@@ -140,12 +140,6 @@
   }
 </script>
 
-<svelte:head>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-</svelte:head>
-
 <div class="container" style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if canAddDelete}
@@ -153,9 +147,7 @@
         {#if selectedRows.length > 0}
           <DeleteButton text small on:click={modal.show()}>
             <Icon name="addrow" />
-            Delete
-            {selectedRows.length}
-            row(s)
+            Delete {selectedRows.length} row(s)
           </DeleteButton>
         {/if}
       </div>
