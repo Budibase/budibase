@@ -19,28 +19,45 @@ const {
   generateLayoutID,
   generateScreenID,
 } = require("../../db/utils")
-const { BUILTIN_LEVEL_IDS } = require("../../utilities/security/accessLevels")
+const {
+  BUILTIN_LEVEL_IDS,
+  AccessController,
+} = require("../../utilities/security/accessLevels")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
-const { MAIN, UNAUTHENTICATED, LayoutTypes } = require("../../constants/layouts")
+const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
+const { recurseMustache } = require("../../utilities/mustache")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 // utility function, need to do away with this
-async function getMainAndUnauthPage(db) {
-  let pages = await db.allDocs(
-    getLayoutParams(null, {
-      include_docs: true,
-    })
-  )
-  pages = pages.rows.map(row => row.doc)
+async function getLayouts(db) {
+  return (
+    await db.allDocs(
+      getLayoutParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+}
 
-  const mainPage = pages.find(page => page.name === LayoutTypes.MAIN)
-  const unauthPage = pages.find(page => page.name === LayoutTypes.UNAUTHENTICATED)
-  return { mainPage, unauthPage }
+async function getScreens(db) {
+  return (
+    await db.allDocs(
+      getScreenParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+}
+
+function getUserAccessLevelId(ctx) {
+  return !ctx.user.accessLevel || !ctx.user.accessLevel._id
+    ? BUILTIN_LEVEL_IDS.PUBLIC
+    : ctx.user.accessLevel._id
 }
 
 async function createInstance(template) {
@@ -85,25 +102,16 @@ exports.fetch = async function(ctx) {
 
 exports.fetchAppDefinition = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
-  // TODO: need to get rid of pages here, they shouldn't be needed anymore
-  const { mainPage, unauthPage } = await getMainAndUnauthPage(db)
-  const userAccessLevelId =
-    !ctx.user.accessLevel || !ctx.user.accessLevel._id
-      ? BUILTIN_LEVEL_IDS.PUBLIC
-      : ctx.user.accessLevel._id
-  const correctPage =
-    userAccessLevelId === BUILTIN_LEVEL_IDS.PUBLIC ? unauthPage : mainPage
-  const screens = (
-    await db.allDocs(
-      getScreenParams(correctPage._id, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc)
-  // TODO: need to handle access control here, limit screens to user access level
+  const layouts = await getLayouts(db)
+  const userAccessLevelId = getUserAccessLevelId(ctx)
+  const accessController = new AccessController(ctx.params.appId)
+  const screens = accessController.checkScreensAccess(
+    await getScreens(db),
+    userAccessLevelId
+  )
   ctx.body = {
-    page: correctPage,
-    screens: screens,
+    layouts,
+    screens,
     libraries: ["@budibase/standard-components"],
   }
 }
@@ -111,16 +119,14 @@ exports.fetchAppDefinition = async function(ctx) {
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
+  const layouts = await getLayouts(db)
+  const screens = await getScreens(db)
 
-  const { mainPage, unauthPage } = await getMainAndUnauthPage(db)
   ctx.body = {
     application,
-    pages: {
-      main: mainPage,
-      unauthenticated: unauthPage,
-    },
+    screens,
+    layouts,
   }
-
   await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
@@ -193,18 +199,18 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   fs.mkdirpSync(newAppFolder)
 
-  const mainPage = cloneDeep(MAIN)
-  mainPage._id = generateLayoutID()
-  mainPage.title = app.name
-
-  const unauthPage = cloneDeep(UNAUTHENTICATED)
-  unauthPage._id = generateLayoutID()
-  unauthPage.title = app.name
-  unauthPage.props._children[0].title = `Log in to ${app.name}`
+  const bulkDocs = []
+  for (let layout of BASE_LAYOUTS) {
+    const cloned = cloneDeep(layout)
+    cloned._id = generateLayoutID()
+    cloned.title = app.name
+    bulkDocs.push(recurseMustache(cloned, app))
+  }
 
   const homeScreen = cloneDeep(HOME_SCREEN)
-  homeScreen._id = generateScreenID(mainPage._id)
-  await db.bulkDocs([mainPage, unauthPage, homeScreen])
+  homeScreen._id = generateScreenID()
+  bulkDocs.push(homeScreen)
+  await db.bulkDocs(bulkDocs)
 
   await compileStaticAssets(app._id)
   return newAppFolder
