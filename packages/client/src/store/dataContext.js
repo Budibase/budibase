@@ -3,7 +3,6 @@ import { enrichDataBinding } from "../utils"
 import { cloneDeep } from "lodash/fp"
 
 const initialValue = {
-  parent: null,
   data: null,
 }
 
@@ -12,15 +11,12 @@ export const createDataContextStore = existingContext => {
   const store = writable(initial)
 
   // Adds a context layer to the data context tree
-  const addContext = row => {
+  const addContext = (row, componentId) => {
     store.update(state => {
-      if (state.data) {
-        state.parent = {
-          parent: state.parent,
-          data: state.data,
-        }
+      if (row && componentId) {
+        state[componentId] = row
+        state.data = row
       }
-      state.data = row
       return state
     })
   }

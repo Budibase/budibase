@@ -130,15 +130,6 @@
 			"form"
 		]
 	},
-	"select": {
-		"name": "Select",
-		"bindable": "value",
-		"description": "An HTML <select> (dropdown)",
-		"props": {
-			"value": "string",
-			"className": "string"
-		}
-	},
 	"option": {
 		"name": "Option",
 		"description": "An HTML <option>, to be used with <select>",
@@ -179,28 +170,6 @@
 		"description": "A component that allows the user to enter long form text.",
 		"props": {
 			"value": "string"
-		}
-	},
-	"checkbox": {
-		"name": "Checkbox",
-		"bindable": "value",
-		"description": "A selectable checkbox component",
-		"props": {
-			"label": "string",
-			"checked": "bool",
-			"value": "string",
-			"onchange": "event"
-		}
-	},
-	"radiobutton": {
-		"name": "Radiobutton",
-		"bindable": "value",
-		"description": "A selectable radiobutton component",
-		"props": {
-			"label": "string",
-			"checked": "bool",
-			"value": "string",
-			"onchange": "event"
 		}
 	},
 	"icon": {
@@ -687,7 +656,8 @@
 		"description": "Date Picker",
 		"bindable": "value",
 		"props": {
-			"placeholder": "string"
+			"placeholder": "string",
+			"value": "string"
 		}
 	},
 	"link": {
