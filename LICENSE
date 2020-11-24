@@ -1,0 +1,6 @@
+Each Budibase package has its own license:
+
+builder: AGPLv3
+server: GPLv3
+client: MPL
+standard-components: MPL
