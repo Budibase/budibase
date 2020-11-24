@@ -4,7 +4,7 @@
   import Input from "./PropertyPanelControls/Input.svelte"
   import { goto } from "@sveltech/routify"
   import { excludeProps } from "./propertyCategories.js"
-  import { store, allScreens } from "builderStore"
+  import { store, allScreens, currentAsset } from "builderStore"
   import { walkProps } from "builderStore/storeUtils"
 
   export let panelDefinition = []
@@ -58,15 +58,15 @@
         }
       })
     }
-    // check page first
-    lookForDuplicate($store.pages[$store.currentPageName].props)
-    if (duplicate) return true
-
+    // check against layouts
+    for (let layout of $store.layouts) {
+      lookForDuplicate(layout.props)
+    }
     // if viewing screen, check current screen for duplicate
     if ($store.currentFrontEndType === "screen") {
       lookForDuplicate($store.currentPreviewItem.props)
     } else {
-      // viewing master page - need to dedupe against all screens
+      // need to dedupe against all screens
       for (let screen of $allScreens) {
         lookForDuplicate(screen.props)
       }

@@ -56,7 +56,7 @@
   screenPlaceholder.props._id = "screenslot-placeholder"
 
   // Extract data to pass to the iframe
-  $: page = $store.pages[$store.currentPageName]
+  $: page = $store.layouts[$store.currentPageName]
   $: screen =
     $store.currentFrontEndType === "page"
       ? screenPlaceholder

@@ -10,31 +10,35 @@ export const backendUiStore = getBackendUiStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 
+export const currentAsset = derived(store, $store => {
+  const layout = $store.layouts ? $store.layouts.find(layout => layout._id === $store.currentAssetId) : null
+  if (layout) {
+    return layout
+  }
+  const screen = $store.screens ? $store.screens.find(screen => screen._id === $store.currentAssetId) : null
+  if (screen) {
+    return screen
+  }
+  return null
+})
+
+export const currentAssetName = derived(store, () => {
+  return currentAsset.name
+})
+
+// leave this as before for consistency
 export const allScreens = derived(store, $store => {
-  let screens = []
-  if ($store.pages == null) {
-    return screens
-  }
-  for (let page of Object.values($store.pages)) {
-    screens = screens.concat(page._screens)
-  }
-  return screens
+  return $store.screens
 })
 
 export const currentScreens = derived(store, $store => {
-  const currentScreens = $store.pages[$store.currentPageName]?._screens
+  const currentScreens = $store.layouts[currentAssetName]?._screens
   if (currentScreens == null) {
     return []
   }
   return Array.isArray(currentScreens)
     ? currentScreens
     : Object.values(currentScreens)
-})
-
-export const selectedPage = derived(store, $store => {
-  if (!$store.pages) return null
-
-  return $store.pages[$store.currentPageName || "main"]
 })
 
 export const initialise = async () => {
