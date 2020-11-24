@@ -8,6 +8,9 @@ const entityMap = {
   ">": "&gt;",
 }
 mustache.escape = text => {
+  if (text == null || typeof text !== "string") {
+    return text
+  }
   return text.replace(/[<>]/g, function fromEntityMap(s) {
     return entityMap[s] || s
   })
