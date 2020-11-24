@@ -20,8 +20,8 @@ export const fetchDatasource = async (datasource, dataContext) => {
     rows = await fetchViewData(datasource)
   } else if (type === "link") {
     rows = await fetchRelationshipData({
-      rowId: dataContext?.data?._id,
-      tableId: dataContext?.data?.tableId,
+      rowId: dataContext?._id,
+      tableId: dataContext?.tableId,
       fieldName,
     })
   }

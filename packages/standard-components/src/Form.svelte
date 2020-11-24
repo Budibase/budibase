@@ -6,7 +6,6 @@
   import { capitalise } from "./helpers"
 
   const { styleable, screenStore, API } = getContext("sdk")
-  const dataContextStore = getContext("data")
   const component = getContext("component")
 
   export let wide = false
@@ -15,11 +14,11 @@
   let schema
   let fields = []
 
-  $: getContextDetails($dataContextStore)
+  $: getContextDetails($component.dataContext)
 
   const getContextDetails = async dataContext => {
-    row = dataContext?.data
-    if (row) {
+    if (dataContext) {
+      row = dataContext
       const tableDefinition = await API.fetchTableDefinition(row.tableId)
       schema = tableDefinition.schema
       fields = Object.keys(schema)
