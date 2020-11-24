@@ -89,7 +89,14 @@ If you are having issues between updates of the builder, please use the guide [h
 
 ## 🏁 Getting Started with Budibase
 
-The Budibase builder runs in Electron, on Mac, PC and Linux. [Sign-up here](https://portal.budi.live/signup) or [Download the latest release](https://github.com/Budibase/budibase/releases), and start building!
+The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps below to get started:
+- [ ] [Sign-up to Budibase](https://portal.budi.live/signup)
+- [ ] Create a username and password
+- [ ] Copy your API key
+- [ ] Download Budibase
+- [ ] Open Budibase and enter your API key
+
+[Here is a guided tutorial](https://docs.budibase.com/tutorial/tutorial-signing-up) if you need extra help.
 
 <p align="center">
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
@@ -98,7 +105,12 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. [Sign-up here](http
 
 ## 🎓 Learning Budibase
 
-Our documentation and tutorials live here: https://docs.budibase.com
+The Budibase [documentation lives here](https://docs.budibase.com)
+Follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+
+## ❗ Code of Conduct
+
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our **Code of Conduct**. Please read it. Please follow it. To build something truly groundbreaking, we must work together in harmony.
 
 ## 🙌 Contributing to Budibase
 
