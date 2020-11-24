@@ -32,11 +32,6 @@
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable = $backendUiStore.selectedTable?._id === TableNames.USERS && UNEDITABLE_USER_FIELDS.includes(field.name) 
-  $: {
-    console.log($backendUiStore.selectedTable)
-    console.log(field.name)
-    console.log(uneditable)
-  }
 
   async function saveColumn() {
     backendUiStore.update(state => {
