@@ -15,7 +15,6 @@
   // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
-  const dataContext = getContext("data")
   const component = getContext("component")
   const { API, styleable } = SDK
 
@@ -59,7 +58,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await API.fetchDatasource(datasource, $dataContext)
+      data = await API.fetchDatasource(datasource, $component.dataContext)
       let schema
 
       // Get schema for datasource

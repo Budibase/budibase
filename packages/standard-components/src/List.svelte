@@ -3,7 +3,6 @@
   import { isEmpty } from "lodash/fp"
 
   const { API, styleable, DataProvider } = getContext("sdk")
-  const dataContextStore = getContext("data")
   const component = getContext("component")
 
   export let datasource = []
@@ -12,7 +11,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await API.fetchDatasource(datasource, $dataContextStore)
+      rows = await API.fetchDatasource(datasource, $component.dataContext)
     }
   })
 </script>

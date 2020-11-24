@@ -26,10 +26,10 @@
   }
 
   // Enriches data bindings to real values based on data context
-  const enrichDataBindings = (data, bindings, props) => {
+  const enrichDataBindings = (dataContexts, dataBindings, props) => {
     const state = {
-      ...data,
-      ...bindings,
+      ...dataContexts,
+      ...dataBindings,
     }
     let enrichedProps = {}
     Object.entries(props).forEach(([key, value]) => {
@@ -49,9 +49,9 @@
   $: componentProps = extractValidProps(definition)
   $: children = definition._children
   $: id = definition._id
-  $: dataStore = getContext("data")
+  $: dataContext = getContext("data")
   $: enrichedProps = enrichDataBindings(
-    $dataStore,
+    $dataContext,
     $bindingStore,
     componentProps
   )
@@ -64,7 +64,7 @@
   $: componentStore.set({
     id,
     styles: { ...definition._styles, id },
-    dataContext: $dataStore.data,
+    dataContext: $dataContext.data,
   })
 </script>
 
