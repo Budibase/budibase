@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
-const { generateUserID, getUserParams } = require("../../db/utils")
+const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
 const {
   BUILTIN_LEVEL_ID_ARRAY,
 } = require("../../utilities/security/accessLevels")
@@ -44,6 +44,7 @@ exports.create = async function(ctx) {
     type: "user",
     accessLevelId,
     permissions: permissions || [BUILTIN_PERMISSION_NAMES.POWER],
+    tableId: ViewNames.USERS,
   }
 
   try {
