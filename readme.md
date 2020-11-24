@@ -8,7 +8,7 @@
 </h1>
 
 <h3 align="center">
-  Powering the developers of tomorrow
+  Build business apps 50x faster
 </h3>
 
 <h3 align="center">
@@ -40,6 +40,20 @@
   </a>
 </p>
 
+<h3 align="center">
+  <a href="https://portal.budi.live/signup">Sign-up</a>
+  <span> · </span>
+  <a href="https://docs.budibase.com">Docs</a>
+  <span> · </span>
+  <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Feature request</a>
+  <span> · </span>
+  <a href="https://github.com/Budibase/budibase/issues">Report a bug</a>
+  <span> · </span>
+  Support: <a href="https://github.com/Budibase/budibase/discussions">Discussions</a>
+  <span> & </span>
+  <a href="https://discord.gg/rCYayfe">Discord</a>
+</h3>
+
 # Status
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
 - [x] Private Beta: We are testing Budibase with a closed set of customers
@@ -60,7 +74,7 @@ If you are having issues between updates of the builder, please use the guide [h
 
 # Getting Started with Budibase
 
-The Budibase builder runs in Electron, on Mac, PC and Linux. [Download the latest release](https://github.com/Budibase/budibase/releases), and start building!
+The Budibase builder runs in Electron, on Mac, PC and Linux. [Sign-up here](https://portal.budi.live/signup) or [Download the latest release](https://github.com/Budibase/budibase/releases), and start building!
 
 <p align="center">
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
