@@ -133,6 +133,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="http://martinmck.com"><img src="https://avatars1.githubusercontent.com/u/11256663?v=4" width="100px;" alt=""/><br /><sub><b>Martin McKeaveney</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=shogunpurple" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.michaeldrury.co.uk"><img src="https://avatars2.githubusercontent.com/u/4407001?v=4" width="100px;" alt=""/><br /><sub><b>Michael Drury</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Tests">⚠️</a> <a href="#infra-mike12345567" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Documentation">📖</a></td>
   </tr>
 </table>
 
