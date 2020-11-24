@@ -36,6 +36,7 @@
   <a href="https://twitter.com/intent/follow?screen_name=budibase">
     <img src="https://img.shields.io/twitter/follow/budibase?style=social" alt="Follow @budibase" />
   </a>
+   <img src="https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg" alt="Code of conduct" />
 </p>
 
 <h3 align="center">
@@ -110,7 +111,7 @@ Follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budib
 
 ## ❗ Code of Conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our **Code of Conduct**. Please read it. Please follow it. To build something truly groundbreaking, we must work together in harmony.
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our **Code of Conduct**. Please read it. 
 
 ## 🙌 Contributing to Budibase
 
