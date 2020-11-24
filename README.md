@@ -106,8 +106,9 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 
 ## 🎓 Learning Budibase
 
-The Budibase [documentation lives here](https://docs.budibase.com)
-Follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+The Budibase [documentation lives here](https://docs.budibase.com).
+
+You can also follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
 
 ## ❗ Code of Conduct
 
