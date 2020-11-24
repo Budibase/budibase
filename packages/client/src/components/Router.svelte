@@ -5,7 +5,7 @@
   import Screen from "./Screen.svelte"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   $: routerConfig = getRouterConfig($routeStore.routes)
 
@@ -26,7 +26,7 @@
 </script>
 
 {#if routerConfig}
-  <div use:styleable={$styles}>
+  <div use:styleable={$component.styles}>
     <Router on:routeLoading={onRouteLoading} routes={routerConfig} />
   </div>
 {/if}

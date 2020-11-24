@@ -3,6 +3,8 @@
   import { writable } from "svelte/store"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
+  import { enrichDataBinding } from "../utils"
+  import { bindingStore } from "../store"
 
   export let definition = {}
 
@@ -23,6 +25,19 @@
     return props
   }
 
+  // Enriches data bindings to real values based on data context
+  const enrichDataBindings = (data, bindings, props) => {
+    const state = {
+      ...data,
+      ...bindings,
+    }
+    let enrichedProps = {}
+    Object.entries(props).forEach(([key, value]) => {
+      enrichedProps[key] = enrichDataBinding(value, state)
+    })
+    return enrichedProps
+  }
+
   // Gets the component constructor for the specified component
   const getComponentConstructor = name => {
     return name === "screenslot" ? Router : ComponentLibrary[componentName]
@@ -32,14 +47,25 @@
   $: componentName = extractComponentName(definition._component)
   $: constructor = getComponentConstructor(componentName)
   $: componentProps = extractValidProps(definition)
-  $: dataContext = getContext("data")
-  $: enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
   $: children = definition._children
+  $: id = definition._id
+  $: dataStore = getContext("data")
+  $: enrichedProps = enrichDataBindings(
+    $dataStore,
+    $bindingStore,
+    componentProps
+  )
 
-  // Set observable style context
-  const styleStore = writable({})
-  setContext("style", styleStore)
-  $: styleStore.set({ ...definition._styles, id: definition._id })
+  // Update component context
+  // ID is duplicated inside style so that the "styleable" helper can set
+  // an ID data tag for unique reference to components
+  const componentStore = writable({})
+  setContext("component", componentStore)
+  $: componentStore.set({
+    id,
+    styles: { ...definition._styles, id },
+    dataContext: $dataStore.data,
+  })
 </script>
 
 {#if constructor}

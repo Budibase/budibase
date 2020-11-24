@@ -3,15 +3,15 @@
   import { chart } from "svelte-apexcharts"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let options
 </script>
 
 {#if options}
-  <div use:chart={options} use:styleable={$styles} />
+  <div use:chart={options} use:styleable={$component.styles} />
 {:else if options === false}
-  <div use:styleable={$styles}>Invalid chart options</div>
+  <div use:styleable={$component.styles}>Invalid chart options</div>
 {/if}
 
 <style>

@@ -16,7 +16,7 @@
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
   const dataContext = getContext("data")
-  const styles = getContext("style")
+  const component = getContext("component")
   const { API, styleable } = SDK
 
   export let datasource = {}
@@ -28,9 +28,9 @@
 
   // Add setting height as css var to allow grid to use correct height
   $: gridStyles = {
-    ...$styles,
+    ...$component.styles,
     normal: {
-      ...$styles.normal,
+      ...$component.styles.normal,
       ["--grid-height"]: `${height}px`,
     },
   }
