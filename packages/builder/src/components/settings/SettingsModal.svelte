@@ -9,11 +9,6 @@
       component: General,
     },
     {
-      title: "Users",
-      key: "USERS",
-      component: Users,
-    },
-    {
       title: "API Keys",
       key: "API_KEYS",
       component: APIKeys,
