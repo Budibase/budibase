@@ -4,7 +4,7 @@
   import api from "builderStore/api"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import PageLayout from "components/userInterface/PageLayout.svelte"
-  import PagesList from "components/userInterface/PagesList.svelte"
+  import PagesList from "components/userInterface/LayoutsList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
   import { Modal } from "@budibase/bbui"
 
@@ -23,7 +23,7 @@
 </div>
 <PagesList />
 <div class="nav-items-container">
-  <PageLayout layout={$store.pages[$store.currentPageName]} />
+  <PageLayout layout={$store.layouts[$store.currentPageName]} />
   <ComponentNavigationTree />
 </div>
 <Modal bind:this={modal}>

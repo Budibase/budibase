@@ -14,7 +14,7 @@
 
     if (!validScreen) {
       // Go to main layout if URL set to invalid screen
-      store.actions.pages.select("main")
+      store.actions.layouts.select("main")
       $goto("../../main")
     } else {
       // Otherwise proceed to set screen
@@ -23,7 +23,7 @@
       // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
       if ($leftover) {
         // Get the correct screen children.
-        const screenChildren = $store.pages[$params.page]._screens.find(
+        const screenChildren = $store.layouts[$params.page]._screens.find(
           screen =>
             screen._id === $params.screen ||
             screen._id === decodeURIComponent($params.screen)
@@ -37,7 +37,7 @@
 
     // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
     if ($leftover) {
-      findComponent(componentIds, $store.pages[$params.page].props._children)
+      findComponent(componentIds, $store.layouts[$params.page].props._children)
     }
   }
 

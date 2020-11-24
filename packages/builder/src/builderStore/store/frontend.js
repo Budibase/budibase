@@ -5,8 +5,7 @@ import {
   getBuiltin,
   makePropsSafe,
 } from "components/userInterface/pagesParsing/createProps"
-import { allScreens, backendUiStore, selectedPage } from "builderStore"
-import { generate_screen_css } from "../generate_css"
+import { allScreens, backendUiStore, currentAsset } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
@@ -23,14 +22,15 @@ const INITIAL_FRONTEND_STATE = {
   apps: [],
   name: "",
   description: "",
-  pages: DEFAULT_PAGES_OBJECT,
+  layouts: DEFAULT_PAGES_OBJECT,
+  screens: [],
   mainUi: {},
   unauthenticatedUi: {},
   components: [],
   currentPreviewItem: null,
   currentComponentInfo: null,
   currentFrontEndType: "none",
-  currentPageName: "",
+  currentAssetId: "",
   currentComponentProps: null,
   errors: [],
   hasAppPackage: false,
@@ -43,52 +43,12 @@ export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
   store.actions = {
-    // TODO: REFACTOR
     initialise: async pkg => {
+      const layouts = pkg.layouts, screens = pkg.screens, application = pkg.application
       store.update(state => {
-        state.appId = pkg.application._id
+        state.appId = application._id
         return state
       })
-      const screens = await api.get("/api/screens").then(r => r.json())
-
-      const mainScreens = screens.filter(screen =>
-          screen._id.includes(pkg.pages.main._id)
-        ),
-        unauthScreens = screens.filter(screen =>
-          screen._id.includes(pkg.pages.unauthenticated._id)
-        )
-      pkg.pages = {
-        main: {
-          ...pkg.pages.main,
-          _screens: mainScreens,
-        },
-        unauthenticated: {
-          ...pkg.pages.unauthenticated,
-          _screens: unauthScreens,
-        },
-      }
-
-      // if the app has just been created
-      // we need to build the CSS and save
-      if (pkg.justCreated) {
-        for (let pageName of ["main", "unauthenticated"]) {
-          const page = pkg.pages[pageName]
-          store.actions.screens.regenerateCss(page)
-          for (let screen of page._screens) {
-            store.actions.screens.regenerateCss(screen)
-          }
-
-          await api.post(`/api/pages/${page._id}`, {
-            page: {
-              componentLibraries: pkg.application.componentLibraries,
-              ...page,
-            },
-            screens: page._screens,
-          })
-        }
-      }
-
-      pkg.justCreated = false
 
       const components = await fetchComponentLibDefinitions(pkg.application._id)
 
@@ -99,7 +59,8 @@ export const getFrontendStore = () => {
         name: pkg.application.name,
         description: pkg.application.description,
         appId: pkg.application._id,
-        pages: pkg.pages,
+        layouts,
+        screens,
         hasAppPackage: true,
         builtins: [getBuiltin("##builtin/screenslot")],
         appInstance: pkg.application.instance,
@@ -111,7 +72,7 @@ export const getFrontendStore = () => {
       store.update(state => {
         state.currentFrontEndType = type
 
-        const page = get(selectedPage)
+        const page = get(currentAsset)
 
         const pageOrScreen = type === "page" ? page : page._screens[0]
 
@@ -168,7 +129,7 @@ export const getFrontendStore = () => {
         await savePromise
       },
       save: async screen => {
-        const page = get(selectedPage)
+        const page = get(currentAsset)
         const currentPageScreens = page._screens
 
         const creatingNewScreen = screen._id === undefined
@@ -197,14 +158,15 @@ export const getFrontendStore = () => {
             state.currentComponentInfo = safeProps
             screen.props = safeProps
           }
-          savePromise = store.actions.pages.save()
+          savePromise = store.actions.layouts.save()
 
           return state
         })
         if (savePromise) await savePromise
       },
-      regenerateCss: screen => {
-        screen._css = generate_screen_css([screen.props])
+      regenerateCss: async asset => {
+        const response = await api.post("/api/css/generate", asset)
+        asset._css = await response.json()
       },
       regenerateCssForCurrentScreen: () => {
         const { currentPreviewItem } = get(store)
@@ -218,7 +180,7 @@ export const getFrontendStore = () => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
         store.update(state => {
-          const currentPage = get(selectedPage)
+          const currentPage = get(currentAsset)
 
           for (let screenToDelete of screensToDelete) {
             // Remove screen from current page as well
@@ -242,17 +204,17 @@ export const getFrontendStore = () => {
         if (state.currentFrontEndType !== "page") {
           await store.actions.screens.save(state.currentPreviewItem)
         }
-        await store.actions.pages.save()
+        await store.actions.layouts.save()
       },
     },
-    pages: {
+    layouts: {
       select: pageName => {
         store.update(state => {
-          const currentPage = state.pages[pageName]
+          const currentPage = state.layouts[pageName]
 
           state.currentFrontEndType = "page"
           state.currentView = "detail"
-          state.currentPageName = pageName
+          state.currentAssetId = pageName
 
           // This is the root of many problems.
           // Uncaught (in promise) TypeError: Cannot read property '_component' of undefined
@@ -264,11 +226,11 @@ export const getFrontendStore = () => {
           )
           state.currentComponentInfo = safeProps
           currentPage.props = safeProps
-          state.currentPreviewItem = state.pages[pageName]
+          state.currentPreviewItem = state.layouts[pageName]
           store.actions.screens.regenerateCssForCurrentScreen()
 
           for (let screen of get(allScreens)) {
-            screen._css = generate_screen_css([screen.props])
+            screen._css = store.actions.screens.regenerateCss(screen)
           }
 
           return state
@@ -276,7 +238,7 @@ export const getFrontendStore = () => {
       },
       save: async page => {
         const storeContents = get(store)
-        const pageName = storeContents.currentPageName || "main"
+        const pageName = storeContents.currentAssetId || "main"
         const pageToSave = page || storeContents.pages[pageName]
 
         // TODO: revisit. This sends down a very weird payload
@@ -293,7 +255,7 @@ export const getFrontendStore = () => {
         if (!json.ok) throw new Error("Error updating page")
 
         store.update(state => {
-          state.pages[pageName]._rev = json.rev
+          state.layouts[pageName]._rev = json.rev
           return state
         })
       },
@@ -324,7 +286,7 @@ export const getFrontendStore = () => {
 
           if (
             componentToAdd.startsWith("##") &&
-            findSlot(state.pages[state.currentPageName].props._children)
+            findSlot(state.layouts[state.currentAssetId].props._children)
           ) {
             return state
           }
@@ -480,7 +442,7 @@ export const getFrontendStore = () => {
           store.update(state => {
             // Try to extract a nav component from the master screen
             const nav = findChildComponentType(
-              state.pages.main,
+              state.layouts.main,
               "@budibase/standard-components/Navigation"
             )
             if (nav) {
@@ -515,12 +477,12 @@ export const getFrontendStore = () => {
 
               // Save page and regenerate all CSS because otherwise weird things happen
               nav._children = [...nav._children, newLink]
-              state.currentPageName = "main"
-              store.actions.screens.regenerateCss(state.pages.main)
-              for (let screen of state.pages.main._screens) {
+              state.currentAssetId = "main"
+              store.actions.screens.regenerateCss(state.layouts.main)
+              for (let screen of state.layouts.main._screens) {
                 store.actions.screens.regenerateCss(screen)
               }
-              savePromise = store.actions.pages.save()
+              savePromise = store.actions.layouts.save()
             }
             return state
           })
