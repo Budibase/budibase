@@ -17,9 +17,15 @@ const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
 const { AuthTypes } = require("../../../constants")
 const env = require("../../../environment")
+const { generateAssetCss } = require("../../../utilities/builder/generateCss")
 
 // this was the version before we started versioning the component library
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
+
+exports.generateCss = async function(ctx) {
+  const structure = ctx.request.body
+  ctx.body = generateAssetCss(structure)
+}
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../../builder")

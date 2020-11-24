@@ -30,6 +30,7 @@ const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { recurseMustache } = require("../../utilities/mustache")
+const { generateAssetCss } = require("../../utilities/builder/generateCss")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -119,9 +120,14 @@ exports.fetchAppDefinition = async function(ctx) {
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
-  const layouts = await getLayouts(db)
-  const screens = await getScreens(db)
+  const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
 
+  for (let layout of layouts) {
+    layout._css = generateAssetCss([layout.props])
+  }
+  for (let screen of screens) {
+    screen._css = generateAssetCss([screen.props])
+  }
   ctx.body = {
     application,
     screens,

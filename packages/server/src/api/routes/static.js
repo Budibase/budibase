@@ -24,6 +24,7 @@ if (env.NODE_ENV !== "production") {
 }
 
 router
+  .post("/api/css/generate", authorized(BUILDER), controller.generateCss)
   .post(
     "/api/attachments/process",
     authorized(BUILDER),
