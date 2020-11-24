@@ -10,6 +10,9 @@
 <h3 align="center">
   Build business apps 50x faster
 </h3>
+<p align="center">
+  [Budibase](https://www.budibase.com) is an open-source low-code platform that helps developers and IT professionals design, build, and ship business apps 50x faster.
+</p>
 
 <h3 align="center">
  🤖 🎨 🚀
@@ -19,11 +22,6 @@
 <p align="center">
   <img src="https://i.imgur.com/tMCahK8.png">
 </p>
-
-
-
-# Budibase
-[Budibase](https://www.budibase.com) is an open-source low-code platform which helps developers and IT professionals design, build, and ship custom software 50x faster.
 
 <p align="center">
   <a href="https://github.com/Budibase/budibase/releases">
@@ -54,14 +52,31 @@
   <a href="https://discord.gg/rCYayfe">Discord</a>
 </h3>
 
-# Status
+
+## ✨ Features
+When other platforms chose the closed source route, we decided to go open source. When other platforms chose cloud builders, we decided a local builder offered the better developer experience. We like to do things differently at Budibase. 
+
+- **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed reponsively, providing your users with a great experience. 
+
+- **Open source and extensable.** Budibase is open-source. The builder and server are AGPL v3, and the client is MPL. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
+
+- **Load data or start from scratch.** Budibase pulls in data from multiple sources, whether it’s a CSV, an external database, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+
+- **Design and build apps with powerful pre-made components.** Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new components](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+
+- **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+
+- **Cloud hosting and self-hosting (coming soon) available.** Users will soon have the option to host with Budibase in AWS (available now) or self-host (coming very soon). From the very beginning, we wanted our users to have the option to self-host. We understand the importance of having full control over data. This is why we are working incredibly hard to offer an easy path to self-hosting. If you are interested in self-hosting, please [join the conversation and add your thoughts](https://github.com/Budibase/budibase/discussions/648).
+
+
+## ⌛ Status
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
 - [x] Private Beta: We are testing Budibase with a closed set of customers
 - [x] Public Beta: Anyone can [sign-up and use Budibase](https://portal.budi.live/signup) but it's not production ready. We cannot ensure backwards compatibility
 - [ ] Official Launch: Production-ready
 
 
-We are currently in Public Beta. Until our official launch, we cannot ensure backwards compatibility for your budibase applications between versions. Issues may arise when trying to edit apps created with old versions of the budibase builder.
+We are currently in Public Beta. Until our official launch, we cannot ensure backwards compatibility for your Budibase applications between versions. Issues may arise when trying to edit apps created with old versions of the Budibase builder.
 
 Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there. 
 
@@ -72,7 +87,7 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
-# Getting Started with Budibase
+## 🏁 Getting Started with Budibase
 
 The Budibase builder runs in Electron, on Mac, PC and Linux. [Sign-up here](https://portal.budi.live/signup) or [Download the latest release](https://github.com/Budibase/budibase/releases), and start building!
 
