@@ -67,7 +67,7 @@ When other platforms chose the closed source route, we decided to go open source
 
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Cloud hosting and self-hosting (coming soon) available.** Users will soon have the option to host with Budibase in AWS (available now) or self-host (coming very soon). From the very beginning, we wanted our users to have the option to self-host. We understand the importance of having full control over data. This is why we are working incredibly hard to offer an easy path to self-hosting. If you are interested in self-hosting, please [join the conversation and add your thoughts](https://github.com/Budibase/budibase/discussions/648).
+- **Cloud hosting (available) and self-hosting (coming soon).** Users will soon have the option to host with Budibase in AWS (available now) or self-host (coming very soon). From the very beginning, we wanted our users to have the option to self-host. We understand the importance of having full control over data. This is why we are working incredibly hard to offer an easy path to self-hosting. If you are interested in self-hosting, please [join the conversation and add your thoughts](https://github.com/Budibase/budibase/discussions/648).
 
 
 ## ⌛ Status
