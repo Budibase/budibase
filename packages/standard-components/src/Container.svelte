@@ -9,55 +9,55 @@
 </script>
 
 {#if type === 'div'}
-  <div use:styleable={styles}>
+  <div use:styleable={$styles}>
     <slot />
   </div>
 {:else if type === 'header'}
-  <header use:styleable={styles}>
+  <header use:styleable={$styles}>
     <slot />
   </header>
 {:else if type === 'main'}
-  <main use:styleable={styles}>
+  <main use:styleable={$styles}>
     <slot />
   </main>
 {:else if type === 'footer'}
-  <footer use:styleable={styles}>
+  <footer use:styleable={$styles}>
     <slot />
   </footer>
 {:else if type === 'aside'}
-  <aside use:styleable={styles}>
+  <aside use:styleable={$styles}>
     <slot />
   </aside>
 {:else if type === 'summary'}
-  <summary use:styleable={styles}>
+  <summary use:styleable={$styles}>
     <slot />
   </summary>
 {:else if type === 'details'}
-  <details use:styleable={styles}>
+  <details use:styleable={$styles}>
     <slot />
   </details>
 {:else if type === 'article'}
-  <article use:styleable={styles}>
+  <article use:styleable={$styles}>
     <slot />
   </article>
 {:else if type === 'nav'}
-  <nav use:styleable={styles}>
+  <nav use:styleable={$styles}>
     <slot />
   </nav>
 {:else if type === 'mark'}
-  <mark use:styleable={styles}>
+  <mark use:styleable={$styles}>
     <slot />
   </mark>
 {:else if type === 'figure'}
-  <figure use:styleable={styles}>
+  <figure use:styleable={$styles}>
     <slot />
   </figure>
 {:else if type === 'figcaption'}
-  <figcaption use:styleable={styles}>
+  <figcaption use:styleable={$styles}>
     <slot />
   </figcaption>
 {:else if type === 'paragraph'}
-  <p use:styleable={styles}>
+  <p use:styleable={$styles}>
     <slot />
   </p>
 {/if}

@@ -26,7 +26,7 @@
   $: showImage = !!imageUrl
 </script>
 
-<div use:cssVars={cssVariables} class="container" use:styleable={styles}>
+<div use:cssVars={cssVariables} class="container" use:styleable={$styles}>
   {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <h2 class="heading">{heading}</h2>

@@ -27,7 +27,13 @@
   export let detailUrl
 
   // Add setting height as css var to allow grid to use correct height
-  styles.normal["--grid-height"] = `${height}px`
+  $: gridStyles = {
+    ...$styles,
+    normal: {
+      ...$styles.normal,
+      ["--grid-height"]: `${height}px`,
+    },
+  }
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -143,7 +149,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div class="container" use:styleable={styles}>
+<div class="container" use:styleable={gridStyles}>
   {#if dataLoaded}
     {#if canAddDelete}
       <div class="controls">

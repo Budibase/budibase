@@ -9,9 +9,9 @@
 </script>
 
 {#if options}
-  <div use:chart={options} use:styleable={styles} />
+  <div use:chart={options} use:styleable={$styles} />
 {:else if options === false}
-  <div use:styleable={styles}>Invalid chart options</div>
+  <div use:styleable={$styles}>Invalid chart options</div>
 {/if}
 
 <style>

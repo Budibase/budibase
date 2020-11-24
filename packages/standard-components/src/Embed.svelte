@@ -7,7 +7,7 @@
   export let embed
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$styles}>
   {@html embed}
 </div>
 

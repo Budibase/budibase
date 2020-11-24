@@ -11,8 +11,11 @@
 
   // Redirect to home page if no matching route
   $: screenDefinition == null && routeStore.actions.navigate("/")
+
+  // Make a screen array so we can use keying to properly re-render each screen
+  $: screens = screenDefinition ? [screenDefinition] : []
 </script>
 
-{#if screenDefinition}
-  <Component definition={screenDefinition} />
-{/if}
+{#each screens as screen (screen._id)}
+  <Component definition={screen} />
+{/each}

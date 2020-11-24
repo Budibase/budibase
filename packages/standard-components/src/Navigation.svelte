@@ -12,7 +12,7 @@
   }
 </script>
 
-<div class="nav" use:styleable={styles}>
+<div class="nav" use:styleable={$styles}>
   <div class="nav__top">
     <a href="/" use:linkable>
       {#if logoUrl}
