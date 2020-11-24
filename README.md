@@ -87,6 +87,10 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
+## Roadmap
+
+Checkout our [public Roadmap](https://github.com/Budibase/budibase/projects/10). If you would like to discuss some of the items on the roadmap, please feel to reach out on [Discord](https://discord.gg/rCYayfe), or via [Github discussions](https://github.com/Budibase/budibase/discussions)
+
 
 ## 🏁 Getting Started with Budibase
 
@@ -119,13 +123,16 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
 
 ### Not Sure Where to Start?
-Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up budibase.
+A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22). 
 
-- packages/builder - contains code for the budibase builder client side svelte application.
+### How the repository is organized
+Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
 
-- packages/client - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
+- [packages/builder](https://github.com/Budibase/budibase/tree/master/packages/builder) - contains code for the budibase builder client side svelte application.
 
-- packages/server - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
+- [packages/client](https://github.com/Budibase/budibase/tree/master/packages/client) - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
+
+- [packages/server](https://github.com/Budibase/budibase/tree/master/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
 For more information, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
