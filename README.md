@@ -104,6 +104,10 @@ Our documentation and tutorials live here: https://docs.budibase.com
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
 
+## 🦸 Contributors 
+
+
+
 ### Not Sure Where to Start?
 Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up budibase.
 
