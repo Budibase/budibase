@@ -13,6 +13,18 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "mike12345567",
+      "name": "Michael Drury",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4407001?v=4",
+      "profile": "http://www.michaeldrury.co.uk",
+      "contributions": [
+        "code",
+        "test",
+        "infra",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
