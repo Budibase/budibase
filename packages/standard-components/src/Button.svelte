@@ -9,7 +9,7 @@
   export let text
 </script>
 
-<button class="default" disabled={disabled || false} use:styleable={styles}>
+<button class="default" disabled={disabled || false} use:styleable={$styles}>
   {text}
 </button>
 

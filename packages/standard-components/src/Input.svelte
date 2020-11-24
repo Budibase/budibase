@@ -18,4 +18,4 @@
   {type}
   {value}
   on:change={onchange}
-  use:styleable={styles} />
+  use:styleable={$styles} />

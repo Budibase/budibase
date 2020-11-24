@@ -29,7 +29,7 @@
   }
 </script>
 
-<div class="root" use:styleable={styles}>
+<div class="root" use:styleable={$styles}>
   <div class="content">
     {#if logo}
       <div class="logo-container"><img src={logo} alt="logo" /></div>

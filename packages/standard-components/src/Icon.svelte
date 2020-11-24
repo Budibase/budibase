@@ -13,4 +13,4 @@
 <i
   style={`color: ${color};`}
   class={`${icon} ${size}`}
-  use:styleable={styles} />
+  use:styleable={$styles} />

@@ -17,7 +17,7 @@
   })
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$styles}>
   {#each rows as row}
     <DataProvider {row}>
       <slot />

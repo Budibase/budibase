@@ -23,6 +23,6 @@
   }
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$styles}>
   <RichText bind:content={value} {options} />
 </div>

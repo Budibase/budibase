@@ -1,5 +1,6 @@
 <script>
   import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
 
@@ -28,21 +29,23 @@
   }
 
   // Extract component definition info
-  const componentName = extractComponentName(definition._component)
-  const constructor = getComponentConstructor(componentName)
-  const componentProps = extractValidProps(definition)
-  const dataContext = getContext("data")
-  const enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
-  const children = definition._children
+  $: componentName = extractComponentName(definition._component)
+  $: constructor = getComponentConstructor(componentName)
+  $: componentProps = extractValidProps(definition)
+  $: dataContext = getContext("data")
+  $: enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
+  $: children = definition._children
 
-  // Set contexts to be consumed by component
-  setContext("style", { ...definition._styles, id: definition._id })
+  // Set observable style context
+  const styleStore = writable({})
+  setContext("style", styleStore)
+  $: styleStore.set({ ...definition._styles, id: definition._id })
 </script>
 
 {#if constructor}
   <svelte:component this={constructor} {...enrichedProps}>
     {#if children && children.length}
-      {#each children as child}
+      {#each children as child (child._id)}
         <svelte:self definition={child} />
       {/each}
     {/if}

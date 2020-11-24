@@ -17,4 +17,4 @@
   class={className}
   src={url}
   alt={description}
-  use:styleable={styles} />
+  use:styleable={$styles} />

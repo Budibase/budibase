@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import Router from "svelte-spa-router"
-  import { routeStore, screenStore } from "../store"
+  import { routeStore } from "../store"
   import Screen from "./Screen.svelte"
 
   const { styleable } = getContext("sdk")
@@ -26,7 +26,7 @@
 </script>
 
 {#if routerConfig}
-  <div use:styleable={styles}>
+  <div use:styleable={$styles}>
     <Router on:routeLoading={onRouteLoading} routes={routerConfig} />
   </div>
 {/if}

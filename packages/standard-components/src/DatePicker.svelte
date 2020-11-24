@@ -14,6 +14,6 @@
   }
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$styles}>
   <DatePicker {placeholder} on:change={handleChange} {value} />
 </div>

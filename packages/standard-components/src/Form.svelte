@@ -27,7 +27,7 @@
   }
 </script>
 
-<div class="form-content" use:styleable={styles}>
+<div class="form-content" use:styleable={$styles}>
   <!--  <ErrorsBox errors={$store.saveRowErrors || {}} />-->
   {#each fields as field}
     <div class="form-field" class:wide>

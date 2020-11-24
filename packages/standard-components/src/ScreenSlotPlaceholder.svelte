@@ -5,7 +5,7 @@
   const { styleable } = getContext("sdk")
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$styles}>
   <h1>Screen Slot</h1>
   <span>
     The screens that you create will be displayed inside this box.
