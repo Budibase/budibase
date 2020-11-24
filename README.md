@@ -132,12 +132,23 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="http://martinmck.com"><img src="https://avatars1.githubusercontent.com/u/11256663?v=4" width="100px;" alt=""/><br /><sub><b>Martin McKeaveney</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=shogunpurple" title="Code">💻</a></td>
+    <td align="center"><a href="http://martinmck.com"><img src="https://avatars1.githubusercontent.com/u/11256663?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Martin McKeaveney</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=shogunpurple" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=shogunpurple" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=shogunpurple" title="Tests">⚠️</a> <a href="#infra-shogunpurple" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="http://www.michaeldrury.co.uk/"><img src="https://avatars2.githubusercontent.com/u/4407001?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Michael Drury</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=mike12345567" title="Tests">⚠️</a> <a href="#infra-mike12345567" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://github.com/aptkingston"><img src="https://avatars3.githubusercontent.com/u/9075550?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Andrew Kingston</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=aptkingston" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=aptkingston" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=aptkingston" title="Tests">⚠️</a> <a href="#design-aptkingston" title="Design">🎨</a></td>
+    <td align="center"><a href="https://budibase.com/"><img src="https://avatars3.githubusercontent.com/u/3524181?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Michael Shanks</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mjashanks" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=mjashanks" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=mjashanks" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/kevmodrome"><img src="https://avatars3.githubusercontent.com/u/534488?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kevin Åberg Kultalahti</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=kevmodrome" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=kevmodrome" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=kevmodrome" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://www.budibase.com/"><img src="https://avatars2.githubusercontent.com/u/49767913?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Joe</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=joebudi" title="Documentation">📖</a> <a href="https://github.com/Budibase/budibase/commits?author=joebudi" title="Code">💻</a> <a href="#content-joebudi" title="Content">🖋</a> <a href="#design-joebudi" title="Design">🎨</a></td>
+    <td align="center"><a href="https://github.com/Conor-Mack"><img src="https://avatars1.githubusercontent.com/u/36074859?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Conor_Mack</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=Conor-Mack" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=Conor-Mack" title="Tests">⚠️</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/pngwn"><img src="https://avatars1.githubusercontent.com/u/12937446?v=4?s=100" width="100px;" alt=""/><br /><sub><b>pngwn</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=pngwn" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=pngwn" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/HugoLd"><img src="https://avatars0.githubusercontent.com/u/26521848?v=4?s=100" width="100px;" alt=""/><br /><sub><b>HugoLd</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=HugoLd" title="Code">💻</a></td>
   </tr>
 </table>
 
-<!-- markdownlint-enable -->
+<!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
