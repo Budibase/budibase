@@ -4,7 +4,7 @@
 
   const { API, styleable, DataProvider } = getContext("sdk")
   const dataContextStore = getContext("data")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let datasource = []
 
@@ -17,7 +17,7 @@
   })
 </script>
 
-<div use:styleable={$styles}>
+<div use:styleable={$component.styles}>
   {#each rows as row}
     <DataProvider {row}>
       <slot />

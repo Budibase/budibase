@@ -2,12 +2,12 @@
   import { getContext } from "svelte"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let embed
 </script>
 
-<div use:styleable={$styles}>
+<div use:styleable={$component.styles}>
   {@html embed}
 </div>
 

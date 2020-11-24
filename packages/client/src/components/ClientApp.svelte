@@ -2,11 +2,11 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import SDK from "../sdk"
-  import { routeStore, screenStore, createDataContextStore } from "../store"
+  import { routeStore, screenStore, createDataStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
-  setContext("data", createDataContextStore())
+  setContext("data", createDataStore())
 
   let loaded = false
 

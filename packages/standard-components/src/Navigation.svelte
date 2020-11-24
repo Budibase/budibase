@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
 
   const { authStore, linkable, styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let logoUrl
   export let title
@@ -12,7 +12,7 @@
   }
 </script>
 
-<div class="nav" use:styleable={$styles}>
+<div class="nav" use:styleable={$component.styles}>
   <div class="nav__top">
     <a href="/" use:linkable>
       {#if logoUrl}

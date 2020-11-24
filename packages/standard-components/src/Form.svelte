@@ -7,7 +7,7 @@
 
   const { styleable, screenStore, API } = getContext("sdk")
   const dataContextStore = getContext("data")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let wide = false
 
@@ -27,7 +27,7 @@
   }
 </script>
 
-<div class="form-content" use:styleable={$styles}>
+<div class="form-content" use:styleable={$component.styles}>
   <!--  <ErrorsBox errors={$store.saveRowErrors || {}} />-->
   {#each fields as field}
     <div class="form-field" class:wide>

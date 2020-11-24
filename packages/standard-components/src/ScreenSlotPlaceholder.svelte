@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte"
 
-  const styles = getContext("style")
+  const component = getContext("component")
   const { styleable } = getContext("sdk")
 </script>
 
-<div use:styleable={$styles}>
+<div use:styleable={$component.styles}>
   <h1>Screen Slot</h1>
   <span>
     The screens that you create will be displayed inside this box.
