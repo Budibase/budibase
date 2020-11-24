@@ -67,6 +67,39 @@ async function createInstance(template) {
     if (!ok) {
       throw "Error loading database dump from template."
     }
+  } else {
+    // create the users table
+    await db.put({
+      _id: "ta_users",
+      type: "table",
+      views: {},
+      name: "Users",
+      schema: {
+        username: {
+          type: "string",
+          constraints: {
+            type: "string",
+            length: {
+              maximum: "",
+            },
+            presence: true,
+          },
+          fieldName: "username",
+          name: "username",
+        },
+        accessLevelId: {
+          fieldName: "accessLevelId",
+          name: "accessLevelId",
+          type: "options",
+          constraints: {
+            type: "string",
+            presence: false,
+            inclusion: Object.values(BUILTIN_LEVEL_IDS),
+          },
+        },
+      },
+      primaryDisplay: "username",
+    })
   }
 
   return { _id: appId }

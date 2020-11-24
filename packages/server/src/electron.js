@@ -7,7 +7,6 @@ const { existsSync } = require("fs-extra")
 const initialiseBudibase = require("./utilities/initialiseBudibase")
 const { budibaseAppsDir } = require("./utilities/budibaseDir")
 const { openNewGitHubIssue, debugInfo } = require("electron-util")
-const open = require("open")
 
 const budibaseDir = budibaseAppsDir()
 const envFile = join(budibaseDir, ".env")
@@ -42,7 +41,7 @@ async function startApp() {
 
   function handleRedirect(e, url) {
     e.preventDefault()
-    open(url)
+    shell.openExternal(url)
   }
 
   async function createWindow() {
