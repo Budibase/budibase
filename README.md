@@ -117,7 +117,7 @@ For more information, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 📝 License
 
-Budibase is open-source. The builder is licensed [AGPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html), the server is [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html), and the client is [MPL](https://directory.fsf.org/wiki/License:MPL-2.0).
+Budibase is open-source. The builder is licensed [AGPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html), the server is licensed [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html), and the client is licensed [MPL](https://directory.fsf.org/wiki/License:MPL-2.0).
 
 ## 💬 Get in touch
 
