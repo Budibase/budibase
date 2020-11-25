@@ -23,7 +23,7 @@
     "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-terser": "^7.0.2",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.29.0"
+    "svelte": "^3.30.0"
   },
   "keywords": [
     "svelte"
@@ -33,7 +33,7 @@
   "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {
     "@budibase/bbui": "^1.51.0",
-    "@budibase/svelte-ag-grid": "^0.0.13",
+    "@budibase/svelte-ag-grid": "^0.0.16",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "apexcharts": "^3.22.1",
     "flatpickr": "^4.6.6",
