@@ -9,7 +9,7 @@
   export let definition = {}
 
   // Get local data binding context
-  const dataStore = getContext("data")
+  const dataContext = getContext("data")
 
   // Create component context
   const componentStore = writable({})
@@ -19,7 +19,7 @@
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children
   $: id = definition._id
-  $: enrichedProps = enrichProps(definition, $dataStore, $bindingStore)
+  $: enrichedProps = enrichProps(definition, $dataContext, $bindingStore)
 
   // Update component context
   // ID is duplicated inside style so that the "styleable" helper can set
