@@ -15,7 +15,6 @@ export default {
     {
       file: "dist/index.js",
       format: "esm",
-      name: "budibaseStandardComponents",
       sourcemap: false,
     },
   ],
