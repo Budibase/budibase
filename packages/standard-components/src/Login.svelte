@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
 
   const { authStore, styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let buttonText = "Log In"
   export let logo = ""
@@ -29,7 +29,7 @@
   }
 </script>
 
-<div class="root" use:styleable={styles}>
+<div class="root" use:styleable={$component.styles}>
   <div class="content">
     {#if logo}
       <div class="logo-container"><img src={logo} alt="logo" /></div>

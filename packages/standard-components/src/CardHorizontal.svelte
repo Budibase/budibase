@@ -3,7 +3,7 @@
   import { cssVars } from "./helpers"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export const className = ""
   export let imageUrl = ""
@@ -29,7 +29,10 @@
   $: showImage = !!imageUrl
 </script>
 
-<div use:cssVars={cssVariables} class="container" use:styleable={styles}>
+<div
+  use:cssVars={cssVariables}
+  class="container"
+  use:styleable={$component.styles}>
   {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <main>

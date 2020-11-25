@@ -1,43 +1,45 @@
 import { writable, derived } from "svelte/store"
 import { routeStore } from "./routes"
+import { builderStore } from "./builder"
 import * as API from "../api"
-import { getAppId } from "../utils"
+import { getAppId } from "../utils/getAppId"
 
 const createScreenStore = () => {
   const config = writable({
     screens: [],
     page: {},
   })
-  const store = derived([config, routeStore], ([$config, $routeStore]) => {
-    const { screens, page } = $config
-    const activeScreen =
-      screens.length === 1
-        ? screens[0]
-        : screens.find(
+  const store = derived(
+    [config, routeStore, builderStore],
+    ([$config, $routeStore, $builderStore]) => {
+      let page
+      let activeScreen
+      if ($builderStore.inBuilder) {
+        // Use builder defined definitions if inside the builder preview
+        page = $builderStore.page
+        activeScreen = $builderStore.screen
+      } else {
+        // Otherwise find the correct screen by matching the current route
+        page = $config.page
+        const { screens } = $config
+        if (screens.length === 1) {
+          activeScreen = screens[0]
+        } else {
+          activeScreen = screens.find(
             screen => screen.routing.route === $routeStore.activeRoute
           )
-    return {
-      screens,
-      page,
-      activeScreen,
+        }
+      }
+      return { page, activeScreen }
     }
-  })
+  )
 
   const fetchScreens = async () => {
-    let screens
-    let page
-    const inBuilder = !!window["##BUDIBASE_IN_BUILDER##"]
-    if (inBuilder) {
-      // Load screen and page from the window object if in the builder
-      screens = [window["##BUDIBASE_PREVIEW_SCREEN##"]]
-      page = window["##BUDIBASE_PREVIEW_PAGE##"]
-    } else {
-      // Otherwise load from API
-      const appDefinition = await API.fetchAppDefinition(getAppId())
-      screens = appDefinition.screens
-      page = appDefinition.page
-    }
-    config.set({ screens, page })
+    const appDefinition = await API.fetchAppDefinition(getAppId())
+    config.set({
+      screens: appDefinition.screens,
+      page: appDefinition.page,
+    })
   }
 
   return {

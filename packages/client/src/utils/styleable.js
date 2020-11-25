@@ -1,7 +1,13 @@
+import { getContext } from "svelte"
+import { get } from "svelte/store"
+
+/**
+ * Helper to build a CSS string from a style object
+ */
 const buildStyleString = styles => {
   let str = ""
   Object.entries(styles).forEach(([style, value]) => {
-    if (style && value) {
+    if (style && value != null) {
       str += `${style}: ${value}; `
     }
   })
@@ -12,35 +18,52 @@ const buildStyleString = styles => {
  * Svelte action to apply correct component styles.
  */
 export const styleable = (node, styles = {}) => {
-  const normalStyles = styles.normal || {}
-  const hoverStyles = {
-    ...normalStyles,
-    ...styles.hover,
+  let applyNormalStyles
+  let applyHoverStyles
+
+  // Creates event listeners and applies initial styles
+  const setupStyles = newStyles => {
+    const normalStyles = newStyles.normal || {}
+    const hoverStyles = {
+      ...normalStyles,
+      ...newStyles.hover,
+    }
+
+    applyNormalStyles = () => {
+      node.style = buildStyleString(normalStyles)
+    }
+
+    applyHoverStyles = () => {
+      node.style = buildStyleString(hoverStyles)
+    }
+
+    // Add listeners to toggle hover styles
+    node.addEventListener("mouseover", applyHoverStyles)
+    node.addEventListener("mouseout", applyNormalStyles)
+    node.setAttribute("data-bb-id", newStyles.id)
+
+    // Apply initial normal styles
+    applyNormalStyles()
   }
 
-  function applyNormalStyles() {
-    node.style = buildStyleString(normalStyles)
+  // Removes the current event listeners
+  const removeListeners = () => {
+    node.removeEventListener("mouseover", applyHoverStyles)
+    node.removeEventListener("mouseout", applyNormalStyles)
   }
 
-  function applyHoverStyles() {
-    node.style = buildStyleString(hoverStyles)
-  }
-
-  // Add listeners to toggle hover styles
-  node.addEventListener("mouseover", applyHoverStyles)
-  node.addEventListener("mouseout", applyNormalStyles)
-
-  // Apply normal styles initially
-  applyNormalStyles()
-
-  // Also apply data tags so we know how to reference each component
-  node.setAttribute("data-bb-id", styles.id)
+  // Apply initial styles
+  setupStyles(styles)
 
   return {
-    // Clean up event listeners when component is destroyed
+    // Clean up old listeners and apply new ones on update
+    update: newStyles => {
+      removeListeners()
+      setupStyles(newStyles)
+    },
+    // Clean up listeners when component is destroyed
     destroy: () => {
-      node.removeEventListener("mouseover", applyHoverStyles)
-      node.removeEventListener("mouseout", applyNormalStyles)
+      removeListeners()
     },
   }
 }

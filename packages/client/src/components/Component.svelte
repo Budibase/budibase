@@ -1,48 +1,43 @@
 <script>
   import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
+  import { enrichProps } from "../utils/componentProps"
+  import { bindingStore } from "../store"
 
   export let definition = {}
 
-  // Extracts the actual component name from the library name
-  const extractComponentName = name => {
-    const split = name?.split("/")
-    return split?.[split.length - 1]
-  }
+  // Get local data binding context
+  const dataStore = getContext("data")
 
-  // Extracts valid props to pass to the real svelte component
-  const extractValidProps = component => {
-    let props = {}
-    Object.entries(component)
-      .filter(([name]) => !name.startsWith("_"))
-      .forEach(([key, value]) => {
-        props[key] = value
-      })
-    return props
-  }
-
-  // Gets the component constructor for the specified component
-  const getComponentConstructor = name => {
-    return name === "screenslot" ? Router : ComponentLibrary[componentName]
-  }
+  // Create component context
+  const componentStore = writable({})
+  setContext("component", componentStore)
 
   // Extract component definition info
-  const componentName = extractComponentName(definition._component)
-  const constructor = getComponentConstructor(componentName)
-  const componentProps = extractValidProps(definition)
-  const dataContext = getContext("data")
-  const enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
-  const children = definition._children
+  $: constructor = getComponentConstructor(definition._component)
+  $: children = definition._children
+  $: id = definition._id
+  $: enrichedProps = enrichProps(definition, $dataStore, $bindingStore)
 
-  // Set contexts to be consumed by component
-  setContext("style", { ...definition._styles, id: definition._id })
+  // Update component context
+  // ID is duplicated inside style so that the "styleable" helper can set
+  // an ID data tag for unique reference to components
+  $: componentStore.set({ id, styles: { ...definition._styles, id } })
+
+  // Gets the component constructor for the specified component
+  const getComponentConstructor = component => {
+    const split = component?.split("/")
+    const name = split?.[split.length - 1]
+    return name === "screenslot" ? Router : ComponentLibrary[name]
+  }
 </script>
 
 {#if constructor}
   <svelte:component this={constructor} {...enrichedProps}>
     {#if children && children.length}
-      {#each children as child}
+      {#each children as child (child._id)}
         <svelte:self definition={child} />
       {/each}
     {/if}

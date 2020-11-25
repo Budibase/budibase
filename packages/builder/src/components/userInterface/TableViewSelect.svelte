@@ -40,13 +40,16 @@
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")
-    .map(property => ({
-      label: property.readableBinding,
-      fieldName: property.fieldSchema.name,
-      name: `all_${property.fieldSchema.tableId}`,
-      tableId: property.fieldSchema.tableId,
-      type: "link",
-    }))
+    .map(property => {
+      return {
+        providerId: property.instance._id,
+        label: property.readableBinding,
+        fieldName: property.fieldSchema.name,
+        name: `all_${property.fieldSchema.tableId}`,
+        tableId: property.fieldSchema.tableId,
+        type: "link",
+      }
+    })
 </script>
 
 <div

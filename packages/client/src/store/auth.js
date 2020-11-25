@@ -1,13 +1,10 @@
 import * as API from "../api"
-import { getAppId } from "../utils"
+import { getAppId } from "../utils/getAppId"
 import { writable } from "svelte/store"
 
 const createAuthStore = () => {
   const store = writable("")
 
-  /**
-   * Logs a user in.
-   */
   const logIn = async ({ username, password }) => {
     const user = await API.logIn({ username, password })
     if (!user.error) {
@@ -15,10 +12,6 @@ const createAuthStore = () => {
       location.reload()
     }
   }
-
-  /**
-   * Logs a user out.
-   */
   const logOut = () => {
     store.set("")
     const appId = getAppId()

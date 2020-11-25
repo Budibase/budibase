@@ -1,21 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const { styleable, setBindableValue } = getContext("sdk")
+  const component = getContext("component")
 
-  export let value = ""
-  export let className = ""
-  export let type = "text"
-
-  const onchange = ev => {
-    value = ev.target.value
-  }
+  // Keep bindable value up to date
+  let value
+  $: setBindableValue(value, $component.id)
 </script>
 
-<input
-  class={className}
-  {type}
-  {value}
-  on:change={onchange}
-  use:styleable={styles} />
+<input bind:value on:change={onchange} use:styleable={$component.styles} />

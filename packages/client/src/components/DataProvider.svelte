@@ -1,25 +1,15 @@
 <script>
-  import { onMount, getContext, setContext } from "svelte"
-  import { createDataContextStore } from "../store"
+  import { getContext, setContext } from "svelte"
+  import { createDataStore } from "../store"
 
   export let row
 
-  // Get current contexts
-  const dataContext = getContext("data")
-  const { id } = getContext("style")
-
-  // Clone current context to this context
-  const newDataContext = createDataContextStore($dataContext)
-  setContext("data", newDataContext)
-
-  // Add additional layer to context
-  let loaded = false
-  onMount(() => {
-    newDataContext.actions.addContext(row, id)
-    loaded = true
-  })
+  // Clone and create new data context for this component tree
+  const data = getContext("data")
+  const component = getContext("component")
+  const newData = createDataStore($data)
+  setContext("data", newData)
+  $: newData.actions.addContext(row, $component.id)
 </script>
 
-{#if loaded}
-  <slot />
-{/if}
+<slot />

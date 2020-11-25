@@ -8,6 +8,9 @@ const entityMap = {
   ">": "&gt;",
 }
 mustache.escape = text => {
+  if (text == null || typeof text !== "string") {
+    return text
+  }
   return text.replace(/[<>]/g, function fromEntityMap(s) {
     return entityMap[s] || s
   })
@@ -29,4 +32,15 @@ export const enrichDataBinding = (input, context) => {
     return input
   }
   return mustache.render(input, context)
+}
+
+/**
+ * Enriches each prop in a props object
+ */
+export const enrichDataBindings = (props, context) => {
+  let enrichedProps = {}
+  Object.entries(props).forEach(([key, value]) => {
+    enrichedProps[key] = enrichDataBinding(value, context)
+  })
+  return enrichedProps
 }
