@@ -2,14 +2,19 @@
   import { getContext } from "svelte"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let className = "default"
   export let disabled = false
   export let text
+  export let onClick
 </script>
 
-<button class="default" disabled={disabled || false} use:styleable={styles}>
+<button
+  class="default"
+  disabled={disabled || false}
+  use:styleable={$component.styles}
+  on:click={onClick}>
   {text}
 </button>
 

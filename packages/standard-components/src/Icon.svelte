@@ -3,7 +3,7 @@
   import { getContext } from "svelte"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let icon = ""
   export let size = "fa-lg"
@@ -13,4 +13,4 @@
 <i
   style={`color: ${color};`}
   class={`${icon} ${size}`}
-  use:styleable={styles} />
+  use:styleable={$component.styles} />

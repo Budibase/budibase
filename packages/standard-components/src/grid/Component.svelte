@@ -15,8 +15,7 @@
   // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
-  const dataContext = getContext("data")
-  const styles = getContext("style")
+  const component = getContext("component")
   const { API, styleable } = SDK
 
   export let datasource = {}
@@ -27,7 +26,13 @@
   export let detailUrl
 
   // Add setting height as css var to allow grid to use correct height
-  styles.normal["--grid-height"] = `${height}px`
+  $: gridStyles = {
+    ...$component.styles,
+    normal: {
+      ...$component.styles.normal,
+      ["--grid-height"]: `${height}px`,
+    },
+  }
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -53,7 +58,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await API.fetchDatasource(datasource, $dataContext)
+      data = await API.fetchDatasource(datasource)
       let schema
 
       // Get schema for datasource
@@ -143,7 +148,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div class="container" use:styleable={styles}>
+<div class="container" use:styleable={gridStyles}>
   {#if dataLoaded}
     {#if canAddDelete}
       <div class="controls">

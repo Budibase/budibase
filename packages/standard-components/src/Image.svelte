@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
 
   const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const component = getContext("component")
 
   export let className = ""
   export let url = ""
@@ -17,4 +17,4 @@
   class={className}
   src={url}
   alt={description}
-  use:styleable={styles} />
+  use:styleable={$component.styles} />

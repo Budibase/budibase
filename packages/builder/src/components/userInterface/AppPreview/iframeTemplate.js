@@ -4,28 +4,12 @@ export default `<html>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <style>
       body, html {
-        height: 100%!important;
+        height: 100% !important;
         font-family: Inter !important;
-        margin: 0px!important;
+        margin: 0px !important;
       }
       *, *:before, *:after {
         box-sizing: border-box;
-      }
-      [data-bb-id="screenslot-placeholder"] {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        text-align: center;
-        border-style: dashed !important;
-        border-width: 1px;
-        color: #000000;
-        background-color: rgba(0, 0, 0, 0.05);
-        flex: 1 1 auto;
-      }
-      [data-bb-id="screenslot-placeholder"] span {
-        display: block;
-        margin-bottom: 10px;
       }
     </style>
     <script src='/assets/budibase-client.js'></script>

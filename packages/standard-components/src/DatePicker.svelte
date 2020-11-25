@@ -2,11 +2,13 @@
   import { DatePicker } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
-  const styles = getContext("style")
+  const { styleable, setBindableValue } = getContext("sdk")
+  const component = getContext("component")
 
   export let placeholder
-  export let value
+
+  let value
+  $: setBindableValue(value, $component.id)
 
   function handleChange(event) {
     const [fullDate] = event.detail
@@ -14,6 +16,6 @@
   }
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$component.styles}>
   <DatePicker {placeholder} on:change={handleChange} {value} />
 </div>

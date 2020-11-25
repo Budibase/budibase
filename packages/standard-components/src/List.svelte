@@ -3,8 +3,8 @@
   import { isEmpty } from "lodash/fp"
 
   const { API, styleable, DataProvider } = getContext("sdk")
-  const dataContextStore = getContext("data")
-  const styles = getContext("style")
+  const component = getContext("component")
+  const data = getContext("data")
 
   export let datasource = []
 
@@ -12,12 +12,12 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await API.fetchDatasource(datasource, $dataContextStore)
+      rows = await API.fetchDatasource(datasource, $data)
     }
   })
 </script>
 
-<div use:styleable={styles}>
+<div use:styleable={$component.styles}>
   {#each rows as row}
     <DataProvider {row}>
       <slot />

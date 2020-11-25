@@ -5,9 +5,9 @@
   import LinkedRowSelector from "./LinkedRowSelector.svelte"
   import { capitalise } from "./helpers"
 
-  const { styleable, screenStore, API } = getContext("sdk")
-  const dataContextStore = getContext("data")
-  const styles = getContext("style")
+  const { styleable, API } = getContext("sdk")
+  const component = getContext("component")
+  const data = getContext("data")
 
   export let wide = false
 
@@ -15,19 +15,22 @@
   let schema
   let fields = []
 
-  $: getContextDetails($dataContextStore)
+  // Fetch info about the closest data context
+  $: getFormData($data[$data.closestComponentId])
 
-  const getContextDetails = async dataContext => {
-    row = dataContext?.data
-    if (row) {
-      const tableDefinition = await API.fetchTableDefinition(row.tableId)
+  const getFormData = async context => {
+    if (context) {
+      const tableDefinition = await API.fetchTableDefinition(context.tableId)
       schema = tableDefinition.schema
       fields = Object.keys(schema)
+
+      // Use the draft version for editing
+      row = $data[`${$data.closestComponentId}_draft`]
     }
   }
 </script>
 
-<div class="form-content" use:styleable={styles}>
+<div class="form-content" use:styleable={$component.styles}>
   <!--  <ErrorsBox errors={$store.saveRowErrors || {}} />-->
   {#each fields as field}
     <div class="form-field" class:wide>
