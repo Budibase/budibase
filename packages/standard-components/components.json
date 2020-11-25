@@ -13,7 +13,7 @@
 			"embed": "string"
 		}
 	},
-	"Navigation": {
+	"navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
 		"children": true,

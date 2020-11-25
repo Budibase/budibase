@@ -479,7 +479,7 @@ export const getFrontendStore = () => {
             // Try to extract a nav component from the master screen
             const nav = findChildComponentType(
               state.pages.main,
-              "@budibase/standard-components/Navigation"
+              "@budibase/standard-components/navigation"
             )
             if (nav) {
               let newLink
