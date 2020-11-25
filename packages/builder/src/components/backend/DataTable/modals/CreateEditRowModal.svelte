@@ -41,7 +41,9 @@
   onConfirm={saveRow}>
   <ErrorsBox {errors} />
   {#if creating && table._id === TableNames.USERS}
-      <RowFieldControl meta={{ name: "password", type: "password" }} bind:value={row.password} />
+    <RowFieldControl
+      meta={{ name: 'password', type: 'password' }}
+      bind:value={row.password} />
   {/if}
   {#each tableSchema as [key, meta]}
     <div>
