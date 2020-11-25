@@ -26,6 +26,7 @@ const {
 const { MAIN, UNAUTHENTICATED, PageTypes } = require("../../constants/pages")
 const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
+const { USERS_TABLE_SCHEMA } = require("../../constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -69,37 +70,7 @@ async function createInstance(template) {
     }
   } else {
     // create the users table
-    await db.put({
-      _id: "ta_users",
-      type: "table",
-      views: {},
-      name: "Users",
-      schema: {
-        username: {
-          type: "string",
-          constraints: {
-            type: "string",
-            length: {
-              maximum: "",
-            },
-            presence: true,
-          },
-          fieldName: "username",
-          name: "username",
-        },
-        accessLevelId: {
-          fieldName: "accessLevelId",
-          name: "accessLevelId",
-          type: "options",
-          constraints: {
-            type: "string",
-            presence: false,
-            inclusion: Object.values(BUILTIN_LEVEL_IDS),
-          },
-        },
-      },
-      primaryDisplay: "username",
-    })
+    await db.put(USERS_TABLE_SCHEMA)
   }
 
   return { _id: appId }
