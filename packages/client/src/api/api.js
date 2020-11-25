@@ -1,4 +1,4 @@
-import { getAppId } from "../utils"
+import { getAppId } from "../utils/getAppId"
 
 /**
  * API cache for cached request responses.

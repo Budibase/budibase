@@ -4,15 +4,11 @@
 
   export let row
 
-  // Get current contexts
+  // Clone and create new data context for this component tree
   const data = getContext("data")
   const component = getContext("component")
-
-  // Clone current context to this context
   const newData = createDataStore($data)
   setContext("data", newData)
-
-  // Add additional layer to context
   $: newData.actions.addContext(row, $component.id)
 </script>
 

@@ -7,12 +7,14 @@
   export let className = "default"
   export let disabled = false
   export let text
+  export let onClick
 </script>
 
 <button
   class="default"
   disabled={disabled || false}
-  use:styleable={$component.styles}>
+  use:styleable={$component.styles}
+  on:click={onClick}>
   {text}
 </button>
 

@@ -1,11 +1,13 @@
 <script>
+  import { writable } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import SDK from "../sdk"
-  import { routeStore, screenStore, createDataStore } from "../store"
+  import { createDataStore, routeStore, screenStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
+  setContext("component", writable({}))
   setContext("data", createDataStore())
 
   let loaded = false

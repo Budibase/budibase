@@ -2,7 +2,7 @@ import { writable, derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import * as API from "../api"
-import { getAppId } from "../utils"
+import { getAppId } from "../utils/getAppId"
 
 const createScreenStore = () => {
   const config = writable({

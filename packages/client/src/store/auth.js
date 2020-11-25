@@ -1,5 +1,5 @@
 import * as API from "../api"
-import { getAppId } from "../utils"
+import { getAppId } from "../utils/getAppId"
 import { writable } from "svelte/store"
 
 const createAuthStore = () => {

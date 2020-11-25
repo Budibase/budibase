@@ -33,3 +33,14 @@ export const enrichDataBinding = (input, context) => {
   }
   return mustache.render(input, context)
 }
+
+/**
+ * Enriches each prop in a props object
+ */
+export const enrichDataBindings = (props, context) => {
+  let enrichedProps = {}
+  Object.entries(props).forEach(([key, value]) => {
+    enrichedProps[key] = enrichDataBinding(value, context)
+  })
+  return enrichedProps
+}
