@@ -1,4 +1,5 @@
 import "@budibase/bbui/dist/bbui.css"
+import "flatpickr/dist/flatpickr.css"
 
 export { default as container } from "./Container.svelte"
 export { default as text } from "./Text.svelte"

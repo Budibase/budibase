@@ -14,7 +14,7 @@
     "prettier-plugin-svelte": "^1.4.0",
     "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",
-    "svelte": "^3.28.0"
+    "svelte": "^3.30.0"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",

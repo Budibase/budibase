@@ -76,6 +76,7 @@
     if (createLink) {
       await store.actions.components.links.save(route, name)
     }
+    await store.actions.routing.fetch()
 
     if (templateIndex !== undefined) {
       const template = templates[templateIndex]

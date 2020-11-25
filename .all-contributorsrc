@@ -1,0 +1,115 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "shogunpurple",
+      "name": "Martin McKeaveney",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/11256663?v=4",
+      "profile": "http://martinmck.com",
+      "contributions": [
+        "code",
+        "doc",
+        "test",
+        "infra"
+      ]
+    },
+    {
+      "login": "mike12345567",
+      "name": "Michael Drury",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4407001?v=4",
+      "profile": "http://www.michaeldrury.co.uk/",
+      "contributions": [
+        "doc",
+        "code",
+        "test",
+        "infra"
+      ]
+    },
+    {
+      "login": "aptkingston",
+      "name": "Andrew Kingston",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/9075550?v=4",
+      "profile": "https://github.com/aptkingston",
+      "contributions": [
+        "doc",
+        "code",
+        "test",
+        "design"
+      ]
+    },
+    {
+      "login": "mjashanks",
+      "name": "Michael Shanks",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/3524181?v=4",
+      "profile": "https://budibase.com/",
+      "contributions": [
+        "doc",
+        "code",
+        "test"
+      ]
+    },
+    {
+      "login": "kevmodrome",
+      "name": "Kevin Åberg Kultalahti",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/534488?v=4",
+      "profile": "https://github.com/kevmodrome",
+      "contributions": [
+        "doc",
+        "code",
+        "test"
+      ]
+    },
+    {
+      "login": "joebudi",
+      "name": "Joe",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/49767913?v=4",
+      "profile": "https://www.budibase.com/",
+      "contributions": [
+        "doc",
+        "code",
+        "content",
+        "design"
+      ]
+    },
+    {
+      "login": "Conor-Mack",
+      "name": "Conor_Mack",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/36074859?v=4",
+      "profile": "https://github.com/Conor-Mack",
+      "contributions": [
+        "code",
+        "test"
+      ]
+    },
+    {
+      "login": "pngwn",
+      "name": "pngwn",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/12937446?v=4",
+      "profile": "https://github.com/pngwn",
+      "contributions": [
+        "code",
+        "test"
+      ]
+    },
+    {
+      "login": "HugoLd",
+      "name": "HugoLd",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/26521848?v=4",
+      "profile": "https://github.com/HugoLd",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "budibase",
+  "projectOwner": "Budibase",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true,
+  "commitConvention": "none"
+}
