@@ -1,4 +1,4 @@
-import { getBuiltin } from "components/userInterface/pagesParsing/createProps"
+import { getBuiltin } from "components/userInterface/assetParsing/createProps"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
 

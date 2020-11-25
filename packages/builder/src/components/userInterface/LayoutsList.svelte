@@ -2,11 +2,6 @@
   import { params, goto } from "@sveltech/routify"
   import { store } from "builderStore"
 
-  const getPage = (state, name) => {
-    const props = state.pages[name]
-    return { name, props }
-  }
-
   const layouts = [
     {
       title: "Private",
@@ -23,7 +18,7 @@
 
   const changeLayout = id => {
     store.actions.layouts.select(id)
-    $goto(`./${id}/page-layout`)
+    $goto(`./${id}/layout`)
   }
 </script>
 

@@ -1,10 +1,10 @@
 <script>
   import { onMount } from "svelte"
-  import { store, currentScreens } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import api from "builderStore/api"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
-  import PageLayout from "components/userInterface/PageLayout.svelte"
-  import PagesList from "components/userInterface/LayoutsList.svelte"
+  import Layout from "components/userInterface/Layout.svelte"
+  import LayoutsList from "components/userInterface/LayoutsList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
   import { Modal } from "@budibase/bbui"
 
@@ -21,14 +21,17 @@
   <h1>Screens</h1>
   <i on:click={modal.show} data-cy="new-screen" class="ri-add-circle-fill" />
 </div>
-<PagesList />
+<LayoutsList />
+
+{#if $store.currentFrontEndType === "layout" && $currentAsset}
 <div class="nav-items-container">
-  <PageLayout layout={$store.layouts[$store.currentPageName]} />
+  <Layout layout={$currentAsset} />
   <ComponentNavigationTree />
 </div>
 <Modal bind:this={modal}>
   <NewScreenModal />
 </Modal>
+{/if}
 
 <style>
   .title {

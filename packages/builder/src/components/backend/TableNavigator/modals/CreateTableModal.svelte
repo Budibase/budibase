@@ -58,7 +58,7 @@
       await store.actions.screens.create(screen)
     }
 
-    // Create autolink to newly created list page
+    // Create autolink to newly created list screen
     const listScreen = screens.find(screen =>
       screen.props._instanceName.endsWith("List")
     )

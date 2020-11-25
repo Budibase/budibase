@@ -20,7 +20,7 @@ export default `<html>
         }
 
         // Extract data from message
-        const { selectedComponentId, page, screen } = JSON.parse(event.data)
+        const { selectedComponentId, layout, screen } = JSON.parse(event.data)
         
         // Update selected component style
         if (selectedComponentStyle) {
@@ -33,7 +33,8 @@ export default `<html>
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true;
-        window["##BUDIBASE_PREVIEW_PAGE##"] = page;
+        // TODO: need to update this
+        window["##BUDIBASE_PREVIEW_PAGE##"] = layout;
         window["##BUDIBASE_PREVIEW_SCREEN##"] = screen;
         
         // Initialise app

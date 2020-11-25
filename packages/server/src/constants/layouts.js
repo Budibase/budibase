@@ -6,7 +6,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Main",
     props: {
-      _id: "private-master-root",
+      _id: "private-master-layout",
       _component: "@budibase/standard-components/container",
       _children: [
         {
@@ -143,6 +143,7 @@ const BASE_LAYOUTS = [
       onLoad: [],
     },
   },
+  // TODO: needs removed
   {
     componentLibraries: ["@budibase/standard-components"],
     title: "{{ name }}",
@@ -150,7 +151,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Unauthenticated",
     props: {
-      _id: "public-master-root",
+      _id: "public-master-layout",
       _component: "@budibase/standard-components/container",
       _children: [
         {

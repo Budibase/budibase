@@ -5,6 +5,6 @@ const controller = require("../controllers/layout")
 
 const router = Router()
 
-router.post("/api/layouts/:layoutId", authorized(BUILDER), controller.save)
+router.post("/api/layouts", authorized(BUILDER), controller.save)
 
 module.exports = router

@@ -1167,7 +1167,7 @@ export default {
           _component: "##builtin/screenslot",
           name: "Screen Slot",
           description:
-            "This component is a placeholder for the rendering of a screen within a page.",
+            "This component is a placeholder for the rendering of a screen within a layout.",
           icon: "ri-crop-2-line",
           properties: { design: { ...all } },
           commonProps: {},
