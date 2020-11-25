@@ -58,7 +58,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await API.fetchDatasource(datasource, $component.dataContext)
+      data = await API.fetchDatasource(datasource)
       let schema
 
       // Get schema for datasource

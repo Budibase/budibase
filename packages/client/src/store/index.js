@@ -5,4 +5,4 @@ export { builderStore } from "./builder"
 export { bindingStore } from "./binding"
 
 // Data stores are layered and duplicated, so it is not a singleton
-export { createDataStore } from "./data"
+export { createDataStore, dataStore } from "./data"
