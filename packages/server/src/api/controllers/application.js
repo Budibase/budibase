@@ -217,7 +217,11 @@ const createEmptyAppPackage = async (ctx, app) => {
   homeScreen._id = generateScreenID()
   screensAndLayouts.push(homeScreen)
 
-  screensAndLayouts = await compileStaticAssets(app._id, screensAndLayouts)
   await db.bulkDocs(screensAndLayouts)
+  // at the end add CSS to all the structures
+  for (let asset of screensAndLayouts) {
+    asset._css = generateAssetCss([asset.props])
+  }
+  await compileStaticAssets(app._id, screensAndLayouts)
   return newAppFolder
 }

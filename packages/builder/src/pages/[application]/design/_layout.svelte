@@ -37,7 +37,7 @@
   </div>
 
   <div class="preview-pane">
-    {#if $store.currentPageName && $store.currentPageName.length > 0}
+    {#if $store.currentAssetId && $store.currentAssetId.length > 0}
       <ComponentSelectionList />
       <div class="preview-content">
         <CurrentItemPreview />

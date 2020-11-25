@@ -2,7 +2,7 @@
   import { params } from "@sveltech/routify"
   import { store } from "builderStore"
 
-  store.actions.layouts.select($params.page)
+  store.actions.layouts.select($params.layout)
 </script>
 
 <slot />

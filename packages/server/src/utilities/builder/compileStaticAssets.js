@@ -5,6 +5,7 @@ const {
   writeFile,
   readdir,
   readFile,
+  existsSync,
 } = require("fs-extra")
 const { join } = require("../centralPath")
 const { budibaseAppsDir } = require("../budibaseDir")
@@ -51,10 +52,12 @@ const buildCssBundle = async (publicPath, asset) => {
   }
 
   // bundle up all the CSS in the directory into one top level CSS file
-  const cssFiles = await readdir(cssPath)
-  for (let filename of cssFiles) {
-    const css = await readFile(filename)
-    cssString += css
+  if (existsSync(cssPath)) {
+    const cssFiles = await readdir(cssPath)
+    for (let filename of cssFiles) {
+      const css = await readFile(join(cssPath, filename))
+      cssString += css
+    }
   }
 
   await writeFile(join(publicPath, "bundle.css"), cssString)

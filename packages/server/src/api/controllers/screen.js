@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
-const compileStaticAssets = require("../../utilities/builder/compileStaticAssets")
 const { AccessController } = require("../../utilities/security/accessLevels")
 
 exports.fetch = async ctx => {
@@ -29,7 +28,6 @@ exports.save = async ctx => {
   if (!screen._id) {
     screen._id = generateScreenID()
   }
-  screen = await compileStaticAssets(ctx.user.appId, screen)
   const response = await db.put(screen)
 
   ctx.message = `Screen ${screen.name} saved.`

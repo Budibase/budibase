@@ -1,4 +1,4 @@
-import { createProps } from "../src/components/userInterface/pagesParsing/createProps"
+import { createProps } from "../src/components/userInterface/assetParsing/createProps"
 import { keys, some } from "lodash/fp"
 import { stripStandardProps } from "./testData"
 

@@ -31,14 +31,8 @@ export const allScreens = derived(store, $store => {
   return $store.screens
 })
 
-export const currentScreens = derived(store, $store => {
-  const currentScreens = $store.layouts[currentAssetName]?._screens
-  if (currentScreens == null) {
-    return []
-  }
-  return Array.isArray(currentScreens)
-    ? currentScreens
-    : Object.values(currentScreens)
+export const mainLayout = derived(store, $store => {
+  return $store.layouts?.find(layout => layout.props?._id === "private-master-layout")
 })
 
 export const initialise = async () => {

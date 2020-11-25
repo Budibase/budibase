@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import { params, leftover, goto } from "@sveltech/routify"
   import { store, allScreens } from "builderStore"
 
@@ -7,7 +6,7 @@
   const componentIds = $leftover.split("/").filter(id => id !== "")
 
   // It's a screen, set it to that screen
-  if ($params.screen !== "page-layout") {
+  if ($params.screen !== "layout") {
     const currentScreenName = decodeURI($params.screen)
     const validScreen =
       $allScreens.findIndex(screen => screen._id === currentScreenName) !== -1
@@ -23,7 +22,7 @@
       // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
       if ($leftover) {
         // Get the correct screen children.
-        const screenChildren = $store.layouts[$params.page]._screens.find(
+        const screenChildren = allScreens.find(
           screen =>
             screen._id === $params.screen ||
             screen._id === decodeURIComponent($params.screen)
@@ -32,12 +31,13 @@
       }
     }
   } else {
-    // It's a page, so set the screentype to page.
-    store.actions.selectPageOrScreen("page")
+    // It's a layout, so set the screen type to layout
+    store.actions.selectAssetType("layout")
 
     // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
+    const layout = store.actions.layouts.find($params.layout)
     if ($leftover) {
-      findComponent(componentIds, $store.layouts[$params.page].props._children)
+      findComponent(componentIds, layout.props._children)
     }
   }
 

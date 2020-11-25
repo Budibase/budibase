@@ -1,4 +1,4 @@
 <script>
   import { goto } from "@sveltech/routify"
-  $goto("../page-layout")
+  $goto("../layout")
 </script>

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { store } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
 
@@ -16,14 +16,14 @@
     .json()
 
   // Extract data to pass to the iframe
-  $: page = $store.layouts[$store.currentPageName]
+  $: layout = currentAsset
   $: screen =
-    $store.currentFrontEndType === "page"
+    $store.currentFrontEndType === "layout"
       ? screenPlaceholder
       : $store.currentPreviewItem
   $: selectedComponentId = $store.currentComponentInfo?._id ?? ""
   $: previewData = {
-    page,
+    layout,
     screen,
     selectedComponentId,
   }
