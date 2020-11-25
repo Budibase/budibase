@@ -16,6 +16,7 @@
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
   const component = getContext("component")
+  const dataContext = getContext("data")
   const { API, styleable } = SDK
 
   export let datasource = {}
@@ -58,7 +59,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await API.fetchDatasource(datasource)
+      data = await API.fetchDatasource(datasource, $dataContext)
       let schema
 
       // Get schema for datasource

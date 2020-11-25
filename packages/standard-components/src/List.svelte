@@ -4,7 +4,7 @@
 
   const { API, styleable, DataProvider } = getContext("sdk")
   const component = getContext("component")
-  const data = getContext("data")
+  const dataContext = getContext("data")
 
   export let datasource = []
 
@@ -12,7 +12,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await API.fetchDatasource(datasource, $data)
+      rows = await API.fetchDatasource(datasource, $dataContext)
     }
   })
 </script>

@@ -7,7 +7,7 @@
 
   const { styleable, API } = getContext("sdk")
   const component = getContext("component")
-  const data = getContext("data")
+  const dataContext = getContext("data")
 
   export let wide = false
 
@@ -16,7 +16,7 @@
   let fields = []
 
   // Fetch info about the closest data context
-  $: getFormData($data[$data.closestComponentId])
+  $: getFormData($dataContext[$dataContext.closestComponentId])
 
   const getFormData = async context => {
     if (context) {
@@ -25,7 +25,7 @@
       fields = Object.keys(schema)
 
       // Use the draft version for editing
-      row = $data[`${$data.closestComponentId}_draft`]
+      row = $dataContext[`${$dataContext.closestComponentId}_draft`]
     }
   }
 </script>
