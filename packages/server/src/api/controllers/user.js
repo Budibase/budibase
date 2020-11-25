@@ -11,7 +11,7 @@ const {
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
   const data = await database.allDocs(
-    getUserParams(null, {
+    getUserParams("", {
       include_docs: true,
     })
   )
