@@ -39,7 +39,7 @@ const MAIN = {
         _children: [
           {
             _id: "49e0e519-9e5e-4127-885a-ee6a0a49e2c1",
-            _component: "@budibase/standard-components/Navigation",
+            _component: "@budibase/standard-components/navigation",
             _styles: {
               normal: {
                 "max-width": "1400px",
