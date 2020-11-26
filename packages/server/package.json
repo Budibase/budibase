@@ -51,6 +51,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/client": "^0.3.8",
+    "@elastic/elasticsearch": "^7.10.0",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",

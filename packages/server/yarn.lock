@@ -225,6 +225,17 @@
     ajv "^6.12.0"
     ajv-keywords "^3.4.1"
 
+"@elastic/elasticsearch@^7.10.0":
+  version "7.10.0"
+  resolved "https://registry.yarnpkg.com/@elastic/elasticsearch/-/elasticsearch-7.10.0.tgz#da105a9c1f14146f9f2cab4e7026cb7949121b8d"
+  integrity sha512-vXtMAQf5/DwqeryQgRriMtnFppJNLc/R7/R0D8E+wG5/kGM5i7mg+Hi7TM4NZEuXgtzZ2a/Nf7aR0vLyrxOK/w==
+  dependencies:
+    debug "^4.1.1"
+    hpagent "^0.1.1"
+    ms "^2.1.1"
+    pump "^3.0.0"
+    secure-json-parse "^2.1.0"
+
 "@electron/get@^1.0.1":
   version "1.12.2"
   resolved "https://registry.yarnpkg.com/@electron/get/-/get-1.12.2.tgz#6442066afb99be08cefb9a281e4b4692b33764f3"
@@ -3650,6 +3661,11 @@ hosted-git-info@^3.0.5:
   dependencies:
     lru-cache "^6.0.0"
 
+hpagent@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/hpagent/-/hpagent-0.1.1.tgz#66f67f16e5c7a8b59a068e40c2658c2c749ad5e2"
+  integrity sha512-IxJWQiY0vmEjetHdoE9HZjD4Cx+mYTr25tR7JCxXaiI3QxW0YqYyM11KyZbHufoa/piWhMb2+D3FGpMgmA2cFQ==
+
 html-encoding-sniffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/html-encoding-sniffer/-/html-encoding-sniffer-1.0.2.tgz#e70d84b94da53aa375e11fe3a351be6642ca46f8"
@@ -6986,6 +7002,11 @@ sax@>=0.6.0, sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
+
+secure-json-parse@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/secure-json-parse/-/secure-json-parse-2.1.0.tgz#ae76f5624256b5c497af887090a5d9e156c9fb20"
+  integrity sha512-GckO+MS/wT4UogDyoI/H/S1L0MCcKS1XX/vp48wfmU7Nw4woBmb8mIpu4zPBQjKlRT88/bt9xdoV4111jPpNJA==
 
 seek-bzip@^1.0.5:
   version "1.0.6"
