@@ -79,7 +79,7 @@
           bind:value={table.name}
           on:input={checkValid}
           {error} />
-        {#if table.integration}
+        {#if table.integration?.type}
           <IntegrationConfigForm integration={table.integration} />
         {/if}
         <footer>

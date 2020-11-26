@@ -27,11 +27,11 @@ const DYNAMODB_OPTIONS = {
     required: true,
   },
   attributeNames: {
-    type: "object",
+    type: "json",
     required: true,
   },
   attributeValues: {
-    type: "object",
+    type: "json",
     required: true,
   },
 }

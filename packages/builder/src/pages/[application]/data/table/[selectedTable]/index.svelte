@@ -7,7 +7,7 @@
 </script>
 
 {#if $backendUiStore.selectedDatabase._id && selectedTable.name}
-  {#if selectedTable.integration}
+  {#if selectedTable.integration?.type}
     <ExternalDataSourceTable />
   {:else}
     <TableDataTable />

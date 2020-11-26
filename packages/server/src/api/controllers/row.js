@@ -190,7 +190,7 @@ exports.fetchTableRows = async function(ctx) {
 
   const table = await db.get(ctx.params.tableId)
 
-  if (table.integration) {
+  if (table.integration && table.integration.type) {
     const Integration = integrations[table.integration.type]
     ctx.body = await new Integration(table.integration).query()
     return
