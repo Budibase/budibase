@@ -9,6 +9,7 @@
   import NavItem from "components/common/NavItem.svelte"
 
   let modal
+
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
@@ -42,7 +43,7 @@
     {#each $backendUiStore.tables as table, idx}
       <NavItem
         border={idx > 0}
-        icon="ri-table-line"
+        icon={table.integration ? 'ri-database-2-line' : 'ri-table-line'}
         text={table.name}
         selected={selectedView === `all_${table._id}`}
         on:click={() => selectTable(table)}>

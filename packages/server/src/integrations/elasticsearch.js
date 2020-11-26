@@ -29,6 +29,9 @@ class ElasticSearchIntegration {
         body: JSON.parse(this.config.query),
       })
       return result.body.hits.hits.map(({ _source }) => _source)
+    } catch (err) {
+      console.error("Error querying elasticsearch", err)
+      throw err
     } finally {
       await this.client.close()
     }
