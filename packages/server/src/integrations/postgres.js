@@ -23,6 +23,10 @@ const POSTGRES_OPTIONS = {
     type: "password",
     default: "root",
   },
+  query: {
+    type: "query",
+    required: true,
+  },
 }
 
 class PostgresIntegration {

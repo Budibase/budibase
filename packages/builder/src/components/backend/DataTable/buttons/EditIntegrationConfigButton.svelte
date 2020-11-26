@@ -37,7 +37,7 @@
     confirmText="Save"
     cancelText="Cancel"
     onConfirm={saveTable}
-    title={'Edit Datasource Configuration'}>
+    title={'Datasource Configuration'}>
     <EditIntegrationConfig onClosed={modal.hide} bind:table />
   </ModalContent>
 </Modal>

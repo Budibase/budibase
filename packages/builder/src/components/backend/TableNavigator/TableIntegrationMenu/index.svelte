@@ -3,50 +3,80 @@
   import { Input, TextArea } from "@budibase/bbui"
   import api from "builderStore/api"
 
+  const INTEGRATION_ICON_MAP = {
+    POSTGRES: "ri-database-2-line",
+  }
+
   export let integration = {}
 
   let integrationsPromise = fetchIntegrations()
   let selectedIntegration
+  let integrations = []
 
   async function fetchIntegrations() {
     const INTEGRATIONS_URL = `/api/integrations`
     const response = await api.get(INTEGRATIONS_URL)
     const json = await response.json()
+    integrations = json
     return json
   }
+
+  onMount(() => {
+    fetchIntegrations()
+  })
 </script>
 
 <section>
-  {#await integrationsPromise}
-    Loading integrations...
-  {:then integrations}
+  <div class="integration-list">
     {#each Object.keys(integrations) as integrationType}
       <div
+        class="integration hoverable"
         on:click={() => {
           selectedIntegration = integrations[integrationType]
           integration.type = integrationType
         }}>
-        <h6>{integrationType}</h6>
+        <span>{integrationType}</span>
+        <i class="ri-database-2-line" />
       </div>
     {/each}
-  {:catch}
-    shit itself
-  {/await}
+  </div>
 
   {#if selectedIntegration}
     {#each Object.keys(selectedIntegration) as configKey}
       <Input
         thin
-        type={configKey.type}
+        type={selectedIntegration[configKey].type}
         label={configKey}
         bind:value={integration[configKey]} />
     {/each}
-    <TextArea label={'Query'} bind:value={integration.query} />
   {/if}
 </section>
 
 <style>
   section {
     display: grid;
+  }
+
+  .integration-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .integration {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding: 5px;
+    transition: 0.3s all;
+    border-radius: var(--border-radius-s);
+  }
+
+  span {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .integration:hover {
+    background-color: var(--grey-3);
   }
 </style>
