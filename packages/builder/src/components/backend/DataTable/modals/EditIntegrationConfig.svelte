@@ -49,7 +49,9 @@
           <option value={'BOOLEAN'}>Boolean</option>
           <option value={'DATETIME'}>Datetime</option>
         </Select>
-        <i class="ri-close-circle-line" on:click={() => deleteField(idx)} />
+        <i
+          class="ri-close-circle-line delete"
+          on:click={() => deleteField(idx)} />
       </div>
     {/each}
     <Button thin secondary on:click={newField}>Add Field</Button>
@@ -72,7 +74,7 @@
   .field {
     display: grid;
     grid-gap: 10px;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 50px;
     margin-bottom: var(--spacing-m);
   }
 
@@ -91,7 +93,7 @@
     margin-bottom: var(--spacing-s);
   }
 
-  form > * {
-    margin-bottom: var(--spacing-s);
+  .delete {
+    align-self: center;
   }
 </style>
