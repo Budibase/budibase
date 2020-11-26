@@ -8,6 +8,7 @@ const {
   SEPARATOR,
 } = require("../../db/utils")
 const { cloneDeep } = require("lodash")
+const { integrations } = require("../../integrations")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -145,7 +146,7 @@ exports.fetchView = async function(ctx) {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.indexOf(TABLE_VIEW_BEGINS_WITH) === 0) {
+  if (viewName.startsWith(TABLE_VIEW_BEGINS_WITH)) {
     ctx.params.tableId = viewName.substring(4)
     await exports.fetchTableRows(ctx)
     return
@@ -186,6 +187,15 @@ exports.fetchView = async function(ctx) {
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
+
+  const table = await db.get(ctx.params.tableId)
+
+  if (table.integration) {
+    const Integration = integrations[table.integration.type]
+    ctx.body = await new Integration(table.integration).query()
+    return
+  }
+
   const response = await db.allDocs(
     getRowParams(ctx.params.tableId, null, {
       include_docs: true,

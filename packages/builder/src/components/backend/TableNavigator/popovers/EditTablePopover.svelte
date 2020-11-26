@@ -3,6 +3,7 @@
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import IntegrationConfigForm from "../TableIntegrationMenu//IntegrationConfigForm.svelte" 
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let table
@@ -39,7 +40,7 @@
 
   async function deleteTable() {
     await backendUiStore.actions.tables.delete(table)
-    store.store.actions.screens.delete(templateScreens)
+    store.actions.screens.delete(templateScreens)
     await backendUiStore.actions.tables.fetch()
     notifier.success("Table deleted")
     hideEditor()
@@ -78,6 +79,9 @@
           bind:value={table.name}
           on:input={checkValid}
           {error} />
+        {#if table.integration}
+          <IntegrationConfigForm integration={table.integration} />
+        {/if}
         <footer>
           <Button secondary on:click={hideEditor}>Cancel</Button>
           <Button primary disabled={error} on:click={save}>Save</Button>

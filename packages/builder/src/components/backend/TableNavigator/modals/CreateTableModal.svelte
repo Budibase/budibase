@@ -4,6 +4,7 @@
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
+  import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
@@ -19,6 +20,7 @@
   let modal
   let name
   let dataImport
+  let integration
   let error = ""
 
   function checkValid(evt) {
@@ -35,6 +37,7 @@
       name,
       schema: dataImport.schema || {},
       dataImport,
+      integration
     }
 
     // Only set primary display if defined
@@ -87,5 +90,9 @@
   <div>
     <Label grey extraSmall>Create Table from CSV (Optional)</Label>
     <TableDataImport bind:dataImport />
+  </div>
+  <div>
+    <Label grey extraSmall>Create Integrated Table from External Source</Label>
+    <TableIntegrationMenu bind:integration />
   </div>
 </ModalContent>
