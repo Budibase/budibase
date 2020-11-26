@@ -24,6 +24,11 @@ class MongoIntegration {
   constructor(config) {
     this.config = config
     this.client = new MongoClient(config.connectionString)
+    try {
+      this.config.query = JSON.parse(this.config.query)
+    } catch (err) {
+      this.config.query = {}
+    }
   }
 
   async connect() {
@@ -37,6 +42,9 @@ class MongoIntegration {
       const collection = db.collection(this.config.collection)
       const result = await collection.find(this.config.query).toArray()
       return result
+    } catch (err) {
+      console.error("Error querying mongodb", err)
+      throw err
     } finally {
       await this.client.close()
     }

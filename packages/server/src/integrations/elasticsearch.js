@@ -11,7 +11,7 @@ const ELASTICSEARCH_OPTIONS = {
     required: true,
   },
   query: {
-    type: "query",
+    type: "json",
     required: true,
   },
 }

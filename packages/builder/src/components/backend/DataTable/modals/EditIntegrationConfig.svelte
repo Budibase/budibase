@@ -36,7 +36,7 @@
   }
 </script>
 
-<form>
+<section>
   <div class="config">
     <h6>Schema</h6>
     {#each fields as field, idx}
@@ -60,15 +60,22 @@
   <div class="config">
     <h6>Datasource</h6>
     {#each Object.keys(table.integration) as configKey}
-      <Input
-        thin
-        type={configKey.type}
-        label={configKey}
-        bind:value={table.integration[configKey]} />
+      {#if configKey === 'query'}
+        <TextArea
+          thin
+          label={configKey}
+          bind:value={table.integration[configKey]} />
+      {:else}
+        <Input
+          thin
+          type={configKey.type}
+          label={configKey}
+          bind:value={table.integration[configKey]} />
+      {/if}
       <Spacer small />
     {/each}
   </div>
-</form>
+</section>
 
 <style>
   .field {
