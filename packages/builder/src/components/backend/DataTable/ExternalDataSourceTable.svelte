@@ -27,6 +27,6 @@
   }
 </script>
 
-<Table {title} {schema} {data} allowEditing={true} {loading}>
+<Table {title} {schema} {data} {loading}>
   <EditIntegrationConfigButton {table} />
 </Table>

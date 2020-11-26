@@ -1,11 +1,21 @@
 <script>
-  import { Select, Button, Input, TextArea, Heading } from "@budibase/bbui"
+  import {
+    Select,
+    Button,
+    Input,
+    TextArea,
+    Heading,
+    Spacer,
+  } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { backendUiStore } from "builderStore"
 
   export let table
 
-  let fields = []
+  let fields = Object.keys(table.schema).map(field => ({
+    name: field,
+    type: table.schema[field].type.toUpperCase(),
+  }))
 
   $: {
     const schema = {}
@@ -27,36 +37,35 @@
 </script>
 
 <form>
-  <Heading extraSmall black>Schema</Heading>
-  <!-- {#each Object.keys(table.schema) as schemaKey, idx}
-    <Input
-      thin
-      type={'text'}
-      label={schemaKey}
-      bind:value={table.schema[schemaKey]} />
-  {/each} -->
-  {#each fields as field}
-    <div class="field">
-      <Input thin type={'text'} bind:value={field.name} />
-      <Select secondary thin bind:value={field.type}>
-        <option value={''}>Select an option</option>
-        <option value={'STRING'}>Text</option>
-        <option value={'NUMBER'}>Number</option>
-        <option value={'BOOLEAN'}>Boolean</option>
-        <option value={'DATETIME'}>Datetime</option>
-      </Select>
-    </div>
-  {/each}
+  <div class="config">
+    <h6>Schema</h6>
+    {#each fields as field, idx}
+      <div class="field">
+        <Input thin type={'text'} bind:value={field.name} />
+        <Select secondary thin bind:value={field.type}>
+          <option value={''}>Select an option</option>
+          <option value={'STRING'}>Text</option>
+          <option value={'NUMBER'}>Number</option>
+          <option value={'BOOLEAN'}>Boolean</option>
+          <option value={'DATETIME'}>Datetime</option>
+        </Select>
+        <i class="ri-close-circle-line" on:click={() => deleteField(idx)} />
+      </div>
+    {/each}
+    <Button thin secondary on:click={newField}>Add Field</Button>
+  </div>
 
-  <Button thin secondary on:click={newField}>Add Field</Button>
-  <Heading extraSmall black>Datasource</Heading>
-  {#each Object.keys(table.integration) as configKey}
-    <Input
-      thin
-      type={configKey.type}
-      label={configKey}
-      bind:value={table.integration[configKey]} />
-  {/each}
+  <div class="config">
+    <h6>Datasource</h6>
+    {#each Object.keys(table.integration) as configKey}
+      <Input
+        thin
+        type={configKey.type}
+        label={configKey}
+        bind:value={table.integration[configKey]} />
+      <Spacer small />
+    {/each}
+  </div>
 </form>
 
 <style>
@@ -64,6 +73,25 @@
     display: grid;
     grid-gap: 10px;
     grid-template-columns: 1fr 1fr;
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-m);
+  }
+
+  h6 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    text-rendering: var(--text-render);
+    color: var(--ink);
+    font-size: var(--heading-font-size-xs);
+    color: var(--ink);
+    margin-bottom: var(--spacing-m);
+    margin-top: var(--spacing-l);
+  }
+
+  .config {
+    margin-bottom: var(--spacing-s);
+  }
+
+  form > * {
+    margin-bottom: var(--spacing-s);
   }
 </style>
