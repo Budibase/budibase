@@ -9,9 +9,9 @@ context('Create a User', () => {
 
     // https://on.cypress.io/interacting-with-elements
     it('should create a user', () => {
-        cy.addRow(["Users", "bbuser", "test", "POWER_USER"])
+        cy.createUser("bbuser", "test", "ADMIN")
 
         // // Check to make sure user was created!
-        // cy.get("input[disabled]").should('have.value', 'bbuser')
+        cy.contains("bbuser").should('be.visible')
     })
 })
