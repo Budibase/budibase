@@ -42,6 +42,7 @@
   <ErrorsBox {errors} />
   {#if creating && table._id === TableNames.USERS}
     <RowFieldControl
+      {creating}
       meta={{ name: 'password', type: 'password' }}
       bind:value={row.password} />
   {/if}
