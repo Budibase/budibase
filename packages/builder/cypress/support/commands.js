@@ -113,23 +113,26 @@ Cypress.Commands.add("addRow", values => {
 
 Cypress.Commands.add("createUser", (username, password, accessLevel) => {
   // Create User
-  cy.get(".toprightnav > .settings").click()
   cy.contains("Users").click()
 
-  cy.get("[name=Name]")
-    .first()
-    .type(username)
-  cy.get("[name=Password]")
-    .first()
-    .type(password)
-  cy.get("select")
-    .first()
-    .select(accessLevel)
+  cy.contains("Create New Row").click()
 
-  // Save
-  cy.get(".inputs")
-    .contains("Create")
-    .click()
+  cy.get(".modal").within(() => {
+    cy.get("input")
+      .first()
+      .type(password)
+    cy.get("input")
+      .eq(1)
+      .type(username)
+    cy.get("select")
+      .first()
+      .select(accessLevel)
+
+    // Save
+    cy.get(".buttons")
+      .contains("Create Row")
+      .click()
+  })
 })
 
 Cypress.Commands.add("addHeadlineComponent", text => {
