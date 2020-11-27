@@ -7,11 +7,13 @@
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
   export let meta
+  export let creating
   export let value = meta.type === "boolean" ? false : ""
 
   $: type = meta.type
   $: label = capitalise(meta.name)
-  $: userTableSelected = $backendUiStore.selectedTable?._id === TableNames.USERS
+  $: editingUser =
+    !creating && $backendUiStore.selectedTable?._id === TableNames.USERS
 </script>
 
 {#if type === 'options'}
@@ -39,5 +41,5 @@
     data-cy="{meta.name}-input"
     {type}
     bind:value
-    disabled={userTableSelected} />
+    disabled={editingUser} />
 {/if}

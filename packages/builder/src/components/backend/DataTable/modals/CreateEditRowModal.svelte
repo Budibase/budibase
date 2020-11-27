@@ -47,7 +47,7 @@
   {/if}
   {#each tableSchema as [key, meta]}
     <div>
-      <RowFieldControl {meta} bind:value={row[key]} />
+      <RowFieldControl {meta} bind:value={row[key]} {creating} />
     </div>
   {/each}
 </ModalContent>
