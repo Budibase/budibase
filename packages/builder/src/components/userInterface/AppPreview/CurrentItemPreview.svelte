@@ -16,7 +16,7 @@
     .json()
 
   // Extract data to pass to the iframe
-  $: layout = currentAsset
+  $: layout = $currentAsset
   $: screen =
     $store.currentFrontEndType === "layout"
       ? screenPlaceholder
