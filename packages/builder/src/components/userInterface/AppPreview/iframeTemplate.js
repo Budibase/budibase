@@ -33,8 +33,7 @@ export default `<html>
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true;
-        // TODO: need to update this
-        window["##BUDIBASE_PREVIEW_PAGE##"] = layout;
+        window["##BUDIBASE_PREVIEW_LAYOUT##"] = layout;
         window["##BUDIBASE_PREVIEW_SCREEN##"] = screen;
         
         // Initialise app
