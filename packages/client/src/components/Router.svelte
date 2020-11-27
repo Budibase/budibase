@@ -30,3 +30,9 @@
     <Router on:routeLoading={onRouteLoading} routes={routerConfig} />
   </div>
 {/if}
+
+<style>
+  div {
+    position: relative;
+  }
+</style>

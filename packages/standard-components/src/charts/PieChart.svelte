@@ -5,6 +5,7 @@
   import { isEmpty } from "lodash/fp"
 
   const { API } = getContext("sdk")
+  const dataContext = getContext("data")
 
   export let title
   export let datasource
@@ -30,7 +31,7 @@
 
     // Fetch, filter and sort data
     const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
-    const result = await API.fetchDatasource(datasource)
+    const result = await API.fetchDatasource(datasource, $dataContext)
     const data = result
       .filter(row => row[labelColumn] != null && row[valueColumn] != null)
       .slice(0, 20)

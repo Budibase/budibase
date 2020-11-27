@@ -1,4 +1,5 @@
 <script>
+  import { fade } from "svelte/transition"
   import { screenStore, routeStore } from "../store"
   import Component from "./Component.svelte"
 
@@ -17,5 +18,18 @@
 </script>
 
 {#each screens as screen (screen._id)}
-  <Component definition={screen} />
+  <div in:fade>
+    <Component definition={screen} />
+  </div>
 {/each}
+
+<style>
+  div {
+    flex: 1 1 auto;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+</style>

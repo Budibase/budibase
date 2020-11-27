@@ -10,14 +10,8 @@ export default {
   output: [
     {
       sourcemap: true,
-      format: "iife",
-      name: "app",
-      file: `./dist/budibase-client.js`,
-    },
-    {
-      file: "dist/budibase-client.esm.mjs",
       format: "esm",
-      sourcemap: "inline",
+      file: `./dist/budibase-client.js`,
     },
   ],
   plugins: [

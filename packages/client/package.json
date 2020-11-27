@@ -23,11 +23,11 @@
     "rollup": "^2.33.2",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^4.0.4",
-    "svelte": "^3.29.7",
-    "svelte-jester": "^1.0.6",
-    "rollup-plugin-svelte": "^6.1.1"
+    "svelte": "^3.30.0",
+    "svelte-jester": "^1.0.6"
   },
   "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a"
 }
