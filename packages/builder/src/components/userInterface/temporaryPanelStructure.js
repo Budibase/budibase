@@ -1175,7 +1175,7 @@ export default {
         },
         {
           name: "Nav Bar",
-          _component: "@budibase/standard-components/Navigation",
+          _component: "@budibase/standard-components/navigation",
           description:
             "A component for handling the navigation within your app.",
           icon: "ri-navigation-line",

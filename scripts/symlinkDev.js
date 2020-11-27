@@ -28,12 +28,12 @@ const SYMLINK_PATHS = [
     destination: resolve("packages/standard-components"),
   },
   {
-    symlink: `${devDir}/budibase-client.esm.mjs`,
-    destination: resolve("packages/client/dist/budibase-client.esm.mjs"),
-  },
-  {
     symlink: `${devDir}/budibase-client.js`,
     destination: resolve("packages/client/dist/budibase-client.js"),
+  },
+  {
+    symlink: `${devDir}/budibase-client.js.map`,
+    destination: resolve("packages/client/dist/budibase-client.js.map"),
   },
 ]
 

@@ -16,6 +16,7 @@
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
   const component = getContext("component")
+  const dataContext = getContext("data")
   const { API, styleable } = SDK
 
   export let datasource = {}
@@ -58,7 +59,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await API.fetchDatasource(datasource)
+      data = await API.fetchDatasource(datasource, $dataContext)
       let schema
 
       // Get schema for datasource
@@ -141,12 +142,6 @@
     selectedRows = []
   }
 </script>
-
-<svelte:head>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-</svelte:head>
 
 <div class="container" use:styleable={gridStyles}>
   {#if dataLoaded}
