@@ -430,8 +430,7 @@ export default {
         {
           _component: "@budibase/standard-components/cardstat",
           name: "Stat",
-          description:
-            "A card component for displaying numbers.",
+          description: "A card component for displaying numbers.",
           icon: "ri-dual-sim-2-line",
           children: [],
           properties: {
