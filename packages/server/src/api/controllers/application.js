@@ -31,6 +31,7 @@ const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { recurseMustache } = require("../../utilities/mustache")
 const { generateAssetCss } = require("../../utilities/builder/generateCss")
+const { USERS_TABLE_SCHEMA } = require("../../constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -85,6 +86,9 @@ async function createInstance(template) {
     if (!ok) {
       throw "Error loading database dump from template."
     }
+  } else {
+    // create the users table
+    await db.put(USERS_TABLE_SCHEMA)
   }
 
   return { _id: appId }

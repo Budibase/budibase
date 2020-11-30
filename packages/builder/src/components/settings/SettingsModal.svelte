@@ -1,5 +1,5 @@
 <script>
-  import { General, Users, DangerZone, APIKeys } from "./tabs"
+  import { General, DangerZone, APIKeys } from "./tabs"
   import { Switcher, ModalContent } from "@budibase/bbui"
 
   const tabs = [
@@ -7,11 +7,6 @@
       title: "General",
       key: "GENERAL",
       component: General,
-    },
-    {
-      title: "Users",
-      key: "USERS",
-      component: Users,
     },
     {
       title: "API Keys",
