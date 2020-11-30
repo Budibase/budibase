@@ -38,7 +38,7 @@ router
     controller.save
   )
   .delete(
-    "/api/screens/:screenId/:revId",
+    "/api/screens/:screenId/:screenRev",
     authorized(BUILDER),
     controller.destroy
   )
