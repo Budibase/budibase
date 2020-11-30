@@ -24,6 +24,7 @@ function generateSaveValidation() {
       _styles: Joi.object().required(),
       type: Joi.string().optional(),
       table: Joi.string().optional(),
+      layoutId: Joi.string().optional(),
     }).required().unknown(true),
   }).unknown(true))
 }
