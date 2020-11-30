@@ -5,6 +5,8 @@ const createBuilderStore = () => {
     inBuilder: false,
     page: null,
     screen: null,
+    selectedComponentId: null,
+    previewId: null,
   }
   return writable(initialState)
 }
