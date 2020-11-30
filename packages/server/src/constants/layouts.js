@@ -1,3 +1,8 @@
+const BASE_LAYOUT_PROP_IDS = {
+  PRIVATE: "private-master-layout",
+  PUBLIC: "public-master-layout",
+}
+
 const BASE_LAYOUTS = [
   {
     componentLibraries: ["@budibase/standard-components"],
@@ -6,7 +11,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Main",
     props: {
-      _id: "private-master-layout",
+      _id: BASE_LAYOUT_PROP_IDS.PRIVATE,
       _component: "@budibase/standard-components/container",
       _children: [
         {
@@ -151,7 +156,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Unauthenticated",
     props: {
-      _id: "public-master-layout",
+      _id: BASE_LAYOUT_PROP_IDS.PUBLIC,
       _component: "@budibase/standard-components/container",
       _children: [
         {
@@ -217,4 +222,5 @@ const BASE_LAYOUTS = [
 
 module.exports = {
   BASE_LAYOUTS,
+  BASE_LAYOUT_PROP_IDS,
 }

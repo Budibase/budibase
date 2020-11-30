@@ -5,6 +5,12 @@ const controller = require("../controllers/layout")
 
 const router = Router()
 
-router.post("/api/layouts", authorized(BUILDER), controller.save)
+router
+  .post("/api/layouts", authorized(BUILDER), controller.save)
+  .delete(
+    "/api/layouts/:layoutId/:layoutRev",
+    authorized(BUILDER),
+    controller.destroy
+  )
 
 module.exports = router

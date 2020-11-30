@@ -36,7 +36,7 @@ exports.save = async ctx => {
 
 exports.destroy = async ctx => {
   const db = new CouchDB(ctx.user.appId)
-  await db.remove(ctx.params.screenId, ctx.params.revId)
+  await db.remove(ctx.params.screenId, ctx.params.screenRev)
   ctx.message = "Screen deleted successfully"
   ctx.status = 200
 }
