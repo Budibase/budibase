@@ -21,6 +21,6 @@
 </script>
 
 {#if loaded}
-  // TODO: need to get the active screen as well
+  <!-- // TODO: need to get the active screen as well -->
   <Component definition={$screenStore.activeLayout.props} />
 {/if}

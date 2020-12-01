@@ -11,6 +11,7 @@ import copy from "rollup-plugin-copy"
 import css from "rollup-plugin-css-only"
 import replace from "rollup-plugin-replace"
 import json from "@rollup/plugin-json"
+import html from "rollup-plugin-html"
 
 import path from "path"
 
@@ -147,5 +148,6 @@ export default {
     // instead of npm run dev), minify
     production && terser(),
     json(),
+    html(),
   ],
 }

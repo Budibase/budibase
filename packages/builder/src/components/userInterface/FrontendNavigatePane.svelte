@@ -1,16 +1,28 @@
 <script>
   import { onMount } from "svelte"
   import { store, currentAsset } from "builderStore"
+  import { FrontendTypes } from "constants"
   import api from "builderStore/api"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
   import LayoutsList from "components/userInterface/LayoutsList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, Switcher } from "@budibase/bbui"
+
+  const tabs = [
+    {
+      title: "Screens",
+      key: "SCREENS",
+    },
+    {
+      title: "Layouts",
+      key: "LAYOUTS",
+    },
+  ]
 
   let modal
-
   let routes = {}
+  let tab = "SCREENS"
 
   onMount(() => {
     store.actions.routing.fetch()
@@ -18,20 +30,38 @@
 </script>
 
 <div class="title">
-  <h1>Screens</h1>
-  <i on:click={modal.show} data-cy="new-screen" class="ri-add-circle-fill" />
-</div>
-<LayoutsList />
+  <Switcher headings={tabs} bind:value={tab}>
+    {#if tab === 'SCREENS'}
+      <i
+        on:click={modal.show}
+        data-cy="new-screen"
+        class="ri-add-circle-fill" />
+      <!-- <LayoutsList /> -->
+      {#if $currentAsset}
+        <div class="nav-items-container">
+          <!-- <Layout layout={$currentAsset} /> -->
+          <ComponentNavigationTree />
+        </div>
+      {/if}
+      <Modal bind:this={modal}>
+        <NewScreenModal />
+      </Modal>
+    {:else if tab === 'LAYOUTS'}
+      <Layout />
+    {/if}
 
-{#if $store.currentFrontEndType === "layout" && $currentAsset}
-<div class="nav-items-container">
-  <Layout layout={$currentAsset} />
-  <ComponentNavigationTree />
+  </Switcher>
 </div>
-<Modal bind:this={modal}>
-  <NewScreenModal />
-</Modal>
-{/if}
+
+<!-- {#if $store.currentFrontEndType === FrontendTypes.LAYOUT && $currentAsset} -->
+<!-- <div class="nav-items-container"> -->
+<!-- <Layout layout={$currentAsset} /> -->
+<!-- <ComponentNavigationTree /> -->
+<!-- </div> -->
+<!-- <Modal bind:this={modal}> -->
+<!-- <NewScreenModal /> -->
+<!-- </Modal> -->
+<!-- {/if} -->
 
 <style>
   .title {

@@ -23,7 +23,7 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-    $goto(`./:screen/${path}`)
+    $goto(`./screens/:screen/${path}`)
   }
 
   const dragstart = component => e => {

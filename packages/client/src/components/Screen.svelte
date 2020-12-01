@@ -4,7 +4,7 @@
   import Component from "./Component.svelte"
 
   // Keep route params up to date
-  export let params
+  export let params = {}
   $: routeStore.actions.setRouteParams(params || {})
 
   // Get the screen definition for the current route

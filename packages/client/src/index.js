@@ -9,6 +9,8 @@ const loadBudibase = () => {
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
     layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
+    selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
+    previewId: window["##BUDIBASE_PREVIEW_ID##"],
   })
 
   // Create app if one hasn't been created yet

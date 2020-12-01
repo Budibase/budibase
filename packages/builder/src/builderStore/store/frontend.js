@@ -5,10 +5,15 @@ import {
   getBuiltin,
   makePropsSafe,
 } from "components/userInterface/assetParsing/createProps"
-import { allScreens, backendUiStore, currentAsset, mainLayout } from "builderStore"
+import {
+  allScreens,
+  backendUiStore,
+  currentAsset,
+  mainLayout,
+} from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
-import { DEFAULT_LAYOUTS } from "../../constants"
+import { DEFAULT_LAYOUTS, FrontendTypes } from "../../constants"
 import getNewComponentName from "../getNewComponentName"
 import analytics from "analytics"
 import {
@@ -44,7 +49,8 @@ export const getFrontendStore = () => {
 
   store.actions = {
     initialise: async pkg => {
-      const layouts = pkg.layouts, screens = pkg.screens, application = pkg.application
+      const { layouts, screens, application } = pkg
+
       store.update(state => {
         state.appId = application._id
         return state
@@ -97,7 +103,7 @@ export const getFrontendStore = () => {
         store.update(state => {
           const screen = get(allScreens).find(screen => screen._id === screenId)
           state.currentPreviewItem = screen
-          state.currentFrontEndType = "screen"
+          state.currentFrontEndType = FrontendTypes.SCREEN
           state.currentAssetId = screenId
           state.currentView = "detail"
 
@@ -117,10 +123,12 @@ export const getFrontendStore = () => {
         store.update(state => {
           state.currentPreviewItem = screen
           state.currentComponentInfo = screen.props
-          state.currentFrontEndType = "screen"
+          state.currentFrontEndType = FrontendTypes.SCREEN
 
           if (state.currentPreviewItem) {
-            promises.push(store.actions.screens.regenerateCss(state.currentPreviewItem))
+            promises.push(
+              store.actions.screens.regenerateCss(state.currentPreviewItem)
+            )
           }
 
           promises.push(store.actions.screens.save(screen))
@@ -137,7 +145,9 @@ export const getFrontendStore = () => {
         screen._id = json.id
 
         store.update(state => {
-          const foundScreen = state.screens.findIndex(el => el._id === screen._id)
+          const foundScreen = state.screens.findIndex(
+            el => el._id === screen._id
+          )
           if (foundScreen !== -1) {
             state.screens.splice(foundScreen, 1)
           }
@@ -171,10 +181,14 @@ export const getFrontendStore = () => {
         const screenDeletePromises = []
         store.update(state => {
           for (let screenToDelete of screensToDelete) {
-            state.screens = state.screens.filter(screen => screen._id !== screenToDelete._id)
-            screenDeletePromises.push(api.delete(
-              `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
-            ))
+            state.screens = state.screens.filter(
+              screen => screen._id !== screenToDelete._id
+            )
+            screenDeletePromises.push(
+              api.delete(
+                `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
+              )
+            )
           }
           return state
         })
@@ -184,7 +198,7 @@ export const getFrontendStore = () => {
     preview: {
       saveSelected: async () => {
         const state = get(store)
-        if (state.currentFrontEndType !== "layout") {
+        if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
           await store.actions.screens.save(currentAsset)
         }
         await store.actions.layouts.save(currentAsset)
@@ -195,7 +209,7 @@ export const getFrontendStore = () => {
         store.update(state => {
           const layout = store.actions.layouts.find(layoutName)
 
-          state.currentFrontEndType = "layout"
+          state.currentFrontEndType = FrontendTypes.LAYOUT
           state.currentView = "detail"
           state.currentAssetId = layout._id
 
@@ -209,7 +223,7 @@ export const getFrontendStore = () => {
           )
           state.currentComponentInfo = safeProps
           layout.props = safeProps
-          state.currentPreviewItem = store.actions.layouts.find(layoutName)
+          state.currentPreviewItem = layout
 
           return state
         })
@@ -231,7 +245,9 @@ export const getFrontendStore = () => {
         if (!json.ok) throw new Error("Error updating layout")
 
         store.update(state => {
-          const layoutToUpdate = state.layouts.find(stateLayouts => stateLayouts._id === layout._id)
+          const layoutToUpdate = state.layouts.find(
+            stateLayouts => stateLayouts._id === layout._id
+          )
           if (layoutToUpdate) {
             layoutToUpdate._rev = json.rev
           }
@@ -243,7 +259,12 @@ export const getFrontendStore = () => {
           return get(mainLayout)
         }
         const storeContents = get(store)
-        return storeContents.layouts.find(layout => layout.name.toLowerCase() === layoutName.toLowerCase())
+        // TODO: only use ID
+        return storeContents.layouts.find(
+          layout =>
+            layout.name.toLowerCase() === layoutName.toLowerCase() ||
+            layout._id === layoutName
+        )
       },
     },
     components: {

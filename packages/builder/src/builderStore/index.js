@@ -11,11 +11,15 @@ export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 
 export const currentAsset = derived(store, $store => {
-  const layout = $store.layouts ? $store.layouts.find(layout => layout._id === $store.currentAssetId) : null
+  const layout = $store.layouts
+    ? $store.layouts.find(layout => layout._id === $store.currentAssetId)
+    : null
   if (layout) {
     return layout
   }
-  const screen = $store.screens ? $store.screens.find(screen => screen._id === $store.currentAssetId) : null
+  const screen = $store.screens
+    ? $store.screens.find(screen => screen._id === $store.currentAssetId)
+    : null
   if (screen) {
     return screen
   }
@@ -32,7 +36,9 @@ export const allScreens = derived(store, $store => {
 })
 
 export const mainLayout = derived(store, $store => {
-  return $store.layouts?.find(layout => layout.props?._id === "private-master-layout")
+  return $store.layouts?.find(
+    layout => layout.props?._id === "private-master-layout"
+  )
 })
 
 export const initialise = async () => {

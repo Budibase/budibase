@@ -11,7 +11,7 @@ describe("fetch bindable properties", () => {
     )
     expect(componentBinding).toBeDefined()
     expect(componentBinding.type).toBe("instance")
-    expect(componentBinding.runtimeBinding).toBe("search-input-id.value")
+    expect(componentBinding.runtimeBinding).toBe("search-input-id")
   })
 
   it("should not return bindable components when not in their context", () => {
@@ -37,20 +37,22 @@ describe("fetch bindable properties", () => {
     expect(contextBindings.length).toBe(4)
 
     const namebinding = contextBindings.find(
-      b => b.runtimeBinding === "data.name"
+      b => b.runtimeBinding === "list-id.name"
     )
     expect(namebinding).toBeDefined()
     expect(namebinding.readableBinding).toBe("list-name.Test Table.name")
 
     const descriptionbinding = contextBindings.find(
-      b => b.runtimeBinding === "data.description"
+      b => b.runtimeBinding === "list-id.description"
     )
     expect(descriptionbinding).toBeDefined()
     expect(descriptionbinding.readableBinding).toBe(
       "list-name.Test Table.description"
     )
 
-    const idbinding = contextBindings.find(b => b.runtimeBinding === "data._id")
+    const idbinding = contextBindings.find(
+      b => b.runtimeBinding === "list-id._id"
+    )
     expect(idbinding).toBeDefined()
     expect(idbinding.readableBinding).toBe("list-name.Test Table._id")
   })
@@ -65,13 +67,13 @@ describe("fetch bindable properties", () => {
     expect(contextBindings.length).toBe(8)
 
     const namebinding_parent = contextBindings.find(
-      b => b.runtimeBinding === "parent.data.name"
+      b => b.runtimeBinding === "list-id.name"
     )
     expect(namebinding_parent).toBeDefined()
     expect(namebinding_parent.readableBinding).toBe("list-name.Test Table.name")
 
     const descriptionbinding_parent = contextBindings.find(
-      b => b.runtimeBinding === "parent.data.description"
+      b => b.runtimeBinding === "list-id.description"
     )
     expect(descriptionbinding_parent).toBeDefined()
     expect(descriptionbinding_parent.readableBinding).toBe(
@@ -79,7 +81,7 @@ describe("fetch bindable properties", () => {
     )
 
     const namebinding_own = contextBindings.find(
-      b => b.runtimeBinding === "data.name"
+      b => b.runtimeBinding === "child-list-id.name"
     )
     expect(namebinding_own).toBeDefined()
     expect(namebinding_own.readableBinding).toBe(
@@ -87,7 +89,7 @@ describe("fetch bindable properties", () => {
     )
 
     const descriptionbinding_own = contextBindings.find(
-      b => b.runtimeBinding === "data.description"
+      b => b.runtimeBinding === "child-list-id.description"
     )
     expect(descriptionbinding_own).toBeDefined()
     expect(descriptionbinding_own.readableBinding).toBe(
@@ -104,7 +106,7 @@ describe("fetch bindable properties", () => {
       r => r.instance._id === "list-item-input-id" && r.type === "instance"
     )
     expect(componentBinding).toBeDefined()
-    expect(componentBinding.runtimeBinding).toBe("list-item-input-id.value")
+    expect(componentBinding.runtimeBinding).toBe("list-item-input-id")
   })
 
   it("should not return components from child context", () => {

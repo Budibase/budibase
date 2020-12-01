@@ -1,12 +1,13 @@
 <script>
   import { goto } from "@sveltech/routify"
+  import { FrontendTypes } from "constants"
   import ComponentTree from "./ComponentNavigationTree/ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { last } from "lodash/fp"
-  import { store } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import { writable } from "svelte/store"
 
-  export let layout
+  export let layout = $currentAsset
 
   let confirmDeleteDialog
   let componentToDelete = ""
@@ -17,13 +18,13 @@
     c && last(c.name ? c.name.split("/") : c._component.split("/"))
 
   $: _layout = {
-    component: layout,
+    component: $currentAsset,
     title: lastPartOfName(layout),
   }
 
   const setCurrentScreenToLayout = () => {
-    store.actions.selectAssetType("layout")
-    $goto("./layout")
+    store.actions.selectAssetType(FrontendTypes.LAYOUT)
+    $goto("./layouts")
   }
 </script>
 
