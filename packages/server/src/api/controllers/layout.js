@@ -22,7 +22,7 @@ exports.destroy = async function(ctx) {
       })
     )
   ).rows.map(element => element.doc.props.layoutId)
-  if (layoutsUsedByScreens.indexOf(layoutId) !== -1) {
+  if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a base layout")
   }
 

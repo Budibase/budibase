@@ -13,8 +13,10 @@
     },
   ]
 
-  if (!$store.currentAssetId)
-    store.actions.layouts.select($params.layout ? $params.layout : "main")
+  if (!$store.currentAssetId) {
+    // refactor so the right layout is chosen
+    store.actions.layouts.select($params.layout || "main")
+  }
 
   const changeLayout = id => {
     store.actions.layouts.select(id)
@@ -24,7 +26,9 @@
 
 <div class="root">
   {#each layouts as { title, id }}
-    <button class:active={id === $params.layout} on:click={() => changeLayout(id)}>
+    <button
+      class:active={id === $params.layout}
+      on:click={() => changeLayout(id)}>
       {title}
     </button>
   {/each}

@@ -4,12 +4,13 @@ import getNewComponentName from "./getNewComponentName"
 
 export const getParent = (rootProps, child) => {
   let parent
-  walkProps(rootProps, (p, breakWalk) => {
+  walkProps(rootProps, (props, breakWalk) => {
     if (
-      p._children &&
-      (p._children.includes(child) || p._children.some(c => c._id === child))
+      props._children &&
+      (props._children.includes(child) ||
+        props._children.some(c => c._id === child))
     ) {
-      parent = p
+      parent = props
       breakWalk()
     }
   })

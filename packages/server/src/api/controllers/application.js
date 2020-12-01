@@ -27,7 +27,7 @@ const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
-const { HOME_SCREEN } = require("../../constants/screens")
+const { HOME_SCREEN, LOGIN_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { recurseMustache } = require("../../utilities/mustache")
 const { generateAssetCss } = require("../../utilities/builder/generateCss")
@@ -222,7 +222,15 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID()
+  // TODO: fix - could have multiple base layouts
+  homeScreen.props.layoutId = screensAndLayouts[0]._id
   screensAndLayouts.push(homeScreen)
+
+  const loginScreen = cloneDeep(LOGIN_SCREEN)
+  loginScreen._id = generateScreenID()
+  // TODO: fix - could have multiple base layouts
+  loginScreen.props.layoutId = screensAndLayouts[0]._id
+  screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)
   // at the end add CSS to all the structures
