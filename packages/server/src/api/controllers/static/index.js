@@ -6,7 +6,7 @@ const fetch = require("node-fetch")
 const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
-const { prepareUploadForS3 } = require("../deploy/aws")
+const { prepareUpload } = require("../deploy/utils")
 const handlebars = require("handlebars")
 const {
   budibaseAppsDir,
@@ -54,7 +54,7 @@ exports.uploadFile = async function(ctx) {
       const fileExtension = [...file.name.split(".")].pop()
       const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-      return prepareUploadForS3({
+      return prepareUpload({
         file,
         s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
         s3,
@@ -235,5 +235,5 @@ exports.serveComponentLibrary = async function(ctx) {
     return
   }
 
-  await send(ctx, "/index.js", { root: componentLibraryPath })
+  await send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
 }
