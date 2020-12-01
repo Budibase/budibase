@@ -1,6 +1,5 @@
 import commonjs from "@rollup/plugin-commonjs"
 import resolve from "@rollup/plugin-node-resolve"
-// import replace from "@rollup/plugin-replace"
 import svelte from "rollup-plugin-svelte"
 import postcss from "rollup-plugin-postcss"
 import { terser } from "rollup-plugin-terser"
@@ -29,10 +28,5 @@ export default {
       skip: externals,
     }),
     commonjs(),
-    // Fix for https://github.com/sveltejs/svelte/issues/3165
-    // replace({
-    //   "outros.c.push":
-    //     "if (outros === undefined) { block.o(local); return }\noutros.c.push",
-    // }),
   ],
 }
