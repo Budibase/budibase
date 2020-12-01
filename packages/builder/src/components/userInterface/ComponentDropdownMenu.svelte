@@ -15,7 +15,8 @@
   let anchor
 
   $: noChildrenAllowed =
-    !component || !getComponentDefinition($store, component._component).children
+    !component ||
+    !getComponentDefinition($store, component._component)?.children
   $: noPaste = !$store.componentToPaste
 
   const lastPartOfName = c => (c ? last(c._component.split("/")) : "")

@@ -1,32 +1,29 @@
 {
   "name": "@budibase/standard-components",
-  "svelte": "src/index.svelte",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run build",
     "postpublish": "node scripts/deploy.js",
-    "testbuild": "rollup -w -c rollup.testconfig.js",
     "dev": "run-p start:dev testbuild",
     "start:dev": "sirv public --single --dev",
     "dev:builder": "rollup -cw"
   },
   "devDependencies": {
-    "@budibase/client": "^0.3.8",
-    "@rollup/plugin-commonjs": "^11.1.0",
+    "@rollup/plugin-alias": "^3.1.1",
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "@rollup/plugin-replace": "^2.3.4",
     "lodash": "^4.17.15",
     "rollup": "^2.11.2",
-    "rollup-plugin-commonjs": "^10.0.2",
-    "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-livereload": "^1.0.1",
-    "rollup-plugin-node-resolve": "^5.0.0",
     "rollup-plugin-postcss": "^3.1.5",
     "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-terser": "^7.0.2",
-    "shortid": "^2.2.15",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.29.0"
+    "svelte": "^3.30.0"
   },
   "keywords": [
     "svelte"
@@ -35,12 +32,10 @@
   "license": "MIT",
   "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {
-    "@budibase/bbui": "^1.50.1",
+    "@budibase/bbui": "^1.51.0",
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@fortawesome/fontawesome-free": "^5.14.0",
-    "@svelteschool/svelte-forms": "^0.7.0",
     "apexcharts": "^3.22.1",
-    "fast-sort": "^2.2.0",
     "flatpickr": "^4.6.6",
     "lodash.debounce": "^4.0.8",
     "quill": "^1.3.7",
