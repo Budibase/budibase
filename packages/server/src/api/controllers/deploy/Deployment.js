@@ -1,13 +1,14 @@
 const { getAppQuota } = require("./quota")
 const env = require("../../../environment")
+const newid = require("../../../db/newid")
 
 /**
  * This is used to pass around information about the deployment that is occurring
  */
 class Deployment {
-  constructor(id, appId) {
-    this._id = id
+  constructor(appId, id = null) {
     this.appId = appId
+    this._id = id || newid()
   }
 
   // purely so that we can do quota stuff outside the main deployment context
@@ -30,6 +31,9 @@ class Deployment {
   }
 
   setVerification(verification) {
+    if (this.verification.quota) {
+      this.quota = this.verification.quota
+    }
     this.verification = verification
   }
 
@@ -41,6 +45,18 @@ class Deployment {
     this.status = status
     if (err) {
       this.err = err
+    }
+  }
+
+  fromJSON(json) {
+    if (json.verification) {
+      this.setVerification(json.verification)
+    }
+    if (json.quota) {
+      this.setQuota(json.quota)
+    }
+    if (json.status) {
+      this.setStatus(json.status, json.err)
     }
   }
 
@@ -56,8 +72,8 @@ class Deployment {
     if (this.verification && this.verification.cfDistribution) {
       obj.cfDistribution = this.verification.cfDistribution
     }
-    if (this.verification && this.verification.quota) {
-      obj.quota = this.verification.quota
+    if (this.quota) {
+      obj.quota = this.quota
     }
     return obj
   }

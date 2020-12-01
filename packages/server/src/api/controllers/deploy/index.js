@@ -1,6 +1,6 @@
 const CouchDB = require("pouchdb")
 const PouchDB = require("../../../db")
-const newid = require("../../../db/newid")
+
 const env = require("../../../environment")
 const deployment = env.SELF_HOSTED
   ? require("./selfDeploy")
@@ -69,7 +69,7 @@ async function storeLocalDeploymentHistory(deployment) {
     deploymentDoc = { _id: "_local/deployments", history: {} }
   }
 
-  const deploymentId = deploymentJSON._id || newid()
+  const deploymentId = deploymentJSON._id
 
   // first time deployment
   if (!deploymentDoc.history[deploymentId])
@@ -82,14 +82,12 @@ async function storeLocalDeploymentHistory(deployment) {
   }
 
   await db.put(deploymentDoc)
-  return {
-    _id: deploymentId,
-    ...deploymentDoc.history[deploymentId],
-  }
+  deployment.fromJSON(deploymentDoc.history[deploymentId])
+  return deployment
 }
 
-async function deployApp({ appId, deploymentId }) {
-  const deployment = new Deployment(deploymentId, appId)
+async function deployApp(deployment) {
+  const appId = deployment.getAppId()
   try {
     await deployment.init()
     deployment.setVerification(await preDeployment(deployment))
@@ -144,15 +142,11 @@ exports.deploymentProgress = async function(ctx) {
 }
 
 exports.deployApp = async function(ctx) {
-  const deployment = await storeLocalDeploymentHistory({
-    appId: ctx.user.appId,
-    status: DeploymentStatus.PENDING,
-  })
+  let deployment = new Deployment(ctx.user.appId)
+  deployment.setStatus(DeploymentStatus.PENDING)
+  deployment = await storeLocalDeploymentHistory(deployment)
 
-  await deployApp({
-    ...ctx.user,
-    deploymentId: deployment._id,
-  })
+  await deployApp(deployment)
 
   ctx.body = deployment
 }
