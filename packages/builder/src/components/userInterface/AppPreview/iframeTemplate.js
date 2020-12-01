@@ -4,72 +4,59 @@ export default `<html>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <style>
       body, html {
-        height: 100%!important;
+        height: 100% !important;
         font-family: Inter !important;
-        margin: 0px!important;
+        margin: 0px !important;
       }
       *, *:before, *:after {
         box-sizing: border-box;
-      }
-      .container-screenslot-placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        text-align: center;
-        border-style: dashed !important;
-        border-width: 1px;
-        color: #000000;
-        background-color: rgba(0, 0, 0, 0.05);
-        flex: 1 1 auto;
-      }
-      .container-screenslot-placeholder span {
-        display: block;
-        margin-bottom: 10px;
       }
     </style>
     <script src='/assets/budibase-client.js'></script>
     <script>
       function receiveMessage(event) { 
+        if (!event.data) {
+          return
+        }
 
-        if (!event.data) return
-
-        const data = JSON.parse(event.data)
-
-        try {
-          if (styles) document.head.removeChild(styles)
-        } catch(_) { }
-
-        try {
-          if (selectedComponentStyle) document.head.removeChild(selectedComponentStyle)
-        } catch(_) { }
-
-        selectedComponentStyle = document.createElement('style');
+        // Extract data from message
+        const { selectedComponentId, page, screen } = JSON.parse(event.data)
+        
+        // Update selected component style
+        if (selectedComponentStyle) {
+          document.head.removeChild(selectedComponentStyle)
+        }
+        selectedComponentStyle = document.createElement("style");
         document.head.appendChild(selectedComponentStyle)
-        var selectedCss = '.' + data.selectedComponentType + '-' + data.selectedComponentId + '{ border: 2px solid #0055ff;  }'
+        var selectedCss = '[data-bb-id="' + selectedComponentId + '"]'  + '{border:2px solid #0055ff !important;}'
         selectedComponentStyle.appendChild(document.createTextNode(selectedCss))
 
-        styles = document.createElement('style')
-        document.head.appendChild(styles)
-        styles.appendChild(document.createTextNode(data.styles))
-
-        window["##BUDIBASE_FRONTEND_DEFINITION##"] = data.frontendDefinition;
+        // Set some flags so the app knows we're in the builder
+        window["##BUDIBASE_IN_BUILDER##"] = true
+        window["##BUDIBASE_PREVIEW_PAGE##"] = page
+        window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
+        window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
+        window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
+        
+        // Initialise app
         if (window.loadBudibase) {
-          loadBudibase({ window, localStorage })
+          loadBudibase()
         }
       }
-      let styles
+      
       let selectedComponentStyle
 
-      document.addEventListener("click", function(e) {
-        e.preventDefault()
-        e.stopPropagation()
-        return false;
-      }, true)
+      // Ignore clicks
+      ["click", "mousedown"].forEach(type => {
+        document.addEventListener(type, function(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          return false
+        }, true)
+      })
 
-      window.addEventListener('message', receiveMessage)
-      window.dispatchEvent(new Event('bb-ready'))
-      
+      window.addEventListener("message", receiveMessage)
+      window.dispatchEvent(new Event("bb-ready"))
     </script>
   </head>
   <body>

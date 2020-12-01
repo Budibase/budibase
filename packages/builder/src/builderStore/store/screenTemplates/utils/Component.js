@@ -15,8 +15,6 @@ export class Component extends BaseStructure {
         selected: {},
       },
       _code: "",
-      className: "",
-      onLoad: [],
       type: "",
       _instanceName: "",
       _children: [],

@@ -1,54 +1,66 @@
 <script>
+  import { getContext } from "svelte"
   import { Label, DatePicker, Input, Select, Toggle } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
   import LinkedRowSelector from "./LinkedRowSelector.svelte"
-  import ErrorsBox from "./ErrorsBox.svelte"
   import { capitalise } from "./helpers"
 
-  export let _bb
-  export let table
+  const { styleable, API } = getContext("sdk")
+  const component = getContext("component")
+  const dataContext = getContext("data")
+
   export let wide = false
 
-  let store = _bb.store
-  let schema = {}
-  let rowId
-  let errors = {}
+  let row
+  let schema
+  let fields = []
 
-  $: schema = $store.data && $store.data._table && $store.data._table.schema
-  $: fields = schema ? Object.keys(schema) : []
+  // Fetch info about the closest data context
+  $: getFormData($dataContext[$dataContext.closestComponentId])
+
+  const getFormData = async context => {
+    if (context) {
+      const tableDefinition = await API.fetchTableDefinition(context.tableId)
+      schema = tableDefinition.schema
+      fields = Object.keys(schema)
+
+      // Use the draft version for editing
+      row = $dataContext[`${$dataContext.closestComponentId}_draft`]
+    }
+  }
 </script>
 
-<div class="form-content">
-  <ErrorsBox errors={$store.saveRowErrors || {}} />
+<div class="form-content" use:styleable={$component.styles}>
+  <!--  <ErrorsBox errors={$store.saveRowErrors || {}} />-->
   {#each fields as field}
     <div class="form-field" class:wide>
       {#if !(schema[field].type === 'boolean' && !wide)}
         <Label extraSmall={!wide} grey>{capitalise(schema[field].name)}</Label>
       {/if}
       {#if schema[field].type === 'options'}
-        <Select secondary bind:value={$store.data[field]}>
+        <Select secondary bind:value={row[field]}>
           <option value="">Choose an option</option>
           {#each schema[field].constraints.inclusion as opt}
             <option>{opt}</option>
           {/each}
         </Select>
       {:else if schema[field].type === 'datetime'}
-        <DatePicker bind:value={$store.data[field]} />
+        <DatePicker bind:value={row[field]} />
       {:else if schema[field].type === 'boolean'}
         <Toggle
           text={wide ? null : capitalise(schema[field].name)}
-          bind:checked={$store.data[field]} />
+          bind:checked={row[field]} />
       {:else if schema[field].type === 'number'}
-        <Input type="number" bind:value={$store.data[field]} />
+        <Input type="number" bind:value={row[field]} />
       {:else if schema[field].type === 'string'}
-        <Input bind:value={$store.data[field]} />
+        <Input bind:value={row[field]} />
       {:else if schema[field].type === 'attachment'}
-        <Dropzone bind:files={$store.data[field]} />
+        <Dropzone bind:files={row[field]} />
       {:else if schema[field].type === 'link'}
         <LinkedRowSelector
           secondary
           showLabel={false}
-          bind:linkedRows={$store.data[field]}
+          bind:linkedRows={row[field]}
           schema={schema[field]} />
       {/if}
     </div>

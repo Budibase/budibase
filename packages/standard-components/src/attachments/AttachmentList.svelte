@@ -1,5 +1,5 @@
 <script>
-  import { Modal, ModalContent, Icon } from "@budibase/bbui"
+  import { Modal, ModalContent } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()

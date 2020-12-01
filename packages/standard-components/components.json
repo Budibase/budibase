@@ -13,18 +13,12 @@
 			"embed": "string"
 		}
 	},
-	"Navigation": {
+	"navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
 		"children": true,
 		"props": {
-			"logoUrl": "string",
-			"title": "string",
-			"backgroundColor": "string",
-			"color": "string",
-			"borderWidth": "string",
-			"borderColor": "string",
-			"borderStyle": "string"
+			"logoUrl": "string"
 		}
 	},
 	"button": {
@@ -32,7 +26,6 @@
 		"description": "an html <button />",
 		"props": {
 			"text": "string",
-			"className": "string",
 			"disabled": "bool",
 			"onClick": "event"
 		},
@@ -65,23 +58,8 @@
 		"name": "Login Control",
 		"description": "A control that accepts username, password an also handles password resets",
 		"props": {
-			"logo": "asset",
-			"loginRedirect": "string",
+			"logo": "string",
 			"title": "string",
-			"usernameLabel": {
-				"type": "string",
-				"default": "Username"
-			},
-			"passwordLabel": {
-				"type": "string",
-				"default": "Password"
-			},
-			"loginButtonLabel": {
-				"type": "string",
-				"default": "Login"
-			},
-			"buttonClass": "string",
-			"inputClass": "string",
 			"buttonText": "string"
 		},
 		"tags": [
@@ -96,7 +74,6 @@
 		"bindable": "value",
 		"description": "An HTML input",
 		"props": {
-			"value": "string",
 			"type": {
 				"type": "options",
 				"options": [
@@ -122,36 +99,15 @@
 					"week"
 				],
 				"default": "text"
-			},
-			"onChange": "event",
-			"className": "string"
+			}
 		},
 		"tags": [
 			"form"
 		]
 	},
-	"select": {
-		"name": "Select",
-		"bindable": "value",
-		"description": "An HTML <select> (dropdown)",
-		"props": {
-			"value": "string",
-			"className": "string"
-		}
-	},
-	"option": {
-		"name": "Option",
-		"description": "An HTML <option>, to be used with <select>",
-		"children": false,
-		"props": {
-			"value": "string",
-			"text": "string"
-		}
-	},
 	"text": {
 		"name": "Text",
 		"description": "stylable block of text",
-		"children": false,
 		"props": {
 			"text": "string",
 			"type": {
@@ -164,43 +120,11 @@
 			"container"
 		]
 	},
-	"textfield": {
-		"name": "Textfield",
-		"description": "A component that allows the user to input text.",
-		"props": {
-			"label": "string",
-			"type": "string",
-			"value": "string",
-			"onchange": "event"
-		}
-	},
 	"richtext": {
 		"name": "Rich Text",
 		"description": "A component that allows the user to enter long form text.",
 		"props": {
 			"value": "string"
-		}
-	},
-	"checkbox": {
-		"name": "Checkbox",
-		"bindable": "value",
-		"description": "A selectable checkbox component",
-		"props": {
-			"label": "string",
-			"checked": "bool",
-			"value": "string",
-			"onchange": "event"
-		}
-	},
-	"radiobutton": {
-		"name": "Radiobutton",
-		"bindable": "value",
-		"description": "A selectable radiobutton component",
-		"props": {
-			"label": "string",
-			"checked": "bool",
-			"value": "string",
-			"onchange": "event"
 		}
 	},
 	"icon": {
@@ -215,17 +139,6 @@
 				"type": "string",
 				"default": "#000"
 			}
-		}
-	},
-	"datatable": {
-		"description": "an HTML table that fetches data from a table or view and displays it.",
-		"data": true,
-		"props": {
-			"datasource": "tables",
-			"stripeColor": "string",
-			"borderColor": "string",
-			"backgroundColor": "string",
-			"color": "string"
 		}
 	},
 	"datagrid": {
@@ -268,21 +181,6 @@
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {}
-	},
-	"datalist": {
-		"description": "A configurable data list that attaches to your backend tables.",
-		"data": true,
-		"props": {
-			"table": "tables",
-			"layout": {
-				"type": "options",
-				"default": "list",
-				"options": [
-					"list",
-					"grid"
-				]
-			}
-		}
 	},
 	"list": {
 		"name": "Repeater",
@@ -696,36 +594,13 @@
 		"props": {
 			"url": "string",
 			"openInNewTab": "bool",
-			"text": "string",
-			"color": "string",
-			"hoverColor": "string",
-			"underline": "bool",
-			"fontSize": "string",
-			"fontFamily": {
-				"type": "options",
-				"default": "initial",
-				"styleBindingProperty": "font-family",
-				"options": [
-					"initial",
-					"Times New Roman",
-					"Georgia",
-					"Arial",
-					"Arial Black",
-					"Comic Sans MS",
-					"Impact",
-					"Lucida Sans Unicode"
-				]
-			}
+			"text": "string"
 		}
 	},
 	"image": {
 		"description": "an HTML <img> tag",
 		"props": {
-			"url": "string",
-			"className": "string",
-			"description": "string",
-			"height": "string",
-			"width": "string"
+			"url": "string"
 		}
 	},
 	"container": {
@@ -733,8 +608,6 @@
 		"children": true,
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
 		"props": {
-			"className": "string",
-			"onLoad": "event",
 			"type": {
 				"type": "options",
 				"options": [
@@ -766,7 +639,6 @@
 		"name": "Heading",
 		"description": "An HTML H1 - H6 tag",
 		"props": {
-			"className": "string",
 			"text": "string",
 			"type": {
 				"type": "options",
@@ -782,19 +654,5 @@
 			}
 		},
 		"tags": []
-	},
-	"thead": {
-		"name": "Table Head",
-		"description": "an HTML <thead> tab",
-		"props": {
-			"className": "string"
-		}
-	},
-	"tbody": {
-		"name": "Table Body",
-		"description": "an HTML <tbody> tab",
-		"props": {
-			"className": "string"
-		}
 	}
 }
