@@ -1,6 +1,3 @@
-import { getContext } from "svelte"
-import { get } from "svelte/store"
-
 /**
  * Helper to build a CSS string from a style object
  */
