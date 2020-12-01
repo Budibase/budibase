@@ -186,7 +186,7 @@ Or if you are in the builder you can run `yarn cy:test`.
 
 ### Other Useful Information
 
-* The contributors are listed in [AUTHORS.md](https://github.com/budibase/server/blob/master/AUTHORS.md) (add yourself).
+* The contributors are listed in [AUTHORS.md](https://github.com/Budibase/budibase/blob/master/.github/AUTHORS.md) (add yourself).
 
 * This project uses a modified version of the MPLv2 license, see [LICENSE](https://github.com/budibase/server/blob/master/LICENSE).
 
