@@ -198,10 +198,11 @@ export const getFrontendStore = () => {
     preview: {
       saveSelected: async () => {
         const state = get(store)
+        const selectedAsset = get(currentAsset)
         if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
-          await store.actions.screens.save(currentAsset)
+          await store.actions.screens.save(selectedAsset)
         }
-        await store.actions.layouts.save(currentAsset)
+        await store.actions.layouts.save(selectedAsset)
       },
     },
     layouts: {
@@ -236,9 +237,10 @@ export const getFrontendStore = () => {
         await Promise.all(cssPromises)
       },
       save: async layout => {
-        const response = await api.post(`/api/layouts`, {
-          ...layout,
-        })
+        const layoutToSave = cloneDeep(layout)
+        delete layoutToSave._css
+
+        const response = await api.post(`/api/layouts`, layoutToSave)
 
         const json = await response.json()
 
