@@ -3,8 +3,11 @@
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
+  import { FrontendTypes } from "../../../constants"
 
   let iframe
+  let layout
+  let screen
 
   // Create screen slot placeholder for use when a page is selected rather
   // than a screen
@@ -16,11 +19,17 @@
     .json()
 
   // Extract data to pass to the iframe
-  $: layout = $currentAsset
-  $: screen =
-    $store.currentFrontEndType === "layout"
-      ? screenPlaceholder
-      : $store.currentPreviewItem
+  $: {
+    if ($store.currentFrontEndType === FrontendTypes.LAYOUT) {
+      layout = $currentAsset
+      screen = screenPlaceholder
+    } else {
+      screen = $currentAsset
+      layout = $store.layouts.find(
+        layout => layout._id === screen.props.layoutId
+      )
+    }
+  }
   $: selectedComponentId = $store.currentComponentInfo?._id ?? ""
   $: previewData = {
     layout,
