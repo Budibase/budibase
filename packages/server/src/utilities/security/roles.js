@@ -1,5 +1,6 @@
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
+const { BUILTIN_PERMISSION_IDS } = require("./permissions")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -9,20 +10,37 @@ const BUILTIN_IDS = {
   BUILDER: "BUILDER",
 }
 
-function Role(id, name, inherits) {
+function Role(id, name) {
   this._id = id
   this.name = name
-  if (inherits) {
-    this.inherits = inherits
-  }
+}
+
+Role.prototype.addPermission = function(permissionId) {
+  this.permissionId = permissionId
+  return this
+}
+
+Role.prototype.addInheritance = function(inherits) {
+  this.inherits = inherits
+  return this
 }
 
 exports.BUILTIN_ROLES = {
-  ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin", BUILTIN_IDS.POWER),
-  POWER: new Role(BUILTIN_IDS.POWER, "Power", BUILTIN_IDS.BASIC),
-  BASIC: new Role(BUILTIN_IDS.BASIC, "Basic", BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public"),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder"),
+  ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin")
+    .addPermission(BUILTIN_PERMISSION_IDS.ADMIN)
+    .addInheritance(BUILTIN_IDS.POWER),
+  POWER: new Role(BUILTIN_IDS.POWER, "Power")
+    .addPermission(BUILTIN_PERMISSION_IDS.POWER)
+    .addInheritance(BUILTIN_IDS.BASIC),
+  BASIC: new Role(BUILTIN_IDS.BASIC, "Basic")
+    .addPermission(BUILTIN_PERMISSION_IDS.WRITE)
+    .addInheritance(BUILTIN_IDS.PUBLIC),
+  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public").addPermission(
+    BUILTIN_PERMISSION_IDS.READ_ONLY
+  ),
+  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder").addPermission(
+    BUILTIN_PERMISSION_IDS.ADMIN
+  ),
 }
 
 exports.BUILTIN_ROLE_ID_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
@@ -61,6 +79,29 @@ exports.getRole = async (appId, roleId) => {
 }
 
 /**
+ * Simple function to get all the roles based on the top level user role ID.
+ */
+async function getAllUserRoles(appId, userRoleId) {
+  if (!userRoleId) {
+    return [BUILTIN_IDS.PUBLIC]
+  }
+  let currentRole = await exports.getRole(appId, userRoleId)
+  let roles = currentRole ? [currentRole] : []
+  let roleIds = [userRoleId]
+  // get all the inherited roles
+  while (
+    currentRole &&
+    currentRole.inherits &&
+    roleIds.indexOf(currentRole.inherits) === -1
+  ) {
+    roleIds.push(currentRole.inherits)
+    currentRole = await exports.getRole(appId, currentRole.inherits)
+    roles.push(currentRole)
+  }
+  return roles
+}
+
+/**
  * Returns an ordered array of the user's inherited role IDs, this can be used
  * to determine if a user can access something that requires a specific role.
  * @param {string} appId The ID of the application from which roles should be obtained.
@@ -70,22 +111,21 @@ exports.getRole = async (appId, roleId) => {
  */
 exports.getUserRoleHierarchy = async (appId, userRoleId) => {
   // special case, if they don't have a role then they are a public user
-  if (!userRoleId) {
-    return [BUILTIN_IDS.PUBLIC]
-  }
-  let roleIds = [userRoleId]
-  let userRole = await exports.getRole(appId, userRoleId)
-  // check if inherited makes it possible
-  while (
-    userRole &&
-    userRole.inherits &&
-    roleIds.indexOf(userRole.inherits) === -1
-  ) {
-    roleIds.push(userRole.inherits)
-    // go to get the inherited incase it inherits anything
-    userRole = await exports.getRole(appId, userRole.inherits)
-  }
-  return roleIds
+  return (await getAllUserRoles(appId, userRoleId)).map(role => role._id)
+}
+
+/**
+ * Get all of the user permissions which could be found across the role hierarchy
+ * @param appId The ID of the application from which roles should be obtained.
+ * @param userRoleId The user's role ID, this can be found in their access token.
+ * @returns {Promise<string[]>} A list of permission IDs these should all be unique.
+ */
+exports.getUserPermissionIds = async (appId, userRoleId) => {
+  return [
+    ...new Set(
+      (await getAllUserRoles(appId, userRoleId)).map(role => role.permissionId)
+    ),
+  ]
 }
 
 class AccessController {

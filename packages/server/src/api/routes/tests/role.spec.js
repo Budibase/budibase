@@ -8,8 +8,9 @@ const {
 const {
   BUILTIN_ROLE_IDS,
 } = require("../../../utilities/security/roles")
+const { BUILTIN_PERMISSION_IDS } = require("../../../utilities/security/permissions")
 
-const roleBody = { name: "user", inherits: BUILTIN_ROLE_IDS.BASIC }
+const roleBody = { name: "NewRole", inherits: BUILTIN_ROLE_IDS.BASIC, permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY }
 
 describe("/roles", () => {
   let server
@@ -43,7 +44,7 @@ describe("/roles", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual("Role 'user' created successfully.")
+      expect(res.res.statusMessage).toEqual("Role 'NewRole' created successfully.")
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
     })
@@ -71,16 +72,19 @@ describe("/roles", () => {
       expect(res.body.length).toBe(3)
 
       const adminRole = res.body.find(r => r._id === BUILTIN_ROLE_IDS.ADMIN)
-      expect(adminRole.inherits).toEqual(BUILTIN_ROLE_IDS.POWER)
       expect(adminRole).toBeDefined()
+      expect(adminRole.inherits).toEqual(BUILTIN_ROLE_IDS.POWER)
+      expect(adminRole.permissionId).toEqual(BUILTIN_PERMISSION_IDS.ADMIN)
 
       const powerUserRole = res.body.find(r => r._id === BUILTIN_ROLE_IDS.POWER)
-      expect(powerUserRole.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
       expect(powerUserRole).toBeDefined()
+      expect(powerUserRole.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
+      expect(powerUserRole.permissionId).toEqual(BUILTIN_PERMISSION_IDS.POWER)
 
       const customRoleFetched = res.body.find(r => r._id === customRole._id)
-      expect(customRoleFetched.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
       expect(customRoleFetched).toBeDefined()
+      expect(customRoleFetched.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
+      expect(customRoleFetched.permissionId).toEqual(BUILTIN_PERMISSION_IDS.READ_ONLY)
     })
     
   });
@@ -89,7 +93,7 @@ describe("/roles", () => {
     it("should delete custom roles", async () => {
       const createRes = await request
         .post(`/api/roles`)
-        .send({ name: "user" })
+        .send({ name: "user", permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY })
         .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
