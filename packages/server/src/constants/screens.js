@@ -1,4 +1,4 @@
-const { BUILTIN_LEVEL_IDS } = require("../utilities/security/accessLevels")
+const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 
 exports.HOME_SCREEN = {
   description: "",
@@ -97,7 +97,7 @@ exports.HOME_SCREEN = {
   },
   routing: {
     route: "/",
-    accessLevelId: BUILTIN_LEVEL_IDS.BASIC,
+    roleId: BUILTIN_ROLE_IDS.BASIC,
   },
   name: "home-screen",
 }
