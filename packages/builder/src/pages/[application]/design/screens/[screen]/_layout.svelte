@@ -8,10 +8,10 @@
   const currentScreenId = decodeURI($params.screen)
   const validScreen = $allScreens.some(screen => screen._id === currentScreenId)
 
-  console.log({ 
-    validScreen, 
+  console.log({
+    validScreen,
     currentScreenId,
-    componentIds
+    componentIds,
   })
 
   if (!validScreen) {
