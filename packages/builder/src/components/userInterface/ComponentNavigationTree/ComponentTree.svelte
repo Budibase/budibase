@@ -24,11 +24,12 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-    if (layout) {
-      $goto(`./layouts/:layout/${path}`)
-    } else {
-      $goto(`./screens/:screen/${path}`)
-    }
+    $goto(`./${path}`)
+    // if (layout) {
+    //   $goto(`./layouts/:layout/${path}`)
+    // } else {
+    //   $goto(`./screens/:screen/${path}`)
+    // }
   }
 
   const dragstart = component => e => {
