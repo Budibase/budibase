@@ -6,6 +6,7 @@
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
+  export let layout
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
@@ -23,7 +24,11 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-    $goto(`./screens/:screen/${path}`)
+    if (layout) {
+      $goto(`./layouts/:layout/${path}`)
+    } else {
+      $goto(`./screens/:screen/${path}`)
+    }
   }
 
   const dragstart = component => e => {
