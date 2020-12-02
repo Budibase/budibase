@@ -56,9 +56,7 @@
       password: string().required(
         "Please enter a password for your first user."
       ),
-      roleId: string().required(
-        "You need to select a role for your user."
-      ),
+      roleId: string().required("You need to select a role for your user."),
     },
   ]
 
