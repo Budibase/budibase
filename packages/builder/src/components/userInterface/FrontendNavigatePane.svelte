@@ -53,7 +53,12 @@
         <NewScreenModal />
       </Modal>
     {:else if tab === 'layouts'}
-      <Layout />
+      {#if $currentAsset}
+        <div class="nav-items-container">
+          <Layout />
+          <ComponentNavigationTree />
+        </div>
+      {/if}
     {/if}
   </Switcher>
 </div>
@@ -68,6 +73,7 @@
 <!-- </Modal> -->
 
 <!-- {/if} -->
+
 <style>
   .title {
     display: flex;

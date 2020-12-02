@@ -1,4 +1,7 @@
 <script>
+  import { store } from "builderStore"
   import { goto } from "@sveltech/routify"
-  $goto("../layout")
+
+  // TODO: refactor
+  $goto(`../${$store.layouts[0]?._id}`)
 </script>

@@ -206,9 +206,9 @@ export const getFrontendStore = () => {
       },
     },
     layouts: {
-      select: async layoutName => {
+      select: async layoutId => {
         store.update(state => {
-          const layout = store.actions.layouts.find(layoutName)
+          const layout = store.actions.layouts.find(layoutId)
 
           state.currentFrontEndType = FrontendTypes.LAYOUT
           state.currentView = "detail"
@@ -248,7 +248,7 @@ export const getFrontendStore = () => {
 
         store.update(state => {
           const layoutToUpdate = state.layouts.find(
-            stateLayouts => stateLayouts._id === layout._id
+            stateLayout => stateLayout._id === layout._id
           )
           if (layoutToUpdate) {
             layoutToUpdate._rev = json.rev
@@ -256,17 +256,12 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      find: layoutName => {
-        if (!layoutName) {
+      find: layoutId => {
+        if (!layoutId) {
           return get(mainLayout)
         }
         const storeContents = get(store)
-        // TODO: only use ID
-        return storeContents.layouts.find(
-          layout =>
-            layout.name.toLowerCase() === layoutName.toLowerCase() ||
-            layout._id === layoutName
-        )
+        return storeContents.layouts.find(layout => layout._id === layoutId)
       },
     },
     components: {
