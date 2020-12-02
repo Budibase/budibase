@@ -14,7 +14,7 @@
     "prettier-plugin-svelte": "^1.4.0",
     "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",
-    "svelte": "^3.28.0"
+    "svelte": "^3.30.0"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
@@ -26,7 +26,7 @@
     "nuke": "rimraf ~/.budibase && npm run restore",
     "clean": "lerna clean",
     "kill-port": "kill-port 4001",
-    "dev": "npm run kill-port && node ./scripts/symlinkDev.js && lerna run --parallel dev:builder --concurrency 1",
+    "dev": "yarn run kill-port && node ./scripts/symlinkDev.js && lerna run --parallel dev:builder --concurrency 1",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
