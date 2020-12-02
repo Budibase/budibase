@@ -1,11 +1,14 @@
 <script>
   import { getContext } from "svelte"
 
-  const { DataProvider } = getContext("sdk")
+  const { DataProvider, styleable } = getContext("sdk")
+  const component = getContext("component")
 
   export let table
 </script>
 
-<DataProvider row={{ tableId: table }}>
-  <slot />
-</DataProvider>
+<div use:styleable={$component.styles}>
+  <DataProvider row={{ tableId: table }}>
+    <slot />
+  </DataProvider>
+</div>

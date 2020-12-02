@@ -190,15 +190,7 @@ exports.serveAttachment = async function(ctx) {
 
 exports.serveAppAsset = async function(ctx) {
   // default to homedir
-  const mainOrAuth =
-    ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated"
-
-  const appPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "public",
-    mainOrAuth
-  )
+  const appPath = resolve(budibaseAppsDir(), ctx.user.appId, "public")
 
   await send(ctx, ctx.file, { root: ctx.devPath || appPath })
 }
