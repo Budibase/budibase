@@ -8,8 +8,6 @@
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
 
-  const dragDropStore = instantiateStore()
-
   export let route
   export let path
   export let indent
@@ -39,13 +37,13 @@
       text={url === '/' ? 'Home' : url}
       withArrow={route.subpaths}
       on:click={() => changeScreen(screenId)}>
-      <ScreenDropdownMenu screen={screenId} />
+      <ScreenDropdownMenu screenId={screenId} />
     </NavItem>
     {#if selectedScreen?._id === screenId}
       <ComponentsTree
         components={selectedScreen.props._children}
         currentComponent={$store.currentComponentInfo}
-        {dragDropStore} />
+      />
     {/if}
   {/each}
 {/each}

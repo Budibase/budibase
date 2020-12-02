@@ -14,10 +14,6 @@
 
   const dragDropStore = writable({})
 
-  $: console.log({ 
-    $currentAsset, layout
-  })
-
   const setCurrentScreenToLayout = () => {
     store.actions.selectAssetType(FrontendTypes.LAYOUT)
     $goto("./layouts")

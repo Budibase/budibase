@@ -2,17 +2,16 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import { getComponentDefinition } from "builderStore/storeUtils"
-  import { DropEffect, DropPosition } from "./dragDropStore"
+  import initDragDropStore, { DropEffect, DropPosition } from "./dragDropStore"
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
-  export let layout
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
 
-  export let dragDropStore
+  export let dragDropStore = initDragDropStore()
 
   const isScreenslot = name => name === "##builtin/screenslot"
 

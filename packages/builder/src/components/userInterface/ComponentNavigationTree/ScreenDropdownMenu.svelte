@@ -3,20 +3,30 @@
   import { store, allScreens } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import EditScreenLayoutModal from "./EditScreenLayoutModal.svelte"
   import { DropdownMenu, Modal, ModalContent } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
-  export let screen
+  export let screenId
 
   let confirmDeleteDialog
   let editLayoutDialog
   let dropdown
   let anchor
 
+  $: screen = $allScreens.find(screen => screen._id === screenId)
+
   const deleteScreen = () => {
-    const screenToDelete = $allScreens.find(scr => scr._id === screen)
-    store.actions.screens.delete(screenToDelete)
+    store.actions.screens.delete(screen)
     store.actions.routing.fetch()
+  }
+
+  async function saveScreen() {
+    try {
+      await store.actions.screens.save(screen)
+    } catch (err) {
+      notifier.danger("Error saving page.")
+    }
   }
 </script>
 
@@ -45,11 +55,8 @@
   onOk={deleteScreen} />
 
 <Modal bind:this={editLayoutDialog}>
-  <ModalContent
-    showCancelButton={false}
-    showConfirmButton={false}
-    title={'Set Layout For Screen'}>
-    Choose a layout for your screen
+  <ModalContent onConfirm={saveScreen} title={'Set Layout For Screen'}>
+    <EditScreenLayoutModal bind:layout={screen.props.layoutId} />
   </ModalContent>
 </Modal>
 
