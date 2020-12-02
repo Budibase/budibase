@@ -53,12 +53,9 @@
         <NewScreenModal />
       </Modal>
     {:else if tab === 'layouts'}
-      {#if $currentAsset}
-        <div class="nav-items-container">
-          <Layout />
-          <ComponentNavigationTree />
-        </div>
-      {/if}
+      {#each $store.layouts as layout}
+        <Layout {layout} />
+      {/each}
     {/if}
   </Switcher>
 </div>
