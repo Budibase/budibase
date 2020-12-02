@@ -31,7 +31,7 @@
 <NavItem
   border={false}
   icon="ri-layout-3-line"
-  text="Master Screen"
+  text={layout.name}
   withArrow
   selected={$store.currentComponentInfo?._id === _layout.component.props._id}
   opened={$store.currentPreviewItem?.name === _layout.title}
