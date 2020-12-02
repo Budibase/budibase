@@ -123,7 +123,7 @@ exports.LOGIN_SCREEN = {
   },
   routing: {
     route: "/",
-    accessLevelId: BUILTIN_LEVEL_IDS.PUBLIC,
+    accessLevelId: BUILTIN_ROLE_IDS.PUBLIC,
   },
   name: "login-screen",
 }
