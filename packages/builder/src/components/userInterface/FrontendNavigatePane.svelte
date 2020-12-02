@@ -55,7 +55,6 @@
     {:else if tab === 'layouts'}
       <Layout />
     {/if}
-
   </Switcher>
 </div>
 
@@ -67,8 +66,8 @@
 <!-- <Modal bind:this={modal}> -->
 <!-- <NewScreenModal /> -->
 <!-- </Modal> -->
-<!-- {/if} -->
 
+<!-- {/if} -->
 <style>
   .title {
     display: flex;

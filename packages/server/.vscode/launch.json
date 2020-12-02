@@ -52,9 +52,9 @@
       {
         "type": "node",
         "request": "launch",
-        "name": "Jest - Access Levels",
+        "name": "Jest - Roles",
         "program": "${workspaceFolder}/node_modules/.bin/jest",
-        "args": ["accesslevel.spec", "--runInBand"],
+        "args": ["role.spec", "--runInBand"],
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",
         "disableOptimisticBPs": true,
