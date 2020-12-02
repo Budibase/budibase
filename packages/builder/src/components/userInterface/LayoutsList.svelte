@@ -15,7 +15,7 @@
 
   if (!$store.currentAssetId) {
     // refactor so the right layout is chosen
-    store.actions.layouts.select($params.layout || "main")
+    store.actions.layouts.select($params.layout)
   }
 
   const changeLayout = id => {
