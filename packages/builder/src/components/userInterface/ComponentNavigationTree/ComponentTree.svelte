@@ -2,16 +2,16 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import { getComponentDefinition } from "builderStore/storeUtils"
-  import initDragDropStore, { DropEffect, DropPosition } from "./dragDropStore"
+  import { DropEffect, DropPosition } from "./dragDropStore"
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
+  export let layout
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
-
-  export let dragDropStore = initDragDropStore()
+  export let dragDropStore 
 
   const isScreenslot = name => name === "##builtin/screenslot"
 
@@ -23,12 +23,11 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-    $goto(`./${path}`)
-    // if (layout) {
-    //   $goto(`./layouts/:layout/${path}`)
-    // } else {
-    //   $goto(`./screens/:screen/${path}`)
-    // }
+    if (layout) {
+      $goto(`./layouts/${path}`)
+    } else {
+      $goto(`./screens/${path}`)
+    }
   }
 
   const dragstart = component => e => {
@@ -84,6 +83,7 @@
 
       {#if component._children}
         <svelte:self
+          {layout}
           components={component._children}
           {currentComponent}
           {onSelect}

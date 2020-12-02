@@ -2,6 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { FrontendTypes } from "constants"
   import ComponentTree from "./ComponentNavigationTree/ComponentTree.svelte"
+  import initDragDropStore from "./ComponentNavigationTree/dragDropStore"
   import NavItem from "components/common/NavItem.svelte"
   import { last } from "lodash/fp"
   import { store, currentAsset } from "builderStore"
@@ -12,7 +13,7 @@
   let confirmDeleteDialog
   let componentToDelete = ""
 
-  const dragDropStore = writable({})
+  const dragDropStore = initDragDropStore();
 
   const setCurrentScreenToLayout = () => {
     store.actions.selectAssetType(FrontendTypes.LAYOUT)
@@ -31,7 +32,7 @@
 
 {#if $currentAsset._id === layout._id && layout.props._children}
   <ComponentTree
-    layout
+    layout={true}
     components={layout.props._children}
     currentComponent={$store.currentComponentInfo}
     {dragDropStore} />
