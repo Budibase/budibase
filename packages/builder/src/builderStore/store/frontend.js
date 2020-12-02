@@ -13,7 +13,7 @@ import {
 } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
-import { DEFAULT_LAYOUTS, FrontendTypes } from "../../constants"
+import { FrontendTypes } from "../../constants"
 import getNewComponentName from "../getNewComponentName"
 import analytics from "analytics"
 import {
@@ -27,7 +27,7 @@ const INITIAL_FRONTEND_STATE = {
   apps: [],
   name: "",
   description: "",
-  layouts: DEFAULT_LAYOUTS,
+  layouts: [],
   screens: [],
   mainUi: {},
   unauthenticatedUi: {},
