@@ -7,7 +7,7 @@ import { getAppId } from "../utils/getAppId"
 const createScreenStore = () => {
   const config = writable({
     screens: [],
-    layouts: {},
+    layouts: [],
   })
   const store = derived(
     [config, routeStore, builderStore],
@@ -20,19 +20,21 @@ const createScreenStore = () => {
         activeScreen = $builderStore.screen
       } else {
         // Otherwise find the correct screen by matching the current route
-        activeLayout = $config.layouts
-        const { screens } = $config
-        if (screens.length === 1) {
-          activeScreen = screens[0]
-        } else {
-          activeScreen = screens.find(
-            screen => screen.routing.route === $routeStore.activeRoute
-          )
-        }
-        // TODO: need to pick the right layout based on link in screen
-        activeLayout = activeLayout[0]
+        // const { screens, layouts } = $config
+        // activeLayout = layouts[0]
+        // if (screens.length === 1) {
+        //   activeScreen = screens[0]
+        // } else {
+        //   activeScreen = screens.find(
+        //     screen => screen.routing.route === $routeStore.activeRoute
+        //   )
+        // }
+        // if (activeScreen) {
+        //   activeLayout = layouts.find(
+        //     layout => layout._id === activeScreen.props.layoutId
+        //   )
+        // }
       }
-      // TODO: need to handle the active screen properly
       return { activeLayout, activeScreen }
     }
   )
