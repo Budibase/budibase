@@ -21,15 +21,6 @@ export default `<html>
 
         // Extract data from message
         const { selectedComponentId, page, screen } = JSON.parse(event.data)
-        
-        // Update selected component style
-        if (selectedComponentStyle) {
-          document.head.removeChild(selectedComponentStyle)
-        }
-        selectedComponentStyle = document.createElement("style");
-        document.head.appendChild(selectedComponentStyle)
-        var selectedCss = '[data-bb-id="' + selectedComponentId + '"]'  + '{border:2px solid #0055ff !important;}'
-        selectedComponentStyle.appendChild(document.createTextNode(selectedCss))
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true
