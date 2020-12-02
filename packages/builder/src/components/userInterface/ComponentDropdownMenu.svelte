@@ -28,7 +28,7 @@
   const selectComponent = component => {
     store.actions.components.select(component)
     const path = store.actions.components.findRoute(component)
-    $goto(`./:screen/${path}`)
+    // $goto(`./:screen/${path}`)
   }
 
   const moveUpComponent = () => {
