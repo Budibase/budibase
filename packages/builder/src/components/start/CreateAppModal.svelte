@@ -56,8 +56,8 @@
       password: string().required(
         "Please enter a password for your first user."
       ),
-      accessLevelId: string().required(
-        "You need to select an access level for your user."
+      roleId: string().required(
+        "You need to select a role for your user."
       ),
     },
   ]
@@ -79,9 +79,7 @@
 
   if (hasKey) {
     validationSchemas.shift()
-    validationSchemas = validationSchemas
     steps.shift()
-    steps = steps
   }
 
   // Handles form navigation
@@ -167,7 +165,7 @@
         name: $createAppStore.values.username,
         username: $createAppStore.values.username,
         password: $createAppStore.values.password,
-        accessLevelId: $createAppStore.values.accessLevelId,
+        roleId: $createAppStore.values.roleId,
       }
       const userResp = await api.post(`/api/users`, user)
       const json = await userResp.json()

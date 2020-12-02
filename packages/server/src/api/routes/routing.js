@@ -5,9 +5,10 @@ const controller = require("../controllers/routing")
 
 const router = Router()
 
-// gets the full structure, not just the correct screen ID for your access level
 router
+  // gets correct structure for user role
   .get("/api/routing/client", controller.clientFetch)
+  // gets the full structure, not just the correct screen ID for user role
   .get("/api/routing", authorized(BUILDER), controller.fetch)
 
 module.exports = router

@@ -19,7 +19,7 @@ const {
   generatePageID,
   generateScreenID,
 } = require("../../db/utils")
-const { BUILTIN_LEVEL_IDS } = require("../../utilities/security/accessLevels")
+const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
@@ -94,12 +94,12 @@ exports.fetchAppDefinition = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   // TODO: need to get rid of pages here, they shouldn't be needed anymore
   const { mainPage, unauthPage } = await getMainAndUnauthPage(db)
-  const userAccessLevelId =
-    !ctx.user.accessLevel || !ctx.user.accessLevel._id
-      ? BUILTIN_LEVEL_IDS.PUBLIC
-      : ctx.user.accessLevel._id
+  const userRoleId =
+    !ctx.user.role || !ctx.user.role._id
+      ? BUILTIN_ROLE_IDS.PUBLIC
+      : ctx.user.role._id
   const correctPage =
-    userAccessLevelId === BUILTIN_LEVEL_IDS.PUBLIC ? unauthPage : mainPage
+    userRoleId === BUILTIN_ROLE_IDS.PUBLIC ? unauthPage : mainPage
   const screens = (
     await db.allDocs(
       getScreenParams(correctPage._id, {
@@ -107,7 +107,7 @@ exports.fetchAppDefinition = async function(ctx) {
       })
     )
   ).rows.map(row => row.doc)
-  // TODO: need to handle access control here, limit screens to user access level
+  // TODO: need to handle access control here, limit screens to user role
   ctx.body = {
     page: correctPage,
     screens: screens,
