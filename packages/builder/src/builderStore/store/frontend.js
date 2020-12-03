@@ -192,8 +192,9 @@ export const getFrontendStore = () => {
         const selectedAsset = get(currentAsset)
         if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
           await store.actions.screens.save(selectedAsset)
+        } else {
+          await store.actions.layouts.save(selectedAsset)
         }
-        await store.actions.layouts.save(selectedAsset)
       },
     },
     layouts: {

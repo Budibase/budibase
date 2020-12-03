@@ -1,5 +1,9 @@
 <script>
   import { goto } from "@sveltech/routify"
-  // TODO: redirect to the first screen
-  $goto("../screen")
+  import { params, leftover } from "@sveltech/routify"
+  import { allScreens } from "builderStore"
+
+  $goto(`../${$allScreens[0]?._id}`)
 </script>
+
+<!-- routify:options index=false -->
