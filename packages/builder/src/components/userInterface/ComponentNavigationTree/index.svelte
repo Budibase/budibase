@@ -2,8 +2,6 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import PathTree from "./PathTree.svelte"
-
-  $: console.log("routes", $store.routes)
 </script>
 
 <div class="root">

@@ -28,7 +28,7 @@
   const selectComponent = component => {
     store.actions.components.select(component)
     const path = store.actions.components.findRoute(component)
-    // $goto(`./:screen/${path}`)
+    $goto(`./${$store.currentFrontEndType}/${path}`)
   }
 
   const moveUpComponent = () => {
@@ -79,7 +79,7 @@
       const parent = getParent(state.currentPreviewItem.props, component)
 
       if (parent) {
-        parent._children = parent._children.filter(c => c !== component)
+        parent._children = parent._children.filter(child => child !== component)
         selectComponent(parent)
       }
 

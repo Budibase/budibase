@@ -26,7 +26,7 @@
     } else {
       screen = $currentAsset
       layout = $store.layouts.find(
-        layout => layout._id === screen.props.layoutId
+        layout => layout._id === screen?.props.layoutId
       )
     }
   }

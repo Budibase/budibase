@@ -27,12 +27,11 @@
   text={layout.name}
   withArrow
   selected={$store.currentComponentInfo?._id === layout.props._id}
-  opened={$currentAsset._id === layout._id}
+  opened={$store.currentAssetId === layout._id}
   on:click={setCurrentScreenToLayout} />
 
-{#if $currentAsset._id === layout._id && layout.props._children}
+{#if $store.currentAssetId === layout._id && layout.props._children}
   <ComponentTree
-    layout={true}
     components={layout.props._children}
     currentComponent={$store.currentComponentInfo}
     {dragDropStore} />
