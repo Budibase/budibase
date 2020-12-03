@@ -13,7 +13,7 @@
   let confirmDeleteDialog
   let componentToDelete = ""
 
-  const dragDropStore = initDragDropStore();
+  const dragDropStore = initDragDropStore()
 
   const setCurrentScreenToLayout = () => {
     store.actions.selectAssetType(FrontendTypes.LAYOUT)

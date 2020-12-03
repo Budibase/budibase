@@ -15,7 +15,6 @@ const {
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
-const { AuthTypes } = require("../../../constants")
 const env = require("../../../environment")
 const { generateAssetCss } = require("../../../utilities/builder/generateCss")
 const compileStaticAssets = require("../../../utilities/builder/compileStaticAssets")

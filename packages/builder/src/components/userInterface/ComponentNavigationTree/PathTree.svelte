@@ -8,7 +8,7 @@
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
 
-  const dragDropStore = instantiateStore();
+  const dragDropStore = instantiateStore()
 
   export let route
   export let path
@@ -45,8 +45,7 @@
       <ComponentTree
         components={selectedScreen.props._children}
         currentComponent={$store.currentComponentInfo}
-        {dragDropStore}
-      />
+        {dragDropStore} />
     {/if}
   {/each}
 {/each}

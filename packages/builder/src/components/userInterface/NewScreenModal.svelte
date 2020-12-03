@@ -72,7 +72,7 @@
     // TODO: need to fix this up correctly
     draftScreen.routing = { route, roleId: "ADMIN" }
 
-    await store.actions.screens.create(draftScreen)
+    const createdScreen = await store.actions.screens.create(draftScreen)
     if (createLink) {
       await store.actions.components.links.save(route, name)
     }
@@ -85,7 +85,7 @@
       })
     }
 
-    $goto(`./${name}`)
+    $goto(`./screens/${createdScreen._id}`)
   }
 
   const routeNameExists = route => {
