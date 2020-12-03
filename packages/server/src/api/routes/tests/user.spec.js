@@ -6,11 +6,15 @@ const {
   testPermissionsForEndpoint,
 } = require("./couchTestUtils")
 const {
-  BUILTIN_PERMISSION_NAMES,
-} = require("../../../utilities/security/permissions")
-const {
-  BUILTIN_LEVEL_IDS,
-} = require("../../../utilities/security/accessLevels")
+  BUILTIN_ROLE_IDS,
+} = require("../../../utilities/security/roles")
+const { cloneDeep } = require("lodash/fp")
+
+const baseBody = {
+  name: "brandNewUser",
+  password: "yeeooo",
+  roleId: BUILTIN_ROLE_IDS.POWER
+}
 
 describe("/users", () => {
   let request
@@ -20,12 +24,12 @@ describe("/users", () => {
 
   beforeAll(async () => {
     ({ request, server } = await supertest(server))
-  });
+  })
 
   beforeEach(async () => {
     app = await createApplication(request)
     appId = app.instance._id
-  });
+  })
 
   afterAll(() => {
     server.close()
@@ -54,38 +58,40 @@ describe("/users", () => {
         method: "GET",
         url: `/api/users`,
         appId: appId,
-        permName1: BUILTIN_PERMISSION_NAMES.POWER,
-        permName2: BUILTIN_PERMISSION_NAMES.WRITE,
+        passRole: BUILTIN_ROLE_IDS.ADMIN,
+        failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
     })
 
   })
 
   describe("create", () => {
-
     it("returns a success message when a user is successfully created", async () => {
+      const body = cloneDeep(baseBody)
+      body.username = "bill"
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
+        .send(body)
         .expect(200)
         .expect('Content-Type', /json/)
 
-      expect(res.res.statusMessage).toEqual("User created successfully."); 
+      expect(res.res.statusMessage).toEqual("User created successfully.")
       expect(res.body._id).toBeUndefined()
     })
 
     it("should apply authorization to endpoint", async () => {
+      const body = cloneDeep(baseBody)
+      body.username = "brandNewUser"
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
+        body,
         url: `/api/users`,
         appId: appId,
-        permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
-        permName2: BUILTIN_PERMISSION_NAMES.POWER,
+        passRole: BUILTIN_ROLE_IDS.ADMIN,
+        failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
     })
-
-  });
+  })
 })

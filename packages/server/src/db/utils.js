@@ -10,7 +10,7 @@ const DocumentTypes = {
   AUTOMATION: "au",
   LINK: "li",
   APP: "app",
-  ACCESS_LEVEL: "ac",
+  ROLE: "role",
   WEBHOOK: "wh",
   INSTANCE: "inst",
   PAGE: "page",
@@ -169,18 +169,18 @@ exports.getAppParams = (appId = null, otherProps = {}) => {
 }
 
 /**
- * Generates a new access level ID.
- * @returns {string} The new access level ID which the access level doc can be stored under.
+ * Generates a new role ID.
+ * @returns {string} The new role ID which the role doc can be stored under.
  */
-exports.generateAccessLevelID = () => {
-  return `${DocumentTypes.ACCESS_LEVEL}${SEPARATOR}${newid()}`
+exports.generateRoleID = () => {
+  return `${DocumentTypes.ROLE}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving an access level, this is a utility function for the getDocParams function.
+ * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
-exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.ACCESS_LEVEL, accessLevelId, otherProps)
+exports.getRoleParams = (roleId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
 }
 
 /**
