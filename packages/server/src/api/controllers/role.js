@@ -15,7 +15,13 @@ exports.fetch = async function(ctx) {
   )
   const customRoles = body.rows.map(row => row.doc)
 
-  const staticRoles = [BUILTIN_ROLES.ADMIN, BUILTIN_ROLES.POWER]
+  // exclude internal roles like builder
+  const staticRoles = [
+    BUILTIN_ROLES.ADMIN,
+    BUILTIN_ROLES.POWER,
+    BUILTIN_ROLES.BASIC,
+    BUILTIN_ROLES.PUBLIC,
+  ]
   ctx.body = [...staticRoles, ...customRoles]
 }
 
