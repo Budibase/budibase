@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount, createEventDispatcher } from "svelte"
-  import { Button, Label, DatePicker } from "@budibase/bbui"
+  import { Button, Label, DatePicker, RichText } from "@budibase/bbui"
   import Dropzone from "../../attachments/Dropzone.svelte"
   import debounce from "lodash.debounce"
 
@@ -98,6 +98,8 @@
           <input class="input" type="number" bind:value={row[field]} />
         {:else if schema[field].type === 'string'}
           <input class="input" type="text" bind:value={row[field]} />
+        {:else if schema[field].type === 'longform'}
+          <RichText bind:value={row[field]} />
         {:else if schema[field].type === 'attachment'}
           <Dropzone bind:files={row[field]} />
         {/if}
