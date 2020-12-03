@@ -20,11 +20,10 @@
   $: children = definition._children
   $: id = definition._id
   $: enrichedProps = enrichProps(definition, $dataContext, $bindingStore)
+  $: selected = id === $builderStore.selectedComponentId
 
   // Update component context
-  // ID is duplicated inside style so that the "styleable" helper can set
-  // an ID data tag for unique reference to components
-  $: componentStore.set({ id, styles: { ...definition._styles, id } })
+  $: componentStore.set({ id, styles: { ...definition._styles, selected } })
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
