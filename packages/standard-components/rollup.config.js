@@ -5,7 +5,7 @@ import postcss from "rollup-plugin-postcss"
 import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 
-import builtins from 'rollup-plugin-node-builtins'
+import builtins from "rollup-plugin-node-builtins"
 
 const production = !process.env.ROLLUP_WATCH
 const externals = ["svelte", "svelte/internal"]
