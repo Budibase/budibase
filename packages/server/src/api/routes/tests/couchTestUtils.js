@@ -1,11 +1,6 @@
 const CouchDB = require("../../../db")
 const supertest = require("supertest")
-const {
-  BUILTIN_LEVEL_IDS,
-} = require("../../../utilities/security/accessLevels")
-const {
-  BUILTIN_PERMISSION_NAMES,
-} = require("../../../utilities/security/permissions")
+const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")
@@ -26,7 +21,7 @@ exports.supertest = async () => {
 exports.defaultHeaders = appId => {
   const builderUser = {
     userId: "BUILDER",
-    accessLevelId: BUILTIN_LEVEL_IDS.BUILDER,
+    roleId: BUILTIN_ROLE_IDS.BUILDER,
   }
 
   const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
@@ -128,54 +123,12 @@ exports.createUser = async (
       name: "Bill",
       username,
       password,
-      accessLevelId: BUILTIN_LEVEL_IDS.POWER,
+      roleId: BUILTIN_ROLE_IDS.POWER,
     })
   return res.body
 }
 
-const createUserWithOnePermission = async (request, appId, permName) => {
-  let permissions = [permName]
-
-  return await createUserWithPermissions(
-    request,
-    appId,
-    permissions,
-    "onePermOnlyUser"
-  )
-}
-
-const createUserWithAdminPermissions = async (request, appId) => {
-  let permissions = [BUILTIN_PERMISSION_NAMES.ADMIN]
-
-  return await createUserWithPermissions(
-    request,
-    appId,
-    permissions,
-    "adminUser"
-  )
-}
-
-const createUserWithAllPermissionExceptOne = async (
-  request,
-  appId,
-  permName
-) => {
-  let permissions = [permName]
-
-  return await createUserWithPermissions(
-    request,
-    appId,
-    permissions,
-    "allPermsExceptOneUser"
-  )
-}
-
-const createUserWithPermissions = async (
-  request,
-  appId,
-  permissions,
-  username
-) => {
+const createUserWithRole = async (request, appId, roleId, username) => {
   const password = `password_${username}`
   await request
     .post(`/api/users`)
@@ -184,13 +137,12 @@ const createUserWithPermissions = async (
       name: username,
       username,
       password,
-      accessLevelId: BUILTIN_LEVEL_IDS.POWER,
-      permissions,
+      roleId,
     })
 
   const anonUser = {
     userId: "ANON",
-    accessLevelId: BUILTIN_LEVEL_IDS.PUBLIC,
+    roleId: BUILTIN_ROLE_IDS.PUBLIC,
     appId: appId,
     version: packageJson.version,
   }
@@ -218,23 +170,29 @@ exports.testPermissionsForEndpoint = async ({
   url,
   body,
   appId,
-  permName1,
-  permName2,
+  passRole,
+  failRole,
 }) => {
-  const headers = await createUserWithOnePermission(request, appId, permName1)
-
-  await createRequest(request, method, url, body)
-    .set(headers)
-    .expect(200)
-
-  const noPermsHeaders = await createUserWithAllPermissionExceptOne(
+  const passHeader = await createUserWithRole(
     request,
     appId,
-    permName2
+    passRole,
+    "passUser"
   )
 
   await createRequest(request, method, url, body)
-    .set(noPermsHeaders)
+    .set(passHeader)
+    .expect(200)
+
+  const failHeader = await createUserWithRole(
+    request,
+    appId,
+    failRole,
+    "failUser"
+  )
+
+  await createRequest(request, method, url, body)
+    .set(failHeader)
     .expect(403)
 }
 
@@ -245,7 +203,12 @@ exports.builderEndpointShouldBlockNormalUsers = async ({
   body,
   appId,
 }) => {
-  const headers = await createUserWithAdminPermissions(request, appId)
+  const headers = await createUserWithRole(
+    request,
+    appId,
+    BUILTIN_ROLE_IDS.BASIC,
+    "basicUser"
+  )
 
   await createRequest(request, method, url, body)
     .set(headers)
