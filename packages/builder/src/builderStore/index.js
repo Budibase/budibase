@@ -4,6 +4,7 @@ import { getAutomationStore } from "./store/automation/"
 import { getThemeStore } from "./store/theme"
 import { derived } from "svelte/store"
 import analytics from "analytics"
+import { LAYOUT_NAMES } from "../constants"
 
 export const store = getFrontendStore()
 export const backendUiStore = getBackendUiStore()
@@ -37,7 +38,7 @@ export const allScreens = derived(store, $store => {
 
 export const mainLayout = derived(store, $store => {
   return $store.layouts?.find(
-    layout => layout.props?._id === "private-master-layout"
+    layout => layout.props?._id === LAYOUT_NAMES.MASTER.PRIVATE
   )
 })
 

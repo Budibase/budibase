@@ -16,7 +16,6 @@ const {
   SEPARATOR,
   getLayoutParams,
   getScreenParams,
-  generateLayoutID,
   generateScreenID,
 } = require("../../db/utils")
 const {
@@ -215,21 +214,16 @@ const createEmptyAppPackage = async (ctx, app) => {
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
     const cloned = cloneDeep(layout)
-    cloned._id = generateLayoutID()
     cloned.title = app.name
     screensAndLayouts.push(recurseMustache(cloned, app))
   }
 
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID()
-  // TODO: fix - could have multiple base layouts
-  homeScreen.props.layoutId = screensAndLayouts[0]._id
   screensAndLayouts.push(homeScreen)
 
   const loginScreen = cloneDeep(LOGIN_SCREEN)
   loginScreen._id = generateScreenID()
-  // TODO: fix - could have multiple base layouts
-  loginScreen.props.layoutId = screensAndLayouts[0]._id
   screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)

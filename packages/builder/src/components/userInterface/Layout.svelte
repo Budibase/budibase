@@ -15,9 +15,9 @@
 
   const dragDropStore = initDragDropStore()
 
-  const setCurrentScreenToLayout = () => {
-    store.actions.selectAssetType(FrontendTypes.LAYOUT)
-    $goto("./layouts")
+  const selectLayout = () => {
+    store.actions.layouts.select(layout._id)
+    $goto(`./layouts/${layout._id}`)
   }
 </script>
 
@@ -28,7 +28,7 @@
   withArrow
   selected={$store.currentComponentInfo?._id === layout.props._id}
   opened={$store.currentAssetId === layout._id}
-  on:click={setCurrentScreenToLayout} />
+  on:click={selectLayout} />
 
 {#if $store.currentAssetId === layout._id && layout.props._children}
   <ComponentTree
