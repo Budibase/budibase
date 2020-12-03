@@ -107,7 +107,7 @@ export const getFrontendStore = () => {
           state.currentAssetId = screenId
           state.currentView = "detail"
 
-          promise = store.actions.screens.regenerateCssForCurrentScreen()
+          promise = store.actions.screens.regenerateCss(screen)
           const safeProps = makePropsSafe(
             state.components[screen.props._component],
             screen.props
@@ -119,30 +119,19 @@ export const getFrontendStore = () => {
         await promise
       },
       create: async screen => {
-        let promises = []
+        screen = await store.actions.screens.save(screen)
         store.update(state => {
           state.currentPreviewItem = screen
           state.currentComponentInfo = screen.props
           state.currentFrontEndType = FrontendTypes.SCREEN
-
-          if (state.currentPreviewItem) {
-            promises.push(
-              store.actions.screens.regenerateCss(state.currentPreviewItem)
-            )
-          }
-
-          promises.push(store.actions.screens.save(screen))
           return state
         })
-
-        await Promise.all(promises)
+        return screen
       },
       save: async screen => {
         const creatingNewScreen = screen._id === undefined
         const response = await api.post(`/api/screens`, screen)
-        const json = await response.json()
-        screen._rev = json.rev
-        screen._id = json.id
+        screen = await response.json()
 
         store.update(state => {
           const foundScreen = state.screens.findIndex(
@@ -164,6 +153,8 @@ export const getFrontendStore = () => {
           }
           return state
         })
+        console.log(screen)
+        return screen
       },
       regenerateCss: async asset => {
         const response = await api.post("/api/css/generate", asset)

@@ -1,6 +1,8 @@
 const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
 const { AccessController } = require("../../utilities/security/roles")
+const { generateAssetCss } = require("../../utilities/builder/generateCss")
+const compileStaticAssets = require("../../utilities/builder/compileStaticAssets")
 
 exports.fetch = async ctx => {
   const appId = ctx.user.appId
@@ -30,8 +32,16 @@ exports.save = async ctx => {
   }
   const response = await db.put(screen)
 
+  // update CSS so client doesn't need to make a call directly after
+  screen._css = generateAssetCss([screen.props])
+  await compileStaticAssets(appId, screen)
+
   ctx.message = `Screen ${screen.name} saved.`
-  ctx.body = response
+  ctx.body = {
+    ...screen,
+    _id: response.id,
+    _rev: response.rev,
+  }
 }
 
 exports.destroy = async ctx => {

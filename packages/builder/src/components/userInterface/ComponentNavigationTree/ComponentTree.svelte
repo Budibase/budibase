@@ -11,7 +11,7 @@
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
-  export let dragDropStore 
+  export let dragDropStore
 
   const isScreenslot = name => name === "##builtin/screenslot"
 

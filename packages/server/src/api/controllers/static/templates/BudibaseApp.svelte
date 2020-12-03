@@ -49,7 +49,6 @@
 
 <body id="app">
   <script src={publicPath('budibase-client.js')}>
-
   </script>
   <script>
     loadBudibase()

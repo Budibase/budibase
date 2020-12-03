@@ -70,7 +70,6 @@
 <!-- </Modal> -->
 
 <!-- {/if} -->
-
 <style>
   .title {
     display: flex;
