@@ -1,12 +1,7 @@
-const fs = require("fs")
-const { join } = require("../../../utilities/centralPath")
-const AwsDeploy = require("aws-sdk")
+const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
-const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
-const PouchDB = require("../../../db")
 const env = require("../../../environment")
-const { prepareUpload } = require("./utils")
-const { walkDir } = require("../../../utilities")
+const { deployToObjectStore } = require("./utils")
 
 /**
  * Verifies the users API key and
@@ -37,7 +32,7 @@ exports.preDeployment = async function(deployment) {
 
   // set credentials here, means any time we're verified we're ready to go
   if (json.credentials) {
-    AwsDeploy.config.update({
+    AWS.config.update({
       accessKeyId: json.credentials.AccessKeyId,
       secretAccessKey: json.credentials.SecretAccessKey,
       sessionToken: json.credentials.SessionToken,
@@ -80,65 +75,11 @@ exports.postDeployment = async function(deployment) {
 exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
   const { bucket, accountId } = deployment.getVerification()
-  const s3 = new AwsDeploy.S3({
+  const metadata = { accountId }
+  const s3Client = new AWS.S3({
     params: {
       Bucket: bucket,
     },
   })
-
-  const appAssetsPath = join(budibaseAppsDir(), appId, "public")
-
-  const appPages = fs.readdirSync(appAssetsPath)
-
-  let uploads = []
-
-  for (let page of appPages) {
-    // Upload HTML, CSS and JS for each page of the web app
-    walkDir(join(appAssetsPath, page), function(filePath) {
-      const appAssetUpload = prepareUpload({
-        file: {
-          path: filePath,
-          name: [...filePath.split("/")].pop(),
-        },
-        s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-        s3,
-        metadata: { accountId },
-      })
-      uploads.push(appAssetUpload)
-    })
-  }
-
-  // Upload file attachments
-  const db = new PouchDB(appId)
-  let fileUploads
-  try {
-    fileUploads = await db.get("_local/fileuploads")
-  } catch (err) {
-    fileUploads = { _id: "_local/fileuploads", uploads: [] }
-  }
-
-  for (let file of fileUploads.uploads) {
-    if (file.uploaded) continue
-
-    const attachmentUpload = prepareUpload({
-      file,
-      s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
-      s3,
-      metadata: { accountId },
-    })
-
-    uploads.push(attachmentUpload)
-
-    // mark file as uploaded
-    file.uploaded = true
-  }
-
-  db.put(fileUploads)
-
-  try {
-    return await Promise.all(uploads)
-  } catch (err) {
-    console.error("Error uploading budibase app assets to s3", err)
-    throw err
-  }
+  await deployToObjectStore(appId, s3Client, metadata)
 }
