@@ -187,8 +187,8 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
  * Generates a new layout ID.
  * @returns {string} The new layout ID which the layout doc can be stored under.
  */
-exports.generateLayoutID = () => {
-  return `${DocumentTypes.LAYOUT}${SEPARATOR}${newid()}`
+exports.generateLayoutID = id => {
+  return `${DocumentTypes.LAYOUT}${SEPARATOR}${id || newid()}`
 }
 
 /**
