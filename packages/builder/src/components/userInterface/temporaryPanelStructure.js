@@ -1185,7 +1185,6 @@ export default {
             settings: [{ label: "Logo URL", key: "logoUrl", control: Input }],
           },
         },
-        // TODO: need to deal with this
         {
           name: "Login",
           _component: "@budibase/standard-components/login",

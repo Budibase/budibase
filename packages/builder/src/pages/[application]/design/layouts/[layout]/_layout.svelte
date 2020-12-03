@@ -9,18 +9,15 @@
   const validLayout = $store.layouts.some(layout => layout._id === currentLayoutId)
 
   if (!validLayout) {
-    // Go to main layout if URL set to invalid screen
-    console.error("Invalid screen", $params.screen)
-    const firstScreenId = $store.layouts[0]?._id
+    const firstLayoutId = $store.layouts[0]?._id
     store.actions.layouts.select($params.layout)
-    $goto(`./${firstScreenId}`)
+    $goto(`./${firstLayoutId}`)
   } else {
     // Otherwise proceed to set layout
     store.actions.layouts.select($params.layout)
 
     // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
     if ($leftover) {
-      console.log("leftover", $params.layout)
       // Get the correct layout children.
       const layoutChildren = $store.layouts.find(
         layout =>
