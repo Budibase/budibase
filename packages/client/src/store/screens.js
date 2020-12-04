@@ -21,7 +21,6 @@ const createScreenStore = () => {
       } else {
         // Otherwise find the correct screen by matching the current route
         const { screens, layouts } = $config
-        console.log(screens)
         activeLayout = layouts[0]
         if (screens.length === 1) {
           activeScreen = screens[0]
