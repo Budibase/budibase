@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.50.2",
+    "@budibase/bbui": "^1.51.0",
     "@budibase/client": "^0.3.8",
     "@budibase/colorpicker": "^1.0.1",
     "@budibase/svelte-ag-grid": "^0.0.16",
@@ -81,8 +81,8 @@
     "shortid": "^2.2.15",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "^0.1.0",
-    "yup": "^0.29.2",
-    "uuid": "^8.3.1"
+    "uuid": "^8.3.1",
+    "yup": "^0.29.2"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -90,6 +90,7 @@
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
     "@rollup/plugin-alias": "^3.0.1",
+    "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.0.3",
     "@sveltech/routify": "1.7.11",
     "@testing-library/jest-dom": "^5.11.0",
@@ -104,7 +105,6 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.11.2",
     "rollup-plugin-alias": "^1.5.2",
-    "rollup-plugin-commonjs": "^10.0.0",
     "rollup-plugin-copy": "^3.0.0",
     "rollup-plugin-css-only": "^2.1.0",
     "rollup-plugin-livereload": "^1.0.0",
@@ -115,7 +115,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-url": "^2.2.2",
     "start-server-and-test": "^1.11.0",
-    "svelte": "^3.29.0",
+    "svelte": "^3.30.0",
     "svelte-jester": "^1.0.6"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
