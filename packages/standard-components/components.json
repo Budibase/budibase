@@ -262,9 +262,7 @@
 		"props": {
 			"title": "string",
 			"value": "string",
-			"label": "string",
-			"color": "string",
-			"bordercolor": "string"
+			"label": "string"
 		}
 	},
 	"cardhorizontal": {

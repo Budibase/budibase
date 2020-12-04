@@ -1,20 +1,16 @@
 <script>
-  import { cssVars, createClasses } from "./cssVars"
+  import { getContext } from "svelte"
+
+  const { styleable } = getContext("sdk")
+  const component = getContext("component")
 
   export const className = ""
   export let title = ""
   export let value = ""
   export let label = ""
-  export let bordercolor = ""
-  export let color
-
-  $: cssVariables = {
-    bordercolor,
-    color,
-  }
 </script>
 
-<div use:cssVars={cssVariables} class="container">
+<div use:styleable={$component.styles} class="container">
   <p class="title">{title}</p>
   <h3 class="value">{value}</h3>
   <p class="label">{label}</p>
@@ -25,8 +21,9 @@
     min-width: 260px;
     width: max-content;
     max-height: 170px;
-    border: 1px solid var(--bordercolor);
+    border: 1px solid var(--grey-3);
     border-radius: 0.3rem;
+    color: var(--blue);
   }
 
   .title {
@@ -39,8 +36,8 @@
   .value {
     font-size: 2rem;
     font-weight: 500;
-    color: var(--color);
-    margin: 0rem 1.5rem 1.5rem 1.5rem;
+    margin: 0 1.5rem 1.5rem 1.5rem;
+    color: inherit;
   }
 
   .label {

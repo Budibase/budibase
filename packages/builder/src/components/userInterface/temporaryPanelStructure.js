@@ -454,18 +454,6 @@ export default {
                 control: Input,
                 placeholder: "Stripe",
               },
-              {
-                label: "Value Color",
-                key: "color",
-                control: Input,
-                placeholder: "Blue",
-              },
-              {
-                label: "Border Color",
-                key: "bordercolor",
-                control: Input,
-                placeholder: "lightgrey",
-              },
             ],
           },
         },
