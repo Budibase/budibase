@@ -1,14 +1,11 @@
 <script>
   import { onMount } from "svelte"
-  import { goto, isActive, leftover, url } from "@sveltech/routify"
+  import { goto } from "@sveltech/routify"
   import { store, currentAsset } from "builderStore"
-  import { FrontendTypes } from "constants"
-  import api from "builderStore/api"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
-  import LayoutsList from "components/userInterface/LayoutsList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
-  import { Modal, Switcher, Button, Spacer } from "@budibase/bbui"
+  import { Modal, Switcher } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -61,9 +58,9 @@
 <style>
   .title {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
   .title i {
     font-size: 20px;
