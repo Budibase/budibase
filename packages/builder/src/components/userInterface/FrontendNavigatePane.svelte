@@ -61,9 +61,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    position: relative;
   }
   .title i {
     font-size: 20px;
+    position: absolute;
+    top: 0;
+    right: 0;
   }
   .title i:hover {
     cursor: pointer;
