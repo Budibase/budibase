@@ -1,11 +1,10 @@
-const CouchDB = require("pouchdb")
 const PouchDB = require("../../../db")
 
 const env = require("../../../environment")
 const deployment = env.SELF_HOSTED
   ? require("./selfDeploy")
   : require("./awsDeploy")
-const { deploy, preDeployment, postDeployment } = deployment
+const { deploy, preDeployment, postDeployment, replicateDb } = deployment
 const Deployment = require("./Deployment")
 
 // the max time we can wait for an invalidation to complete before considering it failed
@@ -32,29 +31,6 @@ async function checkAllDeployments(deployments) {
     }
   }
   return { updated, deployments }
-}
-
-function replicate(local, remote) {
-  return new Promise((resolve, reject) => {
-    const replication = local.sync(remote)
-
-    replication.on("complete", () => resolve())
-    replication.on("error", err => reject(err))
-  })
-}
-
-async function replicateCouch(deployment) {
-  const appId = deployment.getAppId()
-  const { session } = deployment.getVerification()
-  const localDb = new PouchDB(appId)
-  const remoteDb = new CouchDB(`${env.DEPLOYMENT_DB_URL}/${appId}`, {
-    fetch: function(url, opts) {
-      opts.headers.set("Cookie", `${session};`)
-      return CouchDB.fetch(url, opts)
-    },
-  })
-
-  return replicate(localDb, remoteDb)
 }
 
 async function storeLocalDeploymentHistory(deployment) {
@@ -96,9 +72,9 @@ async function deployApp(deployment) {
 
     await deploy(deployment)
 
-    // replicate the DB to the couchDB cluster in prod
-    console.log("Replicating local PouchDB to remote..")
-    await replicateCouch(deployment)
+    // replicate the DB to the main couchDB cluster
+    console.log("Replicating local PouchDB to CouchDB..")
+    await replicateDb(deployment)
 
     await postDeployment(deployment)
 

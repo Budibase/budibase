@@ -1,7 +1,9 @@
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const env = require("../../../environment")
-const { deployToObjectStore } = require("./utils")
+const { deployToObjectStore, performReplication } = require("./utils")
+const CouchDB = require("pouchdb")
+const PouchDB = require("../../../db")
 
 /**
  * Verifies the users API key and
@@ -82,4 +84,18 @@ exports.deploy = async function(deployment) {
     },
   })
   await deployToObjectStore(appId, s3Client, metadata)
+}
+
+exports.replicateDb = async function(deployment) {
+  const appId = deployment.getAppId()
+  const { session } = deployment.getVerification()
+  const localDb = new PouchDB(appId)
+  const remoteDb = new CouchDB(`${env.DEPLOYMENT_DB_URL}/${appId}`, {
+    fetch: function(url, opts) {
+      opts.headers.set("Cookie", `${session};`)
+      return CouchDB.fetch(url, opts)
+    },
+  })
+
+  return performReplication(localDb, remoteDb)
 }
