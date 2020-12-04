@@ -1,7 +1,7 @@
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 const { BASE_LAYOUT_PROP_IDS } = require("./layouts")
 
-exports.HOME_SCREEN = {
+exports.createHomeScreen = app => ({
   description: "",
   url: "",
   props: {
@@ -99,9 +99,9 @@ exports.HOME_SCREEN = {
     roleId: BUILTIN_ROLE_IDS.BASIC,
   },
   name: "home-screen",
-}
+})
 
-exports.LOGIN_SCREEN = {
+exports.createLoginScreen = app => ({
   description: "",
   url: "",
   props: {
@@ -113,8 +113,8 @@ exports.LOGIN_SCREEN = {
         flex: "1 1 auto",
         display: "flex",
         "flex-direction": "column",
-        "justify-content": "flex-start",
-        "align-items": "stretch",
+        "justify-content": "center",
+        "align-items": "center",
       },
       hover: {},
       active: {},
@@ -127,15 +127,26 @@ exports.LOGIN_SCREEN = {
         _id: "781e497e-2e7c-11eb-adc1-0242ac120002",
         _component: "@budibase/standard-components/login",
         _styles: {
-          normal: {},
+          normal: {
+            padding: "64px",
+            background: "rgba(255, 255, 255, 0.4)",
+            "border-radius": "0.5rem",
+            "margin-top": "0px",
+            "box-shadow":
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            "font-size": "16px",
+            "font-family": "Inter",
+            flex: "0 1 auto",
+          },
           hover: {},
           active: {},
           selected: {},
         },
         _code: "",
-        className: "",
-        onLoad: [],
-        type: "div",
+        logo:
+          "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg",
+        title: `Log in to ${app.name}`,
+        buttonText: "Log In",
         _children: [],
         _instanceName: "Login",
       },
@@ -143,7 +154,7 @@ exports.LOGIN_SCREEN = {
   },
   routing: {
     route: "/",
-    accessLevelId: BUILTIN_ROLE_IDS.PUBLIC,
+    roleId: BUILTIN_ROLE_IDS.PUBLIC,
   },
   name: "login-screen",
-}
+})
