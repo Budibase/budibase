@@ -91,3 +91,12 @@ exports.deployToObjectStore = async function(appId, objectClient, metadata) {
     throw err
   }
 }
+
+exports.performReplication = (local, remote) => {
+  return new Promise((resolve, reject) => {
+    const replication = local.sync(remote)
+
+    replication.on("complete", () => resolve())
+    replication.on("error", err => reject(err))
+  })
+}

@@ -36,6 +36,7 @@ module.exports = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
   LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
+  // self hosting features
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   _set(key, value) {
