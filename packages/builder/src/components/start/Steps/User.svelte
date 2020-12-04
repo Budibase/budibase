@@ -2,18 +2,18 @@
   import { Input, Select } from "@budibase/bbui"
   export let validationErrors
 
-  let blurred = { username: false, password: false }
+  let blurred = { email: false, password: false }
 </script>
 
 <h2>Create your first User</h2>
 <div class="container">
   <Input
-    on:input={() => (blurred.username = true)}
-    label="Username"
-    name="username"
-    placeholder="Username"
-    type="name"
-    error={blurred.username && validationErrors.username} />
+    on:input={() => (blurred.email = true)}
+    label="Email"
+    name="email"
+    placeholder="Email"
+    type="email"
+    error={blurred.email && validationErrors.email} />
   <Input
     on:input={() => (blurred.password = true)}
     label="Password"
