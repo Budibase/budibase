@@ -153,7 +153,6 @@ export const getFrontendStore = () => {
           }
           return state
         })
-        console.log(screen)
         return screen
       },
       regenerateCss: async asset => {
