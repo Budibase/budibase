@@ -19,6 +19,9 @@ class Deployment {
   }
 
   setQuota(quota) {
+    if (!quota) {
+      return
+    }
     this.quota = quota
   }
 
@@ -31,6 +34,9 @@ class Deployment {
   }
 
   setVerification(verification) {
+    if (!verification) {
+      return
+    }
     if (this.verification.quota) {
       this.quota = this.verification.quota
     }
