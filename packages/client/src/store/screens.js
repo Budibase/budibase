@@ -31,7 +31,7 @@ const createScreenStore = () => {
         }
         if (activeScreen) {
           activeLayout = layouts.find(
-            layout => layout._id === activeScreen.props.layoutId
+            layout => layout._id === activeScreen.layoutId
           )
         }
       }

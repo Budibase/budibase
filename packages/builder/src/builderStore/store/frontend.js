@@ -243,6 +243,9 @@ export const getFrontendStore = () => {
           )
           if (layoutToUpdate) {
             layoutToUpdate._rev = json.rev
+          } else {
+            // TODO: when a new layout is created
+            state.layouts.push({})
           }
           return state
         })

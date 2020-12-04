@@ -1,9 +1,17 @@
+const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const CouchDB = require("../../db")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   let layout = ctx.request.body
+
+  if (!layout.props) {
+    layout = {
+      ...layout,
+      ...EMPTY_LAYOUT,
+    }
+  }
 
   layout._id = layout._id || generateLayoutID()
   ctx.body = await db.put(layout)
@@ -21,7 +29,7 @@ exports.destroy = async function(ctx) {
         include_docs: true,
       })
     )
-  ).rows.map(element => element.doc.props.layoutId)
+  ).rows.map(element => element.doc.layoutId)
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a base layout")
   }
