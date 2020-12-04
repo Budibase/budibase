@@ -111,11 +111,11 @@ exports.getUserParams = (email = "", otherProps = {}) => {
 
 /**
  * Generates a new user ID based on the passed in username.
- * @param {string} username The username which the ID is going to be built up of.
+ * @param {string} email The email which the ID is going to be built up of.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserID = username => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${username}`
+exports.generateUserID = email => {
+  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${email}`
 }
 
 /**
