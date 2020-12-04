@@ -50,6 +50,6 @@ exports.save = async function(ctx) {
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   await db.remove(ctx.params.roleId, ctx.params.rev)
-  ctx.message = `Role ${ctx.params.id} deleted successfully`
+  ctx.message = `Role ${ctx.params.roleId} deleted successfully`
   ctx.status = 200
 }
