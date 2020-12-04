@@ -1,37 +1,14 @@
 <script>
-  import { onMount } from "svelte"
+  import { getContext } from "svelte"
 
-  export let _bb
+  const { DataProvider, styleable } = getContext("sdk")
+  const component = getContext("component")
+
   export let table
-
-  let row = {}
-
-  $: {
-    row.tableId = table
-  }
-
-  let target
-
-  async function fetchTable(id) {
-    const FETCH_TABLE_URL = `/api/tables/${id}`
-    const response = await _bb.api.get(FETCH_TABLE_URL)
-    return await response.json()
-  }
-
-  onMount(async () => {
-    if (table && typeof table === "string") {
-      const tableObj = await fetchTable(table)
-      row.tableId = table
-      row._table = tableObj
-      _bb.attachChildren(target, {
-        context: row,
-      })
-    } else {
-      _bb.attachChildren(target, {
-        context: {},
-      })
-    }
-  })
 </script>
 
-<section bind:this={target} />
+<div use:styleable={$component.styles}>
+  <DataProvider row={{ tableId: table }}>
+    <slot />
+  </DataProvider>
+</div>

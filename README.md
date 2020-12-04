@@ -116,7 +116,7 @@ You can also follow a quick tutorial on [how to build a CRM with Budibase](https
 
 ## ❗ Code of Conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/master/CODE_OF_CONDUCT.md). Please read it. 
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/master/.github/CODE_OF_CONDUCT.md). Please read it. 
 
 ## 🙌 Contributing to Budibase
 
@@ -134,7 +134,7 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 - [packages/server](https://github.com/Budibase/budibase/tree/master/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-For more information, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/master/.github/CONTRIBUTING.md)
 
 ## 📝 License
 

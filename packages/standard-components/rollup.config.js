@@ -1,38 +1,37 @@
-import svelte from "rollup-plugin-svelte"
-import resolve from "rollup-plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
+import resolve from "@rollup/plugin-node-resolve"
+import svelte from "rollup-plugin-svelte"
 import postcss from "rollup-plugin-postcss"
+import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 
+import builtins from "rollup-plugin-node-builtins"
+
 const production = !process.env.ROLLUP_WATCH
-const lodash_fp_exports = ["isEmpty"]
+const externals = ["svelte", "svelte/internal"]
 
 export default {
+  external: externals,
   input: "src/index.js",
   output: [
     {
       file: "dist/index.js",
       format: "esm",
-      name: "budibaseStandardComponents",
-      sourcemap: true,
+      sourcemap: false,
     },
   ],
   plugins: [
-    // Only run terser in production environments
+    builtins(),
     production && terser(),
-    postcss({
-      plugins: [],
-    }),
+    postcss(),
     svelte({
-      hydratable: true,
+      dev: !production,
     }),
     resolve({
       browser: true,
+      skip: externals,
     }),
-    commonjs({
-      namedExports: {
-        "lodash/fp": lodash_fp_exports,
-      },
-    }),
+    commonjs(),
+    json(),
   ],
 }

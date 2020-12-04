@@ -20,6 +20,7 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
+  USERS: "ta_users",
 }
 
 exports.ViewNames = ViewNames
@@ -80,13 +81,12 @@ exports.generateTableID = () => {
 exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
   if (tableId == null) {
     return getDocParams(DocumentTypes.ROW, null, otherProps)
-  } else {
-    const endOfKey =
-      rowId == null
-        ? `${tableId}${SEPARATOR}`
-        : `${tableId}${SEPARATOR}${rowId}`
-    return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
   }
+
+  const endOfKey =
+    rowId == null ? `${tableId}${SEPARATOR}` : `${tableId}${SEPARATOR}${rowId}`
+
+  return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
 
 /**
@@ -101,8 +101,12 @@ exports.generateRowID = tableId => {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserParams = (username = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.USER, username, otherProps)
+exports.getUserParams = (username = "", otherProps = {}) => {
+  return getDocParams(
+    DocumentTypes.ROW,
+    `${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${username}`,
+    otherProps
+  )
 }
 
 /**
@@ -111,7 +115,7 @@ exports.getUserParams = (username = null, otherProps = {}) => {
  * @returns {string} The new user ID which the user doc can be stored under.
  */
 exports.generateUserID = username => {
-  return `${DocumentTypes.USER}${SEPARATOR}${username}`
+  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${username}`
 }
 
 /**
