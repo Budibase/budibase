@@ -10,7 +10,6 @@
   export let screenId
 
   let confirmDeleteDialog
-  let editLayoutDialog
   let dropdown
   let anchor
 
@@ -40,10 +39,6 @@
         icon="ri-delete-bin-line"
         title="Delete"
         on:click={() => confirmDeleteDialog.show()} />
-      <DropdownItem
-        icon="ri-layout-line"
-        title="Set Layout"
-        on:click={() => editLayoutDialog.show()} />
     </DropdownContainer>
   </DropdownMenu>
 </div>
@@ -53,12 +48,6 @@
   body={'Are you sure you wish to delete this screen?'}
   okText="Delete Screen"
   onOk={deleteScreen} />
-
-<Modal bind:this={editLayoutDialog}>
-  <ModalContent onConfirm={saveScreen} title={'Set Layout For Screen'}>
-    <EditScreenLayoutModal bind:layout={screen.props.layoutId} />
-  </ModalContent>
-</Modal>
 
 <style>
   .icon i {

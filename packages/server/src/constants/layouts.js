@@ -3,6 +3,41 @@ const BASE_LAYOUT_PROP_IDS = {
   PUBLIC: "layout_public_master",
 }
 
+const EMPTY_LAYOUT = {
+  componentLibraries: ["@budibase/standard-components"],
+  title: "{{ name }}",
+  favicon: "./_shared/favicon.png",
+  stylesheets: [],
+  props: {
+    _id: "30b8822a-d07b-49f4-9531-551e37c6899b",
+    _component: "@budibase/standard-components/container",
+    _children: [
+      {
+        _id: "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967",
+        _component: "##builtin/screenslot",
+        _styles: {
+          normal: {},
+          hover: {},
+          active: {},
+          selected: {},
+        },
+        _code: "",
+        _children: [],
+      },
+    ],
+    type: "div",
+    _styles: {
+      active: {},
+      hover: {},
+      normal: {},
+      selected: {},
+    },
+    _code: "",
+    className: "",
+    onLoad: [],
+  },
+}
+
 const BASE_LAYOUTS = [
   {
     _id: BASE_LAYOUT_PROP_IDS.PRIVATE,
@@ -10,7 +45,7 @@ const BASE_LAYOUTS = [
     title: "{{ name }}",
     favicon: "./_shared/favicon.png",
     stylesheets: [],
-    name: "Main",
+    name: "Top Navigation Layout",
     props: {
       _id: BASE_LAYOUT_PROP_IDS.PRIVATE,
       _component: "@budibase/standard-components/container",
@@ -152,7 +187,7 @@ const BASE_LAYOUTS = [
     title: "{{ name }}",
     favicon: "./_shared/favicon.png",
     stylesheets: [],
-    name: "Login",
+    name: "Empty Layout",
     props: {
       _id: BASE_LAYOUT_PROP_IDS.PUBLIC,
       _component: "@budibase/standard-components/container",
@@ -208,4 +243,5 @@ const BASE_LAYOUTS = [
 module.exports = {
   BASE_LAYOUTS,
   BASE_LAYOUT_PROP_IDS,
+  EMPTY_LAYOUT
 }

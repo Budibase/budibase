@@ -1,6 +1,7 @@
 <script>
   import { isEmpty } from "lodash/fp"
   import PropertyControl from "./PropertyControl.svelte"
+  import LayoutSelect from "./LayoutSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { excludeProps } from "./propertyCategories.js"
   import { store, allScreens } from "builderStore"
@@ -14,7 +15,7 @@
   export let displayNameField = false
   export let assetInstance
 
-  let assetProps = ["title", "favicon", "description", "route"]
+  let assetProps = ["title", "description", "route", "layoutId"]
   let duplicateName = false
 
   const propExistsOnComponentDef = prop =>
@@ -27,11 +28,11 @@
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
     { key: "route", label: "Route", control: Input },
+    { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
   const layoutDefinition = [
-    { key: "title", label: "Title", control: Input },
-    { key: "favicon", label: "Favicon", control: Input },
+    { key: "title", label: "Title", control: Input }
   ]
 
   const canRenderControl = (key, dependsOn) => {

@@ -4,8 +4,8 @@ export class Screen extends BaseStructure {
   constructor() {
     super(true)
     this._json = {
+      layoutId: "layout_private_master",
       props: {
-        layoutId: "layout_private_master",
         _id: "",
         _component: "",
         _styles: {

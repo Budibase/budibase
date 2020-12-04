@@ -5,6 +5,7 @@
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
+  import NewLayoutModal from "components/userInterface/NewLayoutModal.svelte"
   import { Modal, Switcher } from "@budibase/bbui"
 
   const tabs = [
@@ -48,9 +49,16 @@
         <NewScreenModal />
       </Modal>
     {:else if tab === 'layouts'}
+      <i
+        on:click={modal.show}
+        data-cy="new-layout"
+        class="ri-add-circle-fill" />
       {#each $store.layouts as layout}
         <Layout {layout} />
       {/each}
+      <Modal bind:this={modal}>
+        <NewLayoutModal />
+      </Modal>
     {/if}
   </Switcher>
 </div>
