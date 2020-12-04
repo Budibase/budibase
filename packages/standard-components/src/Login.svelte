@@ -32,9 +32,7 @@
 <div class="root" use:styleable={$component.styles}>
   <div class="content">
     {#if logo}
-      <div class="logo-container">
-        <img src={logo} alt="logo" />
-      </div>
+      <div class="logo-container"><img src={logo} alt="logo" /></div>
     {/if}
 
     {#if title}
