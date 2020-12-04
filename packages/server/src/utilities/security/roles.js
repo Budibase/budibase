@@ -108,7 +108,7 @@ class AccessController {
     let roleIds = this.userHierarchies[userRoleId]
     if (!roleIds) {
       roleIds = await exports.getUserRoleHierarchy(this.appId, userRoleId)
-      this.userHierarchies[userRoleId] = userRoleId
+      this.userHierarchies[userRoleId] = roleIds
     }
 
     return roleIds.indexOf(tryingRoleId) !== -1
