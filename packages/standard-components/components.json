@@ -56,7 +56,7 @@
 	},
 	"login": {
 		"name": "Login Control",
-		"description": "A control that accepts username, password an also handles password resets",
+		"description": "A control that accepts email, password an also handles password resets",
 		"props": {
 			"logo": "string",
 			"title": "string",

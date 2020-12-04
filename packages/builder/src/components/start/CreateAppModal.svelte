@@ -52,7 +52,9 @@
       applicationName: string().required("Your application must have a name."),
     },
     {
-      username: string().required("Your application needs a first user."),
+      email: string()
+        .email()
+        .required("Your application needs a first user."),
       password: string().required(
         "Please enter a password for your first user."
       ),
@@ -164,8 +166,7 @@
 
       // Create user
       const user = {
-        name: $createAppStore.values.username,
-        username: $createAppStore.values.username,
+        email: $createAppStore.values.email,
         password: $createAppStore.values.password,
         accessLevelId: $createAppStore.values.accessLevelId,
       }
