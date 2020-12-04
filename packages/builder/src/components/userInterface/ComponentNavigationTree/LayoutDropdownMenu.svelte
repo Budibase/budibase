@@ -1,22 +1,26 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { store, allScreens } from "builderStore"
+  import { store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownMenu, Modal, ModalContent } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
-  export let screenId
+  export let layoutId
 
   let confirmDeleteDialog
   let dropdown
   let anchor
 
-  $: screen = $allScreens.find(screen => screen._id === screenId)
+  $: layout = $store.layouts.find(layout => layout._id === layoutId)
 
-  const deleteScreen = () => {
-    store.actions.screens.delete(screen)
-    store.actions.routing.fetch()
+  const deleteLayout = async () => {
+    try {
+      await store.actions.layouts.delete(layout)
+      notifier.success(`Layout ${layout.name} deleted successfully.`)
+    } catch (err) {
+      notifier.danger(`Error deleting layout: ${err.message}`)
+    }
   }
 </script>
 
@@ -36,9 +40,9 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={'Are you sure you wish to delete this screen?'}
-  okText="Delete Screen"
-  onOk={deleteScreen} />
+  body={'Are you sure you wish to delete this layout?'}
+  okText="Delete Layout"
+  onOk={deleteLayout} />
 
 <style>
   .icon i {
