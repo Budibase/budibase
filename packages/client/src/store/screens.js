@@ -20,20 +20,21 @@ const createScreenStore = () => {
         activeScreen = $builderStore.screen
       } else {
         // Otherwise find the correct screen by matching the current route
-        // const { screens, layouts } = $config
-        // activeLayout = layouts[0]
-        // if (screens.length === 1) {
-        //   activeScreen = screens[0]
-        // } else {
-        //   activeScreen = screens.find(
-        //     screen => screen.routing.route === $routeStore.activeRoute
-        //   )
-        // }
-        // if (activeScreen) {
-        //   activeLayout = layouts.find(
-        //     layout => layout._id === activeScreen.props.layoutId
-        //   )
-        // }
+        const { screens, layouts } = $config
+        console.log(screens)
+        activeLayout = layouts[0]
+        if (screens.length === 1) {
+          activeScreen = screens[0]
+        } else {
+          activeScreen = screens.find(
+            screen => screen.routing.route === $routeStore.activeRoute
+          )
+        }
+        if (activeScreen) {
+          activeLayout = layouts.find(
+            layout => layout._id === activeScreen.props.layoutId
+          )
+        }
       }
       return { activeLayout, activeScreen }
     }
