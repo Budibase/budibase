@@ -257,6 +257,23 @@ export const getFrontendStore = () => {
         const storeContents = get(store)
         return storeContents.layouts.find(layout => layout._id === layoutId)
       },
+      delete: async layoutToDelete => {
+        const response = await api.delete(
+          `/api/layouts/${layoutToDelete._id}/${layoutToDelete._rev}`
+        )
+
+        if (response.status !== 200) {
+          const json = await response.json()
+          throw new Error(json.message)
+        }
+
+        store.update(state => {
+          state.layouts = state.layouts.filter(
+            layout => layout._id !== layoutToDelete._id
+          )
+          return state
+        })
+      },
     },
     components: {
       select: component => {
