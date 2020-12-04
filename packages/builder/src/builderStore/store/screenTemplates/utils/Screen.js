@@ -19,7 +19,7 @@ export class Screen extends BaseStructure {
       },
       routing: {
         route: "",
-        roleId: "",
+        roleId: "BASIC",
       },
       name: "screen-id",
     }
