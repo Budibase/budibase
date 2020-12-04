@@ -26,7 +26,10 @@ const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
-const { HOME_SCREEN, LOGIN_SCREEN } = require("../../constants/screens")
+const {
+  createHomeScreen,
+  createLoginScreen,
+} = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { recurseMustache } = require("../../utilities/mustache")
 const { generateAssetCss } = require("../../utilities/builder/generateCss")
@@ -112,7 +115,7 @@ exports.fetchAppDefinition = async function(ctx) {
   const layouts = await getLayouts(db)
   const userRoleId = getUserRoleId(ctx)
   const accessController = new AccessController(ctx.params.appId)
-  const screens = accessController.checkScreensAccess(
+  const screens = await accessController.checkScreensAccess(
     await getScreens(db),
     userRoleId
   )
@@ -218,11 +221,11 @@ const createEmptyAppPackage = async (ctx, app) => {
     screensAndLayouts.push(recurseMustache(cloned, app))
   }
 
-  const homeScreen = cloneDeep(HOME_SCREEN)
+  const homeScreen = createHomeScreen(app)
   homeScreen._id = generateScreenID()
   screensAndLayouts.push(homeScreen)
 
-  const loginScreen = cloneDeep(LOGIN_SCREEN)
+  const loginScreen = createLoginScreen(app)
   loginScreen._id = generateScreenID()
   screensAndLayouts.push(loginScreen)
 
