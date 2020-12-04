@@ -257,6 +257,14 @@
 			}
 		}
 	},
+	"cardstat": {
+		"name": "Stat Card",
+		"props": {
+			"title": "string",
+			"value": "string",
+			"label": "string"
+		}
+	},
 	"cardhorizontal": {
 		"name": "Horizontal Card",
 		"props": {
