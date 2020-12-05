@@ -1,5 +1,6 @@
 <script>
   import { isEmpty } from "lodash/fp"
+  import { FrontendTypes } from "constants"
   import PropertyControl from "./PropertyControl.svelte"
   import LayoutSelect from "./LayoutSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
@@ -63,7 +64,7 @@
       lookForDuplicate(layout.props)
     }
     // if viewing screen, check current screen for duplicate
-    if ($store.currentFrontEndType === "screen") {
+    if ($store.currentFrontEndType === FrontendTypes.SCREEN) {
       lookForDuplicate($store.currentPreviewItem.props)
     } else {
       // need to dedupe against all screens

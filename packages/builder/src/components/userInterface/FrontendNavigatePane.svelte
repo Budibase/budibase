@@ -1,7 +1,8 @@
 <script>
   import { onMount } from "svelte"
-  import { goto } from "@sveltech/routify"
+  import { goto, params, url } from "@sveltech/routify"
   import { store, currentAsset } from "builderStore"
+  import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
@@ -11,17 +12,17 @@
   const tabs = [
     {
       title: "Screens",
-      key: "screens",
+      key: "screen",
     },
     {
       title: "Layouts",
-      key: "layouts",
+      key: "layout",
     },
   ]
 
   let modal
   let routes = {}
-  let tab = "screens"
+  let tab = $params.assetType
 
   function navigate({ detail }) {
     if (!detail) return
@@ -35,7 +36,7 @@
 
 <div class="title">
   <Switcher headings={tabs} bind:value={tab} on:change={navigate}>
-    {#if tab === 'screens'}
+    {#if tab === FrontendTypes.SCREEN}
       <i
         on:click={modal.show}
         data-cy="new-screen"
@@ -48,7 +49,7 @@
       <Modal bind:this={modal}>
         <NewScreenModal />
       </Modal>
-    {:else if tab === 'layouts'}
+    {:else if tab === FrontendTypes.LAYOUT}
       <i
         on:click={modal.show}
         data-cy="new-layout"

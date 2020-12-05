@@ -1,5 +1,6 @@
 <script>
   import { store } from "builderStore"
+  import { FrontendTypes } from "constants"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -19,7 +20,7 @@
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
-      //use for getting controls for each component property
+      // use for getting controls for each component property
       c => c._component === componentInstance._component
     ) || {}
 
@@ -31,7 +32,7 @@
 
   $: isComponentOrScreen =
     $store.currentView === "component" ||
-    $store.currentFrontEndType === "screen"
+    $store.currentFrontEndType === FrontendTypes.SCREEN
   $: isNotScreenslot = componentInstance._component !== "##builtin/screenslot"
 
   $: displayName =
@@ -60,14 +61,17 @@
 
   function setAssetProps(name, value) {
     store.update(state => {
-      if (name === "_instanceName" && state.currentFrontEndType === "screen") {
-        state.currentPreviewItem.props[name] = value
+      if (
+        name === "_instanceName" &&
+        state.currentFrontEndType === FrontendTypes.SCREEN
+      ) {
+        state.currentPreviewItem.props._instanceName = value
       } else {
         state.currentPreviewItem[name] = value
       }
-      store.actions.preview.saveSelected()
       return state
     })
+    store.actions.preview.saveSelected()
   }
 
   function getProps(obj, keys) {
@@ -100,15 +104,6 @@
 </div>
 
 <style>
-  .title > div:nth-child(1) {
-    grid-column-start: name;
-    color: var(--ink);
-  }
-
-  .title > div:nth-child(2) {
-    grid-column-start: actions;
-  }
-
   .component-props-container {
     flex: 1 1 auto;
     min-height: 0;

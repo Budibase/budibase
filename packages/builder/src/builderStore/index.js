@@ -15,15 +15,15 @@ export const currentAsset = derived(store, $store => {
   const layout = $store.layouts
     ? $store.layouts.find(layout => layout._id === $store.currentAssetId)
     : null
-  if (layout) {
-    return layout
-  }
+
+  if (layout) return layout
+
   const screen = $store.screens
     ? $store.screens.find(screen => screen._id === $store.currentAssetId)
     : null
-  if (screen) {
-    return screen
-  }
+
+  if (screen) return screen
+
   return null
 })
 
