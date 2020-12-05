@@ -43,13 +43,13 @@
   <DropdownMenu bind:this={dropdown} {anchor} align="left">
     <DropdownContainer>
       <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
-      <DropdownItem
         icon="ri-pencil-line"
         title="Edit"
         on:click={() => editLayoutNameModal.show()} />
+      <DropdownItem
+        icon="ri-delete-bin-line"
+        title="Delete"
+        on:click={() => confirmDeleteDialog.show()} />
     </DropdownContainer>
   </DropdownMenu>
 </div>

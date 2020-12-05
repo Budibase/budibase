@@ -1,32 +1,39 @@
 <script>
   import { params, leftover, goto } from "@sveltech/routify"
+  import { FrontendTypes } from "constants"
   import { store, allScreens } from "builderStore"
 
   // Get any leftover params not caught by Routifys params store.
   const componentIds = $leftover.split("/").filter(id => id !== "")
 
-  const currentLayoutId = decodeURI($params.layout)
-  const validLayout = $store.layouts.some(layout => layout._id === currentLayoutId)
+  const currentAssetId = decodeURI($params.asset)
 
-  if (!validLayout) {
-    const firstLayoutId = $store.layouts[0]?._id
-    store.actions.layouts.select($params.layout)
-    $goto(`./${firstLayoutId}`)
+  let assetList
+  let actions
+
+  // Determine screens or layouts based on the URL
+  if ($params.assetType === FrontendTypes.SCREEN) {
+    assetList = $allScreens
+    actions = store.actions.screens
   } else {
-    // Otherwise proceed to set layout
-    store.actions.layouts.select($params.layout)
-
-    // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
-    if ($leftover) {
-      // Get the correct layout children.
-      const layoutChildren = $store.layouts.find(
-        layout =>
-          layout._id === $params.layout ||
-          layout._id === decodeURIComponent($params.layout)
-      ).props._children
-      findComponent(componentIds, layoutChildren)
-    }
+    assetList = $store.layouts
+    actions = store.actions.layouts
   }
+
+  // select the screen or layout in the UI
+  actions.select(currentAssetId)
+
+  // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
+  if ($leftover) {
+    // Get the correct screen children.
+    const assetChildren = assetList.find(
+      asset =>
+        asset._id === $params.asset ||
+        asset._id === decodeURIComponent($params.asset)
+    ).props._children
+    findComponent(componentIds, assetChildren)
+  }
+  // }
 
   // Find Component with ID and continue
   function findComponent(ids, children) {

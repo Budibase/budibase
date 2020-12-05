@@ -85,7 +85,7 @@
       })
     }
 
-    $goto(`./screens/${createdScreen._id}`)
+    $goto(`./screen/${createdScreen._id}`)
   }
 
   const routeNameExists = route => {

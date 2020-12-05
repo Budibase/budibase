@@ -22,12 +22,7 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-      $goto(`./${$store.currentFrontEndType}s/${$store.currentAssetId}/${path}`)
-    // if (layout) {
-    //   $goto(`./layouts/${path}`)
-    // } else {
-    //   $goto(`./screens/${$currentAsset.id}/${path}`)
-    // }
+      $goto(`./${$store.currentAssetId}/${path}`)
   }
 
   const dragstart = component => e => {

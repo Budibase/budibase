@@ -6,6 +6,7 @@ exports.createHomeScreen = app => ({
   url: "",
   layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
   props: {
+    _instanceName: "HomeScreenContainer",
     _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
     _component: "@budibase/standard-components/container",
     _styles: {
@@ -106,6 +107,7 @@ exports.createLoginScreen = app => ({
   url: "",
   layoutId: BASE_LAYOUT_PROP_IDS.PUBLIC,
   props: {
+    _instanceName: "LoginScreenContainer",
     _id: "5beb4c7b-3c8b-49b2-b8b3-d447dc76dda7",
     _component: "@budibase/standard-components/container",
     _styles: {

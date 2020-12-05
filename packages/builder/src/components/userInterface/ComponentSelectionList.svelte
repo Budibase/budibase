@@ -27,7 +27,7 @@
   const onComponentChosen = component => {
     store.actions.components.create(component._component, component.presetProps)
     const path = store.actions.components.findRoute($store.currentComponentInfo)
-    $goto(`./${$store.currentFrontEndType}s/${$store.currentAssetId}/${path}`)
+    $goto(`./${$store.currentAssetId}/${path}`)
     close()
   }
 </script>
