@@ -30,7 +30,7 @@
   selected={$store.currentComponentInfo?._id === layout.props._id}
   opened={$store.currentAssetId === layout._id}
   on:click={selectLayout}>
-  <LayoutDropdownMenu layoutId={layout._id} />
+  <LayoutDropdownMenu {layout} />
 </NavItem>
 
 {#if $store.currentAssetId === layout._id && layout.props._children}

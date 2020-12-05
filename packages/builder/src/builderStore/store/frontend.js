@@ -238,15 +238,21 @@ export const getFrontendStore = () => {
         if (!json.ok) throw new Error("Error updating layout")
 
         store.update(state => {
-          const layoutToUpdate = state.layouts.find(
-            stateLayout => stateLayout._id === layout._id
+          layoutToSave._rev = json.rev
+          layoutToSave._id = json.id
+
+          const layoutIdx = state.layouts.findIndex(
+            stateLayout => stateLayout._id === layoutToSave._id
           )
-          if (layoutToUpdate) {
-            layoutToUpdate._rev = json.rev
+
+          if (layoutIdx >= 0) {
+            // update existing layout
+            state.layouts.splice(layoutIdx, 1, layoutToSave)
           } else {
-            // TODO: when a new layout is created
-            state.layouts.push({})
+            // save new layout
+            state.layouts.push(layoutToSave)
           }
+
           return state
         })
       },
