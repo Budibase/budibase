@@ -66,7 +66,7 @@ describe("/users", () => {
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ email: "bill@bill.com", password: "bills_password", roleId: BUILTIN_LEVEL_IDS.POWER })
+        .send({ email: "bill@bill.com", password: "bills_password", roleId: BUILTIN_ROLE_IDS.POWER })
         .expect(200)
         .expect('Content-Type', /json/)
 
@@ -78,7 +78,7 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { email: "brandNewUser@user.com", password: "yeeooo", roleId: BUILTIN_LEVEL_IDS.POWER },
+        body: { email: "brandNewUser@user.com", password: "yeeooo", roleId: BUILTIN_ROLE_IDS.POWER },
         url: `/api/users`,
         appId: appId,
         permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
