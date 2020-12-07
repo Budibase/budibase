@@ -1,5 +1,12 @@
 <script>
-  import { Input, Select, Label, DatePicker, Toggle, RichText } from "@budibase/bbui"
+  import {
+    Input,
+    Select,
+    Label,
+    DatePicker,
+    Toggle,
+    RichText,
+  } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { TableNames } from "constants"
   import Dropzone from "components/common/Dropzone.svelte"
