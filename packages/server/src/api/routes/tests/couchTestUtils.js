@@ -118,7 +118,7 @@ exports.clearApplications = async request => {
 exports.createUser = async (
   request,
   appId,
-  email = "babs",
+  email = "babs@babs.com",
   password = "babs_password"
 ) => {
   const res = await request
