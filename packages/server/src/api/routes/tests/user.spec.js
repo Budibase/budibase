@@ -48,7 +48,7 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, appId, "brenda", "brendas_password")
+      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",
@@ -62,12 +62,11 @@ describe("/users", () => {
   })
 
   describe("create", () => {
-
     it("returns a success message when a user is successfully created", async () => {
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ name: "Bill", email: "bill@bill.com", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
+        .send({ email: "bill@bill.com", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
         .expect(200)
         .expect('Content-Type', /json/)
 
@@ -79,7 +78,7 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { name: "brandNewUser", email: "brandNewUser@user.com", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
+        body: { email: "brandNewUser@user.com", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
         url: `/api/users`,
         appId: appId,
         permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
