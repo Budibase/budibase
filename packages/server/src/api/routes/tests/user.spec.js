@@ -34,8 +34,8 @@ describe("/users", () => {
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await createUser(request, appId, "brenda", "brendas_password")
-      await createUser(request, appId, "pam", "pam_password")
+      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
+      await createUser(request, appId, "pam@pam.com", "pam_password")
       const res = await request
         .get(`/api/users`)
         .set(defaultHeaders(appId))
@@ -43,12 +43,12 @@ describe("/users", () => {
         .expect(200)
       
       expect(res.body.length).toBe(2)
-      expect(res.body.find(u => u.username === "brenda")).toBeDefined()
-      expect(res.body.find(u => u.username === "pam")).toBeDefined()
+      expect(res.body.find(u => u.email === "brenda@brenda.com")).toBeDefined()
+      expect(res.body.find(u => u.email === "pam@pam.com")).toBeDefined()
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, appId, "brenda", "brendas_password")
+      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",
@@ -62,12 +62,11 @@ describe("/users", () => {
   })
 
   describe("create", () => {
-
     it("returns a success message when a user is successfully created", async () => {
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
+        .send({ email: "bill@bill.com", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
         .expect(200)
         .expect('Content-Type', /json/)
 
@@ -79,7 +78,7 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
+        body: { email: "brandNewUser@user.com", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
         url: `/api/users`,
         appId: appId,
         permName1: BUILTIN_PERMISSION_NAMES.ADMIN,

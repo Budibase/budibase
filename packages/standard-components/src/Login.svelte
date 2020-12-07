@@ -10,7 +10,7 @@
   export let buttonClass = ""
   export let inputClass = ""
 
-  let username = ""
+  let email = ""
   let password = ""
   let loading = false
   let error = false
@@ -24,7 +24,7 @@
 
   const login = async () => {
     loading = true
-    await authStore.actions.logIn({ username, password })
+    await authStore.actions.logIn({ email, password })
     loading = false
   }
 </script>
@@ -42,9 +42,9 @@
     <div class="form-root">
       <div class="control">
         <input
-          bind:value={username}
-          type="text"
-          placeholder="Username"
+          bind:value={email}
+          type="email"
+          placeholder="Email"
           class={_inputClass} />
       </div>
 
@@ -62,7 +62,7 @@
     </div>
 
     {#if error}
-      <div class="incorrect-details-panel">Incorrect username or password</div>
+      <div class="incorrect-details-panel">Incorrect email or password</div>
     {/if}
   </div>
 </div>
