@@ -20,7 +20,7 @@ class AutomationEmitter {
 
   emitRow(eventName, appId, row, table = null) {
     // don't emit even if we've reached max automation chain
-    if (this.chainCount > MAX_AUTOMATION_CHAIN) {
+    if (this.chainCount >= MAX_AUTOMATION_CHAIN) {
       return
     }
     rowEmission({
