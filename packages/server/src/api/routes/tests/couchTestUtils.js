@@ -116,7 +116,7 @@ exports.clearApplications = async request => {
 exports.createUser = async (
   request,
   appId,
-  username = "babs",
+  email = "babs@babs.com",
   password = "babs_password"
 ) => {
   const res = await request
@@ -124,7 +124,7 @@ exports.createUser = async (
     .set(exports.defaultHeaders(appId))
     .send({
       name: "Bill",
-      username,
+      email,
       password,
       roleId: BUILTIN_ROLE_IDS.POWER,
     })
@@ -172,15 +172,14 @@ const createUserWithPermissions = async (
   request,
   appId,
   permissions,
-  username
+  email
 ) => {
-  const password = `password_${username}`
+  const password = `password_${email}`
   await request
     .post(`/api/users`)
     .set(exports.defaultHeaders(appId))
     .send({
-      name: username,
-      username,
+      email,
       password,
       roleId: BUILTIN_ROLE_IDS.POWER,
       permissions,
@@ -201,7 +200,7 @@ const createUserWithPermissions = async (
       Cookie: `budibase:${appId}:local=${anonToken}`,
       "x-budibase-app-id": appId,
     })
-    .send({ username, password })
+    .send({ email, password })
 
   // returning necessary request headers
   return {
