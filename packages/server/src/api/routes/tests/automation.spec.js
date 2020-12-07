@@ -127,8 +127,8 @@ describe("/automations", () => {
       trigger.id = "wadiawdo34"
       let createAction = ACTION_DEFINITIONS["CREATE_ROW"]
       createAction.inputs.row = {
-        name: "{{trigger.name}}",
-        description: "{{trigger.description}}"
+        name: "{{trigger.row.name}}",
+        description: "{{trigger.row.description}}"
       }
       createAction.id = "awde444wk"
 
@@ -164,21 +164,23 @@ describe("/automations", () => {
   describe("trigger", () => {
     it("trigger the automation successfully", async () => {
       let table = await createTable(request, appId)
+      TEST_AUTOMATION.definition.trigger.inputs.tableId = table._id
       TEST_AUTOMATION.definition.steps[0].inputs.row.tableId = table._id
       await createAutomation()
+      await delay(500)
+      const res = await triggerWorkflow(automation._id)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
       // TODO: update when workflow logs are a thing
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
-        const res = await triggerWorkflow(automation._id)
         expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
         expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
         await delay(500)
         let elements = await getAllFromTable(request, appId, table._id)
         // don't test it unless there are values to test
-        if (elements.length === 1) {
-          expect(elements.length).toEqual(1)
+        if (elements.length > 1) {
+          expect(elements.length).toEqual(5)
           expect(elements[0].name).toEqual("Test")
           expect(elements[0].description).toEqual("TEST")
           return
