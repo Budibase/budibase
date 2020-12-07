@@ -62,6 +62,8 @@
       </Select>
     {:else if value.customType === 'password'}
       <Input type="password" extraThin bind:value={block.inputs[key]} />
+    {:else if value.customType === 'email'}
+      <Input type="email" extraThin bind:value={block.inputs[key]} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
     {:else if value.customType === 'row'}
