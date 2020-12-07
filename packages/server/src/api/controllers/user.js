@@ -6,7 +6,7 @@ const { getRole } = require("../../utilities/security/roles")
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
   const data = await database.allDocs(
-    getUserParams("", {
+    getUserParams(null, {
       include_docs: true,
     })
   )
