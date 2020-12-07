@@ -24,8 +24,6 @@
   let routes = {}
   let tab = $params.assetType
 
-  $: console.log("selected", $selectedComponent)
-
   function navigate({ detail }) {
     if (!detail) return
     $goto(`./${detail.heading.key}`)
