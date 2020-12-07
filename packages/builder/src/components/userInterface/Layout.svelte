@@ -18,7 +18,7 @@
 
   const selectLayout = () => {
     store.actions.layouts.select(layout._id)
-    $goto(`./layout/${layout._id}`)
+    $goto(`./${layout._id}`)
   }
 </script>
 
@@ -27,7 +27,7 @@
   icon="ri-layout-3-line"
   text={layout.name}
   withArrow
-  selected={$selectedComponent._id === layout.props?._id}
+  selected={$store.currentAssetId === layout._id}
   opened={$store.currentAssetId === layout._id}
   on:click={selectLayout}>
   <LayoutDropdownMenu {layout} />

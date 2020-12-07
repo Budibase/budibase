@@ -54,7 +54,7 @@
         on:click={modal.show}
         data-cy="new-layout"
         class="ri-add-circle-fill" />
-      {#each $store.layouts as layout}
+      {#each $store.layouts as layout (layout._id)}
         <Layout {layout} />
       {/each}
       <Modal bind:this={modal}>

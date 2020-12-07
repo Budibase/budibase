@@ -92,12 +92,7 @@ export const getFrontendStore = () => {
           state.currentView = "detail"
 
           promise = store.actions.screens.regenerateCss(screen)
-          const safeProps = makePropsSafe(
-            state.components[screen.props._component],
-            screen.props
-          )
-          screen.props = safeProps
-          state.selectedComponentId = safeProps._id
+          state.selectedComponentId = screen.props._id
           return state
         })
         await promise
@@ -105,8 +100,8 @@ export const getFrontendStore = () => {
       create: async screen => {
         screen = await store.actions.screens.save(screen)
         store.update(state => {
-          state.selectedComponentId = screen._id
-          state.selectedAssetId = screen._id
+          state.currentAssetId = screen._id
+          state.selectedComponentId = screen.props._id
           state.currentFrontEndType = FrontendTypes.SCREEN
           return state
         })
@@ -169,9 +164,10 @@ export const getFrontendStore = () => {
       },
     },
     preview: {
-      saveSelected: async asset => {
+      saveSelected: async () => {
         const state = get(store)
-        const selectedAsset = asset || get(currentAsset)
+        const selectedAsset = get(currentAsset)
+
         if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
           await store.actions.screens.save(selectedAsset)
         } else {
@@ -188,7 +184,7 @@ export const getFrontendStore = () => {
           state.currentView = "detail"
 
           state.currentAssetId = layout._id
-          state.selectedComponentId = layout._id
+          state.selectedComponentId = layout.props._id
 
           return state
         })
@@ -208,25 +204,21 @@ export const getFrontendStore = () => {
 
         const json = await response.json()
 
-        if (!json.ok) throw new Error("Error updating layout")
-
         store.update(state => {
-          layoutToSave._rev = json.rev
-          layoutToSave._id = json.id
-
           const layoutIdx = state.layouts.findIndex(
-            stateLayout => stateLayout._id === layoutToSave._id
+            stateLayout => stateLayout._id === json._id
           )
 
           if (layoutIdx >= 0) {
             // update existing layout
-            state.layouts.splice(layoutIdx, 1, layoutToSave)
+            state.layouts.splice(layoutIdx, 1, json)
           } else {
             // save new layout
-            state.layouts.push(layoutToSave)
+            state.layouts.push(json)
           }
 
-          state.selectedComponentId = layoutToSave._id
+          state.currentAssetId = json._id
+          state.selectedComponentId = json.props._id
           return state
         })
       },
