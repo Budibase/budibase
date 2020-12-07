@@ -1,7 +1,6 @@
 <script>
   import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
-  import { get } from "svelte/store"
   import { FrontendTypes } from "constants"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
