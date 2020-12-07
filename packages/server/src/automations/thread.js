@@ -2,6 +2,7 @@ const handlebars = require("handlebars")
 const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
+const AutomationEmitter = require("../events/AutomationEmitter")
 
 handlebars.registerHelper("object", value => {
   return new handlebars.SafeString(JSON.stringify(value))
@@ -32,12 +33,18 @@ function recurseMustache(inputs, context) {
  */
 class Orchestrator {
   constructor(automation, triggerOutput) {
+    this._metadata = triggerOutput.metadata
+    this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
     this._appId = triggerOutput.appId
     // remove from context
     delete triggerOutput.appId
+    delete triggerOutput.metadata
     // step zero is never used as the mustache is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
+    // create an emitter which has the chain count for this automation run in it, so it can block
+    // excessive chaining if required
+    this._emitter = new AutomationEmitter(this._chainCount + 1)
   }
 
   async getStepFunctionality(type, stepId) {
@@ -68,6 +75,7 @@ class Orchestrator {
           inputs: step.inputs,
           appId: this._appId,
           apiKey: automation.apiKey,
+          emitter: this._emitter,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break
