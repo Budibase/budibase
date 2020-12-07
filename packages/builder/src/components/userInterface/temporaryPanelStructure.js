@@ -427,6 +427,36 @@ export default {
             ],
           },
         },
+        {
+          _component: "@budibase/standard-components/cardstat",
+          name: "Stat",
+          description: "A card component for displaying numbers.",
+          icon: "ri-dual-sim-2-line",
+          children: [],
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Title",
+                key: "title",
+                control: Input,
+                placeholder: "Total Revenue",
+              },
+              {
+                label: "Value",
+                key: "value",
+                control: Input,
+                placeholder: "$1,981,983",
+              },
+              {
+                label: "Label",
+                key: "label",
+                control: Input,
+                placeholder: "Stripe",
+              },
+            ],
+          },
+        },
       ],
     },
     {

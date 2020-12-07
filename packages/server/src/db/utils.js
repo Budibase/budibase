@@ -101,17 +101,17 @@ exports.generateRowID = tableId => {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserParams = (username = "", otherProps = {}) => {
-  return exports.getRowParams(ViewNames.USERS, username, otherProps)
+exports.getUserParams = (email = "", otherProps = {}) => {
+  return exports.getRowParams(ViewNames.USERS, email, otherProps)
 }
 
 /**
- * Generates a new user ID based on the passed in username.
- * @param {string} username The username which the ID is going to be built up of.
+ * Generates a new user ID based on the passed in email.
+ * @param {string} email The email which the ID is going to be built up of.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserID = username => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${username}`
+exports.generateUserID = email => {
+  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${email}`
 }
 
 /**
