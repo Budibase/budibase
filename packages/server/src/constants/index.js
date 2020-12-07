@@ -12,17 +12,18 @@ const USERS_TABLE_SCHEMA = {
   views: {},
   name: "Users",
   schema: {
-    username: {
+    email: {
       type: "string",
       constraints: {
         type: "string",
+        email: true,
         length: {
           maximum: "",
         },
         presence: true,
       },
-      fieldName: "username",
-      name: "username",
+      fieldName: "email",
+      name: "email",
     },
     accessLevelId: {
       fieldName: "accessLevelId",
@@ -35,7 +36,7 @@ const USERS_TABLE_SCHEMA = {
       },
     },
   },
-  primaryDisplay: "username",
+  primaryDisplay: "email",
 }
 
 exports.AuthTypes = AuthTypes
