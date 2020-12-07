@@ -243,5 +243,5 @@ const BASE_LAYOUTS = [
 module.exports = {
   BASE_LAYOUTS,
   BASE_LAYOUT_PROP_IDS,
-  EMPTY_LAYOUT
+  EMPTY_LAYOUT,
 }

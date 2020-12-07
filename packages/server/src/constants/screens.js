@@ -1,12 +1,11 @@
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 const { BASE_LAYOUT_PROP_IDS } = require("./layouts")
 
-exports.createHomeScreen = app => ({
+exports.createHomeScreen = () => ({
   description: "",
   url: "",
   layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
   props: {
-    _instanceName: "HomeScreenContainer",
     _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
     _component: "@budibase/standard-components/container",
     _styles: {
