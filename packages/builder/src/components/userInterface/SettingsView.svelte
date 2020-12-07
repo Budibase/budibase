@@ -5,7 +5,7 @@
   import LayoutSelect from "./LayoutSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { excludeProps } from "./propertyCategories.js"
-  import { store, allScreens } from "builderStore"
+  import { store, allScreens, currentAsset } from "builderStore"
   import { walkProps } from "builderStore/storeUtils"
 
   export let panelDefinition = []
@@ -65,7 +65,7 @@
     }
     // if viewing screen, check current screen for duplicate
     if ($store.currentFrontEndType === FrontendTypes.SCREEN) {
-      lookForDuplicate($store.currentPreviewItem.props)
+      lookForDuplicate($currentAsset.props)
     } else {
       // need to dedupe against all screens
       for (let screen of $allScreens) {
