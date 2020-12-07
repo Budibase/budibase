@@ -164,7 +164,6 @@ describe("/automations", () => {
   describe("trigger", () => {
     it("trigger the automation successfully", async () => {
       let table = await createTable(request, appId)
-      TEST_AUTOMATION.definition.trigger.inputs.tableId = table._id
       TEST_AUTOMATION.definition.steps[0].inputs.row.tableId = table._id
       await createAutomation()
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
