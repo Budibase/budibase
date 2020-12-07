@@ -26,9 +26,9 @@ export default {
     }),
     resolve({
       browser: true,
-      skip: externals
+      skip: externals,
     }),
     commonjs(),
-    json()
+    json(),
   ],
 }

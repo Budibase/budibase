@@ -32,9 +32,7 @@
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
-  const layoutDefinition = [
-    { key: "title", label: "Title", control: Input }
-  ]
+  const layoutDefinition = [{ key: "title", label: "Title", control: Input }]
 
   const canRenderControl = (key, dependsOn) => {
     let test = !isEmpty(componentInstance[dependsOn])

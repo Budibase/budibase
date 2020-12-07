@@ -25,9 +25,7 @@
       screen = screenPlaceholder
     } else {
       screen = $currentAsset
-      layout = $store.layouts.find(
-        layout => layout._id === screen?.layoutId
-      )
+      layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
     }
   }
   $: selectedComponentId = $store.selectedComponentId ?? ""
