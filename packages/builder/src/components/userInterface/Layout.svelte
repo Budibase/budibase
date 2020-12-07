@@ -6,7 +6,7 @@
   import initDragDropStore from "./ComponentNavigationTree/dragDropStore"
   import NavItem from "components/common/NavItem.svelte"
   import { last } from "lodash/fp"
-  import { store, currentAsset } from "builderStore"
+  import { store, currentAsset, selectedComponent } from "builderStore"
   import { writable } from "svelte/store"
 
   export let layout
@@ -27,7 +27,7 @@
   icon="ri-layout-3-line"
   text={layout.name}
   withArrow
-  selected={$store.currentComponentInfo?._id === layout.props?._id}
+  selected={$selectedComponent._id === layout.props?._id}
   opened={$store.currentAssetId === layout._id}
   on:click={selectLayout}>
   <LayoutDropdownMenu {layout} />
@@ -36,6 +36,6 @@
 {#if $store.currentAssetId === layout._id && layout.props?._children}
   <ComponentTree
     components={layout.props._children}
-    currentComponent={$store.currentComponentInfo}
+    currentComponent={$selectedComponent}
     {dragDropStore} />
 {/if}

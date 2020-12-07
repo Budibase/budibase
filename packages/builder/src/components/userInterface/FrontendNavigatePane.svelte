@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { goto, params, url } from "@sveltech/routify"
-  import { store, currentAsset } from "builderStore"
+  import { store, currentAsset, selectedComponent } from "builderStore"
   import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
@@ -23,6 +23,8 @@
   let modal
   let routes = {}
   let tab = $params.assetType
+
+  $: console.log("selected", $selectedComponent)
 
   function navigate({ detail }) {
     if (!detail) return

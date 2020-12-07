@@ -2,7 +2,12 @@ import { getBuiltin } from "components/userInterface/assetParsing/createProps"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
 
-export const getParent = (rootProps, child) => {
+/**
+ * Find the parent component of the passed in child.
+ * @param {Object} rootProps - props to search for the parent in
+ * @param {String|Object} child - id of the child or the child itself to find the parent of
+ */
+export const findParent = (rootProps, child) => {
   let parent
   walkProps(rootProps, (props, breakWalk) => {
     if (

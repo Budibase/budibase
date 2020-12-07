@@ -10,6 +10,7 @@ import {
   backendUiStore,
   currentAsset,
   mainLayout,
+  selectedComponent,
 } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -20,7 +21,7 @@ import {
   findChildComponentType,
   generateNewIdsForComponent,
   getComponentDefinition,
-  getParent,
+  findParent,
 } from "../storeUtils"
 
 const INITIAL_FRONTEND_STATE = {
@@ -29,14 +30,10 @@ const INITIAL_FRONTEND_STATE = {
   description: "",
   layouts: [],
   screens: [],
-  mainUi: {},
-  unauthenticatedUi: {},
   components: [],
-  currentPreviewItem: null,
-  currentComponentInfo: null,
   currentFrontEndType: "none",
   currentAssetId: "",
-  currentComponentProps: null,
+  selectedComponentId: "",
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -74,18 +71,6 @@ export const getFrontendStore = () => {
 
       await backendUiStore.actions.database.select(pkg.application.instance)
     },
-    selectAssetType: type => {
-      store.update(state => {
-        state.currentFrontEndType = type
-
-        const asset = get(currentAsset)
-
-        state.currentComponentInfo = asset && asset.props ? asset.props : null
-        state.currentPreviewItem = asset
-        state.currentView = "detail"
-        return state
-      })
-    },
     routing: {
       fetch: async () => {
         const response = await api.get("/api/routing")
@@ -102,7 +87,6 @@ export const getFrontendStore = () => {
         let promise
         store.update(state => {
           const screen = get(allScreens).find(screen => screen._id === screenId)
-          state.currentPreviewItem = screen
           state.currentFrontEndType = FrontendTypes.SCREEN
           state.currentAssetId = screenId
           state.currentView = "detail"
@@ -113,7 +97,7 @@ export const getFrontendStore = () => {
             screen.props
           )
           screen.props = safeProps
-          state.currentComponentInfo = safeProps
+          state.selectedComponentId = safeProps._id
           return state
         })
         await promise
@@ -121,8 +105,8 @@ export const getFrontendStore = () => {
       create: async screen => {
         screen = await store.actions.screens.save(screen)
         store.update(state => {
-          state.currentPreviewItem = screen
-          state.currentComponentInfo = screen.props
+          state.selectedComponentId = screen._id
+          state.selectedAssetId = screen._id
           state.currentFrontEndType = FrontendTypes.SCREEN
           return state
         })
@@ -143,12 +127,11 @@ export const getFrontendStore = () => {
           state.screens.push(screen)
 
           if (creatingNewScreen) {
-            state.currentPreviewItem = screen
             const safeProps = makePropsSafe(
               state.components[screen.props._component],
               screen.props
             )
-            state.currentComponentInfo = safeProps
+            state.selectedComponentId = safeProps._id
             screen.props = safeProps
           }
           return state
@@ -160,9 +143,9 @@ export const getFrontendStore = () => {
         asset._css = (await response.json())?.css
       },
       regenerateCssForCurrentScreen: async () => {
-        const { currentPreviewItem } = get(store)
-        if (currentPreviewItem) {
-          await store.actions.screens.regenerateCss(currentPreviewItem)
+        const asset = get(currentAsset)
+        if (asset) {
+          await store.actions.screens.regenerateCss(asset)
         }
       },
       delete: async screens => {
@@ -186,9 +169,9 @@ export const getFrontendStore = () => {
       },
     },
     preview: {
-      saveSelected: async () => {
+      saveSelected: async asset => {
         const state = get(store)
-        const selectedAsset = get(currentAsset)
+        const selectedAsset = asset || get(currentAsset)
         if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
           await store.actions.screens.save(selectedAsset)
         } else {
@@ -203,19 +186,9 @@ export const getFrontendStore = () => {
 
           state.currentFrontEndType = FrontendTypes.LAYOUT
           state.currentView = "detail"
-          state.currentAssetId = layout._id
 
-          // This is the root of many problems.
-          // Uncaught (in promise) TypeError: Cannot read property '_component' of undefined
-          // it appears that the currentLayout sometimes has _props instead of props
-          // why
-          const safeProps = makePropsSafe(
-            state.components[layout.props._component],
-            layout.props
-          )
-          state.currentComponentInfo = safeProps
-          layout.props = safeProps
-          state.currentPreviewItem = layout
+          state.currentAssetId = layout._id
+          state.selectedComponentId = layout._id
 
           return state
         })
@@ -284,15 +257,14 @@ export const getFrontendStore = () => {
     components: {
       select: component => {
         store.update(state => {
-          const componentDef = component._component.startsWith("##")
-            ? component
-            : state.components[component._component]
-          state.currentComponentInfo = makePropsSafe(componentDef, component)
+          state.selectedComponentId = component._id
           state.currentView = "component"
           return state
         })
       },
       create: (componentToAdd, presetProps) => {
+        const selectedAsset = get(currentAsset)
+
         store.update(state => {
           function findSlot(component_array) {
             if (!component_array) {
@@ -310,7 +282,7 @@ export const getFrontendStore = () => {
 
           if (
             componentToAdd.startsWith("##") &&
-            findSlot(get(currentAsset)?.props._children)
+            findSlot(selectedAsset?.props._children)
           ) {
             return state
           }
@@ -326,29 +298,34 @@ export const getFrontendStore = () => {
             _instanceName: instanceName,
           })
 
-          const currentComponent =
-            state.components[state.currentComponentInfo._component]
+          const selected = get(selectedComponent)
 
-          const targetParent = currentComponent.children
-            ? state.currentComponentInfo
-            : getParent(
-                state.currentPreviewItem.props,
-                state.currentComponentInfo
-              )
+          const currentComponentDefinition =
+            state.components[selected._component]
 
-          // Don't continue if there's no parent
-          if (!targetParent) {
-            return state
+          const allowsChildren = currentComponentDefinition.children
+
+          // Determine where to put the new component.
+          let targetParent
+          if (allowsChildren) {
+            // Child of the selected component
+            targetParent = selected
+          } else {
+            // Sibling of selected component
+            targetParent = findParent(selectedAsset.props, selected)
           }
 
-          targetParent._children = targetParent._children.concat(
-            newComponent.props
-          )
+          // Don't continue if there's no parent
+          if (!targetParent) return state
+
+          // Push the new component
+          targetParent._children.push(newComponent.props)
 
           store.actions.preview.saveSelected()
 
           state.currentView = "component"
-          state.currentComponentInfo = newComponent.props
+          state.selectedComponentId = newComponent.props._id
+
           analytics.captureEvent("Added Component", {
             name: newComponent.props._component,
           })
@@ -356,14 +333,12 @@ export const getFrontendStore = () => {
         })
       },
       copy: (component, cut = false) => {
+        const selectedAsset = get(currentAsset)
         store.update(state => {
           state.componentToPaste = cloneDeep(component)
           state.componentToPaste.isCut = cut
           if (cut) {
-            const parent = getParent(
-              state.currentPreviewItem.props,
-              component._id
-            )
+            const parent = findParent(selectedAsset.props, component._id)
             parent._children = parent._children.filter(
               child => child._id !== component._id
             )
@@ -374,6 +349,7 @@ export const getFrontendStore = () => {
         })
       },
       paste: async (targetComponent, mode) => {
+        const selectedAsset = get(currentAsset)
         let promises = []
         store.update(state => {
           if (!state.componentToPaste) return state
@@ -393,10 +369,7 @@ export const getFrontendStore = () => {
             return state
           }
 
-          const parent = getParent(
-            state.currentPreviewItem.props,
-            targetComponent
-          )
+          const parent = findParent(selectedAsset.props, targetComponent)
 
           const targetIndex = parent._children.indexOf(targetComponent)
           const index = mode === "above" ? targetIndex : targetIndex + 1
@@ -412,11 +385,13 @@ export const getFrontendStore = () => {
       },
       updateStyle: async (type, name, value) => {
         let promises = []
+        const selected = get(selectedComponent)
+
         store.update(state => {
-          if (!state.currentComponentInfo._styles) {
-            state.currentComponentInfo._styles = {}
+          if (!selected._styles) {
+            selected._styles = {}
           }
-          state.currentComponentInfo._styles[type][name] = value
+          selected._styles[type][name] = value
 
           promises.push(store.actions.screens.regenerateCssForCurrentScreen())
 
@@ -428,22 +403,22 @@ export const getFrontendStore = () => {
       },
       updateProp: (name, value) => {
         store.update(state => {
-          let current_component = state.currentComponentInfo
+          let current_component = get(selectedComponent)
           current_component[name] = value
 
-          state.currentComponentInfo = current_component
+          state.selectedComponentId = current_component._id
           store.actions.preview.saveSelected()
           return state
         })
       },
       findRoute: component => {
         // Gets all the components to needed to construct a path.
-        const tempStore = get(store)
+        const selectedAsset = get(currentAsset)
         let pathComponents = []
         let parent = component
         let root = false
         while (!root) {
-          parent = getParent(tempStore.currentPreviewItem.props, parent)
+          parent = findParent(selectedAsset.props, parent)
           if (!parent) {
             root = true
           } else {

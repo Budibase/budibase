@@ -30,7 +30,7 @@
       )
     }
   }
-  $: selectedComponentId = $store.currentComponentInfo?._id ?? ""
+  $: selectedComponentId = $store.selectedComponentId ?? ""
   $: previewData = {
     layout,
     screen,
@@ -71,7 +71,7 @@
 </script>
 
 <div class="component-container">
-  {#if $store.currentPreviewItem}
+  {#if $currentAsset}
     <iframe
       style="height: 100%; width: 100%"
       title="componentPreview"

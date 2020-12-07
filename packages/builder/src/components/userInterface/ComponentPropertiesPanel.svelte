@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore"
+  import { store, selectedComponent, currentAsset } from "builderStore"
   import { FrontendTypes } from "constants"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
@@ -15,8 +15,8 @@
 
   $: componentInstance =
     $store.currentView !== "component"
-      ? { ...$store.currentPreviewItem, ...$store.currentComponentInfo }
-      : $store.currentComponentInfo
+      ? { ...$currentAsset, ...$selectedComponent }
+      : $selectedComponent
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
@@ -60,14 +60,15 @@
   }
 
   function setAssetProps(name, value) {
+    const selectedAsset = get(currentAsset)
     store.update(state => {
       if (
         name === "_instanceName" &&
         state.currentFrontEndType === FrontendTypes.SCREEN
       ) {
-        state.currentPreviewItem.props._instanceName = value
+        selectedAsset.props._instanceName = value
       } else {
-        state.currentPreviewItem[name] = value
+        selectedAsset[name] = value
       }
       return state
     })
@@ -99,7 +100,7 @@
       displayNameField={displayName}
       onChange={store.actions.components.updateProp}
       onScreenPropChange={setAssetProps}
-      assetInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
+      assetInstance={$store.currentView !== 'component' && $currentAsset} />
   {/if}
 </div>
 

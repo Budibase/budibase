@@ -22,7 +22,7 @@
     const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
-      $goto(`./${$store.currentAssetId}/${path}`)
+    $goto(`./${$store.currentAssetId}/${path}`)
   }
 
   const dragstart = component => e => {
@@ -72,7 +72,7 @@
         text={isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
         withArrow
         indentLevel={level + 3}
-        selected={currentComponent === component}>
+        selected={$store.selectedComponentId === component._id}>
         <ComponentDropdownMenu {component} />
       </NavItem>
 
