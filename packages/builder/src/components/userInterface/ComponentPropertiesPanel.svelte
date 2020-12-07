@@ -1,4 +1,5 @@
 <script>
+  import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
   import { FrontendTypes } from "constants"
   import panelStructure from "./temporaryPanelStructure.js"
