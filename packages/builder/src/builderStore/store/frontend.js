@@ -226,6 +226,7 @@ export const getFrontendStore = () => {
             state.layouts.push(layoutToSave)
           }
 
+          state.selectedComponentId = layoutToSave._id
           return state
         })
       },

@@ -26,7 +26,7 @@
 
   function navigate({ detail }) {
     if (!detail) return
-    $goto(`./${detail.heading.key}`)
+    $goto(`../${detail.heading.key}`)
   }
 
   onMount(() => {
