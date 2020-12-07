@@ -19,7 +19,7 @@
   const changeScreen = screenId => {
     // select the route
     store.actions.screens.select(screenId)
-    $goto(`./screen/${screenId}`)
+    $goto(`./${screenId}`)
   }
 </script>
 
