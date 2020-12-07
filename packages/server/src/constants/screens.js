@@ -20,7 +20,6 @@ exports.createHomeScreen = () => ({
       active: {},
       selected: {},
     },
-    _code: "",
     type: "div",
     _children: [
       {
@@ -34,7 +33,6 @@ exports.createHomeScreen = () => ({
           active: {},
           selected: {},
         },
-        _code: "",
         text: "Welcome to your Budibase App 👋",
         type: "h2",
         _instanceName: "Heading",
@@ -58,7 +56,6 @@ exports.createHomeScreen = () => ({
           active: {},
           selected: {},
         },
-        _code: "",
         type: "div",
         _instanceName: "Video Container",
         _children: [
@@ -83,7 +80,6 @@ exports.createHomeScreen = () => ({
               active: {},
               selected: {},
             },
-            _code: "",
             embed:
               '<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
             _instanceName: "Rick Astley Video",
@@ -121,7 +117,6 @@ exports.createLoginScreen = app => ({
       active: {},
       selected: {},
     },
-    _code: "",
     type: "div",
     _children: [
       {
@@ -143,7 +138,6 @@ exports.createLoginScreen = app => ({
           active: {},
           selected: {},
         },
-        _code: "",
         logo:
           "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg",
         title: `Log in to ${app.name}`,

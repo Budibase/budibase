@@ -21,7 +21,6 @@ const EMPTY_LAYOUT = {
           active: {},
           selected: {},
         },
-        _code: "",
         _children: [],
       },
     ],
@@ -32,7 +31,6 @@ const EMPTY_LAYOUT = {
       normal: {},
       selected: {},
     },
-    _code: "",
     className: "",
     onLoad: [],
   },
@@ -47,7 +45,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Top Navigation Layout",
     props: {
-      _id: BASE_LAYOUT_PROP_IDS.PRIVATE,
+      _id: "4f569166-a4f3-47ea-a09e-6d218c75586f",
       _component: "@budibase/standard-components/container",
       _children: [
         {
@@ -67,7 +65,6 @@ const BASE_LAYOUTS = [
             active: {},
             selected: {},
           },
-          _code: "",
           className: "",
           onLoad: [],
           type: "div",
@@ -91,7 +88,6 @@ const BASE_LAYOUTS = [
                 active: {},
                 selected: {},
               },
-              _code: "",
               logoUrl:
                 "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg",
               title: "",
@@ -119,7 +115,6 @@ const BASE_LAYOUTS = [
                     active: {},
                     selected: {},
                   },
-                  _code: "",
                   url: "/",
                   openInNewTab: false,
                   text: "Home",
@@ -155,7 +150,6 @@ const BASE_LAYOUTS = [
             active: {},
             selected: {},
           },
-          _code: "",
           _children: [],
         },
       ],
@@ -176,7 +170,6 @@ const BASE_LAYOUTS = [
         },
         selected: {},
       },
-      _code: "",
       className: "",
       onLoad: [],
     },
@@ -189,7 +182,7 @@ const BASE_LAYOUTS = [
     stylesheets: [],
     name: "Empty Layout",
     props: {
-      _id: BASE_LAYOUT_PROP_IDS.PUBLIC,
+      _id: "3723ffa1-f9e0-4c05-8013-98195c788ed6",
       _component: "@budibase/standard-components/container",
       _children: [
         {
@@ -212,7 +205,6 @@ const BASE_LAYOUTS = [
             active: {},
             selected: {},
           },
-          _code: "",
           _children: [],
         },
       ],
@@ -233,7 +225,6 @@ const BASE_LAYOUTS = [
         },
         selected: {},
       },
-      _code: "",
       className: "",
       onLoad: [],
     },

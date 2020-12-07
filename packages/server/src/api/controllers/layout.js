@@ -14,7 +14,10 @@ exports.save = async function(ctx) {
   }
 
   layout._id = layout._id || generateLayoutID()
-  ctx.body = await db.put(layout)
+  const response = await db.put(layout)
+  layout._rev = response.rev
+
+  ctx.body = layout
   ctx.status = 200
 }
 
