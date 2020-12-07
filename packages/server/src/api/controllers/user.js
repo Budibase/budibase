@@ -20,16 +20,10 @@ exports.fetch = async function(ctx) {
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  const {
-    username,
-    password,
-    name,
-    accessLevelId,
-    permissions,
-  } = ctx.request.body
+  const { email, password, accessLevelId, permissions } = ctx.request.body
 
-  if (!username || !password) {
-    ctx.throw(400, "Username and Password Required.")
+  if (!email || !password) {
+    ctx.throw(400, "email and Password Required.")
   }
 
   const accessLevel = await checkAccessLevel(db, accessLevelId)
@@ -37,10 +31,9 @@ exports.create = async function(ctx) {
   if (!accessLevel) ctx.throw(400, "Invalid Access Level")
 
   const user = {
-    _id: generateUserID(username),
-    username,
+    _id: generateUserID(email),
+    email,
     password: await bcrypt.hash(password),
-    name: name || username,
     type: "user",
     accessLevelId,
     permissions: permissions || [BUILTIN_PERMISSION_NAMES.POWER],
@@ -54,8 +47,7 @@ exports.create = async function(ctx) {
     ctx.userId = response._id
     ctx.body = {
       _rev: response.rev,
-      username,
-      name,
+      email,
     }
   } catch (err) {
     if (err.status === 409) {
@@ -76,22 +68,22 @@ exports.update = async function(ctx) {
   user._rev = response.rev
 
   ctx.status = 200
-  ctx.message = `User ${ctx.request.body.username} updated successfully.`
+  ctx.message = `User ${ctx.request.body.email} updated successfully.`
   ctx.body = response
 }
 
 exports.destroy = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  await database.destroy(generateUserID(ctx.params.username))
-  ctx.message = `User ${ctx.params.username} deleted.`
+  await database.destroy(generateUserID(ctx.params.email))
+  ctx.message = `User ${ctx.params.email} deleted.`
   ctx.status = 200
 }
 
 exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const user = await database.get(generateUserID(ctx.params.username))
+  const user = await database.get(generateUserID(ctx.params.email))
   ctx.body = {
-    username: user.username,
+    email: user.email,
     name: user.name,
     _rev: user._rev,
   }

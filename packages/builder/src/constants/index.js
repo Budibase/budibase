@@ -3,7 +3,7 @@ export const TableNames = {
 }
 
 // fields on the user table that cannot be edited
-export const UNEDITABLE_USER_FIELDS = ["username", "password", "accessLevelId"]
+export const UNEDITABLE_USER_FIELDS = ["email", "password", "accessLevelId"]
 
 export const DEFAULT_PAGES_OBJECT = {
   main: {
