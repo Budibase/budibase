@@ -7,20 +7,16 @@
     Toggle,
     RichText,
   } from "@budibase/bbui"
-  import { backendUiStore } from "builderStore"
-  import { TableNames } from "constants"
   import Dropzone from "components/common/Dropzone.svelte"
   import { capitalise } from "../../../helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
   export let meta
-  export let creating
   export let value = meta.type === "boolean" ? false : ""
+  export let readonly
 
   $: type = meta.type
   $: label = capitalise(meta.name)
-  $: editingUser =
-    !creating && $backendUiStore.selectedTable?._id === TableNames.USERS
 </script>
 
 {#if type === 'options'}
@@ -53,5 +49,5 @@
     data-cy="{meta.name}-input"
     {type}
     bind:value
-    disabled={editingUser} />
+    disabled={readonly} />
 {/if}

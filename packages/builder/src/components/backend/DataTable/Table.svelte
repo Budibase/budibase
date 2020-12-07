@@ -7,10 +7,15 @@
   import { notifier } from "builderStore/store/notifications"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
-  import { getRenderer, editRowRenderer } from "./cells/cellRenderers"
+  import {
+    getRenderer,
+    editRowRenderer,
+    userRowRenderer,
+  } from "./cells/cellRenderers"
   import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
   import "@budibase/svelte-ag-grid/dist/index.css"
+  import { TableNames } from "constants"
 
   export let schema = {}
   export let data = []
@@ -42,6 +47,14 @@
     animateRows: true,
   }
 
+  $: isUsersTable = tableId === TableNames.USERS
+  $: {
+    if (isUsersTable) {
+      schema.username.displayFieldName = "Username"
+      schema.roleId.displayFieldName = "Role"
+    }
+  }
+
   $: {
     let result = []
     if (allowEditing) {
@@ -57,12 +70,12 @@
           suppressMenu: true,
           minWidth: 114,
           width: 114,
-          cellRenderer: editRowRenderer,
+          cellRenderer: isUsersTable ? userRowRenderer : editRowRenderer,
         },
       ]
     }
 
-    Object.keys(schema || {}).forEach((key, idx) => {
+    Object.entries(schema || {}).forEach(([key, value]) => {
       result.push({
         headerCheckboxSelection: false,
         headerComponent: TableHeader,
@@ -70,7 +83,7 @@
           field: schema[key],
           editable: allowEditing,
         },
-        headerName: key,
+        headerName: value.displayFieldName || key,
         field: key,
         sortable: true,
         cellRenderer: getRenderer(schema[key], true),
