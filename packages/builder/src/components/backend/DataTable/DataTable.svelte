@@ -8,10 +8,13 @@
   import * as api from "./api"
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
+  import CreateEditUser from "./modals/CreateEditUser.svelte"
+  import CreateEditRow from "./modals/CreateEditRow.svelte"
 
   let data = []
   let loading = false
 
+  $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS
   $: title = $backendUiStore.selectedTable.name
   $: schema = $backendUiStore.selectedTable.schema
   $: tableView = {
@@ -31,14 +34,21 @@
   }
 </script>
 
-<Table {title} {schema} {data} allowEditing={true} {loading}>
+<Table
+  {title}
+  {schema}
+  tableId={$backendUiStore.selectedTable?._id}
+  {data}
+  allowEditing={true}
+  {loading}>
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
-    <CreateRowButton />
+    <CreateRowButton
+      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
     <ExportButton view={tableView} />
   {/if}
-  {#if $backendUiStore.selectedTable?._id === TableNames.USERS}
+  {#if isUsersTable}
     <EditRolesButton />
   {/if}
 </Table>
