@@ -48,7 +48,6 @@ exports.create = async function(ctx) {
     ctx.body = {
       _rev: response.rev,
       email,
-      name,
     }
   } catch (err) {
     if (err.status === 409) {
