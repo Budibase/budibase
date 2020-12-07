@@ -102,11 +102,7 @@ exports.generateRowID = tableId => {
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserParams = (username = "", otherProps = {}) => {
-  return getDocParams(
-    DocumentTypes.ROW,
-    `${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${username}`,
-    otherProps
-  )
+  return exports.getRowParams(ViewNames.USERS, username, otherProps)
 }
 
 /**
