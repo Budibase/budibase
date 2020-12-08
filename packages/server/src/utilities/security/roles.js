@@ -4,7 +4,7 @@ const { BUILTIN_PERMISSION_IDS } = require("./permissions")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
-  POWER: "POWER_USER",
+  POWER: "POWER",
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
@@ -148,7 +148,7 @@ class AccessController {
     let roleIds = this.userHierarchies[userRoleId]
     if (!roleIds) {
       roleIds = await exports.getUserRoleHierarchy(this.appId, userRoleId)
-      this.userHierarchies[userRoleId] = userRoleId
+      this.userHierarchies[userRoleId] = roleIds
     }
 
     return roleIds.indexOf(tryingRoleId) !== -1

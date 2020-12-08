@@ -1,0 +1,101 @@
+<script>
+  import { onMount } from "svelte"
+  import { backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
+  import RowFieldControl from "../RowFieldControl.svelte"
+  import * as backendApi from "../api"
+  import builderApi from "builderStore/api"
+  import { ModalContent, Select } from "@budibase/bbui"
+  import ErrorsBox from "components/common/ErrorsBox.svelte"
+
+  export let row = {}
+
+  let errors = []
+  let roles = []
+  let rolesLoaded = false
+
+  $: creating = row?._id == null
+  $: table = row.tableId
+    ? $backendUiStore.tables.find(table => table._id === row?.tableId)
+    : $backendUiStore.selectedTable
+  $: tableSchema = getUserSchema(table)
+  $: customSchemaKeys = getCustomSchemaKeys(tableSchema)
+
+  const getUserSchema = table => {
+    let schema = table?.schema ?? {}
+    if (schema.username) {
+      schema.username.name = "Username"
+    }
+    return schema
+  }
+
+  const getCustomSchemaKeys = schema => {
+    let customSchema = { ...schema }
+    delete customSchema["email"]
+    delete customSchema["roleId"]
+    return Object.entries(customSchema)
+  }
+
+  const saveRow = async () => {
+    const rowResponse = await backendApi.saveRow(
+      { ...row, tableId: table._id },
+      table._id
+    )
+
+    if (rowResponse.errors) {
+      if (Array.isArray(rowResponse.errors)) {
+        errors = rowResponse.errors.map(error => ({ message: error }))
+      } else {
+        errors = Object.entries(rowResponse.errors)
+          .map(([key, error]) => ({ dataPath: key, message: error }))
+          .flat()
+      }
+      return false
+    }
+
+    notifier.success("User saved successfully.")
+    backendUiStore.actions.rows.save(rowResponse)
+  }
+
+  const fetchRoles = async () => {
+    const rolesResponse = await builderApi.get("/api/roles")
+    roles = await rolesResponse.json()
+    rolesLoaded = true
+  }
+
+  onMount(fetchRoles)
+</script>
+
+<ModalContent
+  title={creating ? 'Create User' : 'Edit User'}
+  confirmText={creating ? 'Create User' : 'Save User'}
+  onConfirm={saveRow}>
+  <ErrorsBox {errors} />
+  <RowFieldControl
+    meta={{ ...tableSchema.email, name: 'Email' }}
+    bind:value={row.email}
+    readonly={!creating} />
+  {#if creating}
+    <RowFieldControl
+      meta={{ name: 'password', type: 'password' }}
+      bind:value={row.password} />
+  {/if}
+  <!-- Defer rendering this select until roles load, otherwise the initial
+       selection is always undefined -->
+  {#if rolesLoaded}
+    <Select
+      thin
+      secondary
+      label="Role"
+      data-cy="roleId-select"
+      bind:value={row.roleId}>
+      <option value="">Choose an option</option>
+      {#each roles as role}
+        <option value={role._id}>{role.name}</option>
+      {/each}
+    </Select>
+  {/if}
+  {#each customSchemaKeys as [key, meta]}
+    <RowFieldControl {meta} bind:value={row[key]} {creating} />
+  {/each}
+</ModalContent>

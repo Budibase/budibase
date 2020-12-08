@@ -1,6 +1,6 @@
 <script>
-  import { goto } from "@sveltech/routify"
-  import { store } from "builderStore"
+  import { goto, url } from "@sveltech/routify"
+  import { store, currentAssetName, selectedComponent } from "builderStore"
   import components from "./temporaryPanelStructure.js"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -26,8 +26,8 @@
 
   const onComponentChosen = component => {
     store.actions.components.create(component._component, component.presetProps)
-    const path = store.actions.components.findRoute($store.currentComponentInfo)
-    $goto(`./:page/:screen/${path}`)
+    const path = store.actions.components.findRoute($selectedComponent)
+    $goto(`./${$store.currentAssetId}/${path}`)
     close()
   }
 </script>
@@ -52,7 +52,7 @@
   align="left">
   <DropdownContainer>
     {#each categories[selectedIndex].children as item}
-      {#if !item.showOnPages || item.showOnPages.includes($store.currentPageName)}
+      {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
         <DropdownItem
           icon={item.icon}
           title={item.name}

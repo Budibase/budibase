@@ -5,6 +5,8 @@ const { join } = require("../../../utilities/centralPath")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
 
+const EXCLUDED_DIRECTORIES = ["css"]
+
 const CONTENT_TYPE_MAP = {
   html: "text/html",
   css: "text/css",
@@ -37,25 +39,28 @@ exports.prepareUpload = async function({ s3Key, metadata, client, file }) {
 exports.deployToObjectStore = async function(appId, objectClient, metadata) {
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
-  const appPages = fs.readdirSync(appAssetsPath)
-
   let uploads = []
 
-  for (let page of appPages) {
-    // Upload HTML, CSS and JS for each page of the web app
-    walkDir(join(appAssetsPath, page), function(filePath) {
-      const appAssetUpload = exports.prepareUpload({
-        file: {
-          path: filePath,
-          name: [...filePath.split("/")].pop(),
-        },
-        s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-        client: objectClient,
-        metadata,
-      })
-      uploads.push(appAssetUpload)
+  // Upload HTML, CSS and JS for each page of the web app
+  walkDir(appAssetsPath, function(filePath) {
+    const filePathParts = filePath.split("/")
+    const publicIndex = filePathParts.indexOf("public")
+    const directory = filePathParts[publicIndex + 1]
+    // don't include these top level directories
+    if (EXCLUDED_DIRECTORIES.indexOf(directory) !== -1) {
+      return
+    }
+    const appAssetUpload = exports.prepareUpload({
+      file: {
+        path: filePath,
+        name: filePathParts.pop(),
+      },
+      s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
+      client: objectClient,
+      metadata,
     })
-  }
+    uploads.push(appAssetUpload)
+  })
 
   // Upload file attachments
   const db = new PouchDB(appId)

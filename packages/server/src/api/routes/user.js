@@ -16,7 +16,7 @@ router
     controller.fetch
   )
   .get(
-    "/api/users/:username",
+    "/api/users/:email",
     authorized(PermissionTypes.USER, PermissionLevels.READ),
     controller.find
   )
@@ -32,7 +32,7 @@ router
     controller.create
   )
   .delete(
-    "/api/users/:username",
+    "/api/users/:email",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     usage,
     controller.destroy

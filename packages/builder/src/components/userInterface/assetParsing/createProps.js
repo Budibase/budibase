@@ -25,7 +25,6 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _id: uuid(),
     _component: componentDefinition._component,
     _styles: { normal: {}, hover: {}, active: {}, selected: {} },
-    _code: "",
   }
 
   const errors = []
@@ -96,6 +95,3 @@ const parsePropDef = propDef => {
 
   return cloneDeep(propDef.default)
 }
-
-export const arrayElementComponentName = (parentComponentName, arrayPropName) =>
-  `${parentComponentName}:${arrayPropName}`

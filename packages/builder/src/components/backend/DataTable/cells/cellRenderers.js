@@ -1,5 +1,6 @@
 import AttachmentList from "./AttachmentCell.svelte"
 import EditRow from "../modals/EditRow.svelte"
+import CreateEditUser from "../modals/CreateEditUser.svelte"
 import DeleteRow from "../modals/DeleteRow.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
 
@@ -39,6 +40,23 @@ export function editRowRenderer(params) {
     target: container,
     props: {
       row: params.data,
+    },
+  })
+
+  return container
+}
+
+export function userRowRenderer(params) {
+  const container = document.createElement("div")
+  container.style.height = "100%"
+  container.style.display = "flex"
+  container.style.alignItems = "center"
+
+  new EditRow({
+    target: container,
+    props: {
+      row: params.data,
+      modalContentComponent: CreateEditUser,
     },
   })
 

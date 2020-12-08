@@ -1,8 +1,9 @@
 <script>
   import { Modal, Button } from "@budibase/bbui"
-  import CreateEditRowModal from "../modals/CreateEditRowModal.svelte"
+  import CreateEditRow from "../modals/CreateEditRow.svelte"
 
   export let row
+  export let modalContentComponent = CreateEditRow
 
   let modal
 
@@ -14,5 +15,5 @@
 
 <Button data-cy="edit-row" secondary small on:click={showModal}>Edit</Button>
 <Modal bind:this={modal}>
-  <CreateEditRowModal {row} />
+  <svelte:component this={modalContentComponent} {row} />
 </Modal>

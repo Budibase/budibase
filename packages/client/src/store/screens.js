@@ -7,30 +7,35 @@ import { getAppId } from "../utils/getAppId"
 const createScreenStore = () => {
   const config = writable({
     screens: [],
-    page: {},
+    layouts: [],
   })
   const store = derived(
     [config, routeStore, builderStore],
     ([$config, $routeStore, $builderStore]) => {
-      let page
+      let activeLayout
       let activeScreen
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        page = $builderStore.page
+        activeLayout = $builderStore.layout
         activeScreen = $builderStore.screen
       } else {
         // Otherwise find the correct screen by matching the current route
-        page = $config.page
-        const { screens } = $config
+        const { screens, layouts } = $config
+        activeLayout = layouts[0]
         if (screens.length === 1) {
           activeScreen = screens[0]
-        } else {
+        } else if ($routeStore.activeRoute) {
           activeScreen = screens.find(
-            screen => screen.routing.route === $routeStore.activeRoute
+            screen => screen._id === $routeStore.activeRoute.screenId
+          )
+        }
+        if (activeScreen) {
+          activeLayout = layouts.find(
+            layout => layout._id === activeScreen.layoutId
           )
         }
       }
-      return { page, activeScreen }
+      return { activeLayout, activeScreen }
     }
   )
 
@@ -38,7 +43,7 @@ const createScreenStore = () => {
     const appDefinition = await API.fetchAppDefinition(getAppId())
     config.set({
       screens: appDefinition.screens,
-      page: appDefinition.page,
+      layouts: appDefinition.layouts,
     })
   }
 

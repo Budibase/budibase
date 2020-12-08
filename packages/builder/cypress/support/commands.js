@@ -44,9 +44,9 @@ Cypress.Commands.add("createApp", name => {
 
       cy.contains("Next").click()
 
-      cy.get("input[name=username]")
+      cy.get("input[name=email]")
         .click()
-        .type("test")
+        .type("test@test.com")
       cy.get("input[name=password]")
         .click()
         .type("test")
@@ -111,7 +111,7 @@ Cypress.Commands.add("addRow", values => {
   })
 })
 
-Cypress.Commands.add("createUser", (username, password, role) => {
+Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
   cy.contains("Users").click()
 
@@ -123,7 +123,7 @@ Cypress.Commands.add("createUser", (username, password, role) => {
       .type(password)
     cy.get("input")
       .eq(1)
-      .type(username)
+      .type(email)
     cy.get("select")
       .first()
       .select(role)
