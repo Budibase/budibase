@@ -2,22 +2,19 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
+export const FrontendTypes = {
+  PAGE: "page",
+  SCREEN: "screen",
+  LAYOUT: "layout",
+  NONE: "none",
+}
+
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = ["email", "password", "roleId"]
 
-export const DEFAULT_PAGES_OBJECT = {
-  main: {
-    props: {
-      _component: "@budibase/standard-components/container",
-    },
-    _screens: {},
+export const LAYOUT_NAMES = {
+  MASTER: {
+    PRIVATE: "layout_private_master",
+    PUBLIC: "layout_private_master",
   },
-  unauthenticated: {
-    props: {
-      _component: "@budibase/standard-components/container",
-    },
-    _screens: {},
-  },
-  componentLibraries: [],
-  stylesheets: [],
 }

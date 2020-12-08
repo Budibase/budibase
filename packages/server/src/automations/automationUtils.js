@@ -1,42 +1,6 @@
 const CouchDB = require("../db")
 
 /**
- * When running mustache statements to execute on the context of the automation it possible user's may input mustache
- * in a few different forms, some of which are invalid but are logically valid. An example of this would be the mustache
- * statement "{{steps[0].revision}}" here it is obvious the user is attempting to access an array or object using array
- * like operators. These are not supported by Mustache and therefore the statement will fail. This function will clean up
- * the mustache statement so it instead reads as "{{steps.0.revision}}" which is valid and will work. It may also be expanded
- * to include any other mustache statement cleanup that has been deemed necessary for the system.
- *
- * @param {string} string The string which *may* contain mustache statements, it is OK if it does not contain any.
- * @returns {string} The string that was input with cleaned up mustache statements as required.
- */
-module.exports.cleanMustache = string => {
-  let charToReplace = {
-    "[": ".",
-    "]": "",
-  }
-  let regex = new RegExp(/{{[^}}]*}}/g)
-  let matches = string.match(regex)
-  if (matches == null) {
-    return string
-  }
-  for (let match of matches) {
-    let baseIdx = string.indexOf(match)
-    for (let key of Object.keys(charToReplace)) {
-      let idxChar = match.indexOf(key)
-      if (idxChar !== -1) {
-        string =
-          string.slice(baseIdx, baseIdx + idxChar) +
-          charToReplace[key] +
-          string.slice(baseIdx + idxChar + 1)
-      }
-    }
-  }
-  return string
-}
-
-/**
  * When values are input to the system generally they will be of type string as this is required for mustache. This can
  * generate some odd scenarios as the Schema of the automation requires a number but the builder might supply a string
  * with mustache syntax to get the number from the rest of the context. To support this the server has to make sure that

@@ -2,7 +2,7 @@
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
 </script>
 
-<!-- routify:options index=1 -->
+<!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
     <TableNavigator />
