@@ -1,6 +1,13 @@
 <script>
   import { getContext } from "svelte"
-  import { Label, DatePicker, Input, Select, Toggle } from "@budibase/bbui"
+  import {
+    Label,
+    DatePicker,
+    Input,
+    Select,
+    Toggle,
+    RichText,
+  } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
   import LinkedRowSelector from "./LinkedRowSelector.svelte"
   import { capitalise } from "./helpers"
@@ -54,6 +61,8 @@
         <Input type="number" bind:value={row[field]} />
       {:else if schema[field].type === 'string'}
         <Input bind:value={row[field]} />
+      {:else if schema[field].type === 'longform'}
+        <RichText bind:value={row[field]} />
       {:else if schema[field].type === 'attachment'}
         <Dropzone bind:files={row[field]} />
       {:else if schema[field].type === 'link'}

@@ -5,8 +5,8 @@ import { writable } from "svelte/store"
 const createAuthStore = () => {
   const store = writable("")
 
-  const logIn = async ({ username, password }) => {
-    const user = await API.logIn({ username, password })
+  const logIn = async ({ email, password }) => {
+    const user = await API.logIn({ email, password })
     if (!user.error) {
       store.set(user.token)
       location.reload()

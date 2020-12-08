@@ -1,7 +1,7 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import {
     readableToRuntimeBinding,
@@ -35,9 +35,9 @@
   function getBindableProperties() {
     // Get all bindableProperties
     bindableProperties = fetchBindableProperties({
-      componentInstanceId: $store.currentComponentInfo._id,
+      componentInstanceId: $store.selectedComponentId,
       components: $store.components,
-      screen: $store.currentPreviewItem,
+      screen: $currentAsset,
       tables: $backendUiStore.tables,
     })
   }

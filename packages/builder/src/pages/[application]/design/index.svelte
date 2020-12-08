@@ -1,6 +1,8 @@
 <script>
   import { goto } from "@sveltech/routify"
-  $goto("../main")
+  import { FrontendTypes } from "constants"
+
+  $goto(`../${FrontendTypes.SCREEN}`)
 </script>
 
-<!-- routify:options index=false -->
+<!-- routify:options index=1 -->

@@ -12,17 +12,18 @@ const USERS_TABLE_SCHEMA = {
   views: {},
   name: "Users",
   schema: {
-    username: {
+    email: {
       type: "string",
       constraints: {
         type: "string",
+        email: true,
         length: {
           maximum: "",
         },
         presence: true,
       },
-      fieldName: "username",
-      name: "username",
+      fieldName: "email",
+      name: "email",
     },
     roleId: {
       fieldName: "roleId",
@@ -31,11 +32,11 @@ const USERS_TABLE_SCHEMA = {
       constraints: {
         type: "string",
         presence: false,
-        inclusion: Object.keys(BUILTIN_ROLE_IDS),
+        inclusion: Object.values(BUILTIN_ROLE_IDS),
       },
     },
   },
-  primaryDisplay: "username",
+  primaryDisplay: "email",
 }
 
 exports.AuthTypes = AuthTypes

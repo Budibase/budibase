@@ -1,7 +1,7 @@
 <script>
   // accepts an array of field names, and outputs an object of { FieldName: value }
   import { DataList, Label, TextButton, Spacer, Select } from "@budibase/bbui"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { CloseCircleIcon, AddIcon } from "components/common/Icons"
   import {
@@ -32,9 +32,9 @@
     }))
 
   $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.currentComponentInfo._id,
+    componentInstanceId: $store.selectedComponentId,
     components: $store.components,
-    screen: $store.currentPreviewItem,
+    screen: $currentAsset,
     tables: $backendUiStore.tables,
   })
 

@@ -24,21 +24,21 @@ function generateSaveValidation() {
       _styles: Joi.object().required(),
       type: Joi.string().optional(),
       table: Joi.string().optional(),
+      layoutId: Joi.string().optional(),
     }).required().unknown(true),
   }).unknown(true))
 }
 
 router
   .get("/api/screens", authorized(BUILDER), controller.fetch)
-  .get("/api/screens/:pageId", authorized(BUILDER), controller.find)
   .post(
-    "/api/screens/:pageId",
+    "/api/screens",
     authorized(BUILDER),
     generateSaveValidation(),
     controller.save
   )
   .delete(
-    "/api/screens/:screenId/:revId",
+    "/api/screens/:screenId/:screenRev",
     authorized(BUILDER),
     controller.destroy
   )
