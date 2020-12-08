@@ -1,12 +1,11 @@
 <html>
   <head>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <style>
       body, html {
         height: 100% !important;
-        font-family: Inter !important;
-        margin: 0px !important;
+        font-family: Inter, sans-serif !important;
+        margin: 0 !important;
       }
       *, *:before, *:after {
         box-sizing: border-box;
@@ -35,8 +34,6 @@
         }
       }
       
-      let selectedComponentStyle
-
       // Ignore clicks
       ["click", "mousedown"].forEach(type => {
         document.addEventListener(type, function(e) {
