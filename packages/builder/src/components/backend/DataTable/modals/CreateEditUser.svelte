@@ -31,7 +31,7 @@
 
   const getCustomSchemaKeys = schema => {
     let customSchema = { ...schema }
-    delete customSchema["username"]
+    delete customSchema["email"]
     delete customSchema["roleId"]
     return Object.entries(customSchema)
   }
@@ -72,8 +72,8 @@
   onConfirm={saveRow}>
   <ErrorsBox {errors} />
   <RowFieldControl
-    meta={{ ...tableSchema.username, name: 'Username' }}
-    bind:value={row.username}
+    meta={{ ...tableSchema.email, name: 'Email' }}
+    bind:value={row.email}
     readonly={!creating} />
   {#if creating}
     <RowFieldControl
