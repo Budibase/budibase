@@ -48,7 +48,7 @@ export default function() {
           if (mousePosition > 0.4 && mousePosition < 0.8) {
             state.dropPosition = DropPosition.INSIDE
           }
-          return
+          return state
         }
 
         // bottom half
