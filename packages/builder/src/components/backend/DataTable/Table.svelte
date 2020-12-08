@@ -75,18 +75,29 @@
       ]
     }
 
+    const canEditColumn = key => {
+      if (!allowEditing) {
+        return false
+      }
+      return !(isUsersTable && ["email", "roleId"].indexOf(key) !== -1)
+    }
+
     Object.entries(schema || {}).forEach(([key, value]) => {
       result.push({
         headerCheckboxSelection: false,
         headerComponent: TableHeader,
         headerComponentParams: {
           field: schema[key],
-          editable: allowEditing,
+          editable: canEditColumn(key),
         },
         headerName: value.displayFieldName || key,
         field: key,
         sortable: true,
-        cellRenderer: getRenderer(schema[key], true),
+        cellRenderer: getRenderer({
+          schema: schema[key],
+          editable: true,
+          isUsersTable,
+        }),
         cellRendererParams: {
           selectRelationship,
         },

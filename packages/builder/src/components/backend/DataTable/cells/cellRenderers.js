@@ -3,15 +3,23 @@ import EditRow from "../modals/EditRow.svelte"
 import CreateEditUser from "../modals/CreateEditUser.svelte"
 import DeleteRow from "../modals/DeleteRow.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
+import RoleCell from "./RoleCell.svelte"
 
 const renderers = {
   attachment: attachmentRenderer,
   link: linkedRowRenderer,
 }
 
-export function getRenderer(schema, editable) {
+export function getRenderer({ schema, editable, isUsersTable }) {
+  const rendererParams = {
+    options: schema.options,
+    constraints: schema.constraints,
+    editable,
+  }
   if (renderers[schema.type]) {
-    return renderers[schema.type](schema.options, schema.constraints, editable)
+    return renderers[schema.type](rendererParams)
+  } else if (isUsersTable && schema.name === "roleId") {
+    return roleRenderer(rendererParams)
   } else {
     return false
   }
@@ -63,15 +71,14 @@ export function userRowRenderer(params) {
   return container
 }
 
-/* eslint-disable no-unused-vars */
-function attachmentRenderer(options, constraints, editable) {
+function attachmentRenderer() {
   return params => {
     const container = document.createElement("div")
     container.style.height = "100%"
     container.style.display = "flex"
     container.style.alignItems = "center"
 
-    const attachmentInstance = new AttachmentList({
+    new AttachmentList({
       target: container,
       props: {
         files: params.value || [],
@@ -82,7 +89,6 @@ function attachmentRenderer(options, constraints, editable) {
   }
 }
 
-/* eslint-disable no-unused-vars */
 function linkedRowRenderer() {
   return params => {
     let container = document.createElement("div")
@@ -96,6 +102,24 @@ function linkedRowRenderer() {
         row: params.data,
         columnName: params.column.colId,
         selectRelationship: params.selectRelationship,
+      },
+    })
+
+    return container
+  }
+}
+
+function roleRenderer() {
+  return params => {
+    let container = document.createElement("div")
+    container.style.display = "grid"
+    container.style.height = "100%"
+    container.style.alignItems = "center"
+
+    new RoleCell({
+      target: container,
+      props: {
+        roleId: params.value,
       },
     })
 

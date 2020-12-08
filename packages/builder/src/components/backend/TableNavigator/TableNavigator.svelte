@@ -2,7 +2,6 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { TableNames } from "constants"
-  import ListItem from "./ListItem.svelte"
   import CreateTableModal from "./modals/CreateTableModal.svelte"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
@@ -47,7 +46,9 @@
         text={table.name}
         selected={selectedView === `all_${table._id}`}
         on:click={() => selectTable(table)}>
-        <EditTablePopover {table} />
+        {#if table._id !== TableNames.USERS}
+          <EditTablePopover {table} />
+        {/if}
       </NavItem>
       {#each Object.keys(table.views || {}) as viewName}
         <NavItem
