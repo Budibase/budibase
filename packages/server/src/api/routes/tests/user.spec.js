@@ -5,14 +5,13 @@ const {
   createUser,
   testPermissionsForEndpoint,
 } = require("./couchTestUtils")
-const {
-  BUILTIN_ROLE_IDS,
-} = require("../../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const { cloneDeep } = require("lodash/fp")
 
 const baseBody = {
+  email: "bill@bill.com",
   password: "yeeooo",
-  roleId: BUILTIN_ROLE_IDS.POWER
+  roleId: BUILTIN_ROLE_IDS.POWER,
 }
 
 describe("/users", () => {
@@ -22,7 +21,7 @@ describe("/users", () => {
   let appId
 
   beforeAll(async () => {
-    ({ request, server } = await supertest(server))
+    ;({ request, server } = await supertest(server))
   })
 
   beforeEach(async () => {
@@ -42,16 +41,16 @@ describe("/users", () => {
       const res = await request
         .get(`/api/users`)
         .set(defaultHeaders(appId))
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      
+
       expect(res.body.length).toBe(2)
       expect(res.body.find(u => u.email === "brenda@brenda.com")).toBeDefined()
       expect(res.body.find(u => u.email === "pam@pam.com")).toBeDefined()
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, appId, "brenda", "brendas_password")
+      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",
@@ -61,7 +60,6 @@ describe("/users", () => {
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
     })
-
   })
 
   describe("create", () => {
@@ -73,7 +71,7 @@ describe("/users", () => {
         .set(defaultHeaders(appId))
         .send(body)
         .expect(200)
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
 
       expect(res.res.statusMessage).toEqual("User created successfully.")
       expect(res.body._id).toBeUndefined()
