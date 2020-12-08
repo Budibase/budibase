@@ -11,8 +11,8 @@
   const ROUTE_NAME_MAP = {
     "/": {
       BASIC: "Home",
-      PUBLIC: "Login"
-    }
+      PUBLIC: "Login",
+    },
   }
 
   const dragDropStore = instantiateStore()
