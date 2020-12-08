@@ -58,7 +58,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, apiKey }) {
+module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.row == null || inputs.row.tableId == null) {
     return
@@ -77,6 +77,7 @@ module.exports.run = async function({ inputs, appId, apiKey }) {
       body: inputs.row,
     },
     user: { appId },
+    eventEmitter: emitter,
   }
 
   try {
