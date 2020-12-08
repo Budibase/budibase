@@ -70,7 +70,7 @@ export const allScreens = derived(store, $store => {
 
 export const mainLayout = derived(store, $store => {
   return $store.layouts?.find(
-    layout => layout.props?._id === LAYOUT_NAMES.MASTER.PRIVATE
+    layout => layout._id === LAYOUT_NAMES.MASTER.PRIVATE
   )
 })
 
