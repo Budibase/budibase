@@ -50,7 +50,7 @@
   $: isUsersTable = tableId === TableNames.USERS
   $: {
     if (isUsersTable) {
-      schema.username.displayFieldName = "Username"
+      schema.email.displayFieldName = "Email"
       schema.roleId.displayFieldName = "Role"
     }
   }
