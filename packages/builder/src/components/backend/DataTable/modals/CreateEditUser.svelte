@@ -75,11 +75,9 @@
     meta={{ ...tableSchema.email, name: 'Email' }}
     bind:value={row.email}
     readonly={!creating} />
-  {#if creating}
-    <RowFieldControl
-      meta={{ name: 'password', type: 'password' }}
-      bind:value={row.password} />
-  {/if}
+  <RowFieldControl
+    meta={{ name: 'password', type: 'password' }}
+    bind:value={row.password} />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
   {#if rolesLoaded}
