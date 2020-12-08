@@ -9,7 +9,6 @@
       return await cachedRoles
     }
     cachedRoles = new Promise(resolve => {
-      console.log("HIT API")
       builderApi
         .get("/api/roles")
         .then(response => response.json())
