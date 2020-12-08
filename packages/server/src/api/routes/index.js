@@ -1,5 +1,5 @@
 const authRoutes = require("./auth")
-const pageRoutes = require("./pages")
+const layoutRoutes = require("./layout")
 const screenRoutes = require("./screen")
 const userRoutes = require("./user")
 const applicationRoutes = require("./application")
@@ -20,7 +20,7 @@ const permissionRoutes = require("./permission")
 
 exports.mainRoutes = [
   deployRoutes,
-  pageRoutes,
+  layoutRoutes,
   screenRoutes,
   userRoutes,
   applicationRoutes,

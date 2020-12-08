@@ -1,21 +1,21 @@
-export const generate_screen_css = component_arr => {
+exports.generateAssetCss = component_arr => {
   let styles = ""
   for (const { _styles, _id, _children, _component } of component_arr) {
     let [componentName] = _component.match(/[a-z]*$/)
     Object.keys(_styles).forEach(selector => {
-      const cssString = generate_css(_styles[selector])
+      const cssString = exports.generateCss(_styles[selector])
       if (cssString) {
-        styles += apply_class(_id, componentName, cssString, selector)
+        styles += exports.applyClass(_id, componentName, cssString, selector)
       }
     })
     if (_children && _children.length) {
-      styles += generate_screen_css(_children) + "\n"
+      styles += exports.generateAssetCss(_children) + "\n"
     }
   }
   return styles.trim()
 }
 
-export const generate_css = style => {
+exports.generateCss = style => {
   let cssString = Object.entries(style).reduce((str, [key, value]) => {
     if (typeof value === "string") {
       if (value) {
@@ -33,7 +33,7 @@ export const generate_css = style => {
   return (cssString || "").trim()
 }
 
-export const apply_class = (id, name = "element", styles, selector) => {
+exports.applyClass = (id, name = "element", styles, selector) => {
   if (selector === "normal") {
     return `.${name}-${id} {\n${styles}\n}`
   } else {
