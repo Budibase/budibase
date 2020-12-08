@@ -59,7 +59,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, apiKey }) {
+module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   const { email, password, accessLevelId } = inputs
   const ctx = {
     user: {
@@ -68,6 +68,7 @@ module.exports.run = async function({ inputs, appId, apiKey }) {
     request: {
       body: { email, password, accessLevelId },
     },
+    eventEmitter: emitter,
   }
 
   try {
