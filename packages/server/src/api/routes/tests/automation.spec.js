@@ -17,7 +17,6 @@ const AUTOMATION_ID = generateAutomationID()
 const TEST_AUTOMATION = {
   _id: AUTOMATION_ID,
   name: "My Automation",
-  pageId: "123123123",
   screenId: "kasdkfldsafkl",
   live: true,
   uiTree: {
