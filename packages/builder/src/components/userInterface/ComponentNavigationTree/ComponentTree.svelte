@@ -71,7 +71,7 @@
         on:drop={dragDropStore.actions.drop}
         text={isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
         withArrow
-        indentLevel={level + 3}
+        indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}>
         <ComponentDropdownMenu {component} />
       </NavItem>
