@@ -8,6 +8,13 @@
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
 
+  const ROUTE_NAME_MAP = {
+    "/": {
+      BASIC: "Home",
+      PUBLIC: "Login"
+    }
+  }
+
   const dragDropStore = instantiateStore()
 
   export let route
@@ -30,13 +37,13 @@
   withArrow={route.subpaths} />
 
 {#each Object.entries(route.subpaths) as [url, subpath]}
-  {#each Object.values(subpath.screens) as screenId}
+  {#each Object.entries(subpath.screens) as [role, screenId]}
     <NavItem
       icon="ri-artboard-2-line"
       indentLevel={indent || 1}
       selected={$store.currentAssetId === screenId}
       opened={$store.currentAssetId === screenId}
-      text={url === '/' ? 'Home' : url}
+      text={ROUTE_NAME_MAP[url]?.[role] || url}
       withArrow={route.subpaths}
       on:click={() => changeScreen(screenId)}>
       <ScreenDropdownMenu {screenId} />
