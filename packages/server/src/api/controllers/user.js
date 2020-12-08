@@ -15,7 +15,7 @@ exports.fetch = async function(ctx) {
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  const { email, username, password, name, roleId } = ctx.request.body
+  const { email, password, roleId } = ctx.request.body
 
   if (!email || !password) {
     ctx.throw(400, "email and Password Required.")
@@ -29,7 +29,6 @@ exports.create = async function(ctx) {
     _id: generateUserID(email),
     email,
     password: await bcrypt.hash(password),
-    name,
     type: "user",
     roleId,
     tableId: ViewNames.USERS,
@@ -43,7 +42,6 @@ exports.create = async function(ctx) {
     ctx.body = {
       _rev: response.rev,
       email,
-      name,
     }
   } catch (err) {
     if (err.status === 409) {
@@ -80,7 +78,6 @@ exports.find = async function(ctx) {
   const user = await database.get(generateUserID(ctx.params.email))
   ctx.body = {
     email: user.email,
-    name: user.name,
     _rev: user._rev,
   }
 }
