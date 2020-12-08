@@ -4,7 +4,7 @@ const { BUILTIN_PERMISSION_IDS } = require("./permissions")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
-  POWER: "POWER_USER",
+  POWER: "POWER",
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
