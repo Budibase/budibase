@@ -174,22 +174,20 @@ async function fillRowOutput(automation, params) {
     let table = await db.get(tableId)
     let row = {}
     for (let schemaKey of Object.keys(table.schema)) {
-      if (params[schemaKey] != null) {
-        continue
-      }
+      const paramValue = params[schemaKey]
       let propSchema = table.schema[schemaKey]
       switch (propSchema.constraints.type) {
         case "string":
-          row[schemaKey] = FAKE_STRING
+          row[schemaKey] = paramValue || FAKE_STRING
           break
         case "boolean":
-          row[schemaKey] = FAKE_BOOL
+          row[schemaKey] = paramValue || FAKE_BOOL
           break
         case "number":
-          row[schemaKey] = FAKE_NUMBER
+          row[schemaKey] = paramValue || FAKE_NUMBER
           break
         case "datetime":
-          row[schemaKey] = FAKE_DATETIME
+          row[schemaKey] = paramValue || FAKE_DATETIME
           break
       }
     }
