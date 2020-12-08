@@ -15,10 +15,15 @@
   $: screen = $allScreens.find(screen => screen._id === screenId)
 
   const deleteScreen = () => {
-    store.actions.screens.delete(screen)
-    store.actions.routing.fetch()
-    confirmDeleteDialog.hide()
-    $goto("../")
+    try {
+      store.actions.screens.delete(screen)
+      store.actions.routing.fetch()
+      confirmDeleteDialog.hide()
+      $goto("../")
+      notifier.success("Deleted screen successfully.")
+    } catch (err) {
+      notifier.danger("Error deleting screen")
+    }
   }
 </script>
 
