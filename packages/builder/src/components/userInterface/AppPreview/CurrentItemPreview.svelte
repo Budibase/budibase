@@ -1,10 +1,13 @@
 <script>
   import { onMount } from "svelte"
-  import { store } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
+  import { FrontendTypes } from "../../../constants"
 
   let iframe
+  let layout
+  let screen
 
   // Create screen slot placeholder for use when a page is selected rather
   // than a screen
@@ -16,12 +19,21 @@
     .json()
 
   // Extract data to pass to the iframe
-  $: page = $store.pages[$store.currentPageName]
-  $: screen =
-    $store.currentFrontEndType === "page"
-      ? screenPlaceholder
-      : $store.currentPreviewItem
-  $: selectedComponentId = $store.currentComponentInfo?._id ?? ""
+  $: {
+    if ($store.currentFrontEndType === FrontendTypes.LAYOUT) {
+      layout = $currentAsset
+      screen = screenPlaceholder
+    } else {
+      screen = $currentAsset
+      layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
+    }
+  }
+  $: selectedComponentId = $store.selectedComponentId ?? ""
+  $: previewData = {
+    layout,
+    screen,
+    selectedComponentId,
+  }
 
   // Saving pages and screens to the DB causes them to have _revs.
   // These revisions change every time a save happens and causes
@@ -29,7 +41,7 @@
   // definition hasn't changed.
   // By deleting all _rev properties we can avoid this and increase
   // performance.
-  $: json = JSON.stringify({ page, screen, selectedComponentId })
+  $: json = JSON.stringify(previewData)
   $: strippedJson = json.replaceAll(/"_rev":\s*"[^"]+"/g, `"_rev":""`)
 
   // Update the iframe with the builder info to render the correct preview
@@ -57,13 +69,11 @@
 </script>
 
 <div class="component-container">
-  {#if $store.currentPreviewItem}
-    <iframe
-      style="height: 100%; width: 100%"
-      title="componentPreview"
-      bind:this={iframe}
-      srcdoc={iframeTemplate} />
-  {/if}
+  <iframe
+    style="height: 100%; width: 100%"
+    title="componentPreview"
+    bind:this={iframe}
+    srcdoc={iframeTemplate} />
 </div>
 
 <style>

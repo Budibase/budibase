@@ -70,9 +70,9 @@
     draftScreen.props._instanceName = name
     draftScreen.props._component = baseComponent
     // TODO: need to fix this up correctly
-    draftScreen.routing = { route, accessLevelId: "ADMIN" }
+    draftScreen.routing = { route, roleId: "ADMIN" }
 
-    await store.actions.screens.create(draftScreen)
+    const createdScreen = await store.actions.screens.create(draftScreen)
     if (createLink) {
       await store.actions.components.links.save(route, name)
     }
@@ -85,7 +85,7 @@
       })
     }
 
-    $goto(`./:page/${name}`)
+    $goto(`./screen/${createdScreen._id}`)
   }
 
   const routeNameExists = route => {

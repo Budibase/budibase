@@ -111,7 +111,7 @@ Cypress.Commands.add("addRow", values => {
   })
 })
 
-Cypress.Commands.add("createUser", (email, password, accessLevel) => {
+Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
   cy.contains("Users").click()
 
@@ -126,7 +126,7 @@ Cypress.Commands.add("createUser", (email, password, accessLevel) => {
       .type(email)
     cy.get("select")
       .first()
-      .select(accessLevel)
+      .select(role)
 
     // Save
     cy.get(".buttons")

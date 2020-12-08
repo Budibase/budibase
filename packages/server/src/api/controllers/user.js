@@ -1,9 +1,7 @@
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
-const {
-  BUILTIN_LEVEL_ID_ARRAY,
-} = require("../../utilities/security/accessLevels")
+const { BUILTIN_ROLE_ID_ARRAY } = require("../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_NAMES,
 } = require("../../utilities/security/permissions")
@@ -20,22 +18,22 @@ exports.fetch = async function(ctx) {
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  const { email, password, accessLevelId, permissions } = ctx.request.body
+  const { email, password, roleId, permissions } = ctx.request.body
 
   if (!email || !password) {
     ctx.throw(400, "email and Password Required.")
   }
 
-  const accessLevel = await checkAccessLevel(db, accessLevelId)
+  const role = await checkRole(db, roleId)
 
-  if (!accessLevel) ctx.throw(400, "Invalid Access Level")
+  if (!role) ctx.throw(400, "Invalid Role")
 
   const user = {
     _id: generateUserID(email),
     email,
     password: await bcrypt.hash(password),
     type: "user",
-    accessLevelId,
+    roleId,
     permissions: permissions || [BUILTIN_PERMISSION_NAMES.POWER],
     tableId: ViewNames.USERS,
   }
@@ -89,14 +87,14 @@ exports.find = async function(ctx) {
   }
 }
 
-const checkAccessLevel = async (db, accessLevelId) => {
-  if (!accessLevelId) return
-  if (BUILTIN_LEVEL_ID_ARRAY.indexOf(accessLevelId) !== -1) {
+const checkRole = async (db, roleId) => {
+  if (!roleId) return
+  if (BUILTIN_ROLE_ID_ARRAY.indexOf(roleId) !== -1) {
     return {
-      _id: accessLevelId,
-      name: accessLevelId,
+      _id: roleId,
+      name: roleId,
       permissions: [],
     }
   }
-  return await db.get(accessLevelId)
+  return await db.get(roleId)
 }
