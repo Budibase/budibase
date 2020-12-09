@@ -10,6 +10,7 @@ import {
   currentAsset,
   mainLayout,
   selectedComponent,
+  selectedAccessRole,
 } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -88,6 +89,11 @@ export const getFrontendStore = () => {
           let screen =
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
+
+          // Update role to the screen's role setting so that it will always
+          // be visible
+          selectedAccessRole.set(screen.routing.roleId)
+
           state.currentFrontEndType = FrontendTypes.SCREEN
           state.currentAssetId = screen._id
           state.currentView = "detail"
