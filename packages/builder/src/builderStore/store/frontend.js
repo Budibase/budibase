@@ -88,7 +88,7 @@ export const getFrontendStore = () => {
           const screen = get(allScreens).find(screen => screen._id === screenId)
           if (!screen) return state
           state.currentFrontEndType = FrontendTypes.SCREEN
-          state.currentAssetId = selectedScreen._id
+          state.currentAssetId = screen._id
           state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
           return state
