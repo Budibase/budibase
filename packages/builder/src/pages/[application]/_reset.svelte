@@ -20,6 +20,7 @@
       backendUiStore.actions.reset()
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
+      await backendUiStore.actions.roles.fetch()
       return pkg
     } else {
       throw new Error(pkg)
