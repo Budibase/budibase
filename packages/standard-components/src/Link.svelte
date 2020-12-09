@@ -11,7 +11,7 @@
   $: target = openInNewTab ? "_blank" : "_self"
 </script>
 
-<a href={url} use:linkable {target} use:styleable={$component.styles}>
+<a href={url || '/'} use:linkable {target} use:styleable={$component.styles}>
   {text}
   <slot />
 </a>
