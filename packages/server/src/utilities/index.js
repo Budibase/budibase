@@ -1,8 +1,58 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const fs = require("fs")
+const { cloneDeep } = require("lodash/fp")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+
+/**
+ * A map of how we convert various properties in rows to each other based on the row type.
+ */
+const TYPE_TRANSFORM_MAP = {
+  link: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
+  options: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  string: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  longform: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  number: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    parse: n => parseFloat(n),
+  },
+  datetime: {
+    "": null,
+    [undefined]: undefined,
+    [null]: null,
+  },
+  attachment: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
+  boolean: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    true: true,
+    false: false,
+  },
+}
 
 function confirmAppId(possibleAppId) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -92,4 +142,29 @@ exports.walkDir = (dirPath, callback) => {
       exports.walkDir(filePath, callback)
     }
   }
+}
+
+/**
+ * This will coerce the values in a row to the correct types based on the type transform map and the
+ * table schema.
+ * @param {object} row The row which is to be coerced to correct values based on schema, this input
+ * row will not be updated.
+ * @param {object} table The table that has been retrieved from DB, this must contain the expected
+ * schema for the rows.
+ * @returns {object} The updated row will be returned with all values coerced.
+ */
+exports.coerceRowValues = (row, table) => {
+  const clonedRow = cloneDeep(row)
+  for (let [key, value] of Object.entries(clonedRow)) {
+    const field = table.schema[key]
+    if (!field) continue
+
+    // eslint-disable-next-line no-prototype-builtins
+    if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
+      clonedRow[key] = TYPE_TRANSFORM_MAP[field.type][value]
+    } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
+      clonedRow[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
+    }
+  }
+  return clonedRow
 }
