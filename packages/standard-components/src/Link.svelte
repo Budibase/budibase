@@ -4,7 +4,7 @@
   const { linkable, styleable } = getContext("sdk")
   const component = getContext("component")
 
-  export let url = ""
+  export let url = "/"
   export let text = ""
   export let openInNewTab = false
 

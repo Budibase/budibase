@@ -612,7 +612,10 @@
 		"name": "Link",
 		"description": "an HTML anchor <a> tag",
 		"props": {
-			"url": "string",
+			"url": {
+				"type": "string",
+				"default": "/"
+			},
 			"openInNewTab": "bool",
 			"text": "string"
 		}
