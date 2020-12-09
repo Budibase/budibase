@@ -29,11 +29,19 @@
   class="container"
   use:styleable={$component.styles}
   style="--cardWidth: {cardWidth}">
-  {#if showImage}<img style="--imageWidth: {imageWidth}; --imageHeight: {imageHeight}" class="image" src={imageUrl} alt="" />{/if}
+  {#if showImage}
+    <img
+      style="--imageWidth: {imageWidth}; --imageHeight: {imageHeight}"
+      class="image"
+      src={imageUrl}
+      alt="" />
+  {/if}
   <div class="content">
     <h2 class="heading">{heading}</h2>
     <h4 class="text">{description}</h4>
-    <a style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}" href={linkUrl}>{linkText}</a>
+    <a
+      style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
+      href={linkUrl}>{linkText}</a>
   </div>
 </div>
 
