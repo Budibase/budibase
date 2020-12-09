@@ -89,9 +89,12 @@ exports.destroy = async function(ctx) {
 
 exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const user = await database.get(generateUserID(ctx.params.email))
-  ctx.body = {
-    email: user.email,
-    _rev: user._rev,
+  let lookup = ctx.params.email
+    ? generateUserID(ctx.params.email)
+    : ctx.params.userId
+  const user = await database.get(lookup)
+  if (user) {
+    delete user.password
   }
+  ctx.body = user
 }
