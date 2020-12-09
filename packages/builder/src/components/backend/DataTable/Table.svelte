@@ -56,6 +56,9 @@
   }
 
   $: {
+    // Reset selection every time data changes
+    selectedRows = []
+
     let result = []
     if (allowEditing) {
       result = [
