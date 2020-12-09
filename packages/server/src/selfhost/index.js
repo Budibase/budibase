@@ -37,3 +37,8 @@ exports.getSelfHostInfo = async () => {
   const db = new CouchDB(SELF_HOST_DB)
   return db.get(SELF_HOST_DOC)
 }
+
+exports.getSelfHostAPIKey = async () => {
+  const info = await exports.getSelfHostInfo()
+  return info ? info.apiKeyId : null
+}
