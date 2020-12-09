@@ -51,8 +51,6 @@ describe("/rows", () => {
 
 
   describe("save, load, update, delete", () => {
-
-
     it("returns a success message when the row is created", async () => {
       const res = await createRow()
       expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
