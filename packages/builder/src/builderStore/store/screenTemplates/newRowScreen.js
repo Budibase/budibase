@@ -18,7 +18,7 @@ export default function(tables) {
   })
 }
 
-export const newRowUrl = table => sanitizeUrl(`/${table.name}/new`)
+export const newRowUrl = table => sanitizeUrl(`/${table.name}/new/row`)
 export const NEW_ROW_TEMPLATE = "NEW_ROW_TEMPLATE"
 
 function generateTitleContainer(table) {

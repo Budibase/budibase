@@ -22,15 +22,13 @@
   export let onChange = () => {}
 
   let temporaryBindableValue = value
+  let bindableProperties = []
+  let anchor
+  let dropdown
 
   function handleClose() {
     handleChange(key, temporaryBindableValue)
   }
-
-  let bindableProperties = []
-
-  let anchor
-  let dropdown
 
   function getBindableProperties() {
     // Get all bindableProperties
@@ -77,7 +75,7 @@
       : temp
   }
 
-  //Incase the component has a different value key name
+  // Incase the component has a different value key name
   const handlevalueKey = value =>
     props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() }
 </script>
@@ -94,7 +92,7 @@
       {...props}
       name={key} />
   </div>
-  {#if bindable && control === Input && !key.startsWith('_')}
+  {#if bindable && !key.startsWith('_') && control === Input}
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
