@@ -86,13 +86,16 @@ export const getFrontendStore = () => {
       select: async screenId => {
         let promise
         store.update(state => {
-          const screen = get(allScreens).find(screen => screen._id === screenId)
+          const screens = get(allScreens)
+          let selectedScreen = screens.find(screen => screen._id === screenId)
+          if (!selectedScreen) {
+            selectedScreen = screens[0]
+          }
           state.currentFrontEndType = FrontendTypes.SCREEN
-          state.currentAssetId = screenId
+          state.currentAssetId = selectedScreen._id
           state.currentView = "detail"
-
-          promise = store.actions.screens.regenerateCss(screen)
-          state.selectedComponentId = screen.props._id
+          promise = store.actions.screens.regenerateCss(selectedScreen)
+          state.selectedComponentId = selectedScreen.props._id
           return state
         })
         await promise
