@@ -15,7 +15,6 @@
   let templateIndex
   let draftScreen
   let createLink = true
-  let roles = []
   let roleId = "BASIC"
 
   $: templates = getTemplates($store, $backendUiStore.tables)
@@ -28,11 +27,6 @@
       templateIndex = 0
       templateChanged(0)
     }
-  }
-
-  const fetchRoles = async () => {
-    const response = await api.get("/api/roles")
-    roles = await response.json()
   }
 
   const templateChanged = newTemplateIndex => {
@@ -96,8 +90,6 @@
       route = "/" + event.target.value
     }
   }
-
-  onMount(fetchRoles)
 </script>
 
 <ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>
@@ -118,12 +110,10 @@
     error={routeError}
     bind:value={route}
     on:change={routeChanged} />
-  {#if roles.length}
-    <Select label="Access" bind:value={roleId} secondary>
-      {#each roles as role}
-        <option value={role._id}>{role.name}</option>
-      {/each}
-    </Select>
-  {/if}
+  <Select label="Access" bind:value={roleId} secondary>
+    {#each $backendUiStore as role}
+      <option value={role._id}>{role.name}</option>
+    {/each}
+  </Select>
   <Toggle text="Create link in navigation bar" bind:checked={createLink} />
 </ModalContent>
