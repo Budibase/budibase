@@ -312,13 +312,13 @@ export default {
                 label: "Link Color",
                 key: "linkColor",
                 control: Colorpicker,
-                defaultValue: "#000"
+                defaultValue: "#000",
               },
               {
                 label: "Hover Color",
                 key: "linkHoverColor",
                 control: Colorpicker,
-                defaultValue: "#222"
+                defaultValue: "#222",
               },
               {
                 label: "Image Height",
@@ -387,13 +387,13 @@ export default {
                 label: "Link Color",
                 key: "linkColor",
                 control: Colorpicker,
-                defaultValue: "#000"
+                defaultValue: "#000",
               },
               {
                 label: "Hover Color",
                 key: "linkHoverColor",
                 control: Colorpicker,
-                defaultValue: "#222"
+                defaultValue: "#222",
               },
               {
                 label: "Card Width",
