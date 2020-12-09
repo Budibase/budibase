@@ -22,13 +22,7 @@
 
   <title>{title}</title>
   <link rel="icon" type="image/png" href={favicon} />
-
-  <link rel="stylesheet" href={publicPath('bundle.css')} />
-
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Roboto+Mono" />
   <style>
     html,
     body {

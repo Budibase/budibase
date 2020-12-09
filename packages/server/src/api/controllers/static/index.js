@@ -16,18 +16,9 @@ const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
 const env = require("../../../environment")
-const { generateAssetCss } = require("../../../utilities/builder/generateCss")
-const compileStaticAssets = require("../../../utilities/builder/compileStaticAssets")
 
 // this was the version before we started versioning the component library
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
-
-exports.generateCss = async function(ctx) {
-  const structure = ctx.request.body
-  structure._css = generateAssetCss([structure.props])
-  await compileStaticAssets(ctx.appId, structure)
-  ctx.body = { css: structure._css }
-}
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../../builder")
