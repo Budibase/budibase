@@ -85,7 +85,9 @@ export const getFrontendStore = () => {
     screens: {
       select: screenId => {
         store.update(state => {
-          const screen = get(allScreens).find(screen => screen._id === screenId)
+          let screens = get(allScreens)
+          let screen =
+            screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
           state.currentFrontEndType = FrontendTypes.SCREEN
           state.currentAssetId = screen._id
