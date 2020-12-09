@@ -218,5 +218,6 @@
     position: absolute;
     bottom: var(--spacing-m);
     left: var(--spacing-m);
+    z-index: 1;
   }
 </style>
