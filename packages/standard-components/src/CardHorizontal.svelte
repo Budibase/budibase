@@ -19,8 +19,6 @@
   export let imageHeight
 
   $: cssVariables = {
-    linkColor,
-    linkHoverColor,
     imageWidth,
     cardWidth,
     imageHeight,
@@ -30,18 +28,18 @@
 </script>
 
 <div
+  use:styleable={$component.styles}
   use:cssVars={cssVariables}
-  class="container"
-  use:styleable={$component.styles}>
+  class="container">
   {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <main>
       <h2 class="heading">{heading}</h2>
       <p class="text">{description}</p>
     </main>
-    <footer>
+    <footer >
       <p class="subtext">{subtext}</p>
-      <a href={linkUrl}>{linkText}</a>
+      <a style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}" href={linkUrl}>{linkText}</a>
     </footer>
   </div>
 </div>
