@@ -3,7 +3,6 @@ import { cloneDeep } from "lodash/fp"
 import {
   createProps,
   getBuiltin,
-  makePropsSafe,
 } from "components/userInterface/assetParsing/createProps"
 import {
   allScreens,
