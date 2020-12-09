@@ -55,7 +55,7 @@ describe("/rows", () => {
 
     it("returns a success message when the row is created", async () => {
       const res = await createRow()
-      expect(res.res.statusMessage).toEqual(`${table.name} created successfully`)           
+      expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
     })
@@ -116,30 +116,6 @@ describe("/rows", () => {
       expect(res.body.length).toBe(2)
       expect(res.body.find(r => r.name === newRow.name)).toBeDefined()
       expect(res.body.find(r => r.name === row.name)).toBeDefined()
-    })
-
-    it("lists rows when queried by their ID", async () => {
-      const newRow = {
-        tableId: table._id,
-        name: "Second Contact",
-        status: "new"
-      }
-      const row = await createRow()
-      const secondRow = await createRow(newRow)
-
-      const rowIds = [row.body._id, secondRow.body._id]
-
-      const res = await request
-        .post(`/api/rows/search`)
-        .set(defaultHeaders(appId))
-        .send({
-          keys: rowIds
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      expect(res.body.length).toBe(2)
-      expect(res.body.map(response => response._id)).toEqual(expect.arrayContaining(rowIds))
     })
 
     it("load should return 404 when row does not exist", async () => {
