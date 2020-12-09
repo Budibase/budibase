@@ -12,14 +12,14 @@
   export let subtext = ""
   export let linkText = ""
   export let linkUrl
-  export let color
+  export let linkColor
   export let linkHoverColor
   export let cardWidth
   export let imageWidth
   export let imageHeight
 
   $: cssVariables = {
-    color,
+    linkColor,
     linkHoverColor,
     imageWidth,
     cardWidth,
@@ -97,7 +97,7 @@
   a {
     margin: 0.5rem 0 0 0;
     text-decoration: none;
-    color: var(--color);
+    color: var(--linkColor);
     font-weight: 600;
     font-size: 0.85rem;
     margin: 0;

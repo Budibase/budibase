@@ -310,15 +310,15 @@ export default {
               },
               {
                 label: "Link Color",
-                key: "color",
-                control: Input,
-                placeholder: "Link Color",
+                key: "linkColor",
+                control: Colorpicker,
+                defaultValue: "#000"
               },
               {
                 label: "Hover Color",
                 key: "linkHoverColor",
-                control: Input,
-                placeholder: "Hover Color",
+                control: Colorpicker,
+                defaultValue: "#222"
               },
               {
                 label: "Image Height",
@@ -385,7 +385,7 @@ export default {
               },
               {
                 label: "Link Color",
-                key: "color",
+                key: "linkColor",
                 control: Colorpicker,
                 defaultValue: "#000"
               },
@@ -393,7 +393,7 @@ export default {
                 label: "Hover Color",
                 key: "linkHoverColor",
                 control: Colorpicker,
-                defaultValue: "#000"
+                defaultValue: "#222"
               },
               {
                 label: "Card Width",
