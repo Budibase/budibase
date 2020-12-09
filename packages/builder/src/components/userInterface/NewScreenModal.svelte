@@ -48,10 +48,10 @@
 
   const save = async () => {
     if (!route) {
-      routeError = "Url is required"
+      routeError = "URL is required"
     } else {
-      if (routeNameExists(route)) {
-        routeError = "This url is already taken"
+      if (routeExists(route, roleId)) {
+        routeError = "This URL is already taken for this access role"
       } else {
         routeError = ""
       }
@@ -79,9 +79,11 @@
     $goto(`./${createdScreen._id}`)
   }
 
-  const routeNameExists = route => {
+  const routeExists = (route, roleId) => {
     return $allScreens.some(
-      screen => screen.routing.route.toLowerCase() === route.toLowerCase()
+      screen =>
+        screen.routing.route.toLowerCase() === route.toLowerCase() &&
+        screen.routing.roleId === roleId
     )
   }
 
