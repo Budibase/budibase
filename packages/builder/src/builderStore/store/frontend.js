@@ -120,17 +120,13 @@ export const getFrontendStore = () => {
             state.screens.splice(foundScreen, 1)
           }
           state.screens.push(screen)
-
-          if (creatingNewScreen) {
-            const safeProps = makePropsSafe(
-              state.components[screen.props._component],
-              screen.props
-            )
-            state.selectedComponentId = safeProps._id
-            screen.props = safeProps
-          }
           return state
         })
+
+        if (creatingNewScreen) {
+          store.actions.screens.select(screen._id)
+        }
+
         return screen
       },
       delete: async screens => {
@@ -178,28 +174,30 @@ export const getFrontendStore = () => {
       },
       save: async layout => {
         const layoutToSave = cloneDeep(layout)
-
+        const creatingNewLayout = layoutToSave._id === undefined
         const response = await api.post(`/api/layouts`, layoutToSave)
-
-        const json = await response.json()
+        const savedLayout = await response.json()
 
         store.update(state => {
           const layoutIdx = state.layouts.findIndex(
-            stateLayout => stateLayout._id === json._id
+            stateLayout => stateLayout._id === savedLayout._id
           )
-
           if (layoutIdx >= 0) {
             // update existing layout
-            state.layouts.splice(layoutIdx, 1, json)
+            state.layouts.splice(layoutIdx, 1, savedLayout)
           } else {
             // save new layout
-            state.layouts.push(json)
+            state.layouts.push(savedLayout)
           }
-
-          state.currentAssetId = json._id
-          state.selectedComponentId = json.props._id
           return state
         })
+
+        // Select layout if creating a new one
+        if (creatingNewLayout) {
+          store.actions.layouts.select(savedLayout._id)
+        }
+
+        return savedLayout
       },
       find: layoutId => {
         if (!layoutId) {
@@ -450,7 +448,6 @@ export const getFrontendStore = () => {
 
               // Save layout
               nav._children = [...nav._children, newLink]
-              state.currentAssetId = layout._id
               promises.push(store.actions.layouts.save(layout))
             }
             return state
