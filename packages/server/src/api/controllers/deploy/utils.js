@@ -5,8 +5,6 @@ const { join } = require("../../../utilities/centralPath")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
 
-const EXCLUDED_DIRECTORIES = ["css"]
-
 const CONTENT_TYPE_MAP = {
   html: "text/html",
   css: "text/css",
@@ -44,12 +42,6 @@ exports.deployToObjectStore = async function(appId, objectClient, metadata) {
   // Upload HTML, CSS and JS for each page of the web app
   walkDir(appAssetsPath, function(filePath) {
     const filePathParts = filePath.split("/")
-    const publicIndex = filePathParts.indexOf("public")
-    const directory = filePathParts[publicIndex + 1]
-    // don't include these top level directories
-    if (EXCLUDED_DIRECTORIES.indexOf(directory) !== -1) {
-      return
-    }
     const appAssetUpload = exports.prepareUpload({
       file: {
         path: filePath,
