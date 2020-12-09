@@ -17,8 +17,6 @@
   export let cardWidth
 
   $: cssVariables = {
-    linkColor,
-    linkHoverColor,
     imageHeight,
     cardWidth,
   }
@@ -29,12 +27,13 @@
 <div
   use:cssVars={cssVariables}
   class="container"
-  use:styleable={$component.styles}>
-  {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
+  use:styleable={$component.styles}
+  style="--cardWidth: {cardWidth}">
+  {#if showImage}<img style="--imageWidth: {imageWidth}; --imageHeight: {imageHeight}" class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <h2 class="heading">{heading}</h2>
     <h4 class="text">{description}</h4>
-    <a href={linkUrl}>{linkText}</a>
+    <a style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}" href={linkUrl}>{linkText}</a>
   </div>
 </div>
 

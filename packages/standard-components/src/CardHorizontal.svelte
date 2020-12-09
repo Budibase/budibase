@@ -1,6 +1,5 @@
 <script>
   import { getContext } from "svelte"
-  import { cssVars } from "./helpers"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -18,20 +17,14 @@
   export let imageWidth
   export let imageHeight
 
-  $: cssVariables = {
-    imageWidth,
-    cardWidth,
-    imageHeight,
-  }
-
   $: showImage = !!imageUrl
 </script>
 
 <div
   use:styleable={$component.styles}
-  use:cssVars={cssVariables}
-  class="container">
-  {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
+  class="container"
+  style="--cardWidth: {cardWidth}">
+  {#if showImage}<img style="--imageWidth: {imageWidth}; --imageHeight: {imageHeight}" class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <main>
       <h2 class="heading">{heading}</h2>
