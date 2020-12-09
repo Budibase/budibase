@@ -111,7 +111,7 @@
     bind:value={route}
     on:change={routeChanged} />
   <Select label="Access" bind:value={roleId} secondary>
-    {#each $backendUiStore as role}
+    {#each $backendUiStore.roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>

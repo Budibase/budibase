@@ -2,7 +2,7 @@ import { getFrontendStore } from "./store/frontend"
 import { getBackendUiStore } from "./store/backend"
 import { getAutomationStore } from "./store/automation/"
 import { getThemeStore } from "./store/theme"
-import { derived } from "svelte/store"
+import { derived, writable } from "svelte/store"
 import analytics from "analytics"
 import { LAYOUT_NAMES } from "../constants"
 import { makePropsSafe } from "components/userInterface/assetParsing/createProps"
@@ -73,6 +73,8 @@ export const mainLayout = derived(store, $store => {
     layout => layout._id === LAYOUT_NAMES.MASTER.PRIVATE
   )
 })
+
+export const selectedAccessRole = writable("BASIC")
 
 export const initialise = async () => {
   try {
