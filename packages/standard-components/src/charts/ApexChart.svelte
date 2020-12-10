@@ -11,7 +11,9 @@
 {#if options}
   <div use:chart={options} use:styleable={$component.styles} />
 {:else if options === false}
-  <div use:styleable={$component.styles}>Invalid chart options</div>
+  <div use:styleable={$component.styles}>
+    Use the settings panel to build your chart -->
+  </div>
 {/if}
 
 <style>
