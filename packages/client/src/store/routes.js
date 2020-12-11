@@ -7,6 +7,7 @@ const createRouteStore = () => {
     routes: [],
     routeParams: {},
     activeRoute: null,
+    routeSessionId: Math.random(),
   }
   const store = writable(initialState)
 
@@ -29,6 +30,7 @@ const createRouteStore = () => {
 
     store.update(state => {
       state.routes = routes
+      state.routeSessionId = Math.random()
       return state
     })
   }
