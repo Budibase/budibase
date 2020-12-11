@@ -1,6 +1,3 @@
-import { routeStore } from "./routes"
-import { screenStore } from "./screens"
-
 export { authStore } from "./auth"
 export { routeStore } from "./routes"
 export { screenStore } from "./screens"
