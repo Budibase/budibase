@@ -7,6 +7,8 @@ const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
 const env = require("../../../environment")
 
+const EXCLUDED_DIRECTORIES = ["css"]
+
 /**
  * Finalises the deployment, updating the quota for the user API key
  * The verification process returns the levels to update to.
@@ -136,25 +138,28 @@ exports.uploadAppAssets = async function({ appId, bucket, accountId }) {
 
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
-  const appPages = fs.readdirSync(appAssetsPath)
-
   let uploads = []
 
-  for (let page of appPages) {
-    // Upload HTML, CSS and JS for each page of the web app
-    walkDir(join(appAssetsPath, page), function(filePath) {
-      const appAssetUpload = prepareUploadForS3({
-        file: {
-          path: filePath,
-          name: [...filePath.split("/")].pop(),
-        },
-        s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-        s3,
-        metadata: { accountId },
-      })
-      uploads.push(appAssetUpload)
+  // Upload HTML, CSS and JS of the web app
+  walkDir(appAssetsPath, function(filePath) {
+    const filePathParts = filePath.split("/")
+    const publicIndex = filePathParts.indexOf("public")
+    const directory = filePathParts[publicIndex + 1]
+    // don't include these top level directories
+    if (EXCLUDED_DIRECTORIES.indexOf(directory) !== -1) {
+      return
+    }
+    const appAssetUpload = prepareUploadForS3({
+      file: {
+        path: filePath,
+        name: filePathParts.pop(),
+      },
+      s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
+      s3,
+      metadata: { accountId },
     })
-  }
+    uploads.push(appAssetUpload)
+  })
 
   // Upload file attachments
   const db = new PouchDB(appId)

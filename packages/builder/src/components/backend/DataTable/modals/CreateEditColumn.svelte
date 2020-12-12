@@ -2,6 +2,7 @@
   import { Input, Button, TextButton, Select, Toggle } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import { FIELDS } from "constants/backend"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
@@ -30,6 +31,9 @@
     table => table._id !== $backendUiStore.draftTable._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
+  $: uneditable =
+    $backendUiStore.selectedTable?._id === TableNames.USERS &&
+    UNEDITABLE_USER_FIELDS.includes(field.name)
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -87,7 +91,7 @@
 </script>
 
 <div class="actions" class:hidden={deletion}>
-  <Input label="Name" thin bind:value={field.name} />
+  <Input label="Name" thin bind:value={field.name} disabled={uneditable} />
 
   <Select
     disabled={originalName}
@@ -101,7 +105,7 @@
     {/each}
   </Select>
 
-  {#if field.type !== 'link'}
+  {#if field.type !== 'link' && !uneditable}
     <Toggle
       checked={required}
       on:change={onChangeRequired}
@@ -157,7 +161,7 @@
       bind:value={field.fieldName} />
   {/if}
   <footer class="create-column-options">
-    {#if originalName}
+    {#if !uneditable && originalName}
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>

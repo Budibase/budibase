@@ -1,4 +1,4 @@
-import { createProps } from "../src/components/userInterface/pagesParsing/createProps"
+import { createProps } from "../src/components/userInterface/assetParsing/createProps"
 import { keys, some } from "lodash/fp"
 import { stripStandardProps } from "./testData"
 
@@ -158,8 +158,6 @@ describe("createDefaultProps", () => {
     const comp = getcomponent()
     comp.props.fieldName = { type: "string", default: 1 }
     const { props } = createProps(comp)
-    expect(props._code).toBeDefined()
     expect(props._styles).toBeDefined()
-    expect(props._code).toBeDefined()
   })
 })

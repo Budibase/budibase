@@ -1,59 +1,25 @@
-import { createApp } from "./createApp"
-import { builtins, builtinLibName } from "./render/builtinComponents"
-import { getAppId } from "./render/getAppId"
+import ClientApp from "./components/ClientApp.svelte"
+import { builderStore } from "./store"
 
-/**
- * create a web application from static budibase definition files.
- * @param  {object} opts - configuration options for budibase client libary
- */
-export const loadBudibase = async opts => {
-  const _window = (opts && opts.window) || window
-  // const _localStorage = (opts && opts.localStorage) || localStorage
-  const appId = getAppId(window.document.cookie)
-  const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
+let app
 
-  const user = {}
-
-  const componentLibraryModules = (opts && opts.componentLibraries) || {}
-
-  const libraries = frontendDefinition.libraries || []
-
-  for (let library of libraries) {
-    // fetch the JavaScript for the component libraries from the server
-    componentLibraryModules[library] = await import(
-      `/componentlibrary?library=${encodeURI(library)}&appId=${appId}`
-    )
-  }
-
-  componentLibraryModules[builtinLibName] = builtins(_window)
-
-  const {
-    initialisePage,
-    screenStore,
-    pageStore,
-    routeTo,
-    rootNode,
-  } = createApp({
-    componentLibraries: componentLibraryModules,
-    frontendDefinition,
-    user,
-    window: _window,
+const loadBudibase = () => {
+  // Update builder store with any builder flags
+  builderStore.set({
+    inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
+    layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
+    screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
+    selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
+    previewId: window["##BUDIBASE_PREVIEW_ID##"],
   })
 
-  const route = _window.location
-    ? _window.location.pathname.replace(`${appId}/`, "").replace(appId, "")
-    : ""
-
-  initialisePage(frontendDefinition.page, _window.document.body, route)
-
-  return {
-    screenStore,
-    pageStore,
-    routeTo,
-    rootNode,
+  // Create app if one hasn't been created yet
+  if (!app) {
+    app = new ClientApp({
+      target: window.document.body,
+    })
   }
 }
 
-if (window) {
-  window.loadBudibase = loadBudibase
-}
+// Attach to window so the HTML template can call this when it loads
+window.loadBudibase = loadBudibase

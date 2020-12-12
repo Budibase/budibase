@@ -7,8 +7,8 @@ export async function createUser(user) {
 }
 
 export async function saveRow(row, tableId) {
-  const SAVE_ROWS_URL = `/api/${tableId}/rows`
-  const response = await api.post(SAVE_ROWS_URL, row)
+  const SAVE_ROW_URL = `/api/${tableId}/rows`
+  const response = await api.post(SAVE_ROW_URL, row)
 
   return await response.json()
 }

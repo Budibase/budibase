@@ -44,9 +44,9 @@ Cypress.Commands.add("createApp", name => {
 
       cy.contains("Next").click()
 
-      cy.get("input[name=username]")
+      cy.get("input[name=email]")
         .click()
-        .type("test")
+        .type("test@test.com")
       cy.get("input[name=password]")
         .click()
         .type("test")
@@ -111,25 +111,28 @@ Cypress.Commands.add("addRow", values => {
   })
 })
 
-Cypress.Commands.add("createUser", (username, password, accessLevel) => {
+Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
-  cy.get(".toprightnav > .settings").click()
   cy.contains("Users").click()
 
-  cy.get("[name=Name]")
-    .first()
-    .type(username)
-  cy.get("[name=Password]")
-    .first()
-    .type(password)
-  cy.get("select")
-    .first()
-    .select(accessLevel)
+  cy.contains("Create New Row").click()
 
-  // Save
-  cy.get(".inputs")
-    .contains("Create")
-    .click()
+  cy.get(".modal").within(() => {
+    cy.get("input")
+      .first()
+      .type(password)
+    cy.get("input")
+      .eq(1)
+      .type(email)
+    cy.get("select")
+      .first()
+      .select(role)
+
+    // Save
+    cy.get(".buttons")
+      .contains("Create Row")
+      .click()
+  })
 })
 
 Cypress.Commands.add("addHeadlineComponent", text => {
