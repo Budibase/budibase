@@ -12,7 +12,6 @@
     "icon": "./build/icons/512x512.png",
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
-    "afterSign": "electron-builder-notarize",
     "mac": {
       "icon": "./assets/icons/icon.icns",
       "category": "public.app-category.developer-tools",
@@ -84,12 +83,14 @@
     "mustache": "^4.0.1",
     "node-fetch": "^2.6.0",
     "pg": "^8.5.1",
+    "open": "^7.3.0",
     "pino-pretty": "^4.0.0",
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "pouchdb-replication-stream": "^1.2.9",
     "sanitize-s3-objectkey": "^0.0.1",
-    "svelte": "^3.29.4",
+    "server-destroy": "^1.0.1",
+    "svelte": "^3.30.0",
     "tar-fs": "^2.1.0",
     "to-json-schema": "^0.2.5",
     "uuid": "^3.3.2",
@@ -107,7 +108,6 @@
     "jest": "^24.8.0",
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
-    "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
   },
   "jest": {

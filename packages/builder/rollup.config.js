@@ -1,7 +1,7 @@
 import alias from "@rollup/plugin-alias"
 import svelte from "rollup-plugin-svelte"
 import resolve from "rollup-plugin-node-resolve"
-import commonjs from "rollup-plugin-commonjs"
+import commonjs from "@rollup/plugin-commonjs"
 import url from "rollup-plugin-url"
 import livereload from "rollup-plugin-livereload"
 import { terser } from "rollup-plugin-terser"
@@ -11,106 +11,12 @@ import copy from "rollup-plugin-copy"
 import css from "rollup-plugin-css-only"
 import replace from "rollup-plugin-replace"
 import json from "@rollup/plugin-json"
+import html from "rollup-plugin-html"
 
 import path from "path"
 
 const production = !process.env.ROLLUP_WATCH
-
-const lodash_fp_exports = [
-  "flow",
-  "pipe",
-  "union",
-  "reduce",
-  "isUndefined",
-  "cloneDeep",
-  "split",
-  "some",
-  "map",
-  "filter",
-  "isEmpty",
-  "countBy",
-  "includes",
-  "last",
-  "find",
-  "constant",
-  "take",
-  "first",
-  "intersection",
-  "mapValues",
-  "isNull",
-  "has",
-  "isInteger",
-  "isNumber",
-  "isString",
-  "isBoolean",
-  "isDate",
-  "isArray",
-  "isObject",
-  "clone",
-  "values",
-  "keyBy",
-  "isNaN",
-  "keys",
-  "orderBy",
-  "concat",
-  "reverse",
-  "difference",
-  "merge",
-  "flatten",
-  "each",
-  "pull",
-  "join",
-  "defaultCase",
-  "uniqBy",
-  "every",
-  "uniqWith",
-  "isFunction",
-  "groupBy",
-  "differenceBy",
-  "intersectionBy",
-  "isEqual",
-  "max",
-  "sortBy",
-  "assign",
-  "uniq",
-  "trimChars",
-  "trimCharsStart",
-  "isObjectLike",
-  "flattenDeep",
-  "indexOf",
-  "isPlainObject",
-  "toNumber",
-  "takeRight",
-  "toPairs",
-  "remove",
-  "findIndex",
-  "compose",
-  "get",
-  "tap",
-]
-
-const lodash_exports = [
-  "flow",
-  "join",
-  "replace",
-  "trim",
-  "dropRight",
-  "takeRight",
-  "head",
-  "reduce",
-  "tail",
-  "startsWith",
-  "findIndex",
-  "merge",
-  "assign",
-  "each",
-  "find",
-  "orderBy",
-  "union",
-]
-
 const outputpath = "../server/builder"
-
 const coreExternal = [
   "lodash",
   "lodash/fp",
@@ -171,10 +77,6 @@ export default {
         { src: "src/favicon.png", dest: outputpath },
         { src: "assets", dest: outputpath },
         {
-          src: "node_modules/@budibase/client/dist/budibase-client.esm.mjs",
-          dest: outputpath,
-        },
-        {
           src: "node_modules/@budibase/bbui/dist/bbui.css",
           dest: outputpath,
         },
@@ -224,13 +126,7 @@ export default {
         )
       },
     }),
-    commonjs({
-      namedExports: {
-        "lodash/fp": lodash_fp_exports,
-        lodash: lodash_exports,
-        shortid: ["generate"],
-      },
-    }),
+    commonjs(),
     url({
       limit: 0,
       include: ["**/*.woff2", "**/*.png"],
@@ -248,5 +144,6 @@ export default {
     // instead of npm run dev), minify
     production && terser(),
     json(),
+    html(),
   ],
 }

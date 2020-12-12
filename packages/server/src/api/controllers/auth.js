@@ -10,21 +10,21 @@ exports.authenticate = async ctx => {
   const appId = ctx.appId
   if (!appId) ctx.throw(400, "No appId")
 
-  const { username, password } = ctx.request.body
+  const { email, password } = ctx.request.body
 
-  if (!username) ctx.throw(400, "Username Required.")
+  if (!email) ctx.throw(400, "Email Required.")
   if (!password) ctx.throw(400, "Password Required.")
 
-  // Check the user exists in the instance DB by username
+  // Check the user exists in the instance DB by email
   const db = new CouchDB(appId)
   const app = await db.get(appId)
 
   let dbUser
   try {
-    dbUser = await db.get(generateUserID(username))
+    dbUser = await db.get(generateUserID(email))
   } catch (_) {
     // do not want to throw a 404 - as this could be
-    // used to determine valid usernames
+    // used to determine valid emails
     ctx.throw(401, "Invalid Credentials")
   }
 
@@ -32,7 +32,7 @@ exports.authenticate = async ctx => {
   if (await bcrypt.compare(password, dbUser.password)) {
     const payload = {
       userId: dbUser._id,
-      accessLevelId: dbUser.accessLevelId,
+      roleId: dbUser.roleId,
       version: app.version,
       permissions: dbUser.permissions || [],
     }

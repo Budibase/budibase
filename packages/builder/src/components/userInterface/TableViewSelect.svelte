@@ -1,7 +1,7 @@
 <script>
   import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
@@ -32,21 +32,24 @@
   }, [])
 
   $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.currentComponentInfo._id,
+    componentInstanceId: $store.selectedComponentId,
     components: $store.components,
-    screen: $store.currentPreviewItem,
+    screen: $currentAsset,
     tables: $backendUiStore.tables,
   })
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")
-    .map(property => ({
-      label: property.readableBinding,
-      fieldName: property.fieldSchema.name,
-      name: `all_${property.fieldSchema.tableId}`,
-      tableId: property.fieldSchema.tableId,
-      type: "link",
-    }))
+    .map(property => {
+      return {
+        providerId: property.instance._id,
+        label: property.readableBinding,
+        fieldName: property.fieldSchema.name,
+        name: `all_${property.fieldSchema.tableId}`,
+        tableId: property.fieldSchema.tableId,
+        type: "link",
+      }
+    })
 </script>
 
 <div
