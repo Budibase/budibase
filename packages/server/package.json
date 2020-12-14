@@ -21,8 +21,10 @@
       "maintainer": "Budibase",
       "icon": "./build/icons/",
       "target": [
-        "AppImage",
-        "deb"
+        "deb",
+        "rpm",
+        "pacman",
+        "snap"
       ],
       "category": "Development"
     },
