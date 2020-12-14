@@ -8,7 +8,7 @@
 
   async function save() {
     try {
-      const layout = store.actions.layouts.save({ name })
+      const layout = await store.actions.layouts.save({ name })
       $goto(`./${layout._id}`)
       notifier.success(`Layout ${name} created successfully`)
     } catch (err) {
