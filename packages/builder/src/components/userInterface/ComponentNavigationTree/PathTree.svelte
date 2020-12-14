@@ -1,5 +1,4 @@
 <script>
-  import { writable } from "svelte/store"
   import { goto } from "@sveltech/routify"
   import { store, selectedComponent, currentAsset } from "builderStore"
   import instantiateStore from "./dragDropStore"
@@ -43,8 +42,8 @@
     <NavItem
       icon="ri-artboard-2-line"
       indentLevel={indent || 1}
-      selected={$store.currentAssetId === screenId}
-      opened={$store.currentAssetId === screenId}
+      selected={$store.selectedScreenId === screenId}
+      opened={$store.selectedScreenId === screenId}
       text={ROUTE_NAME_MAP[url]?.[role] || url}
       withArrow={route.subpaths}
       on:click={() => changeScreen(screenId)}>

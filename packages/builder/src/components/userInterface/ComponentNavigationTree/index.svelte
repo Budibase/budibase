@@ -9,21 +9,23 @@
     const allRoutes = $store.routes
     const sortedPaths = Object.keys(allRoutes).sort()
     const selectedRoleId = $selectedAccessRole
-    const selectedScreenId = $store.currentAssetId
+    const selectedScreenId = $store.selectedScreenId
 
     let found = false
     let firstValidScreenId
     let filteredRoutes = {}
+    let screenRoleId
 
     // Filter all routes down to only those which match the current role
     sortedPaths.forEach(path => {
       const config = allRoutes[path]
       Object.entries(config.subpaths).forEach(([subpath, pathConfig]) => {
         Object.entries(pathConfig.screens).forEach(([roleId, screenId]) => {
+          if (screenId === selectedScreenId) {
+            screenRoleId = roleId
+            found = roleId === selectedRoleId
+          }
           if (roleId === selectedRoleId) {
-            if (screenId === selectedScreenId) {
-              found = roleId === selectedRoleId
-            }
             if (!firstValidScreenId) {
               firstValidScreenId = screenId
             }
@@ -41,8 +43,13 @@
     })
     routes = filteredRoutes
 
+    // Select the correct role for the current screen ID
+    if (!found && screenRoleId) {
+      selectedAccessRole.set(screenRoleId)
+    }
+
     // If the selected screen isn't in this filtered list, select the first one
-    if (!found && firstValidScreenId) {
+    else if (!found && firstValidScreenId) {
       store.actions.screens.select(firstValidScreenId)
     }
   }

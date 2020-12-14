@@ -32,7 +32,8 @@ const INITIAL_FRONTEND_STATE = {
   screens: [],
   components: [],
   currentFrontEndType: "none",
-  currentAssetId: "",
+  selectedScreenId: "",
+  selectedLayoutId: "",
   selectedComponentId: "",
   errors: [],
   hasAppPackage: false,
@@ -89,8 +90,13 @@ export const getFrontendStore = () => {
           let screen =
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
+
+          // Update role to the screen's role setting so that it will always
+          // be visible
+          selectedAccessRole.set(screen.routing.roleId)
+
           state.currentFrontEndType = FrontendTypes.SCREEN
-          state.currentAssetId = screen._id
+          state.selectedScreenId = screen._id
           state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
           return state
@@ -99,7 +105,7 @@ export const getFrontendStore = () => {
       create: async screen => {
         screen = await store.actions.screens.save(screen)
         store.update(state => {
-          state.currentAssetId = screen._id
+          state.selectedScreenId = screen._id
           state.selectedComponentId = screen.props._id
           state.currentFrontEndType = FrontendTypes.SCREEN
           selectedAccessRole.set(screen.routing.roleId)
@@ -144,8 +150,8 @@ export const getFrontendStore = () => {
                 `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
               )
             )
-            if (screenToDelete._id === state.currentAssetId) {
-              state.currentAssetId = ""
+            if (screenToDelete._id === state.selectedScreenId) {
+              state.selectedScreenId = null
             }
           }
           return state
@@ -168,11 +174,12 @@ export const getFrontendStore = () => {
     layouts: {
       select: layoutId => {
         store.update(state => {
-          const layout = store.actions.layouts.find(layoutId)
+          const layout =
+            store.actions.layouts.find(layoutId) || get(store).layouts[0]
           if (!layout) return
           state.currentFrontEndType = FrontendTypes.LAYOUT
           state.currentView = "detail"
-          state.currentAssetId = layout._id
+          state.selectedLayoutId = layout._id
           state.selectedComponentId = layout.props?._id
           return state
         })
@@ -215,16 +222,17 @@ export const getFrontendStore = () => {
         const response = await api.delete(
           `/api/layouts/${layoutToDelete._id}/${layoutToDelete._rev}`
         )
-
         if (response.status !== 200) {
           const json = await response.json()
           throw new Error(json.message)
         }
-
         store.update(state => {
           state.layouts = state.layouts.filter(
             layout => layout._id !== layoutToDelete._id
           )
+          if (layoutToDelete._id === state.selectedLayoutId) {
+            state.selectedLayoutId = get(mainLayout)._id
+          }
           return state
         })
       },

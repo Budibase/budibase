@@ -3,6 +3,7 @@
   import { goto, params, url } from "@sveltech/routify"
   import {
     store,
+    allScreens,
     currentAsset,
     backendUiStore,
     selectedAccessRole,
@@ -29,9 +30,36 @@
   let routes = {}
   let tab = $params.assetType
 
-  function navigate({ detail }) {
-    if (!detail) return
+  const navigate = ({ detail }) => {
+    if (!detail) {
+      return
+    }
     $goto(`../${detail.heading.key}`)
+  }
+
+  const updateAccessRole = event => {
+    const role = event.target.value
+
+    // Select a valid screen with this new role - otherwise we'll not be
+    // able to change role at all because ComponentNavigationTree will kick us
+    // back the current role again because the same screen ID is still selected
+    const firstValidScreenId = $allScreens.find(
+      screen => screen.routing.roleId === role
+    )?._id
+    if (firstValidScreenId) {
+      store.actions.screens.select(firstValidScreenId)
+    }
+
+    // Otherwise clear the selected screen ID so that the first new valid screen
+    // can be selected by ComponentNavigationTree
+    else {
+      store.update(state => {
+        state.selectedScreenId = null
+        return state
+      })
+    }
+
+    selectedAccessRole.set(role)
   }
 
   onMount(() => {
@@ -46,24 +74,21 @@
         on:click={modal.show}
         data-cy="new-screen"
         class="ri-add-circle-fill" />
-
       <div class="role-select">
         <Select
           extraThin
           secondary
-          bind:value={$selectedAccessRole}
+          on:change={updateAccessRole}
+          value={$selectedAccessRole}
           label="Filter by Access">
           {#each $backendUiStore.roles as role}
             <option value={role._id}>{role.name}</option>
           {/each}
         </Select>
       </div>
-
-      {#if $currentAsset}
-        <div class="nav-items-container">
-          <ComponentNavigationTree />
-        </div>
-      {/if}
+      <div class="nav-items-container">
+        <ComponentNavigationTree />
+      </div>
       <Modal bind:this={modal}>
         <NewScreenModal />
       </Modal>
