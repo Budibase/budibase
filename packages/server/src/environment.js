@@ -39,6 +39,8 @@ module.exports = {
   // self hosting features
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  MINIO_URL: process.MINIO_URL,
+  HOSTING_URL: process.HOSTING_URL,
   LOGO_URL: process.env.LOGO_URL,
   _set(key, value) {
     process.env[key] = value

@@ -20,7 +20,7 @@ exports.postDeployment = async function() {
 exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
   var objClient = new AWS.S3({
-    endpoint: "http://localhost:9000",
+    endpoint: env.MINIO_URL,
     s3ForcePathStyle: true, // needed with minio?
     signatureVersion: "v4",
     params: {
@@ -46,6 +46,7 @@ exports.deploy = async function(deployment) {
 exports.replicateDb = async function(deployment) {
   const appId = deployment.getAppId()
   const localDb = new PouchDB(appId)
+
   const remoteDb = new CouchDB(`${env.COUCH_DB_URL}/${appId}`)
   return performReplication(localDb, remoteDb)
 }
