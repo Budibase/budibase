@@ -10,9 +10,10 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      SELF_HOSTED: ${SELF_HOSTED}
+      SELF_HOSTED: 1 
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
+      LOGO_URL: ${LOGO_URL}
     depends_on:
       - nginx-service
       - minio-service

@@ -1,3 +1,5 @@
+const { getLogoUrl } = require("../utilities")
+
 const BASE_LAYOUT_PROP_IDS = {
   PRIVATE: "layout_private_master",
   PUBLIC: "layout_public_master",
@@ -88,8 +90,7 @@ const BASE_LAYOUTS = [
                 active: {},
                 selected: {},
               },
-              logoUrl:
-                "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg",
+              logoUrl: getLogoUrl(),
               title: "",
               backgroundColor: "",
               color: "",
