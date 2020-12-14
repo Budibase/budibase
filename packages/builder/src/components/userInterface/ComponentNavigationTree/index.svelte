@@ -7,7 +7,7 @@
 
   $: {
     const allRoutes = $store.routes
-    const sortedPaths = Object.keys(allRoutes).sort()
+    const sortedPaths = Object.keys(allRoutes || {}).sort()
     const selectedRoleId = $selectedAccessRole
     const selectedScreenId = $store.selectedScreenId
 
