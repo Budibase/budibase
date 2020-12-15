@@ -1,6 +1,8 @@
 import { getFrontendStore } from "./store/frontend"
 import { getBackendUiStore } from "./store/backend"
-import { getAutomationStore } from "./store/automation/"
+import { getAutomationStore } from "./store/automation"
+import { getHostingStore } from "./store/hosting"
+
 import { getThemeStore } from "./store/theme"
 import { derived } from "svelte/store"
 import analytics from "analytics"
@@ -11,6 +13,7 @@ export const store = getFrontendStore()
 export const backendUiStore = getBackendUiStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
+export const hostingStore = getHostingStore()
 
 export const currentAsset = derived(store, $store => {
   const layout = $store.layouts
