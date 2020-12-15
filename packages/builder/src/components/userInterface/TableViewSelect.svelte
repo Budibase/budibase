@@ -1,8 +1,9 @@
 <script>
-  import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
+  import { Icon, DropdownMenu, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
+  import { TableNames } from "constants"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -14,14 +15,19 @@
     dropdownRight.hide()
   }
 
-  $: tables = $backendUiStore.tables.map(m => ({
-    label: m.name,
-    name: `all_${m._id}`,
-    tableId: m._id,
-    type: "table",
-  }))
+  $: tables = $backendUiStore.tables
+    .filter(table => table._id !== TableNames.USERS)
+    .map(m => ({
+      label: m.name,
+      name: `all_${m._id}`,
+      tableId: m._id,
+      type: "table",
+    }))
 
   $: views = $backendUiStore.tables.reduce((acc, cur) => {
+    if (cur._id === TableNames.USERS) {
+      return acc
+    }
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,
