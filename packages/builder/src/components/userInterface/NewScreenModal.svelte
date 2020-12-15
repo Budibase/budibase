@@ -4,8 +4,7 @@
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"
-  import { onMount } from "svelte"
-  import api from "builderStore/api"
+  import { TableNames } from "constants"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -17,7 +16,10 @@
   let createLink = true
   let roleId = "BASIC"
 
-  $: templates = getTemplates($store, $backendUiStore.tables)
+  $: filteredTables = $backendUiStore.tables.filter(
+    table => table._id !== TableNames.USERS
+  )
+  $: templates = getTemplates($store, filteredTables)
   $: route = !route && $allScreens.length === 0 ? "*" : route
   $: baseComponents = Object.values($store.components)
     .filter(componentDefinition => componentDefinition.baseComponent)
