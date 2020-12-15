@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.js",
@@ -15,7 +15,7 @@
     "svelte-spa-router": "^3.0.5"
   },
   "devDependencies": {
-    "@budibase/standard-components": "^0.3.8",
+    "@budibase/standard-components": "^0.4.0",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "fs-extra": "^8.1.0",
@@ -23,8 +23,8 @@
     "rollup": "^2.33.2",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
-    "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-terser": "^4.0.4",
     "svelte": "^3.30.0",
     "svelte-jester": "^1.0.6"
