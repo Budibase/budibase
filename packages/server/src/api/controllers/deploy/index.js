@@ -1,20 +1,19 @@
 const PouchDB = require("../../../db")
-
-const env = require("../../../environment")
-const deployment = env.SELF_HOSTED
-  ? require("./selfDeploy")
-  : require("./awsDeploy")
-const { deploy, preDeployment, postDeployment, replicateDb } = deployment
 const Deployment = require("./Deployment")
-
+const {
+  getHostingInfo,
+  HostingTypes,
+} = require("../../../utilities/builder/hosting")
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
-
 const DeploymentStatus = {
   SUCCESS: "SUCCESS",
   PENDING: "PENDING",
   FAILURE: "FAILURE",
 }
+
+// default to AWS deployment, this will be updated before use (if required)
+let deploymentService = require("./awsDeploy")
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(deployments) {
@@ -66,17 +65,19 @@ async function deployApp(deployment) {
   const appId = deployment.getAppId()
   try {
     await deployment.init()
-    deployment.setVerification(await preDeployment(deployment))
+    deployment.setVerification(
+      await deploymentService.preDeployment(deployment)
+    )
 
     console.log(`Uploading assets for appID ${appId}..`)
 
-    await deploy(deployment)
+    await deploymentService.deploy(deployment)
 
     // replicate the DB to the main couchDB cluster
     console.log("Replicating local PouchDB to CouchDB..")
-    await replicateDb(deployment)
+    await deploymentService.replicateDb(deployment)
 
-    await postDeployment(deployment)
+    await deploymentService.postDeployment(deployment)
 
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)
@@ -118,6 +119,12 @@ exports.deploymentProgress = async function(ctx) {
 }
 
 exports.deployApp = async function(ctx) {
+  // start by checking whether to deploy local or to cloud
+  const hostingInfo = await getHostingInfo()
+  deploymentService =
+    hostingInfo.type === HostingTypes.CLOUD
+      ? require("./awsDeploy")
+      : require("./selfDeploy")
   let deployment = new Deployment(ctx.user.appId)
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeLocalDeploymentHistory(deployment)

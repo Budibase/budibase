@@ -10,10 +10,11 @@ export const getHostingStore = () => {
   const store = writable({ ...INITIAL_BACKEND_UI_STATE })
   store.actions = {
     fetch: async () => {
-      const response = await api.get("/api/hosting/")
-      const info = await response.json()
+      const responses = await Promise.all([api.get("/api/hosting/"), api.get("/api/hosting/urls")])
+      const [info, urls] = await Promise.all(responses.map(resp => resp.json()))
       store.update(state => {
         state.hostingInfo = info
+        state.appUrl = urls.appServer
         return state
       })
       return info
@@ -30,6 +31,5 @@ export const getHostingStore = () => {
       })
     },
   }
-
   return store
 }

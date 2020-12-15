@@ -14,18 +14,14 @@ exports.fetchInfo = async ctx => {
 
 exports.save = async ctx => {
   const db = new CouchDB(BUILDER_CONFIG_DB)
-  const { type, appServerUrl, objectStoreUrl, useHttps } = ctx.request.body
+  const { type } = ctx.request.body
   if (type === HostingTypes.CLOUD) {
     ctx.throw(400, "Cannot update Cloud hosting information")
   }
-  const response = await db.put({
+  ctx.body = await db.put({
+    ...ctx.request.body,
     _id: HOSTING_DOC,
-    type,
-    appServerUrl,
-    objectStoreUrl,
-    useHttps,
   })
-  ctx.body = response
 }
 
 exports.fetch = async ctx => {
@@ -34,6 +30,6 @@ exports.fetch = async ctx => {
 
 exports.fetchUrls = async ctx => {
   ctx.body = {
-    appServer: getAppServerUrl(ctx.appId),
+    appServer: await getAppServerUrl(ctx.appId),
   }
 }
