@@ -22,7 +22,6 @@
       "icon": "./build/icons/",
       "target": [
         "deb",
-        "rpm",
         "pacman",
         "snap"
       ],
