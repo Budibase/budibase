@@ -18,14 +18,14 @@ exports.save = async ctx => {
   if (type === HostingTypes.CLOUD) {
     ctx.throw(400, "Cannot update Cloud hosting information")
   }
-  await db.put({
+  const response = await db.put({
     _id: HOSTING_DOC,
     type,
     appServerUrl,
     objectStoreUrl,
     useHttps,
   })
-  ctx.body = "Hosting information saved successfully"
+  ctx.body = response
 }
 
 exports.fetch = async ctx => {
