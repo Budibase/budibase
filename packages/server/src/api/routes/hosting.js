@@ -7,6 +7,7 @@ const router = Router()
 
 router
   .get("/api/hosting/info", authorized(BUILDER), controller.fetchInfo)
+  .get("/api/hosting/urls", authorized(BUILDER), controller.fetchUrls)
   .get("/api/hosting", authorized(BUILDER), controller.fetch)
   .post("/api/hosting", authorized(BUILDER), controller.save)
 
