@@ -7,7 +7,7 @@
 
 <div>
   <Button text on:click={modal.show}>
-    <i class="ri-settings-3-fill"></i>
+    <i class="ri-settings-3-fill" />
     <p>Settings</p>
   </Button>
 </div>
