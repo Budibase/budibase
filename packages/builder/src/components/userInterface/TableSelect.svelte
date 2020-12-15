@@ -5,7 +5,7 @@
 
   export let value
 
-  $: filteredTales = $backendUiStore.tables.filter(
+  $: filteredTables = $backendUiStore.tables.filter(
     table => table._id !== TableNames.USERS
   )
 </script>
@@ -13,7 +13,7 @@
 <div>
   <Select extraThin secondary wide on:change {value}>
     <option value="">Choose a table</option>
-    {#each filteredTales as table}
+    {#each filteredTables as table}
       <option value={table._id}>{table.name}</option>
     {/each}
   </Select>
