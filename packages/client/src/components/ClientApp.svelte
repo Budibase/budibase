@@ -3,7 +3,7 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import SDK from "../sdk"
-  import { createDataStore, routeStore, screenStore } from "../store"
+  import { createDataStore, initialise, screenStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -14,13 +14,11 @@
 
   // Load app config
   onMount(async () => {
-    await routeStore.actions.fetchRoutes()
-    await screenStore.actions.fetchScreens()
+    await initialise()
     loaded = true
   })
 </script>
 
 {#if loaded && $screenStore.activeLayout}
-  <!-- // TODO: need to get the active screen as well -->
   <Component definition={$screenStore.activeLayout.props} />
 {/if}
