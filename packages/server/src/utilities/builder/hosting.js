@@ -32,7 +32,7 @@ exports.getHostingInfo = async () => {
   return doc
 }
 
-exports.getAppServerUrl = async (appId) => {
+exports.getAppServerUrl = async appId => {
   const hostingInfo = await exports.getHostingInfo()
   const protocol = getProtocol(hostingInfo)
   let url

@@ -7,7 +7,7 @@ const INITIAL_BACKEND_UI_STATE = {
 }
 
 export const getHostingStore = () => {
-  const store = writable({...INITIAL_BACKEND_UI_STATE})
+  const store = writable({ ...INITIAL_BACKEND_UI_STATE })
   store.actions = {
     fetch: async () => {
       const response = await api.get("/api/hosting/")
@@ -28,7 +28,7 @@ export const getHostingStore = () => {
         }
         return state
       })
-    }
+    },
   }
 
   return store

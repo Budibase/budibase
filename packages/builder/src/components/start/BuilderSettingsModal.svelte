@@ -24,13 +24,19 @@
   onMount(async () => {
     hostingInfo = await hostingStore.actions.fetch()
     selfhosted = hostingInfo.type === "self"
-
   })
 </script>
 
-<ModalContent title="Builder settings" confirmText="Save" onConfirm={save} showConfirmButton={selfhosted}>
+<ModalContent
+  title="Builder settings"
+  confirmText="Save"
+  onConfirm={save}
+  showConfirmButton={selfhosted}>
   <h5>Hosting</h5>
-  <p>This section contains settings that relate to the deployment and hosting of apps made in this builder.</p>
+  <p>
+    This section contains settings that relate to the deployment and hosting of
+    apps made in this builder.
+  </p>
   <Toggle thin text="Self hosted" bind:checked={selfhosted} />
   {#if selfhosted}
     <Input bind:value={hostingInfo.appServerUrl} label="Apps URL" />

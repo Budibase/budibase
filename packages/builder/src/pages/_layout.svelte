@@ -39,7 +39,7 @@
           href="https://github.com/Budibase/budibase/issues/new/choose" />
       </div>
       <div class="nav-bottom">
-        <BuilderSettingsButton/>
+        <BuilderSettingsButton />
       </div>
     </div>
   </div>
