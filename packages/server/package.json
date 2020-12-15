@@ -21,9 +21,7 @@
       "maintainer": "Budibase",
       "icon": "./build/icons/",
       "target": [
-        "deb",
-        "pacman",
-        "snap"
+        "deb"
       ],
       "category": "Development"
     },
