@@ -1,40 +1,45 @@
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
-const { BUILTIN_ROLE_ID_ARRAY } = require("../../utilities/security/roles")
-const {
-  BUILTIN_PERMISSION_NAMES,
-} = require("../../utilities/security/permissions")
+const { getRole } = require("../../utilities/security/roles")
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const data = await database.allDocs(
-    getUserParams("", {
-      include_docs: true,
-    })
-  )
-  ctx.body = data.rows.map(row => row.doc)
+  const users = (
+    await database.allDocs(
+      getUserParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+  // user hashed password shouldn't ever be returned
+  for (let user of users) {
+    delete user.password
+  }
+  ctx.body = users
 }
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  const { email, password, roleId, permissions } = ctx.request.body
+  const { email, password, roleId } = ctx.request.body
 
   if (!email || !password) {
     ctx.throw(400, "email and Password Required.")
   }
 
-  const role = await checkRole(db, roleId)
+  const role = await getRole(ctx.user.appId, roleId)
 
   if (!role) ctx.throw(400, "Invalid Role")
 
+  const hashedPassword = await bcrypt.hash(password)
   const user = {
+    ...ctx.request.body,
+    // these must all be after the object spread, make sure
+    // any values are overwritten, generateUserID will always
+    // generate the same ID for the user as it is not UUID based
     _id: generateUserID(email),
-    email,
-    password: await bcrypt.hash(password),
     type: "user",
-    roleId,
-    permissions: permissions || [BUILTIN_PERMISSION_NAMES.POWER],
+    password: hashedPassword,
     tableId: ViewNames.USERS,
   }
 
@@ -59,7 +64,12 @@ exports.create = async function(ctx) {
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const user = ctx.request.body
-  const dbUser = db.get(ctx.request.body._id)
+  const dbUser = await db.get(ctx.request.body._id)
+  if (user.password) {
+    user.password = await bcrypt.hash(user.password)
+  } else {
+    delete user.password
+  }
   const newData = { ...dbUser, ...user }
 
   const response = await db.put(newData)
@@ -79,22 +89,12 @@ exports.destroy = async function(ctx) {
 
 exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const user = await database.get(generateUserID(ctx.params.email))
-  ctx.body = {
-    email: user.email,
-    name: user.name,
-    _rev: user._rev,
+  let lookup = ctx.params.email
+    ? generateUserID(ctx.params.email)
+    : ctx.params.userId
+  const user = await database.get(lookup)
+  if (user) {
+    delete user.password
   }
-}
-
-const checkRole = async (db, roleId) => {
-  if (!roleId) return
-  if (BUILTIN_ROLE_ID_ARRAY.indexOf(roleId) !== -1) {
-    return {
-      _id: roleId,
-      name: roleId,
-      permissions: [],
-    }
-  }
-  return await db.get(roleId)
+  ctx.body = user
 }

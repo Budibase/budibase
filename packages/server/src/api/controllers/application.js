@@ -32,7 +32,6 @@ const {
 } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { recurseMustache } = require("../../utilities/mustache")
-const { generateAssetCss } = require("../../utilities/builder/generateCss")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -131,12 +130,6 @@ exports.fetchAppPackage = async function(ctx) {
   const application = await db.get(ctx.params.appId)
   const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
 
-  for (let layout of layouts) {
-    layout._css = generateAssetCss([layout.props])
-  }
-  for (let screen of screens) {
-    screen._css = generateAssetCss([screen.props])
-  }
   ctx.body = {
     application,
     screens,
@@ -230,10 +223,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)
-  // at the end add CSS to all the structures
-  for (let asset of screensAndLayouts) {
-    asset._css = generateAssetCss([asset.props])
-  }
-  await compileStaticAssets(app._id, screensAndLayouts)
+  await compileStaticAssets(app._id)
   return newAppFolder
 }

@@ -1,8 +1,10 @@
 <script>
+  import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
   import { FrontendTypes } from "constants"
   import PropertyControl from "./PropertyControl.svelte"
   import LayoutSelect from "./LayoutSelect.svelte"
+  import RoleSelect from "./RoleSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { excludeProps } from "./propertyCategories.js"
   import { store, allScreens, currentAsset } from "builderStore"
@@ -16,7 +18,13 @@
   export let displayNameField = false
   export let assetInstance
 
-  let assetProps = ["title", "description", "route", "layoutId"]
+  let assetProps = [
+    "title",
+    "description",
+    "routing.route",
+    "layoutId",
+    "routing.roleId",
+  ]
   let duplicateName = false
 
   const propExistsOnComponentDef = prop =>
@@ -28,7 +36,8 @@
 
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
-    { key: "route", label: "Route", control: Input },
+    { key: "routing.route", label: "Route", control: Input },
+    { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
@@ -92,7 +101,7 @@
         control={def.control}
         label={def.label}
         key={def.key}
-        value={assetInstance[def.key]}
+        value={get(assetInstance, def.key)}
         onChange={onScreenPropChange}
         props={{ ...excludeProps(def, ['control', 'label']) }} />
     {/each}

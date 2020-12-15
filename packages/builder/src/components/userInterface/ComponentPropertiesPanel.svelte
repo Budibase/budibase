@@ -6,6 +6,7 @@
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
   import SettingsView from "./SettingsView.svelte"
+  import { setWith } from "lodash"
 
   let flattenedPanel = flattenComponents(panelStructure.categories)
   let categories = [
@@ -69,7 +70,7 @@
       ) {
         selectedAsset.props._instanceName = value
       } else {
-        selectedAsset[name] = value
+        setWith(selectedAsset, name.split("."), value, Object)
       }
       return state
     })
