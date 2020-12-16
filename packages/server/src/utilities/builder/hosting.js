@@ -24,7 +24,7 @@ exports.getHostingInfo = async () => {
       _id: HOSTING_DOC,
       type: exports.HostingTypes.CLOUD,
       appServerUrl: "app.budi.live",
-      objectStoreUrl: "cdn.app.budi.live",
+      deploymentServerUrl: "",
       templatesUrl: "prod-budi-templates.s3-eu-west-1.amazonaws.com",
       useHttps: true,
     }
@@ -42,6 +42,12 @@ exports.getAppServerUrl = async appId => {
     url = `${protocol}${hostingInfo.appServerUrl}`
   }
   return url
+}
+
+exports.getDeploymentUrl = async () => {
+  const hostingInfo = await exports.getHostingInfo()
+  const protocol = getProtocol(hostingInfo)
+  return `${protocol}${hostingInfo.deploymentServerUrl}`
 }
 
 exports.getTemplatesUrl = async (appId, type, name) => {

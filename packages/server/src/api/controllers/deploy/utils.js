@@ -4,11 +4,32 @@ const { walkDir } = require("../../../utilities")
 const { join } = require("../../../utilities/centralPath")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
+const CouchDB = require("pouchdb")
 
 const CONTENT_TYPE_MAP = {
   html: "text/html",
   css: "text/css",
   js: "application/javascript",
+}
+
+exports.fetchCredentials = async function(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+
+  const json = await response.json()
+  if (json.errors) {
+    throw new Error(json.errors)
+  }
+
+  if (response.status !== 200) {
+    throw new Error(
+      `Error fetching temporary credentials for api key: ${body.apiKey}`
+    )
+  }
+
+  return json
 }
 
 exports.prepareUpload = async function({ s3Key, metadata, client, file }) {
@@ -89,8 +110,17 @@ exports.deployToObjectStore = async function(appId, objectClient, metadata) {
   }
 }
 
-exports.performReplication = (local, remote) => {
+exports.performReplication = (appId, session, dbUrl) => {
   return new Promise((resolve, reject) => {
+    const local = new PouchDB(appId)
+
+    const remote = new CouchDB(`${dbUrl}/${appId}`, {
+      fetch: function(url, opts) {
+        opts.headers.set("Cookie", `${session};`)
+        return CouchDB.fetch(url, opts)
+      },
+    })
+
     const replication = local.sync(remote)
 
     replication.on("complete", () => resolve())
