@@ -40,7 +40,7 @@ services:
   nginx-service:
     image: nginx:1.19.2-alpine
     volumes:
-      - ./nginx.template:/etc/nginx/nginx.template:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "${MINIO_PORT}:5001"
     depends_on:
