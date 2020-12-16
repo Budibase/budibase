@@ -96,9 +96,7 @@
       <h4>Deployment History</h4>
       <div class="deploy-div">
         {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
-          <a target="_blank" href={deploymentUrl}>
-            View Your Deployed App →
-          </a>
+          <a target="_blank" href={deploymentUrl}> View Your Deployed App → </a>
           <Button primary on:click={() => modal.show()}>View webhooks</Button>
         {/if}
       </div>
