@@ -45,7 +45,6 @@ services:
       - "${MINIO_PORT}:5001"
     depends_on:
       - minio-service
-    command: ["sh", "-c", "envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
 
   couchdb-service:
     image: apache/couchdb:3.0
