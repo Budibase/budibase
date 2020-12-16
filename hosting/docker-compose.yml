@@ -6,15 +6,16 @@ services:
     volumes: 
       - ./server:/app
     ports:
-      - "4001:4001"
+      - "${APP_PORT}:${APP_PORT}"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_URL: http://minio-service:9000
+      MINIO_URL: http://nginx-service:${MINIO_PORT}
       SELF_HOSTED: 1 
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
       LOGO_URL: ${LOGO_URL}
+      PORT: ${APP_PORT}
     depends_on:
       - nginx-service
       - minio-service
@@ -24,8 +25,8 @@ services:
     image: minio/minio:RELEASE.2020-12-10T01-54-29Z
     volumes:
       - data1:/data
-    expose:
-      - "9000"
+    ports:
+      - "9000:9000"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -39,11 +40,12 @@ services:
   nginx-service:
     image: nginx:1.19.2-alpine
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.template:/etc/nginx/nginx.template:ro
     ports:
-      - "9000:9000"
+      - "${MINIO_PORT}:5001"
     depends_on:
       - minio-service
+    command: ["sh", "-c", "envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
 
   couchdb-service:
     image: apache/couchdb:3.0
@@ -51,7 +53,7 @@ services:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
-      - "5984:5984"
+      - "${COUCH_DB_PORT}:5984"
       - "4369:4369"
       - "9100:9100"
     volumes:
@@ -59,9 +61,11 @@ services:
 
   couch-init:
     image: curlimages/curl
+    environment:
+      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
     depends_on:
       - couchdb-service
-    command: ["sh","-c","sleep 10 && curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984/_users && curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984/_replicator; fg ; "]
+    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
 
 volumes:
   couchdb_data:
