@@ -45,17 +45,16 @@ async function identifyByApiKey(apiKey) {
     )
     if (response.status === 200) {
       const id = await response.json()
-  
+
       await api.put("/api/keys/userId", { value: id })
       identify(id)
       return true
     }
-  
+
     return false
   } catch (error) {
     console.log(error)
   }
-
 }
 
 function captureException(err) {
