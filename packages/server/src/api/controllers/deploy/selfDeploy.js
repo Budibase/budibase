@@ -1,16 +1,31 @@
 const env = require("../../../environment")
 const AWS = require("aws-sdk")
-const { deployToObjectStore, performReplication } = require("./utils")
-const CouchDB = require("pouchdb")
-const PouchDB = require("../../../db")
-
-const APP_BUCKET = "app-assets"
+const {
+  deployToObjectStore,
+  performReplication,
+  fetchCredentials,
+} = require("./utils")
+const { getDeploymentUrl } = require("../../../utilities/builder/hosting")
+const { join } = require("path")
 
 exports.preDeployment = async function() {
-  AWS.config.update({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
+  const url = join(await getDeploymentUrl(), "api", "deploy")
+  const json = await fetchCredentials(url, {
+    apiKey: env.BUDIBASE_API_KEY,
   })
+
+  // response contains:
+  // couchDbSession, bucket, objectStoreSession, couchDbUrl, objectStoreUrl
+
+  // set credentials here, means any time we're verified we're ready to go
+  if (json.objectStoreSession) {
+    AWS.config.update({
+      accessKeyId: json.objectStoreSession.AccessKeyId,
+      secretAccessKey: json.objectStoreSession.SecretAccessKey,
+    })
+  }
+
+  return json
 }
 
 exports.postDeployment = async function() {
@@ -19,25 +34,15 @@ exports.postDeployment = async function() {
 
 exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
-  var objClient = new AWS.S3({
-    endpoint: env.MINIO_URL,
+  const verification = deployment.getVerification()
+  const objClient = new AWS.S3({
+    endpoint: verification.objectStoreUrl,
     s3ForcePathStyle: true, // needed with minio?
     signatureVersion: "v4",
     params: {
-      Bucket: APP_BUCKET,
+      Bucket: verification.bucket,
     },
   })
-  // checking the bucket exists
-  try {
-    await objClient.headBucket({ Bucket: APP_BUCKET }).promise()
-  } catch (err) {
-    // bucket doesn't exist create it
-    if (err.statusCode === 404) {
-      await objClient.createBucket({ Bucket: APP_BUCKET }).promise()
-    } else {
-      throw err
-    }
-  }
   // no metadata, aws has account ID in metadata
   const metadata = {}
   await deployToObjectStore(appId, objClient, metadata)
@@ -45,8 +50,10 @@ exports.deploy = async function(deployment) {
 
 exports.replicateDb = async function(deployment) {
   const appId = deployment.getAppId()
-  const localDb = new PouchDB(appId)
-
-  const remoteDb = new CouchDB(`${env.COUCH_DB_URL}/${appId}`)
-  return performReplication(localDb, remoteDb)
+  const verification = deployment.getVerification()
+  return performReplication(
+    appId,
+    verification.couchDbSession,
+    verification.couchDbUrl
+  )
 }

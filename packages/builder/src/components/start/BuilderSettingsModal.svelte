@@ -40,7 +40,7 @@
   <Toggle thin text="Self hosted" bind:checked={selfhosted} />
   {#if selfhosted}
     <Input bind:value={hostingInfo.appServerUrl} label="Apps URL" />
-    <Input bind:value={hostingInfo.objectStoreUrl} label="Object store URL" />
+    <Input bind:value={hostingInfo.deploymentServerUrl} label="Deployments URL" />
     <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
   {/if}
 </ModalContent>
