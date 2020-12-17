@@ -33,7 +33,7 @@ destroyable(server)
 server.on("close", () => console.log("Server Closed"))
 
 module.exports = server.listen(env.PORT || 4002, async () => {
-  console.log(`Deployment running on ${JSON.stringify(server.address())}`)
+  console.log(`Worker running on ${JSON.stringify(server.address())}`)
 })
 
 process.on("uncaughtException", err => {

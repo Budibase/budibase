@@ -17,16 +17,16 @@ services:
       LOGO_URL: ${LOGO_URL}
       PORT: ${APP_PORT}
     depends_on:
-      - deployment-service
+      - worker-service
 
-  deployment-service:
-    build: ./deployment
+  worker-service:
+    build: ./worker
     ports:
-      - "${DEPLOYMENT_PORT}:${DEPLOYMENT_PORT}"
+      - "${WORKER_PORT}:${WORKER_PORT}"
     environment:
       SELF_HOSTED: 1,
-      DEPLOYMENT_API_KEY: ${DEPLOYMENT_API_KEY}
-      PORT: ${DEPLOYMENT_PORT}
+      DEPLOYMENT_API_KEY: ${WORKER_API_KEY}
+      PORT: ${WORKER_PORT}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       RAW_MINIO_URL: http://nginx-service:${MINIO_PORT}
