@@ -1,6 +1,6 @@
 module.exports = {
   SELF_HOSTED: process.env.SELF_HOSTED,
-  DEPLOYMENT_API_KEY: process.env.DEPLOYMENT_API_KEY,
+  WORKER_API_KEY: process.env.WORKER_API_KEY,
   PORT: process.env.PORT,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
