@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.52.2",
+    "@budibase/bbui": "^1.52.4",
     "@budibase/client": "^0.4.2",
     "@budibase/colorpicker": "^1.0.1",
     "@budibase/svelte-ag-grid": "^0.0.16",
