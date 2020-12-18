@@ -18,6 +18,7 @@
   let schema = {}
   let fields = []
 
+  $: console.log(files[0])
   $: valid = !schema || fields.every(column => schema[column].success)
   $: dataImport = {
     valid,
@@ -43,6 +44,7 @@
   }
 
   async function validateCSV() {
+    console.log(csvString)
     const response = await api.post("/api/tables/csv/validate", {
       csvString,
       schema: schema || {},
@@ -82,7 +84,7 @@
       files = fileArray
       validateCSV()
     })
-    reader.readAsBinaryString(fileArray[0])
+    reader.readAsText(fileArray[0])
   }
 
   async function omitColumn(columnName) {
