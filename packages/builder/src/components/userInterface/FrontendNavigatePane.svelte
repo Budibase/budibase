@@ -1,13 +1,19 @@
 <script>
   import { onMount } from "svelte"
   import { goto, params, url } from "@sveltech/routify"
-  import { store, currentAsset, selectedComponent } from "builderStore"
+  import {
+    store,
+    allScreens,
+    currentAsset,
+    backendUiStore,
+    selectedAccessRole,
+  } from "builderStore"
   import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import Layout from "components/userInterface/Layout.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
   import NewLayoutModal from "components/userInterface/NewLayoutModal.svelte"
-  import { Modal, Switcher } from "@budibase/bbui"
+  import { Modal, Switcher, Select } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -24,9 +30,36 @@
   let routes = {}
   let tab = $params.assetType
 
-  function navigate({ detail }) {
-    if (!detail) return
+  const navigate = ({ detail }) => {
+    if (!detail) {
+      return
+    }
     $goto(`../${detail.heading.key}`)
+  }
+
+  const updateAccessRole = event => {
+    const role = event.target.value
+
+    // Select a valid screen with this new role - otherwise we'll not be
+    // able to change role at all because ComponentNavigationTree will kick us
+    // back the current role again because the same screen ID is still selected
+    const firstValidScreenId = $allScreens.find(
+      screen => screen.routing.roleId === role
+    )?._id
+    if (firstValidScreenId) {
+      store.actions.screens.select(firstValidScreenId)
+    }
+
+    // Otherwise clear the selected screen ID so that the first new valid screen
+    // can be selected by ComponentNavigationTree
+    else {
+      store.update(state => {
+        state.selectedScreenId = null
+        return state
+      })
+    }
+
+    selectedAccessRole.set(role)
   }
 
   onMount(() => {
@@ -41,11 +74,21 @@
         on:click={modal.show}
         data-cy="new-screen"
         class="ri-add-circle-fill" />
-      {#if $currentAsset}
-        <div class="nav-items-container">
-          <ComponentNavigationTree />
-        </div>
-      {/if}
+      <div class="role-select">
+        <Select
+          extraThin
+          secondary
+          on:change={updateAccessRole}
+          value={$selectedAccessRole}
+          label="Filter by Access">
+          {#each $backendUiStore.roles as role}
+            <option value={role._id}>{role.name}</option>
+          {/each}
+        </Select>
+      </div>
+      <div class="nav-items-container">
+        <ComponentNavigationTree />
+      </div>
       <Modal bind:this={modal}>
         <NewScreenModal />
       </Modal>
@@ -54,8 +97,8 @@
         on:click={modal.show}
         data-cy="new-layout"
         class="ri-add-circle-fill" />
-      {#each $store.layouts as layout (layout._id)}
-        <Layout {layout} />
+      {#each $store.layouts as layout, idx (layout._id)}
+        <Layout {layout} border={idx > 0} />
       {/each}
       <Modal bind:this={modal}>
         <NewLayoutModal />
@@ -81,5 +124,9 @@
   .title i:hover {
     cursor: pointer;
     color: var(--blue);
+  }
+
+  .role-select {
+    margin-bottom: var(--spacing-m);
   }
 </style>

@@ -4,7 +4,7 @@
   import api from "builderStore/api"
 
   async function updateApplication(data) {
-    const response = await api.put(`/api/${$store.appId}`, data)
+    const response = await api.put(`/api/applications/${$store.appId}`, data)
     const app = await response.json()
     store.update(state => {
       state = {

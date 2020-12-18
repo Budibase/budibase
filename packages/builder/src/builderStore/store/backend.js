@@ -1,11 +1,14 @@
 import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
+import { backendUiStore } from ".."
 
 const INITIAL_BACKEND_UI_STATE = {
   tables: [],
   views: [],
   users: [],
+  roles: [],
+  datasources: [],
   selectedDatabase: {},
   selectedTable: {},
   draftTable: {},
@@ -20,9 +23,12 @@ export const getBackendUiStore = () => {
       select: async db => {
         const tablesResponse = await api.get(`/api/tables`)
         const tables = await tablesResponse.json()
+        const datasourcesResponse = await api.get(`/api/datasources`)
+        const datasources = await datasourcesResponse.json()
         store.update(state => {
           state.selectedDatabase = db
           state.tables = tables
+          state.datasources = datasources
           return state
         })
       },
@@ -41,6 +47,69 @@ export const getBackendUiStore = () => {
       select: row =>
         store.update(state => {
           state.selectedRow = row
+          return state
+        }),
+    },
+    datasources: {
+      fetch: async () => {
+        const response = await api.get(`/api/datasources`)
+        const json = await response.json()
+        store.update(state => {
+          state.datasources = json
+          return state
+        })
+        return json
+      },
+      select: async datasource => {
+        store.update(state => {
+          state.selectedDatasourceId = datasource._id
+          return state
+        })
+      },
+      save: async datasource => {
+        const response = await api.post("/api/datasources", datasource)
+        const json = await response.json()
+        store.update(state => {
+          const currentIdx = state.datasources.findIndex(
+            ds => ds._id === json._id
+          )
+
+          if (currentIdx >= 0) {
+            state.datasources.splice(currentIdx, 1, json)
+          } else {
+            state.datasources.push(json)
+          }
+
+          state.datasources = state.datasources
+          return state
+        })
+      },
+      saveQuery: async (datasourceId, query) => {
+        const response = await api.post(
+          `/api/datasources/${datasourceId}/queries`,
+          query
+        )
+        const json = await response.json()
+        store.update(state => {
+          const currentIdx = state.datasources.findIndex(
+            ds => ds._id === json._id
+          )
+
+          if (currentIdx >= 0) {
+            state.datasources.splice(currentIdx, 1, json)
+          } else {
+            state.datasources.push(json)
+          }
+
+          state.datasources = state.datasources
+          return state
+        })
+      },
+    },
+    queries: {
+      select: queryId =>
+        store.update(state => {
+          state.selectedQueryId = queryId
           return state
         }),
     },
@@ -176,6 +245,26 @@ export const getBackendUiStore = () => {
           state.users = state.users
           return state
         }),
+    },
+    roles: {
+      fetch: async () => {
+        const response = await api.get("/api/roles")
+        const roles = await response.json()
+        store.update(state => {
+          state.roles = roles
+          return state
+        })
+      },
+      delete: async role => {
+        const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
+        await store.actions.roles.fetch()
+        return response
+      },
+      save: async role => {
+        const response = await api.post("/api/roles", role)
+        await store.actions.roles.fetch()
+        return response
+      },
     },
   }
 

@@ -3,7 +3,6 @@ import { cloneDeep } from "lodash/fp"
 import {
   createProps,
   getBuiltin,
-  makePropsSafe,
 } from "components/userInterface/assetParsing/createProps"
 import {
   allScreens,
@@ -11,6 +10,7 @@ import {
   currentAsset,
   mainLayout,
   selectedComponent,
+  selectedAccessRole,
 } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -32,7 +32,8 @@ const INITIAL_FRONTEND_STATE = {
   screens: [],
   components: [],
   currentFrontEndType: "none",
-  currentAssetId: "",
+  selectedScreenId: "",
+  selectedLayoutId: "",
   selectedComponentId: "",
   errors: [],
   hasAppPackage: false,
@@ -83,28 +84,31 @@ export const getFrontendStore = () => {
       },
     },
     screens: {
-      select: async screenId => {
-        let promise
+      select: screenId => {
         store.update(state => {
-          const screen = get(allScreens).find(screen => screen._id === screenId)
+          let screens = get(allScreens)
+          let screen =
+            screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
 
-          state.currentFrontEndType = FrontendTypes.SCREEN
-          state.currentAssetId = screenId
-          state.currentView = "detail"
+          // Update role to the screen's role setting so that it will always
+          // be visible
+          selectedAccessRole.set(screen.routing.roleId)
 
-          promise = store.actions.screens.regenerateCss(screen)
+          state.currentFrontEndType = FrontendTypes.SCREEN
+          state.selectedScreenId = screen._id
+          state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
           return state
         })
-        await promise
       },
       create: async screen => {
         screen = await store.actions.screens.save(screen)
         store.update(state => {
-          state.currentAssetId = screen._id
+          state.selectedScreenId = screen._id
           state.selectedComponentId = screen.props._id
           state.currentFrontEndType = FrontendTypes.SCREEN
+          selectedAccessRole.set(screen.routing.roleId)
           return state
         })
         return screen
@@ -113,6 +117,7 @@ export const getFrontendStore = () => {
         const creatingNewScreen = screen._id === undefined
         const response = await api.post(`/api/screens`, screen)
         screen = await response.json()
+        await store.actions.routing.fetch()
 
         store.update(state => {
           const foundScreen = state.screens.findIndex(
@@ -122,28 +127,14 @@ export const getFrontendStore = () => {
             state.screens.splice(foundScreen, 1)
           }
           state.screens.push(screen)
-
-          if (creatingNewScreen) {
-            const safeProps = makePropsSafe(
-              state.components[screen.props._component],
-              screen.props
-            )
-            state.selectedComponentId = safeProps._id
-            screen.props = safeProps
-          }
           return state
         })
-        return screen
-      },
-      regenerateCss: async asset => {
-        const response = await api.post("/api/css/generate", asset)
-        asset._css = (await response.json())?.css
-      },
-      regenerateCssForCurrentScreen: async () => {
-        const asset = get(currentAsset)
-        if (asset) {
-          await store.actions.screens.regenerateCss(asset)
+
+        if (creatingNewScreen) {
+          store.actions.screens.select(screen._id)
         }
+
+        return screen
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
@@ -159,8 +150,8 @@ export const getFrontendStore = () => {
                 `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
               )
             )
-            if (screenToDelete._id === state.currentAssetId) {
-              state.currentAssetId = ""
+            if (screenToDelete._id === state.selectedScreenId) {
+              state.selectedScreenId = null
             }
           }
           return state
@@ -181,50 +172,44 @@ export const getFrontendStore = () => {
       },
     },
     layouts: {
-      select: async layoutId => {
+      select: layoutId => {
         store.update(state => {
-          const layout = store.actions.layouts.find(layoutId)
-
+          const layout =
+            store.actions.layouts.find(layoutId) || get(store).layouts[0]
+          if (!layout) return
           state.currentFrontEndType = FrontendTypes.LAYOUT
           state.currentView = "detail"
-
-          state.currentAssetId = layout._id
+          state.selectedLayoutId = layout._id
           state.selectedComponentId = layout.props?._id
-
           return state
         })
-        let cssPromises = []
-        cssPromises.push(store.actions.screens.regenerateCssForCurrentScreen())
-
-        for (let screen of get(allScreens)) {
-          cssPromises.push(store.actions.screens.regenerateCss(screen))
-        }
-        await Promise.all(cssPromises)
       },
       save: async layout => {
         const layoutToSave = cloneDeep(layout)
-        delete layoutToSave._css
-
+        const creatingNewLayout = layoutToSave._id === undefined
         const response = await api.post(`/api/layouts`, layoutToSave)
-
-        const json = await response.json()
+        const savedLayout = await response.json()
 
         store.update(state => {
           const layoutIdx = state.layouts.findIndex(
-            stateLayout => stateLayout._id === json._id
+            stateLayout => stateLayout._id === savedLayout._id
           )
-
           if (layoutIdx >= 0) {
             // update existing layout
-            state.layouts.splice(layoutIdx, 1, json)
+            state.layouts.splice(layoutIdx, 1, savedLayout)
           } else {
             // save new layout
-            state.layouts.push(json)
+            state.layouts.push(savedLayout)
           }
-
-          state.currentAssetId = json._id
           return state
         })
+
+        // Select layout if creating a new one
+        if (creatingNewLayout) {
+          store.actions.layouts.select(savedLayout._id)
+        }
+
+        return savedLayout
       },
       find: layoutId => {
         if (!layoutId) {
@@ -237,16 +222,17 @@ export const getFrontendStore = () => {
         const response = await api.delete(
           `/api/layouts/${layoutToDelete._id}/${layoutToDelete._rev}`
         )
-
         if (response.status !== 200) {
           const json = await response.json()
           throw new Error(json.message)
         }
-
         store.update(state => {
           state.layouts = state.layouts.filter(
             layout => layout._id !== layoutToDelete._id
           )
+          if (layoutToDelete._id === state.selectedLayoutId) {
+            state.selectedLayoutId = get(mainLayout)._id
+          }
           return state
         })
       },
@@ -372,7 +358,6 @@ export const getFrontendStore = () => {
           const index = mode === "above" ? targetIndex : targetIndex + 1
           parent._children.splice(index, 0, cloneDeep(componentToPaste))
 
-          promises.push(store.actions.screens.regenerateCssForCurrentScreen())
           promises.push(store.actions.preview.saveSelected())
           store.actions.components.select(componentToPaste)
 
@@ -389,8 +374,6 @@ export const getFrontendStore = () => {
             selected._styles = {}
           }
           selected._styles[type][name] = value
-
-          promises.push(store.actions.screens.regenerateCssForCurrentScreen())
 
           // save without messing with the store
           promises.push(store.actions.preview.saveSelected())
@@ -476,13 +459,8 @@ export const getFrontendStore = () => {
                 }).props
               }
 
-              // Save layout and regenerate all CSS because otherwise weird things happen
+              // Save layout
               nav._children = [...nav._children, newLink]
-              state.currentAssetId = layout._id
-              promises.push(store.actions.screens.regenerateCss(layout))
-              for (let screen of get(allScreens)) {
-                promises.push(store.actions.screens.regenerateCss(screen))
-              }
               promises.push(store.actions.layouts.save(layout))
             }
             return state

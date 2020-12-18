@@ -7,11 +7,14 @@
     Heading,
     Spacer,
   } from "@budibase/bbui"
+  import { notifier } from "builderStore/store/notifications"
   import { FIELDS } from "constants/backend"
   import { backendUiStore } from "builderStore"
+  import * as api from "../api"
 
   export let table
 
+  let smartSchemaRow
   let fields = Object.keys(table.schema).map(field => ({
     name: field,
     type: table.schema[field].type.toUpperCase(),
@@ -34,11 +37,29 @@
     fields.splice(idx, 1)
     fields = fields
   }
+
+  async function smartSchema() {
+    try {
+      const rows = await api.fetchDataForView($backendUiStore.selectedView)
+      const first = rows[0]
+      smartSchemaRow = first
+      fields = Object.keys(first).map(key => ({
+        // TODO: Smarter type mapping
+        name: key,
+        type: "STRING",
+      }))
+    } catch (err) {
+      notifier.danger("Error determining schema. Please enter fields manually.")
+    }
+  }
 </script>
 
 <section>
   <div class="config">
     <h6>Schema</h6>
+    {#if smartSchemaRow}
+      <pre>{JSON.stringify(smartSchemaRow, undefined, 2)}</pre>
+    {/if}
     {#each fields as field, idx}
       <div class="field">
         <Input thin type={'text'} bind:value={field.name} />
@@ -55,6 +76,7 @@
       </div>
     {/each}
     <Button thin secondary on:click={newField}>Add Field</Button>
+    <Button thin primary on:click={smartSchema}>Smart Schema</Button>
   </div>
 
   <div class="config">
@@ -102,5 +124,6 @@
 
   .delete {
     align-self: center;
+    cursor: pointer;
   }
 </style>

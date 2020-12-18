@@ -3,7 +3,6 @@
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import IntegrationConfigForm from "../TableIntegrationMenu//IntegrationConfigForm.svelte" 
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let table
@@ -79,9 +78,6 @@
           bind:value={table.name}
           on:input={checkValid}
           {error} />
-        {#if table.integration?.type}
-          <IntegrationConfigForm integration={table.integration} />
-        {/if}
         <footer>
           <Button secondary on:click={hideEditor}>Cancel</Button>
           <Button primary disabled={error} on:click={save}>Save</Button>

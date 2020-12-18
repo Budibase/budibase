@@ -2,11 +2,10 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { TableNames } from "constants"
-  import ListItem from "./ListItem.svelte"
   import CreateTableModal from "./modals/CreateTableModal.svelte"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
 
   let modal
@@ -37,7 +36,6 @@
 
 {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
   <div class="title">
-    <h1>Tables</h1>
     <i data-cy="new-table" on:click={modal.show} class="ri-add-circle-fill" />
   </div>
   <div class="hierarchy-items-container">
@@ -48,7 +46,9 @@
         text={table.name}
         selected={selectedView === `all_${table._id}`}
         on:click={() => selectTable(table)}>
-        <EditTablePopover {table} />
+        {#if table._id !== TableNames.USERS}
+          <EditTablePopover {table} />
+        {/if}
       </NavItem>
       {#each Object.keys(table.views || {}) as viewName}
         <NavItem

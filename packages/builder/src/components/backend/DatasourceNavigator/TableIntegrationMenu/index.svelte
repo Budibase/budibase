@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { Input, TextArea } from "@budibase/bbui"
+  import { Input, TextArea, Spacer } from "@budibase/bbui"
   import api from "builderStore/api"
 
   const INTEGRATION_ICON_MAP = {
@@ -14,8 +14,7 @@
   let integrations = []
 
   async function fetchIntegrations() {
-    const INTEGRATIONS_URL = `/api/integrations`
-    const response = await api.get(INTEGRATIONS_URL)
+    const response = await api.get("/api/integrations")
     const json = await response.json()
     integrations = json
     return json
@@ -31,12 +30,21 @@
     {#each Object.keys(integrations) as integrationType}
       <div
         class="integration hoverable"
+        class:selected={integration.type === integrationType}
         on:click={() => {
-          selectedIntegration = integrations[integrationType]
-          integration.type = integrationType
+          selectedIntegration = integrations[integrationType].datasource
+          integration = { type: integrationType, ...Object.keys(selectedIntegration).reduce(
+              (acc, next) => {
+                return {
+                  ...acc,
+                  [next]: selectedIntegration[next].default,
+                }
+              },
+              {}
+            ) }
         }}>
-        <span>{integrationType}</span>
         <i class="ri-database-2-line" />
+        <span>{integrationType}</span>
       </div>
     {/each}
   </div>
@@ -48,6 +56,7 @@
         type={selectedIntegration[configKey].type}
         label={configKey}
         bind:value={integration[configKey]} />
+      <Spacer medium />
     {/each}
   {/if}
 </section>
@@ -60,6 +69,7 @@
   .integration-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    grid-gap: var(--spacing-m);
   }
 
   .integration {
@@ -76,7 +86,8 @@
     margin-bottom: var(--spacing-xs);
   }
 
-  .integration:hover {
+  .integration:hover,
+  .selected {
     background-color: var(--grey-3);
   }
 </style>
