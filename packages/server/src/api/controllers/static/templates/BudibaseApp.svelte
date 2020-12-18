@@ -4,11 +4,11 @@
 
   export let appId
   export let production
-  export let appServerUrl
+  export let objectStoreUrl
 
   function publicPath(path) {
     if (production) {
-      return `${appServerUrl}/assets/${appId}/${path}`
+      return `${objectStoreUrl}/${appId}/${path}`
     }
 
     return `/assets/${path}`

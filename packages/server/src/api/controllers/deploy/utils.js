@@ -3,6 +3,7 @@ const sanitize = require("sanitize-s3-objectkey")
 const { walkDir } = require("../../../utilities")
 const { join } = require("../../../utilities/centralPath")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
+const fetch = require("node-fetch")
 const PouchDB = require("../../../db")
 const CouchDB = require("pouchdb")
 

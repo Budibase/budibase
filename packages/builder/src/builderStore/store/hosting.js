@@ -17,7 +17,7 @@ export const getHostingStore = () => {
       const [info, urls] = await Promise.all(responses.map(resp => resp.json()))
       store.update(state => {
         state.hostingInfo = info
-        state.appUrl = urls.appServer
+        state.appUrl = urls.app
         return state
       })
       return info

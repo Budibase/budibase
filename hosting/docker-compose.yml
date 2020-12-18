@@ -8,14 +8,14 @@ services:
     ports:
       - "${APP_PORT}:${APP_PORT}"
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_URL: http://nginx-service:${MINIO_PORT}
       SELF_HOSTED: 1 
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
       LOGO_URL: ${LOGO_URL}
       PORT: ${APP_PORT}
+      HOSTING_URL: ${HOSTING_URL}
+      MINIO_PORT: ${MINIO_PORT}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - worker-service
 
@@ -29,7 +29,7 @@ services:
       PORT: ${WORKER_PORT}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      RAW_MINIO_URL: http://nginx-service:${MINIO_PORT}
+      RAW_MINIO_URL: http://nginx-service:5001
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
       COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
       RAW_COUCH_DB_URL: http://couchdb-service:5984

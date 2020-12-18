@@ -37,10 +37,10 @@ class Deployment {
     if (!verification) {
       return
     }
+    this.verification = verification
     if (this.verification.quota) {
       this.quota = this.verification.quota
     }
-    this.verification = verification
   }
 
   getVerification() {
