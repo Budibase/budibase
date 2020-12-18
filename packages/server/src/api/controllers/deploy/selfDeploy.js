@@ -5,23 +5,26 @@ const {
   performReplication,
   fetchCredentials,
 } = require("./utils")
-const { getDeploymentUrl } = require("../../../utilities/builder/hosting")
-const { join } = require("path")
+const {
+  getWorkerUrl,
+  getCouchUrl,
+  getMinioUrl,
+} = require("../../../utilities/builder/hosting")
 
 exports.preDeployment = async function() {
-  const url = join(await getDeploymentUrl(), "api", "deploy")
+  const url = `${await getWorkerUrl()}/api/deploy`
   const json = await fetchCredentials(url, {
     apiKey: env.BUDIBASE_API_KEY,
   })
 
   // response contains:
-  // couchDbSession, bucket, objectStoreSession, couchDbUrl, objectStoreUrl
+  // couchDbSession, bucket, objectStoreSession
 
   // set credentials here, means any time we're verified we're ready to go
   if (json.objectStoreSession) {
     AWS.config.update({
-      accessKeyId: json.objectStoreSession.AccessKeyId,
-      secretAccessKey: json.objectStoreSession.SecretAccessKey,
+      accessKeyId: json.objectStoreSession.accessKeyId,
+      secretAccessKey: json.objectStoreSession.secretAccessKey,
     })
   }
 
@@ -36,7 +39,7 @@ exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
   const verification = deployment.getVerification()
   const objClient = new AWS.S3({
-    endpoint: verification.objectStoreUrl,
+    endpoint: await getMinioUrl(),
     s3ForcePathStyle: true, // needed with minio?
     signatureVersion: "v4",
     params: {
@@ -54,6 +57,6 @@ exports.replicateDb = async function(deployment) {
   return performReplication(
     appId,
     verification.couchDbSession,
-    verification.couchDbUrl
+    await getCouchUrl()
   )
 }

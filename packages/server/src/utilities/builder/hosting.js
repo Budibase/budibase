@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
-const { join } = require("path")
 
 function getProtocol(hostingInfo) {
   return hostingInfo.useHttps ? "https://" : "http://"
@@ -23,8 +22,10 @@ exports.getHostingInfo = async () => {
     doc = {
       _id: HOSTING_DOC,
       type: exports.HostingTypes.CLOUD,
-      appServerUrl: "app.budi.live",
-      deploymentServerUrl: "",
+      appUrl: "app.budi.live",
+      workerUrl: "",
+      minioUrl: "",
+      couchUrl: "",
       templatesUrl: "prod-budi-templates.s3-eu-west-1.amazonaws.com",
       useHttps: true,
     }
@@ -32,22 +33,34 @@ exports.getHostingInfo = async () => {
   return doc
 }
 
-exports.getAppServerUrl = async appId => {
+exports.getAppUrl = async appId => {
   const hostingInfo = await exports.getHostingInfo()
   const protocol = getProtocol(hostingInfo)
   let url
   if (hostingInfo.type === "cloud") {
-    url = `${protocol}${appId}.${hostingInfo.appServerUrl}`
+    url = `${protocol}${appId}.${hostingInfo.appUrl}`
   } else {
-    url = `${protocol}${hostingInfo.appServerUrl}`
+    url = `${protocol}${hostingInfo.appUrl}`
   }
   return url
 }
 
-exports.getDeploymentUrl = async () => {
+exports.getWorkerUrl = async () => {
   const hostingInfo = await exports.getHostingInfo()
   const protocol = getProtocol(hostingInfo)
-  return `${protocol}${hostingInfo.deploymentServerUrl}`
+  return `${protocol}${hostingInfo.workerUrl}`
+}
+
+exports.getMinioUrl = async () => {
+  const hostingInfo = await exports.getHostingInfo()
+  const protocol = getProtocol(hostingInfo)
+  return `${protocol}${hostingInfo.minioUrl}`
+}
+
+exports.getCouchUrl = async () => {
+  const hostingInfo = await exports.getHostingInfo()
+  const protocol = getProtocol(hostingInfo)
+  return `${protocol}${hostingInfo.couchUrl}`
 }
 
 exports.getTemplatesUrl = async (appId, type, name) => {
@@ -55,9 +68,9 @@ exports.getTemplatesUrl = async (appId, type, name) => {
   const protocol = getProtocol(hostingInfo)
   let path
   if (type && name) {
-    path = join("templates", type, `${name}.tar.gz`)
+    path = `templates/type/${name}.tar.gz`
   } else {
     path = "manifest.json"
   }
-  return join(`${protocol}${hostingInfo.templatesUrl}`, path)
+  return `${protocol}${hostingInfo.templatesUrl}/${path}`
 }

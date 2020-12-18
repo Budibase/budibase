@@ -17,17 +17,10 @@ const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
 const env = require("../../../environment")
 
-function appServerUrl(appId) {
-  if (env.SELF_HOSTED) {
-    return env.HOSTING_URL
-  } else {
-    return `https://${appId}.app.budi.live`
-  }
-}
-
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
-    return env.MINIO_URL
+    // TODO: need a better way to handle this, probably reverse proxy
+    return `${env.HOSTING_URL}:${env.MINIO_PORT}/app-assets/assets`
   } else {
     return "https://cdn.app.budi.live/assets"
   }
@@ -164,7 +157,7 @@ exports.serveApp = async function(ctx) {
     title: appInfo.name,
     production: env.CLOUD,
     appId: ctx.params.appId,
-    appServerUrl: appServerUrl(ctx.params.appId),
+    objectStoreUrl: objectStoreUrl(ctx.params.appId),
   })
 
   const template = handlebars.compile(
@@ -232,8 +225,7 @@ exports.serveComponentLibrary = async function(ctx) {
     }
     const S3_URL = encodeURI(
       join(
-        appServerUrl(appId),
-        "assets",
+        objectStoreUrl(appId),
         componentLib,
         ctx.query.library,
         "dist",

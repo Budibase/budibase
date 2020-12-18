@@ -3,7 +3,7 @@ const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
 const {
   getHostingInfo,
   HostingTypes,
-  getAppServerUrl,
+  getAppUrl,
 } = require("../../utilities/builder/hosting")
 
 exports.fetchInfo = async ctx => {
@@ -30,6 +30,6 @@ exports.fetch = async ctx => {
 
 exports.fetchUrls = async ctx => {
   ctx.body = {
-    appServer: await getAppServerUrl(ctx.appId),
+    app: await getAppUrl(ctx.appId),
   }
 }

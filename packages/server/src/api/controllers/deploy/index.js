@@ -24,7 +24,7 @@ async function checkAllDeployments(deployments) {
       deployment.status === DeploymentStatus.PENDING &&
       Date.now() - deployment.updatedAt > MAX_PENDING_TIME_MS
     ) {
-      deployment.status = status
+      deployment.status = DeploymentStatus.FAILURE
       deployment.err = "Timed out"
       updated = true
     }

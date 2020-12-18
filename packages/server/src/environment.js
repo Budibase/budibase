@@ -37,10 +37,8 @@ module.exports = {
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
   LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
   // self hosting features
-  MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
-  MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
-  MINIO_URL: process.MINIO_URL,
-  HOSTING_URL: process.HOSTING_URL,
+  HOSTING_URL: process.env.HOSTING_URL,
+  MINIO_PORT: process.env.MINIO_PORT,
   LOGO_URL: process.env.LOGO_URL,
   _set(key, value) {
     process.env[key] = value
