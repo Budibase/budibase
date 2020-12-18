@@ -55,12 +55,6 @@ async function getMinioSession() {
         Bucket: APP_BUCKET,
       })
       .promise()
-    await objClient
-      .putBucketPolicy({
-        Bucket: APP_BUCKET,
-        Policy: JSON.stringify(PUBLIC_READ_POLICY),
-      })
-      .promise()
   } catch (err) {
     // bucket doesn't exist create it
     if (err.statusCode === 404) {
@@ -69,7 +63,15 @@ async function getMinioSession() {
           Bucket: APP_BUCKET,
         })
         .promise()
-    } else {
+    } else if (err.statusCode === 403) {
+      await objClient
+        .putBucketPolicy({
+          Bucket: APP_BUCKET,
+          Policy: JSON.stringify(PUBLIC_READ_POLICY),
+        })
+        .promise()
+    }
+    else {
       throw err
     }
   }
