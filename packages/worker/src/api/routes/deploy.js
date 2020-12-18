@@ -4,7 +4,6 @@ const checkKey = require("../../middleware/check-key")
 
 const router = Router()
 
-router
-  .post("/api/deploy", checkKey, controller.deploy)
+router.post("/api/deploy", checkKey, controller.deploy)
 
 module.exports = router
