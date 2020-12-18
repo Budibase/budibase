@@ -89,7 +89,7 @@ describe("CSV Parser", () => {
         })
       ).toEqual([
         {
-          Name: "Bert",
+          Name: "Bertå",
         },
         {
           Name: "Ernie",
