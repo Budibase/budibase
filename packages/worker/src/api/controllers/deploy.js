@@ -13,8 +13,8 @@ const PUBLIC_READ_POLICY = {
       Principal: "*",
       Action: "s3:GetObject",
       Resource: `arn:aws:s3:::${APP_BUCKET}/*`,
-    }
-  ]
+    },
+  ],
 }
 
 async function getCouchSession() {
@@ -25,7 +25,7 @@ async function getCouchSession() {
     json: {
       username: env.COUCH_DB_USERNAME,
       password: env.COUCH_DB_PASSWORD,
-    }
+    },
   })
 
   const cookie = session.headers["set-cookie"][0]
@@ -50,19 +50,25 @@ async function getMinioSession() {
   })
   // make sure the bucket exists
   try {
-    await objClient.headBucket({
-      Bucket: APP_BUCKET
-    }).promise()
-    await objClient.putBucketPolicy({
-      Bucket: APP_BUCKET,
-      Policy: JSON.stringify(PUBLIC_READ_POLICY),
-    }).promise()
+    await objClient
+      .headBucket({
+        Bucket: APP_BUCKET,
+      })
+      .promise()
+    await objClient
+      .putBucketPolicy({
+        Bucket: APP_BUCKET,
+        Policy: JSON.stringify(PUBLIC_READ_POLICY),
+      })
+      .promise()
   } catch (err) {
     // bucket doesn't exist create it
     if (err.statusCode === 404) {
-      await objClient.createBucket({
-        Bucket: APP_BUCKET,
-      }).promise()
+      await objClient
+        .createBucket({
+          Bucket: APP_BUCKET,
+        })
+        .promise()
     } else {
       throw err
     }
