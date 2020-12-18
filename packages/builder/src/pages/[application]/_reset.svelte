@@ -20,6 +20,7 @@
       backendUiStore.actions.reset()
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
+      await backendUiStore.actions.roles.fetch()
       return pkg
     } else {
       throw new Error(pkg)
@@ -217,5 +218,6 @@
     position: absolute;
     bottom: var(--spacing-m);
     left: var(--spacing-m);
+    z-index: 1;
   }
 </style>

@@ -1,11 +1,32 @@
 <script>
+  import { Switcher } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
+
+  const tabs = [
+    {
+      title: "Tables",
+      key: "table",
+    },
+    {
+      title: "Data Sources",
+      key: "datasource",
+    },
+  ]
+
+  let tab = "table"
 </script>
 
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <TableNavigator />
+    <Switcher headings={tabs} bind:value={tab}>
+      {#if tab === 'table'}
+        <TableNavigator />
+      {:else if tab === 'datasource'}
+        <DatasourceNavigator />
+      {/if}
+    </Switcher>
   </div>
   <div class="content">
     <slot />

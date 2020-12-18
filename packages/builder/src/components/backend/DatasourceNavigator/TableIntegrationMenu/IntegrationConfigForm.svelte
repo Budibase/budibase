@@ -1,5 +1,5 @@
 <script>
-  import { Input, TextArea } from "@budibase/bbui"
+  import { Input, TextArea, Spacer } from "@budibase/bbui"
 
   export let integration
 </script>
@@ -11,5 +11,6 @@
       type={configKey.type}
       label={configKey}
       bind:value={integration[configKey]} />
+    <Spacer medium />
   {/each}
 </form>

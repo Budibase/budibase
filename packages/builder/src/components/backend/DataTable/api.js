@@ -23,5 +23,22 @@ export async function fetchDataForView(view) {
   const FETCH_ROWS_URL = `/api/views/${view.name}`
 
   const response = await api.get(FETCH_ROWS_URL)
-  return await response.json()
+  const json = await response.json()
+
+  if (response.status !== 200) {
+    throw new Error(json.message)
+  }
+  return json
+}
+
+export async function fetchDataForQuery(datasourceId, queryId) {
+  const FETCH_QUERY_URL = `/api/datasources/${datasourceId}/queries/${queryId}`
+
+  const response = await api.get(FETCH_QUERY_URL)
+  const json = await response.json()
+
+  if (response.status !== 200) {
+    throw new Error(json.message)
+  }
+  return json
 }

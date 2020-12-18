@@ -6,8 +6,8 @@
 
   export let logoUrl
 
-  const logOut = () => {
-    authStore.actions.logOut()
+  const logOut = async () => {
+    await authStore.actions.logOut()
   }
 </script>
 

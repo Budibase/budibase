@@ -9,8 +9,8 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { cloneDeep } = require("lodash")
 const { integrations } = require("../../integrations")
+const { coerceRowValues } = require("../../utilities")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -29,6 +29,28 @@ validateJs.extend(validateJs.validators.datetime, {
     return new Date(value).toISOString()
   },
 })
+
+async function findRow(db, appId, tableId, rowId) {
+  let row
+  if (tableId === ViewNames.USERS) {
+    let ctx = {
+      params: {
+        userId: rowId,
+      },
+      user: {
+        appId,
+      },
+    }
+    await usersController.find(ctx)
+    row = ctx.body
+  } else {
+    row = await db.get(rowId)
+  }
+  if (row.tableId !== tableId) {
+    throw "Supplied tableId does not match the rows tableId"
+  }
+  return row
+}
 
 exports.patch = async function(ctx) {
   const appId = ctx.user.appId
@@ -65,6 +87,13 @@ exports.patch = async function(ctx) {
     tableId: row.tableId,
     table,
   })
+
+  // Creation of a new user goes to the user controller
+  if (row.tableId === ViewNames.USERS) {
+    await usersController.update(ctx)
+    return
+  }
+
   const response = await db.put(row)
   row._rev = response.rev
   row.type = "row"
@@ -81,18 +110,24 @@ exports.save = async function(ctx) {
   let row = ctx.request.body
   row.tableId = ctx.params.tableId
 
+  // TODO: find usage of this and break out into own endpoint
   if (ctx.request.body.type === "delete") {
     await bulkDelete(ctx)
     ctx.body = ctx.request.body.rows
     return
   }
 
+  // if the row obj had an _id then it will have been retrieved
+  const existingRow = ctx.preExisting
+  if (existingRow) {
+    ctx.params.id = row._id
+    await exports.patch(ctx)
+    return
+  }
+
   if (!row._rev && !row._id) {
     row._id = generateRowID(row.tableId)
   }
-
-  // if the row obj had an _id then it will have been retrieved
-  const existingRow = ctx.preExisting
 
   const table = await db.get(row.tableId)
 
@@ -122,39 +157,22 @@ exports.save = async function(ctx) {
   })
 
   // Creation of a new user goes to the user controller
-  if (!existingRow && row.tableId === ViewNames.USERS) {
-    try {
-      await usersController.create(ctx)
-    } catch (err) {
-      ctx.body = { errors: [err.message] }
-    }
-    return
-  }
-
-  if (existingRow) {
-    const response = await db.put(row)
-    row._rev = response.rev
-    row.type = "row"
-    ctx.body = row
-    ctx.status = 200
-    ctx.message = `${table.name} updated successfully.`
+  if (row.tableId === ViewNames.USERS) {
+    await usersController.create(ctx)
     return
   }
 
   row.type = "row"
-  const response = await db.post(row)
+  const response = await db.put(row)
   row._rev = response.rev
-
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.body = row
   ctx.status = 200
-  ctx.message = `${table.name} created successfully`
+  ctx.message = `${table.name} saved successfully`
 }
 
 exports.fetchView = async function(ctx) {
   const appId = ctx.user.appId
-  const db = new CouchDB(appId)
-  const { calculation, group, field } = ctx.query
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
@@ -164,6 +182,8 @@ exports.fetchView = async function(ctx) {
     return
   }
 
+  const db = new CouchDB(appId)
+  const { calculation, group, field } = ctx.query
   const response = await db.query(`database/${viewName}`, {
     include_docs: !calculation,
     group,
@@ -198,50 +218,33 @@ exports.fetchView = async function(ctx) {
 
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
-  const db = new CouchDB(appId)
 
-  const table = await db.get(ctx.params.tableId)
-
-  if (table.integration && table.integration.type) {
-    const Integration = integrations[table.integration.type]
-    ctx.body = await new Integration(table.integration).query()
-    return
+  // special case for users, fetch through the user controller
+  let rows
+  if (ctx.params.tableId === ViewNames.USERS) {
+    await usersController.fetch(ctx)
+    rows = ctx.body
+  } else {
+    const db = new CouchDB(appId)
+    const response = await db.allDocs(
+      getRowParams(ctx.params.tableId, null, {
+        include_docs: true,
+      })
+    )
+    rows = response.rows.map(row => row.doc)
   }
-
-  const response = await db.allDocs(
-    getRowParams(ctx.params.tableId, null, {
-      include_docs: true,
-    })
-  )
-  ctx.body = response.rows.map(row => row.doc)
-  ctx.body = await linkRows.attachLinkInfo(
-    appId,
-    response.rows.map(row => row.doc)
-  )
-}
-
-exports.search = async function(ctx) {
-  const appId = ctx.user.appId
-  const db = new CouchDB(appId)
-  const response = await db.allDocs({
-    include_docs: true,
-    ...ctx.request.body,
-  })
-  ctx.body = await linkRows.attachLinkInfo(
-    appId,
-    response.rows.map(row => row.doc)
-  )
+  ctx.body = await linkRows.attachLinkInfo(appId, rows)
 }
 
 exports.find = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  const row = await db.get(ctx.params.rowId)
-  if (row.tableId !== ctx.params.tableId) {
-    ctx.throw(400, "Supplied tableId does not match the rows tableId")
-    return
+  try {
+    const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
+    ctx.body = await linkRows.attachLinkInfo(appId, row)
+  } catch (err) {
+    ctx.throw(400, err)
   }
-  ctx.body = await linkRows.attachLinkInfo(appId, row)
 }
 
 exports.destroy = async function(ctx) {
@@ -307,7 +310,10 @@ exports.fetchEnrichedRow = async function(ctx) {
     return
   }
   // need table to work out where links go in row
-  const [table, row] = await Promise.all([db.get(tableId), db.get(rowId)])
+  let [table, row] = await Promise.all([
+    db.get(tableId),
+    findRow(db, appId, tableId, rowId),
+  ])
   // get the link docs
   const linkVals = await linkRows.getLinkDocuments({
     appId,
@@ -335,68 +341,6 @@ exports.fetchEnrichedRow = async function(ctx) {
   }
   ctx.body = row
   ctx.status = 200
-}
-
-function coerceRowValues(record, table) {
-  const row = cloneDeep(record)
-  for (let [key, value] of Object.entries(row)) {
-    const field = table.schema[key]
-    if (!field) continue
-
-    // eslint-disable-next-line no-prototype-builtins
-    if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
-      row[key] = TYPE_TRANSFORM_MAP[field.type][value]
-    } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
-      row[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
-    }
-  }
-  return row
-}
-
-const TYPE_TRANSFORM_MAP = {
-  link: {
-    "": [],
-    [null]: [],
-    [undefined]: undefined,
-  },
-  options: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  string: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  longform: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  number: {
-    "": null,
-    [null]: null,
-    [undefined]: undefined,
-    parse: n => parseFloat(n),
-  },
-  datetime: {
-    "": null,
-    [undefined]: undefined,
-    [null]: null,
-  },
-  attachment: {
-    "": [],
-    [null]: [],
-    [undefined]: undefined,
-  },
-  boolean: {
-    "": null,
-    [null]: null,
-    [undefined]: undefined,
-    true: true,
-    false: false,
-  },
 }
 
 async function bulkDelete(ctx) {

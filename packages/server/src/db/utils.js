@@ -15,6 +15,8 @@ const DocumentTypes = {
   INSTANCE: "inst",
   LAYOUT: "layout",
   SCREEN: "screen",
+  DATASOURCE: "datasource",
+  QUERY: "query",
 }
 
 const ViewNames = {
@@ -102,15 +104,11 @@ exports.generateRowID = tableId => {
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserParams = (email = "", otherProps = {}) => {
-  return getDocParams(
-    DocumentTypes.ROW,
-    `${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${email}`,
-    otherProps
-  )
+  return exports.getRowParams(ViewNames.USERS, email, otherProps)
 }
 
 /**
- * Generates a new user ID based on the passed in username.
+ * Generates a new user ID based on the passed in email.
  * @param {string} email The email which the ID is going to be built up of.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
@@ -226,4 +224,34 @@ exports.generateWebhookID = () => {
  */
 exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.WEBHOOK, webhookId, otherProps)
+}
+
+/**
+ * Generates a new datasource ID.
+ * @returns {string} The new datasource ID which the webhook doc can be stored under.
+ */
+exports.generateDatasourceID = () => {
+  return `${DocumentTypes.DATASOURCE}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a datasource, this is a utility function for the getDocParams function.
+ */
+exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.DATASOURCE, datasourceId, otherProps)
+}
+
+/**
+ * Generates a new query ID.
+ * @returns {string} The new query ID which the query doc can be stored under.
+ */
+exports.generateQueryID = () => {
+  return `${DocumentTypes.QUERY}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
+ */
+exports.getQueryParams = (queryId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.QUERY, queryId, otherProps)
 }

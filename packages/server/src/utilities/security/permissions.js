@@ -45,7 +45,7 @@ function getAllowedLevels(userPermLevel) {
   }
 }
 
-exports.BUILTIN_PERMISSION_NAMES = {
+exports.BUILTIN_PERMISSION_IDS = {
   READ_ONLY: "read_only",
   WRITE: "write",
   ADMIN: "admin",
@@ -54,21 +54,24 @@ exports.BUILTIN_PERMISSION_NAMES = {
 
 exports.BUILTIN_PERMISSIONS = {
   READ_ONLY: {
-    name: exports.BUILTIN_PERMISSION_NAMES.READ_ONLY,
+    _id: exports.BUILTIN_PERMISSION_IDS.READ_ONLY,
+    name: "Read only",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.READ),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
     ],
   },
   WRITE: {
-    name: exports.BUILTIN_PERMISSION_NAMES.WRITE,
+    _id: exports.BUILTIN_PERMISSION_IDS.WRITE,
+    name: "Read/Write",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
     ],
   },
   POWER: {
-    name: exports.BUILTIN_PERMISSION_NAMES.POWER,
+    _id: exports.BUILTIN_PERMISSION_IDS.POWER,
+    name: "Power",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
       new Permission(PermissionTypes.USER, PermissionLevels.READ),
@@ -78,7 +81,8 @@ exports.BUILTIN_PERMISSIONS = {
     ],
   },
   ADMIN: {
-    name: exports.BUILTIN_PERMISSION_NAMES.ADMIN,
+    _id: exports.BUILTIN_PERMISSION_IDS.ADMIN,
+    name: "Admin",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.ADMIN),
       new Permission(PermissionTypes.USER, PermissionLevels.ADMIN),
@@ -89,11 +93,11 @@ exports.BUILTIN_PERMISSIONS = {
   },
 }
 
-exports.doesHavePermission = (permType, permLevel, userPermissionNames) => {
+exports.doesHavePermission = (permType, permLevel, permissionIds) => {
   const builtins = Object.values(exports.BUILTIN_PERMISSIONS)
   let permissions = flatten(
     builtins
-      .filter(builtin => userPermissionNames.indexOf(builtin.name) !== -1)
+      .filter(builtin => permissionIds.indexOf(builtin._id) !== -1)
       .map(builtin => builtin.permissions)
   )
   for (let permission of permissions) {

@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.3.8",
+  "version": "0.4.2",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -21,7 +21,6 @@
       "maintainer": "Budibase",
       "icon": "./build/icons/",
       "target": [
-        "AppImage",
         "deb"
       ],
       "category": "Development"
@@ -49,8 +48,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.3.8",
     "@elastic/elasticsearch": "^7.10.0",
+    "@budibase/client": "^0.4.2",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",

@@ -26,11 +26,12 @@
   // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
   if ($leftover) {
     // Get the correct screen children.
-    const assetChildren = assetList.find(
-      asset =>
-        asset._id === $params.asset ||
-        asset._id === decodeURIComponent($params.asset)
-    ).props._children
+    const assetChildren =
+      assetList.find(
+        asset =>
+          asset._id === $params.asset ||
+          asset._id === decodeURIComponent($params.asset)
+      )?.props._children ?? []
     findComponent(componentIds, assetChildren)
   }
   // }
