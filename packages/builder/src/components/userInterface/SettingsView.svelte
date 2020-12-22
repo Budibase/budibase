@@ -4,6 +4,7 @@
   import { FrontendTypes } from "constants"
   import PropertyControl from "./PropertyControl.svelte"
   import LayoutSelect from "./LayoutSelect.svelte"
+  import RoleSelect from "./RoleSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { excludeProps } from "./propertyCategories.js"
   import { store, allScreens, currentAsset } from "builderStore"
@@ -36,8 +37,8 @@
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
     { key: "routing.route", label: "Route", control: Input },
+    { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
-    { key: "routing.roleId", label: "Role", control: Input },
   ]
 
   const layoutDefinition = [{ key: "title", label: "Title", control: Input }]

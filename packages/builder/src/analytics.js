@@ -39,19 +39,22 @@ function identify(id) {
 
 async function identifyByApiKey(apiKey) {
   if (!analyticsEnabled) return true
-  const response = await fetch(
-    `https://03gaine137.execute-api.eu-west-1.amazonaws.com/prod/account/id?api_key=${apiKey.trim()}`
-  )
+  try {
+    const response = await fetch(
+      `https://03gaine137.execute-api.eu-west-1.amazonaws.com/prod/account/id?api_key=${apiKey.trim()}`
+    )
+    if (response.status === 200) {
+      const id = await response.json()
 
-  if (response.status === 200) {
-    const id = await response.json()
+      await api.put("/api/keys/userId", { value: id })
+      identify(id)
+      return true
+    }
 
-    await api.put("/api/keys/userId", { value: id })
-    identify(id)
-    return true
+    return false
+  } catch (error) {
+    console.log(error)
   }
-
-  return false
 }
 
 function captureException(err) {

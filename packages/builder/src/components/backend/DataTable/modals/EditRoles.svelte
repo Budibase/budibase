@@ -4,27 +4,26 @@
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { backendUiStore } from "builderStore"
 
-  let roles = []
   let permissions = []
   let selectedRole = {}
   let errors = []
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = roles.filter(role => role._id !== selectedRoleId)
+  $: otherRoles = $backendUiStore.roles.filter(
+    role => role._id !== selectedRoleId
+  )
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
-  // Loads available roles and permissions from the server
-  const fetchRoles = async () => {
-    const rolesResponse = await api.get("/api/roles")
-    roles = await rolesResponse.json()
+  const fetchPermissions = async () => {
     const permissionsResponse = await api.get("/api/permissions")
     permissions = await permissionsResponse.json()
   }
 
-  // Changes the seleced role
+  // Changes the selected role
   const changeRole = event => {
     const id = event?.target?.value
-    const role = roles.find(role => role._id === id)
+    const role = $backendUiStore.roles.find(role => role._id === id)
     if (role) {
       selectedRole = {
         ...role,
@@ -61,7 +60,7 @@
     }
 
     // Save/create the role
-    const response = await api.post("/api/roles", selectedRole)
+    const response = await backendUiStore.actions.roles.save(selectedRole)
     if (response.status === 200) {
       notifier.success("Role saved successfully.")
     } else {
@@ -72,11 +71,8 @@
 
   // Deletes the selected role
   const deleteRole = async () => {
-    const response = await api.delete(
-      `/api/roles/${selectedRole._id}/${selectedRole._rev}`
-    )
+    const response = await backendUiStore.actions.roles.delete(selectedRole)
     if (response.status === 200) {
-      await fetchRoles()
       changeRole()
       notifier.success("Role deleted successfully.")
     } else {
@@ -84,7 +80,7 @@
     }
   }
 
-  onMount(fetchRoles)
+  onMount(fetchPermissions)
 </script>
 
 <ModalContent
@@ -101,7 +97,7 @@
     value={selectedRoleId}
     on:change={changeRole}>
     <option value="">Create new role</option>
-    {#each roles as role}
+    {#each $backendUiStore.roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>
