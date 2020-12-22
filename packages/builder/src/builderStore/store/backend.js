@@ -6,6 +6,7 @@ const INITIAL_BACKEND_UI_STATE = {
   tables: [],
   views: [],
   users: [],
+  roles: [],
   selectedDatabase: {},
   selectedTable: {},
   draftTable: {},
@@ -176,6 +177,26 @@ export const getBackendUiStore = () => {
           state.users = state.users
           return state
         }),
+    },
+    roles: {
+      fetch: async () => {
+        const response = await api.get("/api/roles")
+        const roles = await response.json()
+        store.update(state => {
+          state.roles = roles
+          return state
+        })
+      },
+      delete: async role => {
+        const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
+        await store.actions.roles.fetch()
+        return response
+      },
+      save: async role => {
+        const response = await api.post("/api/roles", role)
+        await store.actions.roles.fetch()
+        return response
+      },
     },
   }
 

@@ -29,11 +29,11 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.3.8",
+  "version": "0.4.2",
   "license": "MIT",
   "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {
-    "@budibase/bbui": "^1.52.1",
+    "@budibase/bbui": "^1.52.4",
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "apexcharts": "^3.22.1",
@@ -41,8 +41,8 @@
     "lodash.debounce": "^4.0.8",
     "markdown-it": "^12.0.2",
     "quill": "^1.3.7",
-    "turndown": "^7.0.0",
     "svelte-apexcharts": "^1.0.2",
-    "svelte-flatpickr": "^3.1.0"
+    "svelte-flatpickr": "^3.1.0",
+    "turndown": "^7.0.0"
   }
 }

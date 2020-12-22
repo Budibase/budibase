@@ -115,7 +115,7 @@ Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
   cy.contains("Users").click()
 
-  cy.contains("Create New Row").click()
+  cy.contains("Create New User").click()
 
   cy.get(".modal").within(() => {
     cy.get("input")
