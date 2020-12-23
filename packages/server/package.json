@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -49,7 +49,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.4.2",
+    "@budibase/client": "^0.4.3",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
