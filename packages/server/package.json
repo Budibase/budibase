@@ -12,6 +12,7 @@
     "icon": "./build/icons/512x512.png",
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
+    "afterSign": "electron-builder-notarize",
     "mac": {
       "icon": "./assets/icons/icon.icns",
       "category": "public.app-category.developer-tools",
