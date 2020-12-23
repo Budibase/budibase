@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.js",
@@ -15,7 +15,7 @@
     "svelte-spa-router": "^3.0.5"
   },
   "devDependencies": {
-    "@budibase/standard-components": "^0.4.2",
+    "@budibase/standard-components": "^0.4.3",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "fs-extra": "^8.1.0",
