@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -12,6 +12,7 @@
     "icon": "./build/icons/512x512.png",
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
+    "afterSign": "electron-builder-notarize",
     "mac": {
       "icon": "./assets/icons/icon.icns",
       "category": "public.app-category.developer-tools",
@@ -49,7 +50,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@elastic/elasticsearch": "^7.10.0",
-    "@budibase/client": "^0.4.2",
+    "@budibase/client": "^0.4.3",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
