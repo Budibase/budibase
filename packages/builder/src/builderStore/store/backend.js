@@ -81,6 +81,20 @@ export const getBackendUiStore = () => {
           }
 
           state.datasources = state.datasources
+          state.selectedDatasourceId = json._id
+          return state
+        })
+        return json
+      },
+      delete: async datasource => {
+        await api.delete(
+          `/api/datasources/${datasource._id}/${datasource._rev}`
+        )
+        store.update(state => {
+          state.datasources = state.datasources.filter(
+            existing => existing._id !== datasource._id
+          )
+          state.selectedDatasourceId = null
           return state
         })
       },

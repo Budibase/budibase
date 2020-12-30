@@ -27,7 +27,7 @@
     const { type, ...config } = integration
 
     // Create datasource
-    await backendUiStore.actions.datasources.save({
+    const response = await backendUiStore.actions.datasources.save({
       name,
       source: type,
       config
@@ -35,8 +35,10 @@
     notifier.success(`Datasource ${name} created successfully.`)
     analytics.captureEvent("Datasource Created", { name })
 
+    console.log(response)
+
     // Navigate to new datasource
-    $goto(`./datasource/${datasource._id}`)
+    $goto(`./datasource/${response._id}`)
   }
 </script>
 
