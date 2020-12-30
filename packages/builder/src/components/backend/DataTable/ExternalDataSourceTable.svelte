@@ -24,11 +24,11 @@
   async function fetchData() {
     try {
       loading = true
-      const rows = await api.fetchDataForQuery(
+      const response = await api.fetchDataForQuery(
         $params.selectedDatasource,
         $params.query
       )
-      data = rows || []
+      data = response.rows || []
       error = false
     } catch (err) {
       console.log(err)
@@ -40,9 +40,7 @@
   }
 
   // Fetch rows for specified query
-  $: {
-    fetchData()
-  }
+  $: fetchData()
 </script>
 
 {#if error}

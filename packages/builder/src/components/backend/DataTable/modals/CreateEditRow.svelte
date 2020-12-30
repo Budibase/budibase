@@ -45,3 +45,9 @@
     </div>
   {/each}
 </ModalContent>
+
+<style>
+  div {
+    min-width: 0;
+  }
+</style>

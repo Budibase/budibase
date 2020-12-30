@@ -35,7 +35,9 @@
     let queriesArr = Object.entries(cur.queries).map(([key, value]) => ({
       label: value.name,
       name: value.name,
-      ...value,
+      datasourceId: cur._id,
+      queryId: key,
+      schema: value.schema,
       type: "query",
     }))
     return [...acc, ...queriesArr]

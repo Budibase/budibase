@@ -129,5 +129,13 @@ exports.executeQuery = async function(ctx) {
     return
   }
 
-  ctx.body = await new Integration(datasource.config, query.queryString).query()
+  const rows = await new Integration(
+    datasource.config,
+    query.queryString
+  ).query()
+
+  ctx.body = {
+    schema: query.schema,
+    rows,
+  }
 }
