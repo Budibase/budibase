@@ -9,6 +9,7 @@
     ModalContent,
     TextArea,
   } from "@budibase/bbui"
+  import { notifier } from "builderStore/store/notifications"
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import EditIntegrationConfig from "../modals/EditIntegrationConfig.svelte"
@@ -23,17 +24,20 @@
   async function saveQuery() {
     try {
       await backendUiStore.actions.datasources.saveQuery(datasource._id, query)
+      notifier.success(`Query created successfully.`)
     } catch (err) {
       console.error(err)
-      // TODO: notifier
+      notifier.danger(`Error creating query. ${err.message}`)
     }
   }
+
+  $: console.log(query)
 </script>
 
 <div>
   <Button text small on:click={modal.show}>
     <Icon name="filter" />
-    Create Query
+    {query ? 'Edit' : 'Create'} Query
   </Button>
 </div>
 <Modal bind:this={modal}>
