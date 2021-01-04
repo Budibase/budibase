@@ -2,6 +2,7 @@
   import { notifier } from "builderStore/store/notifications"
   import { hostingStore } from "builderStore"
   import { Input, ModalContent, Toggle } from "@budibase/bbui"
+  import ThemeEditor from "components/settings/ThemeEditor.svelte"
   import analytics from "analytics"
   import { onMount } from "svelte"
 
@@ -32,6 +33,8 @@
   confirmText="Save"
   onConfirm={save}
   showConfirmButton={selfhosted}>
+  <h5>Theme</h5>
+  <ThemeEditor />
   <h5>Hosting</h5>
   <p>
     This section contains settings that relate to the deployment and hosting of
