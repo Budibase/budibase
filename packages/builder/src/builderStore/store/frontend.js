@@ -366,20 +366,20 @@ export const getFrontendStore = () => {
         await Promise.all(promises)
       },
       updateStyle: async (type, name, value) => {
-        let promises = []
         const selected = get(selectedComponent)
-
-        store.update(state => {
-          if (!selected._styles) {
-            selected._styles = {}
-          }
-          selected._styles[type][name] = value
-
-          // save without messing with the store
-          promises.push(store.actions.preview.saveSelected())
-          return state
-        })
-        await Promise.all(promises)
+        if (!selected._styles) {
+          selected._styles = {}
+        }
+        selected._styles[type][name] = value
+        await store.actions.preview.saveSelected()
+      },
+      updateCustomStyle: async style => {
+        const selected = get(selectedComponent)
+        if (!selected._styles) {
+          selected._styles = {}
+        }
+        selected._styles.custom = style
+        await store.actions.preview.saveSelected()
       },
       updateProp: (name, value) => {
         store.update(state => {
