@@ -60,9 +60,9 @@ export const getBackendUiStore = () => {
         })
         return json
       },
-      select: async datasource => {
+      select: async datasourceId => {
         store.update(state => {
-          state.selectedDatasourceId = datasource._id
+          state.selectedDatasourceId = datasourceId
           return state
         })
       },

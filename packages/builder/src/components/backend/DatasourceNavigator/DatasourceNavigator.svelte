@@ -15,7 +15,7 @@
 
   function selectDatasource(datasource) {
     // You can't actually select a datasource, just edit it
-    backendUiStore.actions.datasources.select(datasource)
+    backendUiStore.actions.datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }
 
@@ -23,6 +23,7 @@
     if ($backendUiStore.selectedQueryId === queryId) {
       return
     }
+    backendUiStore.actions.datasources.select(datasourceId)
     backendUiStore.actions.queries.select(queryId)
     $goto(`./datasource/${datasourceId}/${queryId}`)
   }
@@ -54,7 +55,7 @@
           indentLevel={1}
           icon="ri-eye-line"
           text={datasource.queries[queryId].name}
-          selected={selectedView === queryId}
+          selected={$backendUiStore.selectedQueryId === queryId}
           on:click={() => onClickQuery(datasource._id, queryId)}>
           <!-- <EditViewPopover
             view={{ name: viewName, ...table.views[viewName] }} /> -->
