@@ -16,9 +16,9 @@
   import CreateEditQuery from "components/backend/DataTable/modals/CreateEditQuery.svelte"
 
   export let datasource
+  export let query = {}
 
   let modal
-  let query = {}
   let fields = []
 
   async function saveQuery() {
@@ -30,14 +30,12 @@
       notifier.danger(`Error creating query. ${err.message}`)
     }
   }
-
-  $: console.log(query)
 </script>
 
 <div>
   <Button text small on:click={modal.show}>
     <Icon name="filter" />
-    {query ? 'Edit' : 'Create'} Query
+    {$backendUiStore.selectedQueryId ? 'Edit' : 'Create'} Query
   </Button>
 </div>
 <Modal bind:this={modal}>
@@ -45,7 +43,7 @@
     confirmText="Save"
     cancelText="Cancel"
     onConfirm={saveQuery}
-    title="Create New Query">
+    title={query ? 'Edit Query' : 'Create New Query'}>
     <CreateEditQuery {datasource} bind:query />
   </ModalContent>
 </Modal>

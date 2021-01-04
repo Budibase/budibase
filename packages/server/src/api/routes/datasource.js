@@ -30,6 +30,11 @@ router
   .get(
     "/api/datasources/:datasourceId/queries/:queryId",
     authorized(BUILDER),
+    datasourceController.fetchQuery
+  )
+  .post(
+    "/api/datasources/:datasourceId/queries/:queryId",
+    authorized(BUILDER),
     datasourceController.executeQuery
   )
   .delete(

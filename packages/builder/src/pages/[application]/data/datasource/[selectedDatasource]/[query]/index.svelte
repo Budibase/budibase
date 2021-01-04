@@ -10,6 +10,6 @@
   $: query = datasource && datasource.queries[$params.query]
 </script>
 
-{#if $backendUiStore.selectedDatabase._id && datasource}
-  <ExternalDataSourceTable {query} datasourceId={datasource._id} />
+{#if $backendUiStore.selectedDatabase._id && datasource && query}
+  <ExternalDataSourceTable {query} {datasource} />
 {/if}

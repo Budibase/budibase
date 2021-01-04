@@ -6,20 +6,12 @@
   import Table from "./Table.svelte"
   import CreateQueryButton from "components/backend/DataTable/buttons/CreateQueryButton.svelte"
 
-  export let datasourceId
+  export let datasource
   export let query = {}
 
   let data = []
   let loading = false
   let error = false
-
-  $: datasourceId = $params.selectedDatasource
-  // TODO: refactor
-  // $: query = $backendUiStore.datasources.find(
-  //   ds => ds._id === $params.selectedDatasource
-  // ).queries[$params.query]
-  $: title = query.name
-  $: schema = query.schema
 
   async function fetchData() {
     try {
@@ -46,8 +38,8 @@
 {#if error}
   <div class="errors">{error}</div>
 {/if}
-<Table {title} {schema} {data} {loading}>
-  <CreateQueryButton {query} />
+<Table title={query.name} schema={query.schema} {data} {loading}>
+  <CreateQueryButton {query} {datasource} />
 </Table>
 
 <style>
