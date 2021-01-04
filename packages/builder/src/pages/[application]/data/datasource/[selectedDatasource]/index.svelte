@@ -36,7 +36,7 @@
     margin-bottom: var(--spacing-s);
   }
   section {
-    background: white;
+    background: var(--background);
     border-radius: var(--border-radius-m);
     padding: var(--spacing-xl);
   }

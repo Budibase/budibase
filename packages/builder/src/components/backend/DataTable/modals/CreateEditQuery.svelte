@@ -31,6 +31,8 @@
   export let query
   export let fields = []
 
+  console.log(query)
+
   let config = {}
   let queryType
   let previewTab = "PREVIEW"

@@ -13,9 +13,6 @@
     tables: $backendUiStore.tables,
   })
 
-  // just wraps binding in {{ ... }}
-  const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
-
   const tableFields = tableId => {
     const table = $backendUiStore.tables.find(m => m._id === tableId)
 
@@ -62,13 +59,5 @@
   .root :global(> div:nth-child(2)) {
     grid-column-start: 2;
     grid-column-end: 6;
-  }
-
-  .cannot-use {
-    color: var(--red);
-    font-size: var(--font-size-s);
-    text-align: center;
-    width: 70%;
-    margin: auto;
   }
 </style>

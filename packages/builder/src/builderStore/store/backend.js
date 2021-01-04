@@ -1,7 +1,6 @@
 import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
-import { backendUiStore } from ".."
 
 const INITIAL_BACKEND_UI_STATE = {
   tables: [],
@@ -63,6 +62,7 @@ export const getBackendUiStore = () => {
       select: async datasourceId => {
         store.update(state => {
           state.selectedDatasourceId = datasourceId
+          state.selectedQueryId = null
           return state
         })
       },
@@ -123,6 +123,7 @@ export const getBackendUiStore = () => {
     queries: {
       select: queryId =>
         store.update(state => {
+          state.selectedDatasourceId = null
           state.selectedQueryId = queryId
           return state
         }),

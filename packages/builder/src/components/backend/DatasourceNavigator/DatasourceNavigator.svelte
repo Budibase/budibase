@@ -8,8 +8,6 @@
   import { Modal, Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
 
-  let modal
-
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
@@ -34,12 +32,6 @@
 </script>
 
 {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
-  <div class="title">
-    <i
-      data-cy="new-datasource"
-      on:click={modal.show}
-      class="ri-add-circle-fill" />
-  </div>
   <div class="hierarchy-items-container">
     {#each $backendUiStore.datasources as datasource, idx}
       <NavItem
@@ -64,23 +56,3 @@
     {/each}
   </div>
 {/if}
-<Modal bind:this={modal}>
-  <CreateDatasourceModal />
-</Modal>
-
-<style>
-  .title {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .title i {
-    font-size: 20px;
-  }
-  .title i:hover {
-    cursor: pointer;
-    color: var(--blue);
-  }
-</style>
