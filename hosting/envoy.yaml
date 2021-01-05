@@ -1,0 +1,91 @@
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  listeners:
+  - name: main_listener
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 10000 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          codec_type: auto
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_services
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/app" }
+                route: { cluster: app-service }
+              - match: { prefix: "/obj" }
+                route: { cluster: minio-service }
+              - match: { prefix: "/worker" }
+                route: { cluster: worker-service }
+              - match: { prefix: "/db" }
+                route: { cluster: couchdb-service }
+          http_filters:
+          - name: envoy.filters.http.router
+
+  clusters:
+  - name: app-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: app-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: 
+                address: app-service
+                port_value: 4002
+
+  - name: minio-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: minio-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: minio-service
+                port_value: 9000
+
+  - name: worker-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: worker-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: 
+                address: worker-service
+                port_value: 4003
+
+  - name: couchdb-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: couchdb-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: couchdb-service
+                port_value: 5984
+
