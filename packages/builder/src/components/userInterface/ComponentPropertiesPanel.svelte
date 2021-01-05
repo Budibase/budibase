@@ -32,6 +32,7 @@
 
   const onStyleChanged = store.actions.components.updateStyle
   const onCustomStyleChanged = store.actions.components.updateCustomStyle
+  const onResetStyles = store.actions.components.resetStyles
 
   $: isComponentOrScreen =
     $store.currentView === "component" ||
@@ -98,7 +99,8 @@
       {panelDefinition}
       {componentInstance}
       {onStyleChanged}
-      {onCustomStyleChanged} />
+      {onCustomStyleChanged}
+      {onResetStyles} />
   {:else if selectedCategory.value === 'settings'}
     <SettingsView
       {componentInstance}
