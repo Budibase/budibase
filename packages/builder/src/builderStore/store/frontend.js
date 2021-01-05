@@ -23,6 +23,7 @@ import {
   getComponentDefinition,
   findParent,
 } from "../storeUtils"
+import { defaults } from "../../components/userInterface/propertyCategories"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -367,18 +368,25 @@ export const getFrontendStore = () => {
       },
       updateStyle: async (type, name, value) => {
         const selected = get(selectedComponent)
-        if (!selected._styles) {
-          selected._styles = {}
+        if (value == null || value === "") {
+          delete selected._styles[type][name]
+        } else {
+          selected._styles[type][name] = value
         }
-        selected._styles[type][name] = value
         await store.actions.preview.saveSelected()
       },
       updateCustomStyle: async style => {
         const selected = get(selectedComponent)
-        if (!selected._styles) {
-          selected._styles = {}
-        }
         selected._styles.custom = style
+        await store.actions.preview.saveSelected()
+      },
+      resetStyles: async () => {
+        const selected = get(selectedComponent)
+        selected._styles = {
+          normal: defaults,
+          hover: defaults,
+          active: defaults,
+        }
         await store.actions.preview.saveSelected()
       },
       updateProp: (name, value) => {
