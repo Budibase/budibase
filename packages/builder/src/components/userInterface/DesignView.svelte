@@ -1,5 +1,5 @@
 <script>
-  import { TextArea, DetailSummary } from "@budibase/bbui"
+  import { TextArea, DetailSummary, Button } from "@budibase/bbui"
   import PropertyGroup from "./PropertyGroup.svelte"
   import FlatButtonGroup from "./FlatButtonGroup.svelte"
 
@@ -8,6 +8,7 @@
   export let componentDefinition = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
+  export let onResetStyles = () => {}
 
   let selectedCategory = "normal"
   let propGroup = null
@@ -46,16 +47,18 @@
             on:open={() => (currentGroup = groupName)} />
         {/each}
         <DetailSummary
-          name="Custom Styles"
+          name={`Custom Styles${componentInstance._styles.custom ? ' *' : ''}`}
           on:open={() => (currentGroup = 'custom')}
           show={currentGroup === 'custom'}
           thin>
           <div class="custom-styles">
             <TextArea
               value={componentInstance._styles.custom}
-              on:change={event => onCustomStyleChanged(event.target.value)} />
+              on:change={event => onCustomStyleChanged(event.target.value)}
+              placeholder="Enter some CSS..." />
           </div>
         </DetailSummary>
+        <Button secondary wide on:click={onResetStyles}>Reset Styles</Button>
       {:else}
         <div class="no-design">
           This component doesn't have any design properties.
