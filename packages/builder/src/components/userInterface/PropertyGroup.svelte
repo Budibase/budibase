@@ -14,17 +14,19 @@
 </script>
 
 <DetailSummary {name} on:open show={open} thin>
-  <div>
-    {#each properties as props}
-      <PropertyControl
-        label={props.label}
-        control={props.control}
-        key={props.key}
-        value={style[props.key]}
-        onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
-        props={{ ...excludeProps(props, ['control', 'label']) }} />
-    {/each}
-  </div>
+  {#if open}
+    <div>
+      {#each properties as props}
+        <PropertyControl
+          label={props.label}
+          control={props.control}
+          key={props.key}
+          value={style[props.key]}
+          onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
+          props={{ ...excludeProps(props, ['control', 'label']) }} />
+      {/each}
+    </div>
+  {/if}
 </DetailSummary>
 
 <style>
