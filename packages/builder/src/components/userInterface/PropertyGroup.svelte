@@ -11,9 +11,15 @@
   export let open = false
 
   $: style = componentInstance["_styles"][styleCategory] || {}
+  $: changed = properties.some(
+    prop =>
+      style[prop.key] != null &&
+      style[prop.key] !== "" &&
+      style[prop.key] !== prop.initialValue
+  )
 </script>
 
-<DetailSummary {name} on:open show={open} thin>
+<DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
   <div>
     {#each properties as props}
       <PropertyControl
