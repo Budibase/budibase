@@ -6,13 +6,13 @@ services:
     volumes: 
       - ./server:/app
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "${APP_PORT}:4002"
     environment:
       SELF_HOSTED: 1 
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
       LOGO_URL: ${LOGO_URL}
-      PORT: ${APP_PORT}
+      PORT: 4002
       HOSTING_URL: ${HOSTING_URL}
       MINIO_PORT: ${MINIO_PORT}
       JWT_SECRET: ${JWT_SECRET}
@@ -22,19 +22,18 @@ services:
   worker-service:
     build: ./worker
     ports:
-      - "${WORKER_PORT}:${WORKER_PORT}"
+      - "${WORKER_PORT}:4003"
     environment:
       SELF_HOSTED: 1,
       DEPLOYMENT_API_KEY: ${WORKER_API_KEY}
-      PORT: ${WORKER_PORT}
+      PORT: 4003
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      RAW_MINIO_URL: http://nginx-service:5001
+      RAW_MINIO_URL: http://minio-service:9000
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
       COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
       RAW_COUCH_DB_URL: http://couchdb-service:5984
     depends_on:
-      - nginx-service
       - minio-service
       - couch-init
 
@@ -54,14 +53,18 @@ services:
       timeout: 20s
       retries: 3
 
-  nginx-service:
-    image: nginx:1.19.2-alpine
+  proxy-service:
+    image: envoyproxy/envoy:v1.16-latest
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
     ports:
-      - "${MINIO_PORT}:5001"
+      - "${MAIN_PORT}:10000"
+      - "9901:9901"
     depends_on:
       - minio-service
+      - worker-service
+      - app-service
+      - couchdb-service
 
   couchdb-service:
     image: apache/couchdb:3.0
