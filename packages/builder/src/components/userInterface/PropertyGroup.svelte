@@ -22,17 +22,19 @@
 </script>
 
 <DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
-  <div>
-    {#each properties as prop}
-      <PropertyControl
-        label={`${prop.label}${hasPropChanged(prop) ? ' *' : ''}`}
-        control={prop.control}
-        key={prop.key}
-        value={style[prop.key]}
-        onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
-        props={{ ...excludeProps(prop, ['control', 'label']) }} />
-    {/each}
-  </div>
+  {#if open}
+    <div>
+      {#each properties as prop}
+        <PropertyControl
+          label={`${prop.label}${hasPropChanged(prop) ? ' *' : ''}`}
+          control={prop.control}
+          key={prop.key}
+          value={style[prop.key]}
+          onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
+          props={{ ...excludeProps(prop, ['control', 'label']) }} />
+      {/each}
+    </div>
+  {/if}
 </DetailSummary>
 
 <style>
