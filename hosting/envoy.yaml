@@ -13,7 +13,7 @@ static_resources:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-          stat_prefix: ingress_http
+          stat_prefix: ingress
           codec_type: auto
           route_config:
             name: local_route
@@ -21,14 +21,27 @@ static_resources:
             - name: local_services
               domains: ["*"]
               routes:
-              - match: { prefix: "/app" }
-                route: { cluster: app-service }
-              - match: { prefix: "/obj" }
-                route: { cluster: minio-service }
-              - match: { prefix: "/worker" }
-                route: { cluster: worker-service }
-              - match: { prefix: "/db" }
-                route: { cluster: couchdb-service }
+              - match: { prefix: "/app/" }
+                route:
+                  cluster: app-service
+                  prefix_rewrite: "/"
+
+              - match: { prefix: "/worker/" }
+                route: 
+                  cluster: worker-service
+                  prefix_rewrite: "/"
+
+              - match: { prefix: "/db/" }
+                route:
+                  prefix_rewrite: "/" 
+                  cluster: couchdb-service
+
+              # minio is on the default route because this works
+              # best, minio + AWS SDK doesn't handle path proxy
+              - match: { prefix: "/" }
+                route:
+                  cluster: minio-service
+
           http_filters:
           - name: envoy.filters.http.router
 
