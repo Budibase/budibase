@@ -27,7 +27,6 @@
   }
 
   function updateSelfHosting(event) {
-
     if (hostingInfo.type === "cloud" && event.target.checked) {
       hostingInfo.hostingUrl = "localhost:10000"
       hostingInfo.useHttps = false
@@ -41,10 +40,7 @@
   })
 </script>
 
-<ModalContent
-  title="Builder settings"
-  confirmText="Save"
-  onConfirm={save}>
+<ModalContent title="Builder settings" confirmText="Save" onConfirm={save}>
   <h5>Theme</h5>
   <ThemeEditor />
   <h5>Hosting</h5>
@@ -52,7 +48,11 @@
     This section contains settings that relate to the deployment and hosting of
     apps made in this builder.
   </p>
-  <Toggle thin text="Self hosted" on:change={updateSelfHosting} bind:checked={selfhosted} />
+  <Toggle
+    thin
+    text="Self hosted"
+    on:change={updateSelfHosting}
+    bind:checked={selfhosted} />
   {#if selfhosted}
     <Input bind:value={hostingInfo.hostingUrl} label="Hosting URL" />
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />

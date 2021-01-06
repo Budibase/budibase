@@ -11,7 +11,7 @@ const PUBLIC_READ_POLICY = {
     {
       Effect: "Allow",
       Principal: {
-        AWS: ["*"]
+        AWS: ["*"],
       },
       Action: "s3:GetObject",
       Resource: [`arn:aws:s3:::${APP_BUCKET}/*`],
@@ -65,8 +65,7 @@ async function getMinioSession() {
           Bucket: APP_BUCKET,
         })
         .promise()
-    }
-    else {
+    } else {
       throw err
     }
   }

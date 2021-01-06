@@ -1,5 +1,4 @@
 <script>
-
   import { Label, DropdownMenu } from "@budibase/bbui"
   import ThemeEditor from "./ThemeEditor.svelte"
 

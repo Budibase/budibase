@@ -16,23 +16,23 @@
   {/if}
   {#if $themeStore.darkMode && showAdvanced}
     <Slider
-        label="Hue"
-        bind:value={$themeStore.hue}
-        min="0"
-        max="360"
-        showValue />
+      label="Hue"
+      bind:value={$themeStore.hue}
+      min="0"
+      max="360"
+      showValue />
     <Slider
-        label="Saturation"
-        bind:value={$themeStore.saturation}
-        min="0"
-        max="100"
-        showValue />
+      label="Saturation"
+      bind:value={$themeStore.saturation}
+      min="0"
+      max="100"
+      showValue />
     <Slider
-        label="Lightness"
-        bind:value={$themeStore.lightness}
-        min="0"
-        max="32"
-        showValue />
+      label="Lightness"
+      bind:value={$themeStore.lightness}
+      min="0"
+      max="32"
+      showValue />
     <div class="button">
       <Button text on:click={themeStore.reset}>Reset</Button>
     </div>
