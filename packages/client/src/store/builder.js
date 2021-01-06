@@ -7,8 +7,20 @@ const createBuilderStore = () => {
     screen: null,
     selectedComponentId: null,
     previewId: null,
+    previewType: null,
   }
-  return writable(initialState)
+  const store = writable(initialState)
+  const actions = {
+    selectComponent: id => {
+      window.dispatchEvent(
+        new CustomEvent("bb-select-component", { detail: id })
+      )
+    },
+  }
+  return {
+    ...store,
+    actions,
+  }
 }
 
 export const builderStore = createBuilderStore()
