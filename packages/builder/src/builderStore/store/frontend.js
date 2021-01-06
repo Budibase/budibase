@@ -23,7 +23,6 @@ import {
   getComponentDefinition,
   findParent,
 } from "../storeUtils"
-import { defaults } from "../../components/userInterface/propertyCategories"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -382,11 +381,7 @@ export const getFrontendStore = () => {
       },
       resetStyles: async () => {
         const selected = get(selectedComponent)
-        selected._styles = {
-          normal: defaults,
-          hover: defaults,
-          active: defaults,
-        }
+        selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
       updateProp: (name, value) => {

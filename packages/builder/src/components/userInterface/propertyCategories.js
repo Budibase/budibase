@@ -2,9 +2,6 @@ import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
 import Colorpicker from "@budibase/colorpicker"
-/*
-  TODO: Allow for default values for all properties
-*/
 
 export const layout = [
   {
@@ -481,6 +478,7 @@ export const typography = [
     label: "Color",
     key: "color",
     control: Colorpicker,
+    initialValue: "#000",
   },
   {
     label: "align",
@@ -524,6 +522,7 @@ export const background = [
     label: "Color",
     key: "background",
     control: Colorpicker,
+    initialValue: "#000",
   },
   {
     label: "Gradient",
@@ -646,6 +645,7 @@ export const border = [
     label: "Color",
     key: "border-color",
     control: Colorpicker,
+    initialValue: "#000",
   },
   {
     label: "Style",
@@ -807,13 +807,3 @@ export function excludeProps(props, propsToExclude) {
   }
   return modifiedProps
 }
-
-let defaultStyles = {}
-Object.values(all).forEach(category => {
-  category.forEach(prop => {
-    if (prop.initialValue) {
-      defaultStyles[prop.key] = prop.initialValue
-    }
-  })
-})
-export const defaults = defaultStyles
