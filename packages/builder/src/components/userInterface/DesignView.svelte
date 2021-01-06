@@ -5,7 +5,6 @@
 
   export let panelDefinition = {}
   export let componentInstance = {}
-  export let componentDefinition = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
   export let onResetStyles = () => {}
@@ -41,7 +40,6 @@
             properties={panelDefinition[groupName]}
             styleCategory={selectedCategory}
             {onStyleChanged}
-            {componentDefinition}
             {componentInstance}
             open={currentGroup === groupName}
             on:open={() => (currentGroup = groupName)} />
