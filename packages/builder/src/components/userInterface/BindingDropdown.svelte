@@ -62,7 +62,7 @@
     <TextArea
       thin
       bind:value
-      placeholder="Add text, or lick the objects on the left to add them to the
+      placeholder="Add text, or click the objects on the left to add them to the
       textbox." />
     <div class="controls">
       <a href="https://docs.budibase.com/design/binding">

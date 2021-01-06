@@ -41,7 +41,7 @@
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
-  const layoutDefinition = [{ key: "title", label: "Title", control: Input }]
+  const layoutDefinition = []
 
   const canRenderControl = (key, dependsOn) => {
     let test = !isEmpty(componentInstance[dependsOn])
@@ -119,7 +119,7 @@
     {/if}
   {/if}
 
-  {#if panelDefinition && panelDefinition.length > 0}
+  {#if !isLayout && panelDefinition && panelDefinition.length > 0}
     {#each panelDefinition as definition}
       {#if canRenderControl(definition.key, definition.dependsOn)}
         <PropertyControl
