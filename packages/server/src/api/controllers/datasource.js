@@ -1,11 +1,6 @@
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
-const {
-  generateDatasourceID,
-  getDatasourceParams,
-  generateQueryID,
-} = require("../../db/utils")
-const { integrations } = require("../../integrations")
+const { generateDatasourceID, getDatasourceParams } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
@@ -30,7 +25,6 @@ exports.save = async function(ctx) {
   const datasource = {
     _id: generateDatasourceID(),
     type: "datasource",
-    queries: {},
     ...ctx.request.body,
   }
 
@@ -76,91 +70,4 @@ exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
   const datasource = await database.get(ctx.params.datasourceId)
   ctx.body = datasource
-}
-
-exports.saveQuery = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const query = ctx.request.body
-
-  //
-  // {
-  //   type: "",
-  //   query: "",
-  //   otherStuff: ""
-  // }
-
-  const datasource = await db.get(ctx.params.datasourceId)
-
-  const queryId = generateQueryID()
-
-  datasource.queries[queryId] = query
-
-  const response = await db.put(datasource)
-  datasource._rev = response.rev
-
-  ctx.body = datasource
-  ctx.message = `Query ${query.name} saved successfully.`
-}
-
-exports.previewQuery = async function(ctx) {
-  const { type, config, query } = ctx.request.body
-
-  const Integration = integrations[type]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-    return
-  }
-
-  ctx.body = await new Integration(config, query).query()
-}
-
-exports.fetchQuery = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-
-  const datasource = await db.get(ctx.params.datasourceId)
-
-  const query = datasource.queries[ctx.params.queryId]
-
-  const Integration = integrations[datasource.source]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-    return
-  }
-
-  const rows = await new Integration(
-    datasource.config,
-    query.queryString
-  ).query()
-
-  ctx.body = {
-    schema: query.schema,
-    rows,
-  }
-}
-
-exports.executeQuery = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-
-  const datasource = await db.get(ctx.params.datasourceId)
-
-  const query = datasource.queries[ctx.params.queryId]
-
-  const Integration = integrations[datasource.source]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-    return
-  }
-
-  // TODO: allow the ability to POST parameters down when executing the query
-  // const customParams = ctx.request.body
-
-  const response = await new Integration(
-    datasource.config,
-    query.queryString
-  ).query()
-
-  ctx.body = response
 }

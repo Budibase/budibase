@@ -17,26 +17,26 @@ router
     datasourceController.find
   )
   .post("/api/datasources", authorized(BUILDER), datasourceController.save)
-  .post(
-    "/api/datasources/:datasourceId/queries",
-    authorized(BUILDER),
-    datasourceController.saveQuery
-  )
-  .post(
-    "/api/datasources/queries/preview",
-    authorized(BUILDER),
-    datasourceController.previewQuery
-  )
-  .get(
-    "/api/datasources/:datasourceId/queries/:queryId",
-    authorized(BUILDER),
-    datasourceController.fetchQuery
-  )
-  .post(
-    "/api/datasources/:datasourceId/queries/:queryId",
-    authorized(BUILDER),
-    datasourceController.executeQuery
-  )
+  // .post(
+  //   "/api/datasources/:datasourceId/queries",
+  //   authorized(BUILDER),
+  //   datasourceController.saveQuery
+  // )
+  // .post(
+  //   "/api/datasources/queries/preview",
+  //   authorized(BUILDER),
+  //   datasourceController.previewQuery
+  // )
+  // .get(
+  //   "/api/datasources/:datasourceId/queries/:queryId",
+  //   authorized(BUILDER),
+  //   datasourceController.fetchQuery
+  // )
+  // .post(
+  //   "/api/datasources/:datasourceId/queries/:queryId",
+  //   authorized(BUILDER),
+  //   datasourceController.executeQuery
+  // )
   .delete(
     "/api/datasources/:datasourceId/:revId",
     authorized(BUILDER),

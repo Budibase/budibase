@@ -245,8 +245,10 @@ exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
  * Generates a new query ID.
  * @returns {string} The new query ID which the query doc can be stored under.
  */
-exports.generateQueryID = () => {
-  return `${DocumentTypes.QUERY}${SEPARATOR}${newid()}`
+exports.generateQueryID = datasourceId => {
+  return `${
+    DocumentTypes.QUERY
+  }${SEPARATOR}${datasourceId}${SEPARATOR}${newid()}`
 }
 
 /**

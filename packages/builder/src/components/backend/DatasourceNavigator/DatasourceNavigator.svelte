@@ -5,6 +5,7 @@
   import { TableNames } from "constants"
   import CreateDatasourceModal from "./modals/CreateDatasourceModal.svelte"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
+  import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import { Modal, Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
 
@@ -18,6 +19,7 @@
   }
 
   function onClickQuery(datasourceId, queryId) {
+    console.log(backendUiStore.selectedQueryId, queryId)
     if ($backendUiStore.selectedQueryId === queryId) {
       return
     }
@@ -28,6 +30,7 @@
 
   onMount(() => {
     backendUiStore.actions.datasources.fetch()
+    backendUiStore.actions.queries.fetch()
   })
 </script>
 
@@ -42,15 +45,14 @@
         on:click={() => selectDatasource(datasource)}>
         <EditDatasourcePopover {datasource} />
       </NavItem>
-      {#each Object.keys(datasource.queries) as queryId}
+      {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}
           icon="ri-eye-line"
-          text={datasource.queries[queryId].name}
-          selected={$backendUiStore.selectedQueryId === queryId}
-          on:click={() => onClickQuery(datasource._id, queryId)}>
-          <!-- <EditViewPopover
-            view={{ name: viewName, ...table.views[viewName] }} /> -->
+          text={query.name}
+          selected={$backendUiStore.selectedQueryId === query._id}
+          on:click={() => onClickQuery(datasource._id, query._id)}>
+          <EditQueryPopover {query} />
         </NavItem>
       {/each}
     {/each}
