@@ -529,7 +529,7 @@ export const background = [
     key: "background-image",
     control: OptionSelect,
     options: [
-      { label: "Select option", value: "" },
+      { label: "Choose option", value: "" },
       { label: "None", value: "none" },
       {
         label: "Warm Flame",
