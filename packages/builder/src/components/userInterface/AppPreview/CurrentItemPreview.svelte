@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { store, currentAsset } from "builderStore"
+  import { store, currentAsset, selectedComponent } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "../../../constants"
@@ -33,6 +33,7 @@
     layout,
     screen,
     selectedComponentId,
+    previewType: $store.currentFrontEndType,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -54,17 +55,18 @@
   // Refresh the preview when required
   $: refreshContent(strippedJson)
 
-  // Initialise the app when mounted
   onMount(() => {
+    // Initialise the app when mounted
     iframe.contentWindow.addEventListener(
       "bb-ready",
-      () => {
-        refreshContent(strippedJson)
-      },
-      {
-        once: true,
-      }
+      () => refreshContent(strippedJson),
+      { once: true }
     )
+
+    // Add listener to select components
+    iframe.contentWindow.addEventListener("bb-select-component", data => {
+      store.actions.components.select({ _id: data.detail })
+    })
   })
 </script>
 

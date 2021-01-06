@@ -8,8 +8,9 @@
 
   export let definition = {}
 
-  // Get local data binding context
+  // Get contexts
   const dataContext = getContext("data")
+  const screenslotContext = getContext("screenslot")
 
   // Create component context
   const componentStore = writable({})
@@ -20,10 +21,15 @@
   $: children = definition._children
   $: id = definition._id
   $: enrichedProps = enrichProps(definition, $dataContext, $bindingStore)
-  $: selected = id === $builderStore.selectedComponentId
+  $: styles = definition._styles
+
+  // Allow component selection in the builder preview if we're previewing a
+  // layout, or we're preview a screen and we're inside the screenslot
+  $: allowSelection =
+    $builderStore.previewType === "layout" || screenslotContext
 
   // Update component context
-  $: componentStore.set({ id, styles: { ...definition._styles, selected } })
+  $: componentStore.set({ id, styles: { ...styles, id, allowSelection } })
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {

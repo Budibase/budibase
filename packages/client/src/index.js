@@ -11,6 +11,7 @@ const loadBudibase = () => {
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
+    previewType: window["##BUDIBASE_PREVIEW_TYPE##"],
   })
 
   // Create app if one hasn't been created yet
