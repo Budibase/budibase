@@ -10,7 +10,7 @@
   export let onStyleChanged = () => {}
   export let open = false
 
-  const hasPropChanged = prop => {
+  const hasPropChanged = (style, prop) => {
     // TODO: replace color picker with one that works better.
     // Currently it cannot support null values, so this is a hack which
     // prevents the color fields from always being marked as changed
@@ -23,7 +23,7 @@
   }
 
   $: style = componentInstance["_styles"][styleCategory] || {}
-  $: changed = properties.some(prop => hasPropChanged(prop))
+  $: changed = properties.some(prop => hasPropChanged(style, prop))
 </script>
 
 <DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
@@ -31,7 +31,7 @@
     <div>
       {#each properties as prop}
         <PropertyControl
-          label={`${prop.label}${hasPropChanged(prop) ? ' *' : ''}`}
+          label={`${prop.label}${hasPropChanged(style, prop) ? ' *' : ''}`}
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
