@@ -2,7 +2,6 @@ import { isString, isUndefined, cloneDeep } from "lodash/fp"
 import { TYPE_MAP } from "./types"
 import { assign } from "lodash"
 import { uuid } from "builderStore/uuid"
-import { defaults } from "../propertyCategories"
 
 export const getBuiltin = _component => {
   const { props } = createProps({ _component })
@@ -25,11 +24,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
   const props = {
     _id: uuid(),
     _component: componentDefinition._component,
-    _styles: {
-      normal: defaults,
-      hover: defaults,
-      active: defaults,
-    },
+    _styles: { normal: {}, hover: {}, active: {} },
   }
 
   const errors = []
@@ -80,11 +75,7 @@ export const makePropsSafe = (componentDefinition, props) => {
   }
 
   if (!props._styles) {
-    props._styles = {
-      normal: defaults,
-      hover: defaults,
-      active: defaults,
-    }
+    props._styles = { normal: {}, hover: {}, active: {} }
   }
 
   return props
