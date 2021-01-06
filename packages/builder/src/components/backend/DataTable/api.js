@@ -32,7 +32,7 @@ export async function fetchDataForView(view) {
 }
 
 export async function fetchDataForQuery(datasourceId, queryId) {
-  const FETCH_QUERY_URL = `/api/datasources/${datasourceId}/queries/${queryId}`
+  const FETCH_QUERY_URL = `/api/queries/${queryId}`
 
   const response = await api.get(FETCH_QUERY_URL)
   const json = await response.json()

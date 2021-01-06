@@ -27,16 +27,19 @@
     },
   ]
 
-  export let datasource
   export let query
   export let fields = []
 
-  console.log(query)
-
   let config = {}
-  let queryType
   let previewTab = "PREVIEW"
   let preview
+
+  $: datasource = $backendUiStore.datasources.find(
+    ds => ds._id === query.datasourceId
+  )
+
+  $: query.datasourceId =
+    query.datasourceId || $backendUiStore.selectedDatasourceId
 
   $: query.schema = fields.reduce(
     (acc, next) => ({
@@ -72,9 +75,8 @@
 
   async function previewQuery() {
     try {
-      const response = await api.post(`/api/datasources/queries/preview`, {
-        type: datasource.source,
-        config: datasource.config,
+      const response = await api.post(`/api/queries/preview`, {
+        datasourceId: datasource._id,
         query: query.queryString,
       })
       const json = await response.json()
@@ -101,18 +103,13 @@
 
 <section>
   <div class="config">
-    <h6>Datasource Type</h6>
-    <span>{datasource.source}</span>
-
-    <Spacer medium />
-
     <Label extraSmall grey>Query Name</Label>
     <Input type="text" thin bind:value={query.name} />
 
     <Spacer medium />
 
     <Label extraSmall grey>Query Type</Label>
-    <Select secondary bind:value={queryType}>
+    <Select secondary bind:value={query.queryType}>
       <option value={''}>Select an option</option>
       {#each Object.keys(config) as queryType}
         <option value={queryType}>{queryType}</option>
@@ -121,7 +118,9 @@
 
     <Spacer medium />
 
-    <IntegrationQueryEditor {queryType} bind:query={query.queryString} />
+    <IntegrationQueryEditor
+      type={query.queryType}
+      bind:query={query.queryString} />
 
     <Spacer small />
 

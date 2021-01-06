@@ -31,17 +31,13 @@
     return [...acc, ...viewsArr]
   }, [])
 
-  $: queries = $backendUiStore.datasources.reduce((acc, cur) => {
-    let queriesArr = Object.entries(cur.queries).map(([key, value]) => ({
-      label: value.name,
-      name: value.name,
-      datasourceId: cur._id,
-      queryId: key,
-      schema: value.schema,
+  $: queries = $backendUiStore.queries.map(query => ({
+      label: query.name,
+      name: query.name,
+      ...query,
+      schema: query.schema,
       type: "query",
-    }))
-    return [...acc, ...queriesArr]
-  }, [])
+  }))
 
   $: bindableProperties = fetchBindableProperties({
     componentInstanceId: $store.selectedComponentId,

@@ -14,6 +14,7 @@ const PermissionTypes = {
   WEBHOOK: "webhook",
   BUILDER: "builder",
   VIEW: "view",
+  QUERY: "query",
 }
 
 function Permission(type, level) {

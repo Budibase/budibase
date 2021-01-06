@@ -24,7 +24,7 @@
     <Label size="m" color="dark">Query</Label>
     <Select secondary bind:value={parameters.queryId}>
       <option value="" />
-      {#each Object.keys(datasource.queries) as query}
+      {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
         <option value={query}>{datasource.queries[query].name}</option>
       {/each}
     </Select>

@@ -6,7 +6,6 @@
   import Table from "./Table.svelte"
   import CreateQueryButton from "components/backend/DataTable/buttons/CreateQueryButton.svelte"
 
-  export let datasource
   export let query = {}
 
   let data = []
@@ -23,7 +22,6 @@
       data = response.rows || []
       error = false
     } catch (err) {
-      console.log(err)
       error = `${query}: Query error. (${err.message}). This could be a problem with your datasource configuration.`
       notifier.danger(error)
     } finally {
@@ -32,14 +30,14 @@
   }
 
   // Fetch rows for specified query
-  $: fetchData()
+  $: query && fetchData()
 </script>
 
 {#if error}
   <div class="errors">{error}</div>
 {/if}
 <Table title={query.name} schema={query.schema} {data} {loading}>
-  <CreateQueryButton {query} {datasource} />
+  <CreateQueryButton {query} edit />
 </Table>
 
 <style>

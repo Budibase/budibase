@@ -3,9 +3,9 @@ import API from "./api"
 /**
  * Fetches all rows from a query.
  */
-export const fetchQueryData = async ({ datasourceId, queryId }) => {
+export const fetchQueryData = async ({ _id }) => {
   const response = await API.get({
-    url: `/api/datasources/${datasourceId}/queries/${queryId}`,
+    url: `/api/queries/${_id}`,
   })
   return response.rows
 }
@@ -13,9 +13,9 @@ export const fetchQueryData = async ({ datasourceId, queryId }) => {
 /**
  * Executes a query against an external data connector.
  */
-export const executeQuery = async ({ datasourceId, queryId }) => {
+export const executeQuery = async ({ _id }) => {
   const response = await API.post({
-    url: `/api/datasources/${datasourceId}/queries/${queryId}`,
+    url: `/api/queries/${_id}`,
     // body: params,
   })
   return response.rows
