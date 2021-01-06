@@ -6,11 +6,9 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-    CAPTURE_VAR_INSIDE_MUSTACHE,
   } from "builderStore/replaceBindings"
   import { DropdownMenu } from "@budibase/bbui"
   import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
-  import { onMount } from "svelte"
 
   export let label = ""
   export let bindable = true
@@ -70,8 +68,8 @@
 
     let temp = runtimeToReadableBinding(bindableProperties, value)
 
-    return value == null && props.defaultValue !== undefined
-      ? props.defaultValue
+    return value == null && props.initialValue !== undefined
+      ? props.initialValue
       : temp
   }
 
