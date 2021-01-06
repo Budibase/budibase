@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose --env-file hosting.properties up
+docker-compose --env-file hosting.properties up --build

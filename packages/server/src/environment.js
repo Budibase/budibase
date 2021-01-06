@@ -38,7 +38,7 @@ module.exports = {
   LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
   // self hosting features
   HOSTING_URL: process.env.HOSTING_URL,
-  MINIO_PORT: process.env.MINIO_PORT,
+  PROXY_PORT: process.env.PROXY_PORT,
   LOGO_URL: process.env.LOGO_URL,
   _set(key, value) {
     process.env[key] = value

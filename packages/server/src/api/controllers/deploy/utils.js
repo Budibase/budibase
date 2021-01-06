@@ -17,6 +17,7 @@ exports.fetchCredentials = async function(url, body) {
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
   })
 
   const json = await response.json()
@@ -26,7 +27,7 @@ exports.fetchCredentials = async function(url, body) {
 
   if (response.status !== 200) {
     throw new Error(
-      `Error fetching temporary credentials for api key: ${body.apiKey}`
+      `Error fetching temporary credentials: ${JSON.stringify(json)}`
     )
   }
 

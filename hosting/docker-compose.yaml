@@ -14,8 +14,8 @@ services:
       LOGO_URL: ${LOGO_URL}
       PORT: 4002
       HOSTING_URL: ${HOSTING_URL}
-      MINIO_PORT: ${MINIO_PORT}
       JWT_SECRET: ${JWT_SECRET}
+      PROXY_PORT: ${MAIN_PORT}
     depends_on:
       - worker-service
 
@@ -33,6 +33,7 @@ services:
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
       COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
       RAW_COUCH_DB_URL: http://couchdb-service:5984
+      SELF_HOST_KEY: ${HOSTING_KEY}
     depends_on:
       - minio-service
       - couch-init
@@ -40,7 +41,7 @@ services:
   minio-service:
     image: minio/minio
     volumes:
-      - data1:/data
+      - minio_data:/data
     ports:
       - "${MINIO_PORT}:9000"
     environment:
@@ -89,4 +90,5 @@ services:
 volumes:
   couchdb_data:
     driver: local
-  data1:
+  minio_data:
+    driver: local

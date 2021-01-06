@@ -1,6 +1,8 @@
 const CouchDB = require("../../db")
 const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
 
+const PROD_HOSTING_URL = "app.budi.live"
+
 function getProtocol(hostingInfo) {
   return hostingInfo.useHttps ? "https://" : "http://"
 }
@@ -30,7 +32,8 @@ exports.getHostingInfo = async () => {
     doc = {
       _id: HOSTING_DOC,
       type: exports.HostingTypes.CLOUD,
-      hostingUrl: "app.budi.live",
+      hostingUrl: PROD_HOSTING_URL,
+      selfHostKey: "",
       templatesUrl: "prod-budi-templates.s3-eu-west-1.amazonaws.com",
       useHttps: true,
     }
@@ -60,6 +63,11 @@ exports.getMinioUrl = async () => {
 
 exports.getCouchUrl = async () => {
   return getURLWithPath("/db")
+}
+
+exports.getSelfHostKey = async () => {
+  const hostingInfo = await exports.getHostingInfo()
+  return hostingInfo.selfHostKey
 }
 
 exports.getTemplatesUrl = async (appId, type, name) => {

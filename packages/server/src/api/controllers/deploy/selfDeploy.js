@@ -1,4 +1,3 @@
-const env = require("../../../environment")
 const AWS = require("aws-sdk")
 const {
   deployToObjectStore,
@@ -9,26 +8,34 @@ const {
   getWorkerUrl,
   getCouchUrl,
   getMinioUrl,
+  getSelfHostKey,
 } = require("../../../utilities/builder/hosting")
 
 exports.preDeployment = async function() {
   const url = `${await getWorkerUrl()}/api/deploy`
-  const json = await fetchCredentials(url, {
-    apiKey: env.BUDIBASE_API_KEY,
-  })
-
-  // response contains:
-  // couchDbSession, bucket, objectStoreSession
-
-  // set credentials here, means any time we're verified we're ready to go
-  if (json.objectStoreSession) {
-    AWS.config.update({
-      accessKeyId: json.objectStoreSession.accessKeyId,
-      secretAccessKey: json.objectStoreSession.secretAccessKey,
+  try {
+    const json = await fetchCredentials(url, {
+      selfHostKey: await getSelfHostKey(),
     })
-  }
 
-  return json
+    // response contains:
+    // couchDbSession, bucket, objectStoreSession
+
+    // set credentials here, means any time we're verified we're ready to go
+    if (json.objectStoreSession) {
+      AWS.config.update({
+        accessKeyId: json.objectStoreSession.accessKeyId,
+        secretAccessKey: json.objectStoreSession.secretAccessKey,
+      })
+    }
+
+    return json
+  } catch (err) {
+    throw {
+      message: "Unauthorised to deploy, check self hosting key",
+      status: 401,
+    }
+  }
 }
 
 exports.postDeployment = async function() {
