@@ -1,6 +1,11 @@
 <script>
   import { writable } from "svelte/store"
-  import { store, automationStore, backendUiStore, hostingStore } from "builderStore"
+  import {
+    store,
+    automationStore,
+    backendUiStore,
+    hostingStore,
+  } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
   import Form from "@svelteschool/svelte-forms"
@@ -12,7 +17,7 @@
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
-  import {onMount} from "svelte"
+  import { onMount } from "svelte"
 
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
