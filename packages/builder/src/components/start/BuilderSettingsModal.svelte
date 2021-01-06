@@ -42,10 +42,7 @@
   </p>
   <Toggle thin text="Self hosted" bind:checked={selfhosted} />
   {#if selfhosted}
-    <Input bind:value={hostingInfo.appUrl} label="Apps URL" />
-    <Input bind:value={hostingInfo.workerUrl} label="Workers URL" />
-    <Input bind:value={hostingInfo.minioUrl} label="MINIO URL" />
-    <Input bind:value={hostingInfo.couchUrl} label="CouchDB URL" />
+    <Input bind:value={hostingInfo.hostingUrl} label="Apps URL" />
     <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
   {/if}
 </ModalContent>

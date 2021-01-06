@@ -5,6 +5,14 @@ function getProtocol(hostingInfo) {
   return hostingInfo.useHttps ? "https://" : "http://"
 }
 
+async function getURLWithPath(pathIfSelfHosted) {
+  const hostingInfo = await exports.getHostingInfo()
+  const protocol = getProtocol(hostingInfo)
+  const path =
+    hostingInfo.type === exports.HostingTypes.SELF ? pathIfSelfHosted : ""
+  return `${protocol}${hostingInfo.hostingUrl}${path}`
+}
+
 exports.HostingTypes = {
   CLOUD: "cloud",
   SELF: "self",
@@ -22,10 +30,7 @@ exports.getHostingInfo = async () => {
     doc = {
       _id: HOSTING_DOC,
       type: exports.HostingTypes.CLOUD,
-      appUrl: "app.budi.live",
-      workerUrl: "",
-      minioUrl: "",
-      couchUrl: "",
+      hostingUrl: "app.budi.live",
       templatesUrl: "prod-budi-templates.s3-eu-west-1.amazonaws.com",
       useHttps: true,
     }
@@ -37,30 +42,24 @@ exports.getAppUrl = async appId => {
   const hostingInfo = await exports.getHostingInfo()
   const protocol = getProtocol(hostingInfo)
   let url
-  if (hostingInfo.type === "cloud") {
-    url = `${protocol}${appId}.${hostingInfo.appUrl}`
+  if (hostingInfo.type === exports.HostingTypes.CLOUD) {
+    url = `${protocol}${appId}.${hostingInfo.hostingUrl}`
   } else {
-    url = `${protocol}${hostingInfo.appUrl}`
+    url = `${protocol}${hostingInfo.hostingUrl}/app`
   }
   return url
 }
 
 exports.getWorkerUrl = async () => {
-  const hostingInfo = await exports.getHostingInfo()
-  const protocol = getProtocol(hostingInfo)
-  return `${protocol}${hostingInfo.workerUrl}`
+  return getURLWithPath("/worker")
 }
 
 exports.getMinioUrl = async () => {
-  const hostingInfo = await exports.getHostingInfo()
-  const protocol = getProtocol(hostingInfo)
-  return `${protocol}${hostingInfo.minioUrl}`
+  return getURLWithPath("/")
 }
 
 exports.getCouchUrl = async () => {
-  const hostingInfo = await exports.getHostingInfo()
-  const protocol = getProtocol(hostingInfo)
-  return `${protocol}${hostingInfo.couchUrl}`
+  return getURLWithPath("/db")
 }
 
 exports.getTemplatesUrl = async (appId, type, name) => {
