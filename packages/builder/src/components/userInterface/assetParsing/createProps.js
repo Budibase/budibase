@@ -24,7 +24,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
   const props = {
     _id: uuid(),
     _component: componentDefinition._component,
-    _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+    _styles: { normal: {}, hover: {}, active: {} },
   }
 
   const errors = []
@@ -75,7 +75,7 @@ export const makePropsSafe = (componentDefinition, props) => {
   }
 
   if (!props._styles) {
-    props._styles = { normal: {}, hover: {}, active: {}, selected: {} }
+    props._styles = { normal: {}, hover: {}, active: {} }
   }
 
   return props
