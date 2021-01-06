@@ -84,7 +84,10 @@ async function deployApp(deployment) {
   } catch (err) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeLocalDeploymentHistory(deployment)
-    throw new Error(`Deployment Failed: ${err.message}`)
+    throw {
+      ...err,
+      message: `Deployment Failed: ${err.message}`,
+    }
   }
 }
 

@@ -1,4 +1,9 @@
+const env = require("../environment")
+
 module.exports = async (ctx, next) => {
-  // TODO: need to check the API key provided in the header
-  await next()
+  if (!ctx.request.body.selfHostKey || env.SELF_HOST_KEY !== ctx.request.body.selfHostKey) {
+    ctx.throw(401, "Deployment unauthorised")
+  } else {
+    await next()
+  }
 }

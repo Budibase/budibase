@@ -10,9 +10,11 @@ const PUBLIC_READ_POLICY = {
   Statement: [
     {
       Effect: "Allow",
-      Principal: "*",
+      Principal: {
+        AWS: ["*"]
+      },
       Action: "s3:GetObject",
-      Resource: `arn:aws:s3:::${APP_BUCKET}/*`,
+      Resource: [`arn:aws:s3:::${APP_BUCKET}/*`],
     },
   ],
 }
@@ -63,19 +65,18 @@ async function getMinioSession() {
           Bucket: APP_BUCKET,
         })
         .promise()
-    } else if (err.statusCode === 403) {
-      await objClient
-        .putBucketPolicy({
-          Bucket: APP_BUCKET,
-          Policy: JSON.stringify(PUBLIC_READ_POLICY),
-        })
-        .promise()
     }
     else {
       throw err
     }
   }
-  // TODO: need to do something better than this
+  // always make sure policy is correct
+  await objClient
+    .putBucketPolicy({
+      Bucket: APP_BUCKET,
+      Policy: JSON.stringify(PUBLIC_READ_POLICY),
+    })
+    .promise()
   // Ideally want to send back some pre-signed URLs for files that are to be uploaded
   return {
     accessKeyId: env.MINIO_ACCESS_KEY,

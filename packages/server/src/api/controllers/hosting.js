@@ -15,13 +15,17 @@ exports.fetchInfo = async ctx => {
 exports.save = async ctx => {
   const db = new CouchDB(BUILDER_CONFIG_DB)
   const { type } = ctx.request.body
-  if (type === HostingTypes.CLOUD) {
-    ctx.throw(400, "Cannot update Cloud hosting information")
+  if (type === HostingTypes.CLOUD && ctx.request.body._rev) {
+    ctx.body = await db.remove({
+      ...ctx.request.body,
+      _id: HOSTING_DOC,
+    })
+  } else {
+    ctx.body = await db.put({
+      ...ctx.request.body,
+      _id: HOSTING_DOC,
+    })
   }
-  ctx.body = await db.put({
-    ...ctx.request.body,
-    _id: HOSTING_DOC,
-  })
 }
 
 exports.fetch = async ctx => {

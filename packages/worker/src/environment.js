@@ -10,6 +10,7 @@ module.exports = {
   RAW_MINIO_URL: process.env.RAW_MINIO_URL,
   COUCH_DB_PORT: process.env.COUCH_DB_PORT,
   MINIO_PORT: process.env.MINIO_PORT,
+  SELF_HOST_KEY: process.env.SELF_HOST_KEY,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

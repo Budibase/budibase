@@ -33,8 +33,8 @@ static_resources:
 
               - match: { prefix: "/db/" }
                 route:
-                  prefix_rewrite: "/" 
                   cluster: couchdb-service
+                  prefix_rewrite: "/"
 
               # minio is on the default route because this works
               # best, minio + AWS SDK doesn't handle path proxy

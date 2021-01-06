@@ -20,7 +20,7 @@ const env = require("../../../environment")
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
     // TODO: need a better way to handle this, probably reverse proxy
-    return `${env.HOSTING_URL}:${env.MINIO_PORT}/app-assets/assets`
+    return `${env.HOSTING_URL}:${env.PROXY_PORT}/app-assets/assets`
   } else {
     return "https://cdn.app.budi.live/assets"
   }
