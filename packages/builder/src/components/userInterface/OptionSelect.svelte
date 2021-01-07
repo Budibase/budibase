@@ -98,7 +98,7 @@
   $: isOptionsObject = options.every(o => typeof o === "object")
 
   $: selectedOption = isOptionsObject
-    ? options.find(o => o.value === value)
+    ? options.find(o => o.value === value || (o.value === "" && value == null))
     : {}
 
   $: if (open && selectMenu) {
