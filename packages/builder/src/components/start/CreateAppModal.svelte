@@ -58,20 +58,14 @@
     email: string()
       .email()
       .required("Your application needs a first user."),
-    password: string().required(
-      "Please enter a password for your first user."
-    ),
+    password: string().required("Please enter a password for your first user."),
     roleId: string().required("You need to select a role for your user."),
   }
 
   let submitting = false
   let errors = {}
   let validationErrors = {}
-  let validationSchemas = [
-    apiValidation,
-    infoValidation,
-    userValidation,
-  ]
+  let validationSchemas = [apiValidation, infoValidation, userValidation]
 
   function buildStep(component) {
     return {
@@ -89,10 +83,7 @@
     if (hostingInfo.type === "self") {
       isApiKeyValid = true
       steps = [buildStep(Info), buildStep(User)]
-      validationSchemas = [
-        infoValidation,
-        userValidation,
-      ]
+      validationSchemas = [infoValidation, userValidation]
     }
   })
 
