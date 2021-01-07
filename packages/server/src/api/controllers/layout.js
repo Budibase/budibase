@@ -8,8 +8,8 @@ exports.save = async function(ctx) {
 
   if (!layout.props) {
     layout = {
-      ...layout,
       ...EMPTY_LAYOUT,
+      ...layout,
     }
   }
 
@@ -34,7 +34,7 @@ exports.destroy = async function(ctx) {
     )
   ).rows.map(element => element.doc.layoutId)
   if (layoutsUsedByScreens.includes(layoutId)) {
-    ctx.throw(400, "Cannot delete a base layout")
+    ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }
 
   await db.remove(layoutId, layoutRev)
