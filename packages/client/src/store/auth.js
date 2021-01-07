@@ -1,8 +1,8 @@
 import * as API from "../api"
-import { getAppId } from "../utils/getAppId"
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { initialise } from "./initialise"
 import { routeStore } from "./routes"
+import { builderStore } from "./builder"
 
 const createAuthStore = () => {
   const store = writable("")
@@ -25,7 +25,7 @@ const createAuthStore = () => {
   }
   const logOut = async () => {
     store.set("")
-    const appId = getAppId()
+    const appId = get(builderStore).appId
     if (appId) {
       for (let environment of ["local", "cloud"]) {
         window.document.cookie = `budibase:${appId}:${environment}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`

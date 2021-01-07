@@ -168,6 +168,7 @@ exports.serveApp = async function(ctx) {
     head,
     body: html,
     style: css.code,
+    appId: ctx.params.appId,
   })
 }
 

@@ -1,5 +1,3 @@
-import { getAppId } from "../utils/getAppId"
-
 /**
  * API cache for cached request responses.
  */
@@ -30,7 +28,7 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     let headers = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "x-budibase-app-id": getAppId(),
+      "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
     }
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       headers["x-budibase-type"] = "client"
