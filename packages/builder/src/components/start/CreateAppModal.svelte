@@ -68,26 +68,24 @@
     },
   ]
 
-  let steps = []
+  function buildStep(component) {
+    return {
+      component,
+      errors,
+    }
+  }
+
+  // steps need to be initialized for cypress from the get go
+  let steps = [buildStep(API), buildStep(Info), buildStep(User)]
 
   onMount(async () => {
     let hostingInfo = await hostingStore.actions.fetch()
-    steps = []
-    // only validate API key for Cloud
-    if (hostingInfo.type === "cloud") {
-      steps.push({
-        component: API,
-        errors,
-      })
+    // re-init the steps based on whether self hosting or cloud hosted
+    if (hostingInfo.type === "self") {
+      steps = [buildStep(Info), buildStep(User)]
+    } else {
+      steps = [buildStep(API), buildStep(Info), buildStep(User)]
     }
-    steps.push({
-      component: Info,
-      errors,
-    })
-    steps.push({
-      component: User,
-      errors,
-    })
   })
 
   if (hasKey) {
