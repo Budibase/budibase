@@ -19,8 +19,8 @@ const env = require("../../../environment")
 
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
-    // TODO: need a better way to handle this, probably reverse proxy
-    return `${env.HOSTING_URL}:${env.PROXY_PORT}/app-assets/assets`
+    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
+    return `/app-assets/assets`
   } else {
     return "https://cdn.app.budi.live/assets"
   }
@@ -157,7 +157,7 @@ exports.serveApp = async function(ctx) {
     title: appInfo.name,
     production: env.CLOUD,
     appId: ctx.params.appId,
-    objectStoreUrl: objectStoreUrl(ctx.params.appId),
+    objectStoreUrl: objectStoreUrl(),
   })
 
   const template = handlebars.compile(

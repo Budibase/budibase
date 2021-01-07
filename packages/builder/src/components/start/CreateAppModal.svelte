@@ -29,6 +29,7 @@
   let lastApiKey
   let fetchApiKeyPromise
   const validateApiKey = async apiKey => {
+    if (isApiKeyValid) return true
     if (!apiKey) return false
 
     // make sure we only fetch once, unless API Key is changed
@@ -45,27 +46,31 @@
     return isApiKeyValid
   }
 
+  const apiValidation = {
+    apiKey: string()
+      .required("Please enter your API key.")
+      .test("valid-apikey", "This API key is invalid", validateApiKey),
+  }
+  const infoValidation = {
+    applicationName: string().required("Your application must have a name."),
+  }
+  const userValidation = {
+    email: string()
+      .email()
+      .required("Your application needs a first user."),
+    password: string().required(
+      "Please enter a password for your first user."
+    ),
+    roleId: string().required("You need to select a role for your user."),
+  }
+
   let submitting = false
   let errors = {}
   let validationErrors = {}
   let validationSchemas = [
-    {
-      apiKey: string()
-        .required("Please enter your API key.")
-        .test("valid-apikey", "This API key is invalid", validateApiKey),
-    },
-    {
-      applicationName: string().required("Your application must have a name."),
-    },
-    {
-      email: string()
-        .email()
-        .required("Your application needs a first user."),
-      password: string().required(
-        "Please enter a password for your first user."
-      ),
-      roleId: string().required("You need to select a role for your user."),
-    },
+    apiValidation,
+    infoValidation,
+    userValidation,
   ]
 
   function buildStep(component) {
@@ -82,9 +87,12 @@
     let hostingInfo = await hostingStore.actions.fetch()
     // re-init the steps based on whether self hosting or cloud hosted
     if (hostingInfo.type === "self") {
+      isApiKeyValid = true
       steps = [buildStep(Info), buildStep(User)]
-    } else {
-      steps = [buildStep(API), buildStep(Info), buildStep(User)]
+      validationSchemas = [
+        infoValidation,
+        userValidation,
+      ]
     }
   })
 
