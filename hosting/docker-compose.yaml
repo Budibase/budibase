@@ -11,9 +11,7 @@ services:
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
       LOGO_URL: ${LOGO_URL}
       PORT: 4002
-      HOSTING_URL: ${HOSTING_URL}
       JWT_SECRET: ${JWT_SECRET}
-      PROXY_PORT: ${MAIN_PORT}
     depends_on:
       - worker-service
 
