@@ -2,9 +2,7 @@ version: "3"
 
 services:
   app-service:
-    build: ./server
-    volumes: 
-      - ./server:/app
+    image: budibase/budibase-apps
     ports:
       - "${APP_PORT}:4002"
     environment:
@@ -20,7 +18,7 @@ services:
       - worker-service
 
   worker-service:
-    build: ./worker
+    image: budibase/budibase-worker
     ports:
       - "${WORKER_PORT}:4003"
     environment:
