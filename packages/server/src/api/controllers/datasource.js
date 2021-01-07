@@ -60,6 +60,7 @@ exports.update = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
+  // TODO: destroy all queries as well
   const database = new CouchDB(ctx.user.appId)
   await database.destroy(ctx.params.datasourceId)
   ctx.message = `Datasource deleted.`

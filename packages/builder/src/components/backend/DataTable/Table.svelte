@@ -199,7 +199,6 @@
     align-items: stretch;
   }
   .grid-wrapper :global(> *) {
-    height: auto;
     flex: 1 1 auto;
   }
   :global(.grid-wrapper) {

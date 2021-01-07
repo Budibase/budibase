@@ -1,5 +1,6 @@
 <script>
-  import { Button, Spacer } from "@budibase/bbui"
+  import { goto } from "@sveltech/routify"
+  import { Button, Spacer, Icon, TextButton } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -17,7 +18,10 @@
 </script>
 
 {#if datasource}
-  <CreateQueryButton {datasource} />
+  <TextButton text small on:click={() => $goto('../new')}>
+    <Icon name="filter" />
+    Create Query
+  </TextButton>
   <section>
     <h4>{datasource.name}: Configuration</h4>
     <IntegrationConfigForm integration={datasource.config} />

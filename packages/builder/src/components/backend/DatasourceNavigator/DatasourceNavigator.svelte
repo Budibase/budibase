@@ -19,7 +19,6 @@
   }
 
   function onClickQuery(datasourceId, queryId) {
-    console.log(backendUiStore.selectedQueryId, queryId)
     if ($backendUiStore.selectedQueryId === queryId) {
       return
     }

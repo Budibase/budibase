@@ -51,7 +51,12 @@ exports.save = async function(ctx) {
 }
 
 exports.preview = async function(ctx) {
-  const { query, datasourceId } = ctx.request.body
+  const { query, datasourceId, parameters } = ctx.request.body
+
+  const queryTemplate = handlebars.compile(query)
+  const parsedQuery = queryTemplate(parameters)
+
+  console.log(parsedQuery)
 
   const db = new CouchDB(ctx.user.appId)
 
@@ -64,7 +69,7 @@ exports.preview = async function(ctx) {
     return
   }
 
-  ctx.body = await new Integration(datasource.config, query).query()
+  ctx.body = await new Integration(datasource.config, parsedQuery).query()
 }
 
 exports.execute = async function(ctx) {

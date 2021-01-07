@@ -4,11 +4,10 @@
   import { notifier } from "builderStore/store/notifications"
   import * as api from "./api"
   import Table from "./Table.svelte"
-  import CreateQueryButton from "components/backend/DataTable/buttons/CreateQueryButton.svelte"
 
   export let query = {}
+  export let data = []
 
-  let data = []
   let loading = false
   let error = false
 
@@ -17,7 +16,7 @@
       loading = true
       const response = await api.fetchDataForQuery(
         $params.selectedDatasource,
-        $params.query
+        query._id
       )
       data = response.rows || []
       error = false
@@ -30,15 +29,13 @@
   }
 
   // Fetch rows for specified query
-  $: query && fetchData()
+  // $: query && fetchData()
 </script>
 
 {#if error}
   <div class="errors">{error}</div>
 {/if}
-<Table title={query.name} schema={query.schema} {data} {loading}>
-  <CreateQueryButton {query} edit />
-</Table>
+<Table title={''} schema={query.schema} {data} {loading} />
 
 <style>
   .errors {

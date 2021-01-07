@@ -10,6 +10,8 @@
   let editor
   let codemirror
 
+  // $: codemirror && codemirror.setValue(value)
+
   onMount(async () => {
     codemirror = cm.fromTextArea(editor, {
       lineNumbers: true,
@@ -26,9 +28,16 @@
     codemirror.on("change", instance => {
       const code = instance.getValue()
       value = code
-      // dispatch("change", { value })
+      dispatch("change", code)
     })
   })
 </script>
 
 <textarea bind:value bind:this={editor} />
+
+<style>
+  textarea {
+    background: var(--background);
+    border-radius: var(--border-radius-m);
+  }
+</style>
