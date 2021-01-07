@@ -87,7 +87,7 @@
     bind:value={name}
     {error} />
   <Toggle
-    text="Create screens to view and edit rows in this table"
+    text="Generate screens in the design section"
     bind:checked={createAutoscreens} />
   <div>
     <Label grey extraSmall>Create Table from CSV (Optional)</Label>
