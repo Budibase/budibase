@@ -25,7 +25,7 @@
     <Select secondary bind:value={parameters.queryId}>
       <option value="" />
       {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
-        <option value={query}>{datasource.queries[query].name}</option>
+        <option value={query._id}>{query.name}</option>
       {/each}
     </Select>
   {/if}

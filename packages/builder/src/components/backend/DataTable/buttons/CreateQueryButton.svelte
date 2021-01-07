@@ -13,7 +13,7 @@
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import EditIntegrationConfig from "../modals/EditIntegrationConfig.svelte"
-  import CreateEditQuery from "components/backend/DataTable/modals/CreateEditQuery.svelte"
+  // import CreateEditQuery from "components/backend/DataTable/modals/CreateEditQuery.svelte"
 
   export let query = {}
   export let edit
@@ -38,12 +38,12 @@
     {edit ? 'Edit' : 'Create'} Query
   </Button>
 </div>
-<Modal bind:this={modal}>
-  <ModalContent
+<!-- <Modal bind:this={modal}> -->
+<!-- <ModalContent
     confirmText="Save"
     cancelText="Cancel"
     onConfirm={saveQuery}
-    title={edit ? 'Edit Query' : 'Create New Query'}>
-    <CreateEditQuery bind:query />
-  </ModalContent>
-</Modal>
+    title={edit ? 'Edit Query' : 'Create New Query'}> -->
+<!-- <CreateEditQuery bind:query /> -->
+<!-- </ModalContent> -->
+<!-- </Modal> -->
