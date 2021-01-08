@@ -23,6 +23,7 @@ static_resources:
               
               # special case for when API requests are made, can just forward, not to minio    
               - match: { prefix: "/api/" }
+                route:
                   cluster: app-service
 
               - match: { prefix: "/worker/" }
