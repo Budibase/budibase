@@ -13,10 +13,12 @@ export const fetchQueryData = async ({ _id }) => {
 /**
  * Executes a query against an external data connector.
  */
-export const executeQuery = async ({ _id }) => {
+export const executeQuery = async ({ queryId, params }) => {
   const response = await API.post({
-    url: `/api/queries/${_id}`,
-    // body: params,
+    url: `/api/queries/${queryId}`,
+    body: {
+      params,
+    },
   })
   return response.rows
 }

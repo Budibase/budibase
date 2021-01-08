@@ -14,6 +14,17 @@
     dropdownRight.hide()
   }
 
+  function openBindingDrawer() {
+    backendUiStore.update(state => {
+      state.selectedQueryId = value._id
+      return state
+    })
+    store.update(state => {
+      state.bottomDrawerVisible = true
+      return state
+    })
+  }
+
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
     name: `all_${m._id}`,
@@ -67,6 +78,9 @@
   <span>{value.label ? value.label : 'Table / View / Query'}</span>
   <Icon name="arrowdown" />
 </div>
+{#if value.type === "query"}
+  <i class="ri-settings-3-line" on:click={openBindingDrawer} />
+{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">

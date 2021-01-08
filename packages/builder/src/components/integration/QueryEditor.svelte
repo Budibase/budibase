@@ -12,6 +12,10 @@
 
   // $: codemirror && codemirror.setValue(value)
 
+  console.log("Running init")
+
+  $: console.log("Running reactive")
+
   onMount(async () => {
     codemirror = cm.fromTextArea(editor, {
       lineNumbers: true,

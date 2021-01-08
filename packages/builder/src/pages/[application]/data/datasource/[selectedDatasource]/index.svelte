@@ -4,7 +4,6 @@
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import CreateQueryButton from "components/backend/DataTable/buttons/CreateQueryButton.svelte"
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === $backendUiStore.selectedDatasourceId

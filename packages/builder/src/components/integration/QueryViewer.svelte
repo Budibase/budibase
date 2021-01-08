@@ -85,8 +85,18 @@
 
   async function previewQuery() {
     try {
+      // parse all the parameters in the UI
+      // send them
+
       const response = await api.post(`/api/queries/preview`, {
-        parameters: query.parameters,
+        // TODO: revisit
+        parameters: query.parameters.reduce(
+          (acc, next) => ({
+            ...acc,
+            [next.name]: next.default,
+          }),
+          {}
+        ),
         datasourceId: datasource._id,
         query: query.queryString,
       })
@@ -96,7 +106,8 @@
 
       data = json || []
 
-      // TODO: refactor
+      // Assume all the fields are strings and create a basic schema
+      // from the first record returned by the query
       fields = Object.keys(json[0]).map(field => ({
         name: field,
         type: "STRING",

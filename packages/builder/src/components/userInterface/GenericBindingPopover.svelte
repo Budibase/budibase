@@ -20,6 +20,8 @@
 
   let getCaretPosition
 
+  $: console.log(bindings)
+
   $: categories = Object.entries(groupBy("category", bindings))
 
   function onClickBinding(binding) {
@@ -50,7 +52,9 @@
                 <span class="binding__label">{binding.label}</span>
                 <span class="binding__type">{binding.type}</span>
                 <br />
-                <div class="binding__description">{binding.description}</div>
+                <div class="binding__description">
+                  {binding.description || ''}
+                </div>
               </div>
             {/each}
           {/each}
