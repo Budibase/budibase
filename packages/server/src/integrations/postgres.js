@@ -1,5 +1,47 @@
 const { Client } = require("pg")
 
+const SCHEMA = {
+  datasource: {
+    host: {
+      type: "string",
+      default: "localhost",
+      required: true,
+    },
+    port: {
+      type: "number",
+      required: true,
+      default: 5432,
+    },
+    database: {
+      type: "string",
+      default: "postgres",
+      required: true,
+    },
+    username: {
+      type: "string",
+      default: "root",
+      required: true,
+    },
+    password: {
+      type: "password",
+      default: "root",
+      required: true,
+    },
+  },
+  editor: {
+    sql: {
+      type: "sql",
+    },
+    gui: {
+      type: "config",
+      fields: {
+        something: "",
+        other: "",
+      },
+    },
+  },
+}
+
 const DATASOURCE_CONFIG = {
   host: {
     type: "string",
@@ -34,10 +76,16 @@ const QUERY_CONFIG = {
   },
   gui: {
     type: "config",
-    fields: {
-      something: "",
-      other: "",
-    },
+    fields: [
+      {
+        name: "",
+        type: "",
+      },
+      {
+        name: "",
+        type: "",
+      },
+    ],
   },
 }
 

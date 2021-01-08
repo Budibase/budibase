@@ -40,6 +40,7 @@ const INITIAL_FRONTEND_STATE = {
   libraries: null,
   appId: "",
   routes: {},
+  bottomDrawerVisible: false,
 }
 
 export const getFrontendStore = () => {

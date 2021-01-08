@@ -10,6 +10,7 @@
   import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
   import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
+  import DataBindingDrawer from "components/userInterface/DataBindingDrawer/index.svelte"
 
   $: instance = $store.appInstance
 
@@ -46,6 +47,10 @@
       </div>
     {/if}
   </div>
+
+  {#if $store.bottomDrawerVisible}
+    <DataBindingDrawer />
+  {/if}
 
   {#if $selectedComponent != null}
     <div class="components-pane">
@@ -101,6 +106,15 @@
     align-items: stretch;
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
+  }
+
+  .binding-drawer-container {
+    height: 50vh;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: var(--background);
+    padding: var(--spacing-xl);
   }
 
   .nav-group-header > div:nth-child(1) {

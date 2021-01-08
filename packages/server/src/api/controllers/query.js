@@ -75,9 +75,13 @@ exports.preview = async function(ctx) {
 exports.execute = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
 
-  const datasource = await db.get(ctx.params.datasourceId)
+  const query = await db.get(ctx.params.queryId)
+  const datasource = await db.get(query.datasourceId)
 
-  const query = datasource.queries[ctx.params.queryId]
+  const queryTemplate = handlebars.compile(query.queryString)
+
+  // TODO: Take the default params into account
+  const parsedQuery = queryTemplate(ctx.request.body.params)
 
   const Integration = integrations[datasource.source]
 
@@ -85,17 +89,7 @@ exports.execute = async function(ctx) {
     ctx.throw(400, "Integration type does not exist.")
     return
   }
-
-  // TODO: allow the ability to POST parameters down when executing the query
-  // const customParams = ctx.request.body
-  const queryTemplate = handlebars.compile(query.queryString)
-
-  const response = await new Integration(
-    datasource.config,
-    queryTemplate({
-      // pass the params here from the UI and backend contexts
-    })
-  ).query()
+  const response = await new Integration(datasource.config, parsedQuery).query()
 
   ctx.body = response
 }

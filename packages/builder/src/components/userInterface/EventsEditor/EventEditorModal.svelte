@@ -1,5 +1,11 @@
 <script>
-  import { TextButton, Body, DropdownMenu, ModalContent } from "@budibase/bbui"
+  import {
+    Button,
+    TextButton,
+    Body,
+    DropdownMenu,
+    ModalContent,
+  } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
@@ -49,61 +55,58 @@
   }
 </script>
 
-<ModalContent title="Actions" confirmText="Save" onConfirm={saveEventData}>
-  <div slot="header">
-    <div bind:this={addActionButton}>
-      <TextButton text small blue on:click={addActionDropdown.show}>
-        <div style="height: 20px; width: 20px;">
-          <AddIcon />
-        </div>
-        Add Action
-      </TextButton>
-    </div>
-    <DropdownMenu
-      bind:this={addActionDropdown}
-      anchor={addActionButton}
-      align="right">
-      <div class="available-actions-container">
-        {#each actionTypes as actionType}
-          <div class="available-action" on:click={addAction(actionType)}>
-            <span>{actionType.name}</span>
-          </div>
-        {/each}
+<div>
+  <div bind:this={addActionButton}>
+    <TextButton text small blue on:click={addActionDropdown.show}>
+      <div style="height: 20px; width: 20px;">
+        <AddIcon />
       </div>
-    </DropdownMenu>
+      Add Action
+    </TextButton>
   </div>
-
-  <div class="actions-container">
-    {#if actions && actions.length > 0}
-      {#each actions as action, index}
-        <div class="action-container">
-          <div class="action-header" on:click={selectAction(action)}>
-            <Body small lh>{index + 1}. {action[eventTypeKey]}</Body>
-            <div class="row-expander" class:rotate={action !== selectedAction}>
-              <ArrowDownIcon />
-            </div>
-          </div>
-          {#if action === selectedAction}
-            <div class="selected-action-container">
-              <svelte:component
-                this={selectedActionComponent}
-                parameters={selectedAction.parameters} />
-              <div class="delete-action-button">
-                <TextButton text medium on:click={() => deleteAction(index)}>
-                  Delete
-                </TextButton>
-              </div>
-            </div>
-          {/if}
+  <DropdownMenu
+    bind:this={addActionDropdown}
+    anchor={addActionButton}
+    align="right">
+    <div class="available-actions-container">
+      {#each actionTypes as actionType}
+        <div class="available-action" on:click={addAction(actionType)}>
+          <span>{actionType.name}</span>
         </div>
       {/each}
-    {/if}
-  </div>
+    </div>
+  </DropdownMenu>
+</div>
 
-  <div slot="footer">
-    <a href="https://docs.budibase.com">Learn more about Actions</a>
-  </div>
-</ModalContent>
+<div class="actions-container">
+  {#if actions && actions.length > 0}
+    {#each actions as action, index}
+      <div class="action-container">
+        <div class="action-header" on:click={selectAction(action)}>
+          <Body small lh>{index + 1}. {action[eventTypeKey]}</Body>
+          <div class="row-expander" class:rotate={action !== selectedAction}>
+            <ArrowDownIcon />
+          </div>
+        </div>
+        {#if action === selectedAction}
+          <div class="selected-action-container">
+            <svelte:component
+              this={selectedActionComponent}
+              parameters={selectedAction.parameters} />
+            <div class="delete-action-button">
+              <TextButton text medium on:click={() => deleteAction(index)}>
+                Delete
+              </TextButton>
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/each}
+  {/if}
+  <Button thin blue on:click={saveEventData}>Save</Button>
+</div>
+
+<a href="https://docs.budibase.com">Learn more about Actions</a>
 
 <style>
   .action-header {

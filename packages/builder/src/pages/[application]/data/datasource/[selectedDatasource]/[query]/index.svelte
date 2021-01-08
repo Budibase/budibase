@@ -14,10 +14,11 @@
       query = {
         datasourceId: $params.selectedDatasource,
         name: "New Query",
-        parameters: {},
+        parameters: [],
         // TODO: set dynamically
       }
     }
+    console.log("The query changes", query)
   }
 </script>
 
