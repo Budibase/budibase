@@ -10,7 +10,6 @@
   import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
   import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
-  import DataBindingDrawer from "components/userInterface/DataBindingDrawer/index.svelte"
 
   $: instance = $store.appInstance
 
@@ -47,10 +46,6 @@
       </div>
     {/if}
   </div>
-
-  {#if $store.bottomDrawerVisible}
-    <DataBindingDrawer />
-  {/if}
 
   {#if $selectedComponent != null}
     <div class="components-pane">

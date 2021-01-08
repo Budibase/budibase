@@ -2,10 +2,14 @@
   import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
+  // import DataBindingDrawer from "components/userInterface/DataBindingDrawer/index.svelte"
+  import BottomDrawer from "components/common/BottomDrawer.svelte"
+  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
+  let bindingDrawerOpen
 
   export let value = {}
 
@@ -15,14 +19,11 @@
   }
 
   function openBindingDrawer() {
-    backendUiStore.update(state => {
-      state.selectedQueryId = value._id
-      return state
-    })
-    store.update(state => {
-      state.bottomDrawerVisible = true
-      return state
-    })
+    bindingDrawerOpen = true
+  }
+
+  function closeDatabindingDrawer() {
+    bindingDrawerOpen = false
   }
 
   $: tables = $backendUiStore.tables.map(m => ({
@@ -47,6 +48,7 @@
       name: query.name,
       ...query,
       schema: query.schema,
+      parameters: query.parameters,
       type: "query",
   }))
 
@@ -56,6 +58,15 @@
     screen: $currentAsset,
     tables: $backendUiStore.tables,
   })
+
+  $: queryBindableProperties = bindableProperties.map(property => ({
+    ...property,
+    category: property.type === "instance" ? "Component" : "Table",
+    label: property.readableBinding,
+    path: property.runtimeBinding,
+  }))
+
+  $: console.log("selected", value)
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")
@@ -78,9 +89,6 @@
   <span>{value.label ? value.label : 'Table / View / Query'}</span>
   <Icon name="arrowdown" />
 </div>
-{#if value.type === "query"}
-  <i class="ri-settings-3-line" on:click={openBindingDrawer} />
-{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
@@ -137,6 +145,25 @@
     </ul>
   </div>
 </DropdownMenu>
+
+{#if value.type === "query"}
+  <Button blue on:click={openBindingDrawer}/>
+  {#if bindingDrawerOpen}
+    <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
+      <div slot="buttons">
+        <Button blue thin on:click={() => handleSelected(value)}>Save</Button>
+      </div>
+      <div class="drawer-contents" slot="body">
+        <pre>{value.queryString}</pre>
+        <ParameterBuilder
+          bind:customParams={value.queryParams}
+          parameters={value.parameters || []}
+          bindings={queryBindableProperties} />
+      </div>
+    </BottomDrawer>
+  {/if}
+{/if}
+
 
 <style>
   .dropdownbutton {
@@ -198,5 +225,9 @@
 
   li:hover {
     background-color: var(--grey-4);
+  }
+
+  .drawer-contents {
+    padding: var(--spacing-xl);
   }
 </style>

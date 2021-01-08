@@ -28,10 +28,13 @@ const navigationHandler = action => {
 const queryExecutionHandler = async (action, context) => {
   const { datasourceId, queryId, queryParams } = action.parameters
 
-  // TODO: allow context based bindings for query params
   const enrichedQueryParameters = enrichDataBindings(queryParams, context)
 
-  await executeQuery({ datasourceId, queryId, params: enrichedQueryParameters })
+  await executeQuery({
+    datasourceId,
+    queryId,
+    parameters: enrichedQueryParameters,
+  })
 }
 
 const handlerMap = {

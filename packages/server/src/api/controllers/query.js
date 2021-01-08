@@ -81,7 +81,7 @@ exports.execute = async function(ctx) {
   const queryTemplate = handlebars.compile(query.queryString)
 
   // TODO: Take the default params into account
-  const parsedQuery = queryTemplate(ctx.request.body.params)
+  const parsedQuery = queryTemplate(ctx.request.body.parameters)
 
   const Integration = integrations[datasource.source]
 
@@ -92,31 +92,6 @@ exports.execute = async function(ctx) {
   const response = await new Integration(datasource.config, parsedQuery).query()
 
   ctx.body = response
-}
-
-exports.fetchQuery = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-
-  const query = await db.get(ctx.params.queryId)
-
-  const datasource = await db.get(query.datasourceId)
-
-  const Integration = integrations[datasource.source]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-    return
-  }
-
-  const rows = await new Integration(
-    datasource.config,
-    query.queryString
-  ).query()
-
-  ctx.body = {
-    schema: query.schema,
-    rows,
-  }
 }
 
 exports.destroy = async function(ctx) {

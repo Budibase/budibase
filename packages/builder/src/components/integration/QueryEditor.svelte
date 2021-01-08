@@ -44,4 +44,7 @@
     background: var(--background);
     border-radius: var(--border-radius-m);
   }
+  :global(.CodeMirror) {
+    border-radius: var(--border-radius-m);
+  }
 </style>

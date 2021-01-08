@@ -8,10 +8,9 @@ const router = Router()
 // TODO: sort out auth so apps have the right permissions
 router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)
-  .get("/api/queries/:queryId", authorized(BUILDER), queryController.fetchQuery)
   .post("/api/queries", authorized(BUILDER), queryController.save)
-  .post("/api/queries/preview", authorized(BUILDER), queryController.preview)
   .post("/api/queries/:queryId", authorized(BUILDER), queryController.execute)
+  .post("/api/queries/preview", authorized(BUILDER), queryController.preview)
   .delete("/api/queries/:queryId", authorized(BUILDER), queryController.destroy)
 
 module.exports = router
