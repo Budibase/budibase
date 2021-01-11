@@ -4,14 +4,6 @@
 let cache = {}
 
 /**
- * Makes a fully formatted URL based on the SDK configuration.
- */
-const makeFullURL = path => {
-  const isProxy = window.location.pathname.startsWith("/app/")
-  return `${isProxy ? "/app/" : "/"}${path}`.replace("//", "/")
-}
-
-/**
  * Handler for API errors.
  */
 const handleError = error => {
@@ -81,8 +73,7 @@ const makeCachedApiCall = async params => {
  */
 const requestApiCall = method => async params => {
   const { url, cache = false } = params
-  const fullURL = makeFullURL(url)
-  const enrichedParams = { ...params, method, url: fullURL }
+  const enrichedParams = { ...params, method, url }
   return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
 }
 
