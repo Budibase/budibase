@@ -71,7 +71,7 @@
   {/each}
   <div class="new-field" on:keyup={onInputEnter}>
     <Input
-      outline
+      primary
       small
       bind:value={addNewName}
       placeholder="Enter field name" />
