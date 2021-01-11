@@ -1,5 +1,5 @@
 #!/bin/bash
-pushd ../build
+pushd ../../build
 docker-compose build --force app-service
 docker-compose build --force worker-service
 docker tag build_app-service budibase/budibase-apps:latest
