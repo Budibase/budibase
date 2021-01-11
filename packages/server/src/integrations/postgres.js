@@ -29,14 +29,42 @@ const SCHEMA = {
     },
   },
   query: {
-    sql: {
+    SQL: {
       type: "sql",
     },
-    gui: {
-      type: "config",
+    "Simple Query": {
+      type: "fields",
       fields: {
-        something: "",
-        other: "",
+        table: {
+          type: "string",
+        },
+        column: {
+          type: "string",
+        },
+        condition: {
+          type: "options",
+          options: [
+            {
+              name: "Equals",
+              value: "=",
+            },
+            {
+              name: "Not Equals",
+              value: "!=",
+            },
+            {
+              name: "Greater Than",
+              value: ">",
+            },
+            {
+              name: "Less Than",
+              value: "<",
+            },
+          ],
+        },
+        value: {
+          type: "string",
+        },
       },
     },
   },
