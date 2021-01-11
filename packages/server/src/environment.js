@@ -27,6 +27,7 @@ module.exports = {
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   CLOUD: process.env.CLOUD,
+  SELF_HOSTED: process.env.SELF_HOSTED,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   AWS_REGION: process.env.AWS_REGION,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
@@ -35,6 +36,8 @@ module.exports = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
   LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
+  // self hosting features
+  LOGO_URL: process.env.LOGO_URL,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

@@ -36,7 +36,7 @@ const addBuilderPreviewStyles = (styleString, componentId, selectable) => {
 
     // Highlighted selected element
     if (componentId === state.selectedComponentId) {
-      str += `;box-shadow: 0 0 0 ${selectedComponentWidth}px ${selectedComponentColor} inset !important;`
+      str += `;border: ${selectedComponentWidth}px solid ${selectedComponentColor} !important;`
     }
   }
 

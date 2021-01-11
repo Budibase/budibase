@@ -168,3 +168,16 @@ exports.coerceRowValues = (row, table) => {
   }
   return clonedRow
 }
+
+/**
+ * Gets the correct link to the logo URL depending on if running in Cloud or if running in self hosting.
+ * @returns {string} A URL which links to the correct default logo for new apps.
+ */
+exports.getLogoUrl = () => {
+  const BB_LOGO_URL =
+    "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
+  if (env.SELF_HOSTED) {
+    return env.LOGO_URL || BB_LOGO_URL
+  }
+  return BB_LOGO_URL
+}

@@ -20,8 +20,6 @@
 
   let getCaretPosition
 
-  $: console.log(bindings)
-
   $: categories = Object.entries(groupBy("category", bindings))
 
   function onClickBinding(binding) {

@@ -20,6 +20,7 @@ const integrationRoutes = require("./integration")
 const permissionRoutes = require("./permission")
 const datasourceRoutes = require("./datasource")
 const queryRoutes = require("./query")
+const hostingRoutes = require("./hosting")
 
 exports.mainRoutes = [
   deployRoutes,
@@ -40,6 +41,7 @@ exports.mainRoutes = [
   permissionRoutes,
   datasourceRoutes,
   queryRoutes,
+  hostingRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
