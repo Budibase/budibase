@@ -10,5 +10,5 @@ export const executeQuery = async ({ queryId, parameters }) => {
       parameters,
     },
   })
-  return response.rows
+  return response
 }

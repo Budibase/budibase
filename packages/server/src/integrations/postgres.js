@@ -28,7 +28,7 @@ const SCHEMA = {
       required: true,
     },
   },
-  editor: {
+  query: {
     sql: {
       type: "sql",
     },
@@ -39,53 +39,6 @@ const SCHEMA = {
         other: "",
       },
     },
-  },
-}
-
-const DATASOURCE_CONFIG = {
-  host: {
-    type: "string",
-    default: "localhost",
-    required: true,
-  },
-  port: {
-    type: "number",
-    required: true,
-    default: 5432,
-  },
-  database: {
-    type: "string",
-    default: "postgres",
-    required: true,
-  },
-  username: {
-    type: "string",
-    default: "root",
-    required: true,
-  },
-  password: {
-    type: "password",
-    default: "root",
-    required: true,
-  },
-}
-
-const QUERY_CONFIG = {
-  sql: {
-    type: "sql",
-  },
-  gui: {
-    type: "config",
-    fields: [
-      {
-        name: "",
-        type: "",
-      },
-      {
-        name: "",
-        type: "",
-      },
-    ],
   },
 }
 
@@ -113,9 +66,6 @@ class PostgresIntegration {
 }
 
 module.exports = {
-  schema: {
-    datasource: DATASOURCE_CONFIG,
-    query: QUERY_CONFIG,
-  },
+  schema: SCHEMA,
   integration: PostgresIntegration,
 }
