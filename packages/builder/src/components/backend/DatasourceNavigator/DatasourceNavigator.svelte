@@ -13,7 +13,6 @@
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectDatasource(datasource) {
-    // You can't actually select a datasource, just edit it
     backendUiStore.actions.datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }

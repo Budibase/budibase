@@ -132,6 +132,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-top: var(--spacing-m);
   }
 
   .action-header > span {
@@ -146,6 +147,7 @@
 
   .actions-list {
     border: var(--border-light);
+    padding: var(--spacing-s);
   }
 
   .available-action {
@@ -159,14 +161,13 @@
   }
 
   .actions-container {
+    height: 40vh;
     display: grid;
     grid-gap: var(--spacing-m);
     grid-template-columns: 15% 1fr;
     grid-auto-flow: column;
     min-height: 0;
     padding-top: 0;
-    border: var(--border-light);
-    border-width: 0 0 1px 0;
     overflow-y: auto;
   }
 

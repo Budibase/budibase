@@ -24,11 +24,18 @@ export const fetchDatasource = async (datasource, dataContext) => {
     rows = await fetchViewData(datasource)
   } else if (type === "query") {
     const bindings = get(bindingStore)
-    const fullContext = {
+
+    // TODO: refactor. Set these defaults up somewhere else
+    let queryParams = datasource.queryParams || {}
+    for (let param of datasource.parameters) {
+      if (!queryParams[param.name]) {
+        queryParams[param.name] = param.default
+      }
+    }
+    const parameters = enrichDataBindings(queryParams, {
       ...bindings,
       ...dataContext,
-    }
-    const parameters = enrichDataBindings(datasource.queryParams, fullContext)
+    })
     return await executeQuery({ queryId: datasource._id, parameters })
   } else if (type === "link") {
     const row = dataContext[datasource.providerId]
