@@ -1,16 +1,7 @@
-import { getAppId } from "../utils/getAppId"
-
 /**
  * API cache for cached request responses.
  */
 let cache = {}
-
-/**
- * Makes a fully formatted URL based on the SDK configuration.
- */
-const makeFullURL = path => {
-  return `/${path}`.replace("//", "/")
-}
 
 /**
  * Handler for API errors.
@@ -29,7 +20,7 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     let headers = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "x-budibase-app-id": getAppId(),
+      "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
     }
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       headers["x-budibase-type"] = "client"
@@ -82,8 +73,8 @@ const makeCachedApiCall = async params => {
  */
 const requestApiCall = method => async params => {
   const { url, cache = false } = params
-  const fullURL = makeFullURL(url)
-  const enrichedParams = { ...params, method, url: fullURL }
+  const fixedUrl = `/${url}`.replace("//", "/")
+  const enrichedParams = { ...params, method, fixedUrl }
   return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
 }
 

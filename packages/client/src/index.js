@@ -7,6 +7,7 @@ const loadBudibase = () => {
   // Update builder store with any builder flags
   builderStore.set({
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
+    appId: window["##BUDIBASE_APP_ID##"],
     layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],

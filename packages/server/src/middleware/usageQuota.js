@@ -43,6 +43,10 @@ module.exports = async (ctx, next) => {
       return
     }
   }
+  // if running in builder or a self hosted cloud usage quotas should not be executed
+  if (!env.CLOUD || env.SELF_HOSTED) {
+    return next()
+  }
   // update usage for uploads to be the total size
   if (property === usageQuota.Properties.UPLOAD) {
     const files =
@@ -50,9 +54,6 @@ module.exports = async (ctx, next) => {
         ? Array.from(ctx.request.files.file)
         : [ctx.request.files.file]
     usage = files.map(file => file.size).reduce((total, size) => total + size)
-  }
-  if (!env.CLOUD) {
-    return next()
   }
   try {
     await usageQuota.update(ctx.auth.apiKey, property, usage)
