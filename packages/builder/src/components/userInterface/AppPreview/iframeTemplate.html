@@ -22,10 +22,11 @@
         }
 
         // Extract data from message
-        const { selectedComponentId, layout, screen, previewType } = JSON.parse(event.data)
+        const { selectedComponentId, layout, screen, previewType, appId } = JSON.parse(event.data)
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true
+        window["##BUDIBASE_APP_ID##"] = appId
         window["##BUDIBASE_PREVIEW_LAYOUT##"] = layout
         window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
         window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
