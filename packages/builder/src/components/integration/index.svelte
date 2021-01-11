@@ -15,7 +15,8 @@
 </script>
 
 {#if query.queryType === QueryTypes.SQL}
-  <ParameterBuilder bind:parameters={query.parameters} />
+  <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
   <Spacer large />
-  <Editor label="Query" on:change={updateQuery} value={query.queryString} />
+  <TextArea bind:value={query.queryString} />
+  <!-- <Editor label="Query" on:change={updateQuery} value={query.queryString} /> -->
 {/if}

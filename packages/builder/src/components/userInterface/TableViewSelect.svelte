@@ -89,6 +89,23 @@
   <span>{value.label ? value.label : 'Table / View / Query'}</span>
   <Icon name="arrowdown" />
 </div>
+{#if value.type === "query"}
+  <i class="ri-settings-5-line" on:click={openBindingDrawer}/>
+  {#if bindingDrawerOpen}
+    <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
+      <div slot="buttons">
+        <Button blue thin on:click={() => handleSelected(value)}>Save</Button>
+      </div>
+      <div class="drawer-contents" slot="body">
+        <pre>{value.queryString}</pre>
+        <ParameterBuilder
+          bind:customParams={value.queryParams}
+          parameters={value.parameters || []}
+          bindings={queryBindableProperties} />
+      </div>
+    </BottomDrawer>
+  {/if}
+{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
@@ -145,24 +162,6 @@
     </ul>
   </div>
 </DropdownMenu>
-
-{#if value.type === "query"}
-  <Button blue on:click={openBindingDrawer}/>
-  {#if bindingDrawerOpen}
-    <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
-      <div slot="buttons">
-        <Button blue thin on:click={() => handleSelected(value)}>Save</Button>
-      </div>
-      <div class="drawer-contents" slot="body">
-        <pre>{value.queryString}</pre>
-        <ParameterBuilder
-          bind:customParams={value.queryParams}
-          parameters={value.parameters || []}
-          bindings={queryBindableProperties} />
-      </div>
-    </BottomDrawer>
-  {/if}
-{/if}
 
 
 <style>
@@ -229,5 +228,18 @@
 
   .drawer-contents {
     padding: var(--spacing-xl);
+  }
+
+  i {
+    margin-left: 5px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  i:hover {
+    transform: scale(1.1);
+    font-weight: 500;
+    cursor: pointer;
   }
 </style>

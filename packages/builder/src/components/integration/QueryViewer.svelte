@@ -117,7 +117,7 @@
   async function saveQuery() {
     try {
       await backendUiStore.actions.queries.save(query.datasourceId, query)
-      notifier.success(`Query created successfully.`)
+      notifier.success(`Query saved successfully.`)
     } catch (err) {
       console.error(err)
       notifier.danger(`Error creating query. ${err.message}`)
@@ -146,12 +146,12 @@
 
     <Spacer medium />
 
-    <section class="viewer">
-      <div class="viewer-controls">
-        <Button wide thin blue on:click={previewQuery}>Run</Button>
-        <Button wide thin primary on:click={saveQuery}>Save</Button>
-      </div>
+    <div class="viewer-controls">
+      <Button wide thin blue disabled={!data} on:click={saveQuery}>Save</Button>
+      <Button wide thin primary on:click={previewQuery}>Run</Button>
+    </div>
 
+    <section class="viewer">
       {#if data}
         <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
           {#if tab === 'JSON'}
@@ -208,14 +208,14 @@
   }
 
   .viewer {
-    position: relative;
   }
 
   .viewer-controls {
-    position: absolute;
-    right: 0;
     display: grid;
     grid-gap: var(--spacing-m);
     grid-auto-flow: column;
+    direction: rtl;
+    grid-template-columns: 10% 10% 1fr;
+    margin-bottom: var(--spacing-m);
   }
 </style>
