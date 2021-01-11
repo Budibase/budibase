@@ -8,10 +8,14 @@
   }
 
   export let query
+
+  function updateQuery({ detail }) {
+    query.queryString = detail
+  }
 </script>
 
 {#if query.queryType === QueryTypes.SQL}
   <ParameterBuilder bind:parameters={query.parameters} />
   <Spacer large />
-  <Editor label="Query" bind:value={query.queryString} />
+  <Editor label="Query" on:change={updateQuery} value={query.queryString} />
 {/if}

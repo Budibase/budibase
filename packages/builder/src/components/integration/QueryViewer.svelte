@@ -85,11 +85,7 @@
 
   async function previewQuery() {
     try {
-      // parse all the parameters in the UI
-      // send them
-
       const response = await api.post(`/api/queries/preview`, {
-        // TODO: revisit
         parameters: query.parameters.reduce(
           (acc, next) => ({
             ...acc,

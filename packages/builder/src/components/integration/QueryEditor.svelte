@@ -10,13 +10,17 @@
   let editor
   let codemirror
 
-  // $: codemirror && codemirror.setValue(value)
+  $: {
+    if (codemirror) {
+      const { left, top } = codemirror.getScrollInfo()
+      codemirror.setValue(value)
+      codemirror.scrollTo(left, top)
+    }
+  }
 
-  console.log("Running init")
+  onMount(() => {
+    if (codemirror) codemirror.toTextArea()
 
-  $: console.log("Running reactive")
-
-  onMount(async () => {
     codemirror = cm.fromTextArea(editor, {
       lineNumbers: true,
       mode,
@@ -31,9 +35,14 @@
     })
     codemirror.on("change", instance => {
       const code = instance.getValue()
-      value = code
       dispatch("change", code)
     })
+
+    codemirror.setValue(value || "")
+
+    return () => {
+      if (codemirror) codemirror.toTextArea()
+    }
   })
 </script>
 

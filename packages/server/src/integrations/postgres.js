@@ -59,6 +59,23 @@ class PostgresIntegration {
     return this.client.connect()
   }
 
+  // async create() {
+
+  // }
+
+  async read() {
+    const response = await this.client.query(this.queryString)
+    return response.rows
+  }
+
+  // async update() {
+
+  // }
+
+  // async delete() {
+
+  // }
+
   async query() {
     const response = await this.client.query(this.queryString)
     return response.rows

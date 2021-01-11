@@ -1,18 +1,26 @@
 const PouchDB = require("pouchdb")
 
-const COUCHDB_OPTIONS = {
-  url: {
-    type: "string",
-    required: true,
-    default: "localhost",
+const SCHEMA = {
+  datasource: {
+    url: {
+      type: "string",
+      required: true,
+      default: "localhost",
+    },
+    database: {
+      type: "string",
+      required: true,
+    },
+    view: {
+      type: "string",
+      required: true,
+    },
   },
-  database: {
-    type: "string",
-    required: true,
-  },
-  view: {
-    type: "string",
-    required: true,
+  query: {
+    json: {
+      type: "json",
+      required: true,
+    },
   },
 }
 
@@ -36,6 +44,6 @@ class CouchDBIntegration {
 }
 
 module.exports = {
-  schema: COUCHDB_OPTIONS,
+  schema: SCHEMA,
   integration: CouchDBIntegration,
 }

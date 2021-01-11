@@ -1,22 +1,25 @@
 const { MongoClient } = require("mongodb")
 
-const MONGODB_OPTIONS = {
-  connectionString: {
-    type: "string",
-    required: true,
-    default: "localhost",
-  },
-  db: {
-    type: "string",
-    required: true,
-  },
-  collection: {
-    type: "string",
-    required: true,
+const SCHEMA = {
+  datasource: {
+    connectionString: {
+      type: "string",
+      required: true,
+      default: "localhost",
+    },
+    db: {
+      type: "string",
+      required: true,
+    },
+    collection: {
+      type: "string",
+      required: true,
+    },
   },
   query: {
-    type: "query",
-    required: true,
+    json: {
+      type: "json",
+    },
   },
 }
 
@@ -52,6 +55,6 @@ class MongoIntegration {
 }
 
 module.exports = {
-  schema: MONGODB_OPTIONS,
+  schema: SCHEMA,
   integration: MongoIntegration,
 }
