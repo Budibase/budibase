@@ -1,0 +1,90 @@
+version: "3"
+
+services:
+  app-service:
+    image: budibase/budibase-apps
+    ports:
+      - "${APP_PORT}:4002"
+    environment:
+      SELF_HOSTED: 1 
+      COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
+      LOGO_URL: ${LOGO_URL}
+      PORT: 4002
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - worker-service
+
+  worker-service:
+    image: budibase/budibase-worker
+    ports:
+      - "${WORKER_PORT}:4003"
+    environment:
+      SELF_HOSTED: 1,
+      DEPLOYMENT_API_KEY: ${WORKER_API_KEY}
+      PORT: 4003
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      RAW_MINIO_URL: http://minio-service:9000
+      COUCH_DB_USERNAME: ${COUCH_DB_USER}
+      COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
+      RAW_COUCH_DB_URL: http://couchdb-service:5984
+      SELF_HOST_KEY: ${HOSTING_KEY}
+    depends_on:
+      - minio-service
+      - couch-init
+
+  minio-service:
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_PORT}:9000"
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  proxy-service:
+    image: envoyproxy/envoy:v1.16-latest
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "${MAIN_PORT}:10000"
+      - "9901:9901"
+    depends_on:
+      - minio-service
+      - worker-service
+      - app-service
+      - couchdb-service
+
+  couchdb-service:
+    image: apache/couchdb:3.0
+    environment:
+      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
+      - COUCHDB_USER=${COUCH_DB_USER}
+    ports:
+      - "${COUCH_DB_PORT}:5984"
+      - "4369:4369"
+      - "9100:9100"
+    volumes:
+      - couchdb_data:/couchdb
+
+  couch-init:
+    image: curlimages/curl
+    environment:
+      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
+    depends_on:
+      - couchdb-service
+    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+
+volumes:
+  couchdb_data:
+    driver: local
+  minio_data:
+    driver: local
