@@ -3,12 +3,7 @@
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
 
-  // parameters.contextPath used in the client handler to determine which row to save
-  // this could be "data" or "data.parent", "data.parent.parent" etc
   export let parameters
-
-  let idFields
-  let schemaFields
 
   const automationSchema = automation => {
     const schema = Object.entries(
