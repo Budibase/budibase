@@ -1,18 +1,22 @@
 const { Client } = require("@elastic/elasticsearch")
 
-const ELASTICSEARCH_OPTIONS = {
-  url: {
-    type: "string",
-    required: true,
-    default: "localhost",
-  },
-  index: {
-    type: "string",
-    required: true,
+const SCHEMA = {
+  datasource: {
+    url: {
+      type: "string",
+      required: true,
+      default: "localhost",
+    },
+    index: {
+      type: "string",
+      required: true,
+    },
   },
   query: {
-    type: "json",
-    required: true,
+    json: {
+      type: "json",
+      required: true,
+    },
   },
 }
 
@@ -39,6 +43,6 @@ class ElasticSearchIntegration {
 }
 
 module.exports = {
-  schema: ELASTICSEARCH_OPTIONS,
+  schema: SCHEMA,
   integration: ElasticSearchIntegration,
 }

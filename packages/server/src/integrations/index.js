@@ -6,6 +6,7 @@ const couchdb = require("./couchdb")
 // const redis = require("./redis")
 const sqlServer = require("./microsoftSqlServer")
 const s3 = require("./s3")
+const airtable = require("./airtable")
 
 const DEFINITIONS = {
   POSTGRES: postgres.schema,
@@ -15,6 +16,7 @@ const DEFINITIONS = {
   COUCHDB: couchdb.schema,
   SQL_SERVER: sqlServer.schema,
   S3: s3.schema,
+  AIRTABLE: airtable.schema,
 }
 
 const INTEGRATIONS = {
@@ -25,6 +27,7 @@ const INTEGRATIONS = {
   COUCHDB: couchdb.integration,
   S3: s3.integration,
   SQL_SERVER: sqlServer.integration,
+  AIRTABLE: airtable.integration,
 }
 
 module.exports = {

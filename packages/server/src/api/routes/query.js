@@ -9,8 +9,8 @@ const router = Router()
 router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)
   .post("/api/queries", authorized(BUILDER), queryController.save)
-  .post("/api/queries/:queryId", authorized(BUILDER), queryController.execute)
   .post("/api/queries/preview", authorized(BUILDER), queryController.preview)
+  .post("/api/queries/:queryId", authorized(BUILDER), queryController.execute)
   .delete("/api/queries/:queryId", authorized(BUILDER), queryController.destroy)
 
 module.exports = router

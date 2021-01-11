@@ -1,26 +1,29 @@
 const sqlServer = require("mssql")
 
-const SQL_SERVER_OPTIONS = {
-  user: {
-    type: "string",
-    required: true,
-    default: "localhost",
-  },
-  password: {
-    type: "password",
-    required: true,
-  },
-  server: {
-    type: "string",
-    default: "localhost",
-  },
-  database: {
-    type: "string",
-    default: "root",
+const SCHEMA = {
+  datasource: {
+    user: {
+      type: "string",
+      required: true,
+      default: "localhost",
+    },
+    password: {
+      type: "password",
+      required: true,
+    },
+    server: {
+      type: "string",
+      default: "localhost",
+    },
+    database: {
+      type: "string",
+      default: "root",
+    },
   },
   query: {
-    type: "query",
-    required: true,
+    sql: {
+      type: "sql",
+    },
   },
 }
 
@@ -47,6 +50,6 @@ class SqlServerIntegration {
 }
 
 module.exports = {
-  schema: SQL_SERVER_OPTIONS,
+  schema: SCHEMA,
   integration: SqlServerIntegration,
 }

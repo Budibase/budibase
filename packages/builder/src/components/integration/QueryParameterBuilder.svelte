@@ -1,6 +1,5 @@
 <script>
   import { Button, TextArea, Label, Input, Heading } from "@budibase/bbui"
-  import Editor from "./QueryEditor.svelte"
   import BindableInput from "components/userInterface/BindableInput.svelte"
 
   export let parameters = []

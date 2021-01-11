@@ -1,24 +1,26 @@
 const AWS = require("aws-sdk")
 
-const S3_OPTIONS = {
-  bucket: {
-    type: "string",
-    required: true,
+const SCHEMA = {
+  datasource: {
+    bucket: {
+      type: "string",
+      required: true,
+    },
+    region: {
+      type: "string",
+      required: true,
+      default: "us-east-1",
+    },
+    accessKeyId: {
+      type: "string",
+      required: true,
+    },
+    secretAccessKey: {
+      type: "string",
+      required: true,
+    },
   },
-  region: {
-    type: "string",
-    required: true,
-    default: "us-east-1",
-  },
-  accessKeyId: {
-    type: "string",
-    required: true,
-  },
-  secretAccessKey: {
-    type: "secretKey",
-    required: true,
-    default: 5432,
-  },
+  query: {},
 }
 
 class S3Integration {
@@ -43,6 +45,6 @@ class S3Integration {
 }
 
 module.exports = {
-  schema: S3_OPTIONS,
+  schema: SCHEMA,
   integration: S3Integration,
 }

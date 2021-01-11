@@ -18,7 +18,6 @@
         // TODO: set dynamically
       }
     }
-    console.log("The query changes", query)
   }
 </script>
 

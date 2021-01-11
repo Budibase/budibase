@@ -1,7 +1,6 @@
 const handlebars = require("handlebars")
 const Joi = require("joi")
 const CouchDB = require("../../db")
-const bcrypt = require("../../utilities/bcrypt")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const joiValidator = require("../../middleware/joi-validator")
@@ -53,10 +52,11 @@ exports.save = async function(ctx) {
 exports.preview = async function(ctx) {
   const { query, datasourceId, parameters } = ctx.request.body
 
-  const queryTemplate = handlebars.compile(query)
-  const parsedQuery = queryTemplate(parameters)
-
-  console.log(parsedQuery)
+  let parsedQuery = ""
+  if (query) {
+    const queryTemplate = handlebars.compile(query)
+    parsedQuery = queryTemplate(parameters)
+  }
 
   const db = new CouchDB(ctx.user.appId)
 

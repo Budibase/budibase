@@ -1,38 +1,53 @@
 const AWS = require("aws-sdk")
 
-const DYNAMODB_OPTIONS = {
-  table: {
-    type: "string",
-    required: true,
+const SCHEMA = {
+  datasource: {
+    table: {
+      type: "string",
+      required: true,
+    },
+    region: {
+      type: "string",
+      required: true,
+      default: "us-east-1",
+    },
+    accessKeyId: {
+      type: "string",
+      required: true,
+    },
+    secretKey: {
+      type: "secretKey",
+      required: true,
+      default: 5432,
+    },
+    indexName: {
+      type: "string",
+    },
   },
-  region: {
-    type: "string",
-    required: true,
-    default: "us-east-1",
-  },
-  accessKeyId: {
-    type: "string",
-    required: true,
-  },
-  secretKey: {
-    type: "secretKey",
-    required: true,
-    default: 5432,
-  },
-  indexName: {
-    type: "string",
-  },
-  keyConditionExpression: {
-    type: "string",
-    required: true,
-  },
-  attributeNames: {
-    type: "json",
-    required: true,
-  },
-  attributeValues: {
-    type: "json",
-    required: true,
+  query: {
+    type: "fields",
+    fields: [
+      {
+        name: "Index",
+        key: "Index",
+        type: "string",
+      },
+      {
+        name: "Key Condition Expression",
+        key: "KeyConditionExpression",
+        type: "string",
+      },
+      {
+        name: "Attribute Names",
+        key: "ExpressionAttributeNames",
+        type: "string",
+      },
+      {
+        name: "Attribute Values",
+        key: "ExpressionAttributeValues",
+        type: "string",
+      },
+    ],
   },
 }
 
@@ -50,15 +65,15 @@ class DynamoDBIntegration {
   async query() {
     const response = await this.client.query({
       TableName: this.config.table,
-      KeyConditionExpression: this.config.keyConditionExpression,
-      ExpressionAttributeNames: this.config.attributeNames,
-      ExpressionAttributeValues: this.config.attributeValues,
+      KeyConditionExpression: this.config.KeyConditionExpression,
+      ExpressionAttributeNames: this.config.ExpressionAttributeNames,
+      ExpressionAttributeValues: this.config.ExpressionAttributeValues,
     })
     return response
   }
 }
 
 module.exports = {
-  schema: DYNAMODB_OPTIONS,
+  schema: SCHEMA,
   integration: DynamoDBIntegration,
 }
