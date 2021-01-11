@@ -36,8 +36,6 @@ module.exports = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
   LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
-  // self hosting features
-  LOGO_URL: process.env.LOGO_URL,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

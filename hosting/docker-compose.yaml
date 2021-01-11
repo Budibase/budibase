@@ -9,7 +9,6 @@ services:
       SELF_HOSTED: 1 
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
-      LOGO_URL: ${LOGO_URL}
       PORT: 4002
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
