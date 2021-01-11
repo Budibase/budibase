@@ -63,10 +63,10 @@ jobs:
             API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
 
       - name: Build/release Docker images
-        uses: actions/checkout@v2
+        # only run the docker image build on linux, easiest way
+        if: startsWith(matrix.os, 'ubuntu')
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-        run: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         run: yarn build:docker
