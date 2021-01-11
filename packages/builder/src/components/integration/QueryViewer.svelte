@@ -136,7 +136,7 @@
     <Select secondary bind:value={query.queryType}>
       <option value={''}>Select an option</option>
       {#each Object.keys(config) as queryType}
-        <option value={queryType}>{queryType}</option>
+        <option value={config[queryType].type}>{queryType}</option>
       {/each}
     </Select>
 

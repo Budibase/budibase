@@ -1,20 +1,7 @@
 const handlebars = require("handlebars")
-const Joi = require("joi")
 const CouchDB = require("../../db")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { integrations } = require("../../integrations")
-const joiValidator = require("../../middleware/joi-validator")
-
-function generateQueryValidation() {
-  // prettier-ignore
-  return joiValidator.body(Joi.object({
-    name: Joi.string().required(),
-    queryString: Joi.string().required(),
-    datasourceId: Joi.string().required(),
-    queryType: Joi.string().required(),
-    schema: Joi.object({}).required().unknown(true)
-  }))
-}
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
@@ -30,13 +17,6 @@ exports.fetch = async function(ctx) {
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const query = ctx.request.body
-
-  //
-  // {
-  //   type: "",
-  //   query: "",
-  //   otherStuff: ""
-  // }
 
   if (!query._id) {
     query._id = generateQueryID(query.datasourceId)

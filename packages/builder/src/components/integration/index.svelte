@@ -5,6 +5,8 @@
 
   const QueryTypes = {
     SQL: "sql",
+    JSON: "json",
+    FIELDS: "fields",
   }
 
   export let query
@@ -19,4 +21,6 @@
   <Spacer large />
   <TextArea bind:value={query.queryString} />
   <!-- <Editor label="Query" on:change={updateQuery} value={query.queryString} /> -->
-{/if}
+{:else if query.queryType === QueryTypes.JSON}
+
+{:else if query.queryType === QueryTypes.FIELDS}{/if}

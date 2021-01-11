@@ -58,6 +58,7 @@ exports.BUILTIN_PERMISSIONS = {
     _id: exports.BUILTIN_PERMISSION_IDS.READ_ONLY,
     name: "Read only",
     permissions: [
+      new Permission(PermissionTypes.QUERY, PermissionLevels.READ),
       new Permission(PermissionTypes.TABLE, PermissionLevels.READ),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
     ],
@@ -66,6 +67,7 @@ exports.BUILTIN_PERMISSIONS = {
     _id: exports.BUILTIN_PERMISSION_IDS.WRITE,
     name: "Read/Write",
     permissions: [
+      new Permission(PermissionTypes.QUERY, PermissionLevels.WRITE),
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
     ],
@@ -90,6 +92,7 @@ exports.BUILTIN_PERMISSIONS = {
       new Permission(PermissionTypes.AUTOMATION, PermissionLevels.ADMIN),
       new Permission(PermissionTypes.VIEW, PermissionLevels.ADMIN),
       new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
+      new Permission(PermissionTypes.QUERY, PermissionLevels.ADMIN),
     ],
   },
 }
