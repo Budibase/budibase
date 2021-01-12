@@ -168,3 +168,7 @@ exports.coerceRowValues = (row, table) => {
   }
   return clonedRow
 }
+
+exports.getLogoUrl = () => {
+  return "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
+}
