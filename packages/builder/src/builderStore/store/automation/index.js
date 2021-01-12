@@ -2,6 +2,7 @@ import { writable } from "svelte/store"
 import api from "../../api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
+import analytics from "analytics"
 
 const automationActions = store => ({
   fetch: async () => {
@@ -92,6 +93,9 @@ const automationActions = store => ({
       const newBlock = state.selectedAutomation.addBlock(cloneDeep(block))
       state.selectedBlock = newBlock
       return state
+    })
+    analytics.captureEvent("Added Automation Block", {
+      name: block.name,
     })
   },
   deleteAutomationBlock: block => {

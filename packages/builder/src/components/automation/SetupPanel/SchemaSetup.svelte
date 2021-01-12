@@ -8,7 +8,6 @@
   }))
 
   let addNewName = ""
-  let addNewType = "string"
 
   function addField() {
     if (!addNewName) return
@@ -76,7 +75,6 @@
       bind:value={addNewName}
       placeholder="Enter field name" />
   </div>
-  <!--button on:click={addField}>Add</button-->
 </div>
 
 <style>
@@ -109,5 +107,9 @@
     box-sizing: border-box;
     border: 1px solid var(--grey-4);
     border-radius: 0px;
+  }
+
+  select.grid-field {
+    border-left: none;
   }
 </style>
