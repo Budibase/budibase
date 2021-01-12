@@ -16,11 +16,18 @@
   }
 </script>
 
+<ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+<Spacer large />
+
+<Label grey medium>Query</Label>
+
 {#if query.queryType === QueryTypes.SQL}
-  <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
-  <Spacer large />
   <TextArea bind:value={query.queryString} />
   <!-- <Editor label="Query" on:change={updateQuery} value={query.queryString} /> -->
 {:else if query.queryType === QueryTypes.JSON}
-
-{:else if query.queryType === QueryTypes.FIELDS}{/if}
+  <!-- <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+  <Spacer large />
+  <TextArea bind:value={query.queryString} /> -->
+{:else if query.queryType === QueryTypes.FIELDS}
+  <!-- {#each Object.keys()} -->
+{/if}

@@ -142,7 +142,7 @@ export const getBackendUiStore = () => {
       delete: async queryId => {
         await api.delete(`/api/queries/${queryId}`)
         store.update(state => {
-          state.datasources = state.queries.filter(
+          state.queries = state.queries.filter(
             existing => existing._id !== queryId
           )
           if (state.selectedQueryId === queryId) {

@@ -63,10 +63,8 @@
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
-    path: property.runtimeBinding,
+    path: property.readableBinding,
   }))
-
-  $: console.log("selected", value)
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")

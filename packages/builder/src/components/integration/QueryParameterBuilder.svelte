@@ -1,6 +1,10 @@
 <script>
   import { Button, TextArea, Label, Input, Heading } from "@budibase/bbui"
   import BindableInput from "components/userInterface/BindableInput.svelte"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/replaceBindings"
 
   export let bindable = true
   export let parameters = []
@@ -14,6 +18,12 @@
   function deleteQueryParameter(idx) {
     parameters.splice(idx, 1)
     parameters = parameters
+  }
+
+  function onBindingChange(param, valueToParse) {
+    const parsedBindingValue = readableToRuntimeBinding(bindings, valueToParse)
+    console.log(parsedBindingValue)
+    customParams[param] = parsedBindingValue
   }
 </script>
 
@@ -33,7 +43,11 @@
         <BindableInput
           type="string"
           thin
-          bind:value={customParams[parameter.name]}
+          on:change={evt => {
+            console.log('changing', evt.detail)
+            onBindingChange(parameter.name, evt.detail)
+          }}
+          value={runtimeToReadableBinding(bindings, customParams[parameter.name])}
           {bindings} />
       {/if}
       <i
