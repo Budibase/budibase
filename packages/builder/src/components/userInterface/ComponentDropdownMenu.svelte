@@ -2,10 +2,9 @@
   import { goto } from "@sveltech/routify"
   import { get } from "svelte/store"
   import { store, currentAsset } from "builderStore"
-  import { getComponentDefinition } from "builderStore/storeUtils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
-  import { findParent } from "builderStore/storeUtils"
+  import { findComponentParent } from "builderStore/storeUtils"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -17,7 +16,7 @@
 
   $: noChildrenAllowed =
     !component ||
-    !getComponentDefinition($store, component._component)?.children
+    !store.actions.components.getDefinition(component._component)?.hasChildren
   $: noPaste = !$store.componentToPaste
 
   const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
@@ -35,7 +34,7 @@
   const moveUpComponent = () => {
     store.update(state => {
       const asset = get(currentAsset)
-      const parent = findParent(asset.props, component)
+      const parent = findComponentParent(asset.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
@@ -55,7 +54,7 @@
   const moveDownComponent = () => {
     store.update(state => {
       const asset = get(currentAsset)
-      const parent = findParent(asset.props, component)
+      const parent = findComponentParent(asset.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
@@ -78,18 +77,7 @@
   }
 
   const deleteComponent = () => {
-    store.update(state => {
-      const asset = get(currentAsset)
-      const parent = findParent(asset.props, component)
-
-      if (parent) {
-        parent._children = parent._children.filter(child => child !== component)
-        selectComponent(parent)
-      }
-
-      store.actions.preview.saveSelected()
-      return state
-    })
+    store.actions.components.delete(component)
   }
 
   const storeComponentForCopy = (cut = false) => {

@@ -35,7 +35,10 @@
   const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
-    return name === "screenslot" ? Router : ComponentLibrary[name]
+    if (name === "screenslot" && $builderStore.previewType !== "layout") {
+      return Router
+    }
+    return ComponentLibrary[name]
   }
 
   // Returns a unique key to let svelte know when to remount components.

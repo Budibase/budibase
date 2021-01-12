@@ -1,80 +1,82 @@
-import { getBuiltin } from "components/userInterface/assetParsing/createProps"
-import { uuid } from "./uuid"
-import getNewComponentName from "./getNewComponentName"
+/**
+ * Recursively searches for a specific component ID
+ */
+export const findComponent = (rootComponent, id) => {
+  return searchComponentTree(rootComponent, comp => comp._id === id)
+}
 
 /**
- * Find the parent component of the passed in child.
- * @param {Object} rootProps - props to search for the parent in
- * @param {String|Object} child - id of the child or the child itself to find the parent of
+ * Recursively searches for a specific component type
  */
-export const findParent = (rootProps, child) => {
-  let parent
-  walkProps(rootProps, (props, breakWalk) => {
-    if (
-      props._children &&
-      (props._children.includes(child) ||
-        props._children.some(c => c._id === child))
-    ) {
-      parent = props
-      breakWalk()
-    }
-  })
-  return parent
+export const findComponentType = (rootComponent, type) => {
+  return searchComponentTree(rootComponent, comp => comp._component === type)
 }
 
-export const walkProps = (props, action, cancelToken = null) => {
-  cancelToken = cancelToken || { cancelled: false }
-  action(props, () => {
-    cancelToken.cancelled = true
-  })
-
-  if (props._children) {
-    for (let child of props._children) {
-      if (cancelToken.cancelled) return
-      walkProps(child, action, cancelToken)
-    }
-  }
-}
-
-export const generateNewIdsForComponent = (
-  component,
-  state,
-  changeName = true
-) =>
-  walkProps(component, prop => {
-    prop._id = uuid()
-    if (changeName) prop._instanceName = getNewComponentName(prop, state)
-  })
-
-export const getComponentDefinition = (state, name) =>
-  name.startsWith("##") ? getBuiltin(name) : state.components[name]
-
-export const findChildComponentType = (node, typeToFind) => {
-  // Stop recursion if invalid props
-  if (!node || !typeToFind) {
+/**
+ * Recursively searches for the parent component of a specific component ID
+ */
+export const findComponentParent = (rootComponent, id, parentComponent) => {
+  if (!rootComponent || !id) {
     return null
   }
-
-  // Stop recursion if this element matches
-  if (node._component === typeToFind) {
-    return node
+  if (rootComponent._id === id) {
+    return parentComponent
   }
-
-  // Otherwise check if any children match
-  // Stop recursion if no valid children to process
-  const children = node._children || (node.props && node.props._children)
-  if (!children || !children.length) {
+  if (!rootComponent._children) {
     return null
   }
-
-  // Recurse and check each child component
-  for (let child of children) {
-    const childResult = findChildComponentType(child, typeToFind)
+  for (const child of rootComponent._children) {
+    const childResult = findComponentParent(child, id, rootComponent)
     if (childResult) {
       return childResult
     }
   }
+  return null
+}
 
-  // If we reach here then no children were valid
+/**
+ * Recursively searches for a specific component ID and records the component
+ * path to this component
+ */
+export const findComponentPath = (rootComponent, id, path = []) => {
+  if (!rootComponent || !id) {
+    return null
+  }
+  if (rootComponent._id === id) {
+    return [...path, id]
+  }
+  if (!rootComponent._children) {
+    return null
+  }
+  for (const child of rootComponent._children) {
+    const newPath = [...path, rootComponent._id]
+    const childResult = findComponentPath(child, id, newPath)
+    if (childResult != null) {
+      return childResult
+    }
+  }
+  return null
+}
+
+/**
+ * Recurses through a component tree evaluating a matching function against
+ * components until a match is found
+ */
+const searchComponentTree = (rootComponent, matchComponent) => {
+  if (!rootComponent || !matchComponent) {
+    return null
+  }
+  if (matchComponent(rootComponent)) {
+    return rootComponent
+  }
+  if (!rootComponent._children) {
+    return null
+  }
+  for (const child of rootComponent._children) {
+    const childResult = searchComponentTree(child, matchComponent)
+    if (childResult) {
+      return childResult
+    }
+  }
   return null
 }

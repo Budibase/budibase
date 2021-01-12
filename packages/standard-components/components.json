@@ -141,35 +141,7 @@
 			}
 		}
 	},
-	"datagrid": {
-		"name": "Grid",
-		"description": "a datagrid component with functionality to add, remove and edit rows.",
-		"data": true,
-		"props": {
-			"datasource": "tables",
-			"editable": "bool",
-			"theme": {
-				"type": "options",
-				"default": "alpine",
-				"options": [
-					"alpine",
-					"alpine-dark",
-					"balham",
-					"balham-dark",
-					"material"
-				]
-			},
-			"height": {
-				"type": "number",
-				"default": "540"
-			},
-			"pagination": {
-				"type": "bool",
-				"default": true
-			},
-			"detailUrl": "string"
-		}
-	},
+
 	"dataform": {
 		"name": "Form",
 		"description": "an HTML table that fetches data from a table or view and displays it.",
@@ -623,38 +595,7 @@
 			"url": "string"
 		}
 	},
-	"container": {
-		"name": "Container",
-		"children": true,
-		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
-		"props": {
-			"type": {
-				"type": "options",
-				"options": [
-					"article",
-					"aside",
-					"details",
-					"div",
-					"firgure",
-					"figcaption",
-					"footer",
-					"header",
-					"main",
-					"mark",
-					"nav",
-					"paragraph",
-					"summary"
-				],
-				"default": "div"
-			}
-		},
-		"baseComponent": true,
-		"tags": [
-			"div",
-			"container",
-			"layout"
-		]
-	},
+
 	"heading": {
 		"name": "Heading",
 		"description": "An HTML H1 - H6 tag",

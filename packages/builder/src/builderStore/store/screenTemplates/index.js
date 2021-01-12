@@ -4,7 +4,6 @@ import rowListScreen from "./rowListScreen"
 import emptyNewRowScreen from "./emptyNewRowScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
 import emptyRowDetailScreen from "./emptyRowDetailScreen"
-import { generateNewIdsForComponent } from "../../storeUtils"
 import { uuid } from "builderStore/uuid"
 
 const allTemplates = tables => [
@@ -16,13 +15,21 @@ const allTemplates = tables => [
   emptyRowDetailScreen,
 ]
 
-// allows us to apply common behaviour to all create() functions
+// Recurses through a component tree and generates new unique ID's
+const makeUniqueIds = component => {
+  if (!component) {
+    return
+  }
+  component._id = uuid()
+  if (component._children) {
+    component._children.forEach(makeUniqueIds)
+  }
+}
+
+// Allows us to apply common behaviour to all create() functions
 const createTemplateOverride = (frontendState, create) => () => {
   const screen = create()
-  for (let component of screen.props._children) {
-    generateNewIdsForComponent(component, frontendState, false)
-  }
-  screen.props._id = uuid()
+  makeUniqueIds(screen.props)
   screen.name = screen.props._id
   screen.routing.route = screen.routing.route.toLowerCase()
   return screen

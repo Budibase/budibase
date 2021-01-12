@@ -1,0 +1,79 @@
+{
+  "container": {
+    "name": "Container",
+    "description": "This component contains things within itself",
+    "icon": "ri-layout-column-line",
+    "hasChildren": true,
+    "styleable": true,
+    "settings": [
+      {
+        "type": "select",
+        "key": "type",
+        "label": "Type",
+        "defaultValue": "div",
+        "options": [
+          "article",
+          "aside",
+          "details",
+          "div",
+          "figure",
+          "figcaption",
+          "footer",
+          "header",
+          "main",
+          "mark",
+          "nav",
+          "paragraph",
+          "summary"
+        ]
+      }
+    ]
+  },
+  "grid": {
+    "name": "Grid",
+    "description":
+      "A datagrid component with functionality to add, remove and edit rows.",
+    "icon": "ri-grid-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Source",
+        "key": "datasource"
+      },
+      {
+        "type": "detailURL",
+        "label": "Detail URL",
+        "key": "detailUrl"
+      },
+      {
+        "type": "boolean",
+        "label": "Editable",
+        "key": "editable"
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "options": ["alpine", "alpine-dark", "balham", "balham-dark", "material"],
+        "defaultValue": "alpine"
+      },
+      {
+        "type": "number",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "500"
+      },
+      {
+        "type": "boolean",
+        "label": "Pagination",
+        "key": "pagination"
+      }
+    ]
+  },
+  "screenslot": {
+    "name": "Screenslot",
+    "description": "Contains your app screens",
+    "styleable": true
+  }
+}

@@ -1,3 +1,8 @@
+<script>
+  // This component is overridden when running in a real app.
+  // This simply serves as a placeholder component for the real screen router.
+</script>
+
 <div>
   <h1>Screen Slot</h1>
   <span>
