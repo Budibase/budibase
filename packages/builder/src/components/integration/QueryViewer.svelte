@@ -126,6 +126,7 @@
 </script>
 
 <section>
+  <Heading>{query.name}</Heading>
   <div class="config">
     <Label extraSmall grey>Query Name</Label>
     <Input thin bind:value={query.name} />

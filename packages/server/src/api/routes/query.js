@@ -39,13 +39,12 @@ function generateQueryValidation() {
 function generateQueryPreviewValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    query: Joi.string().required(),
+    query: Joi.string(),
     datasourceId: Joi.string().required(),
     parameters: Joi.object({}).required().unknown(true)
   }))
 }
 
-// TODO: sort out auth so apps have the right permissions
 router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)
   .post(

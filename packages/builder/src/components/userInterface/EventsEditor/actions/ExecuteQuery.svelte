@@ -20,7 +20,7 @@
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
-    path: property.runtimeBinding,
+    path: property.readableBinding,
   }))
 
   $: query =
