@@ -65,6 +65,10 @@ router
     authorized(PermissionTypes.QUERY, PermissionLevels.WRITE),
     queryController.execute
   )
-  .delete("/api/queries/:queryId", authorized(BUILDER), queryController.destroy)
+  .delete(
+    "/api/queries/:queryId/:revId",
+    authorized(BUILDER),
+    queryController.destroy
+  )
 
 module.exports = router

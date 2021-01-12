@@ -25,9 +25,7 @@
   }
 
   async function deleteDatasource() {
-    // TODO: update the store correctly
     await backendUiStore.actions.datasources.delete(datasource)
-    // await backendUiStore.actions.datasources.fetch()
     notifier.success("Datasource deleted")
     hideEditor()
   }
