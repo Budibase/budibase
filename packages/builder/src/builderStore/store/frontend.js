@@ -3,6 +3,7 @@ import { cloneDeep } from "lodash/fp"
 import {
   allScreens,
   backendUiStore,
+  hostingStore,
   currentAsset,
   mainLayout,
   selectedComponent,
@@ -56,6 +57,7 @@ export const getFrontendStore = () => {
         hasAppPackage: true,
         appInstance: pkg.application.instance,
       }))
+      await hostingStore.actions.fetch()
       await backendUiStore.actions.database.select(pkg.application.instance)
     },
     routing: {

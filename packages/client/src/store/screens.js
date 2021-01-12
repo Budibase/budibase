@@ -1,8 +1,7 @@
-import { writable, derived } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import * as API from "../api"
-import { getAppId } from "../utils/getAppId"
 
 const createScreenStore = () => {
   const config = writable({
@@ -40,7 +39,7 @@ const createScreenStore = () => {
   )
 
   const fetchScreens = async () => {
-    const appDefinition = await API.fetchAppDefinition(getAppId())
+    const appDefinition = await API.fetchAppDefinition(get(builderStore).appId)
     config.set({
       screens: appDefinition.screens,
       layouts: appDefinition.layouts,
