@@ -104,10 +104,10 @@ class PostgresIntegration {
 
   // }
 
-  async query() {
-    const response = await this.client.query(this.queryString)
-    return response.rows
-  }
+  // async query() {
+  //   const response = await this.client.query(this.queryString)
+  //   return response.rows
+  // }
 }
 
 module.exports = {

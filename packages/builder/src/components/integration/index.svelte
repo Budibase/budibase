@@ -1,6 +1,6 @@
 <script>
   import { TextArea, Label, Input, Heading, Spacer } from "@budibase/bbui"
-  import Editor from "./QueryEditor.svelte"
+  import Editor from "./SvelteEditor.svelte"
   import ParameterBuilder from "./QueryParameterBuilder.svelte"
 
   const QueryTypes = {
@@ -12,22 +12,30 @@
   export let query
 
   function updateQuery({ detail }) {
-    query.queryString = detail
+    query.queryString = detail.value
   }
 </script>
 
 <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
 <Spacer large />
 
-<Label grey medium>Query</Label>
+<Heading extraSmall black>Query</Heading>
+<Spacer large />
 
 {#if query.queryType === QueryTypes.SQL}
-  <TextArea bind:value={query.queryString} />
-  <!-- <Editor label="Query" on:change={updateQuery} value={query.queryString} /> -->
+  <!-- <TextArea bind:value={query.queryString} /> -->
+  <Editor
+    label="Query"
+    mode="sql"
+    on:change={updateQuery}
+    value={query.queryString} />
 {:else if query.queryType === QueryTypes.JSON}
-  <!-- <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
   <Spacer large />
-  <TextArea bind:value={query.queryString} /> -->
+  <Editor
+    label="Query"
+    mode="json"
+    on:change={updateQuery}
+    value={query.queryString} />
 {:else if query.queryType === QueryTypes.FIELDS}
   <!-- {#each Object.keys()} -->
 {/if}

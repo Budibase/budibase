@@ -31,11 +31,6 @@ class AirtableIntegration {
 
   // }
 
-  async read() {
-    const response = await this.client.query(this.queryString)
-    return response.rows
-  }
-
   // async update() {
 
   // }
@@ -44,9 +39,9 @@ class AirtableIntegration {
 
   // }
 
-  async query() {
+  async read() {
     const records = await this.client(this.config.table)
-      .select({ maxRecords: 10, view: "Grid view" })
+      .select({ maxRecords: this.query.records, view: this.query.view })
       .firstPage()
     return records.map(({ fields }) => fields)
   }

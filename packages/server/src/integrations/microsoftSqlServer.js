@@ -37,7 +37,7 @@ class SqlServerIntegration {
     return await this.client.connect(this.config)
   }
 
-  async query() {
+  async read() {
     try {
       await this.connect()
       const response = await this.client.query(this.config.query)

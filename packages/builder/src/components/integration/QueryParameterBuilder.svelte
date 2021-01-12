@@ -20,9 +20,11 @@
     parameters = parameters
   }
 
+  // This is necessary due to the way readable and writable bindings are stored.
+  // The readable binding in the UI gets converted to a UUID value that the client understands
+  // for parsing, then converted back so we can display it the readable form in the UI
   function onBindingChange(param, valueToParse) {
     const parsedBindingValue = readableToRuntimeBinding(bindings, valueToParse)
-    console.log(parsedBindingValue)
     customParams[param] = parsedBindingValue
   }
 </script>
@@ -34,8 +36,9 @@
     <Label extraSmall grey>Default</Label>
     {#if bindable}
       <Label extraSmall grey>Value</Label>
+    {:else}
+      <div />
     {/if}
-    <div />
     {#each parameters as parameter, idx}
       <Input thin bind:value={parameter.name} />
       <Input thin bind:value={parameter.default} />
@@ -43,24 +46,27 @@
         <BindableInput
           type="string"
           thin
-          on:change={evt => {
-            console.log('changing', evt.detail)
-            onBindingChange(parameter.name, evt.detail)
-          }}
+          on:change={evt => onBindingChange(parameter.name, evt.detail)}
           value={runtimeToReadableBinding(bindings, customParams[parameter.name])}
           {bindings} />
+      {:else}
+        <i
+          class="ri-close-circle-line delete"
+          on:click={() => deleteQueryParameter(idx)} />
       {/if}
-      <i
-        class="ri-close-circle-line delete"
-        on:click={() => deleteQueryParameter(idx)} />
     {/each}
   </div>
-  <Button thin secondary on:click={newQueryParameter}>New Parameter</Button>
+  {#if !bindable}
+    <Button thin secondary small on:click={newQueryParameter}>
+      Add Parameter
+    </Button>
+  {/if}
+
 </section>
 
 <style>
   .parameters.bindable {
-    grid-template-columns: 1fr 1fr 1fr 5%;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 
   .parameters {
@@ -69,5 +75,15 @@
     grid-gap: 10px;
     align-items: center;
     margin-bottom: var(--spacing-xl);
+  }
+
+  .delete {
+    transition: all 0.2s;
+  }
+
+  .delete:hover {
+    transform: scale(1.1);
+    font-weight: 500;
+    cursor: pointer;
   }
 </style>

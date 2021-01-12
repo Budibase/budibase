@@ -54,6 +54,6 @@
     on:input={checkValid}
     bind:value={name}
     {error} />
-  <Label grey extraSmall>Create Integrated Table from External Source</Label>
+  <Label grey extraSmall>Source</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

@@ -1,6 +1,10 @@
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
-const { generateDatasourceID, getDatasourceParams } = require("../../db/utils")
+const {
+  generateDatasourceID,
+  getDatasourceParams,
+  getQueryParams,
+} = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
@@ -16,11 +20,6 @@ exports.fetch = async function(ctx) {
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-
-  // TODO: validate the config against the integration type
-  // if (!somethingIsntValid) {
-  //   // ctx.throw(400, "email and Password Required.")
-  // }
 
   const datasource = {
     _id: generateDatasourceID(),
@@ -60,9 +59,15 @@ exports.update = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  // TODO: destroy all queries as well
-  const database = new CouchDB(ctx.user.appId)
-  await database.destroy(ctx.params.datasourceId)
+  const db = new CouchDB(ctx.user.appId)
+
+  // Delete all queries for the datasource
+  const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
+  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+
+  // delete the datasource
+  await db.destroy(ctx.params.datasourceId)
+
   ctx.message = `Datasource deleted.`
   ctx.status = 200
 }

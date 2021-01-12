@@ -8,6 +8,7 @@
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import { Modal, Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
+  import ICONS from "./icons"
 
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
@@ -37,10 +38,15 @@
     {#each $backendUiStore.datasources as datasource, idx}
       <NavItem
         border={idx > 0}
-        icon={'ri-database-2-line'}
         text={datasource.name}
         selected={$backendUiStore.selectedDatasourceId === datasource._id}
         on:click={() => selectDatasource(datasource)}>
+        <div class="datasource-icon" slot="icon">
+          <svelte:component
+            this={ICONS[datasource.source]}
+            height="15"
+            width="15" />
+        </div>
         <EditDatasourcePopover {datasource} />
       </NavItem>
       {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}

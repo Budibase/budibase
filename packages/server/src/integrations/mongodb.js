@@ -17,7 +17,7 @@ const SCHEMA = {
     },
   },
   query: {
-    json: {
+    JSON: {
       type: "json",
     },
   },
@@ -32,15 +32,15 @@ class MongoIntegration {
     } catch (err) {
       this.config.query = {}
     }
+    this.connect()
   }
 
   async connect() {
     return this.client.connect()
   }
 
-  async query() {
+  async read() {
     try {
-      await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(this.config.collection)
       const result = await collection.find(this.config.query).toArray()
