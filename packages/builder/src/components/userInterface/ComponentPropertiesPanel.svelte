@@ -19,7 +19,9 @@
     $store.currentView !== "component"
       ? { ...$currentAsset, ...$selectedComponent }
       : $selectedComponent
-  $: componentDefinition = $store.components[componentInstance._component]
+  $: componentDefinition = store.actions.components.getDefinition(
+    componentInstance._component
+  )
   $: componentPropDefinition =
     flattenedPanel.find(
       // use for getting controls for each component property
@@ -37,7 +39,7 @@
   $: isComponentOrScreen =
     $store.currentView === "component" ||
     $store.currentFrontEndType === FrontendTypes.SCREEN
-  $: isNotScreenslot = componentInstance._component !== "##builtin/screenslot"
+  $: isNotScreenslot = !componentInstance._component.endsWith("screenslot")
 
   $: displayName =
     isComponentOrScreen && componentInstance._instanceName && isNotScreenslot

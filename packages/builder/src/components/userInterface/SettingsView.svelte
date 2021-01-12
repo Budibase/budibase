@@ -1,14 +1,11 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import { FrontendTypes } from "constants"
   import PropertyControl from "./PropertyControl.svelte"
   import LayoutSelect from "./LayoutSelect.svelte"
   import RoleSelect from "./RoleSelect.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { excludeProps } from "./propertyCategories.js"
-  import { store, allScreens, currentAsset } from "builderStore"
-  import { walkProps } from "builderStore/storeUtils"
 
   export let panelDefinition = []
   export let componentDefinition = {}
@@ -28,11 +25,7 @@
   let duplicateName = false
 
   const propExistsOnComponentDef = prop =>
-    assetProps.includes(prop) || prop in componentDefinition.props
-
-  function handleChange(key, data) {
-    data.target ? onChange(key, data.target.value) : onChange(key, data)
-  }
+    assetProps.includes(prop) || prop in (componentDefinition?.props ?? {})
 
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
@@ -44,8 +37,6 @@
   const layoutDefinition = []
 
   const canRenderControl = (key, dependsOn) => {
-    let test = !isEmpty(componentInstance[dependsOn])
-
     return (
       propExistsOnComponentDef(key) &&
       (!dependsOn || !isEmpty(componentInstance[dependsOn]))
@@ -55,41 +46,8 @@
   $: isLayout = assetInstance && assetInstance.favicon
   $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
-  const isDuplicateName = name => {
-    let duplicate = false
-
-    const lookForDuplicate = rootProps => {
-      walkProps(rootProps, (inst, cancel) => {
-        if (inst._instanceName === name && inst._id !== componentInstance._id) {
-          duplicate = true
-          cancel()
-        }
-      })
-    }
-    // check against layouts
-    for (let layout of $store.layouts) {
-      lookForDuplicate(layout.props)
-    }
-    // if viewing screen, check current screen for duplicate
-    if ($store.currentFrontEndType === FrontendTypes.SCREEN) {
-      lookForDuplicate($currentAsset.props)
-    } else {
-      // need to dedupe against all screens
-      for (let screen of $allScreens) {
-        lookForDuplicate(screen.props)
-      }
-    }
-
-    return duplicate
-  }
-
   const onInstanceNameChange = (_, name) => {
-    if (isDuplicateName(name)) {
-      duplicateName = true
-    } else {
-      duplicateName = false
-      onChange("_instanceName", name)
-    }
+    onChange("_instanceName", name)
   }
 </script>
 

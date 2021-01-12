@@ -6,47 +6,66 @@
     selectedComponent,
     currentAssetId,
   } from "builderStore"
-  import components from "./temporaryPanelStructure.js"
+  import structure from "./componentStructure.json"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
-  const categories = components.categories
+  $: enrichedStructure = enrichStructure(structure, $store.components)
+
   let selectedIndex
   let anchors = []
   let popover
   $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
 
-  const close = () => {
-    popover.hide()
+  const enrichStructure = (structure, definitions) => {
+    let enrichedStructure = []
+    structure.forEach(item => {
+      if (typeof item === "string") {
+        const def = definitions[`@budibase/standard-components/${item}`]
+        if (def) {
+          enrichedStructure.push({
+            ...def,
+            isCategory: false,
+          })
+        }
+      } else {
+        enrichedStructure.push({
+          ...item,
+          isCategory: true,
+          children: enrichStructure(item.children || [], definitions),
+        })
+      }
+    })
+    return enrichedStructure
   }
 
-  const onCategoryChosen = (category, idx) => {
-    if (category.isCategory) {
+  const onItemChosen = (item, idx) => {
+    if (item.isCategory) {
+      // Select and open this category
       selectedIndex = idx
       popover.show()
     } else {
-      onComponentChosen(category)
+      // Add this component
+      const newComponent = store.actions.components.create(item.component)
+      if (newComponent) {
+        const path = store.actions.components.findRoute(newComponent)
+        $goto(`./${$currentAssetId}/${path}`)
+      }
+      popover.hide()
     }
-  }
-
-  const onComponentChosen = component => {
-    store.actions.components.create(component._component, component.presetProps)
-    const path = store.actions.components.findRoute($selectedComponent)
-    $goto(`./${$currentAssetId}/${path}`)
-    close()
   }
 </script>
 
 <div class="container">
-  {#each categories as category, idx}
+  {#each enrichedStructure as item, idx}
     <div
       bind:this={anchors[idx]}
       class="category"
-      on:click={() => onCategoryChosen(category, idx)}
+      on:click={() => onItemChosen(item, idx)}
       class:active={idx === selectedIndex}>
-      {#if category.icon}<i class={category.icon} />{/if}
-      <span>{category.name}</span>
-      {#if category.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
+      {#if item.icon}<i class={item.icon} />{/if}
+      <span>{item.name}</span>
+      {#if item.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
     </div>
   {/each}
 </div>
@@ -56,12 +75,12 @@
   {anchor}
   align="left">
   <DropdownContainer>
-    {#each categories[selectedIndex].children as item}
+    {#each enrichedStructure[selectedIndex].children as item}
       {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
         <DropdownItem
           icon={item.icon}
           title={item.name}
-          on:click={() => onComponentChosen(item)} />
+          on:click={() => onItemChosen(item)} />
       {/if}
     {/each}
   </DropdownContainer>

@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Category",
+    "icon": "ri-file-edit-line",
+    "children": [
+      "container"
+    ]
+  },
+  "grid",
+  "screenslot"
+]

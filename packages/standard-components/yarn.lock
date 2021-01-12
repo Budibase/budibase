@@ -132,6 +132,33 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
+"@spectrum-css/button@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.0-beta.6.tgz#007919d3e7a6692e506dc9addcd46aee6b203b1a"
+  integrity sha512-ZoJxezt5Pc006RR7SMG7PfC0VAdWqaGDpd21N8SEykGuz/KmNulqGW8RiSZQGMVX/jk5ZCAthPrH8cI/qtKbMg==
+
+"@spectrum-css/icon@^3.0.0-beta.2":
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.0-beta.2.tgz#2dd7258ded74501b56e5fc42d0b6f0a3f4936aeb"
+  integrity sha512-BEHJ68YIXSwsNAqTdq/FrS4A+jtbKzqYrsGKXdDf93ql+fHWYXRCh1EVYGHx/1696mY73DhM4snMpKGIFtXGFA==
+
+"@spectrum-css/page@^3.0.0-beta.0":
+  version "3.0.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/page/-/page-3.0.0-beta.0.tgz#885ea41b44861c5dc3aac904536f9e93c9109b58"
+  integrity sha512-+OD+l3aLisykxJnHfLkdkxMS1Uj1vKGYpKil7W0r5lSWU44eHyRgb8ZK5Vri1+sUO5SSf/CTybeVwtXME9wMLA==
+  dependencies:
+    "@spectrum-css/vars" "^3.0.0-beta.2"
+
+"@spectrum-css/typography@^3.0.0-beta.1":
+  version "3.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.0-beta.1.tgz#c2c2097c49e2711e8d048afcbaa5ccfe1a6ea7f1"
+  integrity sha512-NnRvEnrTdt53ZUYh42v+ff6bUTUjG1qHctVJrIv8XrivFSc4L475x3lJgHmSVQeDoDLAsVOtISlJBXKrqK5eRQ==
+
+"@spectrum-css/vars@^3.0.0-beta.2":
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-3.0.0-beta.2.tgz#f0b3a2db44aa57b1a82e47ab392c716a3056a157"
+  integrity sha512-HpcRDUkSjKVWUi7+jf6zp33YszXs3qFljaaNVTVOf0m0mqjWWXHxgLrvYlFFlHp5ITbNXds5Cb7EgiXCKmVIpA==
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
