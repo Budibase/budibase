@@ -1,25 +1,27 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Input } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
 
-  export let parameters
+  export let parameters = {}
 
-  const automationSchema = automation => {
-    const schema = Object.entries(
-      automation.definition.trigger.inputs.fields
-    ).map(([name, type]) => ({ name, type }))
-
-    return {
-      name: automation.name,
-      _id: automation._id,
-      schema,
-    }
-  }
+  let newOrExisting = parameters.automationId ? "existing" : "new"
 
   $: automations = $automationStore.automations
-    .filter(a => a.definition.trigger && a.definition.trigger.stepId === "APP")
-    .map(automationSchema)
+    .filter(a => a.definition.trigger?.stepId === "APP")
+    .map(automation => {
+      const schema = Object.entries(
+        automation.definition.trigger.inputs.fields
+      ).map(([name, type]) => ({ name, type }))
+
+      return {
+        name: automation.name,
+        _id: automation._id,
+        schema,
+      }
+    })
+
+  $: hasAutomations = automations && automations.length > 0
 
   $: selectedAutomation =
     parameters &&
@@ -29,30 +31,63 @@
   const onFieldsChanged = e => {
     parameters.fields = e.detail
   }
+
+  const setNew = () => {
+    newOrExisting = "new"
+    parameters.automationId = undefined
+  }
+
+  const setExisting = () => {
+    newOrExisting = "existing"
+    parameters.newAutomationName = ""
+  }
+
 </script>
 
 <div class="root">
 
-  {#if !automations || automations.length === 0}
-    <div class="cannot-use">
-      You must have an automation that has an "App Action" trigger.
-    </div>
-  {:else}
-    <Label size="m" color="dark">Automation</Label>
-    <Select secondary bind:value={parameters.automationId}>
+  <div class="radio-container" on:click={setNew}>
+    <input 
+      type="radio" 
+      value="new" 
+      bind:group={newOrExisting}
+      disabled={!hasAutomations}> 
+      
+    <Label disabled={!hasAutomations}>Create a new automation </Label>
+
+  </div>
+
+  <div class="radio-container" on:click={setExisting}>
+
+    <input 
+      type="radio" 
+      value="existing" 
+      bind:group={newOrExisting}
+      disabled={!hasAutomations}> 
+      
+    <Label disabled={!hasAutomations}>Use an existing automation </Label>
+
+  </div>
+
+  <Label size="m" color="dark">Automation</Label>
+
+  {#if newOrExisting=== "existing"}
+    <Select secondary bind:value={parameters.automationId} placeholder="Choose automation">
       <option value="" />
       {#each automations as automation}
         <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>
-
-    {#if selectedAutomation}
-      <SaveFields
-        parameterFields={parameters.fields}
-        schemaFields={selectedAutomation.schema}
-        on:fieldschanged={onFieldsChanged} />
-    {/if}
+  {:else}
+    <Input secondary bind:value={parameters.newAutomationName} placeholder="Enter automation name" />
   {/if}
+
+  <SaveFields
+    parameterFields={parameters.fields}
+    schemaFields={newOrExisting === "existing" && selectedAutomation && selectedAutomation.schema}
+    fieldLabel="Field"
+    on:fieldschanged={onFieldsChanged} />
+
 </div>
 
 <style>
@@ -64,16 +99,33 @@
     align-items: baseline;
   }
 
-  .root :global(> div:nth-child(2)) {
-    grid-column-start: 2;
-    grid-column-end: 6;
+  .root :global(> div:nth-child(4)) {
+    grid-column: 2 / span 4;
   }
 
-  .cannot-use {
-    color: var(--red);
-    font-size: var(--font-size-s);
-    text-align: center;
-    width: 70%;
-    margin: auto;
+  .radio-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
   }
+
+  .radio-container:nth-child(1) {
+    grid-column: 1 / span 2;
+  }
+
+  .radio-container:nth-child(2) {
+    grid-column: 3 / span 3;
+  }
+
+  .radio-container :global(> label) {
+    margin-left: var(--spacing-m);
+  }
+
+  .radio-container > input {
+    margin-bottom: var(--spacing-s);
+  }
+
+  .radio-container > input:focus {
+    outline: none;
+  }
+
 </style>
