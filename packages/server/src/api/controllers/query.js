@@ -30,7 +30,7 @@ exports.save = async function(ctx) {
 }
 
 exports.preview = async function(ctx) {
-  const { query, datasourceId, parameters } = ctx.request.body
+  const { query, datasourceId, parameters, queryVerb } = ctx.request.body
 
   let parsedQuery = ""
   if (query) {
@@ -49,7 +49,7 @@ exports.preview = async function(ctx) {
     return
   }
 
-  ctx.body = await new Integration(datasource.config, parsedQuery).query()
+  ctx.body = await new Integration(datasource.config, parsedQuery)[queryVerb]()
 }
 
 exports.execute = async function(ctx) {
@@ -60,7 +60,6 @@ exports.execute = async function(ctx) {
 
   const queryTemplate = handlebars.compile(query.queryString)
 
-  // TODO: Take the default params into account
   const parsedQuery = queryTemplate(ctx.request.body.parameters)
 
   const Integration = integrations[datasource.source]
@@ -69,7 +68,11 @@ exports.execute = async function(ctx) {
     ctx.throw(400, "Integration type does not exist.")
     return
   }
-  const response = await new Integration(datasource.config, parsedQuery).query()
+
+  // call the relevant CRUD method on the integration class
+  const response = await new Integration(datasource.config, parsedQuery)[
+    query.queryVerb
+  ]()
 
   ctx.body = response
 }

@@ -254,6 +254,14 @@ exports.generateQueryID = datasourceId => {
 /**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
-exports.getQueryParams = (queryId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.QUERY, queryId, otherProps)
+exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
+  if (datasourceId == null) {
+    return getDocParams(DocumentTypes.QUERY, null, otherProps)
+  }
+
+  return getDocParams(
+    DocumentTypes.QUERY,
+    `${datasourceId}${SEPARATOR}`,
+    otherProps
+  )
 }

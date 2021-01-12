@@ -12,10 +12,10 @@ const joiValidator = require("../../middleware/joi-validator")
 const router = Router()
 
 const QueryVerb = {
-  Create: "CREATE",
-  Read: "READ",
-  Update: "UPDATE",
-  Delete: "DELETE",
+  Create: "create",
+  Read: "read",
+  Update: "update",
+  Delete: "delete",
 }
 
 function generateQueryValidation() {
@@ -30,7 +30,7 @@ function generateQueryValidation() {
       name: Joi.string(),
       default: Joi.string()
     })),
-    // queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
+    queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
     queryType: Joi.string().required(),
     schema: Joi.object({}).required().unknown(true)
   }))
@@ -40,6 +40,7 @@ function generateQueryPreviewValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     query: Joi.string(),
+    queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
     datasourceId: Joi.string().required(),
     parameters: Joi.object({}).required().unknown(true)
   }))

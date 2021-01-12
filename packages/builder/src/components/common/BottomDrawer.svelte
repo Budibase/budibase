@@ -35,7 +35,7 @@
     justify-content: space-between;
     align-items: center;
     border: var(--border-light);
-    padding: var(--spacing-s);
+    padding: var(--spacing-m);
   }
 
   .controls {

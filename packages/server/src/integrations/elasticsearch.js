@@ -26,7 +26,7 @@ class ElasticSearchIntegration {
     this.client = new Client({ node: config.url })
   }
 
-  async query() {
+  async read() {
     try {
       const result = await this.client.search({
         index: this.config.index,

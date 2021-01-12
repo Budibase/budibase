@@ -2,6 +2,7 @@
   import { onMount } from "svelte"
   import { Input, TextArea, Spacer } from "@budibase/bbui"
   import api from "builderStore/api"
+  import ICONS from "../icons"
 
   const INTEGRATION_ICON_MAP = {
     POSTGRES: "ri-database-2-line",
@@ -10,7 +11,7 @@
   export let integration = {}
 
   let integrationsPromise = fetchIntegrations()
-  let selectedIntegration
+  let selectedIntegrationConfig
   let integrations = []
 
   async function fetchIntegrations() {
@@ -32,28 +33,31 @@
         class="integration hoverable"
         class:selected={integration.type === integrationType}
         on:click={() => {
-          selectedIntegration = integrations[integrationType].datasource
-          integration = { type: integrationType, ...Object.keys(selectedIntegration).reduce(
+          selectedIntegrationConfig = integrations[integrationType].datasource
+          integration = { type: integrationType, ...Object.keys(selectedIntegrationConfig).reduce(
               (acc, next) => {
                 return {
                   ...acc,
-                  [next]: selectedIntegration[next].default,
+                  [next]: selectedIntegrationConfig[next].default,
                 }
               },
               {}
             ) }
         }}>
-        <i class="ri-database-2-line" />
+        <svelte:component
+          this={ICONS[integrationType]}
+          height="100"
+          width="100" />
         <span>{integrationType}</span>
       </div>
     {/each}
   </div>
 
-  {#if selectedIntegration}
-    {#each Object.keys(selectedIntegration) as configKey}
+  {#if selectedIntegrationConfig}
+    {#each Object.keys(selectedIntegrationConfig) as configKey}
       <Input
         thin
-        type={selectedIntegration[configKey].type}
+        type={selectedIntegrationConfig[configKey].type}
         label={configKey}
         bind:value={integration[configKey]} />
       <Spacer medium />
@@ -79,10 +83,13 @@
     padding: 5px;
     transition: 0.3s all;
     border-radius: var(--border-radius-s);
+    height: 75px;
+    width: 200px;
   }
 
   span {
     font-size: var(--font-size-xs);
+    margin-top: var(--spacing-m);
     margin-bottom: var(--spacing-xs);
   }
 

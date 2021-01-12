@@ -8,9 +8,7 @@
   } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import actionTypes from "./actions"
-  import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
   const eventTypeKey = "##eventHandlerType"
 
   export let event
@@ -49,10 +47,6 @@
   const selectAction = action => () => {
     selectedAction = action
   }
-
-  const saveEventData = () => {
-    dispatch("change", actions)
-  }
 </script>
 
 <div class="actions-container">
@@ -87,23 +81,11 @@
             <span class:selected={action === selectedAction}>
               {index + 1}. {action[eventTypeKey]}
             </span>
-            <!-- <Body small lh>{index + 1}. {action[eventTypeKey]}</Body> -->
-            <!-- <div class="row-expander" class:rotate={action !== selectedAction}>
-              <ArrowDownIcon />
-            </div> -->
           </div>
-          <!-- {#if action === selectedAction}
-            <div class="selected-action-container">
-              <svelte:component
-                this={selectedActionComponent}
-                parameters={selectedAction.parameters} />
-              <div class="delete-action-button">
-                <TextButton text medium on:click={() => deleteAction(index)}>
-                  Delete
-                </TextButton>
-              </div>
-            </div>
-          {/if} -->
+          <i
+            class="ri-close-fill"
+            style="margin-left: var(--spacing-m);"
+            on:click={() => deleteAction(index)} />
         </div>
       {/each}
     {/if}
@@ -114,18 +96,10 @@
         <svelte:component
           this={selectedActionComponent}
           parameters={selectedAction.parameters} />
-        <div class="delete-action-button">
-          <!-- <TextButton text medium on:click={() => deleteAction(index)}>
-            Delete
-          </TextButton> -->
-        </div>
       </div>
     {/if}
-    <Button thin blue on:click={saveEventData}>Save</Button>
   </div>
 </div>
-
-<a href="https://docs.budibase.com">Learn more about Actions</a>
 
 <style>
   .action-header {
@@ -137,6 +111,7 @@
 
   .action-header > span {
     margin-bottom: var(--spacing-m);
+    font-size: var(--font-size-s);
   }
 
   .action-header > span:hover,
@@ -174,18 +149,13 @@
   .action-container {
     border: var(--border-light);
     border-width: 1px 0 0 0;
+    display: flex;
+    align-items: center;
   }
 
   .selected-action-container {
     padding-bottom: var(--spacing-s);
     padding-top: var(--spacing-s);
-  }
-
-  .delete-action-button {
-    padding-top: var(--spacing-l);
-    display: flex;
-    justify-content: flex-end;
-    flex-direction: row;
   }
 
   a {

@@ -30,7 +30,7 @@ class CouchDBIntegration {
     this.client = new PouchDB(`${config.url}/${config.database}`)
   }
 
-  async query() {
+  async read() {
     try {
       const result = await this.client.allDocs({
         include_docs: true,

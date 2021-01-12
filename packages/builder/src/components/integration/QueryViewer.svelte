@@ -27,14 +27,12 @@
       key: "SCHEMA",
     },
     {
-      title: "Results",
-      key: "RESULTS",
-    },
-    {
       title: "Preview",
       key: "PREVIEW",
     },
   ]
+
+  const QueryVerb = ["create", "read", "update", "delete"]
 
   export let query
   export let fields = []
@@ -86,6 +84,7 @@
   async function previewQuery() {
     try {
       const response = await api.post(`/api/queries/preview`, {
+        queryVerb: query.queryVerb,
         parameters: query.parameters.reduce(
           (acc, next) => ({
             ...acc,
@@ -125,63 +124,80 @@
   }
 </script>
 
-<section>
-  <Heading>{query.name}</Heading>
-  <div class="config">
-    <Label extraSmall grey>Query Name</Label>
-    <Input thin bind:value={query.name} />
-
-    <Spacer medium />
-
-    <Label extraSmall grey>Query Type</Label>
-    <Select secondary bind:value={query.queryType}>
-      <option value={''}>Select an option</option>
-      {#each Object.keys(config) as queryType}
-        <option value={config[queryType].type}>{queryType}</option>
-      {/each}
-    </Select>
-
-    <Spacer medium />
-
-    <IntegrationQueryEditor {query} bind:parameters />
-
-    <Spacer medium />
-
-    <div class="viewer-controls">
-      <Button wide thin blue disabled={!data} on:click={saveQuery}>Save</Button>
-      <Button wide thin primary on:click={previewQuery}>Run</Button>
-    </div>
-
-    <section class="viewer">
-      {#if data}
-        <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
-          {#if tab === 'JSON'}
-            <pre class="preview">{JSON.stringify(data[0], undefined, 2)}</pre>
-          {:else if tab === 'PREVIEW'}
-            <ExternalDataSourceTable {query} {data} />
-          {:else if tab === 'SCHEMA'}
-            {#each fields as field, idx}
-              <div class="field">
-                <Input thin type={'text'} bind:value={field.name} />
-                <Select secondary thin bind:value={field.type}>
-                  <option value={''}>Select an option</option>
-                  <option value={'STRING'}>Text</option>
-                  <option value={'NUMBER'}>Number</option>
-                  <option value={'BOOLEAN'}>Boolean</option>
-                  <option value={'DATETIME'}>Datetime</option>
-                </Select>
-                <i
-                  class="ri-close-circle-line delete"
-                  on:click={() => deleteField(idx)} />
-              </div>
-            {/each}
-            <Button thin secondary on:click={newField}>Add Field</Button>
-          {/if}
-        </Switcher>
-      {/if}
-    </section>
+<header>
+  <Heading small>{query.name}</Heading>
+  <div class="queryVerbs">
+    {#each QueryVerb as queryVerb}
+      <div
+        class="queryVerb"
+        class:selected={queryVerb === query.queryVerb}
+        on:click={() => {
+          query.queryVerb = queryVerb
+        }}>
+        {queryVerb}
+      </div>
+    {/each}
   </div>
-</section>
+  <Select thin secondary bind:value={query.queryType}>
+    <option value={''}>Select an option</option>
+    {#each Object.keys(config) as queryType}
+      <option value={config[queryType].type}>{queryType}</option>
+    {/each}
+  </Select>
+</header>
+
+<Spacer large />
+
+{#if query.queryVerb && query.queryType}
+  <section>
+    <div class="config">
+      <Label extraSmall grey>Query Name</Label>
+      <Input thin bind:value={query.name} />
+
+      <Spacer medium />
+
+      <IntegrationQueryEditor {query} bind:parameters />
+
+      <Spacer medium />
+
+      <div class="viewer-controls">
+        <Button wide thin blue disabled={!data} on:click={saveQuery}>
+          Save
+        </Button>
+        <Button wide thin primary on:click={previewQuery}>Run</Button>
+      </div>
+
+      <section class="viewer">
+        {#if data}
+          <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
+            {#if tab === 'JSON'}
+              <pre class="preview">{JSON.stringify(data[0], undefined, 2)}</pre>
+            {:else if tab === 'PREVIEW'}
+              <ExternalDataSourceTable {query} {data} />
+            {:else if tab === 'SCHEMA'}
+              {#each fields as field, idx}
+                <div class="field">
+                  <Input thin type={'text'} bind:value={field.name} />
+                  <Select secondary thin bind:value={field.type}>
+                    <option value={''}>Select an option</option>
+                    <option value={'STRING'}>Text</option>
+                    <option value={'NUMBER'}>Number</option>
+                    <option value={'BOOLEAN'}>Boolean</option>
+                    <option value={'DATETIME'}>Datetime</option>
+                  </Select>
+                  <i
+                    class="ri-close-circle-line delete"
+                    on:click={() => deleteField(idx)} />
+                </div>
+              {/each}
+              <Button thin secondary on:click={newField}>Add Field</Button>
+            {/if}
+          </Switcher>
+        {/if}
+      </section>
+    </div>
+  </section>
+{/if}
 
 <style>
   .field {
@@ -208,7 +224,29 @@
     white-space: pre-wrap;
   }
 
-  .viewer {
+  header {
+    display: flex;
+    align-items: center;
+  }
+
+  .queryVerbs {
+    display: flex;
+    flex: 1;
+    font-size: var(--font-size-m);
+    align-items: center;
+    margin-left: var(--spacing-l);
+  }
+
+  .queryVerb {
+    text-transform: capitalize;
+    margin-right: var(--spacing-m);
+    color: var(--grey-5);
+    cursor: pointer;
+  }
+
+  .selected {
+    color: var(--white);
+    font-weight: 500;
   }
 
   .viewer-controls {

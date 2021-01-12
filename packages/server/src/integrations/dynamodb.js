@@ -62,7 +62,7 @@ class DynamoDBIntegration {
     AWS.config.update(this.config)
   }
 
-  async query() {
+  async read() {
     const response = await this.client.query({
       TableName: this.config.table,
       KeyConditionExpression: this.config.KeyConditionExpression,

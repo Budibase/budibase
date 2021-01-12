@@ -60,3 +60,9 @@
     <pre>{query.queryString}</pre>
   {/if}
 </div>
+
+<style>
+  .root {
+    padding: var(--spacing-m);
+  }
+</style>
