@@ -139,13 +139,13 @@ export const getBackendUiStore = () => {
           state.selectedQueryId = queryId
           return state
         }),
-      delete: async queryId => {
-        await api.delete(`/api/queries/${queryId}`)
+      delete: async query => {
+        await api.delete(`/api/queries/${query._id}/${query._rev}`)
         store.update(state => {
           state.queries = state.queries.filter(
-            existing => existing._id !== queryId
+            existing => existing._id !== query._id
           )
-          if (state.selectedQueryId === queryId) {
+          if (state.selectedQueryId === query._id) {
             state.selectedQueryId = null
           }
 

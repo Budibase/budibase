@@ -6,6 +6,17 @@
 
   let query
 
+  async function fetchQueryConfig() {
+    try {
+      const response = await api.get(`/api/integrations/${datasource.source}`)
+      const json = await response.json()
+      config = json.query
+    } catch (err) {
+      notifier.danger("Error fetching datasource configuration options.")
+      console.error(err)
+    }
+  }
+
   $: {
     if ($params.query !== "new") {
       query = $backendUiStore.queries.find(query => query._id === $params.query)
@@ -15,7 +26,6 @@
         datasourceId: $params.selectedDatasource,
         name: "New Query",
         parameters: [],
-        // TODO: set dynamically
       }
     }
   }

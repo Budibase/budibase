@@ -18,7 +18,15 @@ const SCHEMA = {
       required: true,
     },
   },
-  query: {},
+  query: {
+    Custom: {
+      type: "fields",
+      custom: true,
+    },
+    "Airtable Ids": {
+      type: "list",
+    },
+  },
 }
 
 class AirtableIntegration {
@@ -27,23 +35,52 @@ class AirtableIntegration {
     this.client = new Airtable(config).base(config.base)
   }
 
-  // async create() {
-
-  // }
-
-  // async update() {
-
-  // }
-
-  // async delete() {
-
-  // }
+  async create(record) {
+    try {
+      const records = await this.client(this.config.table).create([
+        {
+          fields: record,
+        },
+      ])
+      return records
+    } catch (err) {
+      console.error("Error writing to airtable", err)
+      throw err
+    }
+  }
 
   async read() {
     const records = await this.client(this.config.table)
       .select({ maxRecords: this.query.records, view: this.query.view })
       .firstPage()
     return records.map(({ fields }) => fields)
+  }
+
+  async update(document) {
+    const { id, ...rest } = document
+
+    try {
+      const records = await this.client(this.config.table).update([
+        {
+          id,
+          fields: rest,
+        },
+      ])
+      return records
+    } catch (err) {
+      console.error("Error writing to airtable", err)
+      throw err
+    }
+  }
+
+  async delete(id) {
+    try {
+      const records = await this.client(this.config.table).destroy([id])
+      return records
+    } catch (err) {
+      console.error("Error writing to airtable", err)
+      throw err
+    }
   }
 }
 

@@ -32,41 +32,6 @@ const SCHEMA = {
     SQL: {
       type: "sql",
     },
-    "Simple Query": {
-      type: "fields",
-      fields: {
-        table: {
-          type: "string",
-        },
-        column: {
-          type: "string",
-        },
-        condition: {
-          type: "options",
-          options: [
-            {
-              name: "Equals",
-              value: "=",
-            },
-            {
-              name: "Not Equals",
-              value: "!=",
-            },
-            {
-              name: "Greater Than",
-              value: ">",
-            },
-            {
-              name: "Less Than",
-              value: "<",
-            },
-          ],
-        },
-        value: {
-          type: "string",
-        },
-      },
-    },
   },
 }
 
@@ -87,27 +52,25 @@ class PostgresIntegration {
     return this.client.connect()
   }
 
-  // async create() {
-
-  // }
+  async create() {
+    const response = await this.client.query(this.queryString)
+    return response.rows
+  }
 
   async read() {
     const response = await this.client.query(this.queryString)
     return response.rows
   }
 
-  // async update() {
+  async update() {
+    const response = await this.client.query(this.queryString)
+    return response.rows
+  }
 
-  // }
-
-  // async delete() {
-
-  // }
-
-  // async query() {
-  //   const response = await this.client.query(this.queryString)
-  //   return response.rows
-  // }
+  async delete() {
+    const response = await this.client.query(this.queryString)
+    return response.rows
+  }
 }
 
 module.exports = {

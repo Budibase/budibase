@@ -79,7 +79,7 @@ exports.execute = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  await db.remove(ctx.params.queryId)
+  await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
 }
