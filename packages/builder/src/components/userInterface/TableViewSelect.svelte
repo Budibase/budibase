@@ -2,7 +2,7 @@
   import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  // import DataBindingDrawer from "components/userInterface/DataBindingDrawer/index.svelte"
+  import { notifier } from "builderStore/store/notifications"
   import BottomDrawer from "components/common/BottomDrawer.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
@@ -92,7 +92,10 @@
   {#if bindingDrawerOpen}
     <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
       <div slot="buttons">
-        <Button blue thin on:click={() => handleSelected(value)}>Save</Button>
+        <Button blue thin on:click={() => { 
+          notifier.success("Query parameters saved.")
+          handleSelected(value)
+        }}>Save</Button>
       </div>
       <div class="drawer-contents" slot="body">
         <pre>{value.queryString}</pre>
