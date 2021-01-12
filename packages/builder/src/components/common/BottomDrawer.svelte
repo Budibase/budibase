@@ -47,5 +47,6 @@
 
   .close {
     font-size: var(--font-size-xl);
+    cursor: pointer;
   }
 </style>

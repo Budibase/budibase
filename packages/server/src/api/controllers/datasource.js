@@ -66,7 +66,7 @@ exports.destroy = async function(ctx) {
   await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
 
   // delete the datasource
-  await db.destroy(ctx.params.datasourceId)
+  await db.remove(ctx.params.datasourceId)
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200
