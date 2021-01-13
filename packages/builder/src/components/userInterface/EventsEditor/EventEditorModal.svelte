@@ -3,6 +3,7 @@
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
+  import { automationStore } from "builderStore"
 
   const dispatch = createEventDispatcher()
   const eventTypeKey = "##eventHandlerType"
@@ -13,16 +14,10 @@
   let addActionDropdown
   let selectedAction
 
-  let draftEventHandler = { parameters: [] }
-
   $: actions = event || []
   $: selectedActionComponent =
     selectedAction &&
     actionTypes.find(t => t.name === selectedAction[eventTypeKey]).component
-
-  const updateEventHandler = (updatedHandler, index) => {
-    actions[index] = updatedHandler
-  }
 
   const deleteAction = index => {
     actions.splice(index, 1)
@@ -44,8 +39,43 @@
     selectedAction = action
   }
 
-  const saveEventData = () => {
-    dispatch("change", actions)
+  const saveEventData = async () => {
+    // e.g. The Trigger Automation action exposes beforeSave, so it can
+    // create any automations it needs to
+    for (let action of actions) {
+      if (action[eventTypeKey] === "Trigger Automation") {
+        await createAutomation(action.parameters)
+      }
+    }
+    dispatch("change", actions)    
+  }
+
+    // called by the parent modal when actions are saved
+  const createAutomation = async parameters => {
+    if (parameters.automationId || !parameters.newAutomationName) return
+
+    await automationStore.actions.create({name: parameters.newAutomationName})
+
+    const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
+
+    const newBlock = $automationStore.selectedAutomation.constructBlock(
+      "TRIGGER", "APP", appActionDefinition)
+
+
+    newBlock.inputs = {
+      fields: Object.entries(parameters.fields).reduce((fields, [key, value]) => {
+        fields[key] = value.type
+        return fields
+      }, {})
+    }
+
+    automationStore.actions.addBlockToAutomation(newBlock)
+
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation)
+
+    parameters.automationId = $automationStore.selectedAutomation.automation._id
+    delete parameters.newAutomationName
   }
 </script>
 

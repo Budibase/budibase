@@ -56,4 +56,13 @@ export default class Automation {
     steps.splice(stepIdx, 1)
     this.automation.definition.steps = steps
   }
+
+  constructBlock(type, stepId, blockDefinition) {
+    return {
+      ...blockDefinition,
+      inputs: blockDefinition.inputs || {},
+      stepId,
+      type,
+    }
+  }
 }
