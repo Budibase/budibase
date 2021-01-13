@@ -1,14 +1,15 @@
 const Airtable = require("airtable")
+const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   datasource: {
     apiKey: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "enter api key",
       required: true,
     },
     base: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "mybase",
       required: true,
     },
@@ -20,7 +21,7 @@ const SCHEMA = {
         customisable: true,
         fields: {
           table: {
-            type: "string",
+            type: FIELD_TYPES.STRING,
             required: true,
           },
         },
@@ -28,14 +29,14 @@ const SCHEMA = {
     },
     read: {
       Table: {
-        type: "fields",
+        type: QUERY_TYPES.FIELDS,
         fields: {
           table: {
-            type: "string",
+            type: FIELD_TYPES.STRING,
             required: true,
           },
           view: {
-            type: "string",
+            type: FIELD_TYPES.STRING,
             required: true,
           },
         },
@@ -43,11 +44,11 @@ const SCHEMA = {
     },
     update: {
       Fields: {
-        type: "fields",
+        type: QUERY_TYPES.FIELDS,
         customisable: true,
         fields: {
           id: {
-            type: "string",
+            type: FIELD_TYPES.STRING,
             required: true,
           },
         },
@@ -55,7 +56,7 @@ const SCHEMA = {
     },
     delete: {
       "Airtable Ids": {
-        type: "list",
+        type: FIELD_TYPES.LIST,
       },
     },
   },

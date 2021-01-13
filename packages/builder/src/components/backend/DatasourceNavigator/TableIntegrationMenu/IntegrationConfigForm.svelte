@@ -8,7 +8,7 @@
   {#each Object.keys(integration) as configKey}
     <Input
       thin
-      type={configKey.type}
+      type={integration[configKey].type}
       label={configKey}
       bind:value={integration[configKey]} />
     <Spacer medium />

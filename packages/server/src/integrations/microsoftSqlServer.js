@@ -1,28 +1,36 @@
 const sqlServer = require("mssql")
+const { FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
   datasource: {
     user: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
       default: "localhost",
     },
     password: {
-      type: "password",
+      type: FIELD_TYPES.PASSWORD,
       required: true,
     },
     server: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "localhost",
     },
     database: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "root",
     },
   },
   query: {
-    sql: {
-      type: "sql",
+    create: {
+      SQL: {
+        type: "sql",
+      },
+    },
+    read: {
+      SQL: {
+        type: "sql",
+      },
     },
   },
 }
@@ -37,10 +45,21 @@ class SqlServerIntegration {
     return await this.client.connect(this.config)
   }
 
-  async read() {
+  async read(query) {
     try {
       await this.connect()
-      const response = await this.client.query(this.config.query)
+      const response = await this.client.query(query.sql)
+      return response.recordset
+    } catch (err) {
+      console.error("Error querying MS SQL Server", err)
+      throw err
+    }
+  }
+
+  async create(query) {
+    try {
+      await this.connect()
+      const response = await this.client.query(query.sql)
       return response.recordset
     } catch (err) {
       console.error("Error querying MS SQL Server", err)

@@ -1,53 +1,46 @@
 const AWS = require("aws-sdk")
+const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   datasource: {
-    table: {
-      type: "string",
-      required: true,
-    },
     region: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
       default: "us-east-1",
     },
     accessKeyId: {
-      type: "string",
+      type: FIELD_TYPES.PASSWORD,
       required: true,
     },
     secretKey: {
-      type: "secretKey",
+      type: FIELD_TYPES.PASSWORD,
       required: true,
-      default: 5432,
-    },
-    indexName: {
-      type: "string",
     },
   },
   query: {
-    type: "fields",
-    fields: [
-      {
-        name: "Index",
-        key: "Index",
-        type: "string",
+    read: {
+      DynamoConfig: {
+        type: QUERY_TYPES.FIELDS,
+        fields: {
+          Table: {
+            type: FIELD_TYPES.STRING,
+            required: true,
+          },
+          Index: {
+            type: FIELD_TYPES.STRING,
+          },
+          KeyConditionExpression: {
+            type: FIELD_TYPES.STRING,
+          },
+          ExpressionAttributeNames: {
+            type: FIELD_TYPES.STRING,
+          },
+          ExpressionAttributeValues: {
+            type: FIELD_TYPES.STRING,
+          },
+        },
       },
-      {
-        name: "Key Condition Expression",
-        key: "KeyConditionExpression",
-        type: "string",
-      },
-      {
-        name: "Attribute Names",
-        key: "ExpressionAttributeNames",
-        type: "string",
-      },
-      {
-        name: "Attribute Values",
-        key: "ExpressionAttributeValues",
-        type: "string",
-      },
-    ],
+    },
   },
 }
 
@@ -62,12 +55,12 @@ class DynamoDBIntegration {
     AWS.config.update(this.config)
   }
 
-  async read() {
+  async read(query) {
     const response = await this.client.query({
-      TableName: this.config.table,
-      KeyConditionExpression: this.config.KeyConditionExpression,
-      ExpressionAttributeNames: this.config.ExpressionAttributeNames,
-      ExpressionAttributeValues: this.config.ExpressionAttributeValues,
+      TableName: query.Table,
+      KeyConditionExpression: query.KeyConditionExpression,
+      ExpressionAttributeNames: query.ExpressionAttributeNames,
+      ExpressionAttributeValues: query.ExpressionAttributeValues,
     })
     return response
   }

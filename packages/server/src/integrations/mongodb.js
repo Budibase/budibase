@@ -17,8 +17,15 @@ const SCHEMA = {
     },
   },
   query: {
-    JSON: {
-      type: "json",
+    create: {
+      JSON: {
+        type: "json",
+      },
+    },
+    read: {
+      JSON: {
+        type: "json",
+      },
     },
   },
 }
@@ -27,23 +34,35 @@ class MongoIntegration {
   constructor(config) {
     this.config = config
     this.client = new MongoClient(config.connectionString)
-    try {
-      this.config.query = JSON.parse(this.config.query)
-    } catch (err) {
-      this.config.query = {}
-    }
-    this.connect()
   }
 
   async connect() {
     return this.client.connect()
   }
 
-  async read() {
+  async create(query) {
     try {
+      const mongoQuery = query.json ? JSON.parse(query.json) : {}
+      await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(this.config.collection)
-      const result = await collection.find(this.config.query).toArray()
+      const result = await collection.insertOne(mongoQuery)
+      return result
+    } catch (err) {
+      console.error("Error querying mongodb", err)
+      throw err
+    } finally {
+      await this.client.close()
+    }
+  }
+
+  async read(query) {
+    try {
+      const mongoQuery = query.json ? JSON.parse(query.json) : {}
+      await this.connect()
+      const db = this.client.db(this.config.db)
+      const collection = db.collection(this.config.collection)
+      const result = await collection.find(mongoQuery).toArray()
       return result
     } catch (err) {
       console.error("Error querying mongodb", err)

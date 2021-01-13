@@ -1,7 +1,12 @@
-class Field {
-  constructor(type, defaultValue, required) {
-    this.type = type
-    this.default = defaultValue
-    this.required = required
-  }
+exports.QUERY_TYPES = {
+  SQL: "sql",
+  JSON: "json",
+  FIELDS: "fields",
+}
+
+exports.FIELD_TYPES = {
+  STRING: "string",
+  NUMBER: "number",
+  PASSWORD: "password",
+  LIST: "list",
 }

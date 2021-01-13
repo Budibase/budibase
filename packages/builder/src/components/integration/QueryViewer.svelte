@@ -32,8 +32,6 @@
     },
   ]
 
-  const QueryVerb = ["create", "read", "update", "delete"]
-
   export let query
   export let fields = []
 
@@ -128,25 +126,27 @@
 
 <header>
   <Heading small>{query.name}</Heading>
-  <div class="queryVerbs">
-    {#each QueryVerb as queryVerb}
-      <div
-        class="queryVerb"
-        class:selected={queryVerb === query.queryVerb}
-        on:click={() => {
-          query.queryVerb = queryVerb
-        }}>
-        {queryVerb}
-      </div>
-    {/each}
-  </div>
-  {#if config && query.queryVerb}
-    <Select thin secondary bind:value={query.queryType}>
-      <option value={''}>Select an option</option>
-      {#each Object.keys(config[query.queryVerb]) as queryType}
-        <option value={queryType}>{queryType}</option>
+  {#if config}
+    <div class="queryVerbs">
+      {#each Object.keys(config) as queryVerb}
+        <div
+          class="queryVerb"
+          class:selected={queryVerb === query.queryVerb}
+          on:click={() => {
+            query.queryVerb = queryVerb
+          }}>
+          {queryVerb}
+        </div>
       {/each}
-    </Select>
+    </div>
+    {#if query.queryVerb}
+      <Select thin secondary bind:value={query.queryType}>
+        <option value={''}>Select an option</option>
+        {#each Object.keys(config[query.queryVerb]) as queryType}
+          <option value={queryType}>{queryType}</option>
+        {/each}
+      </Select>
+    {/if}
   {/if}
 </header>
 
