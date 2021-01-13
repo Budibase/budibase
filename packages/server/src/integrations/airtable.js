@@ -17,7 +17,7 @@ const SCHEMA = {
   query: {
     create: {
       "Airtable Record": {
-        type: "fields",
+        type: QUERY_TYPES.FIELDS,
         customisable: true,
         fields: {
           table: {
