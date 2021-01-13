@@ -9,8 +9,7 @@
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === parameters.datasourceId
   )
-  // TODO: binding needs a significant refactor and needs to
-  // be centralised
+  // TODO: binding needs to be centralised
   $: bindableProperties = fetchBindableProperties({
     componentInstanceId: $store.selectedComponentId,
     components: $store.components,
@@ -51,7 +50,6 @@
 
   <Spacer medium />
 
-  <!-- TODO: Need to render defaults, but allow interpolation of frontend values -->
   {#if query}
     <ParameterBuilder
       bind:customParams={parameters.queryParams}

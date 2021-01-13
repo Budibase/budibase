@@ -1,24 +1,25 @@
 const PouchDB = require("pouchdb")
+const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   datasource: {
     url: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
       default: "localhost",
     },
     database: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
     },
     view: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
     },
   },
   query: {
     json: {
-      type: "json",
+      type: QUERY_TYPES.JSON,
       required: true,
     },
   },

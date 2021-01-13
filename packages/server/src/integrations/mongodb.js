@@ -1,30 +1,31 @@
 const { MongoClient } = require("mongodb")
+const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   datasource: {
     connectionString: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
       default: "localhost",
     },
     db: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
     },
     collection: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
     },
   },
   query: {
     create: {
       JSON: {
-        type: "json",
+        type: QUERY_TYPES.JSON,
       },
     },
     read: {
       JSON: {
-        type: "json",
+        type: QUERY_TYPES.JSON,
       },
     },
   },
