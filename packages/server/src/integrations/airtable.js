@@ -12,19 +12,51 @@ const SCHEMA = {
       default: "mybase",
       required: true,
     },
-    table: {
-      type: "string",
-      default: "mytable",
-      required: true,
-    },
   },
   query: {
-    Custom: {
-      type: "fields",
-      custom: true,
+    create: {
+      "Airtable Record": {
+        type: "fields",
+        customisable: true,
+        fields: {
+          table: {
+            type: "string",
+            required: true,
+          },
+        },
+      },
     },
-    "Airtable Ids": {
-      type: "list",
+    read: {
+      Table: {
+        type: "fields",
+        fields: {
+          table: {
+            type: "string",
+            required: true,
+          },
+          view: {
+            type: "string",
+            required: true,
+          },
+        },
+      },
+    },
+    update: {
+      Fields: {
+        type: "fields",
+        customisable: true,
+        fields: {
+          id: {
+            type: "string",
+            required: true,
+          },
+        },
+      },
+    },
+    delete: {
+      "Airtable Ids": {
+        type: "list",
+      },
     },
   },
 }
@@ -35,11 +67,13 @@ class AirtableIntegration {
     this.client = new Airtable(config).base(config.base)
   }
 
-  async create(record) {
+  async create(query) {
+    const { table, ...rest } = query
+
     try {
-      const records = await this.client(this.config.table).create([
+      const records = await this.client(table).create([
         {
-          fields: record,
+          fields: rest,
         },
       ])
       return records
@@ -49,18 +83,23 @@ class AirtableIntegration {
     }
   }
 
-  async read() {
-    const records = await this.client(this.config.table)
-      .select({ maxRecords: this.query.records, view: this.query.view })
-      .firstPage()
-    return records.map(({ fields }) => fields)
+  async read(query) {
+    try {
+      const records = await this.client(query.table)
+        .select({ maxRecords: 10, view: query.view })
+        .firstPage()
+      return records.map(({ fields }) => fields)
+    } catch (err) {
+      console.error("Error writing to airtable", err)
+      return []
+    }
   }
 
-  async update(document) {
-    const { id, ...rest } = document
+  async update(query) {
+    const { table, id, ...rest } = query
 
     try {
-      const records = await this.client(this.config.table).update([
+      const records = await this.client(table).update([
         {
           id,
           fields: rest,
@@ -73,9 +112,9 @@ class AirtableIntegration {
     }
   }
 
-  async delete(id) {
+  async delete(query) {
     try {
-      const records = await this.client(this.config.table).destroy([id])
+      const records = await this.client(query.table).destroy(query.ids)
       return records
     } catch (err) {
       console.error("Error writing to airtable", err)

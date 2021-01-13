@@ -29,18 +29,20 @@ exports.save = async function(ctx) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-exports.preview = async function(ctx) {
-  const { query, datasourceId, parameters, queryVerb } = ctx.request.body
-
-  let parsedQuery = ""
-  if (query) {
-    const queryTemplate = handlebars.compile(query)
-    parsedQuery = queryTemplate(parameters)
+function enrichQueryFields(fields, parameters) {
+  const enrichedQuery = {}
+  // enrich the fields with dynamic parameters
+  for (let key in fields) {
+    const template = handlebars.compile(fields[key])
+    enrichedQuery[key] = template(parameters)
   }
+  return enrichedQuery
+}
 
+exports.preview = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
 
-  const datasource = await db.get(datasourceId)
+  const datasource = await db.get(ctx.request.body.datasourceId)
 
   const Integration = integrations[datasource.source]
 
@@ -49,7 +51,11 @@ exports.preview = async function(ctx) {
     return
   }
 
-  ctx.body = await new Integration(datasource.config, parsedQuery)[queryVerb]()
+  const { fields, parameters, queryVerb } = ctx.request.body
+
+  const enrichedQuery = enrichQueryFields(fields, parameters)
+
+  ctx.body = await new Integration(datasource.config)[queryVerb](enrichedQuery)
 }
 
 exports.execute = async function(ctx) {
@@ -58,10 +64,6 @@ exports.execute = async function(ctx) {
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
-  const queryTemplate = handlebars.compile(query.queryString)
-
-  const parsedQuery = queryTemplate(ctx.request.body.parameters)
-
   const Integration = integrations[datasource.source]
 
   if (!Integration) {
@@ -69,10 +71,15 @@ exports.execute = async function(ctx) {
     return
   }
 
+  const enrichedQuery = enrichQueryFields(
+    query.fields,
+    ctx.request.body.parameters
+  )
+
   // call the relevant CRUD method on the integration class
-  const response = await new Integration(datasource.config, parsedQuery)[
-    query.queryVerb
-  ]()
+  const response = await new Integration(datasource.config)[query.queryVerb](
+    enrichedQuery
+  )
 
   ctx.body = response
 }

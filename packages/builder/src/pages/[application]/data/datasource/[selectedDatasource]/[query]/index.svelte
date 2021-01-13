@@ -26,6 +26,7 @@
         datasourceId: $params.selectedDatasource,
         name: "New Query",
         parameters: [],
+        fields: {},
       }
     }
   }

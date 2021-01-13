@@ -24,7 +24,7 @@ function generateQueryValidation() {
     _id: Joi.string(),
     _rev: Joi.string(),
     name: Joi.string().required(),
-    queryString: Joi.string().required(),
+    fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
     parameters: Joi.array().items(Joi.object({
       name: Joi.string(),
@@ -39,7 +39,7 @@ function generateQueryValidation() {
 function generateQueryPreviewValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    query: Joi.string(),
+    fields: Joi.object().required(),
     queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
     datasourceId: Joi.string().required(),
     parameters: Joi.object({}).required().unknown(true)
