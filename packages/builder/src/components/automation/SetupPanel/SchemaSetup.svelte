@@ -1,5 +1,5 @@
 <script>
-  import { Input } from "@budibase/bbui"
+  import { Input, Select } from "@budibase/bbui"
 
   export let value = {}
   $: fieldsArray = Object.entries(value).map(([name, type]) => ({
@@ -7,24 +7,10 @@
     type,
   }))
 
-  let addNewName = ""
-
   function addField() {
-    if (!addNewName) return
-    if (value[addNewName.trim()]) {
-      addNewName = ""
-      return
-    }
     const newValue = { ...value }
-    newValue[addNewName.trim()] = "string"
+    newValue[""] = "string"
     value = newValue
-    addNewName = ""
-  }
-
-  function onInputEnter(e) {
-    if (e.key === "Enter") {
-      addField()
-    }
   }
 
   function removeField(name) {
@@ -50,66 +36,98 @@
 </script>
 
 <div class="root">
-  {#each fieldsArray as field}
-    <i
-      class="remove-field ri-delete-bin-line"
-      on:click={() => removeField(field.name)} />
-    <input
-      value={field.name}
-      on:change={fieldNameChanged(field.name)}
-      class="grid-field" />
-    <select
-      value={field.type}
-      on:blur={e => (value[field.name] = e.target.value)}
-      class="grid-field">
-      <option>string</option>
-      <option>number</option>
-      <option>boolean</option>
-      <option>datetime</option>
-    </select>
-  {/each}
-  <div class="new-field" on:keyup={onInputEnter}>
-    <Input
-      primary
-      small
-      bind:value={addNewName}
-      placeholder="Enter field name" />
+  <div class="add-field">
+    <i class="ri-add-line" on:click={addField} />
   </div>
+  <div class="spacer" />
+  {#each fieldsArray as field}
+    <div class="field">
+      <Input
+        value={field.name}
+        secondary
+        on:change={fieldNameChanged(field.name)} />
+      <Select
+        secondary
+        extraThin
+        value={field.type}
+        on:blur={e => (value[field.name] = e.target.value)}>
+        <option>string</option>
+        <option>number</option>
+        <option>boolean</option>
+        <option>datetime</option>
+      </Select>
+
+      <i class="remove-field ri-delete-bin-line"
+        on:click={() => removeField(field.name)} />
+
+      
+    </div>
+  {/each}
+
 </div>
 
 <style>
   .root {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    /* so we can show the "+" button beside the "fields" label*/
+    top: -26px;
+  }
+
+  .spacer {
+    height: var(--spacing-s);
+  }
+
+  .field {
+    max-width: 100%;
+    background-color: var(--grey-2);
+    margin-bottom: var(--spacing-m);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--grey-4);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    /*grid-template-rows: auto auto;
+    grid-template-columns: auto;*/
+    position: relative;
+    overflow: hidden;
+  }
+
+  .field :global(select) {
+    padding: var(--spacing-xs) 2rem var(--spacing-m) var(--spacing-s) !important;
+    font-size: var(--font-size-xs);
+    color: var(--grey-7);
+  }
+
+  .field :global(.pointer) {
+    padding-bottom: var(--spacing-m) !important;
+    color: var(--grey-2);
+  }
+
+  .field :global(input) {
+    padding: var(--spacing-m) var(--spacing-xl) var(--spacing-xs) var(--spacing-m);
+    font-size: var(--font-size-s);
+    font-weight: bold;
   }
 
   .remove-field {
     cursor: pointer;
     color: var(--grey-6);
-    margin: auto 4px auto 0;
+    position: absolute;
+    top: var(--spacing-m);
+    right: 3px;
   }
 
   .remove-field:hover {
     color: var(--black);
   }
 
-  .new-field {
-    grid-column: 1 / span 3;
-    max-width: 100%;
+  .add-field {
+    text-align: right;
   }
 
-  .grid-field {
-    min-width: 50px;
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0.4em;
-    margin: 0 0 0.5em 0;
-    box-sizing: border-box;
-    border: 1px solid var(--grey-4);
-    border-radius: 0px;
+  .add-field > i {
+    cursor: pointer;
   }
 
-  select.grid-field {
-    border-left: none;
-  }
 </style>
