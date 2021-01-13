@@ -29,46 +29,57 @@ const SCHEMA = {
     },
   },
   query: {
-    SQL: {
-      type: "sql",
+    create: {
+      SQL: {
+        type: "sql",
+      },
+    },
+    read: {
+      SQL: {
+        type: "sql",
+      },
+    },
+    update: {
+      SQL: {
+        type: "sql",
+      },
+    },
+    delete: {
+      SQL: {
+        type: "sql",
+      },
     },
   },
 }
 
 class PostgresIntegration {
-  constructor(config, query) {
+  constructor(config) {
     this.config = config
-    this.queryString = this.buildQuery(query)
     this.client = new Client(config)
     this.connect()
-  }
-
-  buildQuery(query) {
-    // TODO: account for different types
-    return query
   }
 
   async connect() {
     return this.client.connect()
   }
 
-  async create() {
-    const response = await this.client.query(this.queryString)
+  async create({ sql }) {
+    const response = await this.client.query(sql)
     return response.rows
   }
 
-  async read() {
-    const response = await this.client.query(this.queryString)
+  async read({ sql }) {
+    const response = await this.client.query(sql)
     return response.rows
   }
 
-  async update() {
-    const response = await this.client.query(this.queryString)
+  async update({ sql }) {
+    const response = await this.client.query(sql)
     return response.rows
   }
 
-  async delete() {
-    const response = await this.client.query(this.queryString)
+  async delete({ sql }) {
+    const response = await this.client.query(sql)
     return response.rows
   }
 }

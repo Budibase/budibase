@@ -57,7 +57,9 @@
       bind:customParams={parameters.queryParams}
       parameters={query.parameters}
       bindings={bindableProperties} />
-    <pre>{query.queryString}</pre>
+    {#if query.fields.sql}
+      <pre>{query.fields.queryString}</pre>
+    {/if}
   {/if}
 </div>
 

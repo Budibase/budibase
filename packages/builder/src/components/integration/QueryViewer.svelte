@@ -37,7 +37,7 @@
   export let query
   export let fields = []
 
-  let config = {}
+  let config
   let tab = "JSON"
   let parameters
   let data
@@ -60,6 +60,8 @@
   $: datasourceType = datasource.source
   $: datasourceType && fetchQueryConfig()
 
+  $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
+
   function newField() {
     fields = [...fields, {}]
   }
@@ -75,8 +77,7 @@
       const json = await response.json()
       config = json.query
     } catch (err) {
-      // TODO: Error fetching integration config
-      // notifier.danger()
+      notifier.danger("Error fetching integration configuration.")
       console.error(err)
     }
   }
@@ -84,6 +85,7 @@
   async function previewQuery() {
     try {
       const response = await api.post(`/api/queries/preview`, {
+        fields: query.fields,
         queryVerb: query.queryVerb,
         parameters: query.parameters.reduce(
           (acc, next) => ({
@@ -93,7 +95,6 @@
           {}
         ),
         datasourceId: datasource._id,
-        query: query.queryString,
       })
       const json = await response.json()
 
@@ -107,6 +108,7 @@
         name: field,
         type: "STRING",
       }))
+      notifier.success("Query executed successfully.")
     } catch (err) {
       notifier.danger(`Query Error: ${err.message}`)
       console.error(err)
@@ -138,17 +140,19 @@
       </div>
     {/each}
   </div>
-  <Select thin secondary bind:value={query.queryType}>
-    <option value={''}>Select an option</option>
-    {#each Object.keys(config) as queryType}
-      <option value={config[queryType].type}>{queryType}</option>
-    {/each}
-  </Select>
+  {#if config && query.queryVerb}
+    <Select thin secondary bind:value={query.queryType}>
+      <option value={''}>Select an option</option>
+      {#each Object.keys(config[query.queryVerb]) as queryType}
+        <option value={queryType}>{queryType}</option>
+      {/each}
+    </Select>
+  {/if}
 </header>
 
 <Spacer large />
 
-{#if query.queryVerb && query.queryType}
+{#if shouldShowQueryConfig}
   <section>
     <div class="config">
       <Label extraSmall grey>Query Name</Label>
@@ -156,7 +160,10 @@
 
       <Spacer medium />
 
-      <IntegrationQueryEditor {query} bind:parameters />
+      <IntegrationQueryEditor
+        schema={config[query.queryVerb][query.queryType]}
+        {query}
+        bind:parameters />
 
       <Spacer medium />
 
