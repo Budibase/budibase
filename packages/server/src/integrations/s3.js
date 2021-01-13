@@ -2,25 +2,33 @@ const AWS = require("aws-sdk")
 
 const SCHEMA = {
   datasource: {
-    bucket: {
-      type: "string",
-      required: true,
-    },
     region: {
       type: "string",
       required: true,
       default: "us-east-1",
     },
     accessKeyId: {
-      type: "string",
+      type: "password",
       required: true,
     },
     secretAccessKey: {
-      type: "string",
+      type: "password",
       required: true,
     },
   },
-  query: {},
+  query: {
+    read: {
+      Bucket: {
+        type: "fields",
+        fields: {
+          bucket: {
+            type: "string",
+            required: true,
+          },
+        },
+      },
+    },
+  },
 }
 
 class S3Integration {
@@ -34,10 +42,10 @@ class S3Integration {
     AWS.config.update(this.config)
   }
 
-  async query() {
+  async read(query) {
     const response = await this.client
       .listObjects({
-        Bucket: this.config.bucket,
+        Bucket: query.bucket,
       })
       .promise()
     return response.Contents

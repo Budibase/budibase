@@ -26,9 +26,7 @@
     <IntegrationConfigForm integration={datasource.config} />
     <Spacer medium />
     <footer>
-      <Button primary wide disabled={false} on:click={saveDatasource}>
-        Save
-      </Button>
+      <Button blue wide on:click={saveDatasource}>Save</Button>
     </footer>
   </section>
 {/if}

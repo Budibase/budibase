@@ -35,6 +35,7 @@
     <Spacer medium />
   {/each}
   {#if schema.customisable}
+    <Spacer large />
     <Label>Add Custom Field</Label>
     {#each Object.keys(customSchema) as field}
       <Label extraSmall grey>{field}</Label>
@@ -54,7 +55,7 @@
         <option value={"number"}>Number</option>
       </Select>
     </div>
-    <Button small thin primary on:click={addField}>Add Field</Button>
+    <Button small thin secondary on:click={addField}>Add Field</Button>
   {/if}
 </form>
 

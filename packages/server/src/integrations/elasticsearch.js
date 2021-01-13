@@ -26,11 +26,11 @@ class ElasticSearchIntegration {
     this.client = new Client({ node: config.url })
   }
 
-  async create(document) {
+  async create(query) {
     try {
       const result = await this.client.index({
         index: this.config.index,
-        body: JSON.parse(document),
+        body: JSON.parse(query.json),
       })
       return [result]
     } catch (err) {
@@ -45,7 +45,7 @@ class ElasticSearchIntegration {
     try {
       const result = await this.client.search({
         index: this.config.index,
-        body: JSON.parse(query),
+        body: JSON.parse(query.json),
       })
       return result.body.hits.hits.map(({ _source }) => _source)
     } catch (err) {
