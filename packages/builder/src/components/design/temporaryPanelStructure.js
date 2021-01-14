@@ -1,13 +1,13 @@
-import Input from "./PropertyPanelControls/Input.svelte"
-import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
-import MultiTableViewFieldSelect from "./MultiTableViewFieldSelect.svelte"
+import Input from "./PropertiesPanel/PropertyPanelControls/Input.svelte"
+import OptionSelect from "./PropertiesPanel/PropertyPanelControls/OptionSelect.svelte"
+import MultiTableViewFieldSelect from "./PropertiesPanel/PropertyPanelControls/MultiTableViewFieldSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
 import TableSelect from "components/userInterface/PropertyPanelControls/TableSelect.svelte"
 import TableViewSelect from "components/userInterface/PropertyPanelControls/TableViewSelect.svelte"
 import TableViewFieldSelect from "components/userInterface/PropertyPanelControls/TableViewFieldSelect.svelte"
 import Event from "components/userInterface/PropertyPanelControls/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/PropertyPanelControls/ScreenSelect.svelte"
-import DetailScreenSelect from "components/userInterface/DetailScreenSelect.svelte"
+import DetailScreenSelect from "components/userInterface/PropertyPanelControls/DetailScreenSelect.svelte"
 import { IconSelect } from "components/userInterface/PropertyPanelControls/IconSelect"
 import Colorpicker from "@budibase/colorpicker"
 
@@ -37,28 +37,7 @@ export default {
       },
       children: [],
     },
-    {
-      _component: "@budibase/standard-components/button",
-      name: "Button",
-      description: "A basic html button that is ready for styling",
-      icon: "ri-share-box-line",
-      children: [],
-      properties: {
-        design: {
-          ...all,
-        },
-        settings: [
-          { label: "Text", key: "text", control: Input },
-          {
-            label: "Disabled",
-            key: "disabled",
-            valueKey: "checked",
-            control: Checkbox,
-          },
-          { label: "On Click", key: "onClick", control: Event },
-        ],
-      },
-    },
+
     {
       name: "Form",
       icon: "ri-file-edit-line",

@@ -8,16 +8,16 @@
   import LayoutSelect from "./PropertyPanelControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyPanelControls/RoleSelect.svelte"
   import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
-  import MultiTableViewFieldSelect from "./MultiTableViewFieldSelect.svelte"
-  import Checkbox from "../common/Checkbox.svelte"
+  import MultiTableViewFieldSelect from "./PropertyPanelControls/MultiTableViewFieldSelect.svelte"
+  import Checkbox from "./PropertyPanelControls/Checkbox.svelte"
   import TableSelect from "components/userInterface/PropertyPanelControls/TableSelect.svelte"
   import TableViewSelect from "components/userInterface/PropertyPanelControls/TableViewSelect.svelte"
   import TableViewFieldSelect from "components/userInterface/PropertyPanelControls/TableViewFieldSelect.svelte"
   import EventsEditor from "components/userInterface/PropertyPanelControls/EventsEditor"
   import ScreenSelect from "components/userInterface/PropertyPanelControls/ScreenSelect.svelte"
-  import DetailScreenSelect from "components/userInterface/DetailScreenSelect.svelte"
+  import DetailScreenSelect from "components/userInterface/PropertyPanelControls/DetailScreenSelect.svelte"
   import IconSelect from "components/userInterface/PropertyPanelControls/IconSelect"
-  import Colorpicker from "@budibase/colorpicker"
+  import ColorPicker from "./ComponentPropertiesPanel.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -43,6 +43,7 @@
     detailURL: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
+    event: EventsEditor,
   }
   const getControl = type => {
     return controlMap[type]

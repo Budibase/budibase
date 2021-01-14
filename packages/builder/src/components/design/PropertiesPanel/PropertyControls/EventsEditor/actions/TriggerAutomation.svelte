@@ -41,53 +41,53 @@
     newOrExisting = "existing"
     parameters.newAutomationName = ""
   }
-
 </script>
 
 <div class="root">
-
   <div class="radio-container" on:click={setNew}>
-    <input 
-      type="radio" 
-      value="new" 
+    <input
+      type="radio"
+      value="new"
       bind:group={newOrExisting}
-      disabled={!hasAutomations}> 
-      
-    <Label disabled={!hasAutomations}>Create a new automation </Label>
+      disabled={!hasAutomations} />
 
+    <Label disabled={!hasAutomations}>Create a new automation</Label>
   </div>
 
   <div class="radio-container" on:click={setExisting}>
-
-    <input 
-      type="radio" 
-      value="existing" 
+    <input
+      type="radio"
+      value="existing"
       bind:group={newOrExisting}
-      disabled={!hasAutomations}> 
-      
-    <Label disabled={!hasAutomations}>Use an existing automation </Label>
+      disabled={!hasAutomations} />
 
+    <Label disabled={!hasAutomations}>Use an existing automation</Label>
   </div>
 
   <Label size="m" color="dark">Automation</Label>
 
-  {#if newOrExisting=== "existing"}
-    <Select secondary bind:value={parameters.automationId} placeholder="Choose automation">
+  {#if newOrExisting === 'existing'}
+    <Select
+      secondary
+      bind:value={parameters.automationId}
+      placeholder="Choose automation">
       <option value="" />
       {#each automations as automation}
         <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>
   {:else}
-    <Input secondary bind:value={parameters.newAutomationName} placeholder="Enter automation name" />
+    <Input
+      secondary
+      bind:value={parameters.newAutomationName}
+      placeholder="Enter automation name" />
   {/if}
 
   <SaveFields
     parameterFields={parameters.fields}
-    schemaFields={newOrExisting === "existing" && selectedAutomation && selectedAutomation.schema}
+    schemaFields={newOrExisting === 'existing' && selectedAutomation && selectedAutomation.schema}
     fieldLabel="Field"
     on:fieldschanged={onFieldsChanged} />
-
 </div>
 
 <style>
@@ -127,5 +127,4 @@
   .radio-container > input:focus {
     outline: none;
   }
-
 </style>
