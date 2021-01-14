@@ -2,7 +2,7 @@
   import { Icon, DropdownMenu, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { getBindableProperties } from "builderStore/dataBinding"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -31,18 +31,17 @@
     return [...acc, ...viewsArr]
   }, [])
 
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-  })
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  )
+  $: console.log(bindableProperties)
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")
     .map(property => {
       return {
-        providerId: property.instance._id,
+        providerId: property.providerId,
         label: property.readableBinding,
         fieldName: property.fieldSchema.name,
         name: `all_${property.fieldSchema.tableId}`,

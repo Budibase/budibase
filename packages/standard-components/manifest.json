@@ -42,7 +42,7 @@
         "key": "datasource"
       },
       {
-        "type": "detailURL",
+        "type": "detailScreen",
         "label": "Detail URL",
         "key": "detailUrl"
       },
@@ -90,13 +90,183 @@
       {
         "type": "boolean",
         "label": "Disabled",
-        "key": "disabled",
-        "valueKey": "checked"
+        "key": "disabled"
       },
       {
         "type": "event",
         "label": "On Click",
         "key": "onClick"
+      }
+    ]
+  },
+  "list": {
+    "name": "Repeater",
+    "description": "A configurable data list that attaches to your backend tables.",
+    "icon": "ri-list-check-2",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      }
+    ]
+  },
+  "form": {
+    "name": "Form",
+    "icon": "ri-file-edit-line",
+    "styleable": true
+  },
+  "input": {
+    "name": "Text Field",
+    "description": "A textfield component that allows the user to input text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "text",
+        "options": ["text", "password"]
+      }
+    ]
+  },
+  "richtext": {
+    "name": "Rich Text",
+    "description": "A component that allows the user to enter long form text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true
+  },
+  "datepicker": {
+    "name": "Date Picker",
+    "description": "A basic date picker component",
+    "icon": "ri-calendar-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      }
+    ]
+  },
+  "stackedlist": {
+    "name": "Stacked List",
+    "icon": "ri-archive-drawer-line",
+    "description": "A basic card component that can contain content and actions.",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Text 1",
+        "key": "text1"
+      },
+      {
+        "type": "text",
+        "label": "Text 2",
+        "key": "text2"
+      },
+      {
+        "type": "text",
+        "label": "Text 3",
+        "key": "text3"
+      },
+      {
+        "type": "screen",
+        "label": "Link URL",
+        "key": "destinationUrl"
+      }
+    ]
+  },
+  "card": {
+    "name": "Vertical Card",
+    "description": "A basic card component that can contain content and actions.",
+    "icon": "ri-layout-column-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "description"
+      },
+      {
+        "type": "text",
+        "label": "Link Text",
+        "key": "linkText"
+      },
+      {
+        "type": "screen",
+        "label": "Link Url",
+        "key": "linkUrl"
+      },
+      {
+        "type": "color",
+        "label": "Link Color",
+        "key": "linkColor",
+        "defaultValue": "#000"
+      },
+      {
+        "type": "color",
+        "label": "Hover Color",
+        "key": "linkHoverColor",
+        "defaultValue": "#222"
+      },
+      {
+        "type": "select",
+        "label": "Image Height",
+        "key": "imageHeight",
+        "options": ["auto", "12rem", "16rem", "20rem", "24rem"],
+        "defaultValue": "auto"
+      },
+      {
+        "type": "select",
+        "label": "Card Width",
+        "key": "cardWidth",
+        "options": ["16rem", "20rem", "24rem"],
+        "defaultValue": "20rem"
+      }
+    ]
+  },
+  "text": {
+    "name": "Paragraph",
+    "description": "A component for displaying paragraph text.",
+    "icon": "ri-paragraph",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
       }
     ]
   }

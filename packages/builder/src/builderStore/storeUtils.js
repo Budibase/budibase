@@ -40,22 +40,45 @@ export const findComponentParent = (rootComponent, id, parentComponent) => {
  */
 export const findComponentPath = (rootComponent, id, path = []) => {
   if (!rootComponent || !id) {
-    return null
+    return []
   }
   if (rootComponent._id === id) {
-    return [...path, id]
+    return [...path, rootComponent]
   }
   if (!rootComponent._children) {
-    return null
+    return []
   }
   for (const child of rootComponent._children) {
-    const newPath = [...path, rootComponent._id]
+    const newPath = [...path, rootComponent]
     const childResult = findComponentPath(child, id, newPath)
-    if (childResult != null) {
+    if (childResult?.length) {
       return childResult
     }
   }
-  return null
+  return []
+}
+
+/**
+ * Recurses through the component tree and finds all components of a certain
+ * type.
+ */
+export const findAllMatchingComponents = (rootComponent, selector) => {
+  if (!rootComponent || !selector) {
+    return []
+  }
+  let components = []
+  if (rootComponent._children) {
+    rootComponent._children.forEach(child => {
+      components = [
+        ...components,
+        ...findAllMatchingComponents(child, selector),
+      ]
+    })
+  }
+  if (selector(rootComponent)) {
+    components.push(rootComponent)
+  }
+  return components.reverse()
 }
 
 /**

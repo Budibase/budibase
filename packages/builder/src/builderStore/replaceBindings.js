@@ -30,9 +30,10 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
     const binding = bindableProperties.find(({ runtimeBinding }) => {
       return v === `{{ ${runtimeBinding} }}`
     })
-    if (binding) {
-      temp = temp.replace(v, `{{ ${binding.readableBinding} }}`)
-    }
+    temp = temp.replace(
+      v,
+      `{{ ${binding?.readableBinding ?? "Invalid binding"} }}`
+    )
   })
 
   return temp

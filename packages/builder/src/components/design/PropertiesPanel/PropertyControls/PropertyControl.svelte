@@ -1,8 +1,8 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import Input from "./Input.svelte"
-  import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { store, currentAsset } from "builderStore"
+  import { getBindableProperties } from "builderStore/dataBinding"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -15,67 +15,48 @@
   export let componentInstance = {}
   export let control = null
   export let key = ""
-  export let value
+  export let type = ""
+  export let value = null
   export let props = {}
   export let onChange = () => {}
 
   let temporaryBindableValue = value
-  let bindableProperties = []
   let anchor
   let dropdown
 
-  function handleClose() {
-    handleChange(key, temporaryBindableValue)
-  }
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  )
+  $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
+  $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
 
-  function getBindableProperties() {
-    // Get all bindableProperties
-    bindableProperties = fetchBindableProperties({
-      componentInstanceId: $store.selectedComponentId,
-      components: $store.components,
-      screen: $currentAsset,
-      tables: $backendUiStore.tables,
-    })
-  }
-
-  function replaceBindings(textWithBindings) {
-    getBindableProperties()
-    textWithBindings = readableToRuntimeBinding(
-      bindableProperties,
-      textWithBindings
-    )
-    onChange(key, textWithBindings)
-  }
-
-  function handleChange(key, v) {
-    let innerVal = v
-    if (typeof v === "object") {
-      if ("detail" in v) {
-        innerVal = v.detail
-      } else if ("target" in v) {
-        innerVal = props.valueKey ? v.target[props.valueKey] : v.target.value
+  // Handle a value change of any type
+  // String values have any bindings handled
+  const handleChange = value => {
+    let innerVal = value
+    if (value && typeof value === "object") {
+      if ("detail" in value) {
+        innerVal = value.detail
+      } else if ("target" in value) {
+        innerVal = value.target.value
       }
     }
     if (typeof innerVal === "string") {
-      replaceBindings(innerVal)
+      onChange(replaceBindings(innerVal))
     } else {
-      onChange(key, innerVal)
+      onChange(innerVal)
     }
   }
 
-  const safeValue = () => {
-    getBindableProperties()
-
-    let temp = runtimeToReadableBinding(bindableProperties, value)
-
-    return value == null && props.initialValue !== undefined
-      ? props.initialValue
-      : temp
+  // The "safe" value is the value with eny bindings made readable
+  // If there is no value set, any default value is used
+  const getSafeValue = (value, defaultValue, bindableProperties) => {
+    const enriched = runtimeToReadableBinding(bindableProperties, value)
+    return enriched == null && defaultValue !== undefined
+      ? defaultValue
+      : enriched
   }
-
-  // Incase the component has a different value key name
-  const handlevalueKey = value =>
-    props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() }
 </script>
 
 <div class="property-control" bind:this={anchor}>
@@ -84,13 +65,13 @@
     <svelte:component
       this={control}
       {componentInstance}
-      {...handlevalueKey(value)}
-      on:change={val => handleChange(key, val)}
-      onChange={val => handleChange(key, val)}
+      value={safeValue}
+      on:change={handleChange}
+      onChange={handleChange}
       {...props}
       name={key} />
   </div>
-  {#if bindable && !key.startsWith('_') && control === Input}
+  {#if bindable && !key.startsWith('_') && type === 'text'}
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
@@ -99,14 +80,14 @@
     </div>
   {/if}
 </div>
-{#if control == Input}
+{#if type === 'text'}
   <DropdownMenu
-    on:close={handleClose}
+    on:close={() => handleChange(temporaryBindableValue)}
     bind:this={dropdown}
     {anchor}
     align="right">
     <BindingDropdown
-      {...handlevalueKey(value)}
+      value={safeValue}
       close={dropdown.hide}
       on:update={e => (temporaryBindableValue = e.detail)}
       {bindableProperties} />
