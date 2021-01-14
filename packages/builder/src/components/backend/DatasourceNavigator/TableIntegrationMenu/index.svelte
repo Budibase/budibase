@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
+  import api from "builderStore/api"
   import { Input, TextArea, Spacer } from "@budibase/bbui"
   import ICONS from "../icons"
 

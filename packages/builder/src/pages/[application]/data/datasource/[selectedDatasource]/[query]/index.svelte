@@ -25,20 +25,6 @@
     parameters: [],
     fields: {},
   }
-
-  // $: {
-  //   if ($params.query !== "new") {
-  //     query = $backendUiStore.queries.find(query => query._id === $params.query)
-  //   } else {
-  //     // New query
-  //     query = {
-  //       datasourceId: $params.selectedDatasource,
-  //       name: "New Query",
-  //       parameters: [],
-  //       fields: {},
-  //     }
-  //   }
-  // }
 </script>
 
 <section>

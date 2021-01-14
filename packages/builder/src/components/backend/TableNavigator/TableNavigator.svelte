@@ -36,7 +36,7 @@
     {#each $backendUiStore.tables as table, idx}
       <NavItem
         border={idx > 0}
-        icon={table.integration?.type ? 'ri-database-2-line' : `ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
+        icon={`ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
         text={table.name}
         selected={selectedView === `all_${table._id}`}
         on:click={() => selectTable(table)}>

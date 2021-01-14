@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { TextArea, Label, Input, Heading, Spacer } from "@budibase/bbui"
-  import Editor from "./SvelteEditor.svelte"
+  import Editor from "./QueryEditor.svelte"
   import ParameterBuilder from "./QueryParameterBuilder.svelte"
   import FieldsBuilder from "./QueryFieldsBuilder.svelte"
 
@@ -9,6 +9,7 @@
     SQL: "sql",
     JSON: "json",
     FIELDS: "fields",
+    LIST: "list",
   }
 
   export let query
@@ -26,7 +27,7 @@
 {/if}
 
 <Heading extraSmall black>Query</Heading>
-<Spacer large />
+<Spacer medium />
 
 {#if schema}
   {#if schema.type === QueryTypes.SQL}
@@ -46,5 +47,5 @@
       value={query.fields.json} />
   {:else if schema.type === QueryTypes.FIELDS}
     <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
-  {/if}
+  {:else if schema.type === QueryTypes.LIST}LIST STUFF{/if}
 {/if}

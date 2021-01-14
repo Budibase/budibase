@@ -35,8 +35,6 @@
     notifier.success(`Datasource ${name} created successfully.`)
     analytics.captureEvent("Datasource Created", { name })
 
-    console.log(response)
-
     // Navigate to new datasource
     $goto(`./datasource/${response._id}`)
   }

@@ -32,7 +32,7 @@ exports.save = async function(ctx) {
     datasource._rev = response.rev
 
     ctx.status = 200
-    ctx.message = "Datasource created successfully."
+    ctx.message = "Datasource saved successfully."
     ctx.body = datasource
   } catch (err) {
     ctx.throw(err.status, err)
