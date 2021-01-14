@@ -497,7 +497,10 @@ export const getFrontendStore = () => {
         const path = findComponentPath(selectedAsset.props, component._id) || []
 
         // Remove root entry since it's the screen or layout
-        return path.slice(1).join("/")
+        return path
+          .slice(1)
+          .map(component => component._id)
+          .join("/")
       },
       links: {
         save: async (url, title) => {

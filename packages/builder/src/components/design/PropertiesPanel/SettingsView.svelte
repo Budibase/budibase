@@ -25,6 +25,13 @@
   export let onScreenPropChange = () => {}
   export let showDisplayName = false
 
+  const layoutDefinition = []
+  const screenDefinition = [
+    { key: "description", label: "Description", control: Input },
+    { key: "routing.route", label: "Route", control: Input },
+    { key: "routing.roleId", label: "Access", control: RoleSelect },
+    { key: "layoutId", label: "Layout", control: LayoutSelect },
+  ]
   const assetProps = [
     "title",
     "description",
@@ -34,12 +41,15 @@
   ]
 
   $: settings = componentDefinition?.settings ?? []
+  $: isLayout = assetInstance && assetInstance.favicon
+  $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
   const controlMap = {
     text: Input,
     select: OptionSelect,
     datasource: TableViewSelect,
-    detailURL: DetailScreenSelect,
+    screen: ScreenSelect,
+    detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
     event: EventsEditor,
@@ -47,17 +57,6 @@
   const getControl = type => {
     return controlMap[type]
   }
-
-  const propExistsOnComponentDef = prop =>
-    assetProps.includes(prop) || prop in (componentDefinition?.props ?? {})
-
-  const layoutDefinition = []
-  const screenDefinition = [
-    { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
-  ]
 
   const canRenderControl = setting => {
     const control = getControl(setting?.type)
@@ -70,29 +69,27 @@
     return true
   }
 
-  $: isLayout = assetInstance && assetInstance.favicon
-  $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
-
-  const onInstanceNameChange = (_, name) => {
+  const onInstanceNameChange = name => {
     onChange("_instanceName", name)
   }
 </script>
 
 <div class="settings-view-container">
   {#if assetInstance}
-    {#each assetDefinition as def}
+    {#each assetDefinition as def (`${componentInstance._id}-${def.key}`)}
       <PropertyControl
         bindable={false}
         control={def.control}
         label={def.label}
         key={def.key}
         value={get(assetInstance, def.key)}
-        onChange={onScreenPropChange} />
+        onChange={val => onScreenPropChange(def.key, val)} />
     {/each}
   {/if}
 
   {#if showDisplayName}
     <PropertyControl
+      bindable={false}
       control={Input}
       label="Name"
       key="_instanceName"
@@ -101,15 +98,16 @@
   {/if}
 
   {#if settings && settings.length > 0}
-    {#each settings as setting}
+    {#each settings as setting (`${componentInstance._id}-${setting.key}`)}
       {#if canRenderControl(setting)}
         <PropertyControl
+          type={setting.type}
           control={getControl(setting.type)}
           label={setting.label}
           key={setting.key}
           value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
           {componentInstance}
-          {onChange}
+          onChange={val => onChange(setting.key, val)}
           props={{ options: setting.options }} />
       {/if}
     {/each}

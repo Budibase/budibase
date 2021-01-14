@@ -1,12 +1,32 @@
 [
+  "container",
+  "grid",
+  "list",
   {
-    "name": "Category",
+    "name": "Cards",
     "icon": "ri-file-edit-line",
     "children": [
-      "container"
+      "card",
+      "stackedlist"
     ]
   },
-  "grid",
-  "screenslot",
-  "button"
+  {
+    "name": "Forms",
+    "icon": "ri-file-edit-line",
+    "children": [
+      "form",
+      "input",
+      "richtext",
+      "datepicker"
+    ]
+  },
+  "button",
+  "text",
+  {
+    "name": "Other",
+    "icon": "ri-file-edit-line",
+    "children": [
+      "screenslot"
+    ]
+  }
 ]

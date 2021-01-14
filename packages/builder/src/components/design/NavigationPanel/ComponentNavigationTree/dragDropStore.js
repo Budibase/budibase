@@ -77,18 +77,16 @@ export default function() {
 
       // Stop if the target and source are the same
       if (state.targetComponent === state.dragged) {
-        console.log("same component")
         return
       }
       // Stop if the target or source are null
       if (!state.targetComponent || !state.dragged) {
-        console.log("null component")
         return
       }
       // Stop if the target is a child of source
       const path = findComponentPath(state.dragged, state.targetComponent._id)
-      if (path?.includes(state.targetComponent._id)) {
-        console.log("target is child of course")
+      const ids = path.map(component => component._id)
+      if (ids.includes(state.targetComponent._id)) {
         return
       }
 

@@ -36,57 +36,6 @@
 			"logon"
 		]
 	},
-	"input": {
-		"name": "Textfield",
-		"bindable": "value",
-		"description": "An HTML input",
-		"props": {
-			"type": {
-				"type": "options",
-				"options": [
-					"text",
-					"password",
-					"checkbox",
-					"color",
-					"date",
-					"datetime-local",
-					"email",
-					"file",
-					"hidden",
-					"image",
-					"month",
-					"number",
-					"radio",
-					"range",
-					"reset",
-					"search",
-					"submit",
-					"tel",
-					"time",
-					"week"
-				],
-				"default": "text"
-			}
-		},
-		"tags": [
-			"form"
-		]
-	},
-	"text": {
-		"name": "Text",
-		"description": "stylable block of text",
-		"props": {
-			"text": "string",
-			"type": {
-				"type": "string",
-				"default": "none"
-			}
-		},
-		"tags": [
-			"div",
-			"container"
-		]
-	},
 	"richtext": {
 		"name": "Rich Text",
 		"description": "A component that allows the user to enter long form text.",
@@ -109,40 +58,7 @@
 		}
 	},
 
-	"dataform": {
-		"name": "Form",
-		"description": "an HTML table that fetches data from a table or view and displays it.",
-		"data": true,
-		"props": {}
-	},
-	"dataformwide": {
-		"name": "Form Wide",
-		"description": "an HTML table that fetches data from a table or view and displays it.",
-		"data": true,
-		"props": {}
-	},
-	"list": {
-		"name": "Repeater",
-		"description": "A configurable data list that attaches to your backend tables.",
-		"context": "datasource",
-		"children": true,
-		"data": true,
-		"props": {
-			"datasource": "tables"
-		}
-	},
-	"stackedlist": {
-		"name": "Stacked List",
-		"description": "A stacked list component for displaying information",
-		"props": {
-			"imageUrl": "string",
-			"heading": "string",
-			"text1": "string",
-			"text2": "string",
-			"text3": "string",
-			"destinationUrl": "string"
-		}
-	},
+
 	"rowdetail": {
 		"name": "Row Detail",
 		"description": "Loads a row, using an ID in the url",
@@ -163,43 +79,6 @@
 		"baseComponent": true,
 		"props": {
 			"table": "tables"
-		}
-	},
-	"card": {
-		"name": "Card",
-		"props": {
-			"imageUrl": "string",
-			"heading": "string",
-			"description": "string",
-			"linkText": "string",
-			"linkUrl": "string",
-			"linkColor": {
-				"type": "string",
-				"default": "#000"
-			},
-			"linkHoverColor": {
-				"type": "string",
-				"default": "#000"
-			},
-			"imageHeight": {
-				"type": "options",
-				"default": "20rem",
-				"options": [
-					"12rem",
-					"16rem",
-					"20rem",
-					"24rem"
-				]
-			},
-			"cardWidth": {
-				"type": "options",
-				"default": "20rem",
-				"options": [
-					"16rem",
-					"20rem",
-					"24rem"
-				]
-			}
 		}
 	},
 	"cardstat": {
