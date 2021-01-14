@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte"
+  import { goto } from "@sveltech/routify"
   import {
     Select,
     Button,
@@ -55,8 +56,9 @@
     {}
   )
 
-  $: datasourceType = datasource.source
-  $: datasourceType && fetchQueryConfig()
+  $: datasourceType = datasource?.source
+  
+  $: config = $backendUiStore.integrations[datasourceType]?.query
 
   $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
 
@@ -67,17 +69,6 @@
   function deleteField(idx) {
     fields.splice(idx, 1)
     fields = fields
-  }
-
-  async function fetchQueryConfig() {
-    try {
-      const response = await api.get(`/api/integrations/${datasource.source}`)
-      const json = await response.json()
-      config = json.query
-    } catch (err) {
-      notifier.danger("Error fetching integration configuration.")
-      console.error(err)
-    }
   }
 
   async function previewQuery() {
@@ -115,8 +106,12 @@
 
   async function saveQuery() {
     try {
-      await backendUiStore.actions.queries.save(query.datasourceId, query)
+      const { _id } = await backendUiStore.actions.queries.save(
+        query.datasourceId,
+        query
+      )
       notifier.success(`Query saved successfully.`)
+      $goto(`../../${_id}`)
     } catch (err) {
       console.error(err)
       notifier.danger(`Error creating query. ${err.message}`)
@@ -161,9 +156,10 @@
       <Spacer medium />
 
       <IntegrationQueryEditor
-        schema={config[query.queryVerb][query.queryType]}
         {query}
-        bind:parameters />
+        schema={config[query.queryVerb][query.queryType]}
+        bind:parameters
+      />
 
       <Spacer medium />
 

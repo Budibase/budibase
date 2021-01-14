@@ -5,6 +5,7 @@
   import { notifier } from "builderStore/store/notifications"
   import BottomDrawer from "components/common/BottomDrawer.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import IntegrationQueryEditor from "components/integration/index.svelte"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
@@ -13,18 +14,6 @@
 
   export let value = {}
 
-  function handleSelected(selected) {
-    dispatch("change", selected)
-    dropdownRight.hide()
-  }
-
-  function openBindingDrawer() {
-    bindingDrawerOpen = true
-  }
-
-  function closeDatabindingDrawer() {
-    bindingDrawerOpen = false
-  }
 
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
@@ -78,6 +67,24 @@
         type: "link",
       }
     })
+
+  function handleSelected(selected) {
+    dispatch("change", selected)
+    dropdownRight.hide()
+  }
+
+  function openBindingDrawer() {
+    bindingDrawerOpen = true
+  }
+
+  function closeDatabindingDrawer() {
+    bindingDrawerOpen = false
+  }
+
+  function fetchDatasourceSchema(query) {
+    const source = $backendUiStore.datasources.find(ds => ds._id === query.datasourceId).source
+    return $backendUiStore.integrations[source].query[query.queryVerb][query.queryType];
+  }
 </script>
 
 <div
@@ -98,11 +105,18 @@
         }}>Save</Button>
       </div>
       <div class="drawer-contents" slot="body">
-        <pre>{value.queryString}</pre>
-        <ParameterBuilder
-          bind:customParams={value.queryParams}
-          parameters={value.parameters || []}
-          bindings={queryBindableProperties} />
+        <IntegrationQueryEditor 
+          query={value}
+          schema={fetchDatasourceSchema(value)}
+          editable={false}
+        />
+        <Spacer large />
+        {#if value.parameters.length > 0}
+          <ParameterBuilder
+            bind:customParams={value.queryParams}
+            parameters={value.parameters}
+            bindings={queryBindableProperties} />
+        {/if}
       </div>
     </BottomDrawer>
   {/if}
@@ -229,6 +243,8 @@
 
   .drawer-contents {
     padding: var(--spacing-xl);
+    height: 40vh;
+    overflow-y: auto;
   }
 
   i {
