@@ -68,5 +68,6 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        run: yarn build:docker
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build:docker
