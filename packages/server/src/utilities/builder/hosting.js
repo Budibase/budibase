@@ -100,5 +100,11 @@ exports.getDeployedApps = async () => {
       "x-budibase-auth": hostingKey,
     },
   })
-  return response.json()
+  const json = await response.json()
+  for (let value of Object.values(json)) {
+    if (value.url) {
+      value.url = value.url.toLowerCase()
+    }
+  }
+  return json
 }
