@@ -29,9 +29,9 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "MIT",
-  "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
+  "gitHead": "bbc62586126c5cbfdafd239e8b1deac0a5a2bf11",
   "dependencies": {
     "@budibase/bbui": "^1.52.4",
     "@budibase/svelte-ag-grid": "^0.0.16",

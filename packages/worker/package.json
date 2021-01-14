@@ -1,7 +1,7 @@
 {
   "name": "@budibase/deployment",
   "email": "hi@budibase.com",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Budibase Deployment Server",
   "main": "src/index.js",
   "repository": {
@@ -30,5 +30,6 @@
     "koa-static": "^5.0.0",
     "pino-pretty": "^4.0.0",
     "server-destroy": "^1.0.1"
-  }
+  },
+  "gitHead": "bbc62586126c5cbfdafd239e8b1deac0a5a2bf11"
 }
