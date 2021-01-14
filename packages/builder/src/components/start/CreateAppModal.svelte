@@ -84,7 +84,9 @@
     if (hostingInfo.type === "self") {
       await hostingStore.actions.fetchDeployedApps()
       const existingAppNames = svelteGet(hostingStore).deployedAppNames
-      infoValidation.applicationName = string().required("Your application must have a name.").notOneOf(existingAppNames)
+      infoValidation.applicationName = string()
+        .required("Your application must have a name.")
+        .notOneOf(existingAppNames)
       isApiKeyValid = true
       steps = [buildStep(Info), buildStep(User)]
       validationSchemas = [infoValidation, userValidation]
