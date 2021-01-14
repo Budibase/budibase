@@ -57,7 +57,7 @@
       const nameIdx = existingAppNames.indexOf(get(store).name)
       const urlIdx = existingAppUrls.indexOf(get(store).url)
       if (nameIdx !== -1) {
-      existingAppNames.splice(nameIdx, 1)
+        existingAppNames.splice(nameIdx, 1)
       }
       if (urlIdx !== -1) {
         existingAppUrls.splice(urlIdx, 1)
