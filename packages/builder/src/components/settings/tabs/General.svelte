@@ -54,8 +54,14 @@
       await hostingStore.actions.fetchDeployedApps()
       const existingAppNames = get(hostingStore).deployedAppNames
       const existingAppUrls = get(hostingStore).deployedAppUrls
-      existingAppNames.splice(existingAppNames.indexOf(get(store).name), 1)
-      existingAppUrls.splice(existingAppUrls.indexOf(get(store).url), 1)
+      const nameIdx = existingAppNames.indexOf(get(store).name)
+      const urlIdx = existingAppUrls.indexOf(get(store).url)
+      if (nameIdx !== -1) {
+      existingAppNames.splice(nameIdx, 1)
+      }
+      if (urlIdx !== -1) {
+        existingAppUrls.splice(urlIdx, 1)
+      }
       nameValidation = {
         name: string()
           .required(nameError)
