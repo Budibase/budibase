@@ -72,7 +72,7 @@ async function getAppUrlIfNotInUse(ctx) {
   } else {
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  url = `/${url.replace(/\/|\\/g, "")}`
+  url = `/${url.replace(/\/|\\/g, "")}`.toLowerCase()
   const hostingInfo = await getHostingInfo()
   if (hostingInfo.type === HostingTypes.CLOUD) {
     return url
