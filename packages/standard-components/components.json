@@ -21,39 +21,6 @@
 			"logoUrl": "string"
 		}
 	},
-	"button": {
-		"name": "Button",
-		"description": "an html <button />",
-		"props": {
-			"text": "string",
-			"disabled": "bool",
-			"onClick": "event"
-		},
-		"tags": [
-			"layout"
-		],
-		"presets": {
-			"primary": {
-				"contentText": "Primary Button Preset",
-				"color": "papayawhip",
-				"padding": "20px",
-				"background": "blue"
-			},
-			"secondary": {
-				"contentText": "Secondary Button Preset",
-				"color": "rebeccapurple",
-				"padding": "10px",
-				"background": "#fff",
-				"border": "1px solid red"
-			},
-			"error": {
-				"contentText": "ERROR",
-				"color": "red",
-				"padding": "10px",
-				"border": "1px solid red"
-			}
-		}
-	},
 	"login": {
 		"name": "Login Control",
 		"description": "A control that accepts email, password an also handles password resets",

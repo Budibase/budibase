@@ -6,7 +6,7 @@
 
   export let className = "default"
   export let disabled = false
-  export let text
+  export let text = ""
   export let onClick
 </script>
 

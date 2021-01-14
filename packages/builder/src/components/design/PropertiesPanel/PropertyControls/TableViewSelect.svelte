@@ -1,8 +1,8 @@
 <script>
-  import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
+  import { Icon, DropdownMenu, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "../../../builderStore/fetchBindableProperties"
+  import fetchBindableProperties from "builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight

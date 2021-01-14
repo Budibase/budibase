@@ -7,9 +7,9 @@
   } from "builderStore"
   import { onMount } from "svelte"
   import CurrentItemPreview from "components/userInterface/AppPreview"
-  import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
-  import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
-  import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
+  import ComponentPropertiesPanel from "components/userInterface/PropertiesPanel/ComponentPropertiesPanel.svelte"
+  import ComponentSelectionList from "components/userInterface/AppPreview/ComponentSelectionList.svelte"
+  import FrontendNavigatePane from "components/userInterface/NavigationPanel/FrontendNavigatePane.svelte"
 
   $: instance = $store.appInstance
 

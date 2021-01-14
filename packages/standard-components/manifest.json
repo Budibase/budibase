@@ -75,5 +75,29 @@
     "name": "Screenslot",
     "description": "Contains your app screens",
     "styleable": true
+  },
+  "button": {
+    "name": "Button",
+    "description": "A basic html button that is ready for styling",
+    "icon": "ri-share-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "valueKey": "checked"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
+      }
+    ]
   }
 }

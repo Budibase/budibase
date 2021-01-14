@@ -8,7 +8,7 @@
     runtimeToReadableBinding,
   } from "builderStore/replaceBindings"
   import { DropdownMenu } from "@budibase/bbui"
-  import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
+  import BindingDropdown from "components/userInterface/PropertiesPanel/BindingDropdown.svelte"
 
   export let label = ""
   export let bindable = true

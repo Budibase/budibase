@@ -1,5 +1,5 @@
 <script>
-  import PropertyControl from "./PropertyPanelControls/PropertyControl.svelte"
+  import PropertyControl from "./PropertyControl.svelte"
   import { DetailSummary } from "@budibase/bbui"
 
   export let name = ""
@@ -10,14 +10,6 @@
   export let open = false
 
   const hasPropChanged = (style, prop) => {
-    // TODO: replace color picker with one that works better.
-    // Currently it cannot support null values, so this is a hack which
-    // prevents the color fields from always being marked as changed
-    if (!["color", "background", "border-color"].includes(prop.key)) {
-      if (prop.initialValue !== undefined) {
-        return style[prop.key] !== prop.initialValue
-      }
-    }
     return style[prop.key] != null && style[prop.key] !== ""
   }
 

@@ -1,7 +1,7 @@
 import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
 import FlatButtonGroup from "./PropertyPanelControls/FlatButtonGroup"
-import Colorpicker from "@budibase/colorpicker"
+import Colorpicker from "./PropertyPanelControls/ColorPicker.svelte"
 
 export const layout = [
   {
@@ -467,7 +467,6 @@ export const typography = [
     label: "Color",
     key: "color",
     control: Colorpicker,
-    initialValue: "#000",
   },
   {
     label: "align",
@@ -511,7 +510,6 @@ export const background = [
     label: "Color",
     key: "background",
     control: Colorpicker,
-    initialValue: "#000",
   },
   {
     label: "Gradient",
@@ -634,7 +632,6 @@ export const border = [
     label: "Color",
     key: "border-color",
     control: Colorpicker,
-    initialValue: "#000",
   },
   {
     label: "Style",
