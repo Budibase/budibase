@@ -1,13 +1,16 @@
 import { writable } from "svelte/store"
-import api from "../api"
+import api, {get} from "../api"
 
-const INITIAL_BACKEND_UI_STATE = {
+const INITIAL_HOSTING_UI_STATE = {
   hostingInfo: {},
   appUrl: "",
+  deployedApps: {},
+  deployedAppNames: [],
+  deployedAppUrls: [],
 }
 
 export const getHostingStore = () => {
-  const store = writable({ ...INITIAL_BACKEND_UI_STATE })
+  const store = writable({ ...INITIAL_HOSTING_UI_STATE })
   store.actions = {
     fetch: async () => {
       const responses = await Promise.all([
@@ -33,6 +36,16 @@ export const getHostingStore = () => {
         return state
       })
     },
+    fetchDeployedApps: async () => {
+      let deployments = await (await get("/api/hosting/apps")).json()
+      store.update(state => {
+        state.deployedApps = deployments
+        state.deployedAppNames = Object.values(deployments).map(app => app.name)
+        state.deployedAppUrls = Object.values(deployments).map(app => app.url)
+        return state
+      })
+      return deployments
+    }
   }
   return store
 }

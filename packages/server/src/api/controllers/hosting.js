@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
 const {
   getHostingInfo,
+  getDeployedApps,
   HostingTypes,
   getAppUrl,
 } = require("../../utilities/builder/hosting")
@@ -36,4 +37,8 @@ exports.fetchUrls = async ctx => {
   ctx.body = {
     app: await getAppUrl(ctx.appId),
   }
+}
+
+exports.getDeployedApps = async ctx => {
+  ctx.body = await getDeployedApps()
 }
