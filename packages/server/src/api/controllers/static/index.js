@@ -29,7 +29,7 @@ function objectStoreUrl() {
 
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
-  let possibleAppUrl = `/${ctx.params.appId}`
+  let possibleAppUrl = `/${encodeURI(ctx.params.appId)}`
   const apps = await getDeployedApps()
   if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
     return apps[possibleAppUrl].appId
