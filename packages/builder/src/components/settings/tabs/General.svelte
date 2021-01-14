@@ -43,7 +43,7 @@
   }
 
   async function checkUrl(url) {
-    urlError = await checkValidation({ url }, urlValidation)
+    urlError = await checkValidation({ url: url.toLowerCase() }, urlValidation)
   }
 
   onMount(async () => {
