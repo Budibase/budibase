@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -49,7 +49,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.5.1",
+    "@budibase/client": "^0.5.2",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
@@ -113,5 +113,5 @@
       "./scripts/jestSetup.js"
     ]
   },
-  "gitHead": "bbc62586126c5cbfdafd239e8b1deac0a5a2bf11"
+  "gitHead": "c33a59f087d6558f100d17a001abe706a64555f5"
 }
