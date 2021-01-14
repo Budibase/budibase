@@ -32,43 +32,35 @@
   }
 
   const moveUpComponent = () => {
-    store.update(state => {
-      const asset = get(currentAsset)
-      const parent = findComponentParent(asset.props, component)
-
-      if (parent) {
-        const currentIndex = parent._children.indexOf(component)
-        if (currentIndex === 0) return state
-
-        const newChildren = parent._children.filter(c => c !== component)
-        newChildren.splice(currentIndex - 1, 0, component)
-        parent._children = newChildren
-      }
-      state.selectedComponentId = component._id
-      store.actions.preview.saveSelected()
-
-      return state
-    })
+    const asset = get(currentAsset)
+    const parent = findComponentParent(asset.props, component._id)
+    if (!parent) {
+      return
+    }
+    const currentIndex = parent._children.indexOf(component)
+    if (currentIndex === 0) {
+      return
+    }
+    const newChildren = parent._children.filter(c => c !== component)
+    newChildren.splice(currentIndex - 1, 0, component)
+    parent._children = newChildren
+    store.actions.preview.saveSelected()
   }
 
   const moveDownComponent = () => {
-    store.update(state => {
-      const asset = get(currentAsset)
-      const parent = findComponentParent(asset.props, component)
-
-      if (parent) {
-        const currentIndex = parent._children.indexOf(component)
-        if (currentIndex === parent._children.length - 1) return state
-
-        const newChildren = parent._children.filter(c => c !== component)
-        newChildren.splice(currentIndex + 1, 0, component)
-        parent._children = newChildren
-      }
-      state.selectedComponentId = component._id
-      store.actions.preview.saveSelected()
-
-      return state
-    })
+    const asset = get(currentAsset)
+    const parent = findComponentParent(asset.props, component._id)
+    if (!parent) {
+      return
+    }
+    const currentIndex = parent._children.indexOf(component)
+    if (currentIndex === parent._children.length - 1) {
+      return
+    }
+    const newChildren = parent._children.filter(c => c !== component)
+    newChildren.splice(currentIndex + 1, 0, component)
+    parent._children = newChildren
+    store.actions.preview.saveSelected()
   }
 
   const duplicateComponent = () => {

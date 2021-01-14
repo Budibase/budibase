@@ -1,6 +1,6 @@
 import Input from "./PropertyPanelControls/Input.svelte"
-import OptionSelect from "./OptionSelect.svelte"
-import FlatButtonGroup from "./FlatButtonGroup.svelte"
+import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
+import FlatButtonGroup from "./PropertyPanelControls/FlatButtonGroup"
 import Colorpicker from "@budibase/colorpicker"
 
 export const layout = [
@@ -299,42 +299,36 @@ export const size = [
     key: "width",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Height",
     key: "height",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Min Width",
     key: "min-width",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Max Width",
     key: "max-width",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Min Height",
     key: "min-height",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Max Height",
     key: "max-height",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
 ]
 
@@ -357,28 +351,24 @@ export const position = [
     key: "top",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Right",
     key: "right",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Bottom",
     key: "bottom",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Left",
     key: "left",
     control: Input,
     placeholder: "px",
-    textAlign: "center",
   },
   {
     label: "Z-index",
@@ -458,7 +448,6 @@ export const typography = [
       { label: "60px", value: "60px" },
       { label: "72px", value: "72px" },
     ],
-    textAlign: "center",
   },
   {
     label: "Line H",
@@ -672,7 +661,6 @@ export const effects = [
     label: "Opacity",
     key: "opacity",
     control: OptionSelect,
-    textAlign: "center",
     options: [
       { label: "Choose option", value: "" },
       { label: "0", value: "0" },
@@ -758,7 +746,6 @@ export const transitions = [
     label: "Duration",
     key: "transition-duration",
     control: OptionSelect,
-    textAlign: "center",
     placeholder: "sec",
     options: [
       { label: "Choose option", value: "" },
@@ -785,7 +772,7 @@ export const transitions = [
   },
 ]
 
-export const all = {
+export const allStyles = {
   layout,
   margin,
   padding,
@@ -796,14 +783,4 @@ export const all = {
   border,
   effects,
   transitions,
-}
-
-export function excludeProps(props, propsToExclude) {
-  const modifiedProps = {}
-  for (const prop in props) {
-    if (!propsToExclude.includes(prop)) {
-      modifiedProps[prop] = props[prop]
-    }
-  }
-  return modifiedProps
 }

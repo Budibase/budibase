@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import Input from "./PropertyPanelControls/Input.svelte"
+  import Input from "./Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import {

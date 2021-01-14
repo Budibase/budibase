@@ -2,7 +2,7 @@
   import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
+  import fetchBindableProperties from "../../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -56,7 +56,7 @@
   class="dropdownbutton"
   bind:this={anchorRight}
   on:click={dropdownRight.show}>
-  <span>{value.label ? value.label : 'Table / View'}</span>
+  <span>{value && value.label ? value.label : 'Table / View'}</span>
   <Icon name="arrowdown" />
 </div>
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
