@@ -7,7 +7,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
-  import FeedbackIframe from "components/Feedback/FeedbackIframe.svelte"
+  import FeedbackIframe from "components/feedback/FeedbackIframe.svelte"
 
   let loading = false
   let deployments = []

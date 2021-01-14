@@ -1,13 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import {
-    Button,
-    TextArea,
-    Label,
-    Body,
-    Heading,
-    Spacer,
-  } from "@budibase/bbui"
+  import { Button, TextArea, Body, Heading, Spacer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()

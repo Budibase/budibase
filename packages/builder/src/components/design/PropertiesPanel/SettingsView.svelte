@@ -1,23 +1,22 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import PropertyControl from "./PropertyPanelControls/PropertyControl.svelte"
 
-  import Input from "./PropertyPanelControls/Input.svelte"
-
-  import LayoutSelect from "./PropertyPanelControls/LayoutSelect.svelte"
-  import RoleSelect from "./PropertyPanelControls/RoleSelect.svelte"
-  import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
-  import MultiTableViewFieldSelect from "./PropertyPanelControls/MultiTableViewFieldSelect.svelte"
-  import Checkbox from "./PropertyPanelControls/Checkbox.svelte"
-  import TableSelect from "components/userInterface/PropertyPanelControls/TableSelect.svelte"
-  import TableViewSelect from "components/userInterface/PropertyPanelControls/TableViewSelect.svelte"
-  import TableViewFieldSelect from "components/userInterface/PropertyPanelControls/TableViewFieldSelect.svelte"
-  import EventsEditor from "components/userInterface/PropertyPanelControls/EventsEditor"
-  import ScreenSelect from "components/userInterface/PropertyPanelControls/ScreenSelect.svelte"
-  import DetailScreenSelect from "components/userInterface/PropertyPanelControls/DetailScreenSelect.svelte"
-  import IconSelect from "components/userInterface/PropertyPanelControls/IconSelect"
-  import ColorPicker from "./ComponentPropertiesPanel.svelte"
+  import PropertyControl from "./PropertyControls/PropertyControl.svelte"
+  import Input from "./PropertyControls/Input.svelte"
+  import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
+  import RoleSelect from "./PropertyControls/RoleSelect.svelte"
+  import OptionSelect from "./PropertyControls/OptionSelect.svelte"
+  import MultiTableViewFieldSelect from "./PropertyControls/MultiTableViewFieldSelect.svelte"
+  import Checkbox from "./PropertyControls/Checkbox.svelte"
+  import TableSelect from "./PropertyControls/TableSelect.svelte"
+  import TableViewSelect from "./PropertyControls/TableViewSelect.svelte"
+  import TableViewFieldSelect from "./PropertyControls/TableViewFieldSelect.svelte"
+  import EventsEditor from "./PropertyControls/EventsEditor"
+  import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
+  import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
+  import IconSelect from "./PropertyControls/IconSelect"
+  import ColorPicker from "./PropertyControls/ColorPicker.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}

@@ -1,5 +1,5 @@
 <script>
-  import GenericBindingPopover from "../../userInterface/PropertiesPanel/GenericBindingPopover.svelte"
+  import GenericBindingPopover from "./GenericBindingPopover.svelte"
   import { Input, Icon } from "@budibase/bbui"
 
   export let bindings = []

@@ -3,7 +3,6 @@
 
   export let options = []
   export let value = []
-  export let styleBindingProperty
   export let onChange = () => {}
 
   let boundValue = getValidOptions(value, options)

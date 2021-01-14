@@ -9,10 +9,10 @@
     selectedAccessRole,
   } from "builderStore"
   import { FrontendTypes } from "constants"
-  import ComponentNavigationTree from "components/userInterface/NavigationPanel/ComponentNavigationTree/index.svelte"
-  import Layout from "components/userInterface/NavigationPanel/Layout.svelte"
-  import NewScreenModal from "components/userInterface/NavigationPanel/NewScreenModal.svelte"
-  import NewLayoutModal from "components/userInterface/NavigationPanel/NewLayoutModal.svelte"
+  import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
+  import Layout from "components/design/NavigationPanel/Layout.svelte"
+  import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
+  import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
   import { Modal, Switcher, Select } from "@budibase/bbui"
 
   const tabs = [

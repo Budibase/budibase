@@ -1,7 +1,7 @@
 <script>
   import { TextArea, DetailSummary, Button } from "@budibase/bbui"
-  import PropertyGroup from "./PropertyPanelControls/PropertyGroup.svelte"
-  import FlatButtonGroup from "./PropertyPanelControls/FlatButtonGroup"
+  import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
+  import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
   import { allStyles } from "./componentStyles"
 
   export let componentDefinition = {}

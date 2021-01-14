@@ -1,7 +1,7 @@
-import Input from "./PropertyPanelControls/Input.svelte"
-import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
-import FlatButtonGroup from "./PropertyPanelControls/FlatButtonGroup"
-import Colorpicker from "./PropertyPanelControls/ColorPicker.svelte"
+import Input from "./PropertyControls/Input.svelte"
+import OptionSelect from "./PropertyControls/OptionSelect.svelte"
+import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
+import Colorpicker from "./PropertyControls/ColorPicker.svelte"
 
 export const layout = [
   {

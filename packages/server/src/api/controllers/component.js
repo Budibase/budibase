@@ -23,7 +23,6 @@ exports.fetchAppComponentDefinitions = async function(ctx) {
       ctx.isDev ? "" : "package",
       "manifest.json"
     ))
-    console.log(componentJson)
 
     const result = {}
 
