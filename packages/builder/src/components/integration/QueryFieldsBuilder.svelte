@@ -11,6 +11,7 @@
 
   export let fields = {}
   export let schema
+  export let editable
 
   let customSchema = {}
   let draftField = {}
@@ -29,12 +30,13 @@
   {#each Object.keys(schema.fields) as field}
     <Label extraSmall grey>{field}</Label>
     <Input
+      disabled={!editable}
       type={schema.fields[field]?.type}
       required={schema.fields[field]?.required}
       bind:value={fields[field]} />
     <Spacer medium />
   {/each}
-  {#if schema.customisable}
+  {#if schema.customisable && editable}
     <Spacer large />
     <Label>Add Custom Field</Label>
     {#each Object.keys(customSchema) as field}

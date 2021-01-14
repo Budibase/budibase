@@ -1,24 +1,31 @@
 <script>
   import { onMount } from "svelte"
+  import { backendUiStore } from "builderStore"
   import { Input, TextArea, Spacer } from "@budibase/bbui"
-  import api from "builderStore/api"
   import ICONS from "../icons"
-
-  const INTEGRATION_ICON_MAP = {
-    POSTGRES: "ri-database-2-line",
-  }
 
   export let integration = {}
 
-  let integrationsPromise = fetchIntegrations()
-  let selectedIntegrationConfig
+  let schema
   let integrations = []
 
   async function fetchIntegrations() {
     const response = await api.get("/api/integrations")
     const json = await response.json()
+
     integrations = json
     return json
+  }
+
+  function selectIntegration(integrationType) {
+    schema = integrations[integrationType].datasource
+    integration = {
+      type: integrationType,
+      ...Object.keys(schema).reduce(
+        (acc, next) => ({ ...acc, [next]: schema[next].default }),
+        {}
+      ),
+    }
   }
 
   onMount(() => {
@@ -32,18 +39,7 @@
       <div
         class="integration hoverable"
         class:selected={integration.type === integrationType}
-        on:click={() => {
-          selectedIntegrationConfig = integrations[integrationType].datasource
-          integration = { type: integrationType, ...Object.keys(selectedIntegrationConfig).reduce(
-              (acc, next) => {
-                return {
-                  ...acc,
-                  [next]: selectedIntegrationConfig[next].default,
-                }
-              },
-              {}
-            ) }
-        }}>
+        on:click={() => selectIntegration(integrationType)}>
         <svelte:component
           this={ICONS[integrationType]}
           height="100"
@@ -53,11 +49,11 @@
     {/each}
   </div>
 
-  {#if selectedIntegrationConfig}
-    {#each Object.keys(selectedIntegrationConfig) as configKey}
+  {#if schema}
+    {#each Object.keys(schema) as configKey}
       <Input
         thin
-        type={selectedIntegrationConfig[configKey].type}
+        type={schema[configKey].type}
         label={configKey}
         bind:value={integration[configKey]} />
       <Spacer medium />

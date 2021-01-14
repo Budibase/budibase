@@ -1,18 +1,23 @@
 <script>
   import CodeMirror from "./codemirror"
   import { onMount, createEventDispatcher } from "svelte"
+  import { themeStore } from "builderStore"
 
   const dispatch = createEventDispatcher()
 
+  const THEMES = {
+    DARK: "tomorrow-night-eighties",
+    LIGHT: "default",
+  }
+
   export let value = ""
-  export let readonly = false
-  export let errorLoc = null
+  export let readOnly = false
   export let lineNumbers = true
   export let tab = true
   export let mode
 
-  let w
-  let h
+  let width
+  let height
 
   // We have to expose set and update methods, rather
   // than making this state-driven through props,
@@ -72,41 +77,8 @@
   let error_line
   let destroyed = false
 
-  $: if (editor && w && h) {
+  $: if (editor && width && height) {
     editor.refresh()
-  }
-
-  $: {
-    if (marker) marker.clear()
-
-    if (errorLoc) {
-      const line = errorLoc.line - 1
-      const ch = errorLoc.column
-
-      marker = editor.markText(
-        { line, ch },
-        { line, ch: ch + 1 },
-        {
-          className: "error-loc",
-        }
-      )
-
-      error_line = line
-    } else {
-      error_line = null
-    }
-  }
-
-  let previous_error_line
-  $: if (editor) {
-    if (previous_error_line != null) {
-      editor.removeLineClass(previous_error_line, "wrap", "error-line")
-    }
-
-    if (error_line && error_line !== previous_error_line) {
-      editor.addLineClass(error_line, "wrap", "error-line")
-      previous_error_line = error_line
-    }
   }
 
   onMount(() => {
@@ -137,9 +109,10 @@
       mode: modes[mode] || {
         name: mode,
       },
-      readOnly: readonly,
+      readOnly,
       autoCloseBrackets: true,
       autoCloseTags: true,
+      theme: $themeStore.darkMode ? THEMES.DARK : THEMES.LIGHT,
     }
 
     if (!tab)
@@ -182,6 +155,7 @@
   }
 
   :global(.CodeMirror) {
+    height: auto !important;
     border-radius: var(--border-radius-m);
     font-family: var(--font-sans) !important;
   }

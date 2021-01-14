@@ -9,6 +9,7 @@ const INITIAL_BACKEND_UI_STATE = {
   roles: [],
   datasources: [],
   queries: [],
+  integrations: {},
   selectedDatabase: {},
   selectedTable: {},
   draftTable: {},
@@ -27,11 +28,15 @@ export const getBackendUiStore = () => {
         const datasources = await datasourcesResponse.json()
         const queriesResponse = await api.get(`/api/queries`)
         const queries = await queriesResponse.json()
+        const integrationsResponse = await api.get("/api/integrations")
+        const integrations = await integrationsResponse.json()
+
         store.update(state => {
           state.selectedDatabase = db
           state.tables = tables
           state.datasources = datasources
           state.queries = queries
+          state.integrations = integrations
           return state
         })
       },
@@ -132,6 +137,7 @@ export const getBackendUiStore = () => {
           state.selectedQueryId = json._id
           return state
         })
+        return json
       },
       select: queryId =>
         store.update(state => {

@@ -17,24 +17,33 @@
     }
   }
 
-  $: {
-    if ($params.query !== "new") {
-      query = $backendUiStore.queries.find(query => query._id === $params.query)
-    } else {
-      // New query
-      query = {
-        datasourceId: $params.selectedDatasource,
-        name: "New Query",
-        parameters: [],
-        fields: {},
-      }
-    }
+  $: selectedQuery = $backendUiStore.queries.find(
+    query => query._id === $backendUiStore.selectedQueryId
+  ) || {
+    datasourceId: $params.selectedDatasource,
+    name: "New Query",
+    parameters: [],
+    fields: {},
   }
+
+  // $: {
+  //   if ($params.query !== "new") {
+  //     query = $backendUiStore.queries.find(query => query._id === $params.query)
+  //   } else {
+  //     // New query
+  //     query = {
+  //       datasourceId: $params.selectedDatasource,
+  //       name: "New Query",
+  //       parameters: [],
+  //       fields: {},
+  //     }
+  //   }
+  // }
 </script>
 
 <section>
-  {#if $backendUiStore.selectedDatabase._id && query}
-    <QueryInterface {query} />
+  {#if $backendUiStore.selectedDatabase._id && selectedQuery}
+    <QueryInterface query={selectedQuery} />
   {/if}
 </section>
 

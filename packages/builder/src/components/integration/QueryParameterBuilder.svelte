@@ -40,8 +40,8 @@
       <div />
     {/if}
     {#each parameters as parameter, idx}
-      <Input thin bind:value={parameter.name} />
-      <Input thin bind:value={parameter.default} />
+      <Input thin disabled={bindable} bind:value={parameter.name} />
+      <Input thin disabled={bindable} bind:value={parameter.default} />
       {#if bindable}
         <BindableInput
           type="string"
