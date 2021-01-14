@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api, {get} from "../api"
+import api, { get } from "../api"
 
 const INITIAL_HOSTING_UI_STATE = {
   hostingInfo: {},
@@ -45,7 +45,7 @@ export const getHostingStore = () => {
         return state
       })
       return deployments
-    }
+    },
   }
   return store
 }

@@ -2,7 +2,7 @@
   import { Input, TextArea } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
   import api from "builderStore/api"
-  import {object, string} from "yup"
+  import { object, string } from "yup"
   import { onMount } from "svelte"
   import { get } from "svelte/store"
 
@@ -47,7 +47,8 @@
   }
 
   onMount(async () => {
-    const nameError = "Your application must have a name.", urlError = "Your application must have a URL."
+    const nameError = "Your application must have a name.",
+      urlError = "Your application must have a URL."
     let hostingInfo = await hostingStore.actions.fetch()
     if (hostingInfo.type === "self") {
       await hostingStore.actions.fetchDeployedApps()
@@ -55,8 +56,16 @@
       const existingAppUrls = get(hostingStore).deployedAppUrls
       existingAppNames.splice(existingAppNames.indexOf(get(store).name), 1)
       existingAppUrls.splice(existingAppUrls.indexOf(get(store).url), 1)
-      nameValidation = { name: string().required(nameError).notOneOf(existingAppNames) }
-      urlValidation = { url: string().required(urlError).notOneOf(existingAppUrls) }
+      nameValidation = {
+        name: string()
+          .required(nameError)
+          .notOneOf(existingAppNames),
+      }
+      urlValidation = {
+        url: string()
+          .required(urlError)
+          .notOneOf(existingAppUrls),
+      }
     } else {
       nameValidation = { name: string.required(nameError) }
     }
@@ -71,7 +80,7 @@
     bind:value={$store.name}
     bind:error={nameError}
     label="App Name" />
-  {#if $hostingStore.hostingInfo.type === "self"}
+  {#if $hostingStore.hostingInfo.type === 'self'}
     <Input
       on:save={e => updateApplication({ url: e.detail })}
       thin
