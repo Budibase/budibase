@@ -1,5 +1,5 @@
 <script>
-  import { store, currentAsset } from "builderStore"
+  import { store } from "builderStore"
   import { Select } from "@budibase/bbui"
 
   export let value

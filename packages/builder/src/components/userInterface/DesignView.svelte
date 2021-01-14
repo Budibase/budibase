@@ -1,16 +1,16 @@
 <script>
   import { TextArea, DetailSummary, Button } from "@budibase/bbui"
   import PropertyGroup from "./PropertyGroup.svelte"
-  import FlatButtonGroup from "./FlatButtonGroup.svelte"
+  import FlatButtonGroup from "./PropertyPanelControls/FlatButtonGroup"
+  import { allStyles } from "./componentStyles"
 
-  export let panelDefinition = {}
+  export let componentDefinition = {}
   export let componentInstance = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
   export let onResetStyles = () => {}
 
   let selectedCategory = "normal"
-  let propGroup = null
   let currentGroup
 
   function onChange(category) {
@@ -23,7 +23,7 @@
     { value: "active", text: "Active" },
   ]
 
-  $: propertyGroupNames = panelDefinition ? Object.keys(panelDefinition) : []
+  $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
 </script>
 
 <div class="design-view-container">
@@ -32,12 +32,12 @@
   </div>
 
   <div class="positioned-wrapper">
-    <div bind:this={propGroup} class="design-view-property-groups">
-      {#if propertyGroupNames.length > 0}
-        {#each propertyGroupNames as groupName}
+    <div class="design-view-property-groups">
+      {#if groups.length > 0}
+        {#each groups as groupName}
           <PropertyGroup
             name={groupName}
-            properties={panelDefinition[groupName]}
+            properties={allStyles[groupName]}
             styleCategory={selectedCategory}
             {onStyleChanged}
             {componentInstance}

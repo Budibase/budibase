@@ -11,12 +11,13 @@ import {
 } from "builderStore"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
-import { FrontendTypes } from "../../constants"
+import { FrontendTypes } from "constants"
 import analytics from "analytics"
 import {
   findComponentType,
   findComponentParent,
   findComponentPath,
+  findComponent,
 } from "../storeUtils"
 import { uuid } from "../uuid"
 
@@ -44,21 +45,21 @@ export const getFrontendStore = () => {
   store.actions = {
     initialise: async pkg => {
       const { layouts, screens, application } = pkg
-      const components = await fetchComponentLibDefinitions(pkg.application._id)
+      const components = await fetchComponentLibDefinitions(application._id)
       store.update(state => ({
         ...state,
-        libraries: pkg.application.componentLibraries,
+        libraries: application.componentLibraries,
         components,
-        name: pkg.application.name,
-        description: pkg.application.description,
-        appId: pkg.application._id,
+        name: application.name,
+        description: application.description,
+        appId: application._id,
         layouts,
         screens,
         hasAppPackage: true,
-        appInstance: pkg.application.instance,
+        appInstance: application.instance,
       }))
       await hostingStore.actions.fetch()
-      await backendUiStore.actions.database.select(pkg.application.instance)
+      await backendUiStore.actions.database.select(application.instance)
     },
     routing: {
       fetch: async () => {
@@ -226,6 +227,25 @@ export const getFrontendStore = () => {
     },
     components: {
       select: component => {
+        if (!component) {
+          return
+        }
+
+        // If this is the root component, select the asset instead
+        const asset = get(currentAsset)
+        const parent = findComponentParent(asset.props, component._id)
+        if (parent == null) {
+          const state = get(store)
+          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
+          if (isLayout) {
+            store.actions.layouts.select(asset._id)
+          } else {
+            store.actions.screens.select(asset._id)
+          }
+          return
+        }
+
+        // Otherwise select the component
         store.update(state => {
           state.selectedComponentId = component._id
           state.currentView = "component"
@@ -236,10 +256,10 @@ export const getFrontendStore = () => {
         if (!componentName) {
           return null
         }
-        const name = componentName.startsWith("@budibase")
-          ? componentName
-          : `@budibase/standard-components/${componentName}`
-        return get(store).components[name]
+        if (!componentName.startsWith("@budibase")) {
+          componentName = `@budibase/standard-components/${componentName}`
+        }
+        return get(store).components[componentName]
       },
       createInstance: (componentName, presetProps) => {
         const definition = store.actions.components.getDefinition(componentName)
@@ -273,6 +293,19 @@ export const getFrontendStore = () => {
         }
       },
       create: (componentName, presetProps) => {
+        const selected = get(selectedComponent)
+        const asset = get(currentAsset)
+        const state = get(store)
+
+        // Only allow one screen slot, and in the layout
+        if (componentName.endsWith("screenslot")) {
+          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
+          const slot = findComponentType(asset.props, componentName)
+          if (!isLayout || slot != null) {
+            return
+          }
+        }
+
         // Create new component
         const componentInstance = store.actions.components.createInstance(
           componentName,
@@ -284,8 +317,7 @@ export const getFrontendStore = () => {
 
         // Find parent node to attach this component to
         let parentComponent
-        const selected = get(selectedComponent)
-        const asset = get(currentAsset)
+
         if (!asset) {
           return
         }

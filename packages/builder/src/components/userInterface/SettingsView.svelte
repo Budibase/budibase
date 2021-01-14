@@ -1,32 +1,57 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import PropertyControl from "./PropertyControl.svelte"
-  import LayoutSelect from "./LayoutSelect.svelte"
-  import RoleSelect from "./RoleSelect.svelte"
-  import Input from "./PropertyPanelControls/Input.svelte"
-  import { excludeProps } from "./propertyCategories.js"
+  import PropertyControl from "./PropertyPanelControls/PropertyControl.svelte"
 
-  export let panelDefinition = []
+  import Input from "./PropertyPanelControls/Input.svelte"
+
+  import LayoutSelect from "./PropertyPanelControls/LayoutSelect.svelte"
+  import RoleSelect from "./PropertyPanelControls/RoleSelect.svelte"
+  import OptionSelect from "./PropertyPanelControls/OptionSelect.svelte"
+  import MultiTableViewFieldSelect from "./MultiTableViewFieldSelect.svelte"
+  import Checkbox from "../common/Checkbox.svelte"
+  import TableSelect from "components/userInterface/PropertyPanelControls/TableSelect.svelte"
+  import TableViewSelect from "components/userInterface/PropertyPanelControls/TableViewSelect.svelte"
+  import TableViewFieldSelect from "components/userInterface/PropertyPanelControls/TableViewFieldSelect.svelte"
+  import EventsEditor from "components/userInterface/PropertyPanelControls/EventsEditor"
+  import ScreenSelect from "components/userInterface/PropertyPanelControls/ScreenSelect.svelte"
+  import DetailScreenSelect from "components/userInterface/DetailScreenSelect.svelte"
+  import IconSelect from "components/userInterface/PropertyPanelControls/IconSelect"
+  import Colorpicker from "@budibase/colorpicker"
+
   export let componentDefinition = {}
   export let componentInstance = {}
+  export let assetInstance
   export let onChange = () => {}
   export let onScreenPropChange = () => {}
-  export let displayNameField = false
-  export let assetInstance
+  export let showDisplayName = false
 
-  let assetProps = [
+  const assetProps = [
     "title",
     "description",
     "routing.route",
     "layoutId",
     "routing.roleId",
   ]
-  let duplicateName = false
+
+  $: settings = componentDefinition?.settings ?? []
+
+  const controlMap = {
+    text: Input,
+    select: OptionSelect,
+    datasource: TableViewSelect,
+    detailURL: DetailScreenSelect,
+    boolean: Checkbox,
+    number: Input,
+  }
+  const getControl = type => {
+    return controlMap[type]
+  }
 
   const propExistsOnComponentDef = prop =>
     assetProps.includes(prop) || prop in (componentDefinition?.props ?? {})
 
+  const layoutDefinition = []
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
     { key: "routing.route", label: "Route", control: Input },
@@ -34,13 +59,15 @@
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
-  const layoutDefinition = []
-
-  const canRenderControl = (key, dependsOn) => {
-    return (
-      propExistsOnComponentDef(key) &&
-      (!dependsOn || !isEmpty(componentInstance[dependsOn]))
-    )
+  const canRenderControl = setting => {
+    const control = getControl(setting?.type)
+    if (!control) {
+      return false
+    }
+    if (setting.dependsOn && isEmpty(componentInstance[setting.dependsOn])) {
+      return false
+    }
+    return true
   }
 
   $: isLayout = assetInstance && assetInstance.favicon
@@ -60,34 +87,30 @@
         label={def.label}
         key={def.key}
         value={get(assetInstance, def.key)}
-        onChange={onScreenPropChange}
-        props={{ ...excludeProps(def, ['control', 'label']) }} />
+        onChange={onScreenPropChange} />
     {/each}
   {/if}
 
-  {#if displayNameField}
+  {#if showDisplayName}
     <PropertyControl
       control={Input}
       label="Name"
       key="_instanceName"
       value={componentInstance._instanceName}
       onChange={onInstanceNameChange} />
-    {#if duplicateName}
-      <span class="duplicate-name">Name must be unique</span>
-    {/if}
   {/if}
 
-  {#if !isLayout && panelDefinition && panelDefinition.length > 0}
-    {#each panelDefinition as definition}
-      {#if canRenderControl(definition.key, definition.dependsOn)}
+  {#if settings && settings.length > 0}
+    {#each settings as setting}
+      {#if canRenderControl(setting)}
         <PropertyControl
-          control={definition.control}
-          label={definition.label}
-          key={definition.key}
-          value={componentInstance[definition.key] ?? componentInstance[definition.key]?.defaultValue}
+          control={getControl(setting.type)}
+          label={setting.label}
+          key={setting.key}
+          value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
           {componentInstance}
           {onChange}
-          props={{ ...excludeProps(definition, ['control', 'label']) }} />
+          props={{ options: setting.options }} />
       {/if}
     {/each}
   {:else}
@@ -105,17 +128,9 @@
     height: 100%;
     gap: var(--spacing-s);
   }
-
   .empty {
     font-size: var(--font-size-xs);
     margin-top: var(--spacing-m);
     color: var(--grey-5);
-  }
-
-  .duplicate-name {
-    color: var(--red);
-    font-size: var(--font-size-xs);
-    position: relative;
-    top: -10px;
   }
 </style>

@@ -1,9 +1,13 @@
 <script>
   // This component is overridden when running in a real app.
-  // This simply serves as a placeholder component for the real screen router.
+  // This simply serves as a placeholder component for the real screen router
+  import { getContext } from "svelte"
+
+  const { styleable } = getContext("sdk")
+  const component = getContext("component")
 </script>
 
-<div>
+<div use:styleable={$component.styles}>
   <h1>Screen Slot</h1>
   <span>
     The screens that you create will be displayed inside this box.
@@ -14,16 +18,15 @@
 
 <style>
   div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    text-align: center !important;
     border-style: dashed !important;
-    border-width: 1px;
-    color: #000000;
-    background-color: rgba(0, 0, 0, 0.05);
-    flex: 1 1 auto;
+    border-width: 1px !important;
+    color: #000000 !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
   }
 </style>

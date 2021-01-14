@@ -1,6 +1,5 @@
 <script>
-  import { excludeProps } from "./propertyCategories.js"
-  import PropertyControl from "./PropertyControl.svelte"
+  import PropertyControl from "./PropertyPanelControls/PropertyControl.svelte"
   import { DetailSummary } from "@budibase/bbui"
 
   export let name = ""
@@ -36,7 +35,7 @@
           key={prop.key}
           value={style[prop.key]}
           onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
-          props={{ ...excludeProps(prop, ['control', 'label']) }} />
+          props={{ options: prop.options, placeholder: prop.placeholder }} />
       {/each}
     </div>
   {/if}

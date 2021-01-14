@@ -2,47 +2,29 @@
   import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
   import { FrontendTypes } from "constants"
-  import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
   import SettingsView from "./SettingsView.svelte"
   import { setWith } from "lodash"
 
-  let flattenedPanel = flattenComponents(panelStructure.categories)
-  let categories = [
+  const categories = [
     { value: "settings", name: "Settings" },
     { value: "design", name: "Design" },
   ]
   let selectedCategory = categories[0]
 
-  $: componentInstance =
-    $store.currentView !== "component"
-      ? { ...$currentAsset, ...$selectedComponent }
-      : $selectedComponent
-  $: componentDefinition = store.actions.components.getDefinition(
-    componentInstance._component
+  $: definition = store.actions.components.getDefinition(
+    $selectedComponent._component
   )
-  $: componentPropDefinition =
-    flattenedPanel.find(
-      // use for getting controls for each component property
-      c => c._component === componentInstance._component
-    ) || {}
-
-  $: panelDefinition =
-    componentPropDefinition.properties &&
-    componentPropDefinition.properties[selectedCategory.value]
+  $: isComponentOrScreen =
+    $store.currentView === "component" ||
+    $store.currentFrontEndType === FrontendTypes.SCREEN
+  $: isNotScreenslot = !$selectedComponent._component.endsWith("screenslot")
+  $: showDisplayName = isComponentOrScreen && isNotScreenslot
 
   const onStyleChanged = store.actions.components.updateStyle
   const onCustomStyleChanged = store.actions.components.updateCustomStyle
   const onResetStyles = store.actions.components.resetStyles
-
-  $: isComponentOrScreen =
-    $store.currentView === "component" ||
-    $store.currentFrontEndType === FrontendTypes.SCREEN
-  $: isNotScreenslot = !componentInstance._component.endsWith("screenslot")
-
-  $: displayName =
-    isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
 
   function walkProps(component, action) {
     action(component)
@@ -91,24 +73,23 @@
   {categories}
   {selectedCategory} />
 
-{#if displayName}
-  <div class="instance-name">{componentInstance._instanceName}</div>
+{#if showDisplayName}
+  <div class="instance-name">{$selectedComponent._instanceName}</div>
 {/if}
 
 <div class="component-props-container">
   {#if selectedCategory.value === 'design'}
     <DesignView
-      {panelDefinition}
-      {componentInstance}
+      componentInstance={$selectedComponent}
+      componentDefinition={definition}
       {onStyleChanged}
       {onCustomStyleChanged}
       {onResetStyles} />
   {:else if selectedCategory.value === 'settings'}
     <SettingsView
-      {componentInstance}
-      {componentDefinition}
-      {panelDefinition}
-      displayNameField={displayName}
+      componentInstance={$selectedComponent}
+      componentDefinition={definition}
+      {showDisplayName}
       onChange={store.actions.components.updateProp}
       onScreenPropChange={setAssetProps}
       assetInstance={$store.currentView !== 'component' && $currentAsset} />

@@ -1,5 +1,5 @@
 <script>
-  import TableViewFieldSelect from "./TableViewFieldSelect.svelte"
+  import TableViewFieldSelect from "./PropertyPanelControls/TableViewFieldSelect.svelte"
 </script>
 
 <TableViewFieldSelect {...$$props} multiselect />

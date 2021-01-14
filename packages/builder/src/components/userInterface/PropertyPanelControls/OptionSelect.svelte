@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import Portal from "svelte-portal"
-  import { buildStyle } from "../../helpers.js"
+  import { buildStyle } from "../../../helpers.js"
 
   export let options = []
   export let value = ""
