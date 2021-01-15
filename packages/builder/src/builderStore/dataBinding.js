@@ -68,7 +68,7 @@ export const getBindableComponents = rootComponent => {
   const componentSelector = component => {
     const type = component._component
     const definition = store.actions.components.getDefinition(type)
-    return definition.bindable
+    return definition?.bindable
   }
   const components = findAllMatchingComponents(rootComponent, componentSelector)
   return components.map(component => {
