@@ -9,7 +9,6 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { integrations } = require("../../integrations")
 const { coerceRowValues } = require("../../utilities")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
