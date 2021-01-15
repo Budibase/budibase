@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk")
 
 const SCHEMA = {
+  docs: "https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html",
   datasource: {
     region: {
       type: "string",
