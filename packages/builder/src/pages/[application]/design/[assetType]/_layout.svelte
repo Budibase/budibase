@@ -11,25 +11,11 @@
   import ComponentSelectionList from "components/design/AppPreview/ComponentSelectionList.svelte"
   import FrontendNavigatePane from "components/design/NavigationPanel/FrontendNavigatePane.svelte"
 
-  $: instance = $store.appInstance
-
-  async function selectDatabase(database) {
-    backendUiStore.actions.database.select(database)
-  }
-
   onMount(async () => {
     if ($store.appInstance && !$backendUiStore.database) {
-      await selectDatabase($store.appInstance)
+      backendUiStore.actions.database.select($store.appInstance)
     }
   })
-
-  let confirmDeleteDialog
-  let componentToDelete = ""
-
-  let settingsView
-  const settings = () => {
-    settingsView.show()
-  }
 </script>
 
 <!-- routify:options index=1 -->

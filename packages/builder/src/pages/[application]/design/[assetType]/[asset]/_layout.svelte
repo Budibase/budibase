@@ -1,64 +1,92 @@
 <script>
+  import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import { params, leftover, goto } from "@sveltech/routify"
   import { FrontendTypes } from "constants"
-  import { store, allScreens } from "builderStore"
+  import { store, allScreens, currentAsset } from "builderStore"
+  import { findComponent, findComponentPath } from "builderStore/storeUtils"
 
-  // Get any leftover params not caught by Routifys params store.
-  const componentIds = $leftover.split("/").filter(id => id !== "")
+  let initialised = false
 
-  const currentAssetId = decodeURI($params.asset)
+  // Hydrate state from query param on mount
+  onMount(() => {
+    const assetId = decodeURI($params.asset)
+    let assetList
+    let actions
 
-  let assetList
-  let actions
+    // Determine screens or layouts based on the URL
+    if ($params.assetType === FrontendTypes.SCREEN) {
+      assetList = $allScreens
+      actions = store.actions.screens
+    } else {
+      assetList = $store.layouts
+      actions = store.actions.layouts
+    }
 
-  // Determine screens or layouts based on the URL
-  if ($params.assetType === FrontendTypes.SCREEN) {
-    assetList = $allScreens
-    actions = store.actions.screens
-  } else {
-    assetList = $store.layouts
-    actions = store.actions.layouts
+    // Find and select the current asset
+    const asset = assetList.find(asset => asset._id === assetId)
+    if (asset) {
+      actions.select(assetId)
+
+      // Select the component ID if one is present in the URL
+      const selectedComponentId = $leftover.split("/").pop()
+      if (selectedComponentId) {
+        const component = findComponent(asset.props, selectedComponentId)
+        if (component) {
+          store.actions.components.select(component)
+        }
+      }
+    }
+
+    initialised = true
+  })
+
+  // Updates the route params in the URL to the specified values
+  const updateParams = (assetType, asset, componentId) => {
+    // Wait until the initial state rehydration to avoid a wasted update
+    if (!initialised) {
+      return
+    }
+
+    // Extract current URL params
+    const currentParams = get(params)
+    const currentLeftover = get(leftover)
+    const paramAssetType = currentParams.assetType
+    const paramAssetId = currentParams.asset
+    const paramComponentId = currentLeftover.split("/").pop()
+
+    // Only update params if the params actually changed
+    if (
+      assetType !== paramAssetType ||
+      asset?._id !== paramAssetId ||
+      componentId !== paramComponentId
+    ) {
+      // Build and navigate to a valid URL
+      let url = "../../"
+      if ([FrontendTypes.SCREEN, FrontendTypes.LAYOUT].includes(assetType)) {
+        url += `${assetType}`
+        if (asset?._id) {
+          url += `/${asset._id}`
+          if (componentId) {
+            const componentPath = findComponentPath(asset.props, componentId)
+            const componentURL = componentPath
+              .slice(1)
+              .map(comp => comp._id)
+              .join("/")
+            url += `/${componentURL}`
+          }
+        }
+      }
+      $goto(url)
+    }
   }
 
-  // select the screen or layout in the UI
-  actions.select(currentAssetId)
-
-  // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
-  if ($leftover) {
-    // Get the correct screen children.
-    const assetChildren =
-      assetList.find(
-        asset =>
-          asset._id === $params.asset ||
-          asset._id === decodeURIComponent($params.asset)
-      )?.props._children ?? []
-    findComponent(componentIds, assetChildren)
-  }
-  // }
-
-  // Find Component with ID and continue
-  function findComponent(ids, children) {
-    // Setup stuff
-    let componentToSelect
-    let currentChildren = children
-
-    // Loop through each ID
-    ids.forEach(id => {
-      // Find ID
-      const component = currentChildren.find(child => child._id === id)
-
-      // If it does not exist, ignore (use last valid route)
-      if (!component) return
-
-      componentToSelect = component
-
-      // Update childrens array to selected components children
-      currentChildren = componentToSelect._children
-    })
-
-    // Select Component!
-    if (componentToSelect) store.actions.components.select(componentToSelect)
-  }
+  // Automatically keep URL up to date with state
+  $: updateParams(
+    $store.currentFrontEndType,
+    $currentAsset,
+    $store.selectedComponentId
+  )
 </script>
 
 <slot />

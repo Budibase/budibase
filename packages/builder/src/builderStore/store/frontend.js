@@ -13,12 +13,7 @@ import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
 import analytics from "analytics"
-import {
-  findComponentType,
-  findComponentParent,
-  findComponentPath,
-  findComponent,
-} from "../storeUtils"
+import { findComponentType, findComponentParent } from "../storeUtils"
 import { uuid } from "../uuid"
 
 const INITIAL_FRONTEND_STATE = {
@@ -486,21 +481,6 @@ export const getFrontendStore = () => {
           return state
         })
         store.actions.preview.saveSelected()
-      },
-      findRoute: component => {
-        const selectedAsset = get(currentAsset)
-        if (!component || !selectedAsset) {
-          return "/"
-        }
-
-        // Get the path to this component
-        const path = findComponentPath(selectedAsset.props, component._id) || []
-
-        // Remove root entry since it's the screen or layout
-        return path
-          .slice(1)
-          .map(component => component._id)
-          .join("/")
       },
       links: {
         save: async (url, title) => {

@@ -46,11 +46,7 @@
       popover.show()
     } else {
       // Add this component
-      const newComponent = store.actions.components.create(item.component)
-      if (newComponent) {
-        const path = store.actions.components.findRoute(newComponent)
-        $goto(`./${$currentAssetId}/${path}`)
-      }
+      store.actions.components.create(item.component)
       popover.hide()
     }
   }
