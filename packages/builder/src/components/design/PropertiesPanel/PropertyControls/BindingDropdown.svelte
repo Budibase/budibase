@@ -28,7 +28,7 @@
   <div class="list">
     {#if hasBindableProperties}
       {#if context}
-        <Heading extraSmall>Contexts</Heading>
+        <Heading extraSmall>Datasources</Heading>
         <Spacer small />
         <ul>
           {#each context as { readableBinding }}
