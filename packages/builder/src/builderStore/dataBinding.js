@@ -71,9 +71,14 @@ export const getBindableComponents = rootComponent => {
     return definition.bindable
   }
   const components = findAllMatchingComponents(rootComponent, componentSelector)
-  console.log(components)
-
-  return []
+  return components.map(component => {
+    return {
+      type: "instance",
+      providerId: component._id,
+      runtimeBinding: `${component._id}`,
+      readableBinding: `${component._instanceName}`,
+    }
+  })
 }
 
 /**
