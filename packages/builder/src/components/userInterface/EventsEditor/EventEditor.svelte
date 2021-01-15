@@ -75,7 +75,8 @@
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
             <span class:selected={action === selectedAction}>
-              {index + 1}. {action[EVENT_TYPE_KEY]}
+              {index + 1}.
+              {action[EVENT_TYPE_KEY]}
             </span>
           </div>
           <i

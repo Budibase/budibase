@@ -5,12 +5,14 @@
 
   const AUTOMATION_STATUS = {
     NEW: "new",
-    EXISTING: "existing"
+    EXISTING: "existing",
   }
 
   export let parameters = {}
 
-  let automationStatus = parameters.automationId ? AUTOMATION_STATUS.EXISTING : AUTOMATION_STATUS.NEW
+  let automationStatus = parameters.automationId
+    ? AUTOMATION_STATUS.EXISTING
+    : AUTOMATION_STATUS.NEW
 
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === "APP")
@@ -46,45 +48,46 @@
     automationStatus = AUTOMATION_STATUS.EXISTING
     parameters.newAutomationName = ""
   }
-
 </script>
 
 <div class="root">
-
   <div class="radio-container" on:click={setNew}>
-    <input 
-      type="radio" 
-      value={AUTOMATION_STATUS.NEW} 
+    <input
+      type="radio"
+      value={AUTOMATION_STATUS.NEW}
       bind:group={automationStatus}
-      disabled={!hasAutomations}> 
-      
-    <Label disabled={!hasAutomations}>Create a new automation </Label>
+      disabled={!hasAutomations} />
 
+    <Label disabled={!hasAutomations}>Create a new automation</Label>
   </div>
 
   <div class="radio-container" on:click={setExisting}>
-
-    <input 
-      type="radio" 
+    <input
+      type="radio"
       value={AUTOMATION_STATUS.EXISTING}
       bind:group={automationStatus}
-      disabled={!hasAutomations}> 
-      
-    <Label disabled={!hasAutomations}>Use an existing automation </Label>
+      disabled={!hasAutomations} />
 
+    <Label disabled={!hasAutomations}>Use an existing automation</Label>
   </div>
 
   <Label size="m" color="dark">Automation</Label>
 
   {#if automationStatus === AUTOMATION_STATUS.EXISTING}
-    <Select secondary bind:value={parameters.automationId} placeholder="Choose automation">
+    <Select
+      secondary
+      bind:value={parameters.automationId}
+      placeholder="Choose automation">
       <option value="" />
       {#each automations as automation}
         <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>
   {:else}
-    <Input secondary bind:value={parameters.newAutomationName} placeholder="Enter automation name" />
+    <Input
+      secondary
+      bind:value={parameters.newAutomationName}
+      placeholder="Enter automation name" />
   {/if}
 
   <SaveFields
@@ -92,7 +95,6 @@
     schemaFields={automationStatus === AUTOMATION_STATUS.EXISTING && selectedAutomation && selectedAutomation.schema}
     fieldLabel="Field"
     on:fieldschanged={onFieldsChanged} />
-
 </div>
 
 <style>
@@ -132,5 +134,4 @@
   .radio-container > input:focus {
     outline: none;
   }
-
 </style>

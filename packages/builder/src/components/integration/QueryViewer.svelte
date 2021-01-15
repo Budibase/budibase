@@ -57,7 +57,7 @@
   )
 
   $: datasourceType = datasource?.source
-  
+
   $: config = $backendUiStore.integrations[datasourceType]?.query
 
   $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
@@ -158,8 +158,7 @@
       <IntegrationQueryEditor
         {query}
         schema={config[query.queryVerb][query.queryType]}
-        bind:parameters
-      />
+        bind:parameters />
 
       <Spacer medium />
 

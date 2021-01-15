@@ -32,9 +32,7 @@
 
     <slot name="icon" />
     {#if icon}
-      <div class="icon">
-        <i class={icon} />
-      </div>
+      <div class="icon"><i class={icon} /></div>
     {/if}
     <div class="text">{text}</div>
     {#if withActions}

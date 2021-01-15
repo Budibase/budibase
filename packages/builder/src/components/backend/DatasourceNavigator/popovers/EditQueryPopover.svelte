@@ -3,7 +3,7 @@
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import IntegrationConfigForm from "../TableIntegrationMenu//IntegrationConfigForm.svelte" 
+  import IntegrationConfigForm from "../TableIntegrationMenu//IntegrationConfigForm.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let query
@@ -35,13 +35,13 @@
     <i class="ri-more-line" />
   </div>
   <DropdownMenu align="left" {anchor} bind:this={dropdown}>
-      <DropdownContainer>
-        <DropdownItem
-          icon="ri-delete-bin-line"
-          title="Delete"
-          on:click={showModal}
-          data-cy="delete-datasource" />
-      </DropdownContainer>
+    <DropdownContainer>
+      <DropdownItem
+        icon="ri-delete-bin-line"
+        title="Delete"
+        on:click={showModal}
+        data-cy="delete-datasource" />
+    </DropdownContainer>
   </DropdownMenu>
 </div>
 <ConfirmDialog
@@ -49,8 +49,7 @@
   okText="Delete Query"
   onOk={deleteQuery}
   title="Confirm Deletion">
-  Are you sure you wish to delete this query?
-  This action cannot be undone.
+  Are you sure you wish to delete this query? This action cannot be undone.
 </ConfirmDialog>
 
 <style>
@@ -64,7 +63,7 @@
   div.icon i {
     font-size: 16px;
   }
-  
+
   .actions {
     padding: var(--spacing-xl);
     display: grid;

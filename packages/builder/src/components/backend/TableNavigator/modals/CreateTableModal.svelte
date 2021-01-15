@@ -2,7 +2,14 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { Input, Label, ModalContent, Button, Spacer, Toggle } from "@budibase/bbui"
+  import {
+    Input,
+    Label,
+    ModalContent,
+    Button,
+    Spacer,
+    Toggle,
+  } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -35,7 +42,7 @@
     let newTable = {
       name,
       schema: dataImport.schema || {},
-      dataImport
+      dataImport,
     }
 
     // Only set primary display if defined
@@ -90,6 +97,7 @@
     text="Generate screens in the design section"
     bind:checked={createAutoscreens} />
   <div>
-  <Label grey extraSmall>Create Table from CSV (Optional)</Label>
-  <TableDataImport bind:dataImport />
+    <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+    <TableDataImport bind:dataImport />
+  </div>
 </ModalContent>

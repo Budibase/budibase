@@ -14,7 +14,6 @@
 
   export let value = {}
 
-
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
     name: `all_${m._id}`,
@@ -33,12 +32,12 @@
   }, [])
 
   $: queries = $backendUiStore.queries.map(query => ({
-      label: query.name,
-      name: query.name,
-      ...query,
-      schema: query.schema,
-      parameters: query.parameters,
-      type: "query",
+    label: query.name,
+    name: query.name,
+    ...query,
+    schema: query.schema,
+    parameters: query.parameters,
+    type: "query",
   }))
 
   $: bindableProperties = fetchBindableProperties({
@@ -82,8 +81,12 @@
   }
 
   function fetchDatasourceSchema(query) {
-    const source = $backendUiStore.datasources.find(ds => ds._id === query.datasourceId).source
-    return $backendUiStore.integrations[source].query[query.queryVerb][query.queryType];
+    const source = $backendUiStore.datasources.find(
+      ds => ds._id === query.datasourceId
+    ).source
+    return $backendUiStore.integrations[source].query[query.queryVerb][
+      query.queryType
+    ]
   }
 </script>
 
@@ -94,22 +97,26 @@
   <span>{value.label ? value.label : 'Table / View / Query'}</span>
   <Icon name="arrowdown" />
 </div>
-{#if value.type === "query"}
-  <i class="ri-settings-5-line" on:click={openBindingDrawer}/>
+{#if value.type === 'query'}
+  <i class="ri-settings-5-line" on:click={openBindingDrawer} />
   {#if bindingDrawerOpen}
     <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
       <div slot="buttons">
-        <Button blue thin on:click={() => { 
-          notifier.success("Query parameters saved.")
-          handleSelected(value)
-        }}>Save</Button>
+        <Button
+          blue
+          thin
+          on:click={() => {
+            notifier.success('Query parameters saved.')
+            handleSelected(value)
+          }}>
+          Save
+        </Button>
       </div>
       <div class="drawer-contents" slot="body">
-        <IntegrationQueryEditor 
+        <IntegrationQueryEditor
           query={value}
           schema={fetchDatasourceSchema(value)}
-          editable={false}
-        />
+          editable={false} />
         <Spacer large />
         {#if value.parameters.length > 0}
           <ParameterBuilder
@@ -177,7 +184,6 @@
     </ul>
   </div>
 </DropdownMenu>
-
 
 <style>
   .dropdownbutton {
