@@ -8,8 +8,10 @@
   } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import actionTypes from "./actions"
+  import { createEventDispatcher } from "svelte"
+  import { automationStore } from "builderStore"
 
-  const eventTypeKey = "##eventHandlerType"
+  const EVENT_TYPE_KEY = "##eventHandlerType"
 
   export let event
 
@@ -17,16 +19,10 @@
   let addActionDropdown
   let selectedAction
 
-  let draftEventHandler = { parameters: [] }
-
   $: actions = event || []
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[eventTypeKey]).component
-
-  const updateEventHandler = (updatedHandler, index) => {
-    actions[index] = updatedHandler
-  }
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
 
   const deleteAction = index => {
     actions.splice(index, 1)
@@ -36,7 +32,7 @@
   const addAction = actionType => () => {
     const newAction = {
       parameters: {},
-      [eventTypeKey]: actionType.name,
+      [EVENT_TYPE_KEY]: actionType.name,
     }
     actions.push(newAction)
     selectedAction = newAction
@@ -79,7 +75,7 @@
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
             <span class:selected={action === selectedAction}>
-              {index + 1}. {action[eventTypeKey]}
+              {index + 1}. {action[EVENT_TYPE_KEY]}
             </span>
           </div>
           <i

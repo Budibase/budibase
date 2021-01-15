@@ -56,7 +56,7 @@ const SCHEMA = {
     },
     delete: {
       "Airtable Ids": {
-        type: FIELD_TYPES.LIST,
+        type: FIELD_TYPES.JSON,
       },
     },
   },
@@ -69,12 +69,12 @@ class AirtableIntegration {
   }
 
   async create(query) {
-    const { table, ...rest } = query
+    const { table, json } = query
 
     try {
       const records = await this.client(table).create([
         {
-          fields: rest,
+          fields: json,
         },
       ])
       return records
@@ -87,7 +87,7 @@ class AirtableIntegration {
   async read(query) {
     try {
       const records = await this.client(query.table)
-        .select({ maxRecords: 10, view: query.view })
+        .select({ maxRecords: query.numRecords || 10, view: query.view })
         .firstPage()
       return records.map(({ fields }) => fields)
     } catch (err) {
@@ -97,13 +97,13 @@ class AirtableIntegration {
   }
 
   async update(query) {
-    const { table, id, ...rest } = query
+    const { table, id, json } = query
 
     try {
       const records = await this.client(table).update([
         {
           id,
-          fields: rest,
+          fields: json,
         },
       ])
       return records

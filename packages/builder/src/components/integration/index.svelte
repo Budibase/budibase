@@ -47,5 +47,5 @@
       value={query.fields.json} />
   {:else if schema.type === QueryTypes.FIELDS}
     <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
-  {:else if schema.type === QueryTypes.LIST}LIST STUFF{/if}
+  {/if}
 {/if}

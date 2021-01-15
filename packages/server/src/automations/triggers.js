@@ -2,6 +2,7 @@ const CouchDB = require("../db")
 const emitter = require("../events/index")
 const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
 const { getAutomationParams } = require("../db/utils")
+const { coerceValue } = require("../utilities")
 
 let automationQueue = new InMemoryQueue("automationQueue")
 
@@ -119,6 +120,37 @@ const BUILTIN_DEFINITIONS = {
     },
     type: "TRIGGER",
   },
+  APP: {
+    name: "App Action",
+    event: "app:trigger",
+    icon: "ri-window-fill",
+    tagline: "Automation fired from the frontend",
+    description: "Trigger an automation from an action inside your app",
+    stepId: "APP",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          fields: {
+            type: "object",
+            customType: "triggerSchema",
+            title: "Fields",
+          },
+        },
+        required: [],
+      },
+      outputs: {
+        properties: {
+          fields: {
+            type: "object",
+            description: "Fields submitted from the app frontend",
+          },
+        },
+        required: ["fields"],
+      },
+    },
+    type: "TRIGGER",
+  },
 }
 
 async function queueRelevantRowAutomations(event, eventType) {
@@ -200,12 +232,19 @@ async function fillRowOutput(automation, params) {
 
 module.exports.externalTrigger = async function(automation, params) {
   // TODO: replace this with allowing user in builder to input values in future
-  if (
-    automation.definition != null &&
-    automation.definition.trigger != null &&
-    automation.definition.trigger.inputs.tableId != null
-  ) {
-    params = await fillRowOutput(automation, params)
+  if (automation.definition != null && automation.definition.trigger != null) {
+    if (automation.definition.trigger.inputs.tableId != null) {
+      params = await fillRowOutput(automation, params)
+    }
+    if (automation.definition.trigger.stepId === "APP") {
+      // values are likely to be submitted as strings, so we shall convert to correct type
+      const coercedFields = {}
+      const fields = automation.definition.trigger.inputs.fields
+      for (let key in fields) {
+        coercedFields[key] = coerceValue(params.fields[key], fields[key])
+      }
+      params.fields = coercedFields
+    }
   }
 
   automationQueue.add({ automation, event: params })
