@@ -50,7 +50,7 @@
 
   <Spacer medium />
 
-  {#if query}
+  {#if query?.parameters.length > 0}
     <ParameterBuilder
       bind:customParams={parameters.queryParams}
       parameters={query.parameters}
