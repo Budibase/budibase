@@ -6,7 +6,7 @@ const SCHEMA = {
     connectionString: {
       type: FIELD_TYPES.STRING,
       required: true,
-      default: "localhost",
+      default: "mongodb://localhost:27017",
     },
     db: {
       type: FIELD_TYPES.STRING,
