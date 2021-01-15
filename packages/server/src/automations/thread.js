@@ -3,7 +3,7 @@ const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
-const { recurseMustache } = require("../utilities/mustache")
+const { recurseHandlebars } = require("../utilities/handlebars")
 
 handlebars.registerHelper("object", value => {
   return new handlebars.SafeString(JSON.stringify(value))
@@ -24,7 +24,7 @@ class Orchestrator {
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
-    // step zero is never used as the mustache is zero indexed for customer facing
+    // step zero is never used as the handlebars is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
     // create an emitter which has the chain count for this automation run in it, so it can block
@@ -49,7 +49,7 @@ class Orchestrator {
     let automation = this._automation
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
-      step.inputs = recurseMustache(step.inputs, this._context)
+      step.inputs = recurseHandlebars(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,
         step.schema.inputs
