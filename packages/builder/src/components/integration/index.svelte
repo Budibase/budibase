@@ -9,7 +9,6 @@
     SQL: "sql",
     JSON: "json",
     FIELDS: "fields",
-    LIST: "list",
   }
 
   export let query

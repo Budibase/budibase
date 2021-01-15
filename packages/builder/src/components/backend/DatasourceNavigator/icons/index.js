@@ -5,7 +5,7 @@ import MongoDB from "./MongoDB.svelte"
 import CouchDB from "./CouchDB.svelte"
 import S3 from "./S3.svelte"
 import Airtable from "./Airtable.svelte"
-import SqlServer from "./SqlServer.svelte"
+import SqlServer from "./SQLServer.svelte"
 
 export default {
   POSTGRES: Postgres,
