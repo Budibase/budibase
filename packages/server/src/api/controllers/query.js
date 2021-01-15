@@ -38,8 +38,10 @@ function enrichQueryFields(fields, parameters) {
     enrichedQuery[key] = template(parameters)
   }
 
-  if (fields.json || fields.customData) {
-    enrichedQuery.json = JSON.parse(fields.json || fields.customData)
+  if (enrichedQuery.json || enrichedQuery.customData) {
+    enrichedQuery.json = JSON.parse(
+      enrichedQuery.json || enrichedQuery.customData
+    )
     delete enrichedQuery.customData
   }
 
