@@ -31,11 +31,18 @@ exports.save = async function(ctx) {
 
 function enrichQueryFields(fields, parameters) {
   const enrichedQuery = {}
+
   // enrich the fields with dynamic parameters
   for (let key in fields) {
     const template = handlebars.compile(fields[key])
     enrichedQuery[key] = template(parameters)
   }
+
+  if (fields.json || fields.customData) {
+    enrichedQuery.json = JSON.parse(fields.json || fields.customData)
+    delete enrichedQuery.customData
+  }
+
   return enrichedQuery
 }
 

@@ -43,14 +43,13 @@ class MongoIntegration {
 
   async create(query) {
     try {
-      const mongoQuery = query.json ? JSON.parse(query.json) : {}
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(this.config.collection)
-      const result = await collection.insertOne(mongoQuery)
+      const result = await collection.insertOne(query.json)
       return result
     } catch (err) {
-      console.error("Error querying mongodb", err)
+      console.error("Error writing to mongodb", err)
       throw err
     } finally {
       await this.client.close()
@@ -59,11 +58,10 @@ class MongoIntegration {
 
   async read(query) {
     try {
-      const mongoQuery = query.json ? JSON.parse(query.json) : {}
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(this.config.collection)
-      const result = await collection.find(mongoQuery).toArray()
+      const result = await collection.find(query.json).toArray()
       return result
     } catch (err) {
       console.error("Error querying mongodb", err)

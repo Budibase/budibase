@@ -6,21 +6,39 @@ const SCHEMA = {
     url: {
       type: FIELD_TYPES.STRING,
       required: true,
-      default: "localhost",
+      default: "http://localhost:5984",
     },
     database: {
       type: FIELD_TYPES.STRING,
       required: true,
     },
-    view: {
-      type: FIELD_TYPES.STRING,
-      required: true,
-    },
   },
   query: {
-    json: {
-      type: QUERY_TYPES.JSON,
-      required: true,
+    create: {
+      "CouchDB DSL": {
+        type: QUERY_TYPES.JSON,
+      },
+    },
+    read: {
+      "CouchDB DSL": {
+        type: QUERY_TYPES.JSON,
+      },
+    },
+    update: {
+      "CouchDB Document": {
+        type: QUERY_TYPES.JSON,
+      },
+    },
+    delete: {
+      "Document ID": {
+        type: QUERY_TYPES.FIELDS,
+        fields: {
+          id: {
+            type: FIELD_TYPES.STRING,
+            required: true,
+          },
+        },
+      },
     },
   },
 }
@@ -31,14 +49,45 @@ class CouchDBIntegration {
     this.client = new PouchDB(`${config.url}/${config.database}`)
   }
 
-  async read() {
+  async create(query) {
+    try {
+      const result = await this.client.post(query.json)
+      return result
+    } catch (err) {
+      console.error("Error writing to couchDB", err)
+      throw err
+    }
+  }
+
+  async read(query) {
     try {
       const result = await this.client.allDocs({
         include_docs: true,
+        ...query.json,
       })
       return result.rows.map(row => row.doc)
     } catch (err) {
       console.error("Error querying couchDB", err)
+      throw err
+    }
+  }
+
+  async update(query) {
+    try {
+      const result = await this.client.put(query.json)
+      return result
+    } catch (err) {
+      console.error("Error updating couchDB document", err)
+      throw err
+    }
+  }
+
+  async delete(query) {
+    try {
+      const result = await this.client.remove(query.id)
+      return result
+    } catch (err) {
+      console.error("Error deleting couchDB document", err)
       throw err
     }
   }
