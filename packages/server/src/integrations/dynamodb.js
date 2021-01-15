@@ -18,25 +18,56 @@ const SCHEMA = {
     },
   },
   query: {
+    create: {
+      DynamoConfig: {
+        type: QUERY_TYPES.FIELDS,
+        fields: {
+          table: {
+            type: FIELD_TYPES.STRING,
+            required: true,
+          },
+          customisable: true,
+        },
+      },
+    },
     read: {
       DynamoConfig: {
         type: QUERY_TYPES.FIELDS,
         fields: {
-          Table: {
+          table: {
             type: FIELD_TYPES.STRING,
             required: true,
           },
-          Index: {
+          index: {
             type: FIELD_TYPES.STRING,
           },
-          KeyConditionExpression: {
+          customisable: true,
+        },
+      },
+    },
+    update: {
+      DynamoConfig: {
+        type: QUERY_TYPES.FIELDS,
+        fields: {
+          table: {
             type: FIELD_TYPES.STRING,
+            required: true,
           },
-          ExpressionAttributeNames: {
+          customisable: true,
+        },
+      },
+    },
+    delete: {
+      "Dynamo Partition Key": {
+        type: QUERY_TYPES.FIELDS,
+        fields: {
+          table: {
             type: FIELD_TYPES.STRING,
+            required: true,
           },
-          ExpressionAttributeValues: {
+          key: {
             type: FIELD_TYPES.STRING,
+            required: true,
           },
         },
       },
@@ -55,12 +86,36 @@ class DynamoDBIntegration {
     AWS.config.update(this.config)
   }
 
+  async create(query) {
+    const response = await this.client.query({
+      TableName: query.table,
+      Item: query.json,
+    })
+    return response
+  }
+
   async read(query) {
     const response = await this.client.query({
       TableName: query.Table,
-      KeyConditionExpression: query.KeyConditionExpression,
-      ExpressionAttributeNames: query.ExpressionAttributeNames,
-      ExpressionAttributeValues: query.ExpressionAttributeValues,
+      ...query.json,
+    })
+    return response
+  }
+
+  async update(query) {
+    const response = await this.client.query({
+      TableName: query.Table,
+      ...query.json,
+    })
+    return response
+  }
+
+  async delete(query) {
+    const response = await this.client.query({
+      TableName: query.Table,
+      Key: {
+        id: query.key,
+      },
     })
     return response
   }
