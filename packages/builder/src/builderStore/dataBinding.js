@@ -36,12 +36,14 @@ export const getBindableContexts = (rootComponent, componentId) => {
       return
     }
     const { schema, table } = getSchemaForDatasource(provider.datasource)
-    Object.entries(schema).forEach(([key, schema]) => {
+    const keys = Object.keys(schema).sort()
+    keys.forEach(key => {
+      const fieldSchema = schema[key]
       // Replace certain bindings with a new property to help display components
       let runtimeBoundKey = key
-      if (schema.type === "link") {
+      if (fieldSchema.type === "link") {
         runtimeBoundKey = `${key}_count`
-      } else if (schema.type === "attachment") {
+      } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
 
@@ -49,7 +51,7 @@ export const getBindableContexts = (rootComponent, componentId) => {
         type: "context",
         runtimeBinding: `${provider._id}.${runtimeBoundKey}`,
         readableBinding: `${provider._instanceName}.${table.name}.${key}`,
-        fieldSchema: schema,
+        fieldSchema,
         providerId: provider._id,
       })
     })
@@ -88,7 +90,7 @@ const getSchemaForDatasource = datasource => {
   const tables = get(backendUiStore).tables
   const { type } = datasource
   const table = tables.find(table => table._id === datasource.tableId)
-  let schema = {}
+  let schema
   if (table) {
     if (type === "table") {
       schema = table.schema ?? {}
@@ -97,6 +99,13 @@ const getSchemaForDatasource = datasource => {
     } else if (type === "link") {
       schema = table.schema ?? {}
     }
+  }
+  if (schema) {
+    // Add ID and rev fields for any valid datasources
+    schema["_id"] = { type: "string" }
+    schema["_rev"] = { type: "string " }
+  } else {
+    schema = {}
   }
   return { schema, table }
 }
