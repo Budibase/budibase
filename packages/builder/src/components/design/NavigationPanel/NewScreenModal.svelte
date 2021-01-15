@@ -63,7 +63,7 @@
     draftScreen.props._component = baseComponent
     draftScreen.routing = { route, roleId }
 
-    const createdScreen = await store.actions.screens.create(draftScreen)
+    await store.actions.screens.create(draftScreen)
     if (createLink) {
       await store.actions.components.links.save(route, name)
     }
@@ -75,8 +75,6 @@
         template: template.id || template.name,
       })
     }
-
-    $goto(`./${createdScreen._id}`)
   }
 
   const routeExists = (route, roleId) => {

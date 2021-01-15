@@ -15,8 +15,6 @@
 
   const selectComponent = component => {
     store.actions.components.select(component)
-    const path = store.actions.components.findRoute(component)
-    $goto(`./${$currentAssetId}/${path}`)
   }
 
   const dragstart = component => e => {

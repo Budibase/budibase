@@ -28,7 +28,7 @@
 
   let modal
   let routes = {}
-  let tab = $params.assetType
+  $: tab = $params.assetType
 
   const navigate = ({ detail }) => {
     if (!detail) {

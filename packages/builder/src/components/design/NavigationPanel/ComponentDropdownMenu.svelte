@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@sveltech/routify"
   import { get } from "svelte/store"
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -27,8 +26,6 @@
 
   const selectComponent = component => {
     store.actions.components.select(component)
-    const path = store.actions.components.findRoute(component)
-    $goto(`./${$store.currentFrontEndType}/${path}`)
   }
 
   const moveUpComponent = () => {

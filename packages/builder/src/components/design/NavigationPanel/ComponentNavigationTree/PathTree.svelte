@@ -24,9 +24,7 @@
   $: selectedScreen = $currentAsset
 
   const changeScreen = screenId => {
-    // select the route
     store.actions.screens.select(screenId)
-    $goto(`./${screenId}`)
   }
 </script>
 

@@ -35,7 +35,6 @@
     $currentAsset.props,
     $store.selectedComponentId
   )
-  $: console.log(bindableProperties)
 
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")

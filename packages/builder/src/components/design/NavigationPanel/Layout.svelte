@@ -19,7 +19,6 @@
 
   const selectLayout = () => {
     store.actions.layouts.select(layout._id)
-    $goto(`./${layout._id}`)
   }
 </script>
 
