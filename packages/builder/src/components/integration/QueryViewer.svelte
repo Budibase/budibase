@@ -39,7 +39,7 @@
   let config
   let tab = "JSON"
   let parameters
-  let data
+  let data = []
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === query.datasourceId
@@ -91,13 +91,20 @@
 
       data = json || []
 
+
+      if (data.length === 0) {
+        notifier.info("Query results empty. Please execute a query with results to create your schema.")
+        return
+      } 
+
+      notifier.success("Query executed successfully.")
+
       // Assume all the fields are strings and create a basic schema
       // from the first record returned by the query
       fields = Object.keys(json[0]).map(field => ({
         name: field,
         type: "STRING",
       }))
-      notifier.success("Query executed successfully.")
     } catch (err) {
       notifier.danger(`Query Error: ${err.message}`)
       console.error(err)
@@ -163,7 +170,7 @@
       <Spacer medium />
 
       <div class="viewer-controls">
-        <Button wide thin blue disabled={!data} on:click={saveQuery}>
+        <Button wide thin blue disabled={data.length === 0} on:click={saveQuery}>
           Save
         </Button>
         <Button wide thin primary on:click={previewQuery}>Run</Button>

@@ -2,6 +2,7 @@ const { MongoClient } = require("mongodb")
 const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
+  docs: "https://github.com/mongodb/node-mongodb-native",
   datasource: {
     connectionString: {
       type: FIELD_TYPES.STRING,

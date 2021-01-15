@@ -1,6 +1,7 @@
 const { Client } = require("pg")
 
 const SCHEMA = {
+  docs: "https://node-postgres.com",
   datasource: {
     host: {
       type: "string",

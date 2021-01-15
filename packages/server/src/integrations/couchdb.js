@@ -2,6 +2,7 @@ const PouchDB = require("pouchdb")
 const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
+  docs: "https://docs.couchdb.org/en/stable/",
   datasource: {
     url: {
       type: FIELD_TYPES.STRING,

@@ -2,6 +2,8 @@ const { Client } = require("@elastic/elasticsearch")
 const { QUERY_TYPES, FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
+  docs:
+    "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html",
   datasource: {
     url: {
       type: "string",

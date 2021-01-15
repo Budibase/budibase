@@ -2,6 +2,7 @@ const sqlServer = require("mssql")
 const { FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
+  docs: "https://github.com/tediousjs/node-mssql",
   datasource: {
     user: {
       type: FIELD_TYPES.STRING,
