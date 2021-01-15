@@ -269,5 +269,27 @@
         "key": "text"
       }
     ]
+  },
+  "login": {
+    "description": "A component that automatically generates a login screen for your app.",
+    "icon": "ri-login-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Logo",
+        "key": "logo"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "text",
+        "label": "Button Text",
+        "key": "buttonText"
+      }
+    ]
   }
 }

@@ -21,21 +21,6 @@
 			"logoUrl": "string"
 		}
 	},
-	"login": {
-		"name": "Login Control",
-		"description": "A control that accepts email, password an also handles password resets",
-		"props": {
-			"logo": "string",
-			"title": "string",
-			"buttonText": "string"
-		},
-		"tags": [
-			"login",
-			"credentials",
-			"password",
-			"logon"
-		]
-	},
 	"richtext": {
 		"name": "Rich Text",
 		"description": "A component that allows the user to enter long form text.",
