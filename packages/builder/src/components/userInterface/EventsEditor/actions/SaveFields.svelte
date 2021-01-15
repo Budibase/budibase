@@ -1,6 +1,13 @@
 <script>
   // accepts an array of field names, and outputs an object of { FieldName: value }
-  import { DataList, Label, TextButton, Spacer, Select, Input } from "@budibase/bbui"
+  import {
+    DataList,
+    Label,
+    TextButton,
+    Spacer,
+    Select,
+    Input,
+  } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { CloseCircleIcon, AddIcon } from "components/common/Icons"
@@ -14,7 +21,7 @@
 
   export let parameterFields
   export let schemaFields
-  export let fieldLabel="Column"
+  export let fieldLabel = "Column"
 
   const emptyField = () => ({ name: "", value: "" })
 
@@ -60,7 +67,9 @@
         // value and type is needed by the client, so it can parse
         // a string into a correct type
         newParameterFields[field.name] = {
-          type: schemaFields ? schemaFields.find(f => f.name === field.name).type : "string",
+          type: schemaFields
+            ? schemaFields.find(f => f.name === field.name).type
+            : "string",
           value: readableToRuntimeBinding(bindableProperties, field.value),
         }
       }
@@ -83,7 +92,7 @@
         {/each}
       </Select>
     {:else}
-      <Input secondary bind:value={field.name} on:blur={rebuildParameters}/> 
+      <Input secondary bind:value={field.name} on:blur={rebuildParameters} />
     {/if}
     <Label size="m" color="dark">Value</Label>
     <DataList secondary bind:value={field.value} on:blur={rebuildParameters}>
@@ -105,7 +114,8 @@
     <Spacer small />
 
     <TextButton text small blue on:click={addField}>
-      Add {fieldLabel}
+      Add
+      {fieldLabel}
       <div style="height: 20px; width: 20px;">
         <AddIcon />
       </div>

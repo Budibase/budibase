@@ -16,7 +16,11 @@
 
   function checkValid(evt) {
     const datasourceName = evt.target.value
-    if ($backendUiStore.datasources?.some(datasource => datasource.name === datasourceName)) {
+    if (
+      $backendUiStore.datasources?.some(
+        datasource => datasource.name === datasourceName
+      )
+    ) {
       error = `Datasource with name ${tableName} already exists. Please choose another name.`
       return
     }
@@ -30,7 +34,7 @@
     await backendUiStore.actions.datasources.save({
       name,
       source: type,
-      config
+      config,
     })
     notifier.success(`Datasource ${name} created successfully.`)
     analytics.captureEvent("Datasource Created", { name })

@@ -5,7 +5,7 @@
     Label,
     Input,
     Heading,
-    Select
+    Select,
   } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
 
@@ -32,7 +32,7 @@
         type={schema.fields[field]?.type}
         required={schema.fields[field]?.required}
         bind:value={fields[field]} />
-      </div>
+    </div>
   {/each}
 </form>
 <Label extraSmall grey>Data</Label>
@@ -45,13 +45,12 @@
     value={fields.customData} />
 {/if}
 
-
 <style>
-.field {
-  margin-bottom: var(--spacing-m);
-  display: grid;
-  grid-template-columns: 1fr 2%;
-  grid-gap: var(--spacing-m);
-  align-items: center;
-}
+  .field {
+    margin-bottom: var(--spacing-m);
+    display: grid;
+    grid-template-columns: 1fr 2%;
+    grid-gap: var(--spacing-m);
+    align-items: center;
+  }
 </style>
