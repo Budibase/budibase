@@ -122,7 +122,7 @@
         {#if value.parameters.length > 0}
           <ParameterBuilder
             bind:customParams={value.queryParams}
-            parameters={value.parameters}
+            parameters={queries.find(query => query._id === value._id).parameters}
             bindings={queryBindableProperties} />
         {/if}
       </div>

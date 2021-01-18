@@ -25,7 +25,7 @@ export const fetchDatasource = async (datasource, dataContext) => {
   } else if (type === "query") {
     const bindings = get(bindingStore)
 
-    // TODO: refactor. Set these defaults up somewhere else
+    // Set the default query params
     let queryParams = datasource.queryParams || {}
     for (let param of datasource.parameters) {
       if (!queryParams[param.name]) {

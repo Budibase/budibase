@@ -18,13 +18,12 @@
     $goto(`./datasource/${datasource._id}`)
   }
 
-  function onClickQuery(datasourceId, queryId) {
-    if ($backendUiStore.selectedQueryId === queryId) {
+  function onClickQuery(query) {
+    if ($backendUiStore.selectedQueryId === query._id) {
       return
     }
-    backendUiStore.actions.datasources.select(datasourceId)
-    backendUiStore.actions.queries.select(queryId)
-    $goto(`./datasource/${datasourceId}/${queryId}`)
+    backendUiStore.actions.queries.select(query)
+    $goto(`./datasource/${query.datasourceId}/${query._id}`)
   }
 
   onMount(() => {
@@ -55,7 +54,7 @@
           icon="ri-eye-line"
           text={query.name}
           selected={$backendUiStore.selectedQueryId === query._id}
-          on:click={() => onClickQuery(datasource._id, query._id)}>
+          on:click={() => onClickQuery(query)}>
           <EditQueryPopover {query} />
         </NavItem>
       {/each}
