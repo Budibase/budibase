@@ -1,9 +1,13 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import GenericBindingPopover from "./GenericBindingPopover.svelte"
   import { Input, Icon } from "@budibase/bbui"
 
+  const dispatch = createEventDispatcher()
+
   export let bindings = []
   export let value
+
   let anchor
   let popover = undefined
   let enrichedValue
@@ -14,6 +18,7 @@
     let { bindings, ...otherProps } = $$props
     inputProps = otherProps
   }
+  $: value && dispatch("change", value)
 </script>
 
 <div class="container" bind:this={anchor}>

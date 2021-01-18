@@ -5,7 +5,7 @@
   import api from "builderStore/api"
 
   const BYTES_IN_MB = 1000000
-  const FILE_SIZE_LIMIT = BYTES_IN_MB * 1
+  const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
 
   export let files = []
   export let dataImport = {
