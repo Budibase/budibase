@@ -36,9 +36,7 @@
 </script>
 
 <div class="root">
-  <div class="add-field">
-    <i class="ri-add-line" on:click={addField} />
-  </div>
+  <div class="add-field"><i class="ri-add-line" on:click={addField} /></div>
   <div class="spacer" />
   {#each fieldsArray as field}
     <div class="field">
@@ -57,13 +55,11 @@
         <option>datetime</option>
       </Select>
 
-      <i class="remove-field ri-delete-bin-line"
+      <i
+        class="remove-field ri-delete-bin-line"
         on:click={() => removeField(field.name)} />
-
-      
     </div>
   {/each}
-
 </div>
 
 <style>
@@ -105,7 +101,8 @@
   }
 
   .field :global(input) {
-    padding: var(--spacing-m) var(--spacing-xl) var(--spacing-xs) var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-xl) var(--spacing-xs)
+      var(--spacing-m);
     font-size: var(--font-size-s);
     font-weight: bold;
   }
@@ -129,5 +126,4 @@
   .add-field > i {
     cursor: pointer;
   }
-
 </style>
