@@ -10,26 +10,6 @@
 
   let loading = false
   let error = false
-
-  // async function fetchData() {
-  //   try {
-  //     loading = true
-  //     const response = await api.fetchDataForQuery(
-  //       $params.selectedDatasource,
-  //       query._id
-  //     )
-  //     data = response.rows || []
-  //     error = false
-  //   } catch (err) {
-  //     error = `${query}: Query error. (${err.message}). This could be a problem with your datasource configuration.`
-  //     notifier.danger(error)
-  //   } finally {
-  //     loading = false
-  //   }
-  // }
-
-  // Fetch rows for specified query
-  // $: query && fetchData()
 </script>
 
 {#if error}
