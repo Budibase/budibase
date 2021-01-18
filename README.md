@@ -8,10 +8,10 @@
 </h1>
 
 <h3 align="center">
-  Build business apps 50x faster
+  Build internal tools 50x faster
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform that helps developers and IT professionals design, build, and ship business apps 50x faster.
+  Budibase is an open-source low-code platform that helps developers and IT professionals build, automate and ship internal tools 50x faster.
 </p>
 
 <h3 align="center">
