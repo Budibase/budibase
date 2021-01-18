@@ -28,6 +28,8 @@ module.exports = {
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   CLOUD: process.env.CLOUD,
   SELF_HOSTED: process.env.SELF_HOSTED,
+  WORKER_URL: process.env.WORKER_URL,
+  HOSTING_KEY: process.env.HOSTING_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   AWS_REGION: process.env.AWS_REGION,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
