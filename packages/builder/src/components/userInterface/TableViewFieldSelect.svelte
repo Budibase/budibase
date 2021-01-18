@@ -9,17 +9,19 @@
   export let multiselect = false
 
   const tables = $backendUiStore.tables
+  const queries = $backendUiStore.queries
 
   let options = []
 
-  $: table = componentInstance.datasource
+  $: table = componentInstance.datasource?.type === "table"
     ? tables.find(m => m._id === componentInstance.datasource.tableId)
-    : null
+    : queries.find(query => query._id === componentInstance.datasource._id)
 
   $: type = componentInstance.datasource.type
+
   $: if (table) {
     options =
-      type === "table" || type === "link"
+      type === "table" || type === "link" || type === "query"
         ? Object.keys(table.schema)
         : Object.keys(table.views[componentInstance.datasource.name].schema)
   }

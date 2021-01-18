@@ -29,22 +29,24 @@
 <Spacer medium />
 
 {#if schema}
-  {#if schema.type === QueryTypes.SQL}
-    <Editor
-      label="Query"
-      mode="sql"
-      on:change={updateQuery}
-      readOnly={!editable}
-      value={query.fields.sql} />
-  {:else if schema.type === QueryTypes.JSON}
-    <Spacer large />
-    <Editor
-      label="Query"
-      mode="json"
-      on:change={updateQuery}
-      readOnly={!editable}
-      value={query.fields.json} />
-  {:else if schema.type === QueryTypes.FIELDS}
-    <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
-  {/if}
+  {#key query._id}
+    {#if schema.type === QueryTypes.SQL}
+      <Editor
+        label="Query"
+        mode="sql"
+        on:change={updateQuery}
+        readOnly={!editable}
+        value={query.fields.sql} />
+    {:else if schema.type === QueryTypes.JSON}
+      <Spacer large />
+      <Editor
+        label="Query"
+        mode="json"
+        on:change={updateQuery}
+        readOnly={!editable}
+        value={query.fields.json} />
+    {:else if schema.type === QueryTypes.FIELDS}
+      <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
+    {/if}
+  {/key}
 {/if}

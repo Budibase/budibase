@@ -139,10 +139,10 @@ export const getBackendUiStore = () => {
         })
         return json
       },
-      select: queryId =>
+      select: query =>
         store.update(state => {
-          state.selectedDatasourceId = null
-          state.selectedQueryId = queryId
+          state.selectedDatasourceId = query.datasourceId
+          state.selectedQueryId = query._id
           return state
         }),
       delete: async query => {
