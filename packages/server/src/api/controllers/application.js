@@ -38,6 +38,8 @@ const {
   HostingTypes,
 } = require("../../utilities/builder/hosting")
 
+const URL_REGEX_SLASH = /\/|\\/g
+
 // utility function, need to do away with this
 async function getLayouts(db) {
   return (
@@ -72,7 +74,7 @@ async function getAppUrlIfNotInUse(ctx) {
   } else {
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  url = `/${url.replace(/\/|\\/g, "")}`.toLowerCase()
+  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
   const hostingInfo = await getHostingInfo()
   if (hostingInfo.type === HostingTypes.CLOUD) {
     return url
