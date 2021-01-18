@@ -91,11 +91,12 @@
 
       data = json || []
 
-
       if (data.length === 0) {
-        notifier.info("Query results empty. Please execute a query with results to create your schema.")
+        notifier.info(
+          "Query results empty. Please execute a query with results to create your schema."
+        )
         return
-      } 
+      }
 
       notifier.success("Query executed successfully.")
 
@@ -170,7 +171,12 @@
       <Spacer medium />
 
       <div class="viewer-controls">
-        <Button wide thin blue disabled={data.length === 0} on:click={saveQuery}>
+        <Button
+          wide
+          thin
+          blue
+          disabled={data.length === 0}
+          on:click={saveQuery}>
           Save
         </Button>
         <Button wide thin primary on:click={previewQuery}>Run</Button>

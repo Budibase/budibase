@@ -15,7 +15,7 @@
     components: $store.components,
     screen: $currentAsset,
     tables: $backendUiStore.tables,
-    queries: $backendUiStore.queries
+    queries: $backendUiStore.queries,
   }).map(property => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
