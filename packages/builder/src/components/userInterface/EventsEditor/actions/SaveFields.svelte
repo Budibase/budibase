@@ -44,6 +44,7 @@
     components: $store.components,
     screen: $currentAsset,
     tables: $backendUiStore.tables,
+    queries: $backendUiStore.queries,
   })
 
   const addField = () => {
@@ -114,8 +115,7 @@
     <Spacer small />
 
     <TextButton text small blue on:click={addField}>
-      Add
-      {fieldLabel}
+      Add {fieldLabel}
       <div style="height: 20px; width: 20px;">
         <AddIcon />
       </div>
