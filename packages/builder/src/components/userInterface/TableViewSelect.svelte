@@ -45,7 +45,7 @@
     components: $store.components,
     screen: $currentAsset,
     tables: $backendUiStore.tables,
-    queries: $backendUiStore.queries
+    queries: $backendUiStore.queries,
   })
 
   $: queryBindableProperties = bindableProperties.map(property => ({

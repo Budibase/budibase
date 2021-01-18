@@ -13,9 +13,10 @@
 
   let options = []
 
-  $: table = componentInstance.datasource?.type === "table"
-    ? tables.find(m => m._id === componentInstance.datasource.tableId)
-    : queries.find(query => query._id === componentInstance.datasource._id)
+  $: table =
+    componentInstance.datasource?.type === "table"
+      ? tables.find(m => m._id === componentInstance.datasource.tableId)
+      : queries.find(query => query._id === componentInstance.datasource._id)
 
   $: type = componentInstance.datasource.type
 
