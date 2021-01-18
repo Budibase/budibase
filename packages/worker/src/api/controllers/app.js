@@ -3,6 +3,7 @@ const CouchDB = require("../../db")
 const env = require("../../environment")
 
 const APP_PREFIX = "app_"
+const URL_REGEX_SLASH = /\/|\\/g
 
 exports.getApps = async ctx => {
   let allDbs
@@ -18,7 +19,7 @@ exports.getApps = async ctx => {
   const body = {}
   for (let app of apps) {
     let url = app.url || encodeURI(`${app.name}`)
-    url = `/${url.replace(/\/|\\/g, "")}`
+    url = `/${url.replace(URL_REGEX_SLASH, "")}`
     body[url] = {
       appId: app._id,
       name: app.name,

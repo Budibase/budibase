@@ -62,7 +62,6 @@
       if (urlIdx !== -1) {
         existingAppUrls.splice(urlIdx, 1)
       }
-      console.log(existingAppUrls)
       nameValidation = {
         name: string()
           .required(nameError)
