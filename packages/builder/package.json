@@ -66,6 +66,7 @@
     "@budibase/bbui": "^1.52.4",
     "@budibase/client": "^0.5.3",
     "@budibase/colorpicker": "^1.0.1",
+    "@budibase/string-templates": "^0.5.3",
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@sentry/browser": "5.19.1",

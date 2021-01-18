@@ -50,6 +50,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/client": "^0.5.3",
+    "@budibase/string-templates": "^0.5.3",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
