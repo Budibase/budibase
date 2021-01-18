@@ -1,0 +1,63 @@
+<script>
+  import { onMount } from "svelte"
+  import { goto } from "@sveltech/routify"
+  import { backendUiStore } from "builderStore"
+  import { TableNames } from "constants"
+  import CreateDatasourceModal from "./modals/CreateDatasourceModal.svelte"
+  import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
+  import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
+  import { Modal, Switcher } from "@budibase/bbui"
+  import NavItem from "components/common/NavItem.svelte"
+  import ICONS from "./icons"
+
+  $: selectedView =
+    $backendUiStore.selectedView && $backendUiStore.selectedView.name
+
+  function selectDatasource(datasource) {
+    backendUiStore.actions.datasources.select(datasource._id)
+    $goto(`./datasource/${datasource._id}`)
+  }
+
+  function onClickQuery(query) {
+    if ($backendUiStore.selectedQueryId === query._id) {
+      return
+    }
+    backendUiStore.actions.queries.select(query)
+    $goto(`./datasource/${query.datasourceId}/${query._id}`)
+  }
+
+  onMount(() => {
+    backendUiStore.actions.datasources.fetch()
+    backendUiStore.actions.queries.fetch()
+  })
+</script>
+
+{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+  <div class="hierarchy-items-container">
+    {#each $backendUiStore.datasources as datasource, idx}
+      <NavItem
+        border={idx > 0}
+        text={datasource.name}
+        selected={$backendUiStore.selectedDatasourceId === datasource._id}
+        on:click={() => selectDatasource(datasource)}>
+        <div class="datasource-icon" slot="icon">
+          <svelte:component
+            this={ICONS[datasource.source]}
+            height="15"
+            width="15" />
+        </div>
+        <EditDatasourcePopover {datasource} />
+      </NavItem>
+      {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
+        <NavItem
+          indentLevel={1}
+          icon="ri-eye-line"
+          text={query.name}
+          selected={$backendUiStore.selectedQueryId === query._id}
+          on:click={() => onClickQuery(query)}>
+          <EditQueryPopover {query} />
+        </NavItem>
+      {/each}
+    {/each}
+  </div>
+{/if}

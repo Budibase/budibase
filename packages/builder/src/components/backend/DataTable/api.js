@@ -23,5 +23,10 @@ export async function fetchDataForView(view) {
   const FETCH_ROWS_URL = `/api/views/${view.name}`
 
   const response = await api.get(FETCH_ROWS_URL)
-  return await response.json()
+  const json = await response.json()
+
+  if (response.status !== 200) {
+    throw new Error(json.message)
+  }
+  return json
 }

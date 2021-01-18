@@ -175,7 +175,7 @@ exports.fetchView = async function(ctx) {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.indexOf(TABLE_VIEW_BEGINS_WITH) === 0) {
+  if (viewName.startsWith(TABLE_VIEW_BEGINS_WITH)) {
     ctx.params.tableId = viewName.substring(4)
     await exports.fetchTableRows(ctx)
     return
@@ -217,6 +217,7 @@ exports.fetchView = async function(ctx) {
 
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
+
   // special case for users, fetch through the user controller
   let rows
   if (ctx.params.tableId === ViewNames.USERS) {
