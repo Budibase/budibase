@@ -59,6 +59,7 @@
   $: datasourceType = datasource?.source
 
   $: config = $backendUiStore.integrations[datasourceType]?.query
+  $: docsLink = $backendUiStore.integrations[datasourceType]?.docs
 
   $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
 
@@ -150,6 +151,10 @@
         {/each}
       </Select>
     {/if}
+    <Spacer medium />
+    <Button primary href={docsLink} target="_blank">
+      <i class="ri-book-2-line" />
+    </Button>
   {/if}
 </header>
 
@@ -220,6 +225,10 @@
     grid-gap: 10px;
     grid-template-columns: 1fr 1fr 50px;
     margin-bottom: var(--spacing-m);
+  }
+
+  a {
+    font-size: var(--font-size-s);
   }
 
   .config {
