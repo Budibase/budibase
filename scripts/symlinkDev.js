@@ -38,7 +38,7 @@ const SYMLINK_PATHS = [
   {
     symlink: `${devDir}/@budibase/string-templates`,
     destination: resolve("packages/string-templates"),
-  }
+  },
 ]
 
 SYMLINK_PATHS.forEach(sym => {
