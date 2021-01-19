@@ -6,11 +6,15 @@
 
   export let icon = ""
   export let size = "fa-lg"
-  export let color = "#000"
+  export let color = "#f00"
+  $: styles = {
+  ...$component.styles,
+  normal: {
+    ...$component.styles.normal,
+    color
+  }
+}
 </script>
 
-<div style="color: {color}; display: contents">
-  <i
-  use:styleable={$component.styles}
+<i use:styleable={styles}
   class="{icon} {size}" />
-</div>
