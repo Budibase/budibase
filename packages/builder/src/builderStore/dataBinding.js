@@ -53,6 +53,7 @@ export const getBindableContexts = (rootComponent, componentId) => {
         readableBinding: `${provider._instanceName}.${table.name}.${key}`,
         fieldSchema,
         providerId: provider._id,
+        tableId: provider.datasource.tableId,
       })
     })
   })

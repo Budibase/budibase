@@ -53,6 +53,7 @@
     boolean: Checkbox,
     number: Input,
     event: EventsEditor,
+    table: TableSelect,
   }
   const getControl = type => {
     return controlMap[type]
