@@ -25,5 +25,4 @@ export { default as cardhorizontal } from "./CardHorizontal.svelte"
 export { default as cardstat } from "./CardStat.svelte"
 export { default as newrow } from "./NewRow.svelte"
 export { default as icon } from "./Icon.svelte"
-
-// export * from "./charts"
+export * from "./charts"
