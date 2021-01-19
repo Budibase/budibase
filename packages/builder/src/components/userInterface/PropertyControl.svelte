@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Button, Icon, Drawer } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -7,7 +7,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/replaceBindings"
-  import BindingDrawer from "components/userInterface/BindingDrawer.svelte"
+  import BindingPanel from "components/userInterface/BindingPanel.svelte"
 
   export let label = ""
   export let bindable = true
@@ -17,15 +17,16 @@
   export let value
   export let props = {}
   export let onChange = () => {}
+
+  let bindingDrawer
   
   let temporaryBindableValue = value
   let bindableProperties = []
   let anchor
-  let showDrawer = false
 
   function handleClose() {
     handleChange(key, temporaryBindableValue)
-    showDrawer = false
+    bindingDrawer.hide()
   }
 
   function getBindableProperties() {
@@ -95,17 +96,24 @@
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={() => showDrawer = true}>
+      on:click={bindingDrawer.show}>
       <Icon name="edit" />
     </div>
   {/if}
 </div>
-<BindingDrawer
-  {...handlevalueKey(value)}
-  close={handleClose}
-  show={showDrawer}
-  on:update={e => (temporaryBindableValue = e.detail)}
-  {bindableProperties} />
+
+<Drawer bind:this={bindingDrawer} title="Bindings">
+  <div slot="description">This describes the drawer!</div>
+  <heading slot="buttons">
+    <Button thin blue on:click={handleClose}>Save</Button>
+  </heading>
+  <div slot="body">
+    <BindingPanel {...handlevalueKey(value)}
+    close={handleClose}
+    on:update={e => (temporaryBindableValue = e.detail)}
+    {bindableProperties} />
+  </div>
+</Drawer>
 
 <style>
   .property-control {
@@ -153,9 +161,5 @@
   .icon:hover {
     color: var(--ink);
     cursor: pointer;
-  }
-  .drawer-contents {
-    height: 40vh;
-    overflow-y: auto;
   }
 </style>
