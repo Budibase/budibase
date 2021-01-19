@@ -1,21 +1,15 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { getBindableProperties } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
 
   export let parameters
 
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-  })
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  )
 
   let idFields
   let rowId

@@ -1,24 +1,20 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { getBindableProperties } from "builderStore/dataBinding"
 
   export let parameters
 
   let idFields
 
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-  })
-
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  )
   $: idFields = bindableProperties.filter(
     bindable =>
       bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
   )
-
   $: {
     if (parameters.rowId) {
       // Set rev ID

@@ -2,6 +2,9 @@ import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
 
+// Regex to match mustache variables, for replacing bindings
+const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
+
 /**
  * Gets all bindable data context fields and instance fields.
  */
@@ -20,22 +23,47 @@ export const getBindableContexts = (rootComponent, componentId) => {
     return []
   }
 
-  // Get the component tree leading up to this component
+  // Get the component tree leading up to this component, ignoring the component
+  // itself
   const path = findComponentPath(rootComponent, componentId)
   path.pop()
 
-  // Extract any components which provide data contexts
-  const dataProviders = path.filter(component => {
-    const def = store.actions.components.getDefinition(component._component)
-    return def?.dataProvider
-  })
+  // Enrich components with their definitions
+  const enriched = path.map(component => ({
+    instance: component,
+    definition: store.actions.components.getDefinition(component._component),
+  }))
 
+  // Extract any components which provide data contexts
+  const providers = enriched.filter(comp => comp.definition?.dataProvider)
   let contexts = []
-  dataProviders.forEach(provider => {
-    if (!provider.datasource) {
+  providers.forEach(({ definition, instance }) => {
+    // Extract datasource from component instance
+    const datasourceSetting = definition.settings.find(setting => {
+      return setting.key === definition.datasourceSetting
+    })
+    if (!datasourceSetting) {
       return
     }
-    const { schema, table } = getSchemaForDatasource(provider.datasource)
+
+    // There are different types of setting which can be a datasource, for
+    // example an actual datasource object, or a table ID string.
+    // Convert the datasource setting into a proper datasource object so that
+    // we can use it properly
+    let datasource
+    if (datasourceSetting.type === "datasource") {
+      datasource = instance[datasourceSetting?.key]
+    } else if (datasourceSetting.type === "table") {
+      datasource = {
+        tableId: instance[datasourceSetting?.key],
+        type: "table",
+      }
+    }
+    if (!datasource) {
+      return
+    }
+
+    const { schema, table } = getSchemaForDatasource(datasource)
     const keys = Object.keys(schema).sort()
     keys.forEach(key => {
       const fieldSchema = schema[key]
@@ -49,11 +77,11 @@ export const getBindableContexts = (rootComponent, componentId) => {
 
       contexts.push({
         type: "context",
-        runtimeBinding: `${provider._id}.${runtimeBoundKey}`,
-        readableBinding: `${provider._instanceName}.${table.name}.${key}`,
+        runtimeBinding: `${instance._id}.${runtimeBoundKey}`,
+        readableBinding: `${instance._instanceName}.${table.name}.${key}`,
         fieldSchema,
-        providerId: provider._id,
-        tableId: provider.datasource.tableId,
+        providerId: instance._id,
+        tableId: datasource.tableId,
       })
     })
   })
@@ -109,4 +137,40 @@ const getSchemaForDatasource = datasource => {
     schema = {}
   }
   return { schema, table }
+}
+
+/**
+ * Converts a readable data binding into a runtime data binding
+ */
+export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
+  let result = textWithBindings
+  boundValues.forEach(boundValue => {
+    const binding = bindableProperties.find(({ readableBinding }) => {
+      return boundValue === `{{ ${readableBinding} }}`
+    })
+    if (binding) {
+      result = result.replace(boundValue, `{{ ${binding.runtimeBinding} }}`)
+    }
+  })
+  return result
+}
+
+/**
+ * Converts a runtime data binding into a readable data binding
+ */
+export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
+  let result = textWithBindings
+  boundValues.forEach(boundValue => {
+    const binding = bindableProperties.find(({ runtimeBinding }) => {
+      return boundValue === `{{ ${runtimeBinding} }}`
+    })
+    // Show invalid bindings as invalid rather than a long ID
+    result = result.replace(
+      boundValue,
+      `{{ ${binding?.readableBinding ?? "Invalid binding"} }}`
+    )
+  })
+  return result
 }

@@ -1,24 +1,12 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { backendUiStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
 
   export let parameters
 
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-  })
-
-  // just wraps binding in {{ ... }}
-  const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
-
   const tableFields = tableId => {
     const table = $backendUiStore.tables.find(m => m._id === tableId)
-
     return Object.keys(table.schema).map(k => ({
       name: k,
       type: table.schema[k].type,
@@ -58,17 +46,8 @@
     grid-template-columns: auto 1fr auto 1fr auto;
     align-items: baseline;
   }
-
   .root :global(> div:nth-child(2)) {
     grid-column-start: 2;
     grid-column-end: 6;
-  }
-
-  .cannot-use {
-    color: var(--red);
-    font-size: var(--font-size-s);
-    text-align: center;
-    width: 70%;
-    margin: auto;
   }
 </style>

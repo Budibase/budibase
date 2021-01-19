@@ -1,12 +1,8 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import { getBindableProperties } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
 
   // parameters.contextPath used in the client handler to determine which row to save
   // this could be "data" or "data.parent", "data.parent.parent" etc
@@ -15,12 +11,10 @@
   let idFields
   let schemaFields
 
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-  })
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  )
 
   $: {
     if (parameters && parameters.contextPath) {
