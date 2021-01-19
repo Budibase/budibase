@@ -2,6 +2,7 @@ const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 
 const HBS_CLEANING_REGEX = /{{[^}}]*}}/g
+const FIND_HBS_REGEX = /{{.*}}/
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -22,6 +23,12 @@ function attemptToCorrectError(string) {
  * @returns {string} The string that was input with cleaned up handlebars statements as required.
  */
 function cleanHandlebars(string) {
+  // TODO: handle these types of statement
+  // every statement must have the "all" helper added e.g.
+  // {{ person }} => {{ html person }}
+  // escaping strings must be handled as such:
+  // {{ person name }} => {{ [person name] }}
+  // {{ obj.person name }} => {{ obj.[person name] }}
   let charToReplace = {
     "[": ".",
     "]": "",

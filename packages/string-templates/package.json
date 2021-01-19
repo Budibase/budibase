@@ -5,7 +5,6 @@
   "main": "dist/bundle.js",
   "module": "dist/bundle.js",
   "license": "AGPL-3.0",
-  "private": true,
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
