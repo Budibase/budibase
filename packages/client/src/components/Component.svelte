@@ -29,7 +29,7 @@
     $builderStore.previewType === "layout" || screenslotContext
 
   // Update component context
-  $: componentStore.set({ id, styles: { ...styles, id, allowSelection } })
+  $: componentStore.set({ id, children: children.length, styles: { ...styles, id, allowSelection } })
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
