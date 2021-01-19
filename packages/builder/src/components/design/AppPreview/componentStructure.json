@@ -2,33 +2,54 @@
   "container",
   "grid",
   "list",
+  "button",
   {
-    "name": "Cards",
+    "name": "Form",
     "icon": "ri-file-edit-line",
     "children": [
-      "card",
-      "stackedlist"
-    ]
-  },
-  {
-    "name": "Forms",
-    "icon": "ri-file-edit-line",
-    "children": [
-      "form",
+      "dataform",
+      "dataformwide",
       "input",
       "richtext",
       "datepicker"
     ]
   },
-  "button",
-  "text",
-  "link",
+  {
+    "name": "Card",
+    "icon": "ri-archive-drawer-line",
+    "children": [
+      "stackedlist",
+      "card",
+      "cardhorizontal",
+      "cardstat"
+    ]
+  },
+  {
+    "name": "Chart",
+    "icon": "ri-bar-chart-2-line",
+    "children": []
+  },
+  {
+    "name": "Elements",
+    "icon": "ri-paragraph",
+    "children": [
+      "heading",
+      "text",
+      "image",
+      "link",
+      "icon",
+      "embed"
+    ]
+  },
   {
     "name": "Other",
-    "icon": "ri-file-edit-line",
+    "icon": "ri-more-2-line",
     "children": [
       "screenslot",
-      "navigation"
+      "navigation",
+      "login",
+      "rowdetail",
+      "newrow"
     ]
   }
 ]
