@@ -9,7 +9,7 @@ const { rowEmission, tableEmission } = require("./utils")
 
 /**
  * Extending the standard emitter to some syntactic sugar and standardisation to the emitted event.
- * This is specifically quite important for handlebars used in automations.
+ * This is specifically quite important for template strings used in automations.
  */
 class BudibaseEmitter extends EventEmitter {
   emitRow(eventName, appId, row, table = null) {
