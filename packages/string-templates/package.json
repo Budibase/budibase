@@ -2,17 +2,20 @@
   "name": "@budibase/string-templates",
   "version": "0.5.3",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "build/bundle.js",
+  "main": "dist/bundle.js",
+  "module": "dist/bundle.js",
   "license": "AGPL-3.0",
   "private": true,
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
-    "dev:builder": "rollup -cw"
+    "dev:builder": "tsc && rollup -cw"
   },
   "dependencies": {
     "handlebars": "^4.7.6"
   },
   "devDependencies": {
+    "typescript": "^4.1.3",
     "rollup": "^2.36.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",

@@ -3,7 +3,7 @@ const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
-const { recurseHandlebars } = require("../utilities/handlebars")
+const { objectHandlebars } = require("../utilities/handlebars")
 
 handlebars.registerHelper("object", value => {
   return new handlebars.SafeString(JSON.stringify(value))
@@ -49,7 +49,7 @@ class Orchestrator {
     let automation = this._automation
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
-      step.inputs = recurseHandlebars(step.inputs, this._context)
+      step.inputs = objectHandlebars(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,
         step.schema.inputs
