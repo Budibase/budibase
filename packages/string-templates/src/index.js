@@ -82,6 +82,9 @@ module.exports.processObject = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processString = (string, context) => {
+  if (typeof string !== "string") {
+    throw "Cannot process non-string types."
+  }
   let template
   try {
     string = cleanHandlebars(string)

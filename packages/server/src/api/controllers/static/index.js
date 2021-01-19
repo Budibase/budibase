@@ -7,7 +7,7 @@ const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
 const { prepareUpload } = require("../deploy/utils")
-const { stringHandlebars } = require("../../../utilities/handlebars")
+const { stringTemplate } = require("../../../utilities/stringTemplating")
 const {
   budibaseAppsDir,
   budibaseTempDir,
@@ -161,7 +161,7 @@ exports.serveApp = async function(ctx) {
   })
 
   const appHbs = fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
-  ctx.body = stringHandlebars(appHbs, {
+  ctx.body = stringTemplate(appHbs, {
     head,
     body: html,
     style: css.code,
