@@ -114,8 +114,13 @@
       }
     ]
   },
-  "form": {
+  "dataform": {
     "name": "Form",
+    "icon": "ri-file-edit-line",
+    "styleable": true
+  },
+  "dataformwide": {
+    "name": "Wide Form",
     "icon": "ri-file-edit-line",
     "styleable": true
   },
@@ -270,6 +275,74 @@
       }
     ]
   },
+  "heading": {
+    "name": "Headline",
+    "icon": "ri-heading",
+    "description": "A component for displaying heading text",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "key": "text",
+        "label": "Text"
+      },
+      {
+        "type": "select",
+        "key": "type",
+        "label": "Type",
+        "options": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "defaultValue": "h1"
+      }
+    ]
+  },
+  "image": {
+    "name": "Image",
+    "description": "A basic component for displaying images",
+    "icon": "ri-image-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      }
+    ]
+  },
+  "icon": {
+    "name": "Icon",
+    "description": "A basic component for displaying icons",
+    "icon": "ri-sun-fill",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "fa-lg",
+        "options": [
+          { "value": "fa-xs", "label": "xs" },
+          { "value": "fa-sm", "label": "sm" },
+          { "value": "fa-lg", "label": "lg" },
+          { "value": "fa-2x", "label": "2x" },
+          { "value": "fa-3x", "label": "3x" },
+          { "value": "fa-5x", "label": "5x" },
+          { "value": "fa-7x", "label": "7x" },
+          { "value": "fa-10x", "label": "10x" }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "defaultValue": "#000"
+      }
+    ]
+  },
   "login": {
     "description": "A component that automatically generates a login screen for your app.",
     "icon": "ri-login-box-line",
@@ -341,6 +414,130 @@
         "type": "table",
         "label": "Table",
         "key": "table"
+      }
+    ]
+  },
+  "newrow": {
+    "name": "New Row",
+    "description": "Sets up a new row for creation, which can be used with {{ context }}, in children",
+    "icon": "ri-profile-line",
+    "hasChildren": true,
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Table",
+        "key": "table"
+      }
+    ]
+  },
+  "cardhorizontal": {
+    "name": "Horizontal Card",
+    "description": "A basic card component that can contain content and actions.",
+    "icon": "ri-layout-row-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "description"
+      },
+      {
+        "type": "text",
+        "label": "Subtext",
+        "key": "subtext"
+      },
+      {
+        "type": "text",
+        "label": "Link Text",
+        "key": "linkText"
+      },
+      {
+        "type": "screen",
+        "label": "Link URL",
+        "key": "linkUrl"
+      },
+      {
+        "type": "color",
+        "label": "Link Color",
+        "key": "linkColor",
+        "defaultValue": "#000"
+      },
+      {
+        "type": "color",
+        "label": "Hover Color",
+        "key": "linkHoverColor",
+        "defaultValue": "#222"
+      },
+      {
+        "type": "select",
+        "label": "Card Width",
+        "key": "cardWidth",
+        "options": ["24rem", "28rem", "32rem", "40rem", "48rem", "60rem", "100%"],
+        "default": "32rem"
+      },
+      {
+        "type": "select",
+        "label": "Image Width",
+        "key": "imageWidth",
+        "options": ["auto", "8rem", "12rem", "16rem"],
+        "defaultValue": "8rem"
+      },
+      {
+        "type": "select",
+        "label": "Image Height",
+        "key": "imageHeight",
+        "options": ["auto", "8rem", "12rem", "16rem", "auto"],
+        "defaultValue": "auto"
+      }
+    ]
+  },
+  "cardstat": {
+    "name": "Stat Card",
+    "description": "A card component for displaying numbers.",
+    "icon": "ri-dual-sim-2-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "placeholder": "Total Revenue"
+      },
+      {
+        "type": "text",
+        "label": "Value",
+        "key": "value",
+        "placeholder": "$1,981,983"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label",
+        "placeholder": "Stripe"
+      }
+    ]
+  },
+  "embed": {
+    "name": "Embed",
+    "icon": "ri-code-line",
+    "description": "Embed content from 3rd party sources",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Embed",
+        "key": "embed"
       }
     ]
   }
