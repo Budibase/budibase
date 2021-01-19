@@ -28,7 +28,11 @@
   {#if rows.length > 0}
     {#each rows as row}
       <DataProvider {row}>
-        <slot />
+        {#if $component.children === 0}
+         <p>Add some components to.</p>
+        {:else}
+          <slot />
+        {/if}
       </DataProvider>
     {/each}
   {:else}
