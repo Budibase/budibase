@@ -282,7 +282,7 @@ export const getFrontendStore = () => {
           _id: uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.component.split("/")[2]}`,
+          _instanceName: `New ${definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }
