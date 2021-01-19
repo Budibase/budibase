@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Drawer } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -7,7 +7,6 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/replaceBindings"
-  import { DropdownMenu } from "@budibase/bbui"
   import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
 
   export let label = ""
@@ -22,7 +21,7 @@
   let temporaryBindableValue = value
   let bindableProperties = []
   let anchor
-  let dropdown
+  let showDrawer = false
 
   function handleClose() {
     handleChange(key, temporaryBindableValue)
@@ -95,23 +94,24 @@
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={dropdown.show}>
+      on:click={() => showDrawer = true}>
       <Icon name="edit" />
     </div>
   {/if}
 </div>
-{#if control == Input}
-  <DropdownMenu
-    on:close={handleClose}
-    bind:this={dropdown}
-    {anchor}
-    align="right">
+{#if showDrawer}
+  <Drawer
+    title="Binding"
+    onClose={() => {
+      handleClose()
+      showDrawer = false
+    }}>
     <BindingDropdown
       {...handlevalueKey(value)}
-      close={dropdown.hide}
+      close={() => showDrawer = false}
       on:update={e => (temporaryBindableValue = e.detail)}
       {bindableProperties} />
-  </DropdownMenu>
+  </Drawer>
 {/if}
 
 <style>
