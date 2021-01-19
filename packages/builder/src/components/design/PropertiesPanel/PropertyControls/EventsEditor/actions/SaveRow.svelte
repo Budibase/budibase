@@ -44,13 +44,13 @@
         <option value={provider._id}>{provider._instanceName}</option>
       {/each}
     </Select>
-  {/if}
 
-  {#if parameters.contextPath}
-    <SaveFields
-      parameterFields={parameters.fields}
-      {schemaFields}
-      on:fieldschanged={onFieldsChanged} />
+    {#if parameters.providerId}
+      <SaveFields
+        parameterFields={parameters.fields}
+        {schemaFields}
+        on:fieldschanged={onFieldsChanged} />
+    {/if}
   {/if}
 </div>
 

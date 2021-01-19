@@ -426,6 +426,8 @@
     "icon": "ri-profile-line",
     "hasChildren": true,
     "styleable": true,
+    "dataProvider": true,
+    "datasourceSetting": "table",
     "settings": [
       {
         "type": "table",

@@ -15,21 +15,9 @@ const allTemplates = tables => [
   emptyRowDetailScreen,
 ]
 
-// Recurses through a component tree and generates new unique ID's
-const makeUniqueIds = component => {
-  if (!component) {
-    return
-  }
-  component._id = uuid()
-  if (component._children) {
-    component._children.forEach(makeUniqueIds)
-  }
-}
-
 // Allows us to apply common behaviour to all create() functions
 const createTemplateOverride = (frontendState, create) => () => {
   const screen = create()
-  makeUniqueIds(screen.props)
   screen.name = screen.props._id
   screen.routing.route = screen.routing.route.toLowerCase()
   return screen

@@ -1,4 +1,5 @@
 import { BaseStructure } from "./BaseStructure"
+import { uuid } from "builderStore/uuid"
 
 export class Screen extends BaseStructure {
   constructor() {
@@ -6,7 +7,7 @@ export class Screen extends BaseStructure {
     this._json = {
       layoutId: "layout_private_master",
       props: {
-        _id: "",
+        _id: uuid(),
         _component: "",
         _styles: {
           normal: {},
