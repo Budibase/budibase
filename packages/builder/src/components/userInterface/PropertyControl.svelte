@@ -103,7 +103,7 @@
 </div>
 
 <Drawer bind:this={bindingDrawer} title="Bindings">
-  <div slot="description"><Body extraSmall grey>Add the objects on thel eft to enrich your text.</Body></div>
+  <div slot="description"><Body extraSmall grey>Add the objects on the left to enrich your text.</Body></div>
   <heading slot="buttons">
     <Button thin blue on:click={handleClose}>Save</Button>
   </heading>
