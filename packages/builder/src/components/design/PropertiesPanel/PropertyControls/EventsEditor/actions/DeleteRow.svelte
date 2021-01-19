@@ -1,51 +1,36 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { store, backendUiStore, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import { store, currentAsset } from "builderStore"
+  import {
+    getDataProviderComponents,
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "builderStore/dataBinding"
 
   export let parameters
 
-  let idFields
-
-  $: bindableProperties = getBindableProperties(
+  $: dataProviderComponents = getDataProviderComponents(
     $currentAsset.props,
     $store.selectedComponentId
   )
-  $: idFields = bindableProperties.filter(
-    bindable =>
-      bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
-  )
   $: {
+    // Automatically set rev and table ID based on row ID
     if (parameters.rowId) {
-      // Set rev ID
       parameters.revId = parameters.rowId.replace("_id", "_rev")
-
-      // Set table ID
-      const idBinding = bindableProperties.find(
-        prop =>
-          prop.runtimeBinding ===
-          parameters.rowId
-            .replace("{{", "")
-            .replace("}}", "")
-            .trim()
+      const providerComponent = dataProviderComponents.find(
+        provider => provider._id === parameters.providerId
       )
-      if (idBinding) {
-        const { instance } = idBinding
-        const component = $store.components[instance._component]
-        const tableInfo = instance[component.context]
-        if (tableInfo) {
-          parameters.tableId =
-            typeof tableInfo === "string" ? tableInfo : tableInfo.tableId
-        }
+      const datasource = getDatasourceForProvider(providerComponent)
+      const { table } = getSchemaForDatasource(datasource)
+      if (table) {
+        parameters.tableId = table._id
       }
-
-      console.log(parameters)
     }
   }
 </script>
 
 <div class="root">
-  {#if idFields.length === 0}
+  {#if dataProviderComponents.length === 0}
     <div class="cannot-use">
       Delete row can only be used within a component that provides data, such as
       a List
@@ -54,9 +39,9 @@
     <Label size="m" color="dark">Datasource</Label>
     <Select secondary bind:value={parameters.rowId}>
       <option value="" />
-      {#each idFields as idField}
-        <option value={`{{ ${idField.runtimeBinding} }}`}>
-          {idField.instance._instanceName}
+      {#each dataProviderComponents as provider}
+        <option value={`{{ ${provider._id}._id }}`}>
+          {provider._instanceName}
         </option>
       {/each}
     </Select>
