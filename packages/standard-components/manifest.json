@@ -484,7 +484,7 @@
         "label": "Card Width",
         "key": "cardWidth",
         "options": ["24rem", "28rem", "32rem", "40rem", "48rem", "60rem", "100%"],
-        "default": "32rem"
+        "defaultValue": "32rem"
       },
       {
         "type": "select",
