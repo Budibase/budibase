@@ -22,11 +22,13 @@
   },
   "button",
   "text",
+  "link",
   {
     "name": "Other",
     "icon": "ri-file-edit-line",
     "children": [
-      "screenslot"
+      "screenslot",
+      "navigation"
     ]
   }
 ]

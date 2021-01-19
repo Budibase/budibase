@@ -1,67 +1,53 @@
 <script>
   import { DataList } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, allScreens, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
-
-  const dispatch = createEventDispatcher()
+  import { store, allScreens, currentAsset } from "builderStore"
+  import { getBindableProperties } from "builderStore/dataBinding"
 
   export let value = ""
 
-  $: urls = getUrls()
+  $: urls = getUrls($allScreens, $currentAsset, $store.selectedComponentId)
 
+  // Update value on blur
+  const dispatch = createEventDispatcher()
   const handleBlur = () => dispatch("change", value)
 
-  // this will get urls of all screens, but only
-  // choose detail screens that are usable in the current context
-  // and substitute the :id param for the actual {{ ._id }} binding
-  const getUrls = () => {
-    const urls = [
-      ...$allScreens
-        .filter(screen => !screen.props._component.endsWith("/rowdetail"))
-        .map(screen => ({
-          name: screen.props._instanceName,
-          url: screen.routing.route,
-          sort: screen.props._component,
-        })),
-    ]
+  // Get all valid screen URL, as well as detail screens which can be used in
+  // the current data context
+  const getUrls = (screens, asset, componentId) => {
+    // Get all screens which aren't detail screens
+    let urls = screens
+      .filter(screen => !screen.props._component.endsWith("/rowdetail"))
+      .map(screen => ({
+        name: screen.props._instanceName,
+        url: screen.routing.route,
+        sort: screen.props._component,
+      }))
 
-    const bindableProperties = fetchBindableProperties({
-      componentInstanceId: $store.selectedComponentId,
-      components: $store.components,
-      screen: $currentAsset,
-      tables: $backendUiStore.tables,
-    })
-
-    const detailScreens = $allScreens.filter(screen =>
-      screen.props._component.endsWith("/rowdetail")
-    )
-
-    for (let detailScreen of detailScreens) {
-      const idBinding = bindableProperties.find(p => {
-        if (
-          p.type === "context" &&
-          p.runtimeBinding.endsWith("._id") &&
-          p.table
-        ) {
-          const tableId =
-            typeof p.table === "string" ? p.table : p.table.tableId
-          return tableId === detailScreen.props.table
-        }
-        return false
-      })
-
-      if (idBinding) {
-        urls.push({
-          name: detailScreen.props._instanceName,
-          url: detailScreen.routing.route.replace(
-            ":id",
-            `{{ ${idBinding.runtimeBinding} }}`
-          ),
-          sort: detailScreen.props._component,
+    // Add detail screens enriched with the current data context
+    const bindableProperties = getBindableProperties(asset.props, componentId)
+    screens
+      .filter(screen => screen.props._component.endsWith("/rowdetail"))
+      .forEach(detailScreen => {
+        // Find any _id bindings that match the detail screen's table
+        const binding = bindableProperties.find(p => {
+          return (
+            p.type === "context" &&
+            p.runtimeBinding.endsWith("._id") &&
+            p.tableId === detailScreen.props.table
+          )
         })
-      }
-    }
+        if (binding) {
+          urls.push({
+            name: detailScreen.props._instanceName,
+            url: detailScreen.routing.route.replace(
+              ":id",
+              `{{ ${binding.runtimeBinding} }}`
+            ),
+            sort: detailScreen.props._component,
+          })
+        }
+      })
 
     return urls
   }

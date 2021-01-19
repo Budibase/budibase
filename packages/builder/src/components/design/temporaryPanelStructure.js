@@ -755,26 +755,6 @@ export default {
           },
         },
         {
-          _component: "@budibase/standard-components/link",
-          name: "Link",
-          description: "A basic link component for internal and external links",
-          icon: "ri-link",
-          children: [],
-          properties: {
-            design: { ...all },
-            settings: [
-              { label: "Text", key: "text", control: Input },
-              { label: "Url", key: "url", control: ScreenSelect },
-              {
-                label: "New Tab",
-                key: "openInNewTab",
-                valueKey: "checked",
-                control: Checkbox,
-              },
-            ],
-          },
-        },
-        {
           _component: "@budibase/standard-components/icon",
           name: "Icon",
           description: "A basic component for displaying icons",
@@ -836,30 +816,6 @@ export default {
           icon: "ri-crop-2-line",
           properties: { design: { ...all } },
           commonProps: {},
-          children: [],
-        },
-        {
-          name: "Nav Bar",
-          _component: "@budibase/standard-components/navigation",
-          description:
-            "A component for handling the navigation within your app.",
-          icon: "ri-navigation-line",
-          children: [],
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Logo URL", key: "logoUrl", control: Input }],
-          },
-        },
-        {
-          name: "Row Detail",
-          _component: "@budibase/standard-components/rowdetail",
-          description:
-            "Loads a row, using an id from the URL, which can be used with {{ context }}, in children",
-          icon: "ri-profile-line",
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Table", key: "table", control: TableSelect }],
-          },
           children: [],
         },
         {
