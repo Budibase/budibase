@@ -425,7 +425,7 @@
     "styleable": true,
     "settings": [
       {
-        "type": "text",
+        "type": "table",
         "label": "Table",
         "key": "table"
       }
