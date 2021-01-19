@@ -52,52 +52,26 @@
     {/if}
   </div>
   <div class="text">
-    <Heading extraSmall>Data binding</Heading>
-    <Spacer small />
-    <Body extraSmall lh>
-      Binding connects one piece of data to another and makes it dynamic. Click
-      the objects on the left, to add them to the textbox.
-    </Body>
-    <Spacer large />
     <TextArea
       thin
       bind:value
       placeholder="Add text, or click the objects on the left to add them to the
       textbox." />
-    <div class="controls">
-      <a href="https://docs.budibase.com/design/binding">
-        <Body small grey>Learn more about binding</Body>
-      </a>
-      <Button on:click={cancel} secondary>Cancel</Button>
-      <Button on:click={close} primary>Done</Button>
-    </div>
   </div>
 </div>
 
 <style>
   .container {
     display: grid;
-    grid-template-columns: auto auto;
-  }
-  .list,
-  .text {
-    padding: var(--spacing-m);
-  }
-  .controls {
-    margin-top: var(--spacing-m);
-    display: grid;
-    align-items: center;
-    grid-gap: var(--spacing-l);
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto 1fr;
   }
   .list {
     width: 150px;
     border-right: 1.5px solid var(--grey-4);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-s);
   }
   .text {
-    width: 600px;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-s);
     font-family: var(--font-sans);
   }
   .text :global(p) {
