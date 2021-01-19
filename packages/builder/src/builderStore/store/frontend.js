@@ -491,7 +491,7 @@ export const getFrontendStore = () => {
 
           // Find a nav bar in the main layout
           const nav = findComponentType(
-            layout,
+            layout.props,
             "@budibase/standard-components/navigation"
           )
           if (!nav) {
