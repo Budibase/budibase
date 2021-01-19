@@ -56,6 +56,8 @@
     table: TableSelect,
     color: ColorPicker,
     icon: IconSelect,
+    field: TableViewFieldSelect,
+    multifield: MultiTableViewFieldSelect,
   }
 
   const getControl = type => {

@@ -27,7 +27,14 @@
   {
     "name": "Chart",
     "icon": "ri-bar-chart-2-line",
-    "children": []
+    "children": [
+      "bar",
+      "line",
+      "area",
+      "pie",
+      "donut",
+      "candlestick"
+    ]
   },
   {
     "name": "Elements",
