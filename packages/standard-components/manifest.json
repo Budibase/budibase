@@ -29,10 +29,9 @@
       }
     ]
   },
-  "grid": {
+  "datagrid": {
     "name": "Grid",
-    "description":
-      "A datagrid component with functionality to add, remove and edit rows.",
+    "description": "A datagrid component with functionality to add, remove and edit rows.",
     "icon": "ri-grid-line",
     "styleable": true,
     "settings": [
@@ -73,6 +72,7 @@
   },
   "screenslot": {
     "name": "Screenslot",
+    "icon": "ri-artboard-2-line",
     "description": "Contains your app screens",
     "styleable": true
   },
@@ -344,6 +344,7 @@
     ]
   },
   "login": {
+    "name": "Login Form",
     "description": "A component that automatically generates a login screen for your app.",
     "icon": "ri-login-box-line",
     "styleable": true,
