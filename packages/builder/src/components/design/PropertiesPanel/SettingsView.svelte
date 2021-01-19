@@ -54,7 +54,10 @@
     number: Input,
     event: EventsEditor,
     table: TableSelect,
+    color: ColorPicker,
+    icon: IconSelect,
   }
+
   const getControl = type => {
     return controlMap[type]
   }

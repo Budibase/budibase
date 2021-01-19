@@ -2,7 +2,7 @@ import "@budibase/bbui/dist/bbui.css"
 import "flatpickr/dist/flatpickr.css"
 
 export { default as container } from "./Container.svelte"
-export { default as grid } from "./grid/Component.svelte"
+export { default as datagrid } from "./grid/Component.svelte"
 export { default as screenslot } from "./ScreenSlot.svelte"
 export { default as button } from "./Button.svelte"
 export { default as input } from "./Input.svelte"
