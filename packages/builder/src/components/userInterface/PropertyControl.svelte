@@ -1,5 +1,5 @@
 <script>
-  import { Button, Icon, Drawer } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -7,7 +7,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/replaceBindings"
-  import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
+  import BindingDrawer from "components/userInterface/BindingDrawer.svelte"
 
   export let label = ""
   export let bindable = true
@@ -17,7 +17,7 @@
   export let value
   export let props = {}
   export let onChange = () => {}
-
+  
   let temporaryBindableValue = value
   let bindableProperties = []
   let anchor
@@ -25,6 +25,7 @@
 
   function handleClose() {
     handleChange(key, temporaryBindableValue)
+    showDrawer = false
   }
 
   function getBindableProperties() {
@@ -99,33 +100,12 @@
     </div>
   {/if}
 </div>
-{#if showDrawer}
-  <Drawer
-    title="Binding"
-    onClose={() => {
-      handleClose()
-      showDrawer = false
-    }}>
-    <div slot="buttons">
-      <Button
-        blue
-        thin
-        on:click={() => {
-          notifier.success('Query parameters saved.')
-          handleSelected(value)
-        }}>
-        Save
-      </Button>
-    </div>
-    <div class="drawer-contents" slot="body">
-      <BindingDropdown
-        {...handlevalueKey(value)}
-        close={() => showDrawer = false}
-        on:update={e => (temporaryBindableValue = e.detail)}
-        {bindableProperties} />
-    </div>
-  </Drawer>
-{/if}
+<BindingDrawer
+  {...handlevalueKey(value)}
+  close={handleClose}
+  show={showDrawer}
+  on:update={e => (temporaryBindableValue = e.detail)}
+  {bindableProperties} />
 
 <style>
   .property-control {
