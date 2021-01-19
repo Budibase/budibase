@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Drawer } from "@budibase/bbui"
+  import { Button, Icon, Drawer } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -106,11 +106,24 @@
       handleClose()
       showDrawer = false
     }}>
-    <BindingDropdown
-      {...handlevalueKey(value)}
-      close={() => showDrawer = false}
-      on:update={e => (temporaryBindableValue = e.detail)}
-      {bindableProperties} />
+    <div slot="buttons">
+      <Button
+        blue
+        thin
+        on:click={() => {
+          notifier.success('Query parameters saved.')
+          handleSelected(value)
+        }}>
+        Save
+      </Button>
+    </div>
+    <div class="drawer-contents" slot="body">
+      <BindingDropdown
+        {...handlevalueKey(value)}
+        close={() => showDrawer = false}
+        on:update={e => (temporaryBindableValue = e.detail)}
+        {bindableProperties} />
+    </div>
   </Drawer>
 {/if}
 
@@ -160,5 +173,9 @@
   .icon:hover {
     color: var(--ink);
     cursor: pointer;
+  }
+  .drawer-contents {
+    height: 40vh;
+    overflow-y: auto;
   }
 </style>
