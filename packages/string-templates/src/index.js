@@ -3,13 +3,6 @@ const { registerAll } = require("./helpers/index")
 
 const HBS_CLEANING_REGEX = /{{[^}}]*}}/g
 
-/**
- * Templates are produced after an input string has been compiled, we store these templates in-case the same
- * string will be processed multiple times after the app has been loaded.
- * In the future storing these templates somewhere could save some processing time for large template runs.
- */
-const COMPILED_TEMPLATES = {}
-
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 
@@ -61,7 +54,7 @@ function cleanHandlebars(string) {
  * @param {object} context The context that handlebars should fill data from.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-module.exports.object = (object, context) => {
+module.exports.processObject = (object, context) => {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)
@@ -71,11 +64,11 @@ module.exports.object = (object, context) => {
   for (let key of Object.keys(object)) {
     let val = object[key]
     if (typeof val === "string") {
-      module.exports.string(object[key], context)
+      object[key] = module.exports.processString(object[key], context)
     }
     // this covers objects and arrays
     else if (typeof val === "object") {
-      object[key] = module.exports.object(object[key], context)
+      object[key] = module.exports.processObject(object[key], context)
     }
   }
   return object
@@ -88,18 +81,14 @@ module.exports.object = (object, context) => {
  * @param {object} context An object of information which will be used to enrich the string.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.string = (string, context) => {
-  let template = COMPILED_TEMPLATES[string]
-  if (template == null) {
-    try {
-      string = cleanHandlebars(string)
-      template = hbsInstance.compile(string)
-    } catch (err) {
-      string = attemptToCorrectError(string)
-      template = hbsInstance.compile(string)
-    }
-    // store the template for later, only after we know it worked
-    COMPILED_TEMPLATES[string] = template
+module.exports.processString = (string, context) => {
+  let template
+  try {
+    string = cleanHandlebars(string)
+    template = hbsInstance.compile(string)
+  } catch (err) {
+    string = attemptToCorrectError(string)
+    template = hbsInstance.compile(string)
   }
   return template(context)
 }

@@ -1,3 +1,4 @@
 const stringTemplates = require("@budibase/string-templates")
 
-exports.recurseHandlebars = stringTemplates.recurseHandlebars
+exports.objectHandlebars = stringTemplates.processObject
+exports.stringHandlebars = stringTemplates.processString

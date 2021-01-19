@@ -31,7 +31,7 @@ const {
   createLoginScreen,
 } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
-const { recurseHandlebars } = require("../../utilities/handlebars")
+const { objectHandlebars } = require("../../utilities/handlebars")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -213,8 +213,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
     const cloned = cloneDeep(layout)
-    cloned.title = app.name
-    screensAndLayouts.push(recurseHandlebars(cloned, app))
+    screensAndLayouts.push(objectHandlebars(cloned, app))
   }
 
   const homeScreen = createHomeScreen(app)
