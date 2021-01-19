@@ -41,7 +41,7 @@ const INITIAL_FRONTEND_STATE = {
   hasAppPackage: false,
   libraries: null,
   appId: "",
-  routes: {}
+  routes: {},
 }
 
 export const getFrontendStore = () => {
