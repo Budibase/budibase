@@ -1,5 +1,5 @@
 <script>
-  import { Button, Icon, Drawer } from "@budibase/bbui"
+  import { Button, Icon, Drawer, Body } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -103,7 +103,7 @@
 </div>
 
 <Drawer bind:this={bindingDrawer} title="Bindings">
-  <div slot="description">This describes the drawer!</div>
+  <div slot="description"><Body extraSmall grey>Add the objects on thel eft to enrich your text.</Body></div>
   <heading slot="buttons">
     <Button thin blue on:click={handleClose}>Save</Button>
   </heading>
@@ -116,6 +116,7 @@
 </Drawer>
 
 <style>
+
   .property-control {
     position: relative;
     display: flex;
