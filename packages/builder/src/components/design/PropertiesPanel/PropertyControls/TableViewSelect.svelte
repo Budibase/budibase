@@ -16,7 +16,6 @@
 
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
-    name: `all_${m._id}`,
     tableId: m._id,
     type: "table",
   }))

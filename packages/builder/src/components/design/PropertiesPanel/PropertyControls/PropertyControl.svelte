@@ -1,12 +1,11 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import Input from "./Input.svelte"
   import { store, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
   import {
+    getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
+  } from "builderStore/dataBinding"
   import { DropdownMenu } from "@budibase/bbui"
   import BindingDropdown from "./BindingDropdown.svelte"
 
