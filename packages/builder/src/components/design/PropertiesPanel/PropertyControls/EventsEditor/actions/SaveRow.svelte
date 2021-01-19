@@ -1,77 +1,28 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { store, backendUiStore, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import { store, currentAsset } from "builderStore"
+  import {
+    getDataProviderComponents,
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
 
-  // parameters.contextPath used in the client handler to determine which row to save
-  // this could be "data" or "data.parent", "data.parent.parent" etc
   export let parameters
 
-  let idFields
-  let schemaFields
-
-  $: bindableProperties = getBindableProperties(
+  $: dataProviderComponents = getDataProviderComponents(
     $currentAsset.props,
     $store.selectedComponentId
   )
+  $: providerComponent = dataProviderComponents.find(
+    provider => provider._id === parameters.providerId
+  )
+  $: schemaFields = getSchemaFields(providerComponent)
 
-  $: {
-    if (parameters && parameters.contextPath) {
-      schemaFields = schemaFromContextPath(parameters.contextPath)
-    } else {
-      schemaFields = []
-    }
-  }
-
-  const idBindingToContextPath = id => id.substring(0, id.length - 4)
-  const contextPathToId = path => `${path}._id`
-
-  $: {
-    idFields = bindableProperties.filter(
-      bindable =>
-        bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
-    )
-    // ensure contextPath is always defaulted - there is usually only one option
-    if (idFields.length > 0 && !parameters.contextPath) {
-      parameters.contextPath = idBindingToContextPath(
-        idFields[0].runtimeBinding
-      )
-      parameters = parameters
-    }
-  }
-
-  // just wraps binding in {{ ... }}
-  const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
-
-  // finds the selected idBinding, then reads the table/view
-  // from the component instance that it belongs to.
-  // then returns the field names for that schema
-  const schemaFromContextPath = contextPath => {
-    if (!contextPath) return []
-
-    const idBinding = bindableProperties.find(
-      prop => prop.runtimeBinding === contextPathToId(contextPath)
-    )
-    if (!idBinding) return []
-
-    const { instance } = idBinding
-
-    const component = $store.components[instance._component]
-
-    // component.context is the name of the prop that holds the tableId
-    const tableInfo = instance[component.context]
-    const tableId =
-      typeof tableInfo === "string" ? tableInfo : tableInfo.tableId
-
-    if (!tableInfo) return []
-
-    const table = $backendUiStore.tables.find(m => m._id === tableId)
-    parameters.tableId = tableId
-    return Object.keys(table.schema).map(k => ({
-      name: k,
-      type: table.schema[k].type,
-    }))
+  const getSchemaFields = component => {
+    const datasource = getDatasourceForProvider(component)
+    const { schema } = getSchemaForDatasource(datasource)
+    return Object.values(schema || {})
   }
 
   const onFieldsChanged = e => {
@@ -80,19 +31,17 @@
 </script>
 
 <div class="root">
-  {#if idFields.length === 0}
+  {#if !dataProviderComponents.length}
     <div class="cannot-use">
-      Update row can only be used within a component that provides data, such as
-      a List
+      Save Row can only be used within a component that provides data, such as a
+      Repeater
     </div>
   {:else}
     <Label size="m" color="dark">Datasource</Label>
-    <Select secondary bind:value={parameters.contextPath}>
+    <Select secondary bind:value={parameters.providerId}>
       <option value="" />
-      {#each idFields as idField}
-        <option value={idBindingToContextPath(idField.runtimeBinding)}>
-          {idField.instance._instanceName}
-        </option>
+      {#each dataProviderComponents as provider}
+        <option value={provider._id}>{provider._instanceName}</option>
       {/each}
     </Select>
   {/if}

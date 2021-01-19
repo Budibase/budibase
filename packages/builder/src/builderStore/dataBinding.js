@@ -1,3 +1,4 @@
+import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
@@ -15,10 +16,9 @@ export const getBindableProperties = (rootComponent, componentId) => {
 }
 
 /**
- * Gets all bindable data contexts. These are fields of schemas of data contexts
- * provided by data provider components, such as lists or row detail components.
+ * Gets all data provider components above a component.
  */
-export const getBindableContexts = (rootComponent, componentId) => {
+export const getDataProviderComponents = (rootComponent, componentId) => {
   if (!rootComponent || !componentId) {
     return []
   }
@@ -28,43 +28,67 @@ export const getBindableContexts = (rootComponent, componentId) => {
   const path = findComponentPath(rootComponent, componentId)
   path.pop()
 
-  // Enrich components with their definitions
-  const enriched = path.map(component => ({
-    instance: component,
-    definition: store.actions.components.getDefinition(component._component),
-  }))
+  // Filter by only data provider components
+  return path.filter(component => {
+    const def = store.actions.components.getDefinition(component._component)
+    return def?.dataProvider
+  })
+}
+
+/**
+ * Gets a datasource object for a certain data provider component
+ */
+export const getDatasourceForProvider = component => {
+  const def = store.actions.components.getDefinition(component?._component)
+  if (!def) {
+    return null
+  }
+
+  // Extract datasource from component instance
+  const datasourceSetting = def.settings.find(setting => {
+    return setting.key === def.datasourceSetting
+  })
+  if (!datasourceSetting) {
+    return null
+  }
+
+  // There are different types of setting which can be a datasource, for
+  // example an actual datasource object, or a table ID string.
+  // Convert the datasource setting into a proper datasource object so that
+  // we can use it properly
+  if (datasourceSetting.type === "datasource") {
+    return component[datasourceSetting?.key]
+  } else if (datasourceSetting.type === "table") {
+    return {
+      tableId: component[datasourceSetting?.key],
+      type: "table",
+    }
+  }
+  return null
+}
+
+/**
+ * Gets all bindable data contexts. These are fields of schemas of data contexts
+ * provided by data provider components, such as lists or row detail components.
+ */
+export const getBindableContexts = (rootComponent, componentId) => {
+  const dataProviders = getDataProviderComponents(rootComponent, componentId)
 
   // Extract any components which provide data contexts
-  const providers = enriched.filter(comp => comp.definition?.dataProvider)
   let contexts = []
-  providers.forEach(({ definition, instance }) => {
-    // Extract datasource from component instance
-    const datasourceSetting = definition.settings.find(setting => {
-      return setting.key === definition.datasourceSetting
-    })
-    if (!datasourceSetting) {
-      return
-    }
-
-    // There are different types of setting which can be a datasource, for
-    // example an actual datasource object, or a table ID string.
-    // Convert the datasource setting into a proper datasource object so that
-    // we can use it properly
-    let datasource
-    if (datasourceSetting.type === "datasource") {
-      datasource = instance[datasourceSetting?.key]
-    } else if (datasourceSetting.type === "table") {
-      datasource = {
-        tableId: instance[datasourceSetting?.key],
-        type: "table",
-      }
-    }
+  dataProviders.forEach(component => {
+    const datasource = getDatasourceForProvider(component)
     if (!datasource) {
       return
     }
 
-    const { schema, table } = getSchemaForDatasource(datasource)
+    // Get schema and add _id and _rev fields
+    let { schema, table } = getSchemaForDatasource(datasource)
+    schema["_id"] = { type: "string" }
+    schema["_rev"] = { type: "string " }
     const keys = Object.keys(schema).sort()
+
+    // Create bindable properties for each schema field
     keys.forEach(key => {
       const fieldSchema = schema[key]
       // Replace certain bindings with a new property to help display components
@@ -77,11 +101,12 @@ export const getBindableContexts = (rootComponent, componentId) => {
 
       contexts.push({
         type: "context",
-        runtimeBinding: `${instance._id}.${runtimeBoundKey}`,
-        readableBinding: `${instance._instanceName}.${table.name}.${key}`,
+        runtimeBinding: `${component._id}.${runtimeBoundKey}`,
+        readableBinding: `${component._instanceName}.${table.name}.${key}`,
         fieldSchema,
-        providerId: instance._id,
+        providerId: component._id,
         tableId: datasource.tableId,
+        field: key,
       })
     })
   })
@@ -115,26 +140,21 @@ export const getBindableComponents = rootComponent => {
 /**
  * Gets a schema for a datasource object.
  */
-const getSchemaForDatasource = datasource => {
-  const tables = get(backendUiStore).tables
-  const { type } = datasource
-  const table = tables.find(table => table._id === datasource.tableId)
-  let schema
-  if (table) {
-    if (type === "table") {
-      schema = table.schema ?? {}
-    } else if (type === "view") {
-      schema = table.views?.[datasource.name]?.schema ?? {}
-    } else if (type === "link") {
-      schema = table.schema ?? {}
+export const getSchemaForDatasource = datasource => {
+  let schema, table
+  if (datasource) {
+    const tables = get(backendUiStore).tables
+    const { type } = datasource
+    table = tables.find(table => table._id === datasource.tableId)
+    if (table) {
+      if (type === "table") {
+        schema = cloneDeep(table.schema)
+      } else if (type === "view") {
+        schema = cloneDeep(table.views?.[datasource.name]?.schema)
+      } else if (type === "link") {
+        schema = cloneDeep(table.schema)
+      }
     }
-  }
-  if (schema) {
-    // Add ID and rev fields for any valid datasources
-    schema["_id"] = { type: "string" }
-    schema["_rev"] = { type: "string " }
-  } else {
-    schema = {}
   }
   return { schema, table }
 }
@@ -143,6 +163,9 @@ const getSchemaForDatasource = datasource => {
  * Converts a readable data binding into a runtime data binding
  */
 export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+  if (typeof textWithBindings !== "string") {
+    return textWithBindings
+  }
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
   let result = textWithBindings
   boundValues.forEach(boundValue => {
@@ -160,6 +183,9 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
  * Converts a runtime data binding into a readable data binding
  */
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
+  if (typeof textWithBindings !== "string") {
+    return textWithBindings
+  }
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
   let result = textWithBindings
   boundValues.forEach(boundValue => {
