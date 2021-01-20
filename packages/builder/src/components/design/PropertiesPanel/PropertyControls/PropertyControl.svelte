@@ -1,13 +1,12 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Button, Icon, Drawer, Body } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import {
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { DropdownMenu } from "@budibase/bbui"
-  import BindingDropdown from "./BindingDropdown.svelte"
+  import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
 
   export let label = ""
   export let bindable = true
@@ -19,9 +18,9 @@
   export let props = {}
   export let onChange = () => {}
 
+  let bindingDrawer
   let temporaryBindableValue = value
   let anchor
-  let dropdown
 
   $: bindableProperties = getBindableProperties(
     $currentAsset.props,
@@ -29,6 +28,11 @@
   )
   $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
   $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
+
+  const handleClose = () => {
+    handleChange(temporaryBindableValue)
+    bindingDrawer.hide()
+  }
 
   // Handle a value change of any type
   // String values have any bindings handled
@@ -74,24 +78,28 @@
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={dropdown.show}>
+      on:click={bindingDrawer.show}>
       <Icon name="edit" />
     </div>
   {/if}
 </div>
-{#if type === 'text'}
-  <DropdownMenu
-    on:close={() => handleChange(temporaryBindableValue)}
-    bind:this={dropdown}
-    {anchor}
-    align="right">
-    <BindingDropdown
+<Drawer bind:this={bindingDrawer} title="Bindings">
+  <div slot="description">
+    <Body extraSmall grey>
+      Add the objects on the left to enrich your text.
+    </Body>
+  </div>
+  <heading slot="buttons">
+    <Button thin blue on:click={handleClose}>Save</Button>
+  </heading>
+  <div slot="body">
+    <BindingPanel
       value={safeValue}
-      close={dropdown.hide}
+      close={handleClose}
       on:update={e => (temporaryBindableValue = e.detail)}
       {bindableProperties} />
-  </DropdownMenu>
-{/if}
+  </div>
+</Drawer>
 
 <style>
   .property-control {
@@ -100,6 +108,7 @@
     flex-flow: row;
     align-items: center;
   }
+
   .label {
     display: flex;
     align-items: center;

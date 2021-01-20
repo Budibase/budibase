@@ -1,4 +1,1 @@
-import "@fortawesome/fontawesome-free/js/all.js"
-import IconSelect from "./IconSelect.svelte"
-
-export default IconSelect
+export { default as IconSelect } from "./IconSelect.svelte"

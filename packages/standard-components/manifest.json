@@ -324,16 +324,23 @@
         "type": "select",
         "label": "Size",
         "key": "size",
-        "defaultValue": "fa-lg",
+        "defaultValue": "md",
         "options": [
-          { "value": "fa-xs", "label": "xs" },
-          { "value": "fa-sm", "label": "sm" },
-          { "value": "fa-lg", "label": "lg" },
-          { "value": "fa-2x", "label": "2x" },
-          { "value": "fa-3x", "label": "3x" },
-          { "value": "fa-5x", "label": "5x" },
-          { "value": "fa-7x", "label": "7x" },
-          { "value": "fa-10x", "label": "10x" }
+          { "value": "ri-xxs", "label": "xxs" },
+          { "value": "ri-xs", "label": "xs" },
+          { "value": "ri-sm", "label": "sm" },
+          { "value": "ri-1x", "label": "md" },
+          { "value": "ri-lg", "label": "lg" },
+          { "value": "ri-xl", "label": "xl" },
+          { "value": "ri-2x", "label": "2x" },
+          { "value": "ri-3x", "label": "3x" },
+          { "value": "ri-4x", "label": "4x" },
+          { "value": "ri-5x", "label": "5x" },
+          { "value": "ri-6x", "label": "6x" },
+          { "value": "ri-7x", "label": "7x" },
+          { "value": "ri-8x", "label": "8x" },
+          { "value": "ri-9x", "label": "9x" },
+          { "value": "ri-10x", "label": "10x" }
         ]
       },
       {

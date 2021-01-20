@@ -3,7 +3,7 @@ const { exportTemplateFromApp } = require("../src/utilities/templates")
 const yargs = require("yargs")
 
 // Script to export a chosen budibase app into a package
-// Usage: ./scripts/exportAppTemplate.js export --name=Funky --appId=someInstanceId --appId=appId
+// Usage: ./scripts/exportAppTemplate.js export --name=Funky --appId=appId
 
 yargs
   .command(

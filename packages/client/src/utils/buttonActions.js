@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
-import { enrichDataBinding } from "./enrichDataBinding"
+import { enrichDataBinding, enrichDataBindings } from "./enrichDataBinding"
 import { routeStore, builderStore } from "../store"
-import { saveRow, deleteRow, triggerAutomation } from "../api"
+import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId } = action.parameters
@@ -46,10 +46,21 @@ const navigationHandler = action => {
   }
 }
 
+const queryExecutionHandler = async (action, context) => {
+  const { datasourceId, queryId, queryParams } = action.parameters
+  const enrichedQueryParameters = enrichDataBindings(queryParams, context)
+  await executeQuery({
+    datasourceId,
+    queryId,
+    parameters: enrichedQueryParameters,
+  })
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
+  ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
 }
 

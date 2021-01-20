@@ -21,7 +21,7 @@ const PUBLIC_READ_POLICY = {
 
 async function getCouchSession() {
   // fetch session token for the api user
-  const session = await got.post(`${env.RAW_COUCH_DB_URL}/_session`, {
+  const session = await got.post(`${env.COUCH_DB_URL}/_session`, {
     responseType: "json",
     credentials: "include",
     json: {
