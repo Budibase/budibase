@@ -1,22 +1,18 @@
 <script>
   import { Select, Label, Spacer } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
-  import ParameterBuilder from "../../../../../integration/QueryParameterBuilder.svelte"
+  import { getBindableProperties } from "builderStore/dataBinding"
+  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
 
   export let parameters
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === parameters.datasourceId
   )
-  // TODO: binding needs to be centralised
-  $: bindableProperties = fetchBindableProperties({
-    componentInstanceId: $store.selectedComponentId,
-    components: $store.components,
-    screen: $currentAsset,
-    tables: $backendUiStore.tables,
-    queries: $backendUiStore.queries,
-  }).map(property => ({
+  $: bindableProperties = getBindableProperties(
+    $currentAsset.props,
+    $store.selectedComponentId
+  ).map(property => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,

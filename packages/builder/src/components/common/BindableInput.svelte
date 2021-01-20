@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import GenericBindingPopover from "./GenericBindingPopover.svelte"
+  import GenericBindingPopover from "../automation/SetupPanel/GenericBindingPopover.svelte"
   import { Input, Icon } from "@budibase/bbui"
 
   const dispatch = createEventDispatcher()
