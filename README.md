@@ -11,7 +11,7 @@
   Build internal tools 50x faster
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform that helps developers and IT professionals build, automate and ship internal tools 50x faster.
+  Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship internal tools 50x faster on their own infrastructure.
 </p>
 
 <h3 align="center">
@@ -61,7 +61,7 @@ When other platforms chose the closed source route, we decided to go open source
 
 - **Open source and extensable.** Budibase is open-source. The builder is licensed AGPL v3, the server is GPL v3, and the client is MPL. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
 
-- **Load data or start from scratch.** Budibase pulls in data from multiple sources, whether it’s a CSV, an external database (coming very soon), or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Load data or start from scratch.** Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, Google Sheets, S3, DyanmoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 - **Design and build apps with powerful pre-made components.** Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new components](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
@@ -85,7 +85,7 @@ Currently, you can host your apps using Docker. The documentation for self-hosti
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
 - [x] Private Beta: We are testing Budibase with a closed set of customers
 - [x] Public Beta: Anyone can [sign-up and use Budibase](https://portal.budi.live/signup).
-- [ ] Official Launch: Production-ready
+- [ ] Official Launch
 
 Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there. 
 
