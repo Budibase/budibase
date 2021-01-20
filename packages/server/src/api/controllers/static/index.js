@@ -7,7 +7,7 @@ const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
 const { prepareUpload } = require("../deploy/utils")
-const { stringTemplate } = require("../../../utilities/stringTemplating")
+const { processString } = require("@budibase/string-templates")
 const {
   budibaseAppsDir,
   budibaseTempDir,
@@ -161,7 +161,7 @@ exports.serveApp = async function(ctx) {
   })
 
   const appHbs = fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
-  ctx.body = stringTemplate(appHbs, {
+  ctx.body = await processString(appHbs, {
     head,
     body: html,
     style: css.code,

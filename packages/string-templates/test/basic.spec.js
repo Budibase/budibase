@@ -4,17 +4,17 @@ const {
 } = require("../src/index")
 
 describe("Test that the string processing works correctly", () => {
-  it("should process a basic template string", () => {
-    const output = processString("templating is {{ adjective }}", {
+  it("should process a basic template string", async () => {
+    const output = await processString("templating is {{ adjective }}", {
       adjective: "easy"
     })
     expect(output).toBe("templating is easy")
   })
 
-  it("should fail gracefully when wrong type passed in", () => {
+  it("should fail gracefully when wrong type passed in", async () => {
     let error = null
     try {
-      processString(null, null)
+      await processString(null, null)
     } catch (err) {
       error = err
     }
@@ -23,8 +23,8 @@ describe("Test that the string processing works correctly", () => {
 })
 
 describe("Test that the object processing works correctly", () => {
-  it("should be able to process an object with some template strings", () => {
-    const output = processObject({
+  it("should be able to process an object with some template strings", async () => {
+    const output = await processObject({
       first: "thing is {{ adjective }}",
       second: "thing is bad",
       third: "we are {{ adjective }} {{ noun }}",
@@ -37,30 +37,30 @@ describe("Test that the object processing works correctly", () => {
     expect(output.third).toBe("we are easy people")
   })
 
-  it("should be able to handle arrays of string templates", () => {
-    const output = processObject(["first {{ noun }}", "second {{ noun }}"], {
+  it("should be able to handle arrays of string templates", async () => {
+    const output = await processObject(["first {{ noun }}", "second {{ noun }}"], {
       noun: "person"
     })
     expect(output[0]).toBe("first person")
     expect(output[1]).toBe("second person")
   })
 
-  it("should fail gracefully when object passed in has cycles", () => {
+  it("should fail gracefully when object passed in has cycles", async () => {
     let error = null
     try {
       const innerObj = { a: "thing {{ a }}" }
       innerObj.b = innerObj
-      processObject(innerObj, { a: 1 })
+      await processObject(innerObj, { a: 1 })
     } catch (err) {
       error = err
     }
     expect(error).not.toBeNull()
   })
 
-  it("should fail gracefully when wrong type is passed in", () => {
+  it("should fail gracefully when wrong type is passed in", async () => {
     let error = null
     try {
-      processObject(null, null)
+      await processObject(null, null)
     } catch (err) {
       error = err
     }
