@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Button, Icon, Drawer, Body } from "@budibase/bbui"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -7,8 +7,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/replaceBindings"
-  import { DropdownMenu } from "@budibase/bbui"
-  import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
+  import BindingPanel from "components/userInterface/BindingPanel.svelte"
 
   export let label = ""
   export let bindable = true
@@ -19,13 +18,15 @@
   export let props = {}
   export let onChange = () => {}
 
+  let bindingDrawer
+  
   let temporaryBindableValue = value
   let bindableProperties = []
   let anchor
-  let dropdown
 
   function handleClose() {
     handleChange(key, temporaryBindableValue)
+    bindingDrawer.hide()
   }
 
   function getBindableProperties() {
@@ -95,26 +96,27 @@
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={dropdown.show}>
+      on:click={bindingDrawer.show}>
       <Icon name="edit" />
     </div>
   {/if}
 </div>
-{#if control == Input}
-  <DropdownMenu
-    on:close={handleClose}
-    bind:this={dropdown}
-    {anchor}
-    align="right">
-    <BindingDropdown
-      {...handlevalueKey(value)}
-      close={dropdown.hide}
-      on:update={e => (temporaryBindableValue = e.detail)}
-      {bindableProperties} />
-  </DropdownMenu>
-{/if}
+
+<Drawer bind:this={bindingDrawer} title="Bindings">
+  <div slot="description"><Body extraSmall grey>Add the objects on the left to enrich your text.</Body></div>
+  <heading slot="buttons">
+    <Button thin blue on:click={handleClose}>Save</Button>
+  </heading>
+  <div slot="body">
+    <BindingPanel {...handlevalueKey(value)}
+    close={handleClose}
+    on:update={e => (temporaryBindableValue = e.detail)}
+    {bindableProperties} />
+  </div>
+</Drawer>
 
 <style>
+
   .property-control {
     position: relative;
     display: flex;
