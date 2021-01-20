@@ -1,5 +1,5 @@
 <script>
-  import { processString } from "@budibase/string-templates"
+  import { processStringSync } from "@budibase/string-templates"
   import { get } from "lodash/fp"
   import { backendUiStore } from "builderStore"
 
@@ -55,7 +55,7 @@
     })
 
     // Fill in bindings with templating library
-    return processString(formattedTagline, { inputs })
+    return processStringSync(formattedTagline, { inputs })
   }
 </script>
 

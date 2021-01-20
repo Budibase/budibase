@@ -6,7 +6,7 @@ const looksLikeTemplate = /{{.*}}/
 /**
  * Enriches a given input with a row from the database.
  */
-export const enrichDataBinding = (input, context) => {
+export const enrichDataBinding = async (input, context) => {
   // Only accept string inputs
   if (!input || typeof input !== "string") {
     return input
@@ -21,10 +21,10 @@ export const enrichDataBinding = (input, context) => {
 /**
  * Enriches each prop in a props object
  */
-export const enrichDataBindings = (props, context) => {
+export const enrichDataBindings = async (props, context) => {
   let enrichedProps = {}
-  Object.entries(props).forEach(([key, value]) => {
-    enrichedProps[key] = enrichDataBinding(value, context)
-  })
+  for (let [key, value] of Object.entries(props)) {
+    enrichedProps[key] = await enrichDataBinding(value, context)
+  }
   return enrichedProps
 }

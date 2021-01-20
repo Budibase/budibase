@@ -2,7 +2,7 @@ const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
-const { objectTemplate } = require("../utilities/stringTemplating")
+const { processObject } = require("@budibase/string-templates")
 
 const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
 
@@ -44,7 +44,7 @@ class Orchestrator {
     let automation = this._automation
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
-      step.inputs = objectTemplate(step.inputs, this._context)
+      step.inputs = await processObject(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,
         step.schema.inputs
