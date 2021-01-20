@@ -1,53 +1,9 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
-
-const HBS_CLEANING_REGEX = /{{[^}}]*}}/g
-const FIND_HBS_REGEX = /{{.*}}/
+const { cleanHandlebars } = require("./cleaning")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
-
-/**
- * When running handlebars statements to execute on the context of the automation it possible user's may input handlebars
- * in a few different forms, some of which are invalid but are logically valid. An example of this would be the handlebars
- * statement "{{steps[0].revision}}" here it is obvious the user is attempting to access an array or object using array
- * like operators. These are not supported by handlebars and therefore the statement will fail. This function will clean up
- * the handlebars statement so it instead reads as "{{steps.0.revision}}" which is valid and will work. It may also be expanded
- * to include any other handlebars statement cleanup that has been deemed necessary for the system.
- *
- * @param {string} string The string which *may* contain handlebars statements, it is OK if it does not contain any.
- * @returns {string} The string that was input with cleaned up handlebars statements as required.
- */
-function cleanHandlebars(string) {
-  // TODO: handle these types of statement
-  // every statement must have the "all" helper added e.g.
-  // {{ person }} => {{ html person }}
-  // escaping strings must be handled as such:
-  // {{ person name }} => {{ [person name] }}
-  // {{ obj.person name }} => {{ obj.[person name] }}
-  let charToReplace = {
-    "[": ".",
-    "]": "",
-  }
-  let regex = new RegExp(HBS_CLEANING_REGEX)
-  let matches = string.match(regex)
-  if (matches == null) {
-    return string
-  }
-  for (let match of matches) {
-    let baseIdx = string.indexOf(match)
-    for (let key of Object.keys(charToReplace)) {
-      let idxChar = match.indexOf(key)
-      if (idxChar !== -1) {
-        string =
-          string.slice(baseIdx, baseIdx + idxChar) +
-          charToReplace[key] +
-          string.slice(baseIdx + idxChar + 1)
-      }
-    }
-  }
-  return string
-}
 
 /**
  * utility function to check if the object is valid
@@ -70,7 +26,6 @@ function testObject(object) {
  */
 module.exports.processObject = async (object, context) => {
   testObject(object)
-  // TODO: carry out any async calls before carrying out async call
   for (let key of Object.keys(object)) {
     let val = object[key]
     if (typeof val === "string") {
