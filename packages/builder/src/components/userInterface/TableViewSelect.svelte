@@ -1,16 +1,15 @@
 <script>
-  import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
+  import { Button, Icon, DropdownMenu, Spacer, Heading, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import BottomDrawer from "components/common/BottomDrawer.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
-  let bindingDrawerOpen
+  let drawer
 
   export let value = {}
 
@@ -73,14 +72,6 @@
     dropdownRight.hide()
   }
 
-  function openBindingDrawer() {
-    bindingDrawerOpen = true
-  }
-
-  function closeDatabindingDrawer() {
-    bindingDrawerOpen = false
-  }
-
   function fetchDatasourceSchema(query) {
     const source = $backendUiStore.datasources.find(
       ds => ds._id === query.datasourceId
@@ -99,9 +90,8 @@
   <Icon name="arrowdown" />
 </div>
 {#if value.type === 'query'}
-  <i class="ri-settings-5-line" on:click={openBindingDrawer} />
-  {#if bindingDrawerOpen}
-    <BottomDrawer title={'Query'} onClose={closeDatabindingDrawer}>
+  <i class="ri-settings-5-line" on:click={drawer.show} />
+    <Drawer title={'Query'}>
       <div slot="buttons">
         <Button
           blue
@@ -109,6 +99,7 @@
           on:click={() => {
             notifier.success('Query parameters saved.')
             handleSelected(value)
+            drawer.hide()
           }}>
           Save
         </Button>
@@ -126,9 +117,8 @@
             bindings={queryBindableProperties} />
         {/if}
       </div>
-    </BottomDrawer>
+    </Drawer>
   {/if}
-{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
