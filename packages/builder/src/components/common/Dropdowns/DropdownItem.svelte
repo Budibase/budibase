@@ -11,7 +11,9 @@
   on:click
   class:big={subtitle != null}
   {...$$restProps}>
-  {#if icon}<i class={icon} />{/if}
+  {#if icon}
+    <i class={icon} />
+  {/if}
   <div class="content">
     <div class="title">{title}</div>
     {#if subtitle != null}
@@ -56,7 +58,7 @@
   }
 
   .title {
-    font-weight: 400;
+    font-weight: 500;
   }
 
   .subtitle {
@@ -65,6 +67,10 @@
   }
 
   i {
-    font-size: 16px;
+    padding: 0.5rem;
+    background-color: var(--grey-2);
+    font-size: 24px;
+    border-radius: var(--border-radius-s);
+    color: var(--ink);
   }
 </style>
