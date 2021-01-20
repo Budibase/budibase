@@ -1,10 +1,10 @@
 <script>
-  import { Button, TextArea, Label, Input, Heading } from "@budibase/bbui"
-  import BindableInput from "components/userInterface/BindableInput.svelte"
+  import { Button, Label, Input, Heading } from "@budibase/bbui"
+  import BindableInput from "components/common/BindableInput.svelte"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
+  } from "builderStore/dataBinding"
 
   export let bindable = true
   export let parameters = []

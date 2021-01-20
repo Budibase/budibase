@@ -15,7 +15,7 @@
   import EventsEditor from "./PropertyControls/EventsEditor"
   import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
-  import IconSelect from "./PropertyControls/IconSelect"
+  import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
 
   export let componentDefinition = {}
