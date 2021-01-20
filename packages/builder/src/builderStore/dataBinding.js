@@ -10,9 +10,10 @@ const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
  * Gets all bindable data context fields and instance fields.
  */
 export const getBindableProperties = (rootComponent, componentId) => {
-  const bindableContexts = getBindableContexts(rootComponent, componentId)
-  const bindableComponents = getBindableComponents(rootComponent)
-  return [...bindableContexts, ...bindableComponents]
+  const contextBindings = getContextBindings(rootComponent, componentId)
+  const queryBindings = getQueryBindings(rootComponent, componentId)
+  const componentBindings = getComponentBindings(rootComponent)
+  return [...contextBindings, ...queryBindings, componentBindings]
 }
 
 /**
@@ -71,11 +72,10 @@ export const getDatasourceForProvider = component => {
  * Gets all bindable data contexts. These are fields of schemas of data contexts
  * provided by data provider components, such as lists or row detail components.
  */
-export const getBindableContexts = (rootComponent, componentId) => {
-  const dataProviders = getDataProviderComponents(rootComponent, componentId)
-
+export const getContextBindings = (rootComponent, componentId) => {
   // Extract any components which provide data contexts
-  let contexts = []
+  const dataProviders = getDataProviderComponents(rootComponent, componentId)
+  let contextBindings = []
   dataProviders.forEach(component => {
     const datasource = getDatasourceForProvider(component)
     if (!datasource) {
@@ -99,7 +99,7 @@ export const getBindableContexts = (rootComponent, componentId) => {
         runtimeBoundKey = `${key}_first`
       }
 
-      contexts.push({
+      contextBindings.push({
         type: "context",
         runtimeBinding: `${component._id}.${runtimeBoundKey}`,
         readableBinding: `${component._instanceName}.${table.name}.${key}`,
@@ -110,14 +110,14 @@ export const getBindableContexts = (rootComponent, componentId) => {
       })
     })
   })
-  return contexts
+  return contextBindings
 }
 
 /**
  * Gets all bindable components. These are form components which allow their
  * values to be bound to.
  */
-export const getBindableComponents = rootComponent => {
+export const getComponentBindings = rootComponent => {
   if (!rootComponent) {
     return []
   }
@@ -135,6 +135,47 @@ export const getBindableComponents = rootComponent => {
       readableBinding: `${component._instanceName}`,
     }
   })
+}
+
+/**
+ * Gets all bindable query fields. These are fields of schemas of data contexts
+ * provided by data provider components, such as lists or row detail components.
+ */
+export const getQueryBindings = (rootComponent, componentId) => {
+  // Extract any components which provide data contexts
+  const dataProviders = getDataProviderComponents(rootComponent, componentId)
+  const queries = get(backendUiStore).queries
+  let queryBindings = []
+  dataProviders.forEach(component => {
+    const datasource = getDatasourceForProvider(component)
+    if (!datasource) {
+      return
+    }
+
+    // Find a query for this table ID
+    const queryId = datasource.tableId
+    const query = queries.find(query => query._id === queryId)
+    const schema = query?.schema
+    if (!schema) {
+      return
+    }
+
+    // Add all schema fields as bindable values
+    const keys = Object.keys(schema).sort()
+    keys.forEach(key => {
+      const fieldSchema = schema[key]
+      queryBindings.push({
+        type: "context",
+        fieldSchema,
+        runtimeBinding: `${component._id}.${key}`,
+        readableBinding: `${component._instanceName}.${query.name}.${key}`,
+        providerId: component._id,
+        tableId: datasource.tableId,
+        field: key,
+      })
+    })
+  })
+  return queryBindings
 }
 
 /**

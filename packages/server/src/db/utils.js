@@ -15,6 +15,8 @@ const DocumentTypes = {
   INSTANCE: "inst",
   LAYOUT: "layout",
   SCREEN: "screen",
+  DATASOURCE: "datasource",
+  QUERY: "query",
 }
 
 const ViewNames = {
@@ -222,4 +224,44 @@ exports.generateWebhookID = () => {
  */
 exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.WEBHOOK, webhookId, otherProps)
+}
+
+/**
+ * Generates a new datasource ID.
+ * @returns {string} The new datasource ID which the webhook doc can be stored under.
+ */
+exports.generateDatasourceID = () => {
+  return `${DocumentTypes.DATASOURCE}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a datasource, this is a utility function for the getDocParams function.
+ */
+exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.DATASOURCE, datasourceId, otherProps)
+}
+
+/**
+ * Generates a new query ID.
+ * @returns {string} The new query ID which the query doc can be stored under.
+ */
+exports.generateQueryID = datasourceId => {
+  return `${
+    DocumentTypes.QUERY
+  }${SEPARATOR}${datasourceId}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
+ */
+exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
+  if (datasourceId == null) {
+    return getDocParams(DocumentTypes.QUERY, null, otherProps)
+  }
+
+  return getDocParams(
+    DocumentTypes.QUERY,
+    `${datasourceId}${SEPARATOR}`,
+    otherProps
+  )
 }

@@ -1,9 +1,9 @@
 <script>
-  import "@fortawesome/fontawesome-free/js/all.js"
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
+  // Add this back once we can define specific design options to expose
+  // const { styleable } = getContext("sdk")
+  // const component = getContext("component")
 
   export let icon = ""
   export let size = "fa-lg"
@@ -12,5 +12,4 @@
 
 <i
   style={`color: ${color};`}
-  class={`${icon} ${size}`}
-  use:styleable={$component.styles} />
+  class={`${icon} ${size}`} />

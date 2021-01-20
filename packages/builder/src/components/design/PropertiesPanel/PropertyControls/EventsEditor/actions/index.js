@@ -1,6 +1,7 @@
 import NavigateTo from "./NavigateTo.svelte"
 import SaveRow from "./SaveRow.svelte"
 import DeleteRow from "./DeleteRow.svelte"
+import ExecuteQuery from "./ExecuteQuery.svelte"
 import TriggerAutomation from "./TriggerAutomation.svelte"
 
 // defines what actions are available, when adding a new one
@@ -20,6 +21,10 @@ export default [
   {
     name: "Navigate To",
     component: NavigateTo,
+  },
+  {
+    name: "Execute Query",
+    component: ExecuteQuery,
   },
   {
     name: "Trigger Automation",

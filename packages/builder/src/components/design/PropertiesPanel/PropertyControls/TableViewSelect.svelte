@@ -1,25 +1,30 @@
 <script>
-  import { Icon, DropdownMenu, Heading } from "@budibase/bbui"
+  import { getBindableProperties } from "builderStore/dataBinding"
+  import {
+    Button,
+    Icon,
+    DropdownMenu,
+    Spacer,
+    Heading,
+    Drawer,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import { notifier } from "builderStore/store/notifications"
+  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import IntegrationQueryEditor from "components/integration/index.svelte"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
+  let drawer
 
   export let value = {}
-
-  function handleSelected(selected) {
-    dispatch("change", selected)
-    dropdownRight.hide()
-  }
 
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
     tableId: m._id,
     type: "table",
   }))
-
   $: views = $backendUiStore.tables.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
@@ -29,12 +34,24 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-
+  $: queries = $backendUiStore.queries.map(query => ({
+    label: query.name,
+    name: query.name,
+    ...query,
+    schema: query.schema,
+    parameters: query.parameters,
+    type: "query",
+  }))
   $: bindableProperties = getBindableProperties(
     $currentAsset.props,
     $store.selectedComponentId
   )
-
+  $: queryBindableProperties = bindableProperties.map(property => ({
+    ...property,
+    category: property.type === "instance" ? "Component" : "Table",
+    label: property.readableBinding,
+    path: property.readableBinding,
+  }))
   $: links = bindableProperties
     .filter(x => x.fieldSchema?.type === "link")
     .map(property => {
@@ -47,15 +64,59 @@
         type: "link",
       }
     })
+
+  function handleSelected(selected) {
+    dispatch("change", selected)
+    dropdownRight.hide()
+  }
+
+  function fetchDatasourceSchema(query) {
+    const source = $backendUiStore.datasources.find(
+      ds => ds._id === query.datasourceId
+    ).source
+    return $backendUiStore.integrations[source].query[query.queryVerb][
+      query.queryType
+    ]
+  }
 </script>
 
 <div
   class="dropdownbutton"
   bind:this={anchorRight}
   on:click={dropdownRight.show}>
-  <span>{value && value.label ? value.label : 'Table / View'}</span>
+  <span>{value.label ? value.label : 'Table / View / Query'}</span>
   <Icon name="arrowdown" />
 </div>
+{#if value.type === 'query'}
+  <i class="ri-settings-5-line" on:click={drawer.show} />
+  <Drawer title={'Query'}>
+    <div slot="buttons">
+      <Button
+        blue
+        thin
+        on:click={() => {
+          notifier.success('Query parameters saved.')
+          handleSelected(value)
+          drawer.hide()
+        }}>
+        Save
+      </Button>
+    </div>
+    <div class="drawer-contents" slot="body">
+      <IntegrationQueryEditor
+        query={value}
+        schema={fetchDatasourceSchema(value)}
+        editable={false} />
+      <Spacer large />
+      {#if value.parameters.length > 0}
+        <ParameterBuilder
+          bind:customParams={value.queryParams}
+          parameters={queries.find(query => query._id === value._id).parameters}
+          bindings={queryBindableProperties} />
+      {/if}
+    </div>
+  </Drawer>
+{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
@@ -93,6 +154,20 @@
           class:selected={value === link}
           on:click={() => handleSelected(link)}>
           {link.label}
+        </li>
+      {/each}
+    </ul>
+
+    <hr />
+    <div class="title">
+      <Heading extraSmall>Queries</Heading>
+    </div>
+    <ul>
+      {#each queries as query}
+        <li
+          class:selected={value === query}
+          on:click={() => handleSelected(query)}>
+          {query.label}
         </li>
       {/each}
     </ul>
@@ -159,5 +234,24 @@
 
   li:hover {
     background-color: var(--grey-4);
+  }
+
+  .drawer-contents {
+    padding: var(--spacing-xl);
+    height: 40vh;
+    overflow-y: auto;
+  }
+
+  i {
+    margin-left: 5px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  i:hover {
+    transform: scale(1.1);
+    font-weight: 500;
+    cursor: pointer;
   }
 </style>

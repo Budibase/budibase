@@ -19,6 +19,7 @@ import { uuid } from "../uuid"
 const INITIAL_FRONTEND_STATE = {
   apps: [],
   name: "",
+  url: "",
   description: "",
   layouts: [],
   screens: [],
@@ -48,6 +49,7 @@ export const getFrontendStore = () => {
         name: application.name,
         description: application.description,
         appId: application._id,
+        url: application.url,
         layouts,
         screens,
         hasAppPackage: true,
