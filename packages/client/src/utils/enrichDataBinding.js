@@ -1,3 +1,4 @@
+import { cloneDeep } from "lodash/fp"
 import mustache from "mustache"
 
 // this is a much more liberal version of mustache's escape function
@@ -35,12 +36,33 @@ export const enrichDataBinding = (input, context) => {
 }
 
 /**
- * Enriches each prop in a props object
+ * Recursively enriches all props in a props object and returns the new props.
+ * Props are deeply cloned so that no mutation is done to the source object.
  */
 export const enrichDataBindings = (props, context) => {
-  let enrichedProps = {}
-  Object.entries(props).forEach(([key, value]) => {
-    enrichedProps[key] = enrichDataBinding(value, context)
+  let clonedProps = cloneDeep(props)
+  recursiveEnrich(clonedProps, context)
+  return clonedProps
+}
+
+/**
+ * Recurses through an object and enriches all string props found.
+ */
+const recursiveEnrich = (props, context) => {
+  if (typeof props !== "object") {
+    return
+  }
+  let keys = []
+  if (Array.isArray(props)) {
+    keys = Array.from(props.keys())
+  } else if (typeof props === "object") {
+    keys = Object.keys(props || {})
+  }
+  keys.forEach(key => {
+    if (typeof props[key] === "string") {
+      props[key] = enrichDataBinding(props[key], context)
+    } else {
+      recursiveEnrich(props[key], context)
+    }
   })
-  return enrichedProps
 }

@@ -1,16 +1,14 @@
-import { get } from "svelte/store"
+import { cloneDeep } from "lodash/fp"
 import { fetchTableData } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
 import { enrichRows } from "./rows"
-import { enrichDataBindings } from "../utils/enrichDataBinding"
-import { bindingStore } from "../store/binding"
 
 /**
  * Fetches all rows for a particular Budibase data source.
  */
-export const fetchDatasource = async (datasource, dataContext) => {
+export const fetchDatasource = async datasource => {
   if (!datasource || !datasource.type) {
     return []
   }
@@ -23,28 +21,22 @@ export const fetchDatasource = async (datasource, dataContext) => {
   } else if (type === "view") {
     rows = await fetchViewData(datasource)
   } else if (type === "query") {
-    const bindings = get(bindingStore)
-
     // Set the default query params
-    let queryParams = datasource.queryParams || {}
+    let parameters = cloneDeep(datasource.queryParams || {})
     for (let param of datasource.parameters) {
-      if (!queryParams[param.name]) {
-        queryParams[param.name] = param.default
+      if (!parameters[param.name]) {
+        parameters[param.name] = param.default
       }
     }
-    const parameters = enrichDataBindings(queryParams, {
-      ...bindings,
-      ...dataContext,
-    })
     return await executeQuery({ queryId: datasource._id, parameters })
   } else if (type === "link") {
-    const row = dataContext[datasource.providerId]
     rows = await fetchRelationshipData({
-      rowId: row?._id,
-      tableId: row?.tableId,
+      rowId: datasource.rowId,
+      tableId: datasource.rowTableId,
       fieldName,
     })
   }
-  // Enrich rows
+
+  // Enrich rows so they can displayed properly
   return await enrichRows(rows, tableId)
 }

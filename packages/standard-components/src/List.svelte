@@ -1,26 +1,21 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
   const { API, styleable, DataProvider } = getContext("sdk")
   const component = getContext("component")
-  const dataContext = getContext("data")
 
   export let datasource = []
 
   let rows = []
 
-  $: datasource && fetchData()
+  $: fetchData(datasource)
 
-  async function fetchData() {
-    rows = await API.fetchDatasource(datasource, $dataContext)
-  }
-
-  onMount(async () => {
+  async function fetchData(datasource) {
     if (!isEmpty(datasource)) {
-      fetchData()
+      rows = await API.fetchDatasource(datasource)
     }
-  })
+  }
 </script>
 
 <div use:styleable={$component.styles}>

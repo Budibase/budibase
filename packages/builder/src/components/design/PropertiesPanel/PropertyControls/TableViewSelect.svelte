@@ -37,6 +37,7 @@
   $: queries = $backendUiStore.queries.map(query => ({
     label: query.name,
     name: query.name,
+    tableId: query._id,
     ...query,
     schema: query.schema,
     parameters: query.parameters,
@@ -59,9 +60,12 @@
         providerId: property.providerId,
         label: property.readableBinding,
         fieldName: property.fieldSchema.name,
-        name: `all_${property.fieldSchema.tableId}`,
         tableId: property.fieldSchema.tableId,
         type: "link",
+        // These properties will be enriched by the client library and provide
+        // details of the parent row of the relationship field, from context
+        rowId: `{{ ${property.providerId}._id }}`,
+        rowTableId: `{{ ${property.providerId}.tableId }}`,
       }
     })
 
@@ -84,12 +88,12 @@
   class="dropdownbutton"
   bind:this={anchorRight}
   on:click={dropdownRight.show}>
-  <span>{value.label ? value.label : 'Table / View / Query'}</span>
+  <span>{value?.label ? value.label : 'Choose option'}</span>
   <Icon name="arrowdown" />
 </div>
-{#if value.type === 'query'}
+{#if value?.type === 'query'}
   <i class="ri-settings-5-line" on:click={drawer.show} />
-  <Drawer title={'Query'}>
+  <Drawer title={'Query'} bind:this={drawer}>
     <div slot="buttons">
       <Button
         blue
