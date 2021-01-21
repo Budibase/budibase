@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "handlebars": "^4.7.6",
+    "handlebars-helpers": "^0.10.0",
+    "helper-date": "^1.0.1",
     "lodash": "^4.17.20"
   },
   "devDependencies": {
