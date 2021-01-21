@@ -33,3 +33,19 @@ describe("Handling context properties with spaces in their name", () => {
     expect(output).toBe("testcase 1")
   })
 })
+
+describe("attempt some complex problems", () => {
+  it("should be able to handle a very complex handlebars statement", async () => {
+    const context = {
+      "New Repeater": {
+        "Get Actors": {
+          "first_name": "Bob",
+          "last_name": "Bobert"
+        },
+      },
+    }
+    const hbs = "{{ New Repeater.Get Actors.first_name }} {{ New Repeater.Get Actors.last_name }}"
+    const output = await processString(hbs, context)
+    expect(output).toBe("Bob Bobert")
+  })
+})

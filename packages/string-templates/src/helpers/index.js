@@ -12,7 +12,7 @@ const HelperFunctionBuiltin = [
   "#each",
   "#with",
   "lookup",
-  "log"
+  "log",
 ]
 
 const HelperFunctionNames = {
@@ -27,17 +27,19 @@ const HELPERS = [
   }),
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, value => {
-    let text = new SafeString(unescape(value).replace(/&amp;/g, '&'))
+    let text = new SafeString(unescape(value).replace(/&amp;/g, "&"))
     if (text == null || typeof text !== "string") {
       return text
     }
     return text.replace(/[<>]/g, tag => {
       return HTML_SWAPS[tag] || tag
     })
-  })
+  }),
 ]
 
-module.exports.HelperFunctions = Object.values(HelperFunctionNames).concat(HelperFunctionBuiltin)
+module.exports.HelperFunctions = Object.values(HelperFunctionNames).concat(
+  HelperFunctionBuiltin
+)
 
 module.exports.registerAll = handlebars => {
   for (let helper of HELPERS) {
