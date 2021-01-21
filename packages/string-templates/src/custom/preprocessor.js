@@ -1,5 +1,10 @@
 const { HelperFunctions } = require("../helpers")
-const { swapStrings, isAlphaNumeric, FIND_HBS_REGEX, includesAny } = require("../utilities")
+const {
+  swapStrings,
+  isAlphaNumeric,
+  FIND_HBS_REGEX,
+  includesAny,
+} = require("../utilities")
 
 function handleProcessor(string, match, fn) {
   const output = fn(match)
@@ -27,7 +32,9 @@ function handleSpacesInProperties(statement) {
   // find all the parts split by spaces
   const splitBySpaces = statement.split(" ")
   // remove the excluded elements
-  const propertyParts = splitBySpaces.filter(part => exclusions.indexOf(part) === -1)
+  const propertyParts = splitBySpaces.filter(
+    part => exclusions.indexOf(part) === -1
+  )
   // rebuild to get the full property
   const fullProperty = propertyParts.join(" ")
   // now work out the dot notation layers and split them up
@@ -35,7 +42,12 @@ function handleSpacesInProperties(statement) {
   // find the layers which need to be wrapped and wrap them
   for (let layer of propertyLayers) {
     if (layer.indexOf(" ") !== -1) {
-      statement = swapStrings(statement, statement.indexOf(layer), layer.length, `[${layer}]`)
+      statement = swapStrings(
+        statement,
+        statement.indexOf(layer),
+        layer.length,
+        `[${layer}]`
+      )
     }
   }
   // remove the edge case of double brackets being entered (in-case user already has specified)
@@ -67,7 +79,7 @@ function finalise(statement) {
  * @param {string} string The string which *may* contain handlebars statements, it is OK if it does not contain any.
  * @returns {string} The string that was input with processed up handlebars statements as required.
  */
-module.exports.preprocess = (string) => {
+module.exports.preprocess = string => {
   let preprocessors = [swapToDotNotation, handleSpacesInProperties, finalise]
   for (let processor of preprocessors) {
     // re-run search each time incase previous cleaner update/removed a match

@@ -11,7 +11,7 @@ export default {
     name: "string-templates",
     exports: "named",
     globals: {
-      "fs": "fs",
+      fs: "fs",
     },
   },
   external: ["fs"],

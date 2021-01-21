@@ -2,7 +2,7 @@ const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 module.exports.FIND_HBS_REGEX = /{{[^}}]*}}/g
 
-module.exports.isAlphaNumeric = (char) => {
+module.exports.isAlphaNumeric = char => {
   return char.match(ALPHA_NUMERIC_REGEX)
 }
 
