@@ -27,11 +27,13 @@ function testObject(object) {
 module.exports.processObject = async (object, context) => {
   testObject(object)
   for (let key of Object.keys(object)) {
-    let val = object[key]
-    if (typeof val === "string") {
-      object[key] = await module.exports.processString(object[key], context)
-    } else if (typeof val === "object") {
-      object[key] = await module.exports.processObject(object[key], context)
+    if (object[key] != null) {
+      let val = object[key]
+      if (typeof val === "string") {
+        object[key] = await module.exports.processString(object[key], context)
+      } else if (typeof val === "object") {
+        object[key] = await module.exports.processObject(object[key], context)
+      }
     }
   }
   return object
