@@ -24,7 +24,8 @@ exports.registerAll = handlebars => {
   for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
-    for (let [name, func] of Object.entries(hbsHelperInfo)) {
+    for (let entry of Object.entries(hbsHelperInfo)) {
+      const name = entry[0]
       // skip built in functions and ones seen already
       if (
         HelperFunctionBuiltin.indexOf(name) !== -1 ||

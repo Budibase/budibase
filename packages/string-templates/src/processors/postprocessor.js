@@ -1,5 +1,4 @@
-const { FIND_HBS_REGEX } = require("../utilities")
-
+/* eslint-disable no-unused-vars */
 class Postprocessor {
   constructor(name, fn) {
     this.name = name
