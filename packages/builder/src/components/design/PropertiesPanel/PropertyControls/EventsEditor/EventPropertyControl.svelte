@@ -7,7 +7,7 @@
 
   const dispatch = createEventDispatcher()
 
-  export let value []
+  export let value = []
   export let name
 
   let drawer
