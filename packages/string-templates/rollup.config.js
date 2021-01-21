@@ -1,27 +1,26 @@
 import commonjs from "rollup-plugin-commonjs"
-import globals from "rollup-plugin-node-globals"
-import builtins from "rollup-plugin-node-builtins"
-import polyfills from "rollup-plugin-node-polyfills"
 import resolve from "rollup-plugin-node-resolve"
+import builtins from "rollup-plugin-node-builtins"
+import globals from "rollup-plugin-node-globals"
 import json from "@rollup/plugin-json"
+
+const production = !process.env.ROLLUP_WATCH
 
 export default {
   input: "src/index.js",
-  output: {
-    file: "dist/bundle.js",
-    format: "umd",
-    name: "string-templates",
-    exports: "named",
-    globals: {
-      fs: "fs",
+  output: [
+    {
+      sourcemap: true,
+      format: "umd",
+      file: "./dist/bundle.js",
+      name: "string-templates",
+      exports: "named",
     },
-  },
-  treeshake: true,
-  external: ["fs"],
+  ],
   plugins: [
-    polyfills(),
     resolve({
-      preferBuiltins: false
+      preferBuiltins: true,
+      browser: true,
     }),
     commonjs(),
     globals(),
