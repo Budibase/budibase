@@ -1,17 +1,7 @@
-const { HelperFunctions } = require("./helpers/index")
+const { HelperFunctions } = require("../helpers")
+const { swapStrings, isAlphaNumeric, FIND_HBS_REGEX, includesAny } = require("../utilities")
 
-const HBS_CLEANING_REGEX = /{{[^}}]*}}/g
-const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
-
-function isAlphaNumeric(char) {
-  return char.match(ALPHA_NUMERIC_REGEX)
-}
-
-function swapStrings(string, start, length, swap) {
-  return string.slice(0, start) + swap + string.slice(start + length)
-}
-
-function handleCleaner(string, match, fn) {
+function handleProcessor(string, match, fn) {
   const output = fn(match)
   const idx = string.indexOf(match)
   return swapStrings(string, idx, match.length, output)
@@ -60,31 +50,34 @@ function finalise(statement) {
   if (insideStatement.charAt(insideStatement.length - 1) === " ") {
     insideStatement = insideStatement.slice(0, insideStatement.length - 1)
   }
-  return `{{ all (${insideStatement}) }}`
+  if (includesAny(insideStatement, HelperFunctions)) {
+    insideStatement = `(${insideStatement})`
+  }
+  return `{{ all ${insideStatement} }}`
 }
 
 /**
  * When running handlebars statements to execute on the context of the automation it possible user's may input handlebars
  * in a few different forms, some of which are invalid but are logically valid. An example of this would be the handlebars
  * statement "{{steps[0].revision}}" here it is obvious the user is attempting to access an array or object using array
- * like operators. These are not supported by handlebars and therefore the statement will fail. This function will clean up
+ * like operators. These are not supported by handlebars and therefore the statement will fail. This function pre-processes will
  * the handlebars statement so it instead reads as "{{steps.0.revision}}" which is valid and will work. It may also be expanded
- * to include any other handlebars statement cleanup that has been deemed necessary for the system.
+ * to include any other handlebars statement pre-process that has been deemed necessary for the system.
  *
  * @param {string} string The string which *may* contain handlebars statements, it is OK if it does not contain any.
- * @returns {string} The string that was input with cleaned up handlebars statements as required.
+ * @returns {string} The string that was input with processed up handlebars statements as required.
  */
-module.exports.cleanHandlebars = (string) => {
-  let cleaners = [swapToDotNotation, handleSpacesInProperties, finalise]
-  for (let cleaner of cleaners) {
+module.exports.preprocess = (string) => {
+  let preprocessors = [swapToDotNotation, handleSpacesInProperties, finalise]
+  for (let processor of preprocessors) {
     // re-run search each time incase previous cleaner update/removed a match
-    let regex = new RegExp(HBS_CLEANING_REGEX)
+    let regex = new RegExp(FIND_HBS_REGEX)
     let matches = string.match(regex)
     if (matches == null) {
       continue
     }
     for (let match of matches) {
-      string = handleCleaner(string, match, cleaner)
+      string = handleProcessor(string, match, processor)
     }
   }
   return string
