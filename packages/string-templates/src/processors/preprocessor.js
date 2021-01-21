@@ -1,9 +1,5 @@
 const { HelperNames } = require("../helpers")
-const {
-  swapStrings,
-  isAlphaNumeric,
-  FIND_HBS_REGEX,
-} = require("../utilities")
+const { swapStrings, isAlphaNumeric, FIND_HBS_REGEX } = require("../utilities")
 
 const PreprocessorNames = {
   SWAP_TO_DOT: "swap-to-dot-notation",

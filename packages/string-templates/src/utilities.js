@@ -22,6 +22,4 @@ module.exports.removeNull = obj => {
   )
 }
 
-module.exports.findHbsStatements = string => {
-
-}
+module.exports.findHbsStatements = string => {}
