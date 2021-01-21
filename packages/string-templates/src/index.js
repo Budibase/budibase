@@ -81,8 +81,6 @@ module.exports.processStringSync = (string, context) => {
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  console.log(string)
-  console.log(context)
   let template
   string = preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
