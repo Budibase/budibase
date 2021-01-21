@@ -29,6 +29,8 @@
         <i class="ri-arrow-right-s-line" />
       </div>
     {/if}
+
+    <slot name="icon" />
     {#if icon}
       <div class="icon"><i class={icon} /></div>
     {/if}

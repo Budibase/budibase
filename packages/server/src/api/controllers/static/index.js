@@ -12,6 +12,7 @@ const {
   budibaseAppsDir,
   budibaseTempDir,
 } = require("../../../utilities/budibaseDir")
+const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
@@ -23,6 +24,17 @@ function objectStoreUrl() {
     return `/app-assets/assets`
   } else {
     return "https://cdn.app.budi.live/assets"
+  }
+}
+
+async function checkForSelfHostedURL(ctx) {
+  // the "appId" component of the URL may actually be a specific self hosted URL
+  let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
+  const apps = await getDeployedApps()
+  if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
+    return apps[possibleAppUrl].appId
+  } else {
+    return ctx.params.appId
   }
 }
 
@@ -149,14 +161,18 @@ exports.performLocalFileProcessing = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
+  let appId = ctx.params.appId
+  if (env.SELF_HOSTED) {
+    appId = await checkForSelfHostedURL(ctx)
+  }
   const App = require("./templates/BudibaseApp.svelte").default
-  const db = new CouchDB(ctx.params.appId)
-  const appInfo = await db.get(ctx.params.appId)
+  const db = new CouchDB(appId, { skip_setup: true })
+  const appInfo = await db.get(appId)
 
   const { head, html, css } = App.render({
     title: appInfo.name,
     production: env.CLOUD,
-    appId: ctx.params.appId,
+    appId,
     objectStoreUrl: objectStoreUrl(),
   })
 
@@ -165,7 +181,7 @@ exports.serveApp = async function(ctx) {
     head,
     body: html,
     style: css.code,
-    appId: ctx.params.appId,
+    appId,
   })
 }
 
@@ -173,8 +189,7 @@ exports.serveAttachment = async function(ctx) {
   const appId = ctx.user.appId
   const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
 
-  // Serve from CloudFront
-  // TODO: need to replace this with link to self hosted object store
+  // Serve from object store
   if (env.CLOUD) {
     const S3_URL = join(objectStoreUrl(), appId, "attachments", ctx.file)
     const response = await fetch(S3_URL)

@@ -1,8 +1,14 @@
+<script context="module">
+  import iconData from "./icons.js"
+  
+  const categories = Object.keys(iconData)
+  const icons = Object.keys(iconData).reduce((acc, cat) => [...acc, ...Object.keys(iconData[cat])], [])
+
+</script>
+
 <script>
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher, tick } from "svelte"
-
-  import icons from "./icons.js"
 
   const dispatch = createEventDispatcher()
 
@@ -45,12 +51,13 @@
     "Y",
     "Z",
   ]
+
   let buttonAnchor, dropdown
   let loading = false
 
   function findIconByTerm(term) {
     const r = new RegExp(`\^${term}`, "i")
-    return icons.filter(i => r.test(i.label))
+    return icons.filter(i => r.test(i))
   }
 
   async function switchLetter(letter) {
@@ -62,7 +69,6 @@
     await tick() //svg icons do not update without tick
     loading = false
   }
-
   async function findIconOnPage() {
     loading = true
     const iconIdx = filteredIcons.findIndex(i => i.value === value)
@@ -100,7 +106,7 @@
     loading = false
   }
 
-  $: displayValue = value ? value.substring(7) : "Pick Icon"
+  $: displayValue = value ? value.substring(3) : "Pick Icon"
 
   $: totalPages = Math.ceil(filteredIcons.length / maxIconsPerPage)
   $: pageEndIdx = maxIconsPerPage * currentPage
@@ -138,11 +144,11 @@
       <div class="page-area">
         <div class="pager">
           <span on:click={() => pageClick(false)}>
-            <i class="page-btn fas fa-chevron-left" />
+            <i class="page-btn ri-arrow-left-line ri-sm" />
           </span>
           <span>{pagerText}</span>
           <span on:click={() => pageClick(true)}>
-            <i class="page-btn fas fa-chevron-right" />
+            <i class="page-btn ri-arrow-right-line ri-sm" />
           </span>
         </div>
       </div>
@@ -153,12 +159,21 @@
           {#each pagedIcons as icon}
             <div
               class="icon-container"
-              class:selected={value === icon.value}
-              on:click={() => (value = icon.value)}>
+              class:selected={value === `ri-${icon}-fill`}
+              on:click={() => (value = `ri-${icon}-fill`)}>
               <div class="icon-preview">
-                <i class={`${icon.value} fa-3x`} />
+                <i class={`ri-${icon}-fill ri-xl`} />
               </div>
-              <div class="icon-label">{icon.label}</div>
+              <div class="icon-label">{icon}-fill</div>
+            </div>
+            <div
+              class="icon-container"
+              class:selected={value === `ri-${icon}-line`}
+              on:click={() => (value = `ri-${icon}-line`)}>
+              <div class="icon-preview">
+                <i class={`ri-${icon}-line ri-xl`} />
+              </div>
+              <div class="icon-label">{icon}-line</div>
             </div>
           {/each}
         {/if}
@@ -182,13 +197,11 @@
     padding: 10px 0px 10px 15px;
     overflow-x: hidden;
   }
-
   .search-area {
     flex: 0 0 80px;
     display: flex;
     flex-direction: column;
   }
-
   .icon-area {
     flex: 1;
     display: grid;
@@ -199,13 +212,11 @@
     overflow-x: hidden;
     padding-right: 10px;
   }
-
   .no-icons {
     display: flex;
     justify-content: center;
     align-items: center;
   }
-
   .alphabet-area {
     display: flex;
     flex-flow: row wrap;
@@ -213,44 +224,36 @@
     padding-right: 15px;
     justify-content: space-around;
   }
-
   .loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
   }
-
   .search-input {
     display: flex;
     flex-flow: row nowrap;
     width: 100%;
     padding-right: 15px;
   }
-
   .input-wrapper {
     width: 510px;
     margin-right: 5px;
   }
-
   .page-area {
     padding: 10px;
     display: flex;
     justify-content: center;
   }
-
   .letter {
     color: var(--blue);
   }
-
   .letter:hover {
     cursor: pointer;
     text-decoration: underline;
   }
-
   .letter-selected {
     text-decoration: underline;
   }
-
   .icon-container {
     height: 100px;
     display: flex;
@@ -258,33 +261,27 @@
     flex-direction: column;
     border: var(--border-dark);
   }
-
   .icon-container:hover {
     cursor: pointer;
     background: var(--grey-2);
   }
-
   .selected {
     background: var(--grey-3);
   }
-
   .icon-preview {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
   }
-
   .icon-label {
     flex: 0 0 20px;
     text-align: center;
     font-size: 12px;
   }
-
   .page-btn {
     color: var(--blue);
   }
-
   .page-btn:hover {
     cursor: pointer;
   }

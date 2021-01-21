@@ -2,6 +2,7 @@ const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const fs = require("fs")
 const { cloneDeep } = require("lodash/fp")
+const CouchDB = require("../db")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -183,4 +184,18 @@ exports.coerceRowValues = (row, table) => {
 
 exports.getLogoUrl = () => {
   return "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
+}
+
+exports.getAllApps = async () => {
+  let allDbs = await CouchDB.allDbs()
+  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
+  if (appPromises.length === 0) {
+    return []
+  } else {
+    const response = await Promise.allSettled(appPromises)
+    return response
+      .filter(result => result.status === "fulfilled")
+      .map(({ value }) => value)
+  }
 }
