@@ -13,3 +13,15 @@ module.exports.swapStrings = (string, start, length, swap) => {
 module.exports.includesAny = (string, options) => {
   return options.some(option => string.includes(option))
 }
+
+// removes null and undefined
+module.exports.removeNull = obj => {
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([key, value]) => value != null)
+      .map(([key, value]) => [
+        key,
+        value === Object(value) ? module.exports.removeNull(value) : value,
+      ])
+  )
+}

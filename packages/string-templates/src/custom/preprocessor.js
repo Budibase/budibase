@@ -6,6 +6,12 @@ const {
   includesAny,
 } = require("../utilities")
 
+const PreprocessorNames = {
+  SWAP_TO_DOT: "swap-to-dot-notation",
+  HANDLE_SPACES: "handle-spaces-in-properties",
+  FINALISE: "finalise",
+}
+
 class Preprocessor {
   constructor(name, fn) {
     this.name = name
@@ -20,7 +26,7 @@ class Preprocessor {
 }
 
 const PROCESSORS = [
-  new Preprocessor("swap-to-dot-notation", statement => {
+  new Preprocessor(PreprocessorNames.SWAP_TO_DOT, statement => {
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
     while (startBraceIdx !== -1) {
@@ -34,7 +40,7 @@ const PROCESSORS = [
     return statement
   }),
 
-  new Preprocessor("handle-spaces-in-properties", statement => {
+  new Preprocessor(PreprocessorNames.HANDLE_SPACES, statement => {
     // exclude helpers and brackets, regex will only find double brackets
     const exclusions = HelperFunctions.concat(["{{", "}}"])
     // find all the parts split by spaces
@@ -62,7 +68,7 @@ const PROCESSORS = [
     return statement.replace(/\[\[/g, "[").replace(/]]/g, "]")
   }),
 
-  new Preprocessor("finalise", statement => {
+  new Preprocessor(Preprocessor.FINALISE, statement => {
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
       insideStatement = insideStatement.slice(1)
