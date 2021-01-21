@@ -11,6 +11,13 @@ describe("Test that the string processing works correctly", () => {
     expect(output).toBe("templating is easy")
   })
 
+  it("should process a literal template", async () => {
+    const output = await processString("derp is {{{ adjective }}}", {
+      adjective: "derp"
+    })
+    expect(output).toBe("derp is derp")
+  })
+
   it("should fail gracefully when wrong type passed in", async () => {
     let error = null
     try {

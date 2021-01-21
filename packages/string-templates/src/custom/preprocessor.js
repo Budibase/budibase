@@ -1,60 +1,81 @@
 const { HelperFunctions } = require("../helpers")
-const { swapStrings, isAlphaNumeric, FIND_HBS_REGEX, includesAny } = require("../utilities")
+const {
+  swapStrings,
+  isAlphaNumeric,
+  FIND_HBS_REGEX,
+  includesAny,
+} = require("../utilities")
 
-function handleProcessor(string, match, fn) {
-  const output = fn(match)
-  const idx = string.indexOf(match)
-  return swapStrings(string, idx, match.length, output)
+class Preprocessor {
+  constructor(name, fn) {
+    this.name = name
+    this.fn = fn
+  }
+
+  process(fullString, statement) {
+    const output = this.fn(statement)
+    const idx = fullString.indexOf(statement)
+    return swapStrings(fullString, idx, statement.length, output)
+  }
 }
 
-function swapToDotNotation(statement) {
-  let startBraceIdx = statement.indexOf("[")
-  let lastIdx = 0
-  while (startBraceIdx !== -1) {
-    // if the character previous to the literal specifier is alpha-numeric this should happen
-    if (isAlphaNumeric(statement.charAt(startBraceIdx - 1))) {
-      statement = swapStrings(statement, startBraceIdx + lastIdx, 1, ".[")
+const PROCESSORS = [
+  new Preprocessor("swap-to-dot-notation", statement => {
+    let startBraceIdx = statement.indexOf("[")
+    let lastIdx = 0
+    while (startBraceIdx !== -1) {
+      // if the character previous to the literal specifier is alpha-numeric this should happen
+      if (isAlphaNumeric(statement.charAt(startBraceIdx - 1))) {
+        statement = swapStrings(statement, startBraceIdx + lastIdx, 1, ".[")
+      }
+      lastIdx = startBraceIdx + 1
+      startBraceIdx = statement.substring(lastIdx + 1).indexOf("[")
     }
-    lastIdx = startBraceIdx + 1
-    startBraceIdx = statement.substring(lastIdx + 1).indexOf("[")
-  }
-  return statement
-}
+    return statement
+  }),
 
-function handleSpacesInProperties(statement) {
-  // exclude helpers and brackets, regex will only find double brackets
-  const exclusions = HelperFunctions.concat(["{{", "}}"])
-  // find all the parts split by spaces
-  const splitBySpaces = statement.split(" ")
-  // remove the excluded elements
-  const propertyParts = splitBySpaces.filter(part => exclusions.indexOf(part) === -1)
-  // rebuild to get the full property
-  const fullProperty = propertyParts.join(" ")
-  // now work out the dot notation layers and split them up
-  const propertyLayers = fullProperty.split(".")
-  // find the layers which need to be wrapped and wrap them
-  for (let layer of propertyLayers) {
-    if (layer.indexOf(" ") !== -1) {
-      statement = swapStrings(statement, statement.indexOf(layer), layer.length, `[${layer}]`)
+  new Preprocessor("handle-spaces-in-properties", statement => {
+    // exclude helpers and brackets, regex will only find double brackets
+    const exclusions = HelperFunctions.concat(["{{", "}}"])
+    // find all the parts split by spaces
+    const splitBySpaces = statement.split(" ")
+    // remove the excluded elements
+    const propertyParts = splitBySpaces.filter(
+      part => exclusions.indexOf(part) === -1
+    )
+    // rebuild to get the full property
+    const fullProperty = propertyParts.join(" ")
+    // now work out the dot notation layers and split them up
+    const propertyLayers = fullProperty.split(".")
+    // find the layers which need to be wrapped and wrap them
+    for (let layer of propertyLayers) {
+      if (layer.indexOf(" ") !== -1) {
+        statement = swapStrings(
+          statement,
+          statement.indexOf(layer),
+          layer.length,
+          `[${layer}]`
+        )
+      }
     }
-  }
-  // remove the edge case of double brackets being entered (in-case user already has specified)
-  return statement.replace(/\[\[/g, "[").replace(/]]/g, "]")
-}
+    // remove the edge case of double brackets being entered (in-case user already has specified)
+    return statement.replace(/\[\[/g, "[").replace(/]]/g, "]")
+  }),
 
-function finalise(statement) {
-  let insideStatement = statement.slice(2, statement.length - 2)
-  if (insideStatement.charAt(0) === " ") {
-    insideStatement = insideStatement.slice(1)
-  }
-  if (insideStatement.charAt(insideStatement.length - 1) === " ") {
-    insideStatement = insideStatement.slice(0, insideStatement.length - 1)
-  }
-  if (includesAny(insideStatement, HelperFunctions)) {
-    insideStatement = `(${insideStatement})`
-  }
-  return `{{ all ${insideStatement} }}`
-}
+  new Preprocessor("finalise", statement => {
+    let insideStatement = statement.slice(2, statement.length - 2)
+    if (insideStatement.charAt(0) === " ") {
+      insideStatement = insideStatement.slice(1)
+    }
+    if (insideStatement.charAt(insideStatement.length - 1) === " ") {
+      insideStatement = insideStatement.slice(0, insideStatement.length - 1)
+    }
+    if (includesAny(insideStatement, HelperFunctions)) {
+      insideStatement = `(${insideStatement})`
+    }
+    return `{{ all ${insideStatement} }}`
+  })
+]
 
 /**
  * When running handlebars statements to execute on the context of the automation it possible user's may input handlebars
@@ -67,17 +88,16 @@ function finalise(statement) {
  * @param {string} string The string which *may* contain handlebars statements, it is OK if it does not contain any.
  * @returns {string} The string that was input with processed up handlebars statements as required.
  */
-module.exports.preprocess = (string) => {
-  let preprocessors = [swapToDotNotation, handleSpacesInProperties, finalise]
-  for (let processor of preprocessors) {
-    // re-run search each time incase previous cleaner update/removed a match
+module.exports.preprocess = string => {
+  for (let processor of PROCESSORS) {
+    // re-run search each time incase previous processor updated/removed a match
     let regex = new RegExp(FIND_HBS_REGEX)
     let matches = string.match(regex)
     if (matches == null) {
       continue
     }
     for (let match of matches) {
-      string = handleProcessor(string, match, processor)
+      string = processor.process(string, match)
     }
   }
   return string
