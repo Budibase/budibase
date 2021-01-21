@@ -12,8 +12,6 @@ const { createRoutingView } = require("../../utilities/routing")
 const { downloadTemplate } = require("../../utilities/templates")
 const {
   generateAppID,
-  DocumentTypes,
-  SEPARATOR,
   getLayoutParams,
   getScreenParams,
   generateScreenID,
@@ -32,9 +30,15 @@ const {
 } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
+const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
+const {
+  getDeployedApps,
+  getHostingInfo,
+  HostingTypes,
+} = require("../../utilities/builder/hosting")
 
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
 async function getLayouts(db) {
@@ -61,6 +65,28 @@ function getUserRoleId(ctx) {
   return !ctx.user.role || !ctx.user.role._id
     ? BUILTIN_ROLE_IDS.PUBLIC
     : ctx.user.role._id
+}
+
+async function getAppUrlIfNotInUse(ctx) {
+  let url
+  if (ctx.request.body.url) {
+    url = encodeURI(ctx.request.body.url)
+  } else {
+    url = encodeURI(`${ctx.request.body.name}`)
+  }
+  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  const hostingInfo = await getHostingInfo()
+  if (hostingInfo.type === HostingTypes.CLOUD) {
+    return url
+  }
+  const deployedApps = await getDeployedApps()
+  if (
+    deployedApps[url] != null &&
+    deployedApps[url].appId !== ctx.params.appId
+  ) {
+    ctx.throw(400, "App name/URL is already in use.")
+  }
+  return url
 }
 
 async function createInstance(template) {
@@ -96,17 +122,7 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function(ctx) {
-  let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
-  const apps = appDbNames.map(db => new CouchDB(db).get(db))
-  if (apps.length === 0) {
-    ctx.body = []
-  } else {
-    const response = await Promise.allSettled(apps)
-    ctx.body = response
-      .filter(result => result.status === "fulfilled")
-      .map(({ value }) => value)
-  }
+  ctx.body = await getAllApps()
 }
 
 exports.fetchAppDefinition = async function(ctx) {
@@ -139,6 +155,7 @@ exports.fetchAppPackage = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
+  const url = await getAppUrlIfNotInUse(ctx)
   const instance = await createInstance(ctx.request.body.template)
   const appId = instance._id
   const version = packageJson.version
@@ -148,6 +165,7 @@ exports.create = async function(ctx) {
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
+    url: url,
     template: ctx.request.body.template,
     instance: instance,
     deployment: {
@@ -169,11 +187,12 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
+  const url = await getAppUrlIfNotInUse(ctx)
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
 
   const data = ctx.request.body
-  const newData = { ...application, ...data }
+  const newData = { ...application, ...data, url }
 
   const response = await db.put(newData)
   data._rev = response.rev

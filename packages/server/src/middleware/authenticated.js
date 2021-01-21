@@ -49,6 +49,8 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, jwtPayload.roleId),
     }
   } catch (err) {
+    // TODO - this can happen if the JWT secret is changed and can never login
+    // TODO: wipe cookies if they exist
     ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)
   }
 

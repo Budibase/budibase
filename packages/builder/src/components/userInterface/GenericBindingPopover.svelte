@@ -50,7 +50,9 @@
                 <span class="binding__label">{binding.label}</span>
                 <span class="binding__type">{binding.type}</span>
                 <br />
-                <div class="binding__description">{binding.description}</div>
+                <div class="binding__description">
+                  {binding.description || ''}
+                </div>
               </div>
             {/each}
           {/each}

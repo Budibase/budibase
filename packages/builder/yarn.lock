@@ -842,10 +842,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.52.4":
-  version "1.52.4"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.52.4.tgz#ae3c17e1f49f14e65831703958bcddc6e64afd24"
-  integrity sha512-/wiv5dSyvXLgy2/zGEslnCsjwE8qqng1D8k5ScSOPEyMab8tzzd1XxfZAN9rp84zIMgAXeH6s5a4j4riR+jVkg==
+"@budibase/bbui@^1.54.0":
+  version "1.54.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.54.0.tgz#60e6c0faa3d8f1781c503e74f8b8990f75ba2c40"
+  integrity sha512-98koXkueqda6oQT6q0NPNvdL878ETRevtmmm34aSz9C6B4Oz68VVCsiFzRWuHvP/7wiNaAxMgY1nsEsCwP3LpQ==
   dependencies:
     markdown-it "^12.0.2"
     quill "^1.3.7"
@@ -917,11 +917,6 @@
   dependencies:
     debug "^3.1.0"
     lodash.once "^4.1.1"
-
-"@fortawesome/fontawesome-free@^5.14.0":
-  version "5.15.1"
-  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.1.tgz#ccfef6ddbe59f8fe8f694783e1d3eb88902dc5eb"
-  integrity sha512-OEdH7SyC1suTdhBGW91/zBfR6qaIhThbcN8PUXtXilY4GYnSBbVqOntdHbC1vXwsDnX0Qix2m2+DSU1J51ybOQ==
 
 "@hapi/hoek@^9.0.0":
   version "9.1.0"
@@ -2232,6 +2227,11 @@ code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
   integrity sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=
+
+codemirror@^5.59.0:
+  version "5.59.0"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.59.0.tgz#6d8132055459aabf21d04cae5cf5c430e5c57bb9"
+  integrity sha512-UGzSkCacY9z0rSpQ3wnTWRN2nvRE6foDXnJltWW8pazInR/R+3gXHrao4IFQMv/bSBvFBxt8/HPpkpKAS54x5Q==
 
 collection-visit@^1.0.0:
   version "1.0.0"
@@ -3911,9 +3911,9 @@ inherits@2, inherits@^2.0.1, inherits@^2.0.3, inherits@^2.0.4, inherits@~2.0.1, 
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
 ini@^1.3.5:
-  version "1.3.5"
-  resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.5.tgz#eee25f56db1c9ec6085e0c22778083f596abf927"
-  integrity sha512-RZY5huIKCMRWDUqZlEi72f/lmXKMvuszcMBduliQ3nnWbx9X/ZBQO7DijMEYS9EhHBb2qacRUMtC7svLwe0lcw==
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
+  integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
 invariant@^2.2.4:
   version "2.2.4"

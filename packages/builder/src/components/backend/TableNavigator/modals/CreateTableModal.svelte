@@ -2,7 +2,14 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
+  import {
+    Input,
+    Label,
+    ModalContent,
+    Button,
+    Spacer,
+    Toggle,
+  } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
