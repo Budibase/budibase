@@ -7,7 +7,7 @@
   "license": "AGPL-3.0",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "tsc && rollup -c",
     "dev:builder": "tsc && rollup -cw",
     "test": "jest"
   },
