@@ -26,25 +26,3 @@ export const enrichDataBinding = async (input, context) => {
 export const enrichDataBindings = async (props, context) => {
   return await processObject(cloneDeep(props), context)
 }
-
-/**
- * Recurses through an object and enriches all string props found.
- */
-const recursiveEnrich = (props, context) => {
-  if (typeof props !== "object") {
-    return
-  }
-  let keys = []
-  if (Array.isArray(props)) {
-    keys = Array.from(props.keys())
-  } else if (typeof props === "object") {
-    keys = Object.keys(props || {})
-  }
-  keys.forEach(key => {
-    if (typeof props[key] === "string") {
-      props[key] = enrichDataBinding(props[key], context)
-    } else {
-      recursiveEnrich(props[key], context)
-    }
-  })
-}

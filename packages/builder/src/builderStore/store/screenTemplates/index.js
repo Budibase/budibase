@@ -4,7 +4,6 @@ import rowListScreen from "./rowListScreen"
 import emptyNewRowScreen from "./emptyNewRowScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
 import emptyRowDetailScreen from "./emptyRowDetailScreen"
-import { uuid } from "builderStore/uuid"
 
 const allTemplates = tables => [
   createFromScratchScreen,
