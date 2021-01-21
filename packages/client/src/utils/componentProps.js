@@ -2,6 +2,22 @@ import { enrichDataBindings } from "./enrichDataBinding"
 import { enrichButtonActions } from "./buttonActions"
 
 /**
+ * Deeply compares 2 props using JSON.stringify.
+ * Does not consider functions, as currently only button actions have a function
+ * prop and it's cheaper to just always re-render buttons than it is to deeply
+ * compare them.
+ */
+export const propsAreSame = (a, b) => {
+  if (a === b) {
+    return true
+  }
+  if (typeof a === "function" || typeof b === "function") {
+    return false
+  }
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+/**
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
