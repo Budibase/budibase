@@ -30,8 +30,7 @@ module.exports.processObject = async (object, context) => {
     let val = object[key]
     if (typeof val === "string") {
       object[key] = await module.exports.processString(object[key], context)
-    }
-    else if (typeof val === "object") {
+    } else if (typeof val === "object") {
       object[key] = await module.exports.processObject(object[key], context)
     }
   }
@@ -64,8 +63,7 @@ module.exports.processObjectSync = (object, context) => {
     let val = object[key]
     if (typeof val === "string") {
       object[key] = module.exports.processStringSync(object[key], context)
-    }
-    else if (typeof val === "object") {
+    } else if (typeof val === "object") {
       object[key] = module.exports.processObjectSync(object[key], context)
     }
   }

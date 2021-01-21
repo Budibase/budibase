@@ -11,9 +11,7 @@
   on:click
   class:big={subtitle != null}
   {...$$restProps}>
-  {#if icon}
-    <i class={icon} />
-  {/if}
+  {#if icon}<i class={icon} />{/if}
   <div class="content">
     <div class="title">{title}</div>
     {#if subtitle != null}

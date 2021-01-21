@@ -1,5 +1,12 @@
 <script>
-  import { Button, Icon, DropdownMenu, Spacer, Heading, Drawer } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    DropdownMenu,
+    Spacer,
+    Heading,
+    Drawer,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -91,34 +98,34 @@
 </div>
 {#if value.type === 'query'}
   <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query'}>
-      <div slot="buttons">
-        <Button
-          blue
-          thin
-          on:click={() => {
-            notifier.success('Query parameters saved.')
-            handleSelected(value)
-            drawer.hide()
-          }}>
-          Save
-        </Button>
-      </div>
-      <div class="drawer-contents" slot="body">
-        <IntegrationQueryEditor
-          query={value}
-          schema={fetchDatasourceSchema(value)}
-          editable={false} />
-        <Spacer large />
-        {#if value.parameters.length > 0}
-          <ParameterBuilder
-            bind:customParams={value.queryParams}
-            parameters={queries.find(query => query._id === value._id).parameters}
-            bindings={queryBindableProperties} />
-        {/if}
-      </div>
-    </Drawer>
-  {/if}
+  <Drawer title={'Query'}>
+    <div slot="buttons">
+      <Button
+        blue
+        thin
+        on:click={() => {
+          notifier.success('Query parameters saved.')
+          handleSelected(value)
+          drawer.hide()
+        }}>
+        Save
+      </Button>
+    </div>
+    <div class="drawer-contents" slot="body">
+      <IntegrationQueryEditor
+        query={value}
+        schema={fetchDatasourceSchema(value)}
+        editable={false} />
+      <Spacer large />
+      {#if value.parameters.length > 0}
+        <ParameterBuilder
+          bind:customParams={value.queryParams}
+          parameters={queries.find(query => query._id === value._id).parameters}
+          bindings={queryBindableProperties} />
+      {/if}
+    </div>
+  </Drawer>
+{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
