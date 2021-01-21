@@ -44,10 +44,14 @@ const PROCESSORS = [
     // exclude helpers and brackets, regex will only find double brackets
     const exclusions = HelperNames()
     // find all the parts split by spaces
-    const splitBySpaces = statement.split(" ").filter(el => el !== "{{" && el !== "}}")
+    const splitBySpaces = statement
+      .split(" ")
+      .filter(el => el !== "{{" && el !== "}}")
     // remove braces if they are found and weren't spaced out
     splitBySpaces[0] = splitBySpaces[0].replace("{", "")
-    splitBySpaces[splitBySpaces.length - 1] = splitBySpaces[splitBySpaces.length - 1].replace("}", "")
+    splitBySpaces[splitBySpaces.length - 1] = splitBySpaces[
+      splitBySpaces.length - 1
+    ].replace("}", "")
     // remove the excluded elements
     const propertyParts = splitBySpaces.filter(
       part => exclusions.indexOf(part) === -1

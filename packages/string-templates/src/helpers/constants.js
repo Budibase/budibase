@@ -12,7 +12,7 @@ module.exports.HelperFunctionBuiltin = [
   "unless",
   "log",
   "lookup",
-  "with"
+  "with",
 ]
 
 module.exports.HelperFunctionNames = {
