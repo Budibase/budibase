@@ -11,9 +11,8 @@ const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
  */
 export const getBindableProperties = (rootComponent, componentId) => {
   const contextBindings = getContextBindings(rootComponent, componentId)
-  const queryBindings = getQueryBindings(rootComponent, componentId)
   const componentBindings = getComponentBindings(rootComponent)
-  return [...contextBindings, ...queryBindings, componentBindings]
+  return [...contextBindings, ...componentBindings]
 }
 
 /**
@@ -82,10 +81,15 @@ export const getContextBindings = (rootComponent, componentId) => {
       return
     }
 
-    // Get schema and add _id and _rev fields
+    // Get schema and add _id and _rev fields for certain types
     let { schema, table } = getSchemaForDatasource(datasource)
-    schema["_id"] = { type: "string" }
-    schema["_rev"] = { type: "string " }
+    if (!schema || !table) {
+      return
+    }
+    if (datasource.type === "table" || datasource.type === "link") {
+      schema["_id"] = { type: "string" }
+      schema["_rev"] = { type: "string " }
+    }
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
@@ -138,61 +142,23 @@ export const getComponentBindings = rootComponent => {
 }
 
 /**
- * Gets all bindable query fields. These are fields of schemas of data contexts
- * provided by data provider components, such as lists or row detail components.
- */
-export const getQueryBindings = (rootComponent, componentId) => {
-  // Extract any components which provide data contexts
-  const dataProviders = getDataProviderComponents(rootComponent, componentId)
-  const queries = get(backendUiStore).queries
-  let queryBindings = []
-  dataProviders.forEach(component => {
-    const datasource = getDatasourceForProvider(component)
-    if (!datasource) {
-      return
-    }
-
-    // Find a query for this table ID
-    const queryId = datasource.tableId
-    const query = queries.find(query => query._id === queryId)
-    const schema = query?.schema
-    if (!schema) {
-      return
-    }
-
-    // Add all schema fields as bindable values
-    const keys = Object.keys(schema).sort()
-    keys.forEach(key => {
-      const fieldSchema = schema[key]
-      queryBindings.push({
-        type: "context",
-        fieldSchema,
-        runtimeBinding: `${component._id}.${key}`,
-        readableBinding: `${component._instanceName}.${query.name}.${key}`,
-        providerId: component._id,
-        tableId: datasource.tableId,
-        field: key,
-      })
-    })
-  })
-  return queryBindings
-}
-
-/**
  * Gets a schema for a datasource object.
  */
 export const getSchemaForDatasource = datasource => {
   let schema, table
   if (datasource) {
-    const tables = get(backendUiStore).tables
     const { type } = datasource
-    table = tables.find(table => table._id === datasource.tableId)
+    if (type === "query") {
+      const queries = get(backendUiStore).queries
+      table = queries.find(query => query._id === datasource._id)
+    } else {
+      const tables = get(backendUiStore).tables
+      table = tables.find(table => table._id === datasource.tableId)
+    }
     if (table) {
-      if (type === "table") {
-        schema = cloneDeep(table.schema)
-      } else if (type === "view") {
+      if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
-      } else if (type === "link") {
+      } else {
         schema = cloneDeep(table.schema)
       }
     }
