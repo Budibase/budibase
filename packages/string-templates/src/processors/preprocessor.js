@@ -3,7 +3,6 @@ const {
   swapStrings,
   isAlphaNumeric,
   FIND_HBS_REGEX,
-  includesAny,
 } = require("../utilities")
 
 const PreprocessorNames = {
@@ -25,7 +24,7 @@ class Preprocessor {
   }
 }
 
-const PROCESSORS = [
+module.exports.processors = [
   new Preprocessor(PreprocessorNames.SWAP_TO_DOT, statement => {
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
@@ -90,29 +89,3 @@ const PROCESSORS = [
     return `{{ all ${insideStatement} }}`
   }),
 ]
-
-/**
- * When running handlebars statements to execute on the context of the automation it possible user's may input handlebars
- * in a few different forms, some of which are invalid but are logically valid. An example of this would be the handlebars
- * statement "{{steps[0].revision}}" here it is obvious the user is attempting to access an array or object using array
- * like operators. These are not supported by handlebars and therefore the statement will fail. This function pre-processes will
- * the handlebars statement so it instead reads as "{{steps.0.revision}}" which is valid and will work. It may also be expanded
- * to include any other handlebars statement pre-process that has been deemed necessary for the system.
- *
- * @param {string} string The string which *may* contain handlebars statements, it is OK if it does not contain any.
- * @returns {string} The string that was input with processed up handlebars statements as required.
- */
-module.exports.preprocess = string => {
-  for (let processor of PROCESSORS) {
-    // re-run search each time incase previous processor updated/removed a match
-    let regex = new RegExp(FIND_HBS_REGEX)
-    let matches = string.match(regex)
-    if (matches == null) {
-      continue
-    }
-    for (let match of matches) {
-      string = processor.process(string, match)
-    }
-  }
-  return string
-}
