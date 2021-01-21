@@ -7,7 +7,7 @@
 
   const dispatch = createEventDispatcher()
 
-  export let value
+  export let value []
   export let name
 
   let drawer
@@ -63,6 +63,6 @@
     <Button thin blue on:click={saveEventData}>Save</Button>
   </heading>
   <div slot="body">
-    <EventEditor event={value} eventType={name} />
+    <EventEditor bind:actions={value} eventType={name} />
   </div>
 </Drawer>
