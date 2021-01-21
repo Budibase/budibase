@@ -1,6 +1,6 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
-const { cleanHandlebars } = require("./cleaning")
+const { preprocess } = require("./custom/preprocessor")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -84,8 +84,7 @@ module.exports.processStringSync = (string, context) => {
   console.log(string)
   console.log(context)
   let template
-  string = cleanHandlebars(string)
-  console.log(string)
+  string = preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
   template = hbsInstance.compile(string)
   return template(context)
