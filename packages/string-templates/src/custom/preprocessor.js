@@ -74,7 +74,7 @@ const PROCESSORS = [
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`
-  })
+  }),
 ]
 
 /**
