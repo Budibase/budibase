@@ -1,31 +1,19 @@
 <script>
   import OptionSelect from "./OptionSelect.svelte"
-  import { backendUiStore } from "builderStore"
   import MultiOptionSelect from "./MultiOptionSelect.svelte"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "builderStore/dataBinding"
 
   export let componentInstance = {}
   export let value = ""
   export let onChange = () => {}
   export let multiselect = false
 
-  const tables = $backendUiStore.tables
-  const queries = $backendUiStore.queries
-
-  let options = []
-
-  $: table =
-    componentInstance.datasource?.type === "table"
-      ? tables.find(m => m._id === componentInstance.datasource.tableId)
-      : queries.find(query => query._id === componentInstance.datasource._id)
-
-  $: type = componentInstance.datasource.type
-
-  $: if (table) {
-    options =
-      type === "table" || type === "link" || type === "query"
-        ? Object.keys(table.schema)
-        : Object.keys(table.views[componentInstance.datasource.name].schema)
-  }
+  $: datasource = getDatasourceForProvider(componentInstance)
+  $: schema = getSchemaForDatasource(datasource)
+  $: options = Object.keys(schema || {})
 </script>
 
 {#if multiselect}
