@@ -6,11 +6,11 @@ import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 const saveRowHandler = async (action, context) => {
   const { fields, providerId } = action.parameters
   if (providerId) {
-    let draft = context[`${action.parameters.providerId}_draft`]
+    let draft = context[`${providerId}_draft`]
     if (fields) {
-      Object.entries(fields).forEach(([key, entry]) => {
-        draft[key] = enrichDataBinding(entry.value, context)
-      })
+      for (let [key, entry] of Object.entries(fields)) {
+        draft[key] = await enrichDataBinding(entry.value, context)
+      }
     }
     await saveRow(draft)
   }
@@ -19,25 +19,28 @@ const saveRowHandler = async (action, context) => {
 const deleteRowHandler = async (action, context) => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
+    const [enrichTable, enrichRow, enrichRev] = await Promise.all([
+      enrichDataBinding(tableId, context),
+      enrichDataBinding(rowId, context),
+      enrichDataBinding(revId, context),
+    ])
     await deleteRow({
-      tableId: enrichDataBinding(tableId, context),
-      rowId: enrichDataBinding(rowId, context),
-      revId: enrichDataBinding(revId, context),
+      tableId: enrichTable,
+      rowId: enrichRow,
+      revId: enrichRev,
     })
   }
 }
 
 const triggerAutomationHandler = async (action, context) => {
-  const params = {}
-  if (action.parameters.fields) {
-    for (let field in action.parameters.fields) {
-      params[field] = enrichDataBinding(
-        action.parameters.fields[field].value,
-        context
-      )
+  const { fields } = action.parameters()
+  if (fields) {
+    const params = {}
+    for (let field in fields) {
+      params[field] = await enrichDataBinding(fields[field].value, context)
     }
+    await triggerAutomation(action.parameters.automationId, params)
   }
-  await triggerAutomation(action.parameters.automationId, params)
 }
 
 const navigationHandler = action => {

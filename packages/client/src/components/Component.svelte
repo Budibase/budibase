@@ -7,7 +7,9 @@
   import { bindingStore, builderStore } from "../store"
 
   export let definition = {}
-  let componentProps = {}
+
+  let enrichedProps
+  let componentProps
 
   // Get contexts
   const dataContext = getContext("data")
@@ -21,7 +23,7 @@
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children
   $: id = definition._id
-  $: enrichedProps = enrichProps(definition, $dataContext, $bindingStore)
+  $: enrichComponentProps(definition, $dataContext, $bindingStore)
   $: updateProps(enrichedProps)
   $: styles = definition._styles
 
@@ -37,6 +39,12 @@
   // Most props are deeply compared so that svelte will only trigger reactive
   // statements on props that have actually changed.
   const updateProps = props => {
+    if (!props) {
+      return
+    }
+    if (!componentProps) {
+      componentProps = {}
+    }
     Object.keys(props).forEach(key => {
       if (!propsAreSame(props[key], componentProps[key])) {
         componentProps[key] = props[key]
@@ -54,6 +62,11 @@
     return ComponentLibrary[name]
   }
 
+  // Enriches any string component props using handlebars
+  const enrichComponentProps = async (definition, context, bindingStore) => {
+    enrichedProps = await enrichProps(definition, context, bindingStore)
+  }
+
   // Returns a unique key to let svelte know when to remount components.
   // If a component is selected we want to remount it every time any props
   // change.
@@ -63,7 +76,7 @@
   }
 </script>
 
-{#if constructor}
+{#if constructor && componentProps}
   <svelte:component this={constructor} {...componentProps}>
     {#if children && children.length}
       {#each children as child (getChildKey(child._id))}
