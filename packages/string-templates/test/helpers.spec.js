@@ -9,4 +9,5 @@ describe("test the custom helpers we have applied", () => {
     })
     expect(output).toBe("object is {\"a\":1}")
   })
+
 })
