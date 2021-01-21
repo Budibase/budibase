@@ -14,7 +14,7 @@ module.exports.swapStrings = (string, start, length, swap) => {
 module.exports.removeNull = obj => {
   return Object.fromEntries(
     Object.entries(obj)
-      .filter(([key, value]) => value != null)
+      .filter(entry => entry[1] != null)
       .map(([key, value]) => [
         key,
         value === Object(value) ? module.exports.removeNull(value) : value,

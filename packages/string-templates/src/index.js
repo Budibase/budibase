@@ -1,6 +1,6 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
-const { preprocess } = require("./custom/preprocessor")
+const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
 const { removeNull } = require("./utilities")
 
@@ -88,10 +88,10 @@ module.exports.processStringSync = (string, context) => {
     throw "Cannot process non-string types."
   }
   let template
-  string = preprocess(string)
+  string = processors.preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
   template = hbsInstance.compile(string)
-  return template(clonedContext)
+  return processors.postprocess(template(clonedContext))
 }
 
 /**

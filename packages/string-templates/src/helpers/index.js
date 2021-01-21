@@ -32,7 +32,7 @@ const HELPERS = [
 module.exports.HelperNames = () => {
   return Object.values(HelperFunctionNames).concat(
     HelperFunctionBuiltin,
-    externalHandlebars.externalHelperNames,
+    externalHandlebars.externalHelperNames
   )
 }
 

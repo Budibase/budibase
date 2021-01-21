@@ -14,10 +14,12 @@
   "dependencies": {
     "handlebars": "^4.7.6",
     "handlebars-helpers": "^0.10.0",
+    "handlebars-utils": "^1.0.6",
     "helper-date": "^1.0.1",
     "lodash": "^4.17.20"
   },
   "devDependencies": {
+    "@rollup/plugin-json": "^4.1.0",
     "jest": "^26.6.3",
     "rollup": "^2.36.2",
     "rollup-plugin-commonjs": "^10.1.0",

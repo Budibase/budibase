@@ -13,7 +13,7 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
   "number",
   "url",
   "string",
-  "markdown"
+  "markdown",
 ]
 
 const DATE_NAME = "date"
@@ -24,17 +24,20 @@ exports.registerAll = handlebars => {
   for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
-    for (let [name, func] of Object.entries(hbsHelperInfo)) {
+    for (let entry of Object.entries(hbsHelperInfo)) {
+      const name = entry[0]
       // skip built in functions and ones seen already
-      if (HelperFunctionBuiltin.indexOf(name) !== -1 ||
-        externalNames.indexOf(name) !== -1) {
+      if (
+        HelperFunctionBuiltin.indexOf(name) !== -1 ||
+        externalNames.indexOf(name) !== -1
+      ) {
         continue
       }
       externalNames.push(name)
     }
     // attach it to our handlebars instance
     helpers[collection]({
-      handlebars
+      handlebars,
     })
   }
   // add date external functionality
