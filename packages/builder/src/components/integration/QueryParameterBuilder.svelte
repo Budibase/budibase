@@ -47,7 +47,7 @@
           type="string"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}
-          value={runtimeToReadableBinding(bindings, customParams[parameter.name])}
+          value={runtimeToReadableBinding(bindings, customParams?.[parameter.name])}
           {bindings} />
       {:else}
         <i
