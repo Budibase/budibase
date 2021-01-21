@@ -1,6 +1,8 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const { preprocess } = require("./custom/preprocessor")
+const { cloneDeep } = require("lodash/fp")
+const { removeNull } = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -78,6 +80,8 @@ module.exports.processObjectSync = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context) => {
+  const clonedContext = removeNull(cloneDeep(context))
+  // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
@@ -85,7 +89,7 @@ module.exports.processStringSync = (string, context) => {
   string = preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
   template = hbsInstance.compile(string)
-  return template(context)
+  return template(clonedContext)
 }
 
 /**

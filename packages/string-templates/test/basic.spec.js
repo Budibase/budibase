@@ -27,6 +27,14 @@ describe("Test that the string processing works correctly", () => {
     }
     expect(error).not.toBeNull()
   })
+
+  it("confirm that null properties are handled correctly", async () => {
+    const output = await processString("hello {{ name }} I am {{ name2 }}", {
+      name: undefined,
+      name2: null,
+    })
+    expect(output).toBe("hello  I am ")
+  })
 })
 
 describe("Test that the object processing works correctly", () => {
