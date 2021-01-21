@@ -10,10 +10,6 @@ module.exports.swapStrings = (string, start, length, swap) => {
   return string.slice(0, start) + swap + string.slice(start + length)
 }
 
-module.exports.includesAny = (string, options) => {
-  return options.some(option => string.includes(option))
-}
-
 // removes null and undefined
 module.exports.removeNull = obj => {
   return Object.fromEntries(

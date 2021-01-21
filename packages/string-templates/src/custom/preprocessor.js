@@ -1,4 +1,4 @@
-const { HelperFunctions } = require("../helpers")
+const { HelperNames } = require("../helpers")
 const {
   swapStrings,
   isAlphaNumeric,
@@ -42,9 +42,12 @@ const PROCESSORS = [
 
   new Preprocessor(PreprocessorNames.HANDLE_SPACES, statement => {
     // exclude helpers and brackets, regex will only find double brackets
-    const exclusions = HelperFunctions.concat(["{{", "}}"])
+    const exclusions = HelperNames()
     // find all the parts split by spaces
-    const splitBySpaces = statement.split(" ")
+    const splitBySpaces = statement.split(" ").filter(el => el !== "{{" && el !== "}}")
+    // remove braces if they are found and weren't spaced out
+    splitBySpaces[0] = splitBySpaces[0].replace("{", "")
+    splitBySpaces[splitBySpaces.length - 1] = splitBySpaces[splitBySpaces.length - 1].replace("}", "")
     // remove the excluded elements
     const propertyParts = splitBySpaces.filter(
       part => exclusions.indexOf(part) === -1
@@ -76,7 +79,8 @@ const PROCESSORS = [
     if (insideStatement.charAt(insideStatement.length - 1) === " ") {
       insideStatement = insideStatement.slice(0, insideStatement.length - 1)
     }
-    if (includesAny(insideStatement, HelperFunctions)) {
+    const possibleHelper = insideStatement.split(" ")[0]
+    if (HelperNames().some(option => possibleHelper === option)) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`

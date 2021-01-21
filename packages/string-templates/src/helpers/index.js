@@ -1,23 +1,11 @@
 const Helper = require("./Helper")
 const { SafeString } = require("handlebars")
+const externalHandlebars = require("./external")
+const { HelperFunctionNames, HelperFunctionBuiltin } = require("./constants")
 
 const HTML_SWAPS = {
   "<": "&lt;",
   ">": "&gt;",
-}
-
-const HelperFunctionBuiltin = [
-  "#if",
-  "#unless",
-  "#each",
-  "#with",
-  "lookup",
-  "log",
-]
-
-const HelperFunctionNames = {
-  OBJECT: "object",
-  ALL: "all",
 }
 
 const HELPERS = [
@@ -41,18 +29,25 @@ const HELPERS = [
   }),
 ]
 
-module.exports.HelperFunctions = Object.values(HelperFunctionNames).concat(
-  HelperFunctionBuiltin
-)
+module.exports.HelperNames = () => {
+  return Object.values(HelperFunctionNames).concat(
+    HelperFunctionBuiltin,
+    externalHandlebars.externalHelperNames,
+  )
+}
 
 module.exports.registerAll = handlebars => {
   for (let helper of HELPERS) {
     helper.register(handlebars)
   }
+  // register imported helpers
+  externalHandlebars.registerAll(handlebars)
 }
 
 module.exports.unregisterAll = handlebars => {
   for (let helper of HELPERS) {
     helper.unregister(handlebars)
   }
+  // unregister all imported helpers
+  externalHandlebars.unregisterAll(handlebars)
 }
