@@ -15,7 +15,7 @@
   disabled={disabled || false}
   use:styleable={$component.styles}
   on:click={onClick}>
-  {text}
+  {text || ''}
 </button>
 
 <style>
