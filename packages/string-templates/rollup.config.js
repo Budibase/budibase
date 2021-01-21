@@ -4,8 +4,6 @@ import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
 import json from "@rollup/plugin-json"
 
-const production = !process.env.ROLLUP_WATCH
-
 export default {
   input: "src/index.js",
   output: [
