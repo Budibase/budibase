@@ -13,13 +13,12 @@
 
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
-  export let event
+  export let actions
 
   let addActionButton
   let addActionDropdown
   let selectedAction
 
-  $: actions = event || []
   $: selectedActionComponent =
     selectedAction &&
     actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
