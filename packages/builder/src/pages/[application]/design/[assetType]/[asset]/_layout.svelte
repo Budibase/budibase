@@ -8,6 +8,11 @@
 
   let initialised = false
 
+  // Cache previous values so we don't update the URL more than necessary
+  let previousType
+  let previousAsset
+  let previousComponentId
+
   // Hydrate state from query param on mount
   onMount(() => {
     const assetId = decodeURI($params.asset)
@@ -46,6 +51,19 @@
     // Wait until the initial state rehydration to avoid a wasted update
     if (!initialised) {
       return
+    }
+
+    // Check we have different params than last invocation
+    if (
+      assetType === previousType &&
+      asset === previousAsset &&
+      componentId === previousComponentId
+    ) {
+      return
+    } else {
+      previousType = assetType
+      previousAsset = asset
+      previousComponentId = componentId
     }
 
     // Extract current URL params
