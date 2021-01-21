@@ -35,6 +35,10 @@ const SYMLINK_PATHS = [
     symlink: `${devDir}/budibase-client.js.map`,
     destination: resolve("packages/client/dist/budibase-client.js.map"),
   },
+  {
+    symlink: `${devDir}/@budibase/string-templates`,
+    destination: resolve("packages/string-templates"),
+  },
 ]
 
 SYMLINK_PATHS.forEach(sym => {

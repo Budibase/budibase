@@ -3,8 +3,8 @@ import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
 
-// Regex to match mustache variables, for replacing bindings
-const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
+// Regex to match all instances of template strings
+const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 
 /**
  * Gets all bindable data context fields and instance fields.
@@ -173,7 +173,7 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
   boundValues.forEach(boundValue => {
     const binding = bindableProperties.find(({ readableBinding }) => {
@@ -193,7 +193,7 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE) || []
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
   boundValues.forEach(boundValue => {
     const binding = bindableProperties.find(({ runtimeBinding }) => {

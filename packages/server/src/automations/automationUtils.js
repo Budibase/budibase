@@ -1,10 +1,11 @@
 const CouchDB = require("../db")
 
 /**
- * When values are input to the system generally they will be of type string as this is required for mustache. This can
- * generate some odd scenarios as the Schema of the automation requires a number but the builder might supply a string
- * with mustache syntax to get the number from the rest of the context. To support this the server has to make sure that
- * the post mustache statement can be cast into the correct type, this function does this for numbers and booleans.
+ * When values are input to the system generally they will be of type string as this is required for template strings.
+ * This can generate some odd scenarios as the Schema of the automation requires a number but the builder might supply
+ * a string with template syntax to get the number from the rest of the context. To support this the server has to
+ * make sure that the post template statement can be cast into the correct type, this function does this for numbers
+ * and booleans.
  *
  * @param {object} inputs An object of inputs, please note this will not recurse down into any objects within, it simply
  * cleanses the top level inputs, however it can be used by recursively calling it deeper into the object structures if
@@ -54,7 +55,7 @@ module.exports.cleanInputValues = (inputs, schema) => {
  *
  * @param {string} appId The instance which the Table/Table is contained under.
  * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
- * @param {object} row The input row structure which requires clean-up after having been through mustache statements.
+ * @param {object} row The input row structure which requires clean-up after having been through template statements.
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
 module.exports.cleanUpRow = async (appId, tableId, row) => {
@@ -66,11 +67,11 @@ module.exports.cleanUpRow = async (appId, tableId, row) => {
 
 /**
  * A utility function for the cleanUpRow, which can be used if only the row ID is known (not the table ID) to clean
- * up a row after mustache statements have been replaced. This is specifically useful for the update row action.
+ * up a row after template statements have been replaced. This is specifically useful for the update row action.
  *
  * @param {string} appId The instance which the Table/Table is contained under.
  * @param {string} rowId The ID of the row from which the tableId will be extracted, to get the Table/Table schema.
- * @param {object} row The input row structure which requires clean-up after having been through mustache statements.
+ * @param {object} row The input row structure which requires clean-up after having been through template statements.
  * @returns {Promise<Object>} The cleaned up rows object, which will now have all the required primitive types.
  */
 module.exports.cleanUpRowById = async (appId, rowId, row) => {
