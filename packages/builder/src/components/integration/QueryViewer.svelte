@@ -16,6 +16,7 @@
   import { FIELDS } from "constants/backend"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
+  import EditQueryParamsPopover from "components/backend/DatasourceNavigator/popovers/EditQueryParamsPopover.svelte"
   import { backendUiStore } from "builderStore"
 
   const PREVIEW_HEADINGS = [
@@ -40,6 +41,7 @@
   let tab = "JSON"
   let parameters
   let data = []
+  let popover
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === query.datasourceId
@@ -132,25 +134,20 @@
   <Heading small>{query.name}</Heading>
   {#if config}
     <div class="queryVerbs">
-      {#each Object.keys(config) as queryVerb}
-        <div
-          class="queryVerb"
-          class:selected={queryVerb === query.queryVerb}
-          on:click={() => {
-            query.queryVerb = queryVerb
-          }}>
-          {queryVerb}
-        </div>
-      {/each}
     </div>
+      <Select thin secondary bind:value={query.queryVerb}>
+        {#each Object.keys(config) as queryVerb}
+          <option value={queryVerb}>{queryVerb}</option>
+        {/each}
+      </Select>
     {#if query.queryVerb}
       <Select thin secondary bind:value={query.queryType}>
-        <option value={''}>Select an option</option>
         {#each Object.keys(config[query.queryVerb]) as queryType}
           <option value={queryType}>{queryType}</option>
         {/each}
       </Select>
     {/if}
+    <EditQueryParamsPopover bind:parameters={query.parameters} bindable={false} />
     <Spacer medium />
     <Button primary href={docsLink} target="_blank">
       <i class="ri-book-2-line" />
