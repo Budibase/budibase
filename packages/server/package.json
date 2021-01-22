@@ -51,6 +51,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.10.0",
     "@budibase/client": "^0.5.3",
+    "@budibase/string-templates": "^0.5.3",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
@@ -67,7 +68,6 @@
     "electron-util": "^0.14.2",
     "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
-    "handlebars": "^4.7.6",
     "jimp": "^0.16.1",
     "joi": "^17.2.1",
     "jsonschema": "^1.4.0",
@@ -82,7 +82,6 @@
     "lodash": "^4.17.13",
     "mongodb": "^3.6.3",
     "mssql": "^6.2.3",
-    "mustache": "^4.0.1",
     "node-fetch": "^2.6.0",
     "open": "^7.3.0",
     "pg": "^8.5.1",

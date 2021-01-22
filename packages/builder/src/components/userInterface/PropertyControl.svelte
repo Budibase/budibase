@@ -19,7 +19,7 @@
   export let onChange = () => {}
 
   let bindingDrawer
-  
+
   let temporaryBindableValue = value
   let bindableProperties = []
   let anchor
@@ -103,20 +103,24 @@
 </div>
 
 <Drawer bind:this={bindingDrawer} title="Bindings">
-  <div slot="description"><Body extraSmall grey>Add the objects on the left to enrich your text.</Body></div>
+  <div slot="description">
+    <Body extraSmall grey>
+      Add the objects on the left to enrich your text.
+    </Body>
+  </div>
   <heading slot="buttons">
     <Button thin blue on:click={handleClose}>Save</Button>
   </heading>
   <div slot="body">
-    <BindingPanel {...handlevalueKey(value)}
-    close={handleClose}
-    on:update={e => (temporaryBindableValue = e.detail)}
-    {bindableProperties} />
+    <BindingPanel
+      {...handlevalueKey(value)}
+      close={handleClose}
+      on:update={e => (temporaryBindableValue = e.detail)}
+      {bindableProperties} />
   </div>
 </Drawer>
 
 <style>
-
   .property-control {
     position: relative;
     display: flex;

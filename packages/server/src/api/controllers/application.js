@@ -29,7 +29,7 @@ const {
   createLoginScreen,
 } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
-const { recurseMustache } = require("../../utilities/mustache")
+const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
@@ -232,8 +232,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
     const cloned = cloneDeep(layout)
-    cloned.title = app.name
-    screensAndLayouts.push(recurseMustache(cloned, app))
+    screensAndLayouts.push(await processObject(cloned, app))
   }
 
   const homeScreen = createHomeScreen(app)
