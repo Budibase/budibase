@@ -4,7 +4,6 @@
 
   const { API, styleable, DataProvider } = getContext("sdk")
   const component = getContext("component")
-  console.log($component)
   const dataContext = getContext("data")
 
   export let datasource = []
