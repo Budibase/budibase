@@ -1,13 +1,8 @@
-const handlebars = require("handlebars")
 const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
-const { recurseMustache } = require("../utilities/mustache")
-
-handlebars.registerHelper("object", value => {
-  return new handlebars.SafeString(JSON.stringify(value))
-})
+const { processObject } = require("@budibase/string-templates")
 
 const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
 
@@ -24,7 +19,7 @@ class Orchestrator {
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
-    // step zero is never used as the mustache is zero indexed for customer facing
+    // step zero is never used as the template string is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
     // create an emitter which has the chain count for this automation run in it, so it can block
@@ -49,7 +44,7 @@ class Orchestrator {
     let automation = this._automation
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
-      step.inputs = recurseMustache(step.inputs, this._context)
+      step.inputs = await processObject(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,
         step.schema.inputs

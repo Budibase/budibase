@@ -17,11 +17,14 @@
   const componentStore = writable({})
   setContext("component", componentStore)
 
+  // Enrich component props
+  let enrichedProps
+  $: enrichComponentProps(definition, $dataContext, $bindingStore)
+
   // Extract component definition info
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children
   $: id = definition._id
-  $: enrichedProps = enrichProps(definition, $dataContext, $bindingStore)
   $: styles = definition._styles
 
   // Allow component selection in the builder preview if we're previewing a
@@ -30,13 +33,22 @@
     $builderStore.previewType === "layout" || screenslotContext
 
   // Update component context
-  $: componentStore.set({ id, children: children.length, styles: { ...styles, id, allowSelection } })
+  $: componentStore.set({
+    id,
+    children: children.length,
+    styles: { ...styles, id, allowSelection },
+  })
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
     return name === "screenslot" ? Router : ComponentLibrary[name]
+  }
+
+  // Enriches any string component props using handlebars
+  const enrichComponentProps = async (definition, context, bindingStore) => {
+    enrichedProps = await enrichProps(definition, context, bindingStore)
   }
 
   // Returns a unique key to let svelte know when to remount components.
@@ -48,7 +60,7 @@
   }
 </script>
 
-{#if constructor}
+{#if constructor && enrichedProps}
   <svelte:component this={constructor} {...enrichedProps}>
     {#if children && children.length}
       {#each children as child (getChildKey(child._id))}
