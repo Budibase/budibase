@@ -3,7 +3,10 @@
   import { Button, TextArea, Drawer, Heading, Spacer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
-  import {getBindableProperties, readableToRuntimeBinding} from "builderStore/dataBinding"
+  import {
+    getBindableProperties,
+    readableToRuntimeBinding,
+  } from "builderStore/dataBinding"
   import { currentAsset, store } from "../../../builderStore"
 
   const dispatch = createEventDispatcher()
@@ -73,8 +76,10 @@
         placeholder="Add text, or click the objects on the left to add them to the
         textbox." />
       {#if !validity}
-        <p class="syntax-error">Current Handlebars syntax is invalid, please check the guide
-          <a href="https://handlebarsjs.com/guide/">here</a> for more details.
+        <p class="syntax-error">
+          Current Handlebars syntax is invalid, please check the guide
+          <a href="https://handlebarsjs.com/guide/">here</a>
+          for more details.
         </p>
       {/if}
     </div>

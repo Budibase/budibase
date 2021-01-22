@@ -106,7 +106,9 @@ export const getContextBindings = (rootComponent, componentId) => {
 
       contextBindings.push({
         type: "context",
-        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(runtimeBoundKey)}`,
+        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
+          runtimeBoundKey
+        )}`,
         readableBinding: `${component._instanceName}.${table.name}.${key}`,
         fieldSchema,
         providerId: component._id,
