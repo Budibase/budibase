@@ -9,7 +9,7 @@
   export let bindingDrawer
 
   function addToText(readableBinding) {
-    value = value + `{{ ${readableBinding} }}`
+    value = `${value || ""}{{ ${readableBinding} }}`
   }
   let originalValue = value
 
