@@ -33,7 +33,7 @@
     $builderStore.previewType === "layout" || screenslotContext
 
   // Update component context
-  $: componentStore.set({ id, styles: { ...styles, id, allowSelection } })
+  $: componentStore.set({ id, children: children.length, styles: { ...styles, id, allowSelection } })
 
   // Updates the component props.
   // Most props are deeply compared so that svelte will only trigger reactive
