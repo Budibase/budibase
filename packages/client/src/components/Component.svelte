@@ -21,7 +21,7 @@
 
   // Extract component definition info
   $: constructor = getComponentConstructor(definition._component)
-  $: children = definition._children
+  $: children = definition._children || []
   $: id = definition._id
   $: enrichComponentProps(definition, $dataContext, $bindingStore)
   $: updateProps(enrichedProps)
@@ -33,7 +33,11 @@
     $builderStore.previewType === "layout" || screenslotContext
 
   // Update component context
-  $: componentStore.set({ id, children: children.length, styles: { ...styles, id, allowSelection } })
+  $: componentStore.set({
+    id,
+    children: children.length,
+    styles: { ...styles, id, allowSelection },
+  })
 
   // Updates the component props.
   // Most props are deeply compared so that svelte will only trigger reactive
@@ -78,7 +82,7 @@
 
 {#if constructor && componentProps}
   <svelte:component this={constructor} {...componentProps}>
-    {#if children && children.length}
+    {#if children.length}
       {#each children as child (getChildKey(child._id))}
         <svelte:self definition={child} />
       {/each}
