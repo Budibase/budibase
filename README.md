@@ -69,6 +69,10 @@ When other platforms chose the closed source route, we decided to go open source
 
 - **Cloud hosting and self-hosting.** Users can self-host (see below), or host their apps with Budibase. Currently, our cloud hosting offering is limited to the free tier but we aim to change this in the future. For heavy usage, we advise users to self-host.
 
+<p align="center">
+  <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
+</p>
+
 
 ## ⌛ Status
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
@@ -95,10 +99,6 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 - [ ] Open Budibase and enter your API key
 
 [Here is a guided tutorial](https://docs.budibase.com/tutorial/tutorial-signing-up) if you need extra help.
-
-<p align="center">
-  <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
-</p>
 
 
 ## 🤖 Self-hosting
