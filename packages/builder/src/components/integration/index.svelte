@@ -20,11 +20,6 @@
   }
 </script>
 
-{#if editable}
-  <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
-  <Spacer large />
-{/if}
-
 <Heading extraSmall black>Query</Heading>
 <Spacer medium />
 

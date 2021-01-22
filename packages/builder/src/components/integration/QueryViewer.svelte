@@ -140,13 +140,11 @@
           <option value={queryVerb}>{queryVerb}</option>
         {/each}
       </Select>
-    {#if query.queryVerb}
       <Select thin secondary bind:value={query.queryType}>
-        {#each Object.keys(config[query.queryVerb]) as queryType}
+        {#each Object.keys(config[query.queryVerb]) as queryType (queryType)}
           <option value={queryType}>{queryType}</option>
         {/each}
       </Select>
-    {/if}
     <EditQueryParamsPopover bind:parameters={query.parameters} bindable={false} />
     <Spacer medium />
     <Button primary href={docsLink} target="_blank">
