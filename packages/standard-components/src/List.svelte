@@ -28,7 +28,7 @@
     {#each rows as row}
       <DataProvider {row}>
         {#if $component.children === 0}
-         <p>Add some components too.</p>
+          <p>Add some components too.</p>
         {:else}
           <slot />
         {/if}
