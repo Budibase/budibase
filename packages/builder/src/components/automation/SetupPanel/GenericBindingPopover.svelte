@@ -78,15 +78,19 @@
         bind:value
         placeholder="Add options from the left, type text, or do both" />
       {#if !validity}
-        <p class="syntax-error">Current Handlebars syntax is invalid, please check the guide
-          <a href="https://handlebarsjs.com/guide/">here</a> for more details.
+        <p class="syntax-error">
+          Current Handlebars syntax is invalid, please check the guide
+          <a href="https://handlebarsjs.com/guide/">here</a>
+          for more details.
         </p>
       {/if}
       <div class="controls">
         <a href="https://docs.budibase.com/design/binding">
           <Body small>Learn more about binding</Body>
         </a>
-        <Button on:click={popover.hide} disabled={!validity} primary>Done</Button>
+        <Button on:click={popover.hide} disabled={!validity} primary>
+          Done
+        </Button>
       </div>
     </div>
   </div>

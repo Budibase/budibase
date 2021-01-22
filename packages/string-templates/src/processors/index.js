@@ -22,7 +22,9 @@ module.exports.preprocess = (string, finalise = true) => {
   // the pre-processor finalisation stops handlebars from ever throwing an error
   // might want to pre-process for other benefits but still want to see errors
   if (!finalise) {
-    processors = processors.filter(processor => processor.name !== preprocessor.PreprocessorNames.FINALISE)
+    processors = processors.filter(
+      processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
+    )
   }
   return process(string, processors)
 }
