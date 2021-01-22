@@ -1,8 +1,8 @@
-export const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
+export const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 
 export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
-  // Find all instances of mustasche
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)
+  // Find all instances of template strings
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE)
 
   let result = textWithBindings
   // Replace readableBindings with runtimeBindings
@@ -22,7 +22,7 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
   let temp = textWithBindings
   const boundValues =
     (typeof textWithBindings === "string" &&
-      textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)) ||
+      textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE)) ||
     []
 
   // Replace runtimeBindings with readableBindings:

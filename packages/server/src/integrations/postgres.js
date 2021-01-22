@@ -18,7 +18,7 @@ const SCHEMA = {
       default: "postgres",
       required: true,
     },
-    username: {
+    user: {
       type: "string",
       default: "root",
       required: true,

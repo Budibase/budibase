@@ -1,5 +1,12 @@
 <script>
-  import { Button, Icon, DropdownMenu, Spacer, Heading, Drawer } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    DropdownMenu,
+    Spacer,
+    Heading,
+    Drawer,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
