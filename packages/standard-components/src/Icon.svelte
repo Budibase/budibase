@@ -1,15 +1,20 @@
 <script>
   import { getContext } from "svelte"
 
-  // Add this back once we can define specific design options to expose
-  // const { styleable } = getContext("sdk")
-  // const component = getContext("component")
+  const { styleable } = getContext("sdk")
+  const component = getContext("component")
 
   export let icon = ""
   export let size = "fa-lg"
-  export let color = "#000"
+  export let color = "#f00"
+  $: styles = {
+  ...$component.styles,
+  normal: {
+    ...$component.styles.normal,
+    color
+  }
+}
 </script>
 
-<i
-  style={`color: ${color};`}
-  class={`${icon} ${size}`} />
+<i use:styleable={styles}
+  class="{icon} {size}" />
