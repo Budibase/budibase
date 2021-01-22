@@ -1,4 +1,5 @@
 <script>
+    import { flip } from 'svelte/animate';
     import { fly } from "svelte/transition"
     import { getContext } from "svelte"
     const notifications = getContext("notifications")
@@ -15,6 +16,7 @@
   <div class="notifications">
     {#each $notifications as notification (notification.id)}
       <div
+        animate:flip
         class="toast"
         style="background: {themes[notification.type]};"
         transition:fly={{ y: -30 }}>
