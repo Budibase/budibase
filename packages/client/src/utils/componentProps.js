@@ -5,7 +5,7 @@ import { enrichButtonActions } from "./buttonActions"
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
-export const enrichProps = (props, dataContexts, dataBindings) => {
+export const enrichProps = async (props, dataContexts, dataBindings) => {
   // Exclude all private props that start with an underscore
   let validProps = {}
   Object.entries(props)
@@ -24,7 +24,7 @@ export const enrichProps = (props, dataContexts, dataBindings) => {
   }
 
   // Enrich all data bindings in top level props
-  let enrichedProps = enrichDataBindings(validProps, context)
+  let enrichedProps = await enrichDataBindings(validProps, context)
 
   // Enrich button actions if they exist
   if (props._component.endsWith("/button") && enrichedProps.onClick) {
