@@ -1,7 +1,7 @@
 <script>
     import { fly } from "svelte/transition"
     import { getContext } from "svelte"
-    const notifications = getContext("notification")
+    const notifications = getContext("notifications")
   
     export let themes = {
       danger: "#E26D69",
