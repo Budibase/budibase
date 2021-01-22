@@ -22,13 +22,12 @@
 <div on:click|stopPropagation bind:this={anchor}>
   <TextButton
     text
-    small
     on:click={dropdown.show}
-    active={true}>
-      <Icon name="plus" />
+    active={false}>
+      <Icon name="add" />
       Add Parameters
   </TextButton>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+  <DropdownMenu align="right" {anchor} bind:this={dropdown}>
     <div class="wrapper">
       <ParameterBuilder bind:parameters {bindable} />
     </div>
@@ -38,5 +37,6 @@
 <style>
   .wrapper {
     padding: var(--spacing-xl);
+    min-width: 600px;
   }
 </style>
