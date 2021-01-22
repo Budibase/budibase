@@ -44,11 +44,3 @@ const createNotificationStore = () => {
 }
 
 export const notificationStore = createNotificationStore()
-
-// setTimeout(() => {
-//   notificationStore.update(state => {
-//     state.notifications.shift()
-//     state.notifications = state.notifications
-//     return state
-//   })
-// }, timeout)
