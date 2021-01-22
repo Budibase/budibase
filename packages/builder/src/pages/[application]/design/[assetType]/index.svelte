@@ -1,45 +1,51 @@
 <script>
-  import { onMount } from "svelte"
-  import { goto } from "@sveltech/routify"
-  import { store, allScreens } from "builderStore"
+  import { get } from "svelte/store"
+  import { store, allScreens, selectedAccessRole } from "builderStore"
   import { FrontendTypes } from "constants"
   import { params } from "@sveltech/routify"
 
-  onMount(() => {
+  $: selectValidAsset($params.assetType)
+
+  // If we ever land on this index page we want to correctly update state
+  // to select a valid asset. The layout page will in turn update the URL
+  // to reflect state.
+  const selectValidAsset = assetType => {
     let id
+    const state = get(store)
+    const screens = get(allScreens)
+    const role = get(selectedAccessRole)
 
-    // Get valid asset type
-    let assetType = $params.assetType
-    if (![FrontendTypes.LAYOUT, FrontendTypes.SCREEN].includes(assetType)) {
-      assetType = FrontendTypes.SCREEN
-    }
-
-    // Get ID or first correct asset type
+    // Get ID or first correct asset type and select it
     if (assetType === FrontendTypes.LAYOUT) {
       if (
-        $store.selectedLayoutId &&
-        $store.layouts.find(layout => layout._id === $store.selectedLayoutId)
+        state.selectedLayoutId &&
+        state.layouts.find(layout => layout._id === state.selectedLayoutId)
       ) {
-        id = $store.selectedLayoutId
+        id = state.selectedLayoutId
       } else {
-        id = $store.layouts[0]?._id
+        id = state.layouts[0]?._id
+      }
+      if (id) {
+        store.actions.layouts.select(id)
       }
     } else if (assetType === FrontendTypes.SCREEN) {
       if (
-        $store.selectedScreenId &&
-        $allScreens.find(screen => screen._id === $store.selectedScreenId)
+        state.selectedScreenId &&
+        screens.find(screen => screen._id === state.selectedScreenId)
       ) {
-        id = $store.selectedScreenId
+        id = state.selectedScreenId
       } else {
-        id = $allScreens[0]?._id
+        // Select the first screen matching the selected role ID
+        const filteredScreens = screens.filter(screen => {
+          return screen.routing?.roleId === role
+        })
+        id = filteredScreens[0]?._id
+      }
+      if (id) {
+        store.actions.screens.select(id)
       }
     }
-
-    // Send correct URL which will then update state
-    if (id) {
-      $goto(`../../${assetType}/${id}`)
-    }
-  })
+  }
 </script>
 
 <!-- routify:options index=false -->
