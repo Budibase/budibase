@@ -1,7 +1,7 @@
 import { writable, derived } from "svelte/store"
 import { generate } from "shortid"
 
-let NOTIFICATION_TIMEOUT = 3000
+const NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
   const _notifications = writable([])
