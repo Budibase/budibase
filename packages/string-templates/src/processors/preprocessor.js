@@ -37,42 +37,7 @@ module.exports.processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.HANDLE_SPACES, statement => {
-    // exclude helpers and brackets, regex will only find double brackets
-    const exclusions = HelperNames()
-    // find all the parts split by spaces
-    const splitBySpaces = statement
-      .split(" ")
-      .filter(el => el !== "{{" && el !== "}}")
-    // remove braces if they are found and weren't spaced out
-    splitBySpaces[0] = splitBySpaces[0].replace("{", "")
-    splitBySpaces[splitBySpaces.length - 1] = splitBySpaces[
-      splitBySpaces.length - 1
-    ].replace("}", "")
-    // remove the excluded elements
-    const propertyParts = splitBySpaces.filter(
-      part => exclusions.indexOf(part) === -1
-    )
-    // rebuild to get the full property
-    const fullProperty = propertyParts.join(" ")
-    // now work out the dot notation layers and split them up
-    const propertyLayers = fullProperty.split(".")
-    // find the layers which need to be wrapped and wrap them
-    for (let layer of propertyLayers) {
-      if (layer.indexOf(" ") !== -1) {
-        statement = swapStrings(
-          statement,
-          statement.indexOf(layer),
-          layer.length,
-          `[${layer}]`
-        )
-      }
-    }
-    // remove the edge case of double brackets being entered (in-case user already has specified)
-    return statement.replace(/\[\[/g, "[").replace(/]]/g, "]")
-  }),
-
-  new Preprocessor(Preprocessor.FINALISE, statement => {
+  new Preprocessor(PreprocessorNames.FINALISE, statement => {
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
       insideStatement = insideStatement.slice(1)
@@ -87,3 +52,5 @@ module.exports.processors = [
     return `{{ all ${insideStatement} }}`
   }),
 ]
+
+module.exports.PreprocessorNames = PreprocessorNames

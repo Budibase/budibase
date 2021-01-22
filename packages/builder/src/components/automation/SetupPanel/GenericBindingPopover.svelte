@@ -10,6 +10,7 @@
     Popover,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { isValid } from "@budibase/string-templates"
   const dispatch = createEventDispatcher()
 
   export let value = ""
@@ -19,8 +20,10 @@
   export let popover = null
 
   let getCaretPosition
+  let validity = true
 
   $: categories = Object.entries(groupBy("category", bindings))
+  $: value && checkValid()
 
   function onClickBinding(binding) {
     const position = getCaretPosition()
@@ -33,6 +36,10 @@
     } else {
       value += toAdd
     }
+  }
+
+  function checkValid() {
+    validity = isValid(value)
   }
 </script>
 
@@ -70,11 +77,16 @@
         bind:getCaretPosition
         bind:value
         placeholder="Add options from the left, type text, or do both" />
+      {#if !validity}
+        <p class="syntax-error">Current Handlebars syntax is invalid, please check the guide
+          <a href="https://handlebarsjs.com/guide/">here</a> for more details.
+        </p>
+      {/if}
       <div class="controls">
         <a href="https://docs.budibase.com/design/binding">
           <Body small>Learn more about binding</Body>
         </a>
-        <Button on:click={popover.hide} primary>Done</Button>
+        <Button on:click={popover.hide} disabled={!validity} primary>Done</Button>
       </div>
     </div>
   </div>
@@ -151,5 +163,15 @@
     grid-gap: var(--spacing-l);
     align-items: center;
     margin-top: var(--spacing-m);
+  }
+
+  .syntax-error {
+    color: var(--red);
+    font-size: 12px;
+  }
+
+  .syntax-error a {
+    color: var(--red);
+    text-decoration: underline;
   }
 </style>

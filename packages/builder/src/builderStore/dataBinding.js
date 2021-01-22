@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
+import { makePropSafe } from "@budibase/string-templates"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -105,7 +106,7 @@ export const getContextBindings = (rootComponent, componentId) => {
 
       contextBindings.push({
         type: "context",
-        runtimeBinding: `${component._id}.${runtimeBoundKey}`,
+        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(runtimeBoundKey)}`,
         readableBinding: `${component._instanceName}.${table.name}.${key}`,
         fieldSchema,
         providerId: component._id,
@@ -135,7 +136,7 @@ export const getComponentBindings = rootComponent => {
     return {
       type: "instance",
       providerId: component._id,
-      runtimeBinding: `${component._id}`,
+      runtimeBinding: `${makePropSafe(component._id)}`,
       readableBinding: `${component._instanceName}`,
     }
   })

@@ -17,8 +17,14 @@ function process(string, processors) {
   return string
 }
 
-module.exports.preprocess = string => {
-  return process(string, preprocessor.processors)
+module.exports.preprocess = (string, finalise = true) => {
+  let processors = preprocessor.processors
+  // the pre-processor finalisation stops handlebars from ever throwing an error
+  // might want to pre-process for other benefits but still want to see errors
+  if (!finalise) {
+    processors = processors.filter(processor => processor.name !== preprocessor.PreprocessorNames.FINALISE)
+  }
+  return process(string, processors)
 }
 
 module.exports.postprocess = string => {
