@@ -1,6 +1,5 @@
 <script>
   import { notificationStore } from "builderStore/store/notifications"
-  import { onMount, onDestroy } from "svelte"
   import { fly } from "svelte/transition"
 
   export let themes = {

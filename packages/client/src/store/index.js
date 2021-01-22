@@ -1,5 +1,5 @@
 export { authStore } from "./auth"
-export { notificationStore } from "./notifier"
+export { notificationStore } from "./notification"
 export { routeStore } from "./routes"
 export { screenStore } from "./screens"
 export { builderStore } from "./builder"

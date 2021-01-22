@@ -3,9 +3,6 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-  const notification = getContext("notification")
-
-  console.log($notification)
 
   export let icon = ""
   export let size = "fa-lg"
