@@ -63,7 +63,7 @@
   $: config = $backendUiStore.integrations[datasourceType]?.query
   $: docsLink = $backendUiStore.integrations[datasourceType]?.docs
 
-  $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
+  $: shouldShowQueryConfig = config && query.queryVerb
 
   function newField() {
     fields = [...fields, {}]
@@ -140,12 +140,9 @@
           <option value={queryVerb}>{queryVerb}</option>
         {/each}
       </Select>
-      <Select thin secondary bind:value={query.queryType}>
-        <option value={""}>Please select an option</option>
-        {#each Object.keys(config[query.queryVerb]) as queryType}
-          <option value={queryType}>{queryType}</option>
-        {/each}
-      </Select>
+      <div>
+        {config[query.queryVerb].type}
+      </div>
     <EditQueryParamsPopover bind:parameters={query.parameters} bindable={false} />
     <Spacer medium />
     <Button primary href={docsLink} target="_blank">
@@ -166,7 +163,7 @@
 
       <IntegrationQueryEditor
         {query}
-        schema={config[query.queryVerb][query.queryType]}
+        schema={config[query.queryVerb]}
         bind:parameters />
 
       <Spacer medium />

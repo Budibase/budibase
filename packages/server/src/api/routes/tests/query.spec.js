@@ -26,7 +26,6 @@ const TEST_QUERY = {
   fields:{},
   schema:{},
   queryVerb:"read",
-  queryType:"Table",
 }
 
 describe("/queries", () => {
