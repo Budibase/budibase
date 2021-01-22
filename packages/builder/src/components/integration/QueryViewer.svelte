@@ -141,7 +141,8 @@
         {/each}
       </Select>
       <Select thin secondary bind:value={query.queryType}>
-        {#each Object.keys(config[query.queryVerb]) as queryType (queryType)}
+        <option value={""}>Please select an option</option>
+        {#each Object.keys(config[query.queryVerb]) as queryType}
           <option value={queryType}>{queryType}</option>
         {/each}
       </Select>
