@@ -14,6 +14,14 @@
     await backendUiStore.actions.datasources.save(datasource)
     notifier.success(`Datasource ${name} saved successfully.`)
   }
+
+  function onClickQuery(query) {
+    if ($backendUiStore.selectedQueryId === query._id) {
+      return
+    }
+    backendUiStore.actions.queries.select(query)
+    $goto(`../${query._id}`)
+  }
 </script>
 
 {#if datasource}
@@ -39,50 +47,17 @@
       </div>
       <Spacer extraLarge />
       <div class="query-list">
-        <div class="query-list-item">
-          <p class="query-name">The Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4000 records</p>
-          <p>→</p>
-        </div>
-        <div class="query-list-item">
-          <p class="query-name">The Second Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4,000,000 records</p>
-          <p>→</p>
-        </div>
-        <div class="query-list-item">
-          <p class="query-name">The Second Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4,000,000 records</p>
-          <p>→</p>
-        </div>
-        <div class="query-list-item">
-          <p class="query-name">The Second Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4,000,000 records</p>
-          <p>→</p>
-        </div>
-        <div class="query-list-item">
-          <p class="query-name">The Second Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4,000,000 records</p>
-          <p>→</p>
-        </div>
-        <div class="query-list-item">
-          <p class="query-name">The Second Long Query Name</p>
-          <p>Read</p>
-          <p>SQL</p>
-          <p>4,000,000 records</p>
-          <p>→</p>
-        </div>
+        {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
+          <div class="query-list-item" on:click={() => onClickQuery(query)}>
+            <p class="query-name">{query.name}</p>
+            <p>{query.queryVerb}</p>
+            <p>{query.queryType}</p>
+            <p>4000 records</p>
+            <p>→</p>
+          </div>
+        {/each}
+        <Spacer medium />
       </div>
-      <Spacer medium />
     </div>
   </section>
 
