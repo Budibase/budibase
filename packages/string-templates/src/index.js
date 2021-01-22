@@ -87,6 +87,7 @@ module.exports.processStringSync = (string, context) => {
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
+
   let template
   string = processors.preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
@@ -95,11 +96,26 @@ module.exports.processStringSync = (string, context) => {
 }
 
 /**
- * Errors can occur if a user of this library attempts to use a helper that has not been added to the system, these errors
- * can be captured to alert the user of the mistake.
- * @param {function} handler a function which will be called every time an error occurs when processing a handlebars
- * statement.
+ * Simple utility function which makes sure that a templating property has been wrapped in literal specifiers correctly.
+ * @param {string} property The property which is to be wrapped.
+ * @returns {string} The wrapped property ready to be added to a templating string.
  */
-module.exports.errorEvents = handler => {
-  hbsInstance.registerHelper("helperMissing", handler)
+module.exports.makePropSafe = property => {
+  return `[${property}]`.replace("[[", "[").replace("]]", "]")
+}
+
+/**
+ * Checks whether or not a template string contains totally valid syntax (simply tries running it)
+ * @param string The string to test for valid syntax - this may contain no templates and will be considered valid.
+ * @returns {boolean} Whether or not the input string is valid.
+ */
+module.exports.isValid = string => {
+  // don't really need a real context to check if its valid
+  const context = {}
+  try {
+    hbsInstance.compile(processors.preprocess(string, false))(context)
+    return true
+  } catch (err) {
+    return false
+  }
 }
