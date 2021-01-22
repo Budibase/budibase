@@ -25,6 +25,7 @@
     parameters: [],
     fields: {},
     queryVerb: "read",
+    queryType: "",
   }
 </script>
 
