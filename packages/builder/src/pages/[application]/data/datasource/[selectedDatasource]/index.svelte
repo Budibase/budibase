@@ -51,7 +51,6 @@
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
             <p>{query.queryVerb}</p>
-            <p>{query.queryType}</p>
             <p>4000 records</p>
             <p>→</p>
           </div>

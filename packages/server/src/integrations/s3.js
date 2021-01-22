@@ -19,13 +19,11 @@ const SCHEMA = {
   },
   query: {
     read: {
-      Bucket: {
-        type: "fields",
-        fields: {
-          bucket: {
-            type: "string",
-            required: true,
-          },
+      type: "fields",
+      fields: {
+        bucket: {
+          type: "string",
+          required: true,
         },
       },
     },
