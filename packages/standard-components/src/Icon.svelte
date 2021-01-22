@@ -3,9 +3,6 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-  const notification = getContext("notification")
-
-  $: console.log($notification)
 
   export let icon = ""
   export let size = "fa-lg"
@@ -21,7 +18,3 @@
 
 <i use:styleable={styles}
   class="{icon} {size}" />
-
-  <button on:click={() => {
-    notification.send('Hello!')
-  }}></button>
