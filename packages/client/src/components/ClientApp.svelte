@@ -3,13 +3,13 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import SDK from "../sdk"
-  import { createDataStore, initialise, screenStore, errorStore } from "../store"
+  import { createDataStore, initialise, screenStore, notificationStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
   setContext("component", writable({}))
   setContext("data", createDataStore())
-  setContext("error", errorStore)
+  setContext("notification", notificationStore)
   setContext("screenslot", false)
 
   let loaded = false
