@@ -8,13 +8,12 @@
   export let size = "fa-lg"
   export let color = "#f00"
   $: styles = {
-  ...$component.styles,
-  normal: {
-    ...$component.styles.normal,
-    color
+    ...$component.styles,
+    normal: {
+      ...$component.styles.normal,
+      color,
+    },
   }
-}
 </script>
 
-<i use:styleable={styles}
-  class="{icon} {size}" />
+<i use:styleable={styles} class="{icon} {size}" />
