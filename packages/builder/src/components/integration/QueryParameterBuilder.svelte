@@ -1,5 +1,12 @@
 <script>
-  import { Button, TextArea, Label, Input, Heading } from "@budibase/bbui"
+  import {
+    Button,
+    TextArea,
+    Label,
+    Input,
+    Heading,
+    Spacer,
+  } from "@budibase/bbui"
   import BindableInput from "components/userInterface/BindableInput.svelte"
   import {
     readableToRuntimeBinding,
@@ -31,19 +38,22 @@
 
 <section>
   <Heading extraSmall black>Parameters</Heading>
+  <Spacer large />
   <div class="parameters" class:bindable>
-    <Label extraSmall grey>Parameter Name</Label>
-    <Label extraSmall grey>Default</Label>
-    {#if bindable}
-      <Label extraSmall grey>Value</Label>
-    {:else}
-      <div />
-    {/if}
     {#each parameters as parameter, idx}
-      <Input thin disabled={bindable} bind:value={parameter.name} />
-      <Input thin disabled={bindable} bind:value={parameter.default} />
+      <Input
+        placeholder="Parameter Name"
+        thin
+        disabled={bindable}
+        bind:value={parameter.name} />
+      <Input
+        placeholder="Default"
+        thin
+        disabled={bindable}
+        bind:value={parameter.default} />
       {#if bindable}
         <BindableInput
+          placeholder="Value"
           type="string"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}
@@ -57,9 +67,7 @@
     {/each}
   </div>
   {#if !bindable}
-    <Button thin secondary small on:click={newQueryParameter}>
-      Add Parameter
-    </Button>
+    <Button secondary on:click={newQueryParameter}>Add Parameter</Button>
   {/if}
 </section>
 
