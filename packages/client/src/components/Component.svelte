@@ -10,7 +10,6 @@
 
   // Get contexts
   const dataContext = getContext("data")
-  const errorContext = getContext("error")
   const screenslotContext = getContext("screenslot")
 
   // Create component context
