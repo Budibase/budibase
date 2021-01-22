@@ -1,3 +1,5 @@
+import { notificationStore } from "../store/notification"
+
 /**
  * API cache for cached request responses.
  */
@@ -7,6 +9,7 @@ let cache = {}
  * Handler for API errors.
  */
 const handleError = error => {
+  notificationStore.danger(error)
   return { error }
 }
 
