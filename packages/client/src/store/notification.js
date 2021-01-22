@@ -1,21 +1,17 @@
 import { writable, derived } from "svelte/store"
 import { generate } from "shortid"
 
-
 let NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
   const _notifications = writable([])
-  
-	const send = (message, type = "default") => {
+
+  const send = (message, type = "default") => {
     _notifications.update(state => {
-      return [
-        ...state,
-        { id: generate(), type, message },
-      ]
+      return [...state, { id: generate(), type, message }]
     })
   }
-  
+
   const notifications = derived(_notifications, ($_notifications, set) => {
     set($_notifications)
     if ($_notifications.length > 0) {
@@ -27,19 +23,19 @@ const createNotificationStore = () => {
         set($_notifications)
       }, NOTIFICATION_TIMEOUT)
       return () => {
-        clearTimeout(timeout);
-      };
+        clearTimeout(timeout)
+      }
     }
-	})
+  })
   const { subscribe } = notifications
 
   return {
     subscribe,
-		send,
+    send,
     danger: msg => send(msg, "danger"),
-  	warning: msg => send(msg, "warning"),
-  	info: msg => send(msg, "info"),
-  	success: msg => send(msg, "success"),
+    warning: msg => send(msg, "warning"),
+    info: msg => send(msg, "info"),
+    success: msg => send(msg, "success"),
   }
 }
 
