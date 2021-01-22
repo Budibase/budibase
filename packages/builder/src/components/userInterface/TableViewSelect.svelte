@@ -91,7 +91,7 @@
 </div>
 {#if value.type === 'query'}
   <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query'}>
+    <Drawer title={'Query'} bind:this={drawer}>
       <div slot="buttons">
         <Button
           blue
