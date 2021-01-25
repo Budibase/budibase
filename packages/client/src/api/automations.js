@@ -9,7 +9,7 @@ export const triggerAutomation = async (automationId, fields) => {
     body: { fields },
   })
   res.error
-    ? notificationStore.danger("En error has occurred")
+    ? notificationStore.danger("An error has occurred")
     : notificationStore.success("Automation triggered")
   return res
 }
