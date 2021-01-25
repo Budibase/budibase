@@ -17,4 +17,4 @@ fetch_config_files() {
 fetch_config_files
 
 # Start budibase
-docker-compose --env-file hosting.properties up
+docker-compose --env-file hosting.properties up -d
