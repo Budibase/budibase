@@ -66,7 +66,7 @@ export const deleteRows = async ({ tableId, rows }) => {
   })
   res.error
     ? notificationStore.danger("En error has occured")
-    : notificationStore.success(`${rows.length} rows deleted.`)
+    : notificationStore.success(`${rows.length} row(s) deleted`)
   return res
 }
 
