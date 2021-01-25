@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 module.exports.FIND_HBS_REGEX = /{{([^{}])+}}/g
@@ -12,12 +13,19 @@ module.exports.swapStrings = (string, start, length, swap) => {
 
 // removes null and undefined
 module.exports.removeNull = obj => {
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(entry => entry[1] != null)
-      .map(([key, value]) => [
-        key,
-        value === Object(value) ? module.exports.removeNull(value) : value,
-      ])
-  )
+  obj = _(obj).omitBy(_.isUndefined).omitBy(_.isNull).value()
+  for (let [key, value] of Object.entries(obj)) {
+    // only objects
+    if (typeof value === "object" && !Array.isArray(value)) {
+      obj[key] = module.exports.removeNull(value)
+    }
+  }
+  return obj
+}
+
+module.exports.addConstants = obj => {
+  if (obj.now == null) {
+    obj.now = (new Date()).toISOString()
+  }
+  return obj
 }

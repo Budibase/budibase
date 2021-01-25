@@ -1,9 +1,11 @@
 const { HelperNames } = require("../helpers")
 const { swapStrings, isAlphaNumeric } = require("../utilities")
 
+const FUNCTION_CASES = ["#", "else", "/"]
+
 const PreprocessorNames = {
   SWAP_TO_DOT: "swap-to-dot-notation",
-  HANDLE_SPACES: "handle-spaces-in-properties",
+  FIX_FUNCTIONS: "fix-functions",
   FINALISE: "finalise",
 }
 
@@ -37,6 +39,14 @@ module.exports.processors = [
     return statement
   }),
 
+  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, statement => {
+    for (let specialCase of FUNCTION_CASES) {
+      const toFind = `{ ${specialCase}`, replacement = `{${specialCase}`
+      statement = statement.replace(new RegExp(toFind, "g"), replacement)
+    }
+    return statement
+  }),
+
   new Preprocessor(PreprocessorNames.FINALISE, statement => {
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
@@ -46,7 +56,13 @@ module.exports.processors = [
       insideStatement = insideStatement.slice(0, insideStatement.length - 1)
     }
     const possibleHelper = insideStatement.split(" ")[0]
-    if (HelperNames().some(option => possibleHelper === option)) {
+    // function helpers can't be wrapped
+    for (let specialCase of FUNCTION_CASES) {
+      if (possibleHelper.includes(specialCase)) {
+        return statement
+      }
+    }
+    if (HelperNames().some(option => possibleHelper.includes(option))) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`
