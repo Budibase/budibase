@@ -41,7 +41,8 @@ module.exports.processors = [
 
   new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, statement => {
     for (let specialCase of FUNCTION_CASES) {
-      const toFind = `{ ${specialCase}`, replacement = `{${specialCase}`
+      const toFind = `{ ${specialCase}`,
+        replacement = `{${specialCase}`
       statement = statement.replace(new RegExp(toFind, "g"), replacement)
     }
     return statement
