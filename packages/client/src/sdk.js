@@ -13,7 +13,7 @@ import DataProvider from "./components/DataProvider.svelte"
 export default {
   API,
   authStore,
-  notificationStore,
+  notifications: notificationStore,
   routeStore,
   screenStore,
   styleable,

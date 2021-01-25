@@ -2,7 +2,7 @@
     import { flip } from 'svelte/animate';
     import { fly } from "svelte/transition"
     import { getContext } from "svelte"
-    const notifications = getContext("notifications")
+    const { notifications } = getContext("sdk")
   
     export let themes = {
       danger: "#E26D69",
