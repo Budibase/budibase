@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Button, TextArea, Drawer, Heading, Spacer } from "@budibase/bbui"
+  import { TextArea, Heading, Spacer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {

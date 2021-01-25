@@ -13,7 +13,7 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
   "number",
   "url",
   "string",
-  "markdown",
+  "comparison",
 ]
 
 const DATE_NAME = "date"
