@@ -12,7 +12,7 @@ export const executeQuery = async ({ queryId, parameters }) => {
     },
   })
   res.error
-    ? notificationStore.danger("En error has occurred")
+    ? notificationStore.danger("An error has occurred")
     : notificationStore.success("Query successful")
-  return response
+  return res
 }
