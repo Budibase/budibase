@@ -9,7 +9,7 @@ let cache = {}
  * Handler for API errors.
  */
 const handleError = error => {
-  notificationStore.danger(error)
+  notificationStore.danger('An error has occured.')
   return { error }
 }
 
