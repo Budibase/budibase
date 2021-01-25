@@ -18,4 +18,7 @@ module.exports.HelperFunctionBuiltin = [
 module.exports.HelperFunctionNames = {
   OBJECT: "object",
   ALL: "all",
+  LITERAL: "literal",
 }
+
+module.exports.LITERAL_MARKER = "%LITERAL%"

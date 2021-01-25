@@ -2,19 +2,23 @@ const { FIND_HBS_REGEX } = require("../utilities")
 const preprocessor = require("./preprocessor")
 const postprocessor = require("./postprocessor")
 
-function process(string, processors) {
+function process(output, processors) {
   for (let processor of processors) {
+    // if a literal statement has occurred stop
+    if (typeof output !== "string") {
+      break
+    }
     // re-run search each time incase previous processor updated/removed a match
-    let regex = new RegExp(FIND_HBS_REGEX)
-    let matches = string.match(regex)
+    let regexp = new RegExp(FIND_HBS_REGEX)
+    let matches = output.match(regexp)
     if (matches == null) {
       continue
     }
     for (let match of matches) {
-      string = processor.process(string, match)
+      output = processor.process(output, match)
     }
   }
-  return string
+  return output
 }
 
 module.exports.preprocess = (string, finalise = true) => {
