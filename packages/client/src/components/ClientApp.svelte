@@ -10,7 +10,6 @@
   setContext("sdk", SDK)
   setContext("component", writable({}))
   setContext("data", createDataStore())
-  setContext("notifications", notificationStore)
   setContext("screenslot", false)
 
   let loaded = false
