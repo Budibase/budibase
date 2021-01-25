@@ -20,7 +20,9 @@ export const saveRow = async row => {
     url: `/api/${row.tableId}/rows`,
     body: row,
   })
-  notificationStore.success("Row saved")
+  res.error
+    ? notificationStore.danger("En error has occured")
+    : notificationStore.success("Row saved")
   return res
 }
 
@@ -32,7 +34,9 @@ export const updateRow = async row => {
     url: `/api/${row.tableId}/rows/${row._id}`,
     body: row,
   })
-  notificationStore.success("Row updated")
+  res.error
+    ? notificationStore.danger("En error has occured")
+    : notificationStore.success("Row updated")
   return res
 }
 
@@ -43,7 +47,9 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
   const res = await API.del({
     url: `/api/${tableId}/rows/${rowId}/${revId}`,
   })
-  notificationStore.success("Row deleted")
+  res.error
+    ? notificationStore.danger("En error has occured")
+    : notificationStore.success("Row deleted")
   return res
 }
 
@@ -58,7 +64,9 @@ export const deleteRows = async ({ tableId, rows }) => {
       type: "delete",
     },
   })
-  notificationStore.success(`${rows.length} rows deleted.`)
+  res.error
+    ? notificationStore.danger("En error has occured")
+    : notificationStore.success(`${rows.length} rows deleted.`)
   return res
 }
 
