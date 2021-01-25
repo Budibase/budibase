@@ -20,7 +20,7 @@
 
 
 <p align="center">
-  <img src="https://i.imgur.com/tMCahK8.png">
+  <img src="https://i.imgur.com/tPQHruf.png">
 </p>
 
 <p align="center">
@@ -69,16 +69,9 @@ When other platforms chose the closed source route, we decided to go open source
 
 - **Cloud hosting and self-hosting.** Users can self-host (see below), or host their apps with Budibase. Currently, our cloud hosting offering is limited to the free tier but we aim to change this in the future. For heavy usage, we advise users to self-host.
 
-
-## 🤖 Self-hosting
-
 <p align="center">
-  <img src="https://i.imgur.com/Z52cEvT.png?1" />
+  <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
 </p>
-
-Budibase wants to make sure anyone can use the tools we develop and we know a lot of people need to be able to host the apps they make on their own systems - that is why we've decided to try and make self hosting as easy as possible!
-
-Currently, you can host your apps using Docker. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
 
 
 ## ⌛ Status
@@ -95,10 +88,6 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
-## Roadmap
-
-Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10). If you would like to discuss some of the items on the roadmap, please feel to reach out on [Discord](https://discord.gg/rCYayfe), or via [Github discussions](https://github.com/Budibase/budibase/discussions)
-
 
 ## 🏁 Getting Started with Budibase
 
@@ -111,9 +100,16 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 
 [Here is a guided tutorial](https://docs.budibase.com/tutorial/tutorial-signing-up) if you need extra help.
 
+
+## 🤖 Self-hosting
+
 <p align="center">
-  <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
+  <img src="https://i.imgur.com/Z52cEvT.png?1" />
 </p>
+
+Budibase wants to make sure anyone can use the tools we develop and we know a lot of people need to be able to host the apps they make on their own systems - that is why we've decided to try and make self hosting as easy as possible!
+
+Currently, you can host your apps using Docker. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
 
 
 ## 🎓 Learning Budibase
@@ -121,6 +117,12 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 The Budibase [documentation lives here](https://docs.budibase.com).
 
 You can also follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+
+
+## Roadmap
+
+Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10). If you would like to discuss some of the items on the roadmap, please feel to reach out on [Discord](https://discord.gg/rCYayfe), or via [Github discussions](https://github.com/Budibase/budibase/discussions)
+
 
 ## ❗ Code of Conduct
 
