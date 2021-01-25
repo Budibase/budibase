@@ -259,3 +259,19 @@ describe("test the comparison helpers", () => {
     expect(output).toBe("s")
   })
 })
+
+describe("Test the literal helper", () => {
+  it("should allow use of the literal specifier for a number", async () => {
+    const output = await processString(`{{literal a}}`, {
+      a: 51,
+    })
+    expect(output).toBe(51)
+  })
+
+  it("should allow use of the literal specifier for an object", async () => {
+    const output = await processString(`{{literal a}}`, {
+      a: {b: 1},
+    })
+    expect(output.b).toBe(1)
+  })
+})
