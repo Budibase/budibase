@@ -1362,6 +1362,16 @@ minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
+mustache@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/mustache/-/mustache-4.0.1.tgz#d99beb031701ad433338e7ea65e0489416c854a2"
+  integrity sha512-yL5VE97+OXn4+Er3THSmTdCFCtx5hHWzrolvH+JObZnUYwuaG7XV+Ch4fR2cIrcYI0tFHxS7iyFYl14bW8y2sA==
+
+nanoid@^2.1.0:
+  version "2.1.11"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-2.1.11.tgz#ec24b8a758d591561531b4176a01e3ab4f0f0280"
+  integrity sha512-s/snB+WGm6uwi0WjsZdaVcuf3KJXlfGl2LcxgwkEwJF0D/BWzVWAZW/XY4bFaiR7s0Jk3FPvlnepg1H1b1UwlA==
+
 nwsapi@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.0.tgz#204879a9e3d068ff2a55139c2c772780681a38b7"
@@ -1802,6 +1812,13 @@ sha.js@^2.4.0, sha.js@^2.4.8:
   dependencies:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
+
+shortid@^2.2.15:
+  version "2.2.16"
+  resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.16.tgz#b742b8f0cb96406fd391c76bfc18a67a57fe5608"
+  integrity sha512-Ugt+GIZqvGXCIItnsL+lvFJOiN7RYqlGy7QE41O3YC1xbNSeDGIRO7xg2JJXIAj1cAGnOeC1r7/T9pgrtQbv4g==
+  dependencies:
+    nanoid "^2.1.0"
 
 side-channel@^1.0.2:
   version "1.0.3"
