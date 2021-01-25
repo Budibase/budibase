@@ -43,8 +43,8 @@
         <div class="datasource-icon" slot="icon">
           <svelte:component
             this={ICONS[datasource.source]}
-            height="15"
-            width="15" />
+            height="18"
+            width="18" />
         </div>
         <EditDatasourcePopover {datasource} />
       </NavItem>
@@ -61,3 +61,10 @@
     {/each}
   </div>
 {/if}
+
+<style>
+  .datasource-icon {
+    margin-right: 3px;
+    padding-top: 3px;
+  }
+</style>

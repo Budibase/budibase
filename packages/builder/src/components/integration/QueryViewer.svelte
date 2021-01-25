@@ -16,6 +16,7 @@
   import { FIELDS } from "constants/backend"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
+  import EditQueryParamsPopover from "components/backend/DatasourceNavigator/popovers/EditQueryParamsPopover.svelte"
   import { backendUiStore } from "builderStore"
 
   const PREVIEW_HEADINGS = [
@@ -40,6 +41,7 @@
   let tab = "JSON"
   let parameters
   let data = []
+  let popover
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === query.datasourceId
@@ -61,7 +63,7 @@
   $: config = $backendUiStore.integrations[datasourceType]?.query
   $: docsLink = $backendUiStore.integrations[datasourceType]?.docs
 
-  $: shouldShowQueryConfig = config && query.queryVerb && query.queryType
+  $: shouldShowQueryConfig = config && query.queryVerb
 
   function newField() {
     fields = [...fields, {}]
@@ -129,62 +131,44 @@
 </script>
 
 <header>
-  <Heading small>{query.name}</Heading>
+  <div class="input">
+    <Input placeholder="✎ Edit Query Name" bind:value={query.name} />
+  </div>
   {#if config}
-    <div class="queryVerbs">
-      {#each Object.keys(config) as queryVerb}
-        <div
-          class="queryVerb"
-          class:selected={queryVerb === query.queryVerb}
-          on:click={() => {
-            query.queryVerb = queryVerb
-          }}>
-          {queryVerb}
-        </div>
-      {/each}
-    </div>
-    {#if query.queryVerb}
-      <Select thin secondary bind:value={query.queryType}>
-        <option value={''}>Select an option</option>
-        {#each Object.keys(config[query.queryVerb]) as queryType}
-          <option value={queryType}>{queryType}</option>
+  <div class="props">
+    <div class="query-type">Query type: <span class="query-type-span">{config[query.queryVerb].type}</span></div>
+    <div class="select">
+      <Select primary thin bind:value={query.queryVerb}>
+        {#each Object.keys(config) as queryVerb}
+          <option value={queryVerb}>{queryVerb}</option>
         {/each}
       </Select>
-    {/if}
-    <Spacer medium />
-    <Button primary href={docsLink} target="_blank">
-      <i class="ri-book-2-line" />
-    </Button>
+  </div>
+    </div>
+    <EditQueryParamsPopover bind:parameters={query.parameters} bindable={false} />
   {/if}
 </header>
-
-<Spacer large />
+<Spacer extraLarge />
 
 {#if shouldShowQueryConfig}
   <section>
     <div class="config">
-      <Label extraSmall grey>Query Name</Label>
-      <Input thin bind:value={query.name} />
-
-      <Spacer medium />
-
       <IntegrationQueryEditor
         {query}
-        schema={config[query.queryVerb][query.queryType]}
+        schema={config[query.queryVerb]}
         bind:parameters />
 
-      <Spacer medium />
+      <Spacer extraLarge />
+      <Spacer large />
 
       <div class="viewer-controls">
         <Button
-          wide
-          thin
           blue
           disabled={data.length === 0}
           on:click={saveQuery}>
-          Save
+          Save Query
         </Button>
-        <Button wide thin primary on:click={previewQuery}>Run</Button>
+        <Button primary on:click={previewQuery}>Run Query</Button>
       </div>
 
       <section class="viewer">
@@ -196,10 +180,11 @@
               <ExternalDataSourceTable {query} {data} />
             {:else if tab === 'SCHEMA'}
               {#each fields as field, idx}
+                <Spacer small />
                 <div class="field">
-                  <Input thin type={'text'} bind:value={field.name} />
-                  <Select secondary thin bind:value={field.type}>
-                    <option value={''}>Select an option</option>
+                  <Input outline placeholder="Field Name" type={'text'} bind:value={field.name} />
+                  <Select thin border bind:value={field.type}>
+                    <option value={''}>Select a field type</option>
                     <option value={'STRING'}>Text</option>
                     <option value={'NUMBER'}>Number</option>
                     <option value={'BOOLEAN'}>Boolean</option>
@@ -210,7 +195,8 @@
                     on:click={() => deleteField(idx)} />
                 </div>
               {/each}
-              <Button thin secondary on:click={newField}>Add Field</Button>
+                <Spacer small />
+                <Button thin secondary on:click={newField}>Add Field</Button>
             {/if}
           </Switcher>
         {/if}
@@ -220,11 +206,28 @@
 {/if}
 
 <style>
+
+  .input {
+    width: 300px;
+  }
+
+  .select {
+    width: 200px;
+    margin-right: 40px;
+  }
+
+  .props {
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+    align-items: center;
+    gap: var(--layout-l);
+  }
+
   .field {
     display: grid;
-    grid-gap: 10px;
     grid-template-columns: 1fr 1fr 50px;
-    margin-bottom: var(--spacing-m);
+    gap: var(--spacing-l);
   }
 
   a {
@@ -240,6 +243,16 @@
     cursor: pointer;
   }
 
+  .query-type {
+    font-family: var(--font-sans);
+    color: var(--grey-8);
+    font-size: var(--font-size-s);
+  }
+
+  .query-type-span {
+    text-transform: uppercase;
+  }
+
   .preview {
     width: 800px;
     height: 100%;
@@ -253,32 +266,18 @@
     align-items: center;
   }
 
-  .queryVerbs {
-    display: flex;
-    flex: 1;
-    font-size: var(--font-size-m);
-    align-items: center;
-    margin-left: var(--spacing-l);
-  }
-
-  .queryVerb {
-    text-transform: capitalize;
-    margin-right: var(--spacing-m);
-    color: var(--grey-5);
-    cursor: pointer;
-  }
-
-  .selected {
-    color: var(--white);
-    font-weight: 500;
-  }
-
   .viewer-controls {
-    display: grid;
-    grid-gap: var(--spacing-m);
-    grid-auto-flow: column;
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
     direction: rtl;
-    grid-template-columns: 10% 10% 1fr;
-    margin-bottom: var(--spacing-m);
+    z-index: 5;
+    gap: var(--spacing-m);
+    min-width: 150px;
+  }
+
+  .viewer {
+    margin-top: -28px;
+    z-index: -2;
   }
 </style>
