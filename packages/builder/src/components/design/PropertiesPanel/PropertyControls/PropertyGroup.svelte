@@ -9,12 +9,17 @@
   export let onStyleChanged = () => {}
   export let open = false
 
+  $: style = componentInstance["_styles"][styleCategory] || {}
+  $: changed = properties.some(prop => hasPropChanged(style, prop))
+
   const hasPropChanged = (style, prop) => {
     return style[prop.key] != null && style[prop.key] !== ""
   }
 
-  $: style = componentInstance["_styles"][styleCategory] || {}
-  $: changed = properties.some(prop => hasPropChanged(style, prop))
+  const getControlProps = props => {
+    const { label, key, control, ...otherProps } = props || {}
+    return otherProps || {}
+  }
 </script>
 
 <DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
@@ -28,7 +33,7 @@
           key={prop.key}
           value={style[prop.key]}
           onChange={value => onStyleChanged(styleCategory, prop.key, value)}
-          props={{ options: prop.options, placeholder: prop.placeholder }} />
+          props={getControlProps(prop)} />
       {/each}
     </div>
   {/if}
