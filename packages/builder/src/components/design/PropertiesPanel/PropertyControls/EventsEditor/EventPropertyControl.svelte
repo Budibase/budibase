@@ -57,7 +57,7 @@
   }
 </script>
 
-<Button secondary small on:click={drawer.show}>Define Actions</Button>
+<Button secondary wide on:click={drawer.show}>Define Actions</Button>
 <Drawer bind:this={drawer} title={'Actions'}>
   <heading slot="buttons">
     <Button thin blue on:click={saveEventData}>Save</Button>

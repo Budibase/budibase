@@ -78,9 +78,7 @@
     const source = $backendUiStore.datasources.find(
       ds => ds._id === query.datasourceId
     ).source
-    return $backendUiStore.integrations[source].query[query.queryVerb][
-      query.queryType
-    ]
+    return $backendUiStore.integrations[source].query[query.queryVerb]
   }
 </script>
 

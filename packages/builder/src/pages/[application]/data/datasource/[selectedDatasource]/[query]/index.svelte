@@ -21,9 +21,9 @@
     query => query._id === $backendUiStore.selectedQueryId
   ) || {
     datasourceId: $params.selectedDatasource,
-    name: "New Query",
     parameters: [],
     fields: {},
+    queryVerb: "read",
   }
 </script>
 
@@ -35,8 +35,10 @@
 
 <style>
   section {
-    background: var(--background);
-    padding: var(--spacing-xl);
-    border-radius: var(--border-radius-m);
+    overflow: scroll;
+  }
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
   }
 </style>
