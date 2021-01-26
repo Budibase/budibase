@@ -3,10 +3,13 @@
   import { writable } from "svelte/store"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
-  import { enrichProps } from "../utils/componentProps"
+  import { enrichProps, propsAreSame } from "../utils/componentProps"
   import { bindingStore, builderStore } from "../store"
 
   export let definition = {}
+
+  let enrichedProps
+  let componentProps
 
   // Get contexts
   const dataContext = getContext("data")
@@ -16,14 +19,12 @@
   const componentStore = writable({})
   setContext("component", componentStore)
 
-  // Enrich component props
-  let enrichedProps
-  $: enrichComponentProps(definition, $dataContext, $bindingStore)
-
   // Extract component definition info
   $: constructor = getComponentConstructor(definition._component)
-  $: children = definition._children
+  $: children = definition._children || []
   $: id = definition._id
+  $: enrichComponentProps(definition, $dataContext, $bindingStore)
+  $: updateProps(enrichedProps)
   $: styles = definition._styles
 
   // Allow component selection in the builder preview if we're previewing a
@@ -38,11 +39,31 @@
     styles: { ...styles, id, allowSelection },
   })
 
+  // Updates the component props.
+  // Most props are deeply compared so that svelte will only trigger reactive
+  // statements on props that have actually changed.
+  const updateProps = props => {
+    if (!props) {
+      return
+    }
+    if (!componentProps) {
+      componentProps = {}
+    }
+    Object.keys(props).forEach(key => {
+      if (!propsAreSame(props[key], componentProps[key])) {
+        componentProps[key] = props[key]
+      }
+    })
+  }
+
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
-    return name === "screenslot" ? Router : ComponentLibrary[name]
+    if (name === "screenslot" && $builderStore.previewType !== "layout") {
+      return Router
+    }
+    return ComponentLibrary[name]
   }
 
   // Enriches any string component props using handlebars
@@ -59,9 +80,9 @@
   }
 </script>
 
-{#if constructor && enrichedProps}
-  <svelte:component this={constructor} {...enrichedProps}>
-    {#if children && children.length}
+{#if constructor && componentProps}
+  <svelte:component this={constructor} {...componentProps}>
+    {#if children.length}
       {#each children as child (getChildKey(child._id))}
         <svelte:self definition={child} />
       {/each}
