@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.54.1",
+    "@budibase/bbui": "^1.55.2",
     "@budibase/client": "^0.5.3",
     "@budibase/colorpicker": "^1.0.1",
     "@budibase/string-templates": "^0.5.3",
