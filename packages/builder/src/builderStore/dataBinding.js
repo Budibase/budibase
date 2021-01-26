@@ -180,17 +180,17 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
   for (let boundValue of boundValues) {
-    const binding = bindableProperties.find(({readableBinding}) => {
+    const binding = bindableProperties.find(({ readableBinding }) => {
       return boundValue.includes(readableBinding)
     })
     let newBoundValue = INVALID_BINDING
     if (binding) {
-      newBoundValue = boundValue.replace(binding.readableBinding, binding.runtimeBinding)
+      newBoundValue = boundValue.replace(
+        binding.readableBinding,
+        binding.runtimeBinding
+      )
     }
-    result = result.replace(
-      boundValue,
-      newBoundValue
-    )
+    result = result.replace(boundValue, newBoundValue)
   }
   return result
 }
@@ -210,12 +210,12 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
     })
     let newBoundValue = INVALID_BINDING
     if (binding) {
-      newBoundValue = boundValue.replace(binding.runtimeBinding, binding.readableBinding)
+      newBoundValue = boundValue.replace(
+        binding.runtimeBinding,
+        binding.readableBinding
+      )
     }
-    result = result.replace(
-      boundValue,
-      newBoundValue
-    )
+    result = result.replace(boundValue, newBoundValue)
   }
   return result
 }
