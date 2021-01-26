@@ -137,8 +137,7 @@
   }
 
   const updateRow = async row => {
-    const schema = (await API.fetchTableDefinition(row.tableId)).schema
-    await API.updateRow(schema, { data: row })
+    await API.updateRow(row)
   }
 
   const deleteRows = async () => {
