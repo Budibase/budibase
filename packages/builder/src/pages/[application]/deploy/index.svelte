@@ -16,8 +16,6 @@
 
   $: appId = $store.appId
 
-  $: console.log($hostingStore)
-
   async function deployApp() {
     const DEPLOY_URL = `/api/deploy`
 
