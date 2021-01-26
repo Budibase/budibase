@@ -103,6 +103,15 @@
     opacity: 1;
   }
 
+  .column-header-name {
+    white-space: normal !important;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
   .sort-icon {
     position: relative;
     top: 2px;

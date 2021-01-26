@@ -2,6 +2,7 @@ version: "3"
 
 services:
   app-service:
+    restart: always
     image: budibase/budibase-apps
     ports:
       - "${APP_PORT}:4002"
@@ -18,6 +19,7 @@ services:
       - worker-service
 
   worker-service:
+    restart: always
     image: budibase/budibase-worker
     ports:
       - "${WORKER_PORT}:4003"
@@ -36,6 +38,7 @@ services:
       - couch-init
 
   minio-service:
+    restart: always
     image: minio/minio
     volumes:
       - minio_data:/data
@@ -53,6 +56,7 @@ services:
       retries: 3
 
   proxy-service:
+    restart: always
     image: envoyproxy/envoy:v1.16-latest
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
@@ -66,6 +70,7 @@ services:
       - couchdb-service
 
   couchdb-service:
+    restart: always
     image: apache/couchdb:3.0
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
