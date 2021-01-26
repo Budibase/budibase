@@ -34,7 +34,7 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-  $: queries = $backendUiStore.queries.map(query => ({
+  $: queries = $backendUiStore.queries.filter(query => query.queryVerb === "read").map(query => ({
     label: query.name,
     name: query.name,
     tableId: query._id,
