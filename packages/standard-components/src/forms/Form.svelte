@@ -1,6 +1,7 @@
 <script>
   import { setContext, getContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
+  import { createValidatorFromConstraints } from "./validation"
 
   export let datasource
   export let theme
@@ -10,7 +11,8 @@
   const component = getContext("component")
 
   let loaded = false
-  let schema = {}
+  let schema
+  let table
   let fieldMap = {}
 
   // Keep form state up to date with form fields
@@ -21,13 +23,18 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, validate) => {
+    registerField: field => {
       if (!field) {
         return
       }
       if (fieldMap[field] != null) {
         return fieldMap[field]
       }
+
+      // Create validation function based on field schema
+      const constraints = schema?.[field]?.constraints
+      const validate = createValidatorFromConstraints(constraints, field, table)
+
       fieldMap[field] = {
         fieldState: makeFieldState(field),
         fieldApi: makeFieldApi(field, validate),
@@ -85,15 +92,16 @@
   const fetchSchema = async () => {
     if (!datasource?.tableId) {
       schema = {}
+      table = null
     } else {
-      const table = await API.fetchTableDefinition(datasource?.tableId)
+      table = await API.fetchTableDefinition(datasource?.tableId)
       if (table) {
         if (datasource.type === "query") {
-          schema = table.parameters
+          console.log("No implementation for queries yet")
+          schema = {}
         } else {
           schema = table.schema || {}
         }
-        console.log(table)
       }
     }
     loaded = true

@@ -59,8 +59,8 @@ export const findComponentPath = (rootComponent, id, path = []) => {
 }
 
 /**
- * Recurses through the component tree and finds all components of a certain
- * type.
+ * Recurses through the component tree and finds all components which match
+ * a certain selector
  */
 export const findAllMatchingComponents = (rootComponent, selector) => {
   if (!rootComponent || !selector) {
@@ -79,6 +79,26 @@ export const findAllMatchingComponents = (rootComponent, selector) => {
     components.push(rootComponent)
   }
   return components.reverse()
+}
+
+/**
+ * Finds the closes parent component which matches certain criteria
+ */
+export const findClosestMatchingComponent = (
+  rootComponent,
+  componentId,
+  selector
+) => {
+  if (!selector) {
+    return null
+  }
+  const componentPath = findComponentPath(rootComponent, componentId).reverse()
+  for (let component of componentPath) {
+    if (selector(component)) {
+      return component
+    }
+  }
+  return null
 }
 
 /**

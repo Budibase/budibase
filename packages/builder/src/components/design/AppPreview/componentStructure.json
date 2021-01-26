@@ -8,7 +8,9 @@
     "icon": "ri-file-edit-line",
     "children": [
       "form",
-      "input",
+      "stringfield",
+      "numberfield",
+      "optionsfield",
       "richtext",
       "datepicker"
     ]

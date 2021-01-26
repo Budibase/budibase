@@ -17,6 +17,9 @@
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
+  import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
+  import NumberFieldSelect from "./PropertyControls/NumberFieldSelect.svelte"
+  import OptionsFieldSelect from "./PropertyControls/OptionsFieldSelect.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -58,6 +61,9 @@
     icon: IconSelect,
     field: TableViewFieldSelect,
     multifield: MultiTableViewFieldSelect,
+    "field/string": StringFieldSelect,
+    "field/number": NumberFieldSelect,
+    "field/options": OptionsFieldSelect,
   }
 
   const getControl = type => {

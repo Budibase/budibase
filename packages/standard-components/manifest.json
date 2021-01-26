@@ -1121,7 +1121,7 @@
       }
     ]
   },
-  "input": {
+  "stringfield": {
     "name": "Text Field",
     "description": "A textfield component that allows the user to input text.",
     "icon": "ri-edit-box-line",
@@ -1129,7 +1129,7 @@
     "bindable": true,
     "settings": [
       {
-        "type": "text",
+        "type": "field/string",
         "label": "Field",
         "key": "field"
       },
@@ -1142,11 +1142,54 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      }
+    ]
+  },
+  "numberfield": {
+    "name": "Number Field",
+    "description": "A textfield component that allows the user to input numbers.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
       },
       {
-        "type": "boolean",
-        "label": "Required",
-        "key": "required"
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      }
+    ]
+  },
+  "optionsfield": {
+    "name": "Options Picker",
+    "description": "A textfield component that allows the user to input text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "field/options",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
       }
     ]
   }
