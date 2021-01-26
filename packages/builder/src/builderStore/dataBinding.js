@@ -6,6 +6,7 @@ import { makePropSafe } from "@budibase/string-templates"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
+const INVALID_BINDING = "{{ invalid binding }}"
 
 /**
  * Gets all bindable data context fields and instance fields.
@@ -178,14 +179,19 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
   }
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
-  boundValues.forEach(boundValue => {
-    const binding = bindableProperties.find(({ readableBinding }) => {
-      return boundValue === `{{ ${readableBinding} }}`
+  for (let boundValue of boundValues) {
+    const binding = bindableProperties.find(({readableBinding}) => {
+      return boundValue.includes(readableBinding)
     })
+    let newBoundValue = INVALID_BINDING
     if (binding) {
-      result = result.replace(boundValue, `{{ ${binding.runtimeBinding} }}`)
+      newBoundValue = boundValue.replace(binding.readableBinding, binding.runtimeBinding)
     }
-  })
+    result = result.replace(
+      boundValue,
+      newBoundValue
+    )
+  }
   return result
 }
 
@@ -198,15 +204,18 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
   }
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
-  boundValues.forEach(boundValue => {
+  for (let boundValue of boundValues) {
     const binding = bindableProperties.find(({ runtimeBinding }) => {
-      return boundValue === `{{ ${runtimeBinding} }}`
+      return boundValue.includes(runtimeBinding)
     })
-    // Show invalid bindings as invalid rather than a long ID
+    let newBoundValue = INVALID_BINDING
+    if (binding) {
+      newBoundValue = boundValue.replace(binding.runtimeBinding, binding.readableBinding)
+    }
     result = result.replace(
       boundValue,
-      `{{ ${binding?.readableBinding ?? "Invalid binding"} }}`
+      newBoundValue
     )
-  })
+  }
   return result
 }
