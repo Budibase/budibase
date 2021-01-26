@@ -5,6 +5,7 @@ import {
   routeStore,
   screenStore,
   bindingStore,
+  builderStore,
 } from "./store"
 import { styleable } from "./utils/styleable"
 import { linkable } from "./utils/linkable"
@@ -16,6 +17,7 @@ export default {
   notifications: notificationStore,
   routeStore,
   screenStore,
+  builderStore,
   styleable,
   linkable,
   DataProvider,
