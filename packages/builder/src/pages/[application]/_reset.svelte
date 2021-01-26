@@ -3,7 +3,7 @@
   import { Button } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
-  import FeedbackNavLink from "components/userInterface/Feedback/FeedbackNavLink.svelte"
+  import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@sveltech/routify"
 

@@ -3,6 +3,7 @@
   import { RichText } from "@budibase/bbui"
 
   const { styleable } = getContext("sdk")
+  const component = getContext("component")
 
   export let value = ""
 

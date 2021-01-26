@@ -1,40 +1,37 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
-  const { API, styleable, DataProvider } = getContext("sdk")
+  const { API, styleable, DataProvider, builderStore } = getContext("sdk")
   const component = getContext("component")
-  const dataContext = getContext("data")
 
   export let datasource = []
 
   let rows = []
+  let loaded = false
 
-  $: datasource && fetchData()
+  $: fetchData(datasource)
 
-  async function fetchData() {
-    rows = await API.fetchDatasource(datasource, $dataContext)
-  }
-
-  onMount(async () => {
+  async function fetchData(datasource) {
     if (!isEmpty(datasource)) {
-      fetchData()
+      rows = await API.fetchDatasource(datasource)
     }
-  })
+    loaded = true
+  }
 </script>
 
 <div use:styleable={$component.styles}>
   {#if rows.length > 0}
-    {#each rows as row}
-      <DataProvider {row}>
-        {#if $component.children === 0}
-          <p>Add some components too.</p>
-        {:else}
+    {#if $component.children === 0 && $builderStore.inBuilder}
+      <p>Add some components too</p>
+    {:else}
+      {#each rows as row}
+        <DataProvider {row}>
           <slot />
-        {/if}
-      </DataProvider>
-    {/each}
-  {:else}
+        </DataProvider>
+      {/each}
+    {/if}
+  {:else if loaded && $builderStore.inBuilder}
     <p>Feed me some data</p>
   {/if}
 </div>
