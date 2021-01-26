@@ -103,13 +103,9 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 
 ## 🤖 Self-hosting
 
-<p align="center">
-  <img src="https://i.imgur.com/Z52cEvT.png?1" />
-</p>
-
 Budibase wants to make sure anyone can use the tools we develop and we know a lot of people need to be able to host the apps they make on their own systems - that is why we've decided to try and make self hosting as easy as possible!
 
-Currently, you can host your apps using Docker. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
+Currently, you can host your apps using Docker or Digital Ocean. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
 
 
 ## 🎓 Learning Budibase
