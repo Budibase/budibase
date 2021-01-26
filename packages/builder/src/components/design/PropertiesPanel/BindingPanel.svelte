@@ -13,8 +13,7 @@
   export let bindableProperties
   export let value = ""
   export let bindingDrawer
-
-  let validity = true
+  export let valid = true
 
   $: value && checkValid()
   $: bindableProperties = getBindableProperties(
@@ -25,7 +24,7 @@
   function checkValid() {
     // TODO: need to convert the value to the runtime binding
     const runtimeBinding = readableToRuntimeBinding(bindableProperties, value)
-    validity = isValid(runtimeBinding)
+    valid = isValid(runtimeBinding)
   }
 
   function addToText(readableBinding) {
@@ -75,7 +74,7 @@
         bind:value
         placeholder="Add text, or click the objects on the left to add them to the
         textbox." />
-      {#if !validity}
+      {#if !valid}
         <p class="syntax-error">
           Current Handlebars syntax is invalid, please check the guide
           <a href="https://handlebarsjs.com/guide/">here</a>
