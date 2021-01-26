@@ -59,7 +59,6 @@
       </div>
     </div>
   </section>
-
 {/if}
 
 <style>

@@ -20,12 +20,9 @@
 </script>
 
 <div on:click|stopPropagation bind:this={anchor}>
-  <TextButton
-    text
-    on:click={dropdown.show}
-    active={false}>
-      <Icon name="add" />
-      Add Parameters
+  <TextButton text on:click={dropdown.show} active={false}>
+    <Icon name="add" />
+    Add Parameters
   </TextButton>
   <DropdownMenu align="right" {anchor} bind:this={dropdown}>
     <div class="wrapper">

@@ -39,5 +39,5 @@ module.exports.processors = [
         return JSON.parse(value)
     }
     return value
-  })
+  }),
 ]
