@@ -51,7 +51,6 @@
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
             <p>{query.queryVerb}</p>
-            <p>4000 records</p>
             <p>→</p>
           </div>
         {/each}
@@ -114,7 +113,7 @@
     background: var(--background);
     border: var(--border-grey);
     display: grid;
-    grid-template-columns: 2fr 0.75fr 0.75fr 1fr 20px;
+    grid-template-columns: 2fr 0.75fr 20px;
     align-items: center;
     padding: var(--spacing-m) var(--layout-xs);
     gap: var(--layout-xs);

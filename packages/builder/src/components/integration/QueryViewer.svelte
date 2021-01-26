@@ -167,7 +167,10 @@
       <Spacer large />
 
       <div class="viewer-controls">
-        <Button blue disabled={data.length === 0} on:click={saveQuery}>
+        <Button
+          blue
+          disabled={data.length === 0 || !query.name}
+          on:click={saveQuery}>
           Save Query
         </Button>
         <Button primary on:click={previewQuery}>Run Query</Button>
