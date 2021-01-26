@@ -6,6 +6,7 @@ import CouchDB from "./CouchDB.svelte"
 import S3 from "./S3.svelte"
 import Airtable from "./Airtable.svelte"
 import SqlServer from "./SQLServer.svelte"
+import MySQL from "./MySQL.svelte"
 
 export default {
   POSTGRES: Postgres,
@@ -16,4 +17,5 @@ export default {
   SQL_SERVER: SqlServer,
   S3: S3,
   AIRTABLE: Airtable,
+  MYSQL: MySQL,
 }

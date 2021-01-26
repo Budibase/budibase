@@ -87,3 +87,8 @@ export const FILE_TYPES = {
   CODE: ["js", "rs", "py", "java", "rb", "hs", "yml"],
   DOCUMENT: ["odf", "docx", "doc", "pdf", "csv"],
 }
+
+export const HostingTypes = {
+  CLOUD: "cloud",
+  SELF: "self",
+}

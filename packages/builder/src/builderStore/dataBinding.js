@@ -48,7 +48,7 @@ export const getDatasourceForProvider = component => {
 
   // Extract datasource from component instance
   const datasourceSetting = def.settings.find(setting => {
-    return setting.key === def.datasourceSetting
+    return setting.type === "datasource" || setting.type === "table"
   })
   if (!datasourceSetting) {
     return null
