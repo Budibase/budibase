@@ -115,33 +115,54 @@
       }
     ]
   },
-  "dataform": {
+  "form": {
     "name": "Form",
     "icon": "ri-file-edit-line",
-    "styleable": true
-  },
-  "dataformwide": {
-    "name": "Wide Form",
-    "icon": "ri-file-edit-line",
-    "styleable": true
-  },
-  "input": {
-    "name": "Text Field",
-    "description": "A textfield component that allows the user to input text.",
-    "icon": "ri-edit-box-line",
     "styleable": true,
-    "bindable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "datasourceSetting": "datasource",
     "settings": [
       {
-        "type": "text",
-        "label": "Label",
-        "key": "label"
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
       },
       {
-        "label": "Type",
-        "key": "type",
-        "defaultValue": "text",
-        "options": ["text", "password"]
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "defaultValue": "spectrum--light",
+        "options": [
+          {
+            "label": "Light",
+            "value": "spectrum--light"
+          },
+          {
+            "label": "Dark",
+            "value": "spectrum--dark"
+          },
+          {
+            "label": "Darkest",
+            "value": "spectrum--darkest"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
       }
     ]
   },
@@ -1100,6 +1121,35 @@
         "label": "Animate",
         "key": "animate",
         "defaultValue": true
+      }
+    ]
+  },
+  "input": {
+    "name": "Text Field",
+    "description": "A textfield component that allows the user to input text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Required",
+        "key": "required"
       }
     ]
   }
