@@ -135,17 +135,22 @@
     <Input placeholder="✎ Edit Query Name" bind:value={query.name} />
   </div>
   {#if config}
-  <div class="props">
-    <div class="query-type">Query type: <span class="query-type-span">{config[query.queryVerb].type}</span></div>
-    <div class="select">
-      <Select primary thin bind:value={query.queryVerb}>
-        {#each Object.keys(config) as queryVerb}
-          <option value={queryVerb}>{queryVerb}</option>
-        {/each}
-      </Select>
-  </div>
+    <div class="props">
+      <div class="query-type">
+        Query type:
+        <span class="query-type-span">{config[query.queryVerb].type}</span>
+      </div>
+      <div class="select">
+        <Select primary thin bind:value={query.queryVerb}>
+          {#each Object.keys(config) as queryVerb}
+            <option value={queryVerb}>{queryVerb}</option>
+          {/each}
+        </Select>
+      </div>
     </div>
-    <EditQueryParamsPopover bind:parameters={query.parameters} bindable={false} />
+    <EditQueryParamsPopover
+      bind:parameters={query.parameters}
+      bindable={false} />
   {/if}
 </header>
 <Spacer extraLarge />
@@ -162,10 +167,7 @@
       <Spacer large />
 
       <div class="viewer-controls">
-        <Button
-          blue
-          disabled={data.length === 0}
-          on:click={saveQuery}>
+        <Button blue disabled={data.length === 0} on:click={saveQuery}>
           Save Query
         </Button>
         <Button primary on:click={previewQuery}>Run Query</Button>
@@ -182,7 +184,11 @@
               {#each fields as field, idx}
                 <Spacer small />
                 <div class="field">
-                  <Input outline placeholder="Field Name" type={'text'} bind:value={field.name} />
+                  <Input
+                    outline
+                    placeholder="Field Name"
+                    type={'text'}
+                    bind:value={field.name} />
                   <Select thin border bind:value={field.type}>
                     <option value={''}>Select a field type</option>
                     <option value={'STRING'}>Text</option>
@@ -195,8 +201,8 @@
                     on:click={() => deleteField(idx)} />
                 </div>
               {/each}
-                <Spacer small />
-                <Button thin secondary on:click={newField}>Add Field</Button>
+              <Spacer small />
+              <Button thin secondary on:click={newField}>Add Field</Button>
             {/if}
           </Switcher>
         {/if}
@@ -206,7 +212,6 @@
 {/if}
 
 <style>
-
   .input {
     width: 300px;
   }
