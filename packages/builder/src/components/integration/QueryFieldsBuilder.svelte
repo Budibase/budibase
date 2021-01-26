@@ -24,18 +24,18 @@
 </script>
 
 <form on:submit|preventDefault>
+<div class="field">
   {#each schemaKeys as field}
-    <Label extraSmall grey>{field}</Label>
-    <div class="field">
       <Input
+        placeholder="Enter {field} name"
+        outline
         disabled={!editable}
         type={schema.fields[field]?.type}
         required={schema.fields[field]?.required}
         bind:value={fields[field]} />
-    </div>
   {/each}
+</div>
 </form>
-<Label extraSmall grey>Data</Label>
 {#if schema.customisable}
   <Editor
     label="Query"
@@ -49,7 +49,7 @@
   .field {
     margin-bottom: var(--spacing-m);
     display: grid;
-    grid-template-columns: 1fr 2%;
+    grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-m);
     align-items: center;
   }
