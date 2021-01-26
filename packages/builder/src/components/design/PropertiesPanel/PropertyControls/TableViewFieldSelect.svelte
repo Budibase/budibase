@@ -12,7 +12,7 @@
   export let multiselect = false
 
   $: datasource = getDatasourceForProvider(componentInstance)
-  $: schema = getSchemaForDatasource(datasource)
+  $: schema = getSchemaForDatasource(datasource).schema
   $: options = Object.keys(schema || {})
 </script>
 
