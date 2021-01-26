@@ -7,6 +7,7 @@
   export let icon = ""
   export let size = "fa-lg"
   export let color = "#f00"
+
   $: styles = {
     ...$component.styles,
     normal: {

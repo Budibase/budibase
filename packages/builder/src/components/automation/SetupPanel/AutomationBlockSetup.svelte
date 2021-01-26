@@ -5,7 +5,7 @@
   import { Button, Input, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
-  import BindableInput from "components/userInterface/BindableInput.svelte"
+  import BindableInput from "../../common/BindableInput.svelte"
 
   export let block
   export let webhookModal
