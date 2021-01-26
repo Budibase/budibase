@@ -20,9 +20,10 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     const requestBody = json ? JSON.stringify(body) : body
     let headers = {
       Accept: "application/json",
-      "Content-Type": "application/json",
+      ...(json && { "Content-Type": "application/json" }),
       "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
     }
+
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       headers["x-budibase-type"] = "client"
     }
