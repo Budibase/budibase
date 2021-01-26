@@ -77,7 +77,7 @@ const makeCachedApiCall = async params => {
 const requestApiCall = method => async params => {
   const { url, cache = false } = params
   const fixedUrl = `/${url}`.replace("//", "/")
-  const enrichedParams = { ...params, method, fixedUrl }
+  const enrichedParams = { ...params, method, url: fixedUrl }
   return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
 }
 
