@@ -7,10 +7,9 @@
 <form>
   {#each Object.keys(integration) as configKey}
     <Input
-      thin
       type={integration[configKey].type}
       label={configKey}
       bind:value={integration[configKey]} />
-    <Spacer medium />
+    <Spacer large />
   {/each}
 </form>
