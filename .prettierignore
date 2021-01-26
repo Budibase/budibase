@@ -1,4 +1,4 @@
-packages/builder/src/userInterface/CurrentItemPreview.svelte
+packages/builder/src/components/design/AppPreview/CurrentItemPreview.svelte
 public
 dist
 packages/server/builder

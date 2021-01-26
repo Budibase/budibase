@@ -31,7 +31,6 @@ function generateQueryValidation() {
       default: Joi.string()
     })),
     queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
-    queryType: Joi.string().required(),
     schema: Joi.object({}).required().unknown(true)
   }))
 }

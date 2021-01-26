@@ -16,7 +16,7 @@ const EMPTY_LAYOUT = {
     _children: [
       {
         _id: "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967",
-        _component: "##builtin/screenslot",
+        _component: "@budibase/standard-components/screenslot",
         _styles: {
           normal: {
             flex: "1 1 auto",
@@ -152,7 +152,7 @@ const BASE_LAYOUTS = [
         },
         {
           _id: "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967",
-          _component: "##builtin/screenslot",
+          _component: "@budibase/standard-components/screenslot",
           _styles: {
             normal: {
               flex: "1 1 auto",
@@ -207,7 +207,7 @@ const BASE_LAYOUTS = [
       _children: [
         {
           _id: "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967",
-          _component: "##builtin/screenslot",
+          _component: "@budibase/standard-components/screenslot",
           _styles: {
             normal: {
               flex: "1 1 auto",

@@ -21,26 +21,29 @@ export default function(tables) {
 export const newRowUrl = table => sanitizeUrl(`/${table.name}/new/row`)
 export const NEW_ROW_TEMPLATE = "NEW_ROW_TEMPLATE"
 
-function generateTitleContainer(table) {
-  return makeTitleContainer("New Row").addChild(makeSaveButton(table))
+function generateTitleContainer(table, providerId) {
+  return makeTitleContainer("New Row").addChild(
+    makeSaveButton(table, providerId)
+  )
 }
 
 const createScreen = table => {
-  const dataform = new Component(
-    "@budibase/standard-components/dataformwide"
-  ).instanceName("Form")
-
-  const container = makeMainContainer()
-    .addChild(makeBreadcrumbContainer(table.name, "New"))
-    .addChild(generateTitleContainer(table))
-    .addChild(dataform)
-
-  return new Screen()
+  const screen = new Screen()
     .component("@budibase/standard-components/newrow")
     .table(table._id)
     .route(newRowUrl(table))
     .instanceName(`${table.name} - New`)
     .name("")
-    .addChild(container)
-    .json()
+
+  const dataform = new Component(
+    "@budibase/standard-components/dataformwide"
+  ).instanceName("Form")
+
+  const providerId = screen._json.props._id
+  const container = makeMainContainer()
+    .addChild(makeBreadcrumbContainer(table.name, "New"))
+    .addChild(generateTitleContainer(table, providerId))
+    .addChild(dataform)
+
+  return screen.addChild(container).json()
 }

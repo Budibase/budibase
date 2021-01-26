@@ -20,14 +20,10 @@ const SCHEMA = {
   },
   query: {
     create: {
-      JSON: {
-        type: QUERY_TYPES.JSON,
-      },
+      type: QUERY_TYPES.JSON,
     },
     read: {
-      JSON: {
-        type: QUERY_TYPES.JSON,
-      },
+      type: QUERY_TYPES.JSON,
     },
   },
 }

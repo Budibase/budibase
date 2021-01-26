@@ -1,7 +1,7 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { Input, Select, Label } from "@budibase/bbui"
-  import BindableInput from "../../userInterface/BindableInput.svelte"
+  import { Select } from "@budibase/bbui"
+  import BindableInput from "../../common/BindableInput.svelte"
 
   export let value
   export let bindings

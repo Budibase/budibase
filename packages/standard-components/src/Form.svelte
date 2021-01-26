@@ -28,8 +28,8 @@
   const getFormData = async context => {
     if (context) {
       const tableDefinition = await API.fetchTableDefinition(context.tableId)
-      schema = tableDefinition.schema
-      fields = Object.keys(schema)
+      schema = tableDefinition?.schema
+      fields = Object.keys(schema ?? {})
 
       // Use the draft version for editing
       row = $dataContext[`${$dataContext.closestComponentId}_draft`]
