@@ -21,8 +21,26 @@ strings and preparing them for display, e.g. `append`, `camelcase`, `capitalize`
 6. [Comparison](https://github.com/helpers/handlebars-helpers/tree/master#comparison) - these helpers are mainly for 
 building strings when particular conditions are met, for example `and`, `or`, `gt`, `lt`, `not` and so on. This is a very
 extensive set of helpers but is mostly as would be expected from a set of logical operators.
+7. [Date](https://github.com/helpers/helper-date) - last but certainly not least is a moment based date helper, which can
+format ISO/timestamp based dates into something human-readable. An example of this would be `{{date dateProperty "DD-MM-YYYY"}}`.
 
-## Format
+## Date formatting
+This package uses the standard method for formatting date times, using the following syntax:
+| Input | Example | Description |
+| ----- | ------- | ----------- |
+| YYYY | 2014 | 4 or 2 digit year. Note: Only 4 digit can be parsed on strict mode |
+| YY | 14	| 2 digit year |
+| Y | -25 | Year with any number of digits and sign |
+| Q | 1..4 | Quarter of year. Sets month to first month in quarter. |
+| M MM | 1..12 | Month number |
+| MMM MMMM | Jan..December | Month name in locale set by moment.locale() |
+| D DD | 1..31 | Day of month |
+| Do | 1st..31st | Day of month with ordinal |
+| DDD DDDD | 1..365 | Day of year |
+| X | 1410715640.579 | Unix timestamp |
+| x	| 1410715640579 | Unix ms timestamp |
+
+## Template format
 There are two main ways that the templating system can be used, the first is very similar to that which
 would be produced by Mustache - a single statement:
 ```
