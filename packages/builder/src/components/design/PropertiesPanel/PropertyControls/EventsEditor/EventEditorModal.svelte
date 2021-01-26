@@ -156,7 +156,7 @@
   }
 
   .available-action {
-    padding: var(--spacing-s);
+    padding: var(--spacing-m);
     font-size: var(--font-size-m);
     cursor: pointer;
   }

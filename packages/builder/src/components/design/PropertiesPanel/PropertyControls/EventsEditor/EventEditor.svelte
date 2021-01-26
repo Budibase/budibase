@@ -1,10 +1,10 @@
 <script>
   import {
     Button,
-    TextButton,
     Body,
     DropdownMenu,
     ModalContent,
+    Spacer,
   } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import actionTypes from "./actions"
@@ -48,12 +48,11 @@
   <div class="actions-list">
     <div>
       <div bind:this={addActionButton}>
-        <TextButton text small blue on:click={addActionDropdown.show}>
-          <div style="height: 20px; width: 20px;">
-            <AddIcon />
-          </div>
+        <Spacer small />
+        <Button wide secondary on:click={addActionDropdown.show}>
           Add Action
-        </TextButton>
+        </Button>
+        <Spacer medium />
       </div>
       <DropdownMenu
         bind:this={addActionDropdown}
@@ -74,13 +73,12 @@
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
             <span class:selected={action === selectedAction}>
-              {index + 1}.
-              {action[EVENT_TYPE_KEY]}
+              {index + 1}. {action[EVENT_TYPE_KEY]}
             </span>
           </div>
           <i
             class="ri-close-fill"
-            style="margin-left: var(--spacing-m);"
+            style="margin-left: auto;"
             on:click={() => deleteAction(index)} />
         </div>
       {/each}
@@ -107,7 +105,7 @@
 
   .action-header > span {
     margin-bottom: var(--spacing-m);
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
   }
 
   .action-header > span:hover,
@@ -123,7 +121,7 @@
 
   .available-action {
     padding: var(--spacing-s);
-    font-size: var(--font-size-m);
+    font-size: var(--font-size-xs);
     cursor: pointer;
   }
 
@@ -135,7 +133,7 @@
     height: 40vh;
     display: grid;
     grid-gap: var(--spacing-m);
-    grid-template-columns: 15% 1fr;
+    grid-template-columns: 260px 1fr;
     grid-auto-flow: column;
     min-height: 0;
     padding-top: 0;
@@ -143,15 +141,13 @@
   }
 
   .action-container {
-    border: var(--border-light);
-    border-width: 1px 0 0 0;
+    border-top: var(--border-light);
     display: flex;
     align-items: center;
   }
 
   .selected-action-container {
-    padding-bottom: var(--spacing-s);
-    padding-top: var(--spacing-s);
+    padding: var(--spacing-xl);
   }
 
   a {
