@@ -9,7 +9,7 @@ const selectedComponentColor = "#4285f4"
  */
 const buildStyleString = (styleObject, customStyles) => {
   let str = ""
-  Object.entries(styleObject).forEach(([style, value]) => {
+  Object.entries(styleObject || {}).forEach(([style, value]) => {
     if (style && value != null) {
       str += `${style}: ${value}; `
     }
@@ -60,14 +60,14 @@ export const styleable = (node, styles = {}) => {
   }
 
   // Creates event listeners and applies initial styles
-  const setupStyles = newStyles => {
+  const setupStyles = (newStyles = {}) => {
     const componentId = newStyles.id
-    const selectable = newStyles.allowSelection
-    const customStyles = newStyles.custom
-    const normalStyles = newStyles.normal
+    const selectable = !!newStyles.allowSelection
+    const customStyles = newStyles.custom || ""
+    const normalStyles = newStyles.normal || {}
     const hoverStyles = {
       ...normalStyles,
-      ...newStyles.hover,
+      ...(newStyles.hover || {}),
     }
 
     // Applies a style string to a DOM node, enriching it for the builder
@@ -89,7 +89,7 @@ export const styleable = (node, styles = {}) => {
     // Handler to select a component in the builder when clicking it in the
     // builder preview
     selectComponent = event => {
-      builderStore.actions.selectComponent(newStyles.id)
+      builderStore.actions.selectComponent(componentId)
       return blockEvent(event)
     }
 

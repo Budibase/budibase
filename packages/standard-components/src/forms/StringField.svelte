@@ -2,11 +2,12 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { Label } from "@budibase/bbui"
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
   export let field
   export let label
   export let placeholder
-  export let validate = value => (value ? null : "Required")
+  export let type = "text"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -23,9 +24,9 @@
 </script>
 
 {#if !field}
-  <div>Add the Field setting to start using your component!</div>
+  <Placeholder>Add the Field setting to start using your component</Placeholder>
 {:else if !fieldState}
-  <div>Form components need to be wrapped in a Form.</div>
+  <Placeholder>Form components need to be wrapped in a Form</Placeholder>
 {:else}
   <div class="container" use:styleable={$component.styles}>
     {#if label}
@@ -44,7 +45,7 @@
         value={$fieldState.value || ''}
         placeholder={placeholder || ''}
         on:blur={onBlur}
-        type="text"
+        {type}
         class="spectrum-Textfield-input" />
     </div>
     {#if $fieldState.error}
