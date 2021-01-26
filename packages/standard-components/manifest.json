@@ -1,0 +1,1103 @@
+{
+  "container": {
+    "name": "Container",
+    "description": "This component contains things within itself",
+    "icon": "ri-layout-column-line",
+    "hasChildren": true,
+    "styleable": true,
+    "settings": [
+      {
+        "type": "select",
+        "key": "type",
+        "label": "Type",
+        "defaultValue": "div",
+        "options": [
+          "article",
+          "aside",
+          "details",
+          "div",
+          "figure",
+          "figcaption",
+          "footer",
+          "header",
+          "main",
+          "mark",
+          "nav",
+          "paragraph",
+          "summary"
+        ]
+      }
+    ]
+  },
+  "datagrid": {
+    "name": "Grid",
+    "description": "A datagrid component with functionality to add, remove and edit rows.",
+    "icon": "ri-grid-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Source",
+        "key": "datasource"
+      },
+      {
+        "type": "detailScreen",
+        "label": "Detail URL",
+        "key": "detailUrl"
+      },
+      {
+        "type": "boolean",
+        "label": "Editable",
+        "key": "editable"
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "options": ["alpine", "alpine-dark", "balham", "balham-dark", "material"],
+        "defaultValue": "alpine"
+      },
+      {
+        "type": "number",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "500"
+      },
+      {
+        "type": "boolean",
+        "label": "Pagination",
+        "key": "pagination"
+      }
+    ]
+  },
+  "screenslot": {
+    "name": "Screenslot",
+    "icon": "ri-artboard-2-line",
+    "description": "Contains your app screens",
+    "styleable": true
+  },
+  "button": {
+    "name": "Button",
+    "description": "A basic html button that is ready for styling",
+    "icon": "ri-share-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
+      }
+    ]
+  },
+  "list": {
+    "name": "Repeater",
+    "description": "A configurable data list that attaches to your backend tables.",
+    "icon": "ri-list-check-2",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      }
+    ]
+  },
+  "dataform": {
+    "name": "Form",
+    "icon": "ri-file-edit-line",
+    "styleable": true
+  },
+  "dataformwide": {
+    "name": "Wide Form",
+    "icon": "ri-file-edit-line",
+    "styleable": true
+  },
+  "input": {
+    "name": "Text Field",
+    "description": "A textfield component that allows the user to input text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "text",
+        "options": ["text", "password"]
+      }
+    ]
+  },
+  "richtext": {
+    "name": "Rich Text",
+    "description": "A component that allows the user to enter long form text.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true
+  },
+  "datepicker": {
+    "name": "Date Picker",
+    "description": "A basic date picker component",
+    "icon": "ri-calendar-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      }
+    ]
+  },
+  "stackedlist": {
+    "name": "Stacked List",
+    "icon": "ri-archive-drawer-line",
+    "description": "A basic card component that can contain content and actions.",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Text 1",
+        "key": "text1"
+      },
+      {
+        "type": "text",
+        "label": "Text 2",
+        "key": "text2"
+      },
+      {
+        "type": "text",
+        "label": "Text 3",
+        "key": "text3"
+      },
+      {
+        "type": "screen",
+        "label": "Link URL",
+        "key": "destinationUrl"
+      }
+    ]
+  },
+  "card": {
+    "name": "Vertical Card",
+    "description": "A basic card component that can contain content and actions.",
+    "icon": "ri-layout-column-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "description"
+      },
+      {
+        "type": "text",
+        "label": "Link Text",
+        "key": "linkText"
+      },
+      {
+        "type": "screen",
+        "label": "Link Url",
+        "key": "linkUrl"
+      },
+      {
+        "type": "color",
+        "label": "Link Color",
+        "key": "linkColor",
+        "defaultValue": "#000"
+      },
+      {
+        "type": "color",
+        "label": "Hover Color",
+        "key": "linkHoverColor",
+        "defaultValue": "#222"
+      },
+      {
+        "type": "select",
+        "label": "Image Height",
+        "key": "imageHeight",
+        "options": ["auto", "12rem", "16rem", "20rem", "24rem"],
+        "defaultValue": "auto"
+      },
+      {
+        "type": "select",
+        "label": "Card Width",
+        "key": "cardWidth",
+        "options": ["16rem", "20rem", "24rem"],
+        "defaultValue": "20rem"
+      }
+    ]
+  },
+  "text": {
+    "name": "Paragraph",
+    "description": "A component for displaying paragraph text.",
+    "icon": "ri-paragraph",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      }
+    ]
+  },
+  "heading": {
+    "name": "Headline",
+    "icon": "ri-heading",
+    "description": "A component for displaying heading text",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "key": "text",
+        "label": "Text"
+      },
+      {
+        "type": "select",
+        "key": "type",
+        "label": "Type",
+        "options": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "defaultValue": "h1"
+      }
+    ]
+  },
+  "image": {
+    "name": "Image",
+    "description": "A basic component for displaying images",
+    "icon": "ri-image-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      }
+    ]
+  },
+  "icon": {
+    "name": "Icon",
+    "description": "A basic component for displaying icons",
+    "icon": "ri-sun-fill",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "md",
+        "options": [
+          { "value": "ri-xxs", "label": "xxs" },
+          { "value": "ri-xs", "label": "xs" },
+          { "value": "ri-sm", "label": "sm" },
+          { "value": "ri-1x", "label": "md" },
+          { "value": "ri-lg", "label": "lg" },
+          { "value": "ri-xl", "label": "xl" },
+          { "value": "ri-2x", "label": "2x" },
+          { "value": "ri-3x", "label": "3x" },
+          { "value": "ri-4x", "label": "4x" },
+          { "value": "ri-5x", "label": "5x" },
+          { "value": "ri-6x", "label": "6x" },
+          { "value": "ri-7x", "label": "7x" },
+          { "value": "ri-8x", "label": "8x" },
+          { "value": "ri-9x", "label": "9x" },
+          { "value": "ri-10x", "label": "10x" }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "defaultValue": "#000"
+      }
+    ]
+  },
+  "login": {
+    "name": "Login Form",
+    "description": "A component that automatically generates a login screen for your app.",
+    "icon": "ri-login-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Logo",
+        "key": "logo"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "text",
+        "label": "Button Text",
+        "key": "buttonText"
+      }
+    ]
+  },
+  "navigation": {
+    "name": "Nav Bar",
+    "description": "A component for handling the navigation within your app.",
+    "icon": "ri-navigation-line",
+    "styleable": true,
+    "hasChildren": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Logo URL",
+        "key": "logoUrl"
+      }
+    ]
+  },
+  "link": {
+    "name": "Link",
+    "description": "A basic link component for internal and external links",
+    "icon": "ri-link",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "screen",
+        "label": "URL",
+        "key": "url"
+      },
+      {
+        "type": "boolean",
+        "label": "New Tab",
+        "key": "openInNewTab"
+      }
+    ]
+  },
+  "rowdetail": {
+    "name": "Row Detail",
+    "description": "Loads a row, using an id from the URL, which can be used with {{ context }}, in children",
+    "icon": "ri-profile-line",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table"
+      }
+    ]
+  },
+  "newrow": {
+    "name": "New Row",
+    "description": "Sets up a new row for creation, which can be used with {{ context }}, in children",
+    "icon": "ri-profile-line",
+    "hasChildren": true,
+    "styleable": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table"
+      }
+    ]
+  },
+  "cardhorizontal": {
+    "name": "Horizontal Card",
+    "description": "A basic card component that can contain content and actions.",
+    "icon": "ri-layout-row-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Image",
+        "key": "imageUrl"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "description"
+      },
+      {
+        "type": "text",
+        "label": "Subtext",
+        "key": "subtext"
+      },
+      {
+        "type": "text",
+        "label": "Link Text",
+        "key": "linkText"
+      },
+      {
+        "type": "screen",
+        "label": "Link URL",
+        "key": "linkUrl"
+      },
+      {
+        "type": "color",
+        "label": "Link Color",
+        "key": "linkColor",
+        "defaultValue": "#000"
+      },
+      {
+        "type": "color",
+        "label": "Hover Color",
+        "key": "linkHoverColor",
+        "defaultValue": "#222"
+      },
+      {
+        "type": "select",
+        "label": "Card Width",
+        "key": "cardWidth",
+        "options": ["24rem", "28rem", "32rem", "40rem", "48rem", "60rem", "100%"],
+        "defaultValue": "32rem"
+      },
+      {
+        "type": "select",
+        "label": "Image Width",
+        "key": "imageWidth",
+        "options": ["auto", "8rem", "12rem", "16rem"],
+        "defaultValue": "8rem"
+      },
+      {
+        "type": "select",
+        "label": "Image Height",
+        "key": "imageHeight",
+        "options": ["auto", "8rem", "12rem", "16rem", "auto"],
+        "defaultValue": "auto"
+      }
+    ]
+  },
+  "cardstat": {
+    "name": "Stat Card",
+    "description": "A card component for displaying numbers.",
+    "icon": "ri-dual-sim-2-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "placeholder": "Total Revenue"
+      },
+      {
+        "type": "text",
+        "label": "Value",
+        "key": "value",
+        "placeholder": "$1,981,983"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label",
+        "placeholder": "Stripe"
+      }
+    ]
+  },
+  "embed": {
+    "name": "Embed",
+    "icon": "ri-code-line",
+    "description": "Embed content from 3rd party sources",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Embed",
+        "key": "embed"
+      }
+    ]
+  },
+  "bar": {
+    "name": "Bar Chart",
+    "description": "Bar chart",
+    "icon": "ri-bar-chart-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Label Col.",
+        "key": "labelColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "multifield",
+        "label": "Data Cols.",
+        "key": "valueColumns",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Format",
+        "key": "yAxisUnits",
+        "options": ["Default", "Thousands", "Millions"],
+        "defaultValue": "Default"
+      },
+      {
+        "type": "text",
+        "label": "Y Axis Label",
+        "key": "yAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "X Axis Label",
+        "key": "xAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colours",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Stacked",
+        "key": "stacked",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": false
+      }
+    ]
+  },
+  "line": {
+    "name": "Line Chart",
+    "description": "Line chart",
+    "icon": "ri-line-chart-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Label Col.",
+        "key": "labelColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "multifield",
+        "label": "Data Cols.",
+        "key": "valueColumns",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Format",
+        "key": "yAxisUnits",
+        "options": ["Default", "Thousands", "Millions"],
+        "defaultValue": "Default"
+      },
+      {
+        "type": "text",
+        "label": "Y Axis Label",
+        "key": "yAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "X Axis Label",
+        "key": "xAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colours",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Curve",
+        "key": "curve",
+        "options": ["Smooth", "Straight", "Stepline"],
+        "defaultValue": "Smooth"
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": false
+      }
+    ]
+  },
+  "area": {
+    "name": "Area Chart",
+    "description": "Line chart",
+    "icon": "ri-line-chart-fill",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Label Col.",
+        "key": "labelColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "multifield",
+        "label": "Data Cols.",
+        "key": "valueColumns",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Format",
+        "key": "yAxisUnits",
+        "options": ["Default", "Thousands", "Millions"],
+        "defaultValue": "Default"
+      },
+      {
+        "type": "text",
+        "label": "Y Axis Label",
+        "key": "yAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "X Axis Label",
+        "key": "xAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colours",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Curve",
+        "key": "curve",
+        "options": ["Smooth", "Straight", "Stepline"],
+        "defaultValue": "Smooth"
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Stacked",
+        "key": "stacked",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Gradient",
+        "key": "gradient",
+        "defaultValue": false
+      }
+    ]
+  },
+  "pie": {
+    "name": "Pie Chart",
+    "description": "Pie chart",
+    "icon": "ri-pie-chart-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Label Col.",
+        "key": "labelColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Data Col.",
+        "key": "valueColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colours",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": false
+      }
+    ]
+  },
+  "donut": {
+    "name": "Donut Chart",
+    "description": "Donut chart",
+    "icon": "ri-donut-chart-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Label Col.",
+        "key": "labelColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Data Col.",
+        "key": "valueColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colours",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": false
+      }
+    ]
+  },
+  "candlestick": {
+    "name": "Candlestick Chart",
+    "description": "Candlestick chart",
+    "icon": "ri-stock-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Date Col.",
+        "key": "dateColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Open Col.",
+        "key": "openColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Close Col.",
+        "key": "closeColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "High Col.",
+        "key": "highColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "field",
+        "label": "Low Col.",
+        "key": "lowColumn",
+        "dependsOn": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Format",
+        "key": "yAxisUnits",
+        "options": ["Default", "Thousands", "Millions"],
+        "defaultValue": "Default"
+      },
+      {
+        "type": "text",
+        "label": "Y Axis Label",
+        "key": "yAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "X Axis Label",
+        "key": "xAxisLabel"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      }
+    ]
+  }
+}

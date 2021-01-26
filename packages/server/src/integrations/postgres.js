@@ -31,24 +31,16 @@ const SCHEMA = {
   },
   query: {
     create: {
-      SQL: {
-        type: "sql",
-      },
+      type: "sql",
     },
     read: {
-      SQL: {
-        type: "sql",
-      },
+      type: "sql",
     },
     update: {
-      SQL: {
-        type: "sql",
-      },
+      type: "sql",
     },
     delete: {
-      SQL: {
-        type: "sql",
-      },
+      type: "sql",
     },
   },
 }

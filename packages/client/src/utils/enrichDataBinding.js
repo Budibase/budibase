@@ -1,4 +1,5 @@
-import { processString } from "@budibase/string-templates"
+import { cloneDeep } from "lodash/fp"
+import { processString, processObject } from "@budibase/string-templates"
 
 // Regex to test inputs with to see if they are likely candidates for template strings
 const looksLikeTemplate = /{{.*}}/
@@ -19,12 +20,9 @@ export const enrichDataBinding = async (input, context) => {
 }
 
 /**
- * Enriches each prop in a props object
+ * Recursively enriches all props in a props object and returns the new props.
+ * Props are deeply cloned so that no mutation is done to the source object.
  */
 export const enrichDataBindings = async (props, context) => {
-  let enrichedProps = {}
-  for (let [key, value] of Object.entries(props)) {
-    enrichedProps[key] = await enrichDataBinding(value, context)
-  }
-  return enrichedProps
+  return await processObject(cloneDeep(props), context)
 }

@@ -1,4 +1,4 @@
-import { v4 } from "uuid"
+import { uuid } from "builderStore/uuid"
 import { BaseStructure } from "./BaseStructure"
 
 export class Component extends BaseStructure {
@@ -6,7 +6,7 @@ export class Component extends BaseStructure {
     super(false)
     this._children = []
     this._json = {
-      _id: v4(),
+      _id: uuid(),
       _component: name,
       _styles: {
         normal: {},
