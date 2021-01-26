@@ -155,8 +155,9 @@
   }
 
   :global(.CodeMirror) {
-    height: auto !important;
-    border-radius: var(--border-radius-m);
-    font-family: var(--font-sans) !important;
+    height: 500px !important;
+    border-radius: var(--border-radius-s);
+    font-family: monospace !important;
+    line-height: 1.3;
   }
 </style>
