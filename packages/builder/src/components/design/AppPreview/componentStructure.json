@@ -7,8 +7,7 @@
     "name": "Form",
     "icon": "ri-file-edit-line",
     "children": [
-      "dataform",
-      "dataformwide",
+      "form",
       "input",
       "richtext",
       "datepicker"
