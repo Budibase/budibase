@@ -87,13 +87,6 @@ describe("test the array helpers", () => {
     })
     expect(output).toBe("a,b")
   })
-
-  it("should allow a complex case", async () => {
-    const output = await processString("{{ last ( sort ( unique array ) ) }}", {
-      array: ["a", "a", "d", "c", "e"]
-    })
-    expect(output).toBe("e")
-  })
 })
 
 describe("test the number helpers", () => {
@@ -273,5 +266,19 @@ describe("Test the literal helper", () => {
       a: {b: 1},
     })
     expect(output.b).toBe(1)
+  })
+})
+
+describe("Cover a few complex use cases", () => {
+  it("should allow use of three different collection helpers", async () => {
+    const output = await processString(`{{ join ( after ( split "My name is: Joe Smith" " " ) 3 ) " " }}`, {})
+    expect(output).toBe("Joe Smith")
+  })
+
+  it("should allow a complex array case", async () => {
+    const output = await processString("{{ last ( sort ( unique array ) ) }}", {
+      array: ["a", "a", "d", "c", "e"]
+    })
+    expect(output).toBe("e")
   })
 })
