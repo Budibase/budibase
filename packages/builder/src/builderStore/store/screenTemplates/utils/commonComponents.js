@@ -78,7 +78,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .addChild(identifierText)
 }
 
-export function makeSaveButton(table) {
+export function makeSaveButton(table, providerId) {
   return new Component("@budibase/standard-components/button")
     .normalStyle({
       background: "#000000",
@@ -100,8 +100,7 @@ export function makeSaveButton(table) {
       onClick: [
         {
           parameters: {
-            contextPath: "data",
-            tableId: table._id,
+            providerId,
           },
           "##eventHandlerType": "Save Row",
         },
