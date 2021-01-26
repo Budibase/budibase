@@ -58,7 +58,7 @@ class PostgresIntegration {
 
   async create({ sql }) {
     const response = await this.client.query(sql)
-    return response.rows
+    return response.rows.length ? response.rows : [{ created: true }]
   }
 
   async read({ sql }) {
@@ -68,12 +68,12 @@ class PostgresIntegration {
 
   async update({ sql }) {
     const response = await this.client.query(sql)
-    return response.rows
+    return response.rows.length ? response.rows : [{ updated: true }]
   }
 
   async delete({ sql }) {
     const response = await this.client.query(sql)
-    return response.rows
+    return response.rows.length ? response.rows : [{ deleted: true }]
   }
 }
 
