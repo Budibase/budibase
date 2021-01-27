@@ -115,7 +115,7 @@
   }
 
   .actions-list {
-    border: var(--border-light);
+    border-right: var(--border-light);
     padding: var(--spacing-s);
   }
 
@@ -159,5 +159,10 @@
 
   a:hover {
     color: var(--blue);
+  }
+
+  i:hover {
+    color: var(--red);
+    cursor: pointer;
   }
 </style>

@@ -28,6 +28,7 @@
     <div class="list">
       {#if context}
         <Heading extraSmall>Columns</Heading>
+        <Spacer small />
         <ul>
           {#each context as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -66,7 +67,13 @@
   .list {
     border-right: var(--border-light);
     padding: var(--spacing-l);
+    overflow: auto;
   }
+
+  .list::-webkit-scrollbar {
+    display: none;
+  }
+
   .text {
     padding: var(--spacing-xl);
     font-family: var(--font-sans);
