@@ -1,0 +1,1057 @@
+{
+  "math": {
+    "abs": {
+      "args": [
+        "a"
+      ],
+      "numArgs": 1,
+      "description": "Return the magnitude of `a`."
+    },
+    "add": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Return the sum of `a` plus `b`."
+    },
+    "avg": {
+      "args": [
+        "array"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{avg \"[1, 2, 3, 4, 5]\"}} <!-- results in: '3' --> ",
+      "description": "Returns the average of all numbers in the given array."
+    },
+    "ceil": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "description": "Get the `Math.ceil()` of the given value."
+    },
+    "divide": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Divide `a` by `b`"
+    },
+    "floor": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "description": "Get the `Math.floor()` of the given value."
+    },
+    "minus": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Return the product of `a` minus `b`."
+    },
+    "modulo": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Get the remainder of a division operation."
+    },
+    "multiply": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Return the product of `a` times `b`."
+    },
+    "plus": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Add `a` by `b`."
+    },
+    "random": {
+      "args": [
+        "min",
+        "max"
+      ],
+      "numArgs": 2,
+      "description": "Generate a random number between two values"
+    },
+    "remainder": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Get the remainder when `a` is divided by `b`."
+    },
+    "round": {
+      "args": [
+        "number"
+      ],
+      "numArgs": 1,
+      "description": "Round the given number."
+    },
+    "subtract": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Return the product of `a` minus `b`."
+    },
+    "sum": {
+      "args": [
+        "array"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{sum \"[1, 2, 3, 4, 5]\"}} <!-- results in: '15' --> ",
+      "description": "Returns the sum of all numbers in the given array."
+    },
+    "times": {
+      "args": [
+        "a",
+        "b"
+      ],
+      "numArgs": 2,
+      "description": "Multiply number `a` by number `b`."
+    }
+  },
+  "array": {
+    "after": {
+      "args": [
+        "array",
+        "n"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{after array 1}} <!-- results in: '[\"c\"]' --> ",
+      "description": "Returns all of the items in an array after the specified index. Opposite of [before](#before)."
+    },
+    "arrayify": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{arrayify \"foo\"}} <!-- results in: [ \"foo\" ] --> ",
+      "description": "Cast the given `value` to an array."
+    },
+    "before": {
+      "args": [
+        "array",
+        "n"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{before array 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
+      "description": "Return all of the items in the collection before the specified count. Opposite of [after](#after)."
+    },
+    "eachIndex": {
+      "args": [
+        "array",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] --> {{#eachIndex array}} {{item}} is {{index}} {{/eachIndex}} ",
+      "description": "Iterates the array, listing an item and the index of it."
+    },
+    "filter": {
+      "args": [
+        "array",
+        "value",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#filter array \"foo\"}}AAA{{else}}BBB{{/filter}} <!-- results in: 'BBB' --> ",
+      "description": "Block helper that filters the given array and renders the block for values that evaluate to `true`, otherwise the inverse block is returned."
+    },
+    "first": {
+      "args": [
+        "array",
+        "n"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{first \"['a', 'b', 'c', 'd', 'e']\" 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
+      "description": "Returns the first item, or first `n` items of an array."
+    },
+    "forEach": {
+      "args": [
+        "array"
+      ],
+      "numArgs": 1,
+      "example": "handlebars <!-- accounts = [ {'name': 'John', 'email': 'john@example.com'}, {'name': 'Malcolm', 'email': 'malcolm@example.com'}, {'name': 'David', 'email': 'david@example.com'} ] --> {{#forEach accounts}} <a href=\"mailto:{{ email }}\" title=\"Send an email to {{ name }}\"> {{ name }} </a>{{#unless isLast}}, {{/unless}} {{/forEach}} ",
+      "description": "Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - `index` - `total` - `isFirst` - `isLast` Also, `@index` is exposed as a private variable, and additional private variables may be defined as hash arguments."
+    },
+    "inArray": {
+      "args": [
+        "array",
+        "value",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#inArray array \"d\"}} foo {{else}} bar {{/inArray}} <!-- results in: 'bar' --> ",
+      "description": "Block helper that renders the block if an array has the given `value`. Optionally specify an inverse block to render when the array does not have the given value."
+    },
+    "isArray": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{isArray \"abc\"}} <!-- results in: false --> <!-- array: [1, 2, 3] --> {{isArray array}} <!-- results in: true --> ",
+      "description": "Returns true if `value` is an es5 array."
+    },
+    "itemAt": {
+      "args": [
+        "array",
+        "idx"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{itemAt array 1}} <!-- results in: 'b' --> ",
+      "description": "Returns the item from `array` at index `idx`."
+    },
+    "join": {
+      "args": [
+        "array",
+        "separator"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{join array}} <!-- results in: 'a, b, c' --> {{join array '-'}} <!-- results in: 'a-b-c' --> ",
+      "description": "Join all elements of array into a string, optionally using a given separator."
+    },
+    "equalsLength": {
+      "args": [
+        "value",
+        "length",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Returns true if the the length of the given `value` is equal to the given `length`. Can be used as a block or inline helper."
+    },
+    "last": {
+      "args": [
+        "value",
+        "n"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- var value = ['a', 'b', 'c', 'd', 'e'] --> {{last value}} <!-- results in: ['e'] --> {{last value 2}} <!-- results in: ['d', 'e'] --> {{last value 3}} <!-- results in: ['c', 'd', 'e'] --> ",
+      "description": "Returns the last item, or last `n` items of an array or string. Opposite of [first](#first)."
+    },
+    "length": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{length '[\"a\", \"b\", \"c\"]'}} <!-- results in: 3 --> <!-- results in: myArray = ['a', 'b', 'c', 'd', 'e']; --> {{length myArray}} <!-- results in: 5 --> <!-- results in: myObject = {'a': 'a', 'b': 'b'}; --> {{length myObject}} <!-- results in: 2 --> ",
+      "description": "Returns the length of the given string or array."
+    },
+    "lengthEqual": {
+      "args": [
+        "value",
+        "length",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Returns true if the the length of the given `value` is equal to the given `length`. Can be used as a block or inline helper."
+    },
+    "map": {
+      "args": [
+        "array",
+        "fn"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'], and \"double\" is a fictitious function that duplicates letters --> {{map array double}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
+      "description": "Returns a new array, created by calling `function` on each element of the given `array`. For example,"
+    },
+    "pluck": {
+      "args": [
+        "collection",
+        "prop"
+      ],
+      "numArgs": 2,
+      "example": "handlebars // {{pluck items \"data.title\"}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
+      "description": "Map over the given object or array or objects and create an array of values from the given `prop`. Dot-notation may be used (as a string) to get nested properties."
+    },
+    "reverse": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "example": "handlebars <!-- value: 'abcd' --> {{reverse value}} <!-- results in: 'dcba' --> <!-- value: ['a', 'b', 'c', 'd'] --> {{reverse value}} <!-- results in: ['d', 'c', 'b', 'a'] --> ",
+      "description": "Reverse the elements in an array, or the characters in a string."
+    },
+    "some": {
+      "args": [
+        "array",
+        "iter",
+        "provided"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: [1, 'b', 3] --> {{#some array isString}} Render me if the array has a string. {{else}} Render me if it doesn't. {{/some}} <!-- results in: 'Render me if the array has a string.' --> ",
+      "description": "Block helper that returns the block if the callback returns true for some value in the given array."
+    },
+    "sort": {
+      "args": [
+        "array",
+        "key"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{sort array}} <!-- results in: '[\"a\", \"b\", \"c\"]' --> ",
+      "description": "Sort the given `array`. If an array of objects is passed, you may optionally pass a `key` to sort on as the second argument. You may alternatively pass a sorting function as the second argument."
+    },
+    "sortBy": {
+      "args": [
+        "array",
+        "props"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: [{a: 'zzz'}, {a: 'aaa'}] --> {{sortBy array \"a\"}} <!-- results in: '[{\"a\":\"aaa\"}, {\"a\":\"zzz\"}]' --> ",
+      "description": "Sort an `array`. If an array of objects is passed, you may optionally pass a `key` to sort on as the second argument. You may alternatively pass a sorting function as the second argument."
+    },
+    "withAfter": {
+      "args": [
+        "array",
+        "idx",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withAfter array 3}} {{this}} {{/withAfter}} <!-- results in: \"de\" --> ",
+      "description": "Use the items in the array _after_ the specified index as context inside a block. Opposite of [withBefore](#withBefore)."
+    },
+    "withBefore": {
+      "args": [
+        "array",
+        "idx",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withBefore array 3}} {{this}} {{/withBefore}} <!-- results in: 'ab' --> ",
+      "description": "Use the items in the array _before_ the specified index as context inside a block. Opposite of [withAfter](#withAfter)."
+    },
+    "withFirst": {
+      "args": [
+        "array",
+        "idx",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withFirst array}} {{this}} {{/withFirst}} <!-- results in: 'a' --> ",
+      "description": "Use the first item in a collection inside a handlebars block expression. Opposite of [withLast](#withLast)."
+    },
+    "withGroup": {
+      "args": [
+        "array",
+        "size",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a','b','c','d','e','f','g','h'] --> {{#withGroup array 4}} {{#each this}} {{.}} {{each}} <br> {{/withGroup}} <!-- results in: --> <!-- 'a','b','c','d'<br> --> <!-- 'e','f','g','h'<br> --> ",
+      "description": "Block helper that groups array elements by given group `size`."
+    },
+    "withLast": {
+      "args": [
+        "array",
+        "idx",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withLast array}} {{this}} {{/withLast}} <!-- results in: 'c' --> ",
+      "description": "Use the last item or `n` items in an array as context inside a block. Opposite of [withFirst](#withFirst)."
+    },
+    "withSort": {
+      "args": [
+        "array",
+        "prop",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{#withSort array}}{{this}}{{/withSort}} <!-- results in: 'abc' --> ",
+      "description": "Block helper that sorts a collection and exposes the sorted collection as context inside the block."
+    },
+    "unique": {
+      "args": [
+        "array",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- array: ['a', 'a', 'c', 'b', 'e', 'e'] --> {{#each (unique array)}}{{.}}{{/each}} <!-- results in: 'acbe' --> ",
+      "description": "Block helper that return an array with all duplicate values removed. Best used along with a [each](#each) helper."
+    }
+  },
+  "number": {
+    "bytes": {
+      "args": [
+        "number"
+      ],
+      "numArgs": 1,
+      "description": "Format a number to it's equivalent in bytes. If a string is passed, it's length will be formatted and returned. **Examples:** - `'foo' => 3 B` - `13661855 => 13.66 MB` - `825399 => 825.39 kB` - `1396 => 1.4 kB`"
+    },
+    "addCommas": {
+      "args": [
+        "num"
+      ],
+      "numArgs": 1,
+      "description": "Add commas to numbers"
+    },
+    "phoneNumber": {
+      "args": [
+        "num"
+      ],
+      "numArgs": 1,
+      "description": "Convert a string or number to a formatted phone number."
+    },
+    "toAbbr": {
+      "args": [
+        "number",
+        "precision"
+      ],
+      "numArgs": 2,
+      "description": "Abbreviate numbers to the given number of `precision`. This for general numbers, not size in bytes."
+    },
+    "toExponential": {
+      "args": [
+        "number",
+        "fractionDigits"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{toExponential number digits}}; ",
+      "description": "Returns a string representing the given number in exponential notation."
+    },
+    "toFixed": {
+      "args": [
+        "number",
+        "digits"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{toFixed \"1.1234\" 2}} //=> '1.12' ",
+      "description": "Formats the given number using fixed-point notation."
+    },
+    "toFloat": {
+      "args": [
+        "number"
+      ],
+      "numArgs": 1,
+      "description": "Convert input to a float."
+    },
+    "toInt": {
+      "args": [
+        "number"
+      ],
+      "numArgs": 1,
+      "description": "Convert input to an integer."
+    },
+    "toPrecision": {
+      "args": [
+        "number",
+        "precision"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{toPrecision \"1.1234\" 2}} //=> '1.1' ",
+      "description": "Returns a string representing the `Number` object to the specified precision."
+    }
+  },
+  "url": {
+    "encodeURI": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "description": "Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character."
+    },
+    "escape": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "description": "Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc."
+    },
+    "decodeURI": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "description": "Decode a Uniform Resource Identifier (URI) component."
+    },
+    "url_encode": {
+      "args": [],
+      "numArgs": 0,
+      "description": "Alias for [encodeURI](#encodeuri)."
+    },
+    "url_decode": {
+      "args": [],
+      "numArgs": 0,
+      "description": "Alias for [decodeURI](#decodeuri)."
+    },
+    "urlResolve": {
+      "args": [
+        "base",
+        "href"
+      ],
+      "numArgs": 2,
+      "description": "Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag."
+    },
+    "urlParse": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "description": "Parses a `url` string into an object."
+    },
+    "stripQuerystring": {
+      "args": [
+        "url"
+      ],
+      "numArgs": 1,
+      "description": "Strip the query string from the given `url`."
+    },
+    "stripProtocol": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars <!-- url = 'http://foo.bar' --> {{stripProtocol url}} <!-- results in: '//foo.bar' --> ",
+      "description": "Strip protocol from a `url`. Useful for displaying media that may have an 'http' protocol on secure connections."
+    }
+  },
+  "string": {
+    "append": {
+      "args": [
+        "str",
+        "suffix"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- given that \"item.stem\" is \"foo\" --> {{append item.stem \".html\"}} <!-- results in: 'foo.html' --> ",
+      "description": "Append the specified `suffix` to the given string."
+    },
+    "camelcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{camelcase \"foo bar baz\"}}; <!-- results in: 'fooBarBaz' --> ",
+      "description": "camelCase the characters in the given `string`."
+    },
+    "capitalize": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{capitalize \"foo bar baz\"}} <!-- results in: \"Foo bar baz\" --> ",
+      "description": "Capitalize the first word in a sentence."
+    },
+    "capitalizeAll": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{capitalizeAll \"foo bar baz\"}} <!-- results in: \"Foo Bar Baz\" --> ",
+      "description": "Capitalize all words in a string."
+    },
+    "center": {
+      "args": [
+        "str",
+        "spaces"
+      ],
+      "numArgs": 2,
+      "description": "Center a string using non-breaking spaces"
+    },
+    "chop": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{chop \"_ABC_\"}} <!-- results in: 'ABC' --> {{chop \"-ABC-\"}} <!-- results in: 'ABC' --> {{chop \" ABC \"}} <!-- results in: 'ABC' --> ",
+      "description": "Like trim, but removes both extraneous whitespace **and non-word characters** from the beginning and end of a string."
+    },
+    "dashcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{dashcase \"a-b-c d_e\"}} <!-- results in: 'a-b-c-d-e' --> ",
+      "description": "dash-case the characters in `string`. Replaces non-word characters and periods with hyphens."
+    },
+    "dotcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{dotcase \"a-b-c d_e\"}} <!-- results in: 'a.b.c.d.e' --> ",
+      "description": "dot.case the characters in `string`."
+    },
+    "downcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{downcase \"aBcDeF\"}} <!-- results in: 'abcdef' --> ",
+      "description": "Lowercase all of the characters in the given string. Alias for [lowercase](#lowercase)."
+    },
+    "ellipsis": {
+      "args": [
+        "str",
+        "length"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{ellipsis (sanitize \"<span>foo bar baz</span>\"), 7}} <!-- results in: 'foo bar…' --> {{ellipsis \"foo bar baz\", 7}} <!-- results in: 'foo bar…' --> ",
+      "description": "Truncates a string to the specified `length`, and appends it with an elipsis, `…`."
+    },
+    "hyphenate": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{hyphenate \"foo bar baz qux\"}} <!-- results in: \"foo-bar-baz-qux\" --> ",
+      "description": "Replace spaces in a string with hyphens."
+    },
+    "isString": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{isString \"foo\"}} <!-- results in: 'true' --> ",
+      "description": "Return true if `value` is a string."
+    },
+    "lowercase": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{lowercase \"Foo BAR baZ\"}} <!-- results in: 'foo bar baz' --> ",
+      "description": "Lowercase all characters in the given string."
+    },
+    "occurrences": {
+      "args": [
+        "str",
+        "substring"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{occurrences \"foo bar foo bar baz\" \"foo\"}} <!-- results in: 2 --> ",
+      "description": "Return the number of occurrences of `substring` within the given `string`."
+    },
+    "pascalcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{pascalcase \"foo bar baz\"}} <!-- results in: 'FooBarBaz' --> ",
+      "description": "PascalCase the characters in `string`."
+    },
+    "pathcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{pathcase \"a-b-c d_e\"}} <!-- results in: 'a/b/c/d/e' --> ",
+      "description": "path/case the characters in `string`."
+    },
+    "plusify": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{plusify \"foo bar baz\"}} <!-- results in: 'foo+bar+baz' --> ",
+      "description": "Replace spaces in the given string with pluses."
+    },
+    "prepend": {
+      "args": [
+        "str",
+        "prefix"
+      ],
+      "numArgs": 2,
+      "example": "handlebars <!-- given that \"val\" is \"bar\" --> {{prepend val \"foo-\"}} <!-- results in: 'foo-bar' --> ",
+      "description": "Prepends the given `string` with the specified `prefix`."
+    },
+    "raw": {
+      "args": [
+        "options"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{{{#raw}}}} {{foo}} {{{{/raw}}}} <!-- results in: '{{foo}}' --> ",
+      "description": "Render a block without processing mustache templates inside the block."
+    },
+    "remove": {
+      "args": [
+        "str",
+        "substring"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{remove \"a b a b a b\" \"a \"}} <!-- results in: 'b b b' --> ",
+      "description": "Remove all occurrences of `substring` from the given `str`."
+    },
+    "removeFirst": {
+      "args": [
+        "str",
+        "substring"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{remove \"a b a b a b\" \"a\"}} <!-- results in: ' b a b a b' --> ",
+      "description": "Remove the first occurrence of `substring` from the given `str`."
+    },
+    "replace": {
+      "args": [
+        "str",
+        "a",
+        "b"
+      ],
+      "numArgs": 3,
+      "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b z b z b' --> ",
+      "description": "Replace all occurrences of substring `a` with substring `b`."
+    },
+    "replaceFirst": {
+      "args": [
+        "str",
+        "a",
+        "b"
+      ],
+      "numArgs": 3,
+      "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b a b a b' --> ",
+      "description": "Replace the first occurrence of substring `a` with substring `b`."
+    },
+    "sentence": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{sentence \"hello world. goodbye world.\"}} <!-- results in: 'Hello world. Goodbye world.' --> ",
+      "description": "Sentence case the given string"
+    },
+    "snakecase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{snakecase \"a-b-c d_e\"}} <!-- results in: 'a_b_c_d_e' --> ",
+      "description": "snake_case the characters in the given `string`."
+    },
+    "split": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{split \"a,b,c\" \",\"}} <!-- results in: ['a', 'b', 'c'] --> ",
+      "description": "Split `string` by the given `character`."
+    },
+    "startsWith": {
+      "args": [
+        "prefix",
+        "testString",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars {{#startsWith \"Goodbye\" \"Hello, world!\"}} Whoops {{else}} Bro, do you even hello world? {{/startsWith}} ",
+      "description": "Tests whether a string begins with the given prefix."
+    },
+    "titleize": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{titleize \"this title case\"}} <!-- results in: 'This Is Title Case' --> ",
+      "description": "Title case the given string."
+    },
+    "trim": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC' --> ",
+      "description": "Removes extraneous whitespace from the beginning and end of a string."
+    },
+    "trimLeft": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC ' --> ",
+      "description": "Removes extraneous whitespace from the beginning of a string."
+    },
+    "trimRight": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{trimRight \" ABC \"}} <!-- results in: ' ABC' --> ",
+      "description": "Removes extraneous whitespace from the end of a string."
+    },
+    "truncate": {
+      "args": [
+        "str",
+        "limit",
+        "suffix"
+      ],
+      "numArgs": 3,
+      "example": "handlebars truncate(\"foo bar baz\", 7); <!-- results in: 'foo bar' --> truncate(sanitize(\"<span>foo bar baz</span>\", 7)); <!-- results in: 'foo bar' --> ",
+      "description": "Truncate a string to the specified `length`. Also see [ellipsis](#ellipsis)."
+    },
+    "truncateWords": {
+      "args": [
+        "str",
+        "limit",
+        "suffix"
+      ],
+      "numArgs": 3,
+      "example": "handlebars truncateWords(\"foo bar baz\", 1); <!-- results in: 'foo…' --> truncateWords(\"foo bar baz\", 2); <!-- results in: 'foo bar…' --> truncateWords(\"foo bar baz\", 3); <!-- results in: 'foo bar baz' --> ",
+      "description": "Truncate a string to have the specified number of words. Also see [truncate](#truncate)."
+    },
+    "upcase": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "example": "handlebars {{upcase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
+      "description": "Uppercase all of the characters in the given string. Alias for [uppercase](#uppercase)."
+    },
+    "uppercase": {
+      "args": [
+        "str",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{uppercase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
+      "description": "Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks."
+    }
+  },
+  "comparison": {
+    "and": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "example": "handlebars <!-- {great: true, magnificent: true} --> {{#and great magnificent}}A{{else}}B{{/and}} <!-- results in: 'A' --> ",
+      "description": "Helper that renders the block if **both** of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression."
+    },
+    "compare": {
+      "args": [
+        "a",
+        "operator",
+        "b",
+        "options"
+      ],
+      "numArgs": 4,
+      "description": "Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy."
+    },
+    "contains": {
+      "args": [
+        "collection",
+        "value",
+        "[startIndex=0]",
+        "options"
+      ],
+      "numArgs": 4,
+      "example": "handlebars <!-- array = ['a', 'b', 'c'] --> {{#contains array \"d\"}} This will not be rendered. {{else}} This will be rendered. {{/contains}} ",
+      "description": "Block helper that renders the block if `collection` has the given `value`, using strict equality (`===`) for comparison, otherwise the inverse block is rendered (if specified). If a `startIndex` is specified and is negative, it is used as the offset from the end of the collection."
+    },
+    "default": {
+      "args": [
+        "value",
+        "defaultValue"
+      ],
+      "numArgs": 2,
+      "description": "Returns the first value that is not undefined, otherwise the \"default\" value is returned."
+    },
+    "eq": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+    },
+    "gt": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **greater than** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+    },
+    "gte": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **greater than or equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+    },
+    "has": {
+      "args": [
+        "val",
+        "pattern",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `value` has `pattern`. If an inverse block is specified it will be rendered when falsy."
+    },
+    "isFalsey": {
+      "args": [
+        "val",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "Returns true if the given `value` is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper."
+    },
+    "isTruthy": {
+      "args": [
+        "val",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "Returns true if the given `value` is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper."
+    },
+    "ifEven": {
+      "args": [
+        "number",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{#ifEven value}} render A {{else}} render B {{/ifEven}} ",
+      "description": "Return true if the given value is an even number."
+    },
+    "ifNth": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Conditionally renders a block if the remainder is zero when `a` operand is divided by `b`. If an inverse block is specified it will be rendered when the remainder is **not zero**."
+    },
+    "ifOdd": {
+      "args": [
+        "value",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{#ifOdd value}} render A {{else}} render B {{/ifOdd}} ",
+      "description": "Block helper that renders a block if `value` is **an odd number**. If an inverse block is specified it will be rendered when falsy."
+    },
+    "is": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **equal to** `b`. If an inverse block is specified it will be rendered when falsy. Similar to [eq](#eq) but does not do strict equality."
+    },
+    "isnt": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **not equal to** `b`. If an inverse block is specified it will be rendered when falsy. Similar to [unlessEq](#unlesseq) but does not use strict equality for comparisons."
+    },
+    "lt": {
+      "args": [
+        "context",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "Block helper that renders a block if `a` is **less than** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+    },
+    "lte": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if `a` is **less than or equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+    },
+    "neither": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that renders a block if **neither of** the given values are truthy. If an inverse block is specified it will be rendered when falsy."
+    },
+    "not": {
+      "args": [
+        "val",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "Returns true if `val` is falsey. Works as a block or inline helper."
+    },
+    "or": {
+      "args": [
+        "arguments",
+        "options"
+      ],
+      "numArgs": 2,
+      "example": "handlebars {{#or a b c}} If any value is true this will be rendered. {{/or}} ",
+      "description": "Block helper that renders a block if **any of** the given values is truthy. If an inverse block is specified it will be rendered when falsy."
+    },
+    "unlessEq": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that always renders the inverse block **unless `a` is equal to `b`**."
+    },
+    "unlessGt": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that always renders the inverse block **unless `a` is greater than `b`**."
+    },
+    "unlessLt": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that always renders the inverse block **unless `a` is less than `b`**."
+    },
+    "unlessGteq": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that always renders the inverse block **unless `a` is greater than or equal to `b`**."
+    },
+    "unlessLteq": {
+      "args": [
+        "a",
+        "b",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "Block helper that always renders the inverse block **unless `a` is less than or equal to `b`**."
+    }
+  },
+  "date": {
+    "date": {
+      "args": [
+        "datetime",
+        "format"
+      ],
+      "numArgs": 2,
+      "example": "{{date \"5 years ago\" \"YYYY\"}}",
+      "description": "Format a date using moment.js data formatting."
+    }
+  }
+}
