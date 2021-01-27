@@ -56,6 +56,19 @@ exports.downloadTemplate = async function(type, name) {
   return dirName
 }
 
+async function performDump({ dir, appId, name = "dump.txt" }) {
+  const writeStream = fs.createWriteStream(join(dir, name))
+  // perform couch dump
+  const instanceDb = new CouchDB(appId)
+  await instanceDb.dump(writeStream, {
+    filter: doc => {
+      return !doc._id.startsWith(DocumentTypes.USER)
+    },
+  })
+}
+
+exports.performDump = performDump
+
 exports.exportTemplateFromApp = async function({ templateName, appId }) {
   // Copy frontend files
   const templatesDir = join(
@@ -67,13 +80,6 @@ exports.exportTemplateFromApp = async function({ templateName, appId }) {
     "db"
   )
   fs.ensureDirSync(templatesDir)
-  const writeStream = fs.createWriteStream(join(templatesDir, "dump.txt"))
-  // perform couch dump
-  const instanceDb = new CouchDB(appId)
-  await instanceDb.dump(writeStream, {
-    filter: doc => {
-      return !doc._id.startsWith(DocumentTypes.USER)
-    },
-  })
+  await performDump({ dir: templatesDir, appId })
   return templatesDir
 }

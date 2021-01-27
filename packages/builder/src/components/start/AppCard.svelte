@@ -2,7 +2,27 @@
   import { TextButton } from "@budibase/bbui"
   import { Heading } from "@budibase/bbui"
   import { Spacer } from "@budibase/bbui"
+  import api from "builderStore/api"
+  import { notifier } from "builderStore/store/notifications"
+  import Spinner from "components/common/Spinner.svelte"
+
   export let name, _id
+
+  let appExportLoading = false
+
+  async function exportApp() {
+    appExportLoading = true
+    try {
+      const response = await api.post(`/api/backups/export`, { appId: _id })
+      const { url } = await response.json()
+      notifier.success("App Export Complete.")
+      window.location = url
+    } catch (err) {
+      notifier.danger("App Export Failed.")
+    } finally {
+      appExportLoading = false
+    }
+  }
 </script>
 
 <div class="apps-card">
@@ -10,9 +30,12 @@
   <Spacer medium />
   <div class="card-footer">
     <TextButton text medium blue href="/_builder/{_id}">
-      Open
-      {name}
-      →
+      Open {name} →
+    </TextButton>
+    <TextButton text medium blue on:click={exportApp}>
+      {#if appExportLoading}
+        <Spinner size="10" />
+      {:else}Export{/if}
     </TextButton>
   </div>
 </div>

@@ -46,12 +46,18 @@
     modal.show()
   }
 
+  function initiateAppImport() {
+    template = { fromFile: true }
+    modal.show()
+  }
+
   checkIfKeysAndApps()
 </script>
 
 <div class="container">
   <div class="header">
     <Heading medium black>Welcome to the Budibase Beta</Heading>
+    <Button secondary on:click={initiateAppImport}>Import Web App</Button>
     <Button primary on:click={modal.show}>Create New Web App</Button>
   </div>
 
