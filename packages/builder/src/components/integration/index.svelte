@@ -20,7 +20,6 @@
   }
 </script>
 
-
 {#if schema}
   {#key query._id}
     {#if schema.type === QueryTypes.SQL}

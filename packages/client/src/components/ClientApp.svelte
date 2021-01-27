@@ -4,18 +4,12 @@
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
   import SDK from "../sdk"
-  import {
-    createDataStore,
-    initialise,
-    screenStore,
-    builderStore,
-  } from "../store"
+  import { createDataStore, initialise, screenStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
   setContext("component", writable({}))
   setContext("data", createDataStore())
-  setContext("screenslot", false)
 
   let loaded = false
 
