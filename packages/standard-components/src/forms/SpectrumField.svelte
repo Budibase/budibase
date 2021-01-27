@@ -10,7 +10,7 @@
   const component = getContext("component")
   const { labelPosition, formApi } = formContext || {}
   const formField = formApi?.registerField(field) ?? {}
-  const { fieldId } = formField
+  const { fieldId, fieldState } = formField
 
   $: labelPositionClass =
     labelPosition === "top" ? "" : `spectrum-FieldLabel--${labelPosition}`
@@ -31,6 +31,20 @@
     {/if}
     <div class="spectrum-Form-itemField">
       <slot />
+      {#if $fieldState.error}
+        <div class="error">{$fieldState.error}</div>
+      {/if}
     </div>
   </div>
 {/if}
+
+<style>
+  .error {
+    color: var(
+      --spectrum-semantic-negative-color-default,
+      var(--spectrum-global-color-red-500)
+    );
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    margin-top: var(--spectrum-global-dimension-size-75);
+  }
+</style>

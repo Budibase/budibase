@@ -1,9 +1,6 @@
 import { get } from "svelte/store"
 import { builderStore } from "../store"
 
-const selectedComponentWidth = 2
-const selectedComponentColor = "#4285f4"
-
 /**
  * Helper to build a CSS string from a style object.
  */
@@ -23,24 +20,14 @@ const buildStyleString = (styleObject, customStyles) => {
  * events for any selectable components (overriding the blanket ban on pointer
  * events in the iframe HTML).
  */
-const addBuilderPreviewStyles = (styleString, componentId, selectable) => {
-  let str = styleString
-
-  // Apply extra styles if we're in the builder preview
-  const state = get(builderStore)
-  if (state.inBuilder) {
-    // Allow pointer events and always enable cursor
-    if (selectable) {
-      str += ";pointer-events: all !important; cursor: pointer !important;"
-    }
-
-    // Highlighted selected element
-    if (componentId === state.selectedComponentId) {
-      str += `;border: ${selectedComponentWidth}px solid ${selectedComponentColor} !important;`
-    }
+const addBuilderPreviewStyles = (node, styleString, componentId) => {
+  if (componentId === get(builderStore).selectedComponentId) {
+    const style = window.getComputedStyle(node)
+    const property = style?.display === "table-row" ? "outline" : "border"
+    return styleString + `;${property}: 2px solid #4285f4 !important;`
+  } else {
+    return styleString
   }
-
-  return str
 }
 
 /**
@@ -52,17 +39,9 @@ export const styleable = (node, styles = {}) => {
   let applyHoverStyles
   let selectComponent
 
-  // Kill JS even bubbling
-  const blockEvent = event => {
-    event.preventDefault()
-    event.stopPropagation()
-    return false
-  }
-
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
     const componentId = newStyles.id
-    const selectable = !!newStyles.allowSelection
     const customStyles = newStyles.custom || ""
     const normalStyles = newStyles.normal || {}
     const hoverStyles = {
@@ -70,10 +49,9 @@ export const styleable = (node, styles = {}) => {
       ...(newStyles.hover || {}),
     }
 
-    // Applies a style string to a DOM node, enriching it for the builder
-    // preview
+    // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = addBuilderPreviewStyles(styleString, componentId, selectable)
+      node.style = addBuilderPreviewStyles(node, styleString, componentId)
       node.dataset.componentId = componentId
     }
 
@@ -91,7 +69,9 @@ export const styleable = (node, styles = {}) => {
     // builder preview
     selectComponent = event => {
       builderStore.actions.selectComponent(componentId)
-      return blockEvent(event)
+      event.preventDefault()
+      event.stopPropagation()
+      return false
     }
 
     // Add listeners to toggle hover styles
@@ -101,10 +81,6 @@ export const styleable = (node, styles = {}) => {
     // Add builder preview click listener
     if (get(builderStore).inBuilder) {
       node.addEventListener("click", selectComponent, false)
-
-      // Kill other interaction events
-      node.addEventListener("mousedown", blockEvent)
-      node.addEventListener("mouseup", blockEvent)
     }
 
     // Apply initial normal styles
@@ -119,8 +95,6 @@ export const styleable = (node, styles = {}) => {
     // Remove builder preview click listener
     if (get(builderStore).inBuilder) {
       node.removeEventListener("click", selectComponent)
-      node.removeEventListener("mousedown", blockEvent)
-      node.removeEventListener("mouseup", blockEvent)
     }
   }
 

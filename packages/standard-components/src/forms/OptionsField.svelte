@@ -92,16 +92,4 @@
       {/each}
     </ul>
   </div>
-  {#if $fieldState.error}
-    <div class="error">{$fieldState.error}</div>
-  {/if}
 </SpectrumField>
-
-<style>
-  .error {
-    color: var(
-      --spectrum-semantic-negative-color-default,
-      var(--spectrum-global-color-red-500)
-    ) !important;
-  }
-</style>

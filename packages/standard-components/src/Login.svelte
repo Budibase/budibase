@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { authStore, styleable } = getContext("sdk")
+  const { authStore, styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let buttonText = "Log In"
@@ -23,6 +23,9 @@
   }
 
   const login = async () => {
+    if ($builderStore.inBuilder) {
+      return
+    }
     loading = true
     await authStore.actions.logIn({ email, password })
     loading = false

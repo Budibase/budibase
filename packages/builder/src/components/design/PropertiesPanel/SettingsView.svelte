@@ -120,7 +120,7 @@
           value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
           {componentInstance}
           onChange={val => onChange(setting.key, val)}
-          props={{ options: setting.options }} />
+          props={{ options: setting.options, placeholder: setting.placeholder }} />
       {/if}
     {/each}
   {:else}
