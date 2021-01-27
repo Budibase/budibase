@@ -10,6 +10,11 @@
     "start:dev": "sirv public --single --dev",
     "dev:builder": "rollup -cw"
   },
+  "files": [
+    "manifest.json",
+    "package.json",
+    "dist"
+  ],
   "devDependencies": {
     "@rollup/plugin-alias": "^3.1.1",
     "@rollup/plugin-commonjs": "^16.0.0",
