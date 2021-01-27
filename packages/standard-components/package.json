@@ -10,6 +10,11 @@
     "start:dev": "sirv public --single --dev",
     "dev:builder": "rollup -cw"
   },
+  "files": [
+    "manifest.json",
+    "package.json",
+    "dist"
+  ],
   "devDependencies": {
     "@rollup/plugin-alias": "^3.1.1",
     "@rollup/plugin-commonjs": "^16.0.0",
@@ -30,7 +35,7 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.5.3",
+  "version": "0.6.2",
   "license": "MIT",
   "gitHead": "62ebf3cedcd7e9b2494b4f8cbcfb90927609b491",
   "dependencies": {

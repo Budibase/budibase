@@ -33,6 +33,9 @@
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
     }
+    if (!actions) {
+      actions = []
+    }
     actions.push(newAction)
     selectedAction = newAction
     actions = actions
@@ -73,7 +76,8 @@
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
             <span class:selected={action === selectedAction}>
-              {index + 1}. {action[EVENT_TYPE_KEY]}
+              {index + 1}.
+              {action[EVENT_TYPE_KEY]}
             </span>
           </div>
           <i
