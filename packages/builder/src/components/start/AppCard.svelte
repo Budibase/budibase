@@ -32,11 +32,11 @@
     <TextButton text medium blue href="/_builder/{_id}">
       Open {name} →
     </TextButton>
-    <TextButton text medium blue on:click={exportApp}>
-      {#if appExportLoading}
-        <Spinner size="10" />
-      {:else}Export{/if}
-    </TextButton>
+    {#if appExportLoading}
+      <Spinner size="10" />
+    {:else}
+      <i class="ri-folder-download-line" on:click={exportApp} />
+    {/if}
   </div>
 </div>
 
@@ -54,7 +54,17 @@
   .card-footer {
     display: flex;
     flex-direction: row;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
+  }
+
+  i {
+    font-size: var(--font-size-l);
+    cursor: pointer;
+    transition: 0.2s all;
+  }
+
+  i:hover {
+    color: var(--blue);
   }
 </style>
