@@ -18,7 +18,7 @@
   let open = false
   $: options = fieldSchema?.constraints?.inclusion ?? []
   $: placeholderText = placeholder || "Choose an option"
-  $: isNull = $fieldState.value == null || $fieldState.value === ""
+  $: isNull = $fieldState?.value == null || $fieldState?.value === ""
 
   // Update value on blur only
   const selectOption = value => {

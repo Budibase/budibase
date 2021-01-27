@@ -1,19 +1,22 @@
 <script>
   import Placeholder from "./Placeholder.svelte"
+  import FieldGroupFallback from "./FieldGroupFallback.svelte"
   import { getContext } from "svelte"
 
   export let label
   export let field
 
   const formContext = getContext("form")
+  const fieldGroupContext = getContext("fieldGroup")
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-  const { labelPosition, formApi } = formContext || {}
+  const { formApi } = formContext || {}
+  const labelPosition = fieldGroupContext?.labelPosition || "above"
   const formField = formApi?.registerField(field) ?? {}
   const { fieldId, fieldState } = formField
 
   $: labelPositionClass =
-    labelPosition === "top" ? "" : `spectrum-FieldLabel--${labelPosition}`
+    labelPosition === "above" ? "" : `spectrum-FieldLabel--${labelPosition}`
 </script>
 
 {#if !fieldId}
@@ -21,21 +24,23 @@
 {:else if !formContext}
   <Placeholder>Form components need to be wrapped in a Form</Placeholder>
 {:else}
-  <div class="spectrum-Form-item" use:styleable={$component.styles}>
-    {#if label}
-      <label
-        for={fieldId}
-        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
-        {label}
-      </label>
-    {/if}
-    <div class="spectrum-Form-itemField">
-      <slot />
-      {#if $fieldState.error}
-        <div class="error">{$fieldState.error}</div>
+  <FieldGroupFallback>
+    <div class="spectrum-Form-item" use:styleable={$component.styles}>
+      {#if label}
+        <label
+          for={fieldId}
+          class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
+          {label}
+        </label>
       {/if}
+      <div class="spectrum-Form-itemField">
+        <slot />
+        {#if $fieldState.error}
+          <div class="error">{$fieldState.error}</div>
+        {/if}
+      </div>
     </div>
-  </div>
+  </FieldGroupFallback>
 {/if}
 
 <style>

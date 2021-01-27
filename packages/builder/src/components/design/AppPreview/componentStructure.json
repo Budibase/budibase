@@ -8,6 +8,7 @@
     "icon": "ri-file-edit-line",
     "children": [
       "form",
+      "fieldgroup",
       "stringfield",
       "numberfield",
       "optionsfield",

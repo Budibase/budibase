@@ -1118,12 +1118,21 @@
             "value": "spectrum--large"
           }
         ]
-      },
+      }
+    ]
+  },
+  "fieldgroup": {
+    "name": "Field Group",
+    "description": "A group of fields in a form.",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "hasChildren": true,
+    "settings": [
       {
         "type": "select",
         "label": "Labels",
         "key": "labelPosition",
-        "defaultValue": "left",
+        "defaultValue": "above",
         "options": [
           {
             "label": "Left",
