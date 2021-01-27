@@ -132,15 +132,30 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
+"@spectrum-css/actionbutton@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.0.0-beta.1.tgz#a6684cac108d4a9daefe0be6df8201d3c369a0d6"
+  integrity sha512-QbrPMTkbkmh+dEBP66TFXmF5z3qSde+BnLR5hnlo2XMvKvnblX2VJStEbQ+hTKuSZXCRFADXyXD5o0NOYDTByQ==
+
 "@spectrum-css/button@^3.0.0-beta.6":
   version "3.0.0-beta.6"
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.0-beta.6.tgz#007919d3e7a6692e506dc9addcd46aee6b203b1a"
   integrity sha512-ZoJxezt5Pc006RR7SMG7PfC0VAdWqaGDpd21N8SEykGuz/KmNulqGW8RiSZQGMVX/jk5ZCAthPrH8cI/qtKbMg==
 
+"@spectrum-css/fieldlabel@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/fieldlabel/-/fieldlabel-3.0.0-beta.7.tgz#f37797565e21b3609b8fbc2dafcea8ea41ffa114"
+  integrity sha512-0pseiPghqlOdALsRtidveWyt2YjfSXTZWDlSkcne/J0/QXBJOQH/7Qfy7TmROQZYRB2LqH1VzmE1zbvGwr5Aog==
+
 "@spectrum-css/icon@^3.0.0-beta.2":
   version "3.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.0-beta.2.tgz#2dd7258ded74501b56e5fc42d0b6f0a3f4936aeb"
   integrity sha512-BEHJ68YIXSwsNAqTdq/FrS4A+jtbKzqYrsGKXdDf93ql+fHWYXRCh1EVYGHx/1696mY73DhM4snMpKGIFtXGFA==
+
+"@spectrum-css/menu@^3.0.0-beta.5":
+  version "3.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/menu/-/menu-3.0.0-beta.5.tgz#99d5ea7f6760b7a89d5d732f4e91b98dd3f82d74"
+  integrity sha512-jvPD5GbNdX31rdFBLxCG7KoUVGeeNYLzNXDpiGZsWme/djVTwitljgNe7bhVwCVlXZE7H20Ti/YrdafnE154Rw==
 
 "@spectrum-css/page@^3.0.0-beta.0":
   version "3.0.0-beta.0"
@@ -148,6 +163,21 @@
   integrity sha512-+OD+l3aLisykxJnHfLkdkxMS1Uj1vKGYpKil7W0r5lSWU44eHyRgb8ZK5Vri1+sUO5SSf/CTybeVwtXME9wMLA==
   dependencies:
     "@spectrum-css/vars" "^3.0.0-beta.2"
+
+"@spectrum-css/picker@^1.0.0-beta.3":
+  version "1.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.0.0-beta.3.tgz#476593597b5a9e0105397e4e39350869cf6e7965"
+  integrity sha512-jHzFnS5Frd3JSwZ6B8ymH/sVnNqAUBo9p93Zax4VHTUDsPTtTkvxj/Vxo4POmrJEL9v3qUB2Yk13rD2BSfEzLQ==
+
+"@spectrum-css/popover@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/popover/-/popover-3.0.0-beta.6.tgz#787611f020e091234e6ba7e946b0dbd0ed1a2fa2"
+  integrity sha512-dUJlwxoNpB6jOR0g/ywH2cPoUz2FVsL6xPfkm6BSsLp9ejhYy0/OFF4w0Q32Fu9qJDbWJ9qaoOlPpt7IjQ+/GQ==
+
+"@spectrum-css/stepper@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/stepper/-/stepper-3.0.0-beta.7.tgz#fc78435ce878c5e233af13e43ed2c3e8671a2bbc"
+  integrity sha512-TQL2OBcdEgbHBwehMGgqMuWdKZZQPGcBRV5FlF0TUdOT58lEqFAO43Gajqvyte1P23lNmnX8KuMwkRfQdn0RzA==
 
 "@spectrum-css/textfield@^3.0.0-beta.6":
   version "3.0.0-beta.6"

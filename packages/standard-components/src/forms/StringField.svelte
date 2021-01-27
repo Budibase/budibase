@@ -1,21 +1,21 @@
 <script>
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { Label } from "@budibase/bbui"
+  import "@spectrum-css/actionbutton/dist/index-vars.css"
+  import "@spectrum-css/stepper/dist/index-vars.css"
   import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+  import SpectrumField from "./SpectrumField.svelte"
 
   export let field
   export let label
   export let placeholder
   export let type = "text"
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
-  const { formApi } = getContext("form") ?? {}
-
   // Register this field with its form
-  const formField = formApi?.registerField(field, validate) ?? {}
+  const { formApi } = getContext("form") ?? {}
+  const formField = formApi?.registerField(field) ?? {}
   const { fieldApi, fieldState } = formField
+
+  $: numeric = type === "number"
 
   // Update value on blur only
   const onBlur = event => {
@@ -23,16 +23,12 @@
   }
 </script>
 
-{#if !field}
-  <Placeholder>Add the Field setting to start using your component</Placeholder>
-{:else if !fieldState}
-  <Placeholder>Form components need to be wrapped in a Form</Placeholder>
-{:else}
-  <div class="container" use:styleable={$component.styles}>
-    {#if label}
-      <Label grey>{label}</Label>
-    {/if}
-    <div class="spectrum-Textfield" class:is-invalid={!$fieldState.valid}>
+<SpectrumField {label} {field}>
+  <div class:spectrum-Stepper={type === 'number'}>
+    <div
+      class="spectrum-Textfield"
+      class:spectrum-Stepper-textfield={numeric}
+      class:is-invalid={!$fieldState.valid}>
       {#if !$fieldState.valid}
         <svg
           class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
@@ -42,27 +38,49 @@
         </svg>
       {/if}
       <input
+        id={$fieldState.fieldId}
         value={$fieldState.value || ''}
         placeholder={placeholder || ''}
         on:blur={onBlur}
         {type}
-        class="spectrum-Textfield-input" />
+        class="spectrum-Textfield-input"
+        class:spectrum-Stepper-input={numeric} />
     </div>
+    {#if numeric}
+      <span class="spectrum-Stepper-buttons">
+        <button
+          class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepUp"
+          tabindex="-1">
+          <svg
+            class="spectrum-Icon spectrum-UIIcon-ChevronUp75 spectrum-Stepper-stepUpIcon"
+            focusable="false"
+            aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Chevron75" />
+          </svg>
+        </button>
+        <button
+          class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepDown"
+          tabindex="-1">
+          <svg
+            class="spectrum-Icon spectrum-UIIcon-ChevronDown75 spectrum-Stepper-stepDownIcon"
+            focusable="false"
+            aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Chevron75" />
+          </svg>
+        </button>
+      </span>
+    {/if}
     {#if $fieldState.error}
-      <div class="error">
-        <Label>{$fieldState.error}</Label>
-      </div>
+      <div class="error">{$fieldState.error}</div>
     {/if}
   </div>
-{/if}
+</SpectrumField>
 
 <style>
-  .error :global(label) {
+  .error {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     ) !important;
-    margin-top: var(--spacing-s) !important;
-    margin-bottom: 0 !important;
   }
 </style>
