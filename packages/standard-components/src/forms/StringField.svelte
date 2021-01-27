@@ -20,23 +20,21 @@
 </script>
 
 <SpectrumField {label} {field}>
-  <div>
-    <div class="spectrum-Textfield" class:is-invalid={!$fieldState.valid}>
-      {#if !$fieldState.valid}
-        <svg
-          class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-          focusable="false"
-          aria-hidden="true">
-          <use xlink:href="#spectrum-icon-18-Alert" />
-        </svg>
-      {/if}
-      <input
-        id={$fieldState.fieldId}
-        value={$fieldState.value || ''}
-        placeholder={placeholder || ''}
-        on:blur={onBlur}
-        {type}
-        class="spectrum-Textfield-input" />
-    </div>
+  <div class="spectrum-Textfield" class:is-invalid={!$fieldState.valid}>
+    {#if !$fieldState.valid}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+        focusable="false"
+        aria-hidden="true">
+        <use xlink:href="#spectrum-icon-18-Alert" />
+      </svg>
+    {/if}
+    <input
+      id={$fieldState.fieldId}
+      value={$fieldState.value || ''}
+      placeholder={placeholder || ''}
+      on:blur={onBlur}
+      {type}
+      class="spectrum-Textfield-input" />
   </div>
 </SpectrumField>

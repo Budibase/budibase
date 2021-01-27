@@ -7,7 +7,6 @@
   export let datasource
   export let theme
   export let size
-  export let labelPosition = "left"
 
   const { styleable, API } = getContext("sdk")
   const component = getContext("component")
@@ -51,7 +50,7 @@
   }
 
   // Provide both form API and state to children
-  setContext("form", { formApi, formState, labelPosition })
+  setContext("form", { formApi, formState })
 
   // Creates an API for a specific field
   const makeFieldApi = (field, validate) => {
@@ -122,11 +121,7 @@
   dir="ltr"
   use:styleable={$component.styles}
   class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
-  <form
-    class="spectrum-Form"
-    class:spectrum-Form--labelsAbove={labelPosition === 'above'}>
-    {#if loaded}
-      <slot />
-    {/if}
-  </form>
+  {#if loaded}
+    <slot />
+  {/if}
 </div>
