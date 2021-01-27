@@ -26,10 +26,9 @@
 <div class="drawer-contents">
   <div class="container" data-cy="binding-dropdown-modal">
     <div class="list">
-      <Heading extraSmall>Objects</Heading>
-      <Spacer medium />
       {#if context}
-        <Heading extraSmall>Tables</Heading>
+        <Heading extraSmall>Columns</Heading>
+        <Spacer small />
         <ul>
           {#each context as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -53,8 +52,8 @@
       <TextArea
         thin
         bind:value
-        placeholder="Add text, or click the objects on the left to add them to the
-        textbox." />
+        placeholder="Add text, or click the objects on the left to add them to
+        the textbox." />
     </div>
   </div>
 </div>
@@ -63,15 +62,20 @@
   .container {
     height: 100%;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 260px 1fr;
   }
   .list {
-    width: 150px;
-    border-right: 1.5px solid var(--grey-4);
-    padding: var(--spacing-s);
+    border-right: var(--border-light);
+    padding: var(--spacing-l);
+    overflow: auto;
   }
+
+  .list::-webkit-scrollbar {
+    display: none;
+  }
+
   .text {
-    padding: var(--spacing-s);
+    padding: var(--spacing-xl);
     font-family: var(--font-sans);
   }
   .text :global(p) {
@@ -89,10 +93,12 @@
     font-family: var(--font-sans);
     font-size: var(--font-size-xs);
     color: var(--grey-7);
-    padding: var(--spacing-s) 0;
+    padding: var(--spacing-m) 0;
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
+    border: var(--border-light);
+    border-width: 1px 0 1px 0;
   }
 
   li:hover {
