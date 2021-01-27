@@ -1,6 +1,6 @@
 <script>
   import { notificationStore } from "builderStore/store/notifications"
-  import { flip } from 'svelte/animate';
+  import { flip } from "svelte/animate"
   import { fly } from "svelte/transition"
 
   export let themes = {
