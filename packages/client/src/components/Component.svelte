@@ -1,19 +1,23 @@
 <script>
   import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "../utils/componentProps"
   import { bindingStore, builderStore } from "../store"
+  import { hashString } from "../utils/hash"
 
   export let definition = {}
 
   let enrichedProps
   let componentProps
 
+  // Props are hashed when inside the builder preview and used as a key, so that
+  // components fully remount whenever any props change
+  let propsHash = 0
+
   // Get contexts
   const dataContext = getContext("data")
-  const screenslotContext = getContext("screenslot")
 
   // Create component context
   const componentStore = writable({})
@@ -27,16 +31,11 @@
   $: updateProps(enrichedProps)
   $: styles = definition._styles
 
-  // Allow component selection in the builder preview if we're previewing a
-  // layout, or we're preview a screen and we're inside the screenslot
-  $: allowSelection =
-    $builderStore.previewType === "layout" || screenslotContext
-
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...styles, id, allowSelection },
+    styles: { ...styles, id },
   })
 
   // Updates the component props.
@@ -46,14 +45,20 @@
     if (!props) {
       return
     }
+    let propsChanged = false
     if (!componentProps) {
       componentProps = {}
+      propsChanged = true
     }
     Object.keys(props).forEach(key => {
       if (!propsAreSame(props[key], componentProps[key])) {
+        propsChanged = true
         componentProps[key] = props[key]
       }
     })
+    if (get(builderStore).inBuilder && propsChanged) {
+      propsHash = hashString(JSON.stringify(componentProps))
+    }
   }
 
   // Gets the component constructor for the specified component
@@ -70,22 +75,16 @@
   const enrichComponentProps = async (definition, context, bindingStore) => {
     enrichedProps = await enrichProps(definition, context, bindingStore)
   }
-
-  // Returns a unique key to let svelte know when to remount components.
-  // If a component is selected we want to remount it every time any props
-  // change.
-  const getChildKey = childId => {
-    const selected = childId === $builderStore.selectedComponentId
-    return selected ? `${childId}-${$builderStore.previewId}` : childId
-  }
 </script>
 
 {#if constructor && componentProps}
-  <svelte:component this={constructor} {...componentProps}>
-    {#if children.length}
-      {#each children as child (getChildKey(child._id))}
-        <svelte:self definition={child} />
-      {/each}
-    {/if}
-  </svelte:component>
+  {#key propsHash}
+    <svelte:component this={constructor} {...componentProps}>
+      {#if children.length}
+        {#each children as child (child._id)}
+          <svelte:self definition={child} />
+        {/each}
+      {/if}
+    </svelte:component>
+  {/key}
 {/if}
