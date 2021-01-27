@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { Button, Spacer, Modal } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { store, hostingStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
@@ -29,6 +29,7 @@
 
       analytics.captureEvent("Deployed App", {
         appId,
+        hostingType: $hostingStore.hostingInfo?.type,
       })
 
       if (analytics.requestFeedbackOnDeploy()) {
@@ -37,6 +38,7 @@
     } catch (err) {
       analytics.captureEvent("Deploy App Failed", {
         appId,
+        hostingType: $hostingStore.hostingInfo?.type,
       })
       analytics.captureException(err)
       notifier.danger("Deployment unsuccessful. Please try again later.")
