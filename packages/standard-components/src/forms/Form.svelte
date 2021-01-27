@@ -1,4 +1,5 @@
 <script>
+  import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import { setContext, getContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
@@ -6,6 +7,7 @@
   export let datasource
   export let theme
   export let size
+  export let labelPosition = "left"
 
   const { styleable, API } = getContext("sdk")
   const component = getContext("component")
@@ -38,6 +40,10 @@
       fieldMap[field] = {
         fieldState: makeFieldState(field),
         fieldApi: makeFieldApi(field, validate),
+        fieldSchema: schema?.[field] ?? {},
+        fieldId: `${Math.random()
+          .toString(32)
+          .substr(2)}/${field}`,
       }
       fieldMap = fieldMap
       return fieldMap[field]
@@ -45,7 +51,7 @@
   }
 
   // Provide both form API and state to children
-  setContext("form", { formApi, formState })
+  setContext("form", { formApi, formState, labelPosition })
 
   // Creates an API for a specific field
   const makeFieldApi = (field, validate) => {
@@ -116,16 +122,11 @@
   dir="ltr"
   use:styleable={$component.styles}
   class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
-  {#if loaded}
-    <slot />
-  {/if}
+  <form
+    class="spectrum-Form"
+    class:spectrum-Form--labelsAbove={labelPosition === 'above'}>
+    {#if loaded}
+      <slot />
+    {/if}
+  </form>
 </div>
-
-<style>
-  .spectrum :global(label) {
-    font-size: var(
-      --spectrum-alias-item-text-size-m,
-      var(--spectrum-global-dimension-font-size-100)
-    ) !important;
-  }
-</style>

@@ -114,57 +114,6 @@
       }
     ]
   },
-  "form": {
-    "name": "Form",
-    "icon": "ri-file-edit-line",
-    "styleable": true,
-    "hasChildren": true,
-    "dataProvider": true,
-    "datasourceSetting": "datasource",
-    "settings": [
-      {
-        "type": "datasource",
-        "label": "Data",
-        "key": "datasource"
-      },
-      {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "defaultValue": "spectrum--light",
-        "options": [
-          {
-            "label": "Light",
-            "value": "spectrum--light"
-          },
-          {
-            "label": "Dark",
-            "value": "spectrum--dark"
-          },
-          {
-            "label": "Darkest",
-            "value": "spectrum--darkest"
-          }
-        ]
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      }
-    ]
-  },
   "richtext": {
     "name": "Rich Text",
     "description": "A component that allows the user to enter long form text.",
@@ -1121,6 +1070,77 @@
       }
     ]
   },
+  "form": {
+    "name": "Form",
+    "icon": "ri-file-edit-line",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "datasourceSetting": "datasource",
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "defaultValue": "spectrum--light",
+        "options": [
+          {
+            "label": "Light",
+            "value": "spectrum--light"
+          },
+          {
+            "label": "Dark",
+            "value": "spectrum--dark"
+          },
+          {
+            "label": "Darkest",
+            "value": "spectrum--darkest"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Labels",
+        "key": "labelPosition",
+        "defaultValue": "left",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left"
+          },
+          {
+            "label": "Right",
+            "value": "right"
+          },
+          {
+            "label": "Above",
+            "value": "above"
+          }
+        ]
+      }
+    ]
+  },
   "stringfield": {
     "name": "Text Field",
     "description": "A textfield component that allows the user to input text.",
@@ -1189,7 +1209,8 @@
       {
         "type": "text",
         "label": "Placeholder",
-        "key": "placeholder"
+        "key": "placeholder",
+        "placeholder": "Choose an option"
       }
     ]
   }

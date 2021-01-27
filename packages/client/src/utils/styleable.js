@@ -74,6 +74,7 @@ export const styleable = (node, styles = {}) => {
     // preview
     const applyStyles = styleString => {
       node.style = addBuilderPreviewStyles(styleString, componentId, selectable)
+      node.dataset.componentId = componentId
     }
 
     // Applies the "normal" style definition
