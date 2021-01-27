@@ -10,14 +10,7 @@ const FILENAME = "../manifest.json"
  * https://github.com/helpers/handlebars-helpers
  */
 
-const COLLECTIONS = [
-  "math",
-  "array",
-  "number",
-  "url",
-  "string",
-  "comparison",
-]
+const COLLECTIONS = ["math", "array", "number", "url", "string", "comparison"]
 
 const outputJSON = {}
 
@@ -59,7 +52,8 @@ function getCommentInfo(file, func) {
     // from here work back until we have the comment
     if (lookForward(lines, funcLines, idx)) {
       let fromIdx = idx
-      let start = 0, end = 0
+      let start = 0,
+        end = 0
       do {
         if (lines[fromIdx].includes("*/")) {
           end = fromIdx
@@ -96,7 +90,10 @@ function getCommentInfo(file, func) {
 function run() {
   const foundNames = []
   for (let collection of COLLECTIONS) {
-    const collectionFile = fs.readFileSync(`../node_modules/handlebars-helpers/lib/${collection}.js`, "utf8")
+    const collectionFile = fs.readFileSync(
+      `../node_modules/handlebars-helpers/lib/${collection}.js`,
+      "utf8"
+    )
     const collectionInfo = {}
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
@@ -115,7 +112,14 @@ function run() {
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
       let args = jsDocInfo.tags
         .filter(tag => tag.title === "param")
-        .map(tag => tag.description && tag.description.replace(/`/g, "").split(" ")[0].trim())
+        .map(
+          tag =>
+            tag.description &&
+            tag.description
+              .replace(/`/g, "")
+              .split(" ")[0]
+              .trim()
+        )
       collectionInfo[name] = fixSpecialCases(name, {
         args,
         numArgs: args.length,
@@ -127,15 +131,12 @@ function run() {
   }
   // add the date helper
   outputJSON["date"] = {
-    "date": {
-      args: [
-        "datetime",
-        "format"
-      ],
+    date: {
+      args: ["datetime", "format"],
       numArgs: 2,
-      example: "{{date now \"YYYY\"}}",
-      description: "Format a date using moment.js data formatting."
-    }
+      example: '{{date now "YYYY"}}',
+      description: "Format a date using moment.js data formatting.",
+    },
   }
   fs.writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))
 }
