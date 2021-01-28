@@ -12,15 +12,16 @@
   let fieldApi
   let value
   $: fieldApi?.setValue(value)
+  $: flatpickrOptions = {
+    element: `#${$fieldState?.id}-wrapper`,
+    enableTime: true,
+    altInput: true,
+    altFormat: "F j Y, H:i",
+  }
 
   const handleChange = event => {
     const [fullDate] = event.detail
     value = fullDate
-  }
-
-  const formatDate = dateString => {
-    const date = new Date(dateString)
-    return date.toDateString()
   }
 </script>
 
@@ -28,7 +29,7 @@
   {#if fieldState}
     <Flatpickr
       {value}
-      options={{ element: `#${$fieldState.id}-wrapper` }}
+      options={flatpickrOptions}
       on:change={handleChange}
       element={`#${$fieldState.id}-wrapper`}>
       <div
@@ -47,7 +48,7 @@
             aria-invalid="false"
             {placeholder}
             id={$fieldState.id}
-            value={formatDate($fieldState.value)} />
+            value={$fieldState.value} />
         </div>
         <button
           type="button"
