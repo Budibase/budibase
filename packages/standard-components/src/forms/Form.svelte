@@ -16,15 +16,14 @@
   let table
   let fieldMap = {}
 
-  // Keep form state up to date with form fields
-  $: updateFormState(fieldMap)
-
   // Form state contains observable data about the form
   const formState = writable({ values: {}, errors: {}, valid: true })
+  $: updateFormState(fieldMap)
+  $: setBindableValue($component.id, $formState.values)
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, componentId) => {
+    registerField: field => {
       if (!field) {
         return
       }
@@ -38,7 +37,7 @@
 
       fieldMap[field] = {
         fieldState: makeFieldState(field),
-        fieldApi: makeFieldApi(field, componentId, validate),
+        fieldApi: makeFieldApi(field, validate),
         fieldSchema: schema?.[field] ?? {},
       }
       fieldMap = fieldMap
@@ -53,8 +52,6 @@
   const makeFieldApi = (field, componentId, validate) => {
     return {
       setValue: value => {
-        console.log("setting " + componentId + " to " + value)
-        setBindableValue(value, componentId)
         const { fieldState } = fieldMap[field]
         fieldState.update(state => {
           state.value = value

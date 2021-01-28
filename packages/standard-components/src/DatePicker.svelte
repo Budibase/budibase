@@ -8,7 +8,7 @@
   export let placeholder
 
   let value
-  $: setBindableValue(value, $component.id)
+  $: setBindableValue($component.id, value)
 
   function handleChange(event) {
     const [fullDate] = event.detail

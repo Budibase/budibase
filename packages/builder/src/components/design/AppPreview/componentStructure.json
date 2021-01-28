@@ -12,6 +12,7 @@
       "stringfield",
       "numberfield",
       "optionsfield",
+      "booleanfield",
       "richtext",
       "datepicker"
     ]

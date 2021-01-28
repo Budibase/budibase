@@ -44,6 +44,7 @@
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@spectrum-css/actionbutton": "^1.0.0-beta.1",
     "@spectrum-css/button": "^3.0.0-beta.6",
+    "@spectrum-css/checkbox": "^3.0.0-beta.6",
     "@spectrum-css/fieldlabel": "^3.0.0-beta.7",
     "@spectrum-css/icon": "^3.0.0-beta.2",
     "@spectrum-css/menu": "^3.0.0-beta.5",

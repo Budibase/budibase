@@ -142,6 +142,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.0-beta.6.tgz#007919d3e7a6692e506dc9addcd46aee6b203b1a"
   integrity sha512-ZoJxezt5Pc006RR7SMG7PfC0VAdWqaGDpd21N8SEykGuz/KmNulqGW8RiSZQGMVX/jk5ZCAthPrH8cI/qtKbMg==
 
+"@spectrum-css/checkbox@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/checkbox/-/checkbox-3.0.0-beta.6.tgz#338c4e58c4570ac8023f7332794fcb45f5ae9374"
+  integrity sha512-Z0Mwu7yn2b+QcZaBqMpKhliTQiF8T/cRyKgTyaIACtJ0FAK5NBJ4h/X6SWW3iXtoUWCH4+p/Hdtq1iQHAFi1qQ==
+
 "@spectrum-css/fieldlabel@^3.0.0-beta.7":
   version "3.0.0-beta.7"
   resolved "https://registry.yarnpkg.com/@spectrum-css/fieldlabel/-/fieldlabel-3.0.0-beta.7.tgz#f37797565e21b3609b8fbc2dafcea8ea41ffa114"

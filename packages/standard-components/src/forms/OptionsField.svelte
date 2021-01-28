@@ -54,7 +54,8 @@
     </button>
     <div
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover"
-      class:is-open={open}>
+      class:is-open={open}
+      style="z-index: 1;">
       <ul class="spectrum-Menu" role="listbox">
         <li
           class="spectrum-Menu-item"

@@ -18,7 +18,7 @@
   // Register field with form
   const { formApi } = formContext || {}
   const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field, $component.id)
+  const formField = formApi?.registerField(field)
 
   // Expose field properties to parent component
   fieldState = formField?.fieldState
@@ -37,13 +37,11 @@
 {:else}
   <FieldGroupFallback>
     <div class="spectrum-Form-item" use:styleable={$component.styles}>
-      {#if label}
-        <label
-          for={$fieldState.fieldId}
-          class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
-          {label}
-        </label>
-      {/if}
+      <label
+        for={$fieldState.fieldId}
+        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
+        {label || ''}
+      </label>
       <div class="spectrum-Form-itemField">
         <slot />
         {#if $fieldState.error}

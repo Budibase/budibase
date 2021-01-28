@@ -1123,7 +1123,6 @@
   },
   "fieldgroup": {
     "name": "Field Group",
-    "description": "A group of fields in a form.",
     "icon": "ri-edit-box-line",
     "styleable": true,
     "hasChildren": true,
@@ -1152,7 +1151,6 @@
   },
   "stringfield": {
     "name": "Text Field",
-    "description": "A textfield component that allows the user to input text.",
     "icon": "ri-edit-box-line",
     "styleable": true,
     "bindable": true,
@@ -1176,7 +1174,6 @@
   },
   "numberfield": {
     "name": "Number Field",
-    "description": "A textfield component that allows the user to input numbers.",
     "icon": "ri-edit-box-line",
     "styleable": true,
     "bindable": true,
@@ -1200,7 +1197,6 @@
   },
   "optionsfield": {
     "name": "Options Picker",
-    "description": "A textfield component that allows the user to input text.",
     "icon": "ri-edit-box-line",
     "styleable": true,
     "bindable": true,
@@ -1220,6 +1216,29 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
+      }
+    ]
+  },
+  "booleanfield": {
+    "name": "Checkbox",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "bindable": true,
+    "settings": [
+      {
+        "type": "field/boolean",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
       }
     ]
   }

@@ -20,6 +20,7 @@
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
   import NumberFieldSelect from "./PropertyControls/NumberFieldSelect.svelte"
   import OptionsFieldSelect from "./PropertyControls/OptionsFieldSelect.svelte"
+  import BooleanFieldSelect from "./PropertyControls/BooleanFieldSelect.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -64,6 +65,7 @@
     "field/string": StringFieldSelect,
     "field/number": NumberFieldSelect,
     "field/options": OptionsFieldSelect,
+    "field/boolean": BooleanFieldSelect,
   }
 
   const getControl = type => {
