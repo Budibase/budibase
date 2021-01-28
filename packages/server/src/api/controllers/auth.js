@@ -45,7 +45,7 @@ exports.authenticate = async ctx => {
       expiresIn: "1 day",
     })
 
-    setCookie(ctx, appId, token)
+    setCookie(ctx, token, appId)
 
     delete dbUser.password
     ctx.body = {

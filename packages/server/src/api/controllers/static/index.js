@@ -49,6 +49,18 @@ exports.serveBuilder = async function(ctx) {
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
 
+exports.serveSelfHostPage = async function(ctx) {
+  const logo = fs.readFileSync(resolve(__dirname, "selfhost/logo.svg"), "utf8")
+  const hostingHbs = fs.readFileSync(
+    resolve(__dirname, "selfhost/index.hbs"),
+    "utf8"
+  )
+  ctx.body = await processString(hostingHbs, {
+    logo,
+    key: env.HOSTING_KEY,
+  })
+}
+
 exports.uploadFile = async function(ctx) {
   let files
   files =
@@ -177,7 +189,6 @@ exports.serveApp = async function(ctx) {
   })
 
   const appHbs = fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
-  console.log(appHbs)
   ctx.body = await processString(appHbs, {
     head,
     body: html,

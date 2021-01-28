@@ -2,7 +2,13 @@ const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
 const { getRole, BUILTIN_ROLES } = require("../utilities/security/roles")
 const { AuthTypes } = require("../constants")
-const { getAppId, getCookieName, setCookie, isClient } = require("../utilities")
+const {
+  getAppId,
+  getCookieName,
+  clearCookie,
+  setCookie,
+  isClient,
+} = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -15,16 +21,17 @@ module.exports = async (ctx, next) => {
   let appId = getAppId(ctx)
   const cookieAppId = ctx.cookies.get(getCookieName("currentapp"))
   if (appId && cookieAppId !== appId) {
-    setCookie(ctx, "currentapp", appId)
+    setCookie(ctx, appId, "currentapp")
   } else if (cookieAppId) {
     appId = cookieAppId
   }
-
-  let token = ctx.cookies.get(getCookieName(appId))
-  let authType = AuthTypes.APP
-  if (!token && !isClient(ctx)) {
-    authType = AuthTypes.BUILDER
+  let token, authType
+  if (!isClient(ctx)) {
     token = ctx.cookies.get(getCookieName())
+    authType = AuthTypes.BUILDER
+  } else if (appId) {
+    token = ctx.cookies.get(getCookieName(appId))
+    authType = AuthTypes.APP
   }
 
   if (!token) {
@@ -49,9 +56,13 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, jwtPayload.roleId),
     }
   } catch (err) {
-    // TODO - this can happen if the JWT secret is changed and can never login
-    // TODO: wipe cookies if they exist
-    ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)
+    if (authType === AuthTypes.BUILDER) {
+      clearCookie(ctx)
+      ctx.status = 200
+      return
+    } else {
+      ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)
+    }
   }
 
   await next()
