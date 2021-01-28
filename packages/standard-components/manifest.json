@@ -114,13 +114,6 @@
       }
     ]
   },
-  "richtext": {
-    "name": "Rich Text",
-    "description": "A component that allows the user to enter long form text.",
-    "icon": "ri-edit-box-line",
-    "styleable": true,
-    "bindable": true
-  },
   "datepicker": {
     "name": "Date Picker",
     "description": "A basic date picker component",
@@ -1239,6 +1232,29 @@
         "type": "text",
         "label": "Text",
         "key": "text"
+      }
+    ]
+  },
+  "longformfield": {
+    "name": "Rich Text",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/longform",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Type something..."
       }
     ]
   }

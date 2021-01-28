@@ -49,7 +49,7 @@
   setContext("form", { formApi, formState })
 
   // Creates an API for a specific field
-  const makeFieldApi = (field, componentId, validate) => {
+  const makeFieldApi = (field, validate) => {
     return {
       setValue: value => {
         const { fieldState } = fieldMap[field]
