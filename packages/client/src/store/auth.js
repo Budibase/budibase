@@ -3,9 +3,10 @@ import { writable, get } from "svelte/store"
 import { initialise } from "./initialise"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
+import { TableNames } from "../constants"
 
 const createAuthStore = () => {
-  const store = writable("")
+  const store = writable(null)
 
   const goToDefaultRoute = () => {
     // Setting the active route forces an update of the active screen ID,
@@ -15,16 +16,20 @@ const createAuthStore = () => {
     // Navigating updates the URL to reflect this route
     routeStore.actions.navigate("/")
   }
+
+  // Logs a user in
   const logIn = async ({ email, password }) => {
     const user = await API.logIn({ email, password })
     if (!user.error) {
-      store.set(user.token)
+      store.set(user)
       await initialise()
       goToDefaultRoute()
     }
   }
+
+  // Logs a user out
   const logOut = async () => {
-    store.set("")
+    store.set(null)
     const appId = get(builderStore).appId
     if (appId) {
       for (let environment of ["local", "cloud"]) {
@@ -35,9 +40,34 @@ const createAuthStore = () => {
     goToDefaultRoute()
   }
 
+  // Fetches the user object if someone is logged in and has reloaded the page
+  const fetchUser = async () => {
+    // Fetch the first user if inside the builder
+    if (get(builderStore).inBuilder) {
+      const users = await API.fetchTableData(TableNames.USERS)
+      if (!users.error && users[0] != null) {
+        store.set(users[0])
+      }
+    }
+
+    // Or fetch the current user from localstorage in a real app
+    else {
+      if (get(store) == null) {
+        const user = await API.fetchSelf()
+        if (user) {
+          store.set(user)
+        } else {
+          await logOut()
+        }
+      } else {
+        await logOut()
+      }
+    }
+  }
+
   return {
     subscribe: store.subscribe,
-    actions: { logIn, logOut },
+    actions: { logIn, logOut, fetchUser },
   }
 }
 

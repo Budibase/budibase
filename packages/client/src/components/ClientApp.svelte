@@ -4,12 +4,7 @@
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
   import SDK from "../sdk"
-  import {
-    createDataStore,
-    initialise,
-    screenStore,
-    notificationStore,
-  } from "../store"
+  import { createDataStore, initialise, screenStore, authStore } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -22,6 +17,7 @@
   // Load app config
   onMount(async () => {
     await initialise()
+    await authStore.actions.fetchUser()
     loaded = true
   })
 </script>
