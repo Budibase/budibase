@@ -77,11 +77,21 @@ exports.getLinkDocuments = async function({
   }
   params.include_docs = !!includeDocs
   try {
-    const response = await db.query(getQueryIndex(ViewNames.LINK), params)
+    let linkRows = (await db.query(getQueryIndex(ViewNames.LINK), params)).rows
+    // filter to get unique entries
+    const foundIds = []
+    linkRows = linkRows.filter(link => {
+      const unique = foundIds.indexOf(link.id) === -1
+      if (unique) {
+        foundIds.push(link.id)
+      }
+      return unique
+    })
+
     if (includeDocs) {
-      return response.rows.map(row => row.doc)
+      return linkRows.map(row => row.doc)
     } else {
-      return response.rows.map(row => row.value)
+      return linkRows.map(row => row.value)
     }
   } catch (err) {
     // check if the view doesn't exist, it should for all new instances
