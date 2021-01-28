@@ -1,3 +1,5 @@
+import flatpickr from "flatpickr"
+
 export const createValidatorFromConstraints = (constraints, field, table) => {
   let checks = []
 
@@ -11,7 +13,7 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     }
 
     // String length constraint
-    if (constraints.length?.maximum) {
+    if (constraints.length?.maximum != null) {
       const length = constraints.length?.maximum
       checks.push(lengthConstraint(length))
     }
@@ -27,9 +29,19 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     }
 
     // Inclusion constraint
-    if (constraints.inclusion !== undefined) {
+    if (constraints.inclusion != null) {
       const options = constraints.inclusion
       checks.push(inclusionConstraint(options))
+    }
+
+    // Date constraint
+    if (constraints.datetime?.earliest != null) {
+      const limit = constraints.datetime.earliest
+      checks.push(dateConstraint(limit, true))
+    }
+    if (constraints.datetime?.latest != null) {
+      const limit = constraints.datetime.latest
+      checks.push(dateConstraint(limit, false))
     }
   }
 
@@ -51,7 +63,7 @@ const presenceConstraint = value => {
 
 const lengthConstraint = maxLength => value => {
   if (value && value.length > maxLength) {
-    ;`Maximum ${maxLength} characters`
+    return `Maximum ${maxLength} characters`
   }
   return null
 }
@@ -75,4 +87,18 @@ const inclusionConstraint = (options = []) => value => {
     return "Invalid value"
   }
   return null
+}
+
+const dateConstraint = (dateString, isEarliest) => {
+  const dateLimit = Date.parse(dateString)
+  return value => {
+    if (value == null || value === "" || !value.length) {
+      return null
+    }
+    const dateValue = Date.parse(value[0])
+    const valid = isEarliest ? dateValue >= dateLimit : dateValue <= dateLimit
+    const adjective = isEarliest ? "Earliest" : "Latest"
+    const limitString = flatpickr.formatDate(new Date(dateLimit), "F j Y, H:i")
+    return valid ? null : `${adjective} is ${limitString}`
+  }
 }
