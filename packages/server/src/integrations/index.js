@@ -32,7 +32,7 @@ const INTEGRATIONS = {
   SQL_SERVER: sqlServer.integration,
   AIRTABLE: airtable.integration,
   MYSQL: mysql.integration,
-  ARANGODB:　arangodb.integration,
+  ARANGODB: arangodb.integration,
 }
 
 module.exports = {
