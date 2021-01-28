@@ -22,36 +22,11 @@
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
 
-  export let hasKey
   export let template
 
-  let isApiKeyValid
   let lastApiKey
   let fetchApiKeyPromise
 
-  const validateApiKey = async apiKey => {
-    if (isApiKeyValid) return true
-    if (!apiKey) return false
-
-    // make sure we only fetch once, unless API Key is changed
-    if (isApiKeyValid === undefined || apiKey !== lastApiKey) {
-      lastApiKey = apiKey
-      // svelte reactivity was causing a requst to get fired mutiple times
-      // so, we make everything await the same promise, if one exists
-      if (!fetchApiKeyPromise) {
-        fetchApiKeyPromise = analytics.identifyByApiKey(apiKey)
-      }
-      isApiKeyValid = await fetchApiKeyPromise
-      fetchApiKeyPromise = undefined
-    }
-    return isApiKeyValid
-  }
-
-  const apiValidation = {
-    apiKey: string()
-      .required("Please enter your API key.")
-      .test("valid-apikey", "This API key is invalid", validateApiKey),
-  }
   const infoValidation = {
     applicationName: string().required("Your application must have a name."),
   }
@@ -66,9 +41,9 @@
   let submitting = false
   let errors = {}
   let validationErrors = {}
-  let validationSchemas = [apiValidation, infoValidation, userValidation]
+  let validationSchemas = [infoValidation, userValidation]
 
-  function buildStep(component) {
+  function buildStep(component, skippable) {
     return {
       component,
       errors,
@@ -76,7 +51,7 @@
   }
 
   // steps need to be initialized for cypress from the get go
-  let steps = [buildStep(API), buildStep(Info), buildStep(User)]
+  let steps = [buildStep(Info), buildStep(User)]
 
   onMount(async () => {
     let hostingInfo = await hostingStore.actions.fetch()
@@ -87,16 +62,10 @@
       infoValidation.applicationName = string()
         .required("Your application must have a name.")
         .notOneOf(existingAppNames)
-      isApiKeyValid = true
       steps = [buildStep(Info), buildStep(User)]
       validationSchemas = [infoValidation, userValidation]
     }
   })
-
-  if (hasKey) {
-    validationSchemas.shift()
-    steps.shift()
-  }
 
   // Handles form navigation
   const back = () => {
@@ -145,11 +114,6 @@
   async function createNewApp() {
     submitting = true
     try {
-      // Add API key if there is none.
-      if (!hasKey) {
-        await updateKey(["budibase", $createAppStore.values.apiKey])
-      }
-
       // Create App
       const appResp = await post("/api/applications", {
         name: $createAppStore.values.applicationName,
