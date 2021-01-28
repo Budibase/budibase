@@ -1,6 +1,5 @@
 <script>
   import { RichText } from "@budibase/bbui"
-  import "@spectrum-css/checkbox/dist/index-vars.css"
   import SpectrumField from "./SpectrumField.svelte"
 
   export let field
@@ -9,7 +8,6 @@
 
   let fieldState
   let fieldApi
-
   let value
   $: fieldApi?.setValue(value)
 

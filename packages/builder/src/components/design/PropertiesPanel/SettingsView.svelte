@@ -22,6 +22,7 @@
   import OptionsFieldSelect from "./PropertyControls/OptionsFieldSelect.svelte"
   import BooleanFieldSelect from "./PropertyControls/BooleanFieldSelect.svelte"
   import LongFormFieldSelect from "./PropertyControls/LongFormFieldSelect.svelte"
+  import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -68,6 +69,7 @@
     "field/options": OptionsFieldSelect,
     "field/boolean": BooleanFieldSelect,
     "field/longform": LongFormFieldSelect,
+    "field/datetime": DateTimeFieldSelect,
   }
 
   const getControl = type => {
