@@ -38,7 +38,6 @@
   }
 
   function toggleAnalytics() {
-    console.log(analyticsDisabled)
     if (analyticsDisabled) {
       analytics.optIn()
     } else {
