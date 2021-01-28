@@ -47,6 +47,7 @@
     "@spectrum-css/checkbox": "^3.0.0-beta.6",
     "@spectrum-css/fieldlabel": "^3.0.0-beta.7",
     "@spectrum-css/icon": "^3.0.0-beta.2",
+    "@spectrum-css/inputgroup": "^3.0.0-beta.7",
     "@spectrum-css/menu": "^3.0.0-beta.5",
     "@spectrum-css/page": "^3.0.0-beta.0",
     "@spectrum-css/picker": "^1.0.0-beta.3",

@@ -14,7 +14,7 @@
       "optionsfield",
       "booleanfield",
       "longformfield",
-      "datepicker"
+      "datetimefield"
     ]
   },
   {

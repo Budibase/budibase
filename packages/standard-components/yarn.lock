@@ -157,6 +157,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.0-beta.2.tgz#2dd7258ded74501b56e5fc42d0b6f0a3f4936aeb"
   integrity sha512-BEHJ68YIXSwsNAqTdq/FrS4A+jtbKzqYrsGKXdDf93ql+fHWYXRCh1EVYGHx/1696mY73DhM4snMpKGIFtXGFA==
 
+"@spectrum-css/inputgroup@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/inputgroup/-/inputgroup-3.0.0-beta.7.tgz#9829812e349bf973fb8835f0586bf013c8c38d23"
+  integrity sha512-pZDpYhtTKZUVG31Rtx7imdwK2ohLyVuTEsl+mj2yDKn+2TOwYRxr6LdbfNhFN4xd0GtSqapKYfbgKBWYpIyiSw==
+
 "@spectrum-css/menu@^3.0.0-beta.5":
   version "3.0.0-beta.5"
   resolved "https://registry.yarnpkg.com/@spectrum-css/menu/-/menu-3.0.0-beta.5.tgz#99d5ea7f6760b7a89d5d732f4e91b98dd3f82d74"
