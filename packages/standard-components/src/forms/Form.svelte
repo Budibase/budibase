@@ -8,7 +8,7 @@
   export let theme
   export let size
 
-  const { styleable, API } = getContext("sdk")
+  const { styleable, API, setBindableValue } = getContext("sdk")
   const component = getContext("component")
 
   let loaded = false
@@ -24,7 +24,7 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: field => {
+    registerField: (field, componentId) => {
       if (!field) {
         return
       }
@@ -38,11 +38,8 @@
 
       fieldMap[field] = {
         fieldState: makeFieldState(field),
-        fieldApi: makeFieldApi(field, validate),
+        fieldApi: makeFieldApi(field, componentId, validate),
         fieldSchema: schema?.[field] ?? {},
-        fieldId: `${Math.random()
-          .toString(32)
-          .substr(2)}/${field}`,
       }
       fieldMap = fieldMap
       return fieldMap[field]
@@ -53,9 +50,11 @@
   setContext("form", { formApi, formState })
 
   // Creates an API for a specific field
-  const makeFieldApi = (field, validate) => {
+  const makeFieldApi = (field, componentId, validate) => {
     return {
       setValue: value => {
+        console.log("setting " + componentId + " to " + value)
+        setBindableValue(value, componentId)
         const { fieldState } = fieldMap[field]
         fieldState.update(state => {
           state.value = value
@@ -72,6 +71,9 @@
   const makeFieldState = field => {
     return writable({
       field,
+      fieldId: `${Math.random()
+        .toString(32)
+        .substr(2)}/${field}`,
       value: null,
       error: null,
       valid: true,

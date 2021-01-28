@@ -5,21 +5,32 @@
 
   export let label
   export let field
+  export let fieldState
+  export let fieldApi
+  export let fieldSchema
 
+  // Get contexts
   const formContext = getContext("form")
   const fieldGroupContext = getContext("fieldGroup")
   const { styleable } = getContext("sdk")
   const component = getContext("component")
+
+  // Register field with form
   const { formApi } = formContext || {}
   const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field) ?? {}
-  const { fieldId, fieldState } = formField
+  const formField = formApi?.registerField(field, $component.id)
 
+  // Expose field properties to parent component
+  fieldState = formField?.fieldState
+  fieldApi = formField?.fieldApi
+  fieldSchema = formField?.fieldSchema
+
+  // Extract label position from field group context
   $: labelPositionClass =
     labelPosition === "above" ? "" : `spectrum-FieldLabel--${labelPosition}`
 </script>
 
-{#if !fieldId}
+{#if !fieldState}
   <Placeholder>Add the Field setting to start using your component</Placeholder>
 {:else if !formContext}
   <Placeholder>Form components need to be wrapped in a Form</Placeholder>
@@ -28,7 +39,7 @@
     <div class="spectrum-Form-item" use:styleable={$component.styles}>
       {#if label}
         <label
-          for={fieldId}
+          for={$fieldState.fieldId}
           class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
           {label}
         </label>
