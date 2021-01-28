@@ -5,6 +5,7 @@ version: "3"
 services:
   app-service:
     restart: always
+    #build: ./build/server
     image: budibase/budibase-apps
     ports:
       - "${APP_PORT}:4002"
@@ -22,6 +23,7 @@ services:
 
   worker-service:
     restart: always
+    #build: ./build/worker
     image: budibase/budibase-worker
     ports:
       - "${WORKER_PORT}:4003"
