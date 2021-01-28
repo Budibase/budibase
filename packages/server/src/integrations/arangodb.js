@@ -52,9 +52,7 @@ class ArangoDBIntegration {
   async read(query) {
     try {
       const result = await this.client.query(query.sql)
-      let rl = []
-      await result.forEach(r => rl.push(r))
-      return rl
+      return result.all()
     } catch (err) {
       console.error("Error querying arangodb", err.message)
       throw err
@@ -67,11 +65,9 @@ class ArangoDBIntegration {
     const clc = this.client.collection(this.config.collection)
     try {
       const result = await this.client.query(
-        aql`INSERT ${query.json} INTO ${clc} LET n = NEW RETURN NEW`
+        aql`INSERT ${query.json} INTO ${clc} RETURN NEW`
       )
-      let rl = []
-      await result.forEach(r => rl.push(r))
-      return rl
+      return result.all()
     } catch (err) {
       console.error("Error querying arangodb", err.message)
       throw err
