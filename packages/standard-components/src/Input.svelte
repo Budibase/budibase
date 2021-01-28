@@ -7,7 +7,7 @@
   let value
 
   function onBlur() {
-    setBindableValue(value, $component.id)
+    setBindableValue($component.id, value)
   }
 </script>
 
