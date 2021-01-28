@@ -22,7 +22,7 @@
   $: options = getOptions(schema, type)
 
   const getOptions = (schema, fieldType) => {
-    let entries = Object.entries(schema)
+    let entries = Object.entries(schema ?? {})
     if (fieldType) {
       entries = entries.filter(entry => entry[1].type === fieldType)
     }
