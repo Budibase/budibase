@@ -43,7 +43,7 @@
   let validationErrors = {}
   let validationSchemas = [infoValidation, userValidation]
 
-  function buildStep(component, skippable) {
+  function buildStep(component) {
     return {
       component,
       errors,
