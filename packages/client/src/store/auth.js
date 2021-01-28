@@ -52,16 +52,8 @@ const createAuthStore = () => {
 
     // Or fetch the current user from localstorage in a real app
     else {
-      if (get(store) == null) {
-        const user = await API.fetchSelf()
-        if (user) {
-          store.set(user)
-        } else {
-          await logOut()
-        }
-      } else {
-        await logOut()
-      }
+      const user = await API.fetchSelf()
+      store.set(user)
     }
   }
 
