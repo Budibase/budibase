@@ -7,6 +7,7 @@ const sqlServer = require("./microsoftSqlServer")
 const s3 = require("./s3")
 const airtable = require("./airtable")
 const mysql = require("./mysql")
+const arangodb = require("./arangodb")
 
 const DEFINITIONS = {
   POSTGRES: postgres.schema,
@@ -18,6 +19,7 @@ const DEFINITIONS = {
   S3: s3.schema,
   AIRTABLE: airtable.schema,
   MYSQL: mysql.schema,
+  ARANGODB: arangodb.schema,
 }
 
 const INTEGRATIONS = {
@@ -30,6 +32,7 @@ const INTEGRATIONS = {
   SQL_SERVER: sqlServer.integration,
   AIRTABLE: airtable.integration,
   MYSQL: mysql.integration,
+  ARANGODB:　arangodb.integration,
 }
 
 module.exports = {
