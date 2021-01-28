@@ -1,7 +1,5 @@
-const arangojs = require("arangojs")
+const { Database, aql } = require("arangojs")
 const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
-// const arangodb = arangojs.Database
-const aql = arangojs.aql
 
 const SCHEMA = {
     docs: "https://github.com/arangodb/arangojs",
@@ -48,7 +46,7 @@ class ArangoDBIntegration {
         }
         
         this.config = config
-        this.client = arangojs.arangojs(config)
+        this.client = new Database(config)
     }
 
     async read(query) {
