@@ -75,6 +75,7 @@ specifiers so that it is safe for use in Handlebars. Ideally this function shoul
 being accessed, for example `[Table 1].[property name]` is the syntax that is required for Handlebars. 
 6. `isValid` - `(string)` - checks the given string for any templates and provides a boolean stating whether it is a valid
 template.
+7. `getManifest` - returns the manifest JSON which has been generated for the helpers, describing them and their params.
 
 ## Development
 This library is built with [Rollup](https://rollupjs.org/guide/en/) as many of the packages built by Budibase are. We have
