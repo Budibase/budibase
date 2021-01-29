@@ -29,7 +29,8 @@ module.exports = async (ctx, next) => {
   if (!isClient(ctx)) {
     token = ctx.cookies.get(getCookieName())
     authType = AuthTypes.BUILDER
-  } else if (appId) {
+  }
+  if (!token && appId) {
     token = ctx.cookies.get(getCookieName(appId))
     authType = AuthTypes.APP
   }
