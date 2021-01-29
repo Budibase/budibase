@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.5.3",
+  "version": "0.6.2",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -49,13 +49,14 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/client": "^0.6.2",
+    "@budibase/string-templates": "^0.6.2",
     "@elastic/elasticsearch": "^7.10.0",
-    "@budibase/client": "^0.5.3",
-    "@budibase/string-templates": "^0.5.3",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
     "airtable": "^0.10.1",
+    "arangojs": "^7.2.0",
     "aws-sdk": "^2.767.0",
     "bcryptjs": "^2.4.3",
     "chmodr": "^1.2.0",
@@ -82,6 +83,7 @@
     "lodash": "^4.17.13",
     "mongodb": "^3.6.3",
     "mssql": "^6.2.3",
+    "mysql": "^2.18.1",
     "node-fetch": "^2.6.0",
     "open": "^7.3.0",
     "pg": "^8.5.1",

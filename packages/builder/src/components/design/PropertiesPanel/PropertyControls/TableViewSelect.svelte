@@ -34,15 +34,17 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-  $: queries = $backendUiStore.queries.map(query => ({
-    label: query.name,
-    name: query.name,
-    tableId: query._id,
-    ...query,
-    schema: query.schema,
-    parameters: query.parameters,
-    type: "query",
-  }))
+  $: queries = $backendUiStore.queries
+    .filter(query => query.queryVerb === "read")
+    .map(query => ({
+      label: query.name,
+      name: query.name,
+      tableId: query._id,
+      ...query,
+      schema: query.schema,
+      parameters: query.parameters,
+      type: "query",
+    }))
   $: bindableProperties = getBindableProperties(
     $currentAsset.props,
     $store.selectedComponentId

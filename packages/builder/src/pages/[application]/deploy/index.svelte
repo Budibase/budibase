@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { Button, Spacer, Modal } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { store, hostingStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
@@ -17,6 +17,18 @@
   $: appId = $store.appId
 
   async function deployApp() {
+    // Must have cloud or self host API key to deploy
+    if (!$hostingStore.hostingInfo?.selfHostKey) {
+      const response = await api.get(`/api/keys/`)
+      const userKeys = await response.json()
+      if (!userKeys.budibase) {
+        notifier.danger(
+          "No budibase API Keys configured. You must set either a self hosted or cloud API key to deploy your budibase app."
+        )
+      }
+      return
+    }
+
     const DEPLOY_URL = `/api/deploy`
 
     try {
@@ -29,6 +41,7 @@
 
       analytics.captureEvent("Deployed App", {
         appId,
+        hostingType: $hostingStore.hostingInfo?.type,
       })
 
       if (analytics.requestFeedbackOnDeploy()) {
@@ -37,6 +50,7 @@
     } catch (err) {
       analytics.captureEvent("Deploy App Failed", {
         appId,
+        hostingType: $hostingStore.hostingInfo?.type,
       })
       analytics.captureException(err)
       notifier.danger("Deployment unsuccessful. Please try again later.")

@@ -1,6 +1,7 @@
 <script>
   import { notifier } from "builderStore/store/notifications"
   import { hostingStore } from "builderStore"
+  import { HostingTypes } from "constants/backend"
   import { Input, ModalContent, Toggle } from "@budibase/bbui"
   import ThemeEditor from "components/settings/ThemeEditor.svelte"
   import analytics from "analytics"
@@ -9,8 +10,10 @@
   let hostingInfo
   let selfhosted = false
 
+  $: analyticsDisabled = analytics.disabled()
+
   async function save() {
-    hostingInfo.type = selfhosted ? "self" : "cloud"
+    hostingInfo.type = selfhosted ? HostingTypes.SELF : HostingTypes.CLOUD
     if (!selfhosted && hostingInfo._rev) {
       hostingInfo = {
         type: hostingInfo.type,
@@ -27,10 +30,18 @@
   }
 
   function updateSelfHosting(event) {
-    if (hostingInfo.type === "cloud" && event.target.checked) {
+    if (hostingInfo.type === HostingTypes.CLOUD && event.target.checked) {
       hostingInfo.hostingUrl = "localhost:10000"
       hostingInfo.useHttps = false
       hostingInfo.selfHostKey = "budibase"
+    }
+  }
+
+  function toggleAnalytics() {
+    if (analyticsDisabled) {
+      analytics.optIn()
+    } else {
+      analytics.optOut()
     }
   }
 
@@ -58,6 +69,16 @@
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
     <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
   {/if}
+  <h5>Analytics</h5>
+  <p>
+    If you would like to send analytics that help us make budibase better,
+    please let us know below.
+  </p>
+  <Toggle
+    thin
+    text="Send Analytics To Budibase"
+    checked={!analyticsDisabled}
+    on:change={toggleAnalytics} />
 </ModalContent>
 
 <style>
