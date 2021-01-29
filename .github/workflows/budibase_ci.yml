@@ -40,7 +40,7 @@ jobs:
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       run: |
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        yarn build:staging:docker
+        yarn build:docker:staging
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
