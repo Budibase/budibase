@@ -1,6 +1,7 @@
 <script>
-  import { Input, Label } from "@budibase/bbui"
+  import { Input, Label, TextButton } from "@budibase/bbui"
   import api from "builderStore/api"
+  import { notifier } from "builderStore/store/notifications"
   import { backendUiStore } from "builderStore"
   import analytics from "analytics"
 
@@ -10,7 +11,7 @@
     if (key === "budibase") {
       const isValid = await analytics.identifyByApiKey(value)
       if (!isValid) {
-        // TODO: add validation message
+        notifier.danger("Your API Key is invalid.")
         keys = { ...keys }
         return
       }
@@ -38,7 +39,10 @@
     thin
     edit
     value={keys.budibase}
-    label="Budibase API Key" />
+    label="Budibase Cloud API Key" />
+  <TextButton text medium blue href="https://portal.budi.live">
+    Log in to the Budibase Hosting Portal to get your API Key. →
+  </TextButton>
   <div>
     <Label extraSmall grey>Instance ID (Webhooks)</Label>
     <span>{$backendUiStore.selectedDatabase._id}</span>

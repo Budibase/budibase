@@ -4,7 +4,7 @@
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "../utils/componentProps"
-  import { bindingStore, builderStore } from "../store"
+  import { authStore, bindingStore, builderStore } from "../store"
   import { hashString } from "../utils/hash"
 
   export let definition = {}
@@ -32,7 +32,7 @@
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children || []
   $: id = definition._id
-  $: updateComponentProps(definition, $dataContext, $bindingStore)
+  $: updateComponentProps(definition, $dataContext, $bindingStore, $authStore)
   $: styles = definition._styles
 
   // Update component context
@@ -53,13 +53,13 @@
   }
 
   // Enriches any string component props using handlebars
-  const updateComponentProps = async (definition, context, bindingStore) => {
+  const updateComponentProps = async (definition, context, bindings, user) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich props with context
-    const enrichedProps = await enrichProps(definition, context, bindingStore)
+    const enrichedProps = await enrichProps(definition, context, bindings, user)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {

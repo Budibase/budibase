@@ -57,3 +57,17 @@ exports.authenticate = async ctx => {
     ctx.throw(401, "Invalid credentials.")
   }
 }
+
+exports.fetchSelf = async ctx => {
+  const { userId, appId } = ctx.user
+  if (!userId || !appId) {
+    ctx.body = {}
+  } else {
+    const database = new CouchDB(appId)
+    const user = await database.get(userId)
+    if (user) {
+      delete user.password
+    }
+    ctx.body = user
+  }
+}
