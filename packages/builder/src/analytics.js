@@ -106,6 +106,16 @@ function highlightFeedbackIcon() {
   return isFeedbackTimeElapsed(firstRunStr)
 }
 
+// Opt In/Out
+const ifAnalyticsEnabled = func => () => {
+  if (analyticsEnabled && process.env.POSTHOG_TOKEN) {
+    return func()
+  }
+}
+const disabled = () => posthog.has_opted_out_capturing()
+const optIn = () => posthog.opt_in_capturing()
+const optOut = () => posthog.opt_out_capturing()
+
 export default {
   activate,
   identify,
@@ -115,4 +125,7 @@ export default {
   requestFeedbackOnDeploy,
   submitFeedback,
   highlightFeedbackIcon,
+  disabled: ifAnalyticsEnabled(disabled),
+  optIn: ifAnalyticsEnabled(optIn),
+  optOut: ifAnalyticsEnabled(optOut),
 }
