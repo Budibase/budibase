@@ -3,6 +3,7 @@ const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
 const { removeNull, addConstants } = require("./utilities")
+const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -117,4 +118,13 @@ module.exports.isValid = string => {
   } catch (err) {
     return false
   }
+}
+
+/**
+ * We have generated a static manifest file from the helpers that this string templating package makes use of.
+ * This manifest provides information about each of the helpers and how it can be used.
+ * @returns The manifest JSON which has been generated from the helpers.
+ */
+module.exports.getManifest = () => {
+  return manifest
 }

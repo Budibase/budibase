@@ -3,6 +3,7 @@ const {
   processString,
   isValid,
   makePropSafe,
+  getManifest,
 } = require("../src/index")
 
 describe("Test that the string processing works correctly", () => {
@@ -99,5 +100,13 @@ describe("check the utility functions", () => {
   it("should make a property safe", () => {
     const property = makePropSafe("thing")
     expect(property).toEqual("[thing]")
+  })
+})
+
+describe("check manifest", () => {
+  it("should be able to retrieve the manifest", () => {
+    const manifest = getManifest()
+    expect(manifest.math).not.toBeNull()
+    expect(manifest.math.abs.description).toBe("Return the magnitude of `a`.")
   })
 })
