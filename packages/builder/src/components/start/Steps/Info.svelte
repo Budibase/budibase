@@ -25,13 +25,13 @@
   }
 </script>
 
-{#if template.fromFile}
+{#if template?.fromFile}
   <h2>Import Your Web App From A File</h2>
 {:else}
   <h2>Create your Web App</h2>
 {/if}
 <div class="container">
-  {#if template.fromFile}
+  {#if template?.fromFile}
     <div class="template">
       <Label extraSmall grey>Import File</Label>
       <div class="dropzone">
