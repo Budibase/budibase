@@ -57,7 +57,6 @@ exports.serveSelfHostPage = async function(ctx) {
   )
   ctx.body = await processString(hostingHbs, {
     logo,
-    key: env.HOSTING_KEY,
   })
 }
 
