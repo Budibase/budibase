@@ -8,7 +8,7 @@
   export let theme
   export let size
 
-  const { styleable, API, setBindableValue } = getContext("sdk")
+  const { styleable, API, setBindableValue, DataProvider } = getContext("sdk")
   const component = getContext("component")
 
   let loaded = false
@@ -115,12 +115,14 @@
   onMount(fetchSchema)
 </script>
 
-<div
-  lang="en"
-  dir="ltr"
-  use:styleable={$component.styles}
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
-  {#if loaded}
-    <slot />
-  {/if}
-</div>
+<DataProvider row={{ ...$formState.values, tableId: datasource?.tableId }}>
+  <div
+    lang="en"
+    dir="ltr"
+    use:styleable={$component.styles}
+    class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+    {#if loaded}
+      <slot />
+    {/if}
+  </div>
+</DataProvider>

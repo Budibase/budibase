@@ -9,12 +9,17 @@
 
   export let definition = {}
 
-  let enrichedProps
+  // Props that will be passed to the component instance
   let componentProps
 
   // Props are hashed when inside the builder preview and used as a key, so that
   // components fully remount whenever any props change
   let propsHash = 0
+
+  // Latest timestamp that we started a props update.
+  // Due to enrichment now being async, we need to avoid overwriting newer
+  // props with old ones, depending on how long enrichment takes.
+  let latestUpdateTime
 
   // Get contexts
   const dataContext = getContext("data")
@@ -27,8 +32,7 @@
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children || []
   $: id = definition._id
-  $: enrichComponentProps(definition, $dataContext, $bindingStore)
-  $: updateProps(enrichedProps)
+  $: updateComponentProps(definition, $dataContext, $bindingStore)
   $: styles = definition._styles
 
   // Update component context
@@ -37,29 +41,6 @@
     children: children.length,
     styles: { ...styles, id },
   })
-
-  // Updates the component props.
-  // Most props are deeply compared so that svelte will only trigger reactive
-  // statements on props that have actually changed.
-  const updateProps = props => {
-    if (!props) {
-      return
-    }
-    let propsChanged = false
-    if (!componentProps) {
-      componentProps = {}
-      propsChanged = true
-    }
-    Object.keys(props).forEach(key => {
-      if (!propsAreSame(props[key], componentProps[key])) {
-        propsChanged = true
-        componentProps[key] = props[key]
-      }
-    })
-    if (get(builderStore).inBuilder && propsChanged) {
-      propsHash = hashString(JSON.stringify(componentProps))
-    }
-  }
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
@@ -72,8 +53,42 @@
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentProps = async (definition, context, bindingStore) => {
-    enrichedProps = await enrichProps(definition, context, bindingStore)
+  const updateComponentProps = async (definition, context, bindingStore) => {
+    // Record the timestamp so we can reference it after enrichment
+    latestUpdateTime = Date.now()
+    const enrichmentTime = latestUpdateTime
+
+    // Enrich props with context
+    const enrichedProps = await enrichProps(definition, context, bindingStore)
+
+    // Abandon this update if a newer update has started
+    if (enrichmentTime !== latestUpdateTime) {
+      return
+    }
+
+    // Update the component props.
+    // Most props are deeply compared so that svelte will only trigger reactive
+    // statements on props that have actually changed.
+    if (!enrichedProps) {
+      return
+    }
+    let propsChanged = false
+    if (!componentProps) {
+      componentProps = {}
+      propsChanged = true
+    }
+    Object.keys(enrichedProps).forEach(key => {
+      if (!propsAreSame(enrichedProps[key], componentProps[key])) {
+        propsChanged = true
+        componentProps[key] = enrichedProps[key]
+      }
+    })
+
+    // Update the hash if we're in the builder so we can fully remount this
+    // component
+    if (get(builderStore).inBuilder && propsChanged) {
+      propsHash = hashString(JSON.stringify(componentProps))
+    }
   }
 </script>
 
