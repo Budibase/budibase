@@ -60,11 +60,7 @@ async function performDump({ dir, appId, name = "dump.txt" }) {
   const writeStream = fs.createWriteStream(join(dir, name))
   // perform couch dump
   const instanceDb = new CouchDB(appId)
-  await instanceDb.dump(writeStream, {
-    filter: doc => {
-      return !doc._id.startsWith(DocumentTypes.USER)
-    },
-  })
+  await instanceDb.dump(writeStream, {})
 }
 
 exports.performDump = performDump
