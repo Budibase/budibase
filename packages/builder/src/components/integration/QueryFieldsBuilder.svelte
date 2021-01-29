@@ -24,8 +24,8 @@
 </script>
 
 <form on:submit|preventDefault>
-<div class="field">
-  {#each schemaKeys as field}
+  <div class="field">
+    {#each schemaKeys as field}
       <Input
         placeholder="Enter {field} name"
         outline
@@ -33,8 +33,8 @@
         type={schema.fields[field]?.type}
         required={schema.fields[field]?.required}
         bind:value={fields[field]} />
-  {/each}
-</div>
+    {/each}
+  </div>
 </form>
 {#if schema.customisable}
   <Editor

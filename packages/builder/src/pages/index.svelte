@@ -1,4 +1,5 @@
 <script>
+  import { store } from "builderStore"
   import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
@@ -34,10 +35,6 @@
     if (keys.userId) {
       hasKey = true
       analytics.identify(keys.userId)
-    }
-
-    if (!keys.budibase) {
-      modal.show()
     }
   }
 

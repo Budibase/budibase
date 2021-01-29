@@ -17,6 +17,18 @@
   $: appId = $store.appId
 
   async function deployApp() {
+    // Must have cloud or self host API key to deploy
+    if (!$hostingStore.hostingInfo?.selfHostKey) {
+      const response = await api.get(`/api/keys/`)
+      const userKeys = await response.json()
+      if (!userKeys.budibase) {
+        notifier.danger(
+          "No budibase API Keys configured. You must set either a self hosted or cloud API key to deploy your budibase app."
+        )
+      }
+      return
+    }
+
     const DEPLOY_URL = `/api/deploy`
 
     try {
