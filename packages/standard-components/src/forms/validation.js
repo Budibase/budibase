@@ -92,10 +92,10 @@ const inclusionConstraint = (options = []) => value => {
 const dateConstraint = (dateString, isEarliest) => {
   const dateLimit = Date.parse(dateString)
   return value => {
-    if (value == null || value === "" || !value.length) {
+    if (value == null || value === "") {
       return null
     }
-    const dateValue = Date.parse(value[0])
+    const dateValue = Date.parse(value)
     const valid = isEarliest ? dateValue >= dateLimit : dateValue <= dateLimit
     const adjective = isEarliest ? "Earliest" : "Latest"
     const limitString = flatpickr.formatDate(new Date(dateLimit), "F j Y, H:i")
