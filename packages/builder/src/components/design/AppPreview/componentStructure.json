@@ -14,7 +14,8 @@
       "optionsfield",
       "booleanfield",
       "longformfield",
-      "datetimefield"
+      "datetimefield",
+      "attachmentfield"
     ]
   },
   {

@@ -1271,5 +1271,22 @@
         "defaultValue": true
       }
     ]
+  },
+  "attachmentfield": {
+    "name": "Attachment",
+    "icon": "ri-calendar-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/attachment",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
   }
 }

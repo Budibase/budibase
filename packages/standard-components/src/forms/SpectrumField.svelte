@@ -16,41 +16,45 @@
   const component = getContext("component")
 
   // Register field with form
-  const { formApi } = formContext || {}
-  const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field)
+  $: formApi = formContext?.formApi
+  $: labelPosition = fieldGroupContext?.labelPosition || "above"
+  $: formField = formApi?.registerField(field)
 
   // Expose field properties to parent component
-  fieldState = formField?.fieldState
-  fieldApi = formField?.fieldApi
-  fieldSchema = formField?.fieldSchema
+  $: {
+    fieldState = formField?.fieldState
+    fieldApi = formField?.fieldApi
+    fieldSchema = formField?.fieldSchema
+  }
 
   // Extract label position from field group context
   $: labelPositionClass =
     labelPosition === "above" ? "" : `spectrum-FieldLabel--${labelPosition}`
 </script>
 
-{#if !fieldState}
-  <Placeholder>Add the Field setting to start using your component</Placeholder>
-{:else if !formContext}
-  <Placeholder>Form components need to be wrapped in a Form</Placeholder>
-{:else}
-  <FieldGroupFallback>
-    <div class="spectrum-Form-item" use:styleable={$component.styles}>
-      <label
-        for={$fieldState.fieldId}
-        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
-        {label || ''}
-      </label>
-      <div class="spectrum-Form-itemField">
+<FieldGroupFallback>
+  <div class="spectrum-Form-item" use:styleable={$component.styles}>
+    <label
+      for={$fieldState?.fieldId}
+      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
+      {label || ''}
+    </label>
+    <div class="spectrum-Form-itemField">
+      {#if !formContext}
+        <Placeholder>Form components need to be wrapped in a Form</Placeholder>
+      {:else if !fieldState}
+        <Placeholder>
+          Add the Field setting to start using your component
+        </Placeholder>
+      {:else}
         <slot />
         {#if $fieldState.error}
           <div class="error">{$fieldState.error}</div>
         {/if}
-      </div>
+      {/if}
     </div>
-  </FieldGroupFallback>
-{/if}
+  </div>
+</FieldGroupFallback>
 
 <style>
   .error {
