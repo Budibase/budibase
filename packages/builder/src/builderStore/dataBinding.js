@@ -171,24 +171,30 @@ export const getSchemaForDatasource = datasource => {
 }
 
 /**
- * Converts a readable data binding into a runtime data binding
+ * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
-export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
+  const convertFrom = convertTo === "runtimeBinding" ? "readableBinding" : "runtimeBinding"
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
+  const convertFromProps = bindableProperties
+    .map(el => el[convertFrom])
+    .sort((a, b) => {
+      return b.length - a.length
+    })
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
   for (let boundValue of boundValues) {
-    const binding = bindableProperties.find(({ readableBinding }) => {
-      return boundValue.includes(readableBinding)
-    })
-    let newBoundValue = INVALID_BINDING
-    if (binding) {
-      newBoundValue = boundValue.replace(
-        binding.readableBinding,
-        binding.runtimeBinding
-      )
+    let newBoundValue = boundValue
+    for (let from of convertFromProps) {
+      if (newBoundValue.includes(from)) {
+        const binding = bindableProperties.find(el => el[convertFrom] === from)
+        newBoundValue = newBoundValue.replace(
+          from,
+          binding[convertTo],
+        )
+      }
     }
     result = result.replace(boundValue, newBoundValue)
   }
@@ -196,26 +202,15 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
 }
 
 /**
+ * Converts a readable data binding into a runtime data binding
+ */
+export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+  return bindingReplacement(bindableProperties, textWithBindings, "runtimeBinding")
+}
+
+/**
  * Converts a runtime data binding into a readable data binding
  */
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
-  if (typeof textWithBindings !== "string") {
-    return textWithBindings
-  }
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
-  let result = textWithBindings
-  for (let boundValue of boundValues) {
-    const binding = bindableProperties.find(({ runtimeBinding }) => {
-      return boundValue.includes(runtimeBinding)
-    })
-    let newBoundValue = INVALID_BINDING
-    if (binding) {
-      newBoundValue = boundValue.replace(
-        binding.runtimeBinding,
-        binding.readableBinding
-      )
-    }
-    result = result.replace(boundValue, newBoundValue)
-  }
-  return result
+  return bindingReplacement(bindableProperties, textWithBindings, "readableBinding")
 }

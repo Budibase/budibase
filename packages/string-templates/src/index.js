@@ -116,7 +116,9 @@ module.exports.isValid = string => {
     hbsInstance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
-    return false
+    // special case for maths functions - don't have inputs yet
+    return !!(err && err.message.includes("isNumber"))
+
   }
 }
 
