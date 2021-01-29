@@ -1132,7 +1132,6 @@
     "name": "Text Field",
     "icon": "ri-edit-box-line",
     "styleable": true,
-    "bindable": true,
     "settings": [
       {
         "type": "field/string",
@@ -1155,7 +1154,6 @@
     "name": "Number Field",
     "icon": "ri-edit-box-line",
     "styleable": true,
-    "bindable": true,
     "settings": [
       {
         "type": "field/number",
@@ -1178,7 +1176,6 @@
     "name": "Options Picker",
     "icon": "ri-edit-box-line",
     "styleable": true,
-    "bindable": true,
     "settings": [
       {
         "type": "field/options",
@@ -1202,7 +1199,6 @@
     "name": "Checkbox",
     "icon": "ri-edit-box-line",
     "styleable": true,
-    "bindable": true,
     "settings": [
       {
         "type": "field/boolean",
