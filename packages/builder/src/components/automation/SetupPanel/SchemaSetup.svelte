@@ -43,6 +43,7 @@
       <Input
         value={field.name}
         secondary
+        placeholder="Enter field name"
         on:change={fieldNameChanged(field.name)} />
       <Select
         secondary
