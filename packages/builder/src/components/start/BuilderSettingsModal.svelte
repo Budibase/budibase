@@ -10,6 +10,8 @@
   let hostingInfo
   let selfhosted = false
 
+  $: analyticsDisabled = analytics.disabled()
+
   async function save() {
     hostingInfo.type = selfhosted ? HostingTypes.SELF : HostingTypes.CLOUD
     if (!selfhosted && hostingInfo._rev) {
@@ -32,6 +34,14 @@
       hostingInfo.hostingUrl = "localhost:10000"
       hostingInfo.useHttps = false
       hostingInfo.selfHostKey = "budibase"
+    }
+  }
+
+  function toggleAnalytics() {
+    if (analyticsDisabled) {
+      analytics.optIn()
+    } else {
+      analytics.optOut()
     }
   }
 
@@ -59,6 +69,16 @@
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
     <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
   {/if}
+  <h5>Analytics</h5>
+  <p>
+    If you would like to send analytics that help us make budibase better,
+    please let us know below.
+  </p>
+  <Toggle
+    thin
+    text="Send Analytics To Budibase"
+    checked={!analyticsDisabled}
+    on:change={toggleAnalytics} />
 </ModalContent>
 
 <style>
