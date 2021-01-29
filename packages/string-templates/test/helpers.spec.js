@@ -1,5 +1,6 @@
 const {
   processString,
+  isValid,
 } = require("../src/index")
 
 describe("test the custom helpers we have applied", () => {
@@ -288,5 +289,11 @@ describe("Cover a few complex use cases", () => {
       array: ["a", "a", "d", "c", "e"]
     })
     expect(output).toBe("e")
+  })
+
+  it("should make sure case is valid", () => {
+    const validity = isValid("{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}")
+
+    expect(validity).toBe(true)
   })
 })

@@ -17,6 +17,7 @@ export default {
   ],
   plugins: [
     resolve({
+      mainFields: ["module", "main"],
       preferBuiltins: true,
       browser: true,
     }),
