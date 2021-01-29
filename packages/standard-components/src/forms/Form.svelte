@@ -10,16 +10,27 @@
 
   const { styleable, API, setBindableValue, DataProvider } = getContext("sdk")
   const component = getContext("component")
+  const dataContext = getContext("data")
 
   let loaded = false
   let schema
   let table
   let fieldMap = {}
 
+  // Checks if the closest data context matches the model for this forms
+  // datasource, and use it as the initial form values if so
+  const getInitialValues = context => {
+    return context && context.tableId === datasource?.tableId ? context : {}
+  }
+
+  // Use the closest data context as the initial form values if it matches
+  const initialValues = getInitialValues(
+    $dataContext[$dataContext.closestComponentId]
+  )
+
   // Form state contains observable data about the form
-  const formState = writable({ values: {}, errors: {}, valid: true })
+  const formState = writable({ values: initialValues, errors: {}, valid: true })
   $: updateFormState(fieldMap)
-  $: setBindableValue($component.id, $formState.values)
 
   // Form API contains functions to control the form
   const formApi = {
@@ -71,7 +82,7 @@
       fieldId: `${Math.random()
         .toString(32)
         .substr(2)}/${field}`,
-      value: null,
+      value: initialValues[field] ?? null,
       error: null,
       valid: true,
     })
@@ -79,7 +90,7 @@
 
   // Updates the form states from the field data
   const updateFormState = fieldMap => {
-    let values = {}
+    let values = { ...initialValues }
     let errors = {}
     Object.entries(fieldMap).forEach(([field, formField]) => {
       const fieldState = get(formField.fieldState)
@@ -126,3 +137,9 @@
     {/if}
   </div>
 </DataProvider>
+
+<style>
+  div {
+    padding: 20px;
+  }
+</style>
