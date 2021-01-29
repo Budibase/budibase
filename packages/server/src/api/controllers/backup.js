@@ -4,7 +4,7 @@ const os = require("os")
 const fs = require("fs-extra")
 
 exports.exportAppDump = async function(ctx) {
-  const { appId } = ctx.request.body
+  const { appId } = ctx.query
 
   const backupsDir = path.join(os.homedir(), ".budibase", "backups")
   fs.ensureDirSync(backupsDir)
@@ -18,19 +18,24 @@ exports.exportAppDump = async function(ctx) {
   })
 
   ctx.status = 200
-  ctx.body = {
-    url: `/api/backups/download/${backupIdentifier}`,
-  }
-}
 
-exports.downloadAppDump = async function(ctx) {
-  const fileName = ctx.params.fileName
+  const backupFile = path.join(backupsDir, backupIdentifier)
 
-  const backupsDir = path.join(os.homedir(), ".budibase", "backups")
-  fs.ensureDirSync(backupsDir)
-
-  const backupFile = path.join(backupsDir, fileName)
-
-  ctx.attachment(fileName)
+  ctx.attachment(backupIdentifier)
   ctx.body = fs.createReadStream(backupFile)
+  // ctx.body = {
+  //   url: `/api/backups/download/${backupIdentifier}`,
+  // }
 }
+
+// exports.downloadAppDump = async function(ctx) {
+//   const fileName = ctx.params.fileName
+
+//   const backupsDir = path.join(os.homedir(), ".budibase", "backups")
+//   fs.ensureDirSync(backupsDir)
+
+//   const backupFile = path.join(backupsDir, fileName)
+
+//   ctx.attachment(fileName)
+//   ctx.body = fs.createReadStream(backupFile)
+// }

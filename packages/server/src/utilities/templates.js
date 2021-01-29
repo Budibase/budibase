@@ -10,7 +10,6 @@ const streamPipeline = promisify(stream.pipeline)
 const { budibaseAppsDir } = require("./budibaseDir")
 const env = require("../environment")
 const CouchDB = require("../db")
-const { DocumentTypes } = require("../db/utils")
 
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
