@@ -8,8 +8,17 @@
 
   let fieldState
   let fieldApi
-  let value
-  $: fieldApi?.setValue(value)
+  let previousValue = ""
+  let value = ""
+
+  $: {
+    // Only actually update the value when it changes, so that we don't trigger
+    // validation unnecessarily
+    if (value !== previousValue) {
+      fieldApi?.setValue(value)
+      previousValue = value
+    }
+  }
 
   // Options for rich text component
   const options = {
