@@ -13,8 +13,8 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     }
 
     // String length constraint
-    if (constraints.length?.maximum != null) {
-      const length = constraints.length?.maximum
+    if (constraints.length?.maximum) {
+      const length = constraints.length.maximum
       checks.push(lengthConstraint(length))
     }
 
