@@ -34,3 +34,12 @@ jobs:
         CI: true
         name: Budibase CI
     - run: yarn test:e2e:ci
+
+    - name: Build and Push Staging Docker Image
+      # Only run on push
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      run: yarn build:staging:docker
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+
