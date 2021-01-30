@@ -73,7 +73,7 @@
           .notOneOf(existingAppUrls),
       }
     } else {
-      nameValidation = { name: string.required(nameError) }
+      nameValidation = { name: string().required(nameError) }
     }
   })
 </script>
