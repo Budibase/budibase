@@ -3,15 +3,17 @@ import resolve from "rollup-plugin-node-resolve"
 import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
 import json from "@rollup/plugin-json"
+import { terser } from "rollup-plugin-terser"
 
+const production = !process.env.ROLLUP_WATCH
 export default {
   input: "src/index.js",
   output: [
     {
       sourcemap: true,
-      format: "umd",
+      format: "es",
       file: "./dist/bundle.js",
-      name: "string-templates",
+      name: "templates",
       exports: "named",
     },
   ],
@@ -24,6 +26,7 @@ export default {
     commonjs(),
     globals(),
     builtins(),
+    production && terser(),
     json(),
   ],
 }
