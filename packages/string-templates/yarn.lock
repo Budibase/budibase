@@ -472,7 +472,7 @@
   dependencies:
     "@rollup/pluginutils" "^3.0.8"
 
-"@rollup/pluginutils@^3.0.8", "@rollup/pluginutils@^3.1.0":
+"@rollup/pluginutils@^3.0.8":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-3.1.0.tgz#706b4524ee6dc8b103b3c995533e5ad680c02b9b"
   integrity sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==
@@ -1311,16 +1311,6 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-cjs-es@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/cjs-es/-/cjs-es-0.8.2.tgz#3a4358f8cbc6caffcabf3282e5b56052cb1e7962"
-  integrity sha512-Z3AHuD0KH36hntFdT5M4c921ygkALhuRRaX8QyYhuOgoHBLeZItE5G3CMg/+m5NQ6b1revYp7Th2h6F8J56i2g==
-  dependencies:
-    estree-walker "^0.6.1"
-    is-reference "^1.1.2"
-    magic-string "^0.25.2"
-    rollup-pluginutils "^2.8.1"
-
 cjs-module-lexer@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/cjs-module-lexer/-/cjs-module-lexer-0.6.0.tgz#4186fcca0eae175970aee870b9fe2d6cf8d5655f"
@@ -1755,15 +1745,6 @@ error-symbol@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/error-symbol/-/error-symbol-0.1.0.tgz#0a4dae37d600d15a29ba453d8ef920f1844333f6"
   integrity sha1-Ck2uN9YA0VopukU9jvkg8YRDM/Y=
-
-es-info@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/es-info/-/es-info-0.3.0.tgz#d95a6c2a8f1f12ae07d9c8a51d99bd97562ac028"
-  integrity sha512-mcw8DZ6/PiZzT6lvwL5yUz9y1U8BJc4CLNsblFQwquc+VX0ByqzHgg/31smKU2LB2exlKAZXMABksL/F96Lhbw==
-  dependencies:
-    estree-walker "^0.6.1"
-    is-reference "^1.1.2"
-    rollup-pluginutils "^2.8.1"
 
 escape-string-regexp@^1.0.5:
   version "1.0.5"
@@ -4132,15 +4113,6 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
   dependencies:
     hash-base "^3.0.0"
     inherits "^2.0.1"
-
-rollup-plugin-cjs-es@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-cjs-es/-/rollup-plugin-cjs-es-1.0.1.tgz#81c55e40d1e8b4f0c5bda1120f43723fae93517e"
-  integrity sha512-I8PUM9VCOEc1Kyyjuvg9PfVcxEFDu3eeA9OyzMgOpdDdrAUVSgkuqGzgqezyyBbxUfRFai7/n3TBpbM8iCNu7A==
-  dependencies:
-    "@rollup/pluginutils" "^3.1.0"
-    cjs-es "^0.8.2"
-    es-info "^0.3.0"
 
 rollup-plugin-commonjs@^10.1.0:
   version "10.1.0"
