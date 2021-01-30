@@ -28,7 +28,7 @@ module.exports.removeNull = obj => {
 
 module.exports.addConstants = obj => {
   if (obj.now == null) {
-    obj.now = new Date().toISOString()
+    obj.now = new Date()
   }
   return obj
 }
