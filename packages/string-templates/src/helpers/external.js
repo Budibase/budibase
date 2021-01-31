@@ -1,10 +1,10 @@
-const helpers = require("handlebars-helpers")
+const helpers = require("@budibase/handlebars-helpers")
 const dateHelper = require("helper-date")
 const { HelperFunctionBuiltin } = require("./constants")
 
 /**
  * full list of supported helpers can be found here:
- * https://github.com/helpers/handlebars-helpers
+ * https://github.com/Budibase/handlebars-helpers
  */
 
 const EXTERNAL_FUNCTION_COLLECTIONS = [
