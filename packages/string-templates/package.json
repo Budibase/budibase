@@ -13,8 +13,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@budibase/handlebars-helpers": "^0.11.1",
     "handlebars": "^4.7.6",
-    "@budibase/handlebars-helpers": "^0.11.0",
     "handlebars-utils": "^1.0.6",
     "helper-date": "^1.0.1",
     "lodash": "^4.17.20"
