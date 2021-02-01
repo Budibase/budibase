@@ -2,6 +2,7 @@ import { get } from "svelte/store"
 import { enrichDataBinding, enrichDataBindings } from "./enrichDataBinding"
 import { routeStore, builderStore } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
+import { ActionTypes } from "../constants"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId } = action.parameters
@@ -59,12 +60,21 @@ const queryExecutionHandler = async (action, context) => {
   })
 }
 
+const validateFormHandler = async (action, context) => {
+  const { componentId } = action.parameters
+  const fn = context[`${componentId}_${ActionTypes.ValidateForm}`]
+  if (fn) {
+    return await fn()
+  }
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
+  ["Validate Form"]: validateFormHandler,
 }
 
 /**
@@ -79,7 +89,18 @@ export const enrichButtonActions = (actions, context) => {
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
-      await handlers[i](actions[i], context)
+      try {
+        const result = await handlers[i](actions[i], context)
+        // A handler returning `false` is a flag to stop execution of handlers
+        if (result === false) {
+          return
+        }
+      } catch (error) {
+        console.error("Error while executing button handler")
+        console.error(error)
+        // Stop executing on an error
+        return
+      }
     }
   }
 }

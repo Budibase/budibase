@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
-import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
+import { findComponentPath } from "./storeUtils"
 import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
@@ -11,9 +11,7 @@ const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
  * Gets all bindable data context fields and instance fields.
  */
 export const getBindableProperties = (rootComponent, componentId) => {
-  const contextBindings = getContextBindings(rootComponent, componentId)
-  const componentBindings = getComponentBindings(rootComponent)
-  return [...contextBindings, ...componentBindings]
+  return getContextBindings(rootComponent, componentId)
 }
 
 /**
@@ -33,6 +31,30 @@ export const getDataProviderComponents = (rootComponent, componentId) => {
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
     return def?.dataProvider
+  })
+}
+
+/**
+ * Gets all data provider components above a component.
+ */
+export const getActionProviderComponents = (
+  rootComponent,
+  componentId,
+  actionType
+) => {
+  if (!rootComponent || !componentId) {
+    return []
+  }
+
+  // Get the component tree leading up to this component, ignoring the component
+  // itself
+  const path = findComponentPath(rootComponent, componentId)
+  path.pop()
+
+  // Filter by only data provider components
+  return path.filter(component => {
+    const def = store.actions.components.getDefinition(component._component)
+    return def?.actions?.includes(actionType)
   })
 }
 
@@ -147,30 +169,6 @@ export const getContextBindings = (rootComponent, componentId) => {
   })
 
   return contextBindings
-}
-
-/**
- * Gets all bindable components. These are form components which allow their
- * values to be bound to.
- */
-export const getComponentBindings = rootComponent => {
-  if (!rootComponent) {
-    return []
-  }
-  const componentSelector = component => {
-    const type = component._component
-    const definition = store.actions.components.getDefinition(type)
-    return definition?.bindable
-  }
-  const components = findAllMatchingComponents(rootComponent, componentSelector)
-  return components.map(component => {
-    return {
-      type: "instance",
-      providerId: component._id,
-      runtimeBinding: `${component._id}`,
-      readableBinding: `${component._instanceName}`,
-    }
-  })
 }
 
 /**

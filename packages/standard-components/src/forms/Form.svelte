@@ -9,9 +9,9 @@
   export let theme
   export let size
 
-  const { styleable, API, setBindableValue, DataProvider } = getContext("sdk")
   const component = getContext("component")
-  const dataContext = getContext("data")
+  const context = getContext("context")
+  const { styleable, API, Provider, ActionTypes } = getContext("sdk")
 
   let loaded = false
   let schema
@@ -26,12 +26,11 @@
 
   // Use the closest data context as the initial form values if it matches
   const initialValues = getInitialValues(
-    $dataContext[$dataContext.closestComponentId]
+    $context[`${$context.closestComponentId}`]
   )
 
   // Form state contains observable data about the form
   const formState = writable({ values: initialValues, errors: {}, valid: true })
-  $: updateFormState(fieldMap)
 
   // Form API contains functions to control the form
   const formApi = {
@@ -52,29 +51,65 @@
         fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
-      fieldMap = fieldMap
       return fieldMap[field]
+    },
+    validate: () => {
+      const fields = Object.keys(fieldMap)
+      fields.forEach(field => {
+        const { fieldApi } = fieldMap[field]
+        fieldApi.validate()
+      })
+      return get(formState).valid
     },
   }
 
   // Provide both form API and state to children
   setContext("form", { formApi, formState })
 
+  // Action context to pass to children
+  $: actions = [{ type: ActionTypes.ValidateForm, callback: formApi.validate }]
+
   // Creates an API for a specific field
   const makeFieldApi = (field, defaultValue, validate) => {
+    const setValue = (value, skipCheck = false) => {
+      const { fieldState } = fieldMap[field]
+
+      // Skip if the value is the same
+      if (!skipCheck && get(fieldState).value === value) {
+        return
+      }
+
+      const newValue = value == null ? defaultValue : value
+      const newError = validate ? validate(newValue) : null
+      const newValid = !newError
+
+      // Update field state
+      fieldState.update(state => {
+        state.value = newValue
+        state.error = newError
+        state.valid = newValid
+        return state
+      })
+
+      // Update form state
+      formState.update(state => {
+        state.values = { ...state.values, [field]: newValue }
+        if (newError) {
+          state.errors = { ...state.errors, [field]: newError }
+        } else {
+          delete state.errors[field]
+        }
+        state.valid = Object.keys(state.errors).length === 0
+        return state
+      })
+
+      return newValid
+    }
     return {
-      setValue: value => {
+      setValue,
+      validate: () => {
         const { fieldState } = fieldMap[field]
-        fieldState.update(state => {
-          if (state.value === value) {
-            return state
-          }
-          state.value = value == null ? defaultValue : value
-          state.error = validate ? validate(state.value) : null
-          state.valid = !state.error
-          return state
-        })
-        fieldMap = fieldMap
+        setValue(get(fieldState).value, true)
       },
     }
   }
@@ -88,21 +123,6 @@
       error: null,
       valid: true,
     })
-  }
-
-  // Updates the form states from the field data
-  const updateFormState = fieldMap => {
-    let values = { ...initialValues }
-    let errors = {}
-    Object.entries(fieldMap).forEach(([field, formField]) => {
-      const fieldState = get(formField.fieldState)
-      values[field] = fieldState.value
-      if (fieldState.error) {
-        errors[field] = fieldState.error
-      }
-    })
-    const valid = Object.keys(errors).length === 0
-    formState.set({ values, errors, valid })
   }
 
   // Fetches the form schema from this form's datasource, if one exists
@@ -128,7 +148,9 @@
   onMount(fetchSchema)
 </script>
 
-<DataProvider row={{ ...$formState.values, tableId: datasource?.tableId }}>
+<Provider
+  {actions}
+  data={{ ...$formState.values, tableId: datasource?.tableId }}>
   <div
     lang="en"
     dir="ltr"
@@ -138,7 +160,7 @@
       <slot />
     {/if}
   </div>
-</DataProvider>
+</Provider>
 
 <style>
   div {

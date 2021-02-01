@@ -1051,11 +1051,12 @@
   },
   "form": {
     "name": "Form",
-    "icon": "ri-file-edit-line",
+    "icon": "ri-file-text-line",
     "styleable": true,
     "hasChildren": true,
     "dataProvider": true,
     "datasourceSetting": "datasource",
+    "actions": ["ValidateForm"],
     "settings": [
       {
         "type": "datasource",
@@ -1102,7 +1103,7 @@
   },
   "fieldgroup": {
     "name": "Field Group",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-layout-row-line",
     "styleable": true,
     "hasChildren": true,
     "settings": [
@@ -1130,7 +1131,7 @@
   },
   "stringfield": {
     "name": "Text Field",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-t-box-line",
     "styleable": true,
     "settings": [
       {
@@ -1174,7 +1175,7 @@
   },
   "optionsfield": {
     "name": "Options Picker",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-file-list-line",
     "styleable": true,
     "settings": [
       {
@@ -1197,7 +1198,7 @@
   },
   "booleanfield": {
     "name": "Checkbox",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-checkbox-line",
     "styleable": true,
     "settings": [
       {
@@ -1219,7 +1220,7 @@
   },
   "longformfield": {
     "name": "Rich Text",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-file-edit-line",
     "styleable": true,
     "settings": [
       {
@@ -1270,7 +1271,7 @@
   },
   "attachmentfield": {
     "name": "Attachment",
-    "icon": "ri-calendar-line",
+    "icon": "ri-image-edit-line",
     "styleable": true,
     "settings": [
       {
@@ -1287,7 +1288,7 @@
   },
   "relationshipfield": {
     "name": "Relationship Picker",
-    "icon": "ri-edit-box-line",
+    "icon": "ri-links-line",
     "styleable": true,
     "settings": [
       {
