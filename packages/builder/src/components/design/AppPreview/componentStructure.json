@@ -15,7 +15,8 @@
       "booleanfield",
       "longformfield",
       "datetimefield",
-      "attachmentfield"
+      "attachmentfield",
+      "relationshipfield"
     ]
   },
   {

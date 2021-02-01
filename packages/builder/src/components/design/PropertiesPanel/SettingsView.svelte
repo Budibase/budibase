@@ -24,6 +24,7 @@
   import LongFormFieldSelect from "./PropertyControls/LongFormFieldSelect.svelte"
   import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
   import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
+  import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -72,6 +73,7 @@
     "field/longform": LongFormFieldSelect,
     "field/datetime": DateTimeFieldSelect,
     "field/attachment": AttachmentFieldSelect,
+    "field/relationship": RelationshipFieldSelect,
   }
 
   const getControl = type => {
