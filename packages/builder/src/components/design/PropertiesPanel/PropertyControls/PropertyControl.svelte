@@ -123,7 +123,7 @@
 
   .control {
     flex: 1;
-    display: flex;
+    display: inline-block;
     padding-left: 2px;
     overflow: hidden;
   }
