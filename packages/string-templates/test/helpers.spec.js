@@ -293,7 +293,12 @@ describe("Cover a few complex use cases", () => {
 
   it("should make sure case is valid", () => {
     const validity = isValid("{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}")
-
     expect(validity).toBe(true)
+  })
+
+  it("should be able to solve an example from docs", async () => {
+    const output = await processString(`{{first ( split "a-b-c" "-") 2}}`, {})
+    expect(output).toBe(`a,b`)
+
   })
 })
