@@ -25,13 +25,17 @@
 
   const fetchTable = async id => {
     if (id != null) {
-      tableDefinition = await API.fetchTableDefinition(id)
+      const result = await API.fetchTableDefinition(id)
+      if (!result.error) {
+        tableDefinition = result
+      }
     }
   }
 
   const fetchRows = async id => {
     if (id != null) {
-      options = await API.fetchTableData(id)
+      const rows = await API.fetchTableData(id)
+      options = rows && !rows.error ? rows : []
     }
   }
 
