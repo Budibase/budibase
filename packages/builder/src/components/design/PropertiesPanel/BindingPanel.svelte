@@ -92,7 +92,7 @@
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
-              {helper.description}
+              {@html helper.description}
             </div>
           </li>
         {/each}
