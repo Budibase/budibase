@@ -3,7 +3,7 @@ const env = require("../../environment")
 const CouchDB = require("../../db")
 const jwt = require("jsonwebtoken")
 const { DocumentTypes, SEPARATOR } = require("../../db/utils")
-const { setCookie } = require("../index")
+const { setCookie, clearCookie } = require("../index")
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 module.exports = async (ctx, appId, version) => {
@@ -20,13 +20,13 @@ module.exports = async (ctx, appId, version) => {
   })
 
   // set the builder token
-  setCookie(ctx, "builder", token)
-  setCookie(ctx, "currentapp", appId)
+  setCookie(ctx, token, "builder")
+  setCookie(ctx, appId, "currentapp")
   // need to clear all app tokens or else unable to use the app in the builder
   let allDbNames = await CouchDB.allDbs()
   allDbNames.map(dbName => {
     if (dbName.startsWith(APP_PREFIX)) {
-      setCookie(ctx, dbName, "")
+      clearCookie(ctx, dbName)
     }
   })
 }
