@@ -2,7 +2,8 @@ const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
-const { removeNull } = require("./utilities")
+const { removeNull, addConstants } = require("./utilities")
+const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -82,24 +83,52 @@ module.exports.processObjectSync = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context) => {
-  const clonedContext = removeNull(cloneDeep(context))
+  let clonedContext = removeNull(cloneDeep(context))
+  clonedContext = addConstants(clonedContext)
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  let template
   string = processors.preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-  template = hbsInstance.compile(string)
+  const template = hbsInstance.compile(string)
   return processors.postprocess(template(clonedContext))
 }
 
 /**
- * Errors can occur if a user of this library attempts to use a helper that has not been added to the system, these errors
- * can be captured to alert the user of the mistake.
- * @param {function} handler a function which will be called every time an error occurs when processing a handlebars
- * statement.
+ * Simple utility function which makes sure that a templating property has been wrapped in literal specifiers correctly.
+ * @param {string} property The property which is to be wrapped.
+ * @returns {string} The wrapped property ready to be added to a templating string.
  */
-module.exports.errorEvents = handler => {
-  hbsInstance.registerHelper("helperMissing", handler)
+module.exports.makePropSafe = property => {
+  return `[${property}]`.replace("[[", "[").replace("]]", "]")
+}
+
+/**
+ * Checks whether or not a template string contains totally valid syntax (simply tries running it)
+ * @param string The string to test for valid syntax - this may contain no templates and will be considered valid.
+ * @returns {boolean} Whether or not the input string is valid.
+ */
+module.exports.isValid = string => {
+  const specialCases = ["isNumber", "expected a number"]
+  // don't really need a real context to check if its valid
+  const context = {}
+  try {
+    hbsInstance.compile(processors.preprocess(string, false))(context)
+    return true
+  } catch (err) {
+    const msg = err ? err.message : ""
+    const foundCase = specialCases.find(spCase => msg.includes(spCase))
+    // special case for maths functions - don't have inputs yet
+    return !!foundCase
+  }
+}
+
+/**
+ * We have generated a static manifest file from the helpers that this string templating package makes use of.
+ * This manifest provides information about each of the helpers and how it can be used.
+ * @returns The manifest JSON which has been generated from the helpers.
+ */
+module.exports.getManifest = () => {
+  return manifest
 }
