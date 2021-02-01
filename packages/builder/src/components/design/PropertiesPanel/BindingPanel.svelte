@@ -29,6 +29,7 @@
   )
   $: dispatch("update", value)
   $: ({ instance, context } = groupBy("type", bindableProperties))
+  $: searchRgx = new RegExp(search, "ig")
 
   function checkValid() {
     // TODO: need to convert the value to the runtime binding
@@ -69,7 +70,7 @@
         <Spacer small />
         <ul>
           {#each context.filter(context =>
-            context.readableBinding.startsWith(search)
+            context.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
@@ -83,7 +84,7 @@
         <Spacer small />
         <ul>
           {#each instance.filter(instance =>
-            instance.readableBinding.startsWith(search)
+            instance.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
@@ -95,13 +96,13 @@
       <Heading extraSmall>Helpers</Heading>
       <Spacer small />
       <ul>
-        {#each helpers.filter(helper =>
-          helper.label.startsWith(search)
-        ) as helper}
+        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
-              <div class="description">{@html helper.description}</div>
+              <div class="description">
+                {@html helper.description}
+              </div>
             </div>
           </li>
         {/each}
