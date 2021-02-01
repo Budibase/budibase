@@ -3,6 +3,7 @@
   import { setContext, getContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
+  import { generateID } from "../helpers"
 
   export let datasource
   export let theme
@@ -82,9 +83,7 @@
   const makeFieldState = (field, defaultValue) => {
     return writable({
       field,
-      fieldId: `${Math.random()
-        .toString(32)
-        .substr(2)}/${field}`,
+      fieldId: `id-${generateID()}-${field}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
       valid: true,
