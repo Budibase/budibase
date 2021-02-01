@@ -29,6 +29,7 @@
 
   $: categories = Object.entries(groupBy("category", bindings))
   $: value && checkValid()
+  $: searchRgx = new RegExp(search, "ig")
 
   function onClickBinding(binding) {
     const position = getCaretPosition()
@@ -61,7 +62,7 @@
             <Heading extraSmall>{categoryName}</Heading>
             <Spacer extraSmall />
             {#each bindings.filter(binding =>
-              binding.label.startsWith(search)
+              binding.label.match(searchRgx)
             ) as binding}
               <div class="binding" on:click={() => onClickBinding(binding)}>
                 <span class="binding__label">{binding.label}</span>
@@ -75,9 +76,7 @@
           {/each}
           <Heading extraSmall>Helpers</Heading>
           <Spacer extraSmall />
-          {#each helpers.filter(binding =>
-            binding.label.startsWith(search)
-          ) as helper}
+          {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
             <div class="binding" on:click={() => onClickBinding(helper)}>
               <span class="binding__label">{helper.label}</span>
               <br />
