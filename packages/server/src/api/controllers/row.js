@@ -10,6 +10,8 @@ const {
 } = require("../../db/utils")
 const usersController = require("./user")
 const { coerceRowValues } = require("../../utilities")
+const env = require("../../environment")
+const { OBJ_STORE_DIRECTORY } = require("../../constants")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -49,6 +51,32 @@ async function findRow(db, appId, tableId, rowId) {
     throw "Supplied tableId does not match the rows tableId"
   }
   return row
+}
+
+/**
+ * This function "enriches" the input rows with anything they are supposed to contain, for example
+ * link records or attachment links.
+ */
+async function enrichRows(appId, table, rows) {
+  // attach any linked row information
+  const enriched = await linkRows.attachLinkInfo(appId, rows)
+  // update the attachments URL depending on hosting
+  if (env.CLOUD && env.SELF_HOSTED) {
+    for (let [property, column] of Object.entries(table.schema)) {
+      if (column.type === "attachment") {
+        for (let row of enriched) {
+          if (row[property] == null || row[property].length === 0) {
+            continue
+          }
+          row[property].forEach(attachment => {
+            attachment.url = `${OBJ_STORE_DIRECTORY}/${appId}/${attachment.url}`
+            attachment.url = attachment.url.replace("//", "/")
+          })
+        }
+      }
+    }
+  }
+  return enriched
 }
 
 exports.patch = async function(ctx) {
@@ -190,7 +218,8 @@ exports.fetchView = async function(ctx) {
 
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
-    ctx.body = await linkRows.attachLinkInfo(appId, response.rows)
+    const table = await db.get(ctx.params.tableId)
+    ctx.body = await enrichRows(appId, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -217,14 +246,15 @@ exports.fetchView = async function(ctx) {
 
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
+  const db = new CouchDB(appId)
 
   // special case for users, fetch through the user controller
-  let rows
+  let rows, table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === ViewNames.USERS) {
     await usersController.fetch(ctx)
     rows = ctx.body
   } else {
-    const db = new CouchDB(appId)
+
     const response = await db.allDocs(
       getRowParams(ctx.params.tableId, null, {
         include_docs: true,
@@ -232,15 +262,16 @@ exports.fetchTableRows = async function(ctx) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  ctx.body = await linkRows.attachLinkInfo(appId, rows)
+  ctx.body = await enrichRows(appId, table, rows)
 }
 
 exports.find = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
   try {
+    const table = await db.get(ctx.params.tableId)
     const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
-    ctx.body = await linkRows.attachLinkInfo(appId, row)
+    ctx.body = await enrichRows(appId, table, row)
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -325,9 +356,10 @@ exports.fetchEnrichedRow = async function(ctx) {
     keys: linkVals.map(linkVal => linkVal.id),
   })
   // need to include the IDs in these rows for any links they may have
-  let linkedRows = await linkRows.attachLinkInfo(
+  let linkedRows = await enrichRows(
     appId,
-    response.rows.map(row => row.doc)
+    table,
+    response.rows.map(row => row.doc),
   )
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
