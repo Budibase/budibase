@@ -107,6 +107,8 @@ Budibase wants to make sure anyone can use the tools we develop and we know a lo
 
 Currently, you can host your apps using Docker or Digital Ocean. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
 
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/droplets/new?onboarding_origin=marketplace&i=09038e&fleetUuid=bb04f9c8-1de8-4687-b2ae-1d5177a0535b&appId=77729671&type=applications&size=s-4vcpu-8gb&region=nyc1&refcode=0caaa6085a82&image=budibase-20-04)
+
 
 ## 🎓 Learning Budibase
 
