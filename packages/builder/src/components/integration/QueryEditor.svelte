@@ -2,6 +2,7 @@
   import CodeMirror from "./codemirror"
   import { onMount, createEventDispatcher } from "svelte"
   import { themeStore } from "builderStore"
+  import { handlebarsCompletions } from "constants/completions"
 
   const dispatch = createEventDispatcher()
 
@@ -15,6 +16,14 @@
   export let lineNumbers = true
   export let tab = true
   export let mode
+  // export let parameters = []
+
+  let completions = handlebarsCompletions()
+
+  // $: completions = parameters.map(param => ({
+  //   text: `{{ ${param.name} }}`,
+  //   displayText: param.name,
+  // }))
 
   let width
   let height
@@ -109,6 +118,7 @@
       mode: modes[mode] || {
         name: mode,
       },
+
       readOnly,
       autoCloseBrackets: true,
       autoCloseTags: true,
@@ -135,6 +145,18 @@
         dispatch("change", { value })
       }
     })
+
+    // editor.on("cursorActivity", function() {
+    //   editor.showHint({
+    //     hint: function() {
+    //       return {
+    //         from: editor.getDoc().getCursor(),
+    //         to: editor.getDoc().getCursor(),
+    //         list: completions,
+    //       }
+    //     },
+    //   })
+    // })
 
     if (first) await sleep(50)
     editor.refresh()
