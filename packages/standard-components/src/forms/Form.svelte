@@ -34,7 +34,7 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: field => {
+    registerField: (field, defaultValue = null) => {
       if (!field) {
         return
       }
@@ -47,8 +47,8 @@
       const validate = createValidatorFromConstraints(constraints, field, table)
 
       fieldMap[field] = {
-        fieldState: makeFieldState(field),
-        fieldApi: makeFieldApi(field, validate),
+        fieldState: makeFieldState(field, defaultValue),
+        fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
       fieldMap = fieldMap
@@ -60,13 +60,16 @@
   setContext("form", { formApi, formState })
 
   // Creates an API for a specific field
-  const makeFieldApi = (field, validate) => {
+  const makeFieldApi = (field, defaultValue, validate) => {
     return {
       setValue: value => {
         const { fieldState } = fieldMap[field]
         fieldState.update(state => {
-          state.value = value
-          state.error = validate ? validate(value) : null
+          if (state.value === value) {
+            return state
+          }
+          state.value = value == null ? defaultValue : value
+          state.error = validate ? validate(state.value) : null
           state.valid = !state.error
           return state
         })
@@ -76,13 +79,13 @@
   }
 
   // Creates observable state data about a specific field
-  const makeFieldState = field => {
+  const makeFieldState = (field, defaultValue) => {
     return writable({
       field,
       fieldId: `${Math.random()
         .toString(32)
         .substr(2)}/${field}`,
-      value: initialValues[field] ?? null,
+      value: initialValues[field] ?? defaultValue,
       error: null,
       valid: true,
     })

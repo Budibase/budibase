@@ -13,18 +13,19 @@
   const onChange = event => {
     fieldApi.setValue(event.target.checked)
   }
-
-  // Ensure a valid boolean value is set
-  onMount(() => {
-    fieldApi.setValue($fieldState.value || false)
-  })
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi>
+<SpectrumField
+  {label}
+  {field}
+  bind:fieldState
+  bind:fieldApi
+  defaultValue={false}>
   {#if fieldState}
     <div class="spectrum-FieldGroup spectrum-FieldGroup--horizontal">
       <label class="spectrum-Checkbox" class:is-invalid={!$fieldState.valid}>
         <input
+          checked={$fieldState.value}
           on:change={onChange}
           type="checkbox"
           class="spectrum-Checkbox-input"
