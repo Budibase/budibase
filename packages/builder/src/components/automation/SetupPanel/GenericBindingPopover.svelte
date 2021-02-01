@@ -3,6 +3,7 @@
   import {
     TextArea,
     Label,
+    Input,
     Heading,
     Body,
     Spacer,
@@ -24,6 +25,7 @@
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let validity = true
+  let search = ""
 
   $: categories = Object.entries(groupBy("category", bindings))
   $: value && checkValid()
@@ -50,12 +52,17 @@
   <div class="container">
     <div class="bindings">
       <Heading small>Available bindings</Heading>
+      <Spacer medium />
+      <Input extraThin placeholder="Search" bind:value={search} />
+      <Spacer medium />
       <div class="bindings__wrapper">
         <div class="bindings__list">
           {#each categories as [categoryName, bindings]}
             <Heading extraSmall>{categoryName}</Heading>
             <Spacer extraSmall />
-            {#each bindings as binding}
+            {#each bindings.filter(binding =>
+              binding.label.startsWith(search)
+            ) as binding}
               <div class="binding" on:click={() => onClickBinding(binding)}>
                 <span class="binding__label">{binding.label}</span>
                 <span class="binding__type">{binding.type}</span>
@@ -68,11 +75,15 @@
           {/each}
           <Heading extraSmall>Helpers</Heading>
           <Spacer extraSmall />
-          {#each helpers as helper}
+          {#each helpers.filter(binding =>
+            binding.label.startsWith(search)
+          ) as helper}
             <div class="binding" on:click={() => onClickBinding(helper)}>
-              <span class="binding__label">{helper.displayText}</span>
+              <span class="binding__label">{helper.label}</span>
               <br />
-              <div class="binding__description">{helper.description || ''}</div>
+              <div class="binding__description">
+                {@html helper.description || ''}
+              </div>
             </div>
           {/each}
         </div>

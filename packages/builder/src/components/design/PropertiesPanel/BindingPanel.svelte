@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { TextArea, Heading, Spacer, Label } from "@budibase/bbui"
+  import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -20,6 +20,7 @@
   let originalValue = value
   let helpers = handlebarsCompletions()
   let getCaretPosition
+  let search = ""
 
   $: value && checkValid()
   $: bindableProperties = getBindableProperties(
@@ -61,11 +62,15 @@
 <div class="drawer-contents">
   <div class="container" data-cy="binding-dropdown-modal">
     <div class="list">
+      <Input extraThin placeholder="Search" bind:value={search} />
+      <Spacer medium />
       {#if context}
         <Heading extraSmall>Columns</Heading>
         <Spacer small />
         <ul>
-          {#each context as { readableBinding }}
+          {#each context.filter(context =>
+            context.readableBinding.startsWith(search)
+          ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
             </li>
@@ -77,7 +82,9 @@
         <Heading extraSmall>Components</Heading>
         <Spacer small />
         <ul>
-          {#each instance as { readableBinding }}
+          {#each instance.filter(instance =>
+            instance.readableBinding.startsWith(search)
+          ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
             </li>
@@ -88,7 +95,9 @@
       <Heading extraSmall>Helpers</Heading>
       <Spacer small />
       <ul>
-        {#each helpers as helper}
+        {#each helpers.filter(helper =>
+          helper.label.startsWith(search)
+        ) as helper}
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
