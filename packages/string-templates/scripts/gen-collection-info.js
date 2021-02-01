@@ -1,9 +1,13 @@
-const helpers = require("handlebars-helpers")
+const HELPER_LIBRARY = "@budibase/handlebars-helpers"
+const helpers = require(HELPER_LIBRARY)
 const { HelperFunctionBuiltin } = require("../src/helpers/constants")
 const fs = require("fs")
 const doctrine = require("doctrine")
+const marked = require("marked")
 
-const FILENAME = "../manifest.json"
+const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
+
+const FILENAME = `${DIRECTORY}/manifest.json`
 
 /**
  * full list of supported helpers can be found here:
@@ -29,8 +33,6 @@ function fixSpecialCases(name, obj) {
   if (name === "toInt") {
     obj.description = "Convert input to an integer."
   }
-  // add the date helper
-  obj
   return obj
 }
 
@@ -91,7 +93,7 @@ function run() {
   const foundNames = []
   for (let collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
-      `../node_modules/handlebars-helpers/lib/${collection}.js`,
+      `${DIRECTORY}/node_modules/${HELPER_LIBRARY}/lib/${collection}.js`,
       "utf8"
     )
     const collectionInfo = {}
@@ -137,6 +139,12 @@ function run() {
       example: '{{date now "YYYY"}}',
       description: "Format a date using moment.js data formatting.",
     },
+  }
+  // convert all markdown to HTML
+  for (let collection of Object.values(outputJSON)) {
+    for (let helper of Object.values(collection)) {
+      helper.description = marked(helper.description)
+    }
   }
   fs.writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))
 }
