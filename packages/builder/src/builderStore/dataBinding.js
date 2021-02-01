@@ -206,7 +206,8 @@ export const getSchemaForDatasource = datasource => {
  * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
 function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
-  const convertFrom = convertTo === "runtimeBinding" ? "readableBinding" : "runtimeBinding"
+  const convertFrom =
+    convertTo === "runtimeBinding" ? "readableBinding" : "runtimeBinding"
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
@@ -222,10 +223,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     for (let from of convertFromProps) {
       if (newBoundValue.includes(from)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
-        newBoundValue = newBoundValue.replace(
-          from,
-          binding[convertTo],
-        )
+        newBoundValue = newBoundValue.replace(from, binding[convertTo])
       }
     }
     result = result.replace(boundValue, newBoundValue)
@@ -237,12 +235,20 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * Converts a readable data binding into a runtime data binding
  */
 export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
-  return bindingReplacement(bindableProperties, textWithBindings, "runtimeBinding")
+  return bindingReplacement(
+    bindableProperties,
+    textWithBindings,
+    "runtimeBinding"
+  )
 }
 
 /**
  * Converts a runtime data binding into a readable data binding
  */
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
-  return bindingReplacement(bindableProperties, textWithBindings, "readableBinding")
+  return bindingReplacement(
+    bindableProperties,
+    textWithBindings,
+    "readableBinding"
+  )
 }

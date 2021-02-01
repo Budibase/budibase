@@ -110,15 +110,17 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
+  const specialCases = ["isNumber", "expected a number"]
   // don't really need a real context to check if its valid
   const context = {}
   try {
     hbsInstance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
+    const msg = err ? err.message : ""
+    const foundCase = specialCases.find(spCase => msg.includes(spCase))
     // special case for maths functions - don't have inputs yet
-    return !!(err && err.message.includes("isNumber"))
-
+    return !!foundCase
   }
 }
 
