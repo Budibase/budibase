@@ -83,7 +83,7 @@ const controller = {
     ctx.message = `View ${ctx.params.viewName} saved successfully.`
   },
   exportView: async ctx => {
-    const view = ctx.request.body
+    const view = ctx.query.view
     const format = ctx.query.format
 
     // Fetch view rows
@@ -101,14 +101,6 @@ const controller = {
     const exportedFile = exporter(headers, ctx.body)
     const filename = `${view.name}.${format}`
     fs.writeFileSync(join(os.tmpdir(), filename), exportedFile)
-
-    ctx.body = {
-      url: `/api/views/export/download/${filename}`,
-      name: view.name,
-    }
-  },
-  downloadExport: async ctx => {
-    const filename = ctx.params.fileName
 
     ctx.attachment(filename)
     ctx.body = fs.createReadStream(join(os.tmpdir(), filename))

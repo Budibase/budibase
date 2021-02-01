@@ -270,6 +270,38 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@budibase/handlebars-helpers@^0.11.0":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.1.tgz#fe8672612fb4ad8fd3bad338ee15759f45e421eb"
+  integrity sha512-s72LhOhlHk43QYGVcqjogaGa4h4e6y6X1AfshqWBWceTRYBs/9tUnoYDUiRJ/Mt3WoTmx8Hj5GOZekSqrUsOFQ==
+  dependencies:
+    arr-flatten "^1.1.0"
+    array-sort "^0.1.4"
+    define-property "^1.0.0"
+    extend-shallow "^3.0.2"
+    "falsey" "^0.3.2"
+    for-in "^1.0.2"
+    for-own "^1.0.0"
+    get-object "^0.2.0"
+    get-value "^2.0.6"
+    handlebars "^4.0.11"
+    handlebars-utils "^1.0.6"
+    has-value "^1.0.0"
+    helper-date "^1.0.1"
+    helper-markdown "^1.0.0"
+    helper-md "^0.2.2"
+    html-tag "^2.0.0"
+    is-even "^1.0.0"
+    is-glob "^4.0.0"
+    is-number "^4.0.0"
+    kind-of "^6.0.0"
+    logging-helpers "^1.0.0"
+    micromatch "^3.1.4"
+    relative "^3.0.2"
+    striptags "^3.1.0"
+    to-gfm-code-block "^0.1.1"
+    year "^0.2.1"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -484,14 +516,6 @@
   integrity sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==
   dependencies:
     "@rollup/pluginutils" "^3.0.8"
-
-"@rollup/plugin-replace@^2.3.4":
-  version "2.3.4"
-  resolved "https://registry.yarnpkg.com/@rollup/plugin-replace/-/plugin-replace-2.3.4.tgz#7dd84c17755d62b509577f2db37eb524d7ca88ca"
-  integrity sha512-waBhMzyAtjCL1GwZes2jaE9MjuQ/DQF2BatH3fRivUF3z0JBFrU0U6iBNC/4WR+2rLKhaAhPWDNPYp4mI6RqdQ==
-  dependencies:
-    "@rollup/pluginutils" "^3.1.0"
-    magic-string "^0.25.7"
 
 "@rollup/pluginutils@^3.0.8", "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
@@ -1472,16 +1496,6 @@ create-ecdh@^4.0.0:
     bn.js "^4.1.0"
     elliptic "^6.5.3"
 
-create-frame@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/create-frame/-/create-frame-1.0.0.tgz#8b95f2691e3249b6080443e33d0bad9f8f6975aa"
-  integrity sha1-i5XyaR4ySbYIBEPjPQutn49pdao=
-  dependencies:
-    define-property "^0.2.5"
-    extend-shallow "^2.0.1"
-    isobject "^3.0.0"
-    lazy-cache "^2.0.2"
-
 create-hash@^1.1.0, create-hash@^1.1.2, create-hash@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/create-hash/-/create-hash-1.2.0.tgz#889078af11a63756bcfb59bd221996be3a9ef196"
@@ -2152,48 +2166,6 @@ gulp-header@^1.7.1:
     concat-with-sourcemaps "*"
     lodash.template "^4.4.0"
     through2 "^2.0.0"
-
-handlebars-helper-create-frame@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/handlebars-helper-create-frame/-/handlebars-helper-create-frame-0.1.0.tgz#8aa51d10aeb6408fcc6605d40d77356288487a03"
-  integrity sha1-iqUdEK62QI/MZgXUDXc1YohIegM=
-  dependencies:
-    create-frame "^1.0.0"
-    isobject "^3.0.0"
-
-handlebars-helpers@^0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/handlebars-helpers/-/handlebars-helpers-0.10.0.tgz#663d49e718928eafbead1473419ed7bc24bcd45a"
-  integrity sha512-QiyhQz58u/DbuV41VnfpE0nhy6YCH4vB514ajysV8SoKmP+DxU+pR+fahVyNECHj+jiwEN2VrvxD/34/yHaLUg==
-  dependencies:
-    arr-flatten "^1.1.0"
-    array-sort "^0.1.4"
-    create-frame "^1.0.0"
-    define-property "^1.0.0"
-    "falsey" "^0.3.2"
-    for-in "^1.0.2"
-    for-own "^1.0.0"
-    get-object "^0.2.0"
-    get-value "^2.0.6"
-    handlebars "^4.0.11"
-    handlebars-helper-create-frame "^0.1.0"
-    handlebars-utils "^1.0.6"
-    has-value "^1.0.0"
-    helper-date "^1.0.1"
-    helper-markdown "^1.0.0"
-    helper-md "^0.2.2"
-    html-tag "^2.0.0"
-    is-even "^1.0.0"
-    is-glob "^4.0.0"
-    is-number "^4.0.0"
-    kind-of "^6.0.0"
-    lazy-cache "^2.0.2"
-    logging-helpers "^1.0.0"
-    micromatch "^3.1.4"
-    relative "^3.0.2"
-    striptags "^3.1.0"
-    to-gfm-code-block "^0.1.1"
-    year "^0.2.1"
 
 handlebars-utils@^1.0.2, handlebars-utils@^1.0.4, handlebars-utils@^1.0.6:
   version "1.0.6"
@@ -3219,7 +3191,7 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-lazy-cache@^2.0.1, lazy-cache@^2.0.2:
+lazy-cache@^2.0.1:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/lazy-cache/-/lazy-cache-2.0.2.tgz#b9190a4f913354694840859f8a8f7084d8822264"
   integrity sha1-uRkKT5EzVGlIQIWfio9whNiCImQ=
@@ -4790,9 +4762,9 @@ typescript@^4.1.3:
   integrity sha512-B3ZIOf1IKeH2ixgHhj6la6xdwR9QrLC5d1VKeCSY4tvkqhF2eqd9O7txNlS0PO3GrBAFIdr3L1ndNwteUbZLYg==
 
 uglify-js@^3.1.4:
-  version "3.12.4"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.12.4.tgz#93de48bb76bb3ec0fc36563f871ba46e2ee5c7ee"
-  integrity sha512-L5i5jg/SHkEqzN18gQMTWsZk3KelRsfD1wUVNqtq0kzqWQqcJjyL8yc1o8hJgRrWqrAl2mUFbhfznEIoi7zi2A==
+  version "3.12.6"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.12.6.tgz#f884584fcc42e10bca70db5cb32e8625c2c42535"
+  integrity sha512-aqWHe3DfQmZUDGWBbabZ2eQnJlQd1fKlMUu7gV+MiTuDzdgDw31bI3wA2jLLsV/hNcDP26IfyEgSVoft5+0SVw==
 
 union-value@^1.0.0:
   version "1.0.1"
