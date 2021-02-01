@@ -11,6 +11,8 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
+  import { handlebarsCompletions } from "constants/completions"
+
   const dispatch = createEventDispatcher()
 
   export let value = ""
@@ -19,6 +21,7 @@
   export let align
   export let popover = null
 
+  let helpers = handlebarsCompletions()
   let getCaretPosition
   let validity = true
 
@@ -62,6 +65,15 @@
                 </div>
               </div>
             {/each}
+          {/each}
+          <Heading extraSmall>Helpers</Heading>
+          <Spacer extraSmall />
+          {#each helpers as helper}
+            <div class="binding" on:click={() => onClickBinding(helper)}>
+              <span class="binding__label">{helper.displayText}</span>
+              <br />
+              <div class="binding__description">{helper.description || ''}</div>
+            </div>
           {/each}
         </div>
       </div>
