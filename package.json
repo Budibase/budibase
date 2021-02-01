@@ -33,6 +33,7 @@
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci",
-    "build:docker": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -"
+    "build:docker": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
+    "build:docker:staging": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh staging && cd -"
   }
 }
