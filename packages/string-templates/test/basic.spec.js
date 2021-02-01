@@ -107,6 +107,6 @@ describe("check manifest", () => {
   it("should be able to retrieve the manifest", () => {
     const manifest = getManifest()
     expect(manifest.math).not.toBeNull()
-    expect(manifest.math.abs.description).toBe("Return the magnitude of `a`.")
+    expect(manifest.math.abs.description).toBe("<p>Return the magnitude of <code>a</code>.</p>\n")
   })
 })

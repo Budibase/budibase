@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc && rollup -c",
     "dev:builder": "tsc && rollup -cw",
-    "test": "jest"
+    "test": "jest",
+    "manifest": "node ./scripts/gen-collection-info.js"
   },
   "dependencies": {
     "@budibase/handlebars-helpers": "^0.11.1",
@@ -24,6 +25,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "doctrine": "^3.0.0",
     "jest": "^26.6.3",
+    "marked": "^1.2.8",
     "rollup": "^2.36.2",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",

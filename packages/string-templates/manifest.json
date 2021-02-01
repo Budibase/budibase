@@ -5,7 +5,7 @@
         "a"
       ],
       "numArgs": 1,
-      "description": "Return the magnitude of `a`."
+      "description": "<p>Return the magnitude of <code>a</code>.</p>\n"
     },
     "add": {
       "args": [
@@ -13,7 +13,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Return the sum of `a` plus `b`."
+      "description": "<p>Return the sum of <code>a</code> plus <code>b</code>.</p>\n"
     },
     "avg": {
       "args": [
@@ -21,14 +21,14 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{avg \"[1, 2, 3, 4, 5]\"}} <!-- results in: '3' --> ",
-      "description": "Returns the average of all numbers in the given array."
+      "description": "<p>Returns the average of all numbers in the given array.</p>\n"
     },
     "ceil": {
       "args": [
         "value"
       ],
       "numArgs": 1,
-      "description": "Get the `Math.ceil()` of the given value."
+      "description": "<p>Get the <code>Math.ceil()</code> of the given value.</p>\n"
     },
     "divide": {
       "args": [
@@ -36,14 +36,14 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Divide `a` by `b`"
+      "description": "<p>Divide <code>a</code> by <code>b</code></p>\n"
     },
     "floor": {
       "args": [
         "value"
       ],
       "numArgs": 1,
-      "description": "Get the `Math.floor()` of the given value."
+      "description": "<p>Get the <code>Math.floor()</code> of the given value.</p>\n"
     },
     "minus": {
       "args": [
@@ -51,7 +51,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Return the product of `a` minus `b`."
+      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n"
     },
     "modulo": {
       "args": [
@@ -59,7 +59,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Get the remainder of a division operation."
+      "description": "<p>Get the remainder of a division operation.</p>\n"
     },
     "multiply": {
       "args": [
@@ -67,7 +67,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Return the product of `a` times `b`."
+      "description": "<p>Return the product of <code>a</code> times <code>b</code>.</p>\n"
     },
     "plus": {
       "args": [
@@ -75,7 +75,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Add `a` by `b`."
+      "description": "<p>Add <code>a</code> by <code>b</code>.</p>\n"
     },
     "random": {
       "args": [
@@ -83,7 +83,7 @@
         "max"
       ],
       "numArgs": 2,
-      "description": "Generate a random number between two values"
+      "description": "<p>Generate a random number between two values</p>\n"
     },
     "remainder": {
       "args": [
@@ -91,14 +91,14 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Get the remainder when `a` is divided by `b`."
+      "description": "<p>Get the remainder when <code>a</code> is divided by <code>b</code>.</p>\n"
     },
     "round": {
       "args": [
         "number"
       ],
       "numArgs": 1,
-      "description": "Round the given number."
+      "description": "<p>Round the given number.</p>\n"
     },
     "subtract": {
       "args": [
@@ -106,7 +106,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Return the product of `a` minus `b`."
+      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n"
     },
     "sum": {
       "args": [
@@ -114,7 +114,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{sum \"[1, 2, 3, 4, 5]\"}} <!-- results in: '15' --> ",
-      "description": "Returns the sum of all numbers in the given array."
+      "description": "<p>Returns the sum of all numbers in the given array.</p>\n"
     },
     "times": {
       "args": [
@@ -122,7 +122,7 @@
         "b"
       ],
       "numArgs": 2,
-      "description": "Multiply number `a` by number `b`."
+      "description": "<p>Multiply number <code>a</code> by number <code>b</code>.</p>\n"
     }
   },
   "array": {
@@ -133,7 +133,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{after array 1}} <!-- results in: '[\"c\"]' --> ",
-      "description": "Returns all of the items in an array after the specified index. Opposite of [before](#before)."
+      "description": "<p>Returns all of the items in an array after the specified index. Opposite of <a href=\"#before\">before</a>.</p>\n"
     },
     "arrayify": {
       "args": [
@@ -141,7 +141,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{arrayify \"foo\"}} <!-- results in: [ \"foo\" ] --> ",
-      "description": "Cast the given `value` to an array."
+      "description": "<p>Cast the given <code>value</code> to an array.</p>\n"
     },
     "before": {
       "args": [
@@ -150,7 +150,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{before array 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
-      "description": "Return all of the items in the collection before the specified count. Opposite of [after](#after)."
+      "description": "<p>Return all of the items in the collection before the specified count. Opposite of <a href=\"#after\">after</a>.</p>\n"
     },
     "eachIndex": {
       "args": [
@@ -159,7 +159,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] --> {{#eachIndex array}} {{item}} is {{index}} {{/eachIndex}} ",
-      "description": "Iterates the array, listing an item and the index of it."
+      "description": "<p>Iterates the array, listing an item and the index of it.</p>\n"
     },
     "filter": {
       "args": [
@@ -169,7 +169,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#filter array \"foo\"}}AAA{{else}}BBB{{/filter}} <!-- results in: 'BBB' --> ",
-      "description": "Block helper that filters the given array and renders the block for values that evaluate to `true`, otherwise the inverse block is returned."
+      "description": "<p>Block helper that filters the given array and renders the block for values that evaluate to <code>true</code>, otherwise the inverse block is returned.</p>\n"
     },
     "first": {
       "args": [
@@ -178,7 +178,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{first \"['a', 'b', 'c', 'd', 'e']\" 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
-      "description": "Returns the first item, or first `n` items of an array."
+      "description": "<p>Returns the first item, or first <code>n</code> items of an array.</p>\n"
     },
     "forEach": {
       "args": [
@@ -186,7 +186,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars <!-- accounts = [ {'name': 'John', 'email': 'john@example.com'}, {'name': 'Malcolm', 'email': 'malcolm@example.com'}, {'name': 'David', 'email': 'david@example.com'} ] --> {{#forEach accounts}} <a href=\"mailto:{{ email }}\" title=\"Send an email to {{ name }}\"> {{ name }} </a>{{#unless isLast}}, {{/unless}} {{/forEach}} ",
-      "description": "Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - `index` - `total` - `isFirst` - `isLast` Also, `@index` is exposed as a private variable, and additional private variables may be defined as hash arguments."
+      "description": "<p>Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - <code>index</code> - <code>total</code> - <code>isFirst</code> - <code>isLast</code> Also, <code>@index</code> is exposed as a private variable, and additional private variables may be defined as hash arguments.</p>\n"
     },
     "inArray": {
       "args": [
@@ -196,7 +196,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#inArray array \"d\"}} foo {{else}} bar {{/inArray}} <!-- results in: 'bar' --> ",
-      "description": "Block helper that renders the block if an array has the given `value`. Optionally specify an inverse block to render when the array does not have the given value."
+      "description": "<p>Block helper that renders the block if an array has the given <code>value</code>. Optionally specify an inverse block to render when the array does not have the given value.</p>\n"
     },
     "isArray": {
       "args": [
@@ -204,7 +204,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{isArray \"abc\"}} <!-- results in: false --> <!-- array: [1, 2, 3] --> {{isArray array}} <!-- results in: true --> ",
-      "description": "Returns true if `value` is an es5 array."
+      "description": "<p>Returns true if <code>value</code> is an es5 array.</p>\n"
     },
     "itemAt": {
       "args": [
@@ -213,7 +213,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{itemAt array 1}} <!-- results in: 'b' --> ",
-      "description": "Returns the item from `array` at index `idx`."
+      "description": "<p>Returns the item from <code>array</code> at index <code>idx</code>.</p>\n"
     },
     "join": {
       "args": [
@@ -222,7 +222,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{join array}} <!-- results in: 'a, b, c' --> {{join array '-'}} <!-- results in: 'a-b-c' --> ",
-      "description": "Join all elements of array into a string, optionally using a given separator."
+      "description": "<p>Join all elements of array into a string, optionally using a given separator.</p>\n"
     },
     "equalsLength": {
       "args": [
@@ -231,7 +231,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Returns true if the the length of the given `value` is equal to the given `length`. Can be used as a block or inline helper."
+      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "last": {
       "args": [
@@ -240,7 +240,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- var value = ['a', 'b', 'c', 'd', 'e'] --> {{last value}} <!-- results in: ['e'] --> {{last value 2}} <!-- results in: ['d', 'e'] --> {{last value 3}} <!-- results in: ['c', 'd', 'e'] --> ",
-      "description": "Returns the last item, or last `n` items of an array or string. Opposite of [first](#first)."
+      "description": "<p>Returns the last item, or last <code>n</code> items of an array or string. Opposite of <a href=\"#first\">first</a>.</p>\n"
     },
     "length": {
       "args": [
@@ -248,7 +248,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{length '[\"a\", \"b\", \"c\"]'}} <!-- results in: 3 --> <!-- results in: myArray = ['a', 'b', 'c', 'd', 'e']; --> {{length myArray}} <!-- results in: 5 --> <!-- results in: myObject = {'a': 'a', 'b': 'b'}; --> {{length myObject}} <!-- results in: 2 --> ",
-      "description": "Returns the length of the given string or array."
+      "description": "<p>Returns the length of the given string or array.</p>\n"
     },
     "lengthEqual": {
       "args": [
@@ -257,7 +257,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Returns true if the the length of the given `value` is equal to the given `length`. Can be used as a block or inline helper."
+      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "map": {
       "args": [
@@ -266,7 +266,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'b', 'c'], and \"double\" is a fictitious function that duplicates letters --> {{map array double}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
-      "description": "Returns a new array, created by calling `function` on each element of the given `array`. For example,"
+      "description": "<p>Returns a new array, created by calling <code>function</code> on each element of the given <code>array</code>. For example,</p>\n"
     },
     "pluck": {
       "args": [
@@ -275,7 +275,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars // {{pluck items \"data.title\"}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
-      "description": "Map over the given object or array or objects and create an array of values from the given `prop`. Dot-notation may be used (as a string) to get nested properties."
+      "description": "<p>Map over the given object or array or objects and create an array of values from the given <code>prop</code>. Dot-notation may be used (as a string) to get nested properties.</p>\n"
     },
     "reverse": {
       "args": [
@@ -283,7 +283,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars <!-- value: 'abcd' --> {{reverse value}} <!-- results in: 'dcba' --> <!-- value: ['a', 'b', 'c', 'd'] --> {{reverse value}} <!-- results in: ['d', 'c', 'b', 'a'] --> ",
-      "description": "Reverse the elements in an array, or the characters in a string."
+      "description": "<p>Reverse the elements in an array, or the characters in a string.</p>\n"
     },
     "some": {
       "args": [
@@ -293,7 +293,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: [1, 'b', 3] --> {{#some array isString}} Render me if the array has a string. {{else}} Render me if it doesn't. {{/some}} <!-- results in: 'Render me if the array has a string.' --> ",
-      "description": "Block helper that returns the block if the callback returns true for some value in the given array."
+      "description": "<p>Block helper that returns the block if the callback returns true for some value in the given array.</p>\n"
     },
     "sort": {
       "args": [
@@ -302,7 +302,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{sort array}} <!-- results in: '[\"a\", \"b\", \"c\"]' --> ",
-      "description": "Sort the given `array`. If an array of objects is passed, you may optionally pass a `key` to sort on as the second argument. You may alternatively pass a sorting function as the second argument."
+      "description": "<p>Sort the given <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "sortBy": {
       "args": [
@@ -311,7 +311,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: [{a: 'zzz'}, {a: 'aaa'}] --> {{sortBy array \"a\"}} <!-- results in: '[{\"a\":\"aaa\"}, {\"a\":\"zzz\"}]' --> ",
-      "description": "Sort an `array`. If an array of objects is passed, you may optionally pass a `key` to sort on as the second argument. You may alternatively pass a sorting function as the second argument."
+      "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "withAfter": {
       "args": [
@@ -321,7 +321,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withAfter array 3}} {{this}} {{/withAfter}} <!-- results in: \"de\" --> ",
-      "description": "Use the items in the array _after_ the specified index as context inside a block. Opposite of [withBefore](#withBefore)."
+      "description": "<p>Use the items in the array <em>after</em> the specified index as context inside a block. Opposite of <a href=\"#withBefore\">withBefore</a>.</p>\n"
     },
     "withBefore": {
       "args": [
@@ -331,7 +331,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withBefore array 3}} {{this}} {{/withBefore}} <!-- results in: 'ab' --> ",
-      "description": "Use the items in the array _before_ the specified index as context inside a block. Opposite of [withAfter](#withAfter)."
+      "description": "<p>Use the items in the array <em>before</em> the specified index as context inside a block. Opposite of <a href=\"#withAfter\">withAfter</a>.</p>\n"
     },
     "withFirst": {
       "args": [
@@ -341,7 +341,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withFirst array}} {{this}} {{/withFirst}} <!-- results in: 'a' --> ",
-      "description": "Use the first item in a collection inside a handlebars block expression. Opposite of [withLast](#withLast)."
+      "description": "<p>Use the first item in a collection inside a handlebars block expression. Opposite of <a href=\"#withLast\">withLast</a>.</p>\n"
     },
     "withGroup": {
       "args": [
@@ -351,7 +351,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a','b','c','d','e','f','g','h'] --> {{#withGroup array 4}} {{#each this}} {{.}} {{each}} <br> {{/withGroup}} <!-- results in: --> <!-- 'a','b','c','d'<br> --> <!-- 'e','f','g','h'<br> --> ",
-      "description": "Block helper that groups array elements by given group `size`."
+      "description": "<p>Block helper that groups array elements by given group <code>size</code>.</p>\n"
     },
     "withLast": {
       "args": [
@@ -361,7 +361,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withLast array}} {{this}} {{/withLast}} <!-- results in: 'c' --> ",
-      "description": "Use the last item or `n` items in an array as context inside a block. Opposite of [withFirst](#withFirst)."
+      "description": "<p>Use the last item or <code>n</code> items in an array as context inside a block. Opposite of <a href=\"#withFirst\">withFirst</a>.</p>\n"
     },
     "withSort": {
       "args": [
@@ -371,7 +371,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{#withSort array}}{{this}}{{/withSort}} <!-- results in: 'abc' --> ",
-      "description": "Block helper that sorts a collection and exposes the sorted collection as context inside the block."
+      "description": "<p>Block helper that sorts a collection and exposes the sorted collection as context inside the block.</p>\n"
     },
     "unique": {
       "args": [
@@ -380,7 +380,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- array: ['a', 'a', 'c', 'b', 'e', 'e'] --> {{#each (unique array)}}{{.}}{{/each}} <!-- results in: 'acbe' --> ",
-      "description": "Block helper that return an array with all duplicate values removed. Best used along with a [each](#each) helper."
+      "description": "<p>Block helper that return an array with all duplicate values removed. Best used along with a <a href=\"#each\">each</a> helper.</p>\n"
     }
   },
   "number": {
@@ -389,21 +389,21 @@
         "number"
       ],
       "numArgs": 1,
-      "description": "Format a number to it's equivalent in bytes. If a string is passed, it's length will be formatted and returned. **Examples:** - `'foo' => 3 B` - `13661855 => 13.66 MB` - `825399 => 825.39 kB` - `1396 => 1.4 kB`"
+      "description": "<p>Format a number to it&#39;s equivalent in bytes. If a string is passed, it&#39;s length will be formatted and returned. <strong>Examples:</strong> - <code>&#39;foo&#39; =&gt; 3 B</code> - <code>13661855 =&gt; 13.66 MB</code> - <code>825399 =&gt; 825.39 kB</code> - <code>1396 =&gt; 1.4 kB</code></p>\n"
     },
     "addCommas": {
       "args": [
         "num"
       ],
       "numArgs": 1,
-      "description": "Add commas to numbers"
+      "description": "<p>Add commas to numbers</p>\n"
     },
     "phoneNumber": {
       "args": [
         "num"
       ],
       "numArgs": 1,
-      "description": "Convert a string or number to a formatted phone number."
+      "description": "<p>Convert a string or number to a formatted phone number.</p>\n"
     },
     "toAbbr": {
       "args": [
@@ -411,7 +411,7 @@
         "precision"
       ],
       "numArgs": 2,
-      "description": "Abbreviate numbers to the given number of `precision`. This for general numbers, not size in bytes."
+      "description": "<p>Abbreviate numbers to the given number of <code>precision</code>. This for general numbers, not size in bytes.</p>\n"
     },
     "toExponential": {
       "args": [
@@ -420,7 +420,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{toExponential number digits}}; ",
-      "description": "Returns a string representing the given number in exponential notation."
+      "description": "<p>Returns a string representing the given number in exponential notation.</p>\n"
     },
     "toFixed": {
       "args": [
@@ -429,21 +429,21 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{toFixed \"1.1234\" 2}} //=> '1.12' ",
-      "description": "Formats the given number using fixed-point notation."
+      "description": "<p>Formats the given number using fixed-point notation.</p>\n"
     },
     "toFloat": {
       "args": [
         "number"
       ],
       "numArgs": 1,
-      "description": "Convert input to a float."
+      "description": "<p>Convert input to a float.</p>\n"
     },
     "toInt": {
       "args": [
         "number"
       ],
       "numArgs": 1,
-      "description": "Convert input to an integer."
+      "description": "<p>Convert input to an integer.</p>\n"
     },
     "toPrecision": {
       "args": [
@@ -452,7 +452,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{toPrecision \"1.1234\" 2}} //=> '1.1' ",
-      "description": "Returns a string representing the `Number` object to the specified precision."
+      "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n"
     }
   },
   "url": {
@@ -461,31 +461,31 @@
         "str"
       ],
       "numArgs": 1,
-      "description": "Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character."
+      "description": "<p>Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.</p>\n"
     },
     "escape": {
       "args": [
         "str"
       ],
       "numArgs": 1,
-      "description": "Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc."
+      "description": "<p>Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc.</p>\n"
     },
     "decodeURI": {
       "args": [
         "str"
       ],
       "numArgs": 1,
-      "description": "Decode a Uniform Resource Identifier (URI) component."
+      "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n"
     },
     "url_encode": {
       "args": [],
       "numArgs": 0,
-      "description": "Alias for [encodeURI](#encodeuri)."
+      "description": "<p>Alias for <a href=\"#encodeuri\">encodeURI</a>.</p>\n"
     },
     "url_decode": {
       "args": [],
       "numArgs": 0,
-      "description": "Alias for [decodeURI](#decodeuri)."
+      "description": "<p>Alias for <a href=\"#decodeuri\">decodeURI</a>.</p>\n"
     },
     "urlResolve": {
       "args": [
@@ -493,21 +493,21 @@
         "href"
       ],
       "numArgs": 2,
-      "description": "Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag."
+      "description": "<p>Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag.</p>\n"
     },
     "urlParse": {
       "args": [
         "str"
       ],
       "numArgs": 1,
-      "description": "Parses a `url` string into an object."
+      "description": "<p>Parses a <code>url</code> string into an object.</p>\n"
     },
     "stripQuerystring": {
       "args": [
         "url"
       ],
       "numArgs": 1,
-      "description": "Strip the query string from the given `url`."
+      "description": "<p>Strip the query string from the given <code>url</code>.</p>\n"
     },
     "stripProtocol": {
       "args": [
@@ -515,7 +515,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars <!-- url = 'http://foo.bar' --> {{stripProtocol url}} <!-- results in: '//foo.bar' --> ",
-      "description": "Strip protocol from a `url`. Useful for displaying media that may have an 'http' protocol on secure connections."
+      "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n"
     }
   },
   "string": {
@@ -526,7 +526,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- given that \"item.stem\" is \"foo\" --> {{append item.stem \".html\"}} <!-- results in: 'foo.html' --> ",
-      "description": "Append the specified `suffix` to the given string."
+      "description": "<p>Append the specified <code>suffix</code> to the given string.</p>\n"
     },
     "camelcase": {
       "args": [
@@ -534,7 +534,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{camelcase \"foo bar baz\"}}; <!-- results in: 'fooBarBaz' --> ",
-      "description": "camelCase the characters in the given `string`."
+      "description": "<p>camelCase the characters in the given <code>string</code>.</p>\n"
     },
     "capitalize": {
       "args": [
@@ -542,7 +542,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{capitalize \"foo bar baz\"}} <!-- results in: \"Foo bar baz\" --> ",
-      "description": "Capitalize the first word in a sentence."
+      "description": "<p>Capitalize the first word in a sentence.</p>\n"
     },
     "capitalizeAll": {
       "args": [
@@ -550,7 +550,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{capitalizeAll \"foo bar baz\"}} <!-- results in: \"Foo Bar Baz\" --> ",
-      "description": "Capitalize all words in a string."
+      "description": "<p>Capitalize all words in a string.</p>\n"
     },
     "center": {
       "args": [
@@ -558,7 +558,7 @@
         "spaces"
       ],
       "numArgs": 2,
-      "description": "Center a string using non-breaking spaces"
+      "description": "<p>Center a string using non-breaking spaces</p>\n"
     },
     "chop": {
       "args": [
@@ -566,7 +566,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{chop \"_ABC_\"}} <!-- results in: 'ABC' --> {{chop \"-ABC-\"}} <!-- results in: 'ABC' --> {{chop \" ABC \"}} <!-- results in: 'ABC' --> ",
-      "description": "Like trim, but removes both extraneous whitespace **and non-word characters** from the beginning and end of a string."
+      "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n"
     },
     "dashcase": {
       "args": [
@@ -574,7 +574,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{dashcase \"a-b-c d_e\"}} <!-- results in: 'a-b-c-d-e' --> ",
-      "description": "dash-case the characters in `string`. Replaces non-word characters and periods with hyphens."
+      "description": "<p>dash-case the characters in <code>string</code>. Replaces non-word characters and periods with hyphens.</p>\n"
     },
     "dotcase": {
       "args": [
@@ -582,7 +582,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{dotcase \"a-b-c d_e\"}} <!-- results in: 'a.b.c.d.e' --> ",
-      "description": "dot.case the characters in `string`."
+      "description": "<p>dot.case the characters in <code>string</code>.</p>\n"
     },
     "downcase": {
       "args": [
@@ -590,7 +590,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{downcase \"aBcDeF\"}} <!-- results in: 'abcdef' --> ",
-      "description": "Lowercase all of the characters in the given string. Alias for [lowercase](#lowercase)."
+      "description": "<p>Lowercase all of the characters in the given string. Alias for <a href=\"#lowercase\">lowercase</a>.</p>\n"
     },
     "ellipsis": {
       "args": [
@@ -599,7 +599,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{ellipsis (sanitize \"<span>foo bar baz</span>\"), 7}} <!-- results in: 'foo bar…' --> {{ellipsis \"foo bar baz\", 7}} <!-- results in: 'foo bar…' --> ",
-      "description": "Truncates a string to the specified `length`, and appends it with an elipsis, `…`."
+      "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {
       "args": [
@@ -607,7 +607,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{hyphenate \"foo bar baz qux\"}} <!-- results in: \"foo-bar-baz-qux\" --> ",
-      "description": "Replace spaces in a string with hyphens."
+      "description": "<p>Replace spaces in a string with hyphens.</p>\n"
     },
     "isString": {
       "args": [
@@ -615,7 +615,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{isString \"foo\"}} <!-- results in: 'true' --> ",
-      "description": "Return true if `value` is a string."
+      "description": "<p>Return true if <code>value</code> is a string.</p>\n"
     },
     "lowercase": {
       "args": [
@@ -623,7 +623,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{lowercase \"Foo BAR baZ\"}} <!-- results in: 'foo bar baz' --> ",
-      "description": "Lowercase all characters in the given string."
+      "description": "<p>Lowercase all characters in the given string.</p>\n"
     },
     "occurrences": {
       "args": [
@@ -632,7 +632,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{occurrences \"foo bar foo bar baz\" \"foo\"}} <!-- results in: 2 --> ",
-      "description": "Return the number of occurrences of `substring` within the given `string`."
+      "description": "<p>Return the number of occurrences of <code>substring</code> within the given <code>string</code>.</p>\n"
     },
     "pascalcase": {
       "args": [
@@ -640,7 +640,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{pascalcase \"foo bar baz\"}} <!-- results in: 'FooBarBaz' --> ",
-      "description": "PascalCase the characters in `string`."
+      "description": "<p>PascalCase the characters in <code>string</code>.</p>\n"
     },
     "pathcase": {
       "args": [
@@ -648,7 +648,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{pathcase \"a-b-c d_e\"}} <!-- results in: 'a/b/c/d/e' --> ",
-      "description": "path/case the characters in `string`."
+      "description": "<p>path/case the characters in <code>string</code>.</p>\n"
     },
     "plusify": {
       "args": [
@@ -656,7 +656,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{plusify \"foo bar baz\"}} <!-- results in: 'foo+bar+baz' --> ",
-      "description": "Replace spaces in the given string with pluses."
+      "description": "<p>Replace spaces in the given string with pluses.</p>\n"
     },
     "prepend": {
       "args": [
@@ -665,7 +665,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars <!-- given that \"val\" is \"bar\" --> {{prepend val \"foo-\"}} <!-- results in: 'foo-bar' --> ",
-      "description": "Prepends the given `string` with the specified `prefix`."
+      "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n"
     },
     "raw": {
       "args": [
@@ -673,7 +673,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{{{#raw}}}} {{foo}} {{{{/raw}}}} <!-- results in: '{{foo}}' --> ",
-      "description": "Render a block without processing mustache templates inside the block."
+      "description": "<p>Render a block without processing mustache templates inside the block.</p>\n"
     },
     "remove": {
       "args": [
@@ -682,7 +682,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{remove \"a b a b a b\" \"a \"}} <!-- results in: 'b b b' --> ",
-      "description": "Remove all occurrences of `substring` from the given `str`."
+      "description": "<p>Remove all occurrences of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "removeFirst": {
       "args": [
@@ -691,7 +691,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{remove \"a b a b a b\" \"a\"}} <!-- results in: ' b a b a b' --> ",
-      "description": "Remove the first occurrence of `substring` from the given `str`."
+      "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "replace": {
       "args": [
@@ -701,7 +701,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b z b z b' --> ",
-      "description": "Replace all occurrences of substring `a` with substring `b`."
+      "description": "<p>Replace all occurrences of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "replaceFirst": {
       "args": [
@@ -711,7 +711,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b a b a b' --> ",
-      "description": "Replace the first occurrence of substring `a` with substring `b`."
+      "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "sentence": {
       "args": [
@@ -719,7 +719,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{sentence \"hello world. goodbye world.\"}} <!-- results in: 'Hello world. Goodbye world.' --> ",
-      "description": "Sentence case the given string"
+      "description": "<p>Sentence case the given string</p>\n"
     },
     "snakecase": {
       "args": [
@@ -727,7 +727,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{snakecase \"a-b-c d_e\"}} <!-- results in: 'a_b_c_d_e' --> ",
-      "description": "snake_case the characters in the given `string`."
+      "description": "<p>snake_case the characters in the given <code>string</code>.</p>\n"
     },
     "split": {
       "args": [
@@ -735,7 +735,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{split \"a,b,c\" \",\"}} <!-- results in: ['a', 'b', 'c'] --> ",
-      "description": "Split `string` by the given `character`."
+      "description": "<p>Split <code>string</code> by the given <code>character</code>.</p>\n"
     },
     "startsWith": {
       "args": [
@@ -745,7 +745,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars {{#startsWith \"Goodbye\" \"Hello, world!\"}} Whoops {{else}} Bro, do you even hello world? {{/startsWith}} ",
-      "description": "Tests whether a string begins with the given prefix."
+      "description": "<p>Tests whether a string begins with the given prefix.</p>\n"
     },
     "titleize": {
       "args": [
@@ -753,7 +753,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{titleize \"this title case\"}} <!-- results in: 'This Is Title Case' --> ",
-      "description": "Title case the given string."
+      "description": "<p>Title case the given string.</p>\n"
     },
     "trim": {
       "args": [
@@ -761,7 +761,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC' --> ",
-      "description": "Removes extraneous whitespace from the beginning and end of a string."
+      "description": "<p>Removes extraneous whitespace from the beginning and end of a string.</p>\n"
     },
     "trimLeft": {
       "args": [
@@ -769,7 +769,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC ' --> ",
-      "description": "Removes extraneous whitespace from the beginning of a string."
+      "description": "<p>Removes extraneous whitespace from the beginning of a string.</p>\n"
     },
     "trimRight": {
       "args": [
@@ -777,7 +777,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{trimRight \" ABC \"}} <!-- results in: ' ABC' --> ",
-      "description": "Removes extraneous whitespace from the end of a string."
+      "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n"
     },
     "truncate": {
       "args": [
@@ -787,7 +787,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars truncate(\"foo bar baz\", 7); <!-- results in: 'foo bar' --> truncate(sanitize(\"<span>foo bar baz</span>\", 7)); <!-- results in: 'foo bar' --> ",
-      "description": "Truncate a string to the specified `length`. Also see [ellipsis](#ellipsis)."
+      "description": "<p>Truncate a string to the specified <code>length</code>. Also see <a href=\"#ellipsis\">ellipsis</a>.</p>\n"
     },
     "truncateWords": {
       "args": [
@@ -797,7 +797,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars truncateWords(\"foo bar baz\", 1); <!-- results in: 'foo…' --> truncateWords(\"foo bar baz\", 2); <!-- results in: 'foo bar…' --> truncateWords(\"foo bar baz\", 3); <!-- results in: 'foo bar baz' --> ",
-      "description": "Truncate a string to have the specified number of words. Also see [truncate](#truncate)."
+      "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n"
     },
     "upcase": {
       "args": [
@@ -805,7 +805,7 @@
       ],
       "numArgs": 1,
       "example": "handlebars {{upcase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
-      "description": "Uppercase all of the characters in the given string. Alias for [uppercase](#uppercase)."
+      "description": "<p>Uppercase all of the characters in the given string. Alias for <a href=\"#uppercase\">uppercase</a>.</p>\n"
     },
     "uppercase": {
       "args": [
@@ -814,7 +814,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{uppercase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
-      "description": "Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks."
+      "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n"
     }
   },
   "comparison": {
@@ -826,7 +826,7 @@
       ],
       "numArgs": 3,
       "example": "handlebars <!-- {great: true, magnificent: true} --> {{#and great magnificent}}A{{else}}B{{/and}} <!-- results in: 'A' --> ",
-      "description": "Helper that renders the block if **both** of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression."
+      "description": "<p>Helper that renders the block if <strong>both</strong> of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression.</p>\n"
     },
     "compare": {
       "args": [
@@ -836,7 +836,7 @@
         "options"
       ],
       "numArgs": 4,
-      "description": "Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy."
+      "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n"
     },
     "contains": {
       "args": [
@@ -847,7 +847,7 @@
       ],
       "numArgs": 4,
       "example": "handlebars <!-- array = ['a', 'b', 'c'] --> {{#contains array \"d\"}} This will not be rendered. {{else}} This will be rendered. {{/contains}} ",
-      "description": "Block helper that renders the block if `collection` has the given `value`, using strict equality (`===`) for comparison, otherwise the inverse block is rendered (if specified). If a `startIndex` is specified and is negative, it is used as the offset from the end of the collection."
+      "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n"
     },
     "default": {
       "args": [
@@ -855,7 +855,7 @@
         "defaultValue"
       ],
       "numArgs": 2,
-      "description": "Returns the first value that is not undefined, otherwise the \"default\" value is returned."
+      "description": "<p>Returns the first value that is not undefined, otherwise the &quot;default&quot; value is returned.</p>\n"
     },
     "eq": {
       "args": [
@@ -864,7 +864,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
     },
     "gt": {
       "args": [
@@ -873,7 +873,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **greater than** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
     },
     "gte": {
       "args": [
@@ -882,7 +882,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **greater than or equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
     },
     "has": {
       "args": [
@@ -891,7 +891,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `value` has `pattern`. If an inverse block is specified it will be rendered when falsy."
+      "description": "<p>Block helper that renders a block if <code>value</code> has <code>pattern</code>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "isFalsey": {
       "args": [
@@ -899,7 +899,7 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "Returns true if the given `value` is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper."
+      "description": "<p>Returns true if the given <code>value</code> is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
     },
     "isTruthy": {
       "args": [
@@ -907,7 +907,7 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "Returns true if the given `value` is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper."
+      "description": "<p>Returns true if the given <code>value</code> is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
     },
     "ifEven": {
       "args": [
@@ -916,7 +916,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{#ifEven value}} render A {{else}} render B {{/ifEven}} ",
-      "description": "Return true if the given value is an even number."
+      "description": "<p>Return true if the given value is an even number.</p>\n"
     },
     "ifNth": {
       "args": [
@@ -925,7 +925,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Conditionally renders a block if the remainder is zero when `a` operand is divided by `b`. If an inverse block is specified it will be rendered when the remainder is **not zero**."
+      "description": "<p>Conditionally renders a block if the remainder is zero when <code>a</code> operand is divided by <code>b</code>. If an inverse block is specified it will be rendered when the remainder is <strong>not zero</strong>.</p>\n"
     },
     "ifOdd": {
       "args": [
@@ -934,7 +934,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{#ifOdd value}} render A {{else}} render B {{/ifOdd}} ",
-      "description": "Block helper that renders a block if `value` is **an odd number**. If an inverse block is specified it will be rendered when falsy."
+      "description": "<p>Block helper that renders a block if <code>value</code> is <strong>an odd number</strong>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "is": {
       "args": [
@@ -943,7 +943,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **equal to** `b`. If an inverse block is specified it will be rendered when falsy. Similar to [eq](#eq) but does not do strict equality."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#eq\">eq</a> but does not do strict equality.</p>\n"
     },
     "isnt": {
       "args": [
@@ -952,7 +952,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **not equal to** `b`. If an inverse block is specified it will be rendered when falsy. Similar to [unlessEq](#unlesseq) but does not use strict equality for comparisons."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>not equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#unlesseq\">unlessEq</a> but does not use strict equality for comparisons.</p>\n"
     },
     "lt": {
       "args": [
@@ -960,7 +960,7 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "Block helper that renders a block if `a` is **less than** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
     },
     "lte": {
       "args": [
@@ -969,7 +969,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if `a` is **less than or equal to** `b`. If an inverse block is specified it will be rendered when falsy. You may optionally use the `compare=\"\"` hash argument for the second value."
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
     },
     "neither": {
       "args": [
@@ -978,7 +978,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that renders a block if **neither of** the given values are truthy. If an inverse block is specified it will be rendered when falsy."
+      "description": "<p>Block helper that renders a block if <strong>neither of</strong> the given values are truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "not": {
       "args": [
@@ -986,7 +986,7 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "Returns true if `val` is falsey. Works as a block or inline helper."
+      "description": "<p>Returns true if <code>val</code> is falsey. Works as a block or inline helper.</p>\n"
     },
     "or": {
       "args": [
@@ -995,7 +995,7 @@
       ],
       "numArgs": 2,
       "example": "handlebars {{#or a b c}} If any value is true this will be rendered. {{/or}} ",
-      "description": "Block helper that renders a block if **any of** the given values is truthy. If an inverse block is specified it will be rendered when falsy."
+      "description": "<p>Block helper that renders a block if <strong>any of</strong> the given values is truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "unlessEq": {
       "args": [
@@ -1004,7 +1004,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that always renders the inverse block **unless `a` is equal to `b`**."
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is equal to <code>b</code></strong>.</p>\n"
     },
     "unlessGt": {
       "args": [
@@ -1013,7 +1013,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that always renders the inverse block **unless `a` is greater than `b`**."
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than <code>b</code></strong>.</p>\n"
     },
     "unlessLt": {
       "args": [
@@ -1022,7 +1022,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that always renders the inverse block **unless `a` is less than `b`**."
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than <code>b</code></strong>.</p>\n"
     },
     "unlessGteq": {
       "args": [
@@ -1031,7 +1031,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that always renders the inverse block **unless `a` is greater than or equal to `b`**."
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than or equal to <code>b</code></strong>.</p>\n"
     },
     "unlessLteq": {
       "args": [
@@ -1040,7 +1040,7 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "Block helper that always renders the inverse block **unless `a` is less than or equal to `b`**."
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n"
     }
   },
   "date": {
@@ -1050,8 +1050,8 @@
         "format"
       ],
       "numArgs": 2,
-      "example": "{{date \"5 years ago\" \"YYYY\"}}",
-      "description": "Format a date using moment.js data formatting."
+      "example": "{{date now \"YYYY\"}}",
+      "description": "<p>Format a date using moment.js data formatting.</p>\n"
     }
   }
 }

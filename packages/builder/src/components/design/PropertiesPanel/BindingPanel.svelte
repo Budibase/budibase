@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { TextArea, Heading, Spacer } from "@budibase/bbui"
+  import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -8,18 +8,28 @@
     readableToRuntimeBinding,
   } from "builderStore/dataBinding"
   import { currentAsset, store } from "../../../builderStore"
+  import { handlebarsCompletions } from "constants/completions"
 
   const dispatch = createEventDispatcher()
+
   export let bindableProperties
   export let value = ""
   export let bindingDrawer
   export let valid = true
+
+  let originalValue = value
+  let helpers = handlebarsCompletions()
+  let getCaretPosition
+  let search = ""
 
   $: value && checkValid()
   $: bindableProperties = getBindableProperties(
     $currentAsset.props,
     $store.selectedComponentId
   )
+  $: dispatch("update", value)
+  $: ({ instance, context } = groupBy("type", bindableProperties))
+  $: searchRgx = new RegExp(search, "ig")
 
   function checkValid() {
     // TODO: need to convert the value to the runtime binding
@@ -28,47 +38,79 @@
   }
 
   function addToText(readableBinding) {
-    value = `${value || ""}{{ ${readableBinding} }}`
+    const position = getCaretPosition()
+    const toAdd = `{{ ${readableBinding} }}`
+    if (position.start) {
+      value =
+        value.substring(0, position.start) +
+        toAdd +
+        value.substring(position.end, value.length)
+    } else {
+      value += toAdd
+    }
   }
-  let originalValue = value
-
-  $: dispatch("update", value)
 
   export function cancel() {
     dispatch("update", originalValue)
     bindingDrawer.close()
   }
 
-  $: ({ instance, context } = groupBy("type", bindableProperties))
+  function updateValue({ detail }) {
+    value = detail.value
+  }
 </script>
 
 <div class="drawer-contents">
   <div class="container" data-cy="binding-dropdown-modal">
     <div class="list">
+      <Input extraThin placeholder="Search" bind:value={search} />
+      <Spacer medium />
       {#if context}
         <Heading extraSmall>Columns</Heading>
         <Spacer small />
         <ul>
-          {#each context as { readableBinding }}
+          {#each context.filter(context =>
+            context.readableBinding.match(searchRgx)
+          ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
             </li>
           {/each}
         </ul>
       {/if}
+      <Spacer small />
       {#if instance}
         <Heading extraSmall>Components</Heading>
+        <Spacer small />
         <ul>
-          {#each instance as { readableBinding }}
+          {#each instance.filter(instance =>
+            instance.readableBinding.match(searchRgx)
+          ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
               {readableBinding}
             </li>
           {/each}
         </ul>
       {/if}
+      <Spacer small />
+      <Heading extraSmall>Helpers</Heading>
+      <Spacer small />
+      <ul>
+        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+          <li on:click={() => addToText(helper.text)}>
+            <div>
+              <Label extraSmall>{helper.displayText}</Label>
+              <div class="description">
+                {@html helper.description}
+              </div>
+            </div>
+          </li>
+        {/each}
+      </ul>
     </div>
     <div class="text">
       <TextArea
+        bind:getCaretPosition
         thin
         bind:value
         placeholder="Add text, or click the objects on the left to add them to
@@ -150,5 +192,17 @@
   .syntax-error a {
     color: var(--red);
     text-decoration: underline;
+  }
+
+  .description :global(p) {
+    color: var(--grey-7);
+  }
+
+  .description :global(p:hover) {
+    color: var(--ink);
+  }
+
+  .description :global(p a) {
+    color: var(--grey-7);
   }
 </style>

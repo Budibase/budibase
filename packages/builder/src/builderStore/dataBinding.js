@@ -7,7 +7,6 @@ import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
-const INVALID_BINDING = "{{ invalid binding }}"
 
 /**
  * Gets all bindable data context fields and instance fields.
