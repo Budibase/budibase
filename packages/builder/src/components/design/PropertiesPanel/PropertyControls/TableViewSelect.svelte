@@ -17,6 +17,7 @@
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
   let drawer
+  let tableDrawer
 
   export let value = {}
 

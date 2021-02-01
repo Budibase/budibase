@@ -114,6 +114,21 @@
       }
     ]
   },
+  "search": {
+    "name": "Search",
+    "description": "A searchable list of items.",
+    "icon": "ri-search-line",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Data",
+        "key": "datasource"
+      }
+    ]
+  },
   "dataform": {
     "name": "Form",
     "icon": "ri-file-edit-line",

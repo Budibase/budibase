@@ -41,7 +41,7 @@
 
   .icon {
     right: 2px;
-    top: 26px;
+    top: 5px;
     bottom: 2px;
     position: absolute;
     align-items: center;

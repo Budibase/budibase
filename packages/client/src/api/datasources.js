@@ -1,5 +1,5 @@
 import { cloneDeep } from "lodash/fp"
-import { fetchTableData } from "./tables"
+import { fetchTableData, searchTableData } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
@@ -14,10 +14,15 @@ export const fetchDatasource = async datasource => {
   }
 
   // Fetch all rows in data source
-  const { type, tableId, fieldName } = datasource
+  const { type, tableId, fieldName, search } = datasource
   let rows = []
   if (type === "table") {
-    rows = await fetchTableData(tableId)
+    // TODO refactor
+    if (search) {
+      rows = await searchTableData(tableId, search)
+    } else {
+      rows = await fetchTableData(tableId)
+    }
   } else if (type === "view") {
     rows = await fetchViewData(datasource)
   } else if (type === "query") {

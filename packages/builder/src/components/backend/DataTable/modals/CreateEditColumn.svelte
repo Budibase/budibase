@@ -79,6 +79,10 @@
     }
   }
 
+  function onChangeSearchable() {
+
+  }
+
   function confirmDelete() {
     confirmDeleteDialog.show()
     deletion = true
@@ -120,6 +124,10 @@
       on:change={onChangePrimaryDisplay}
       thin
       text="Use as table display column" />
+    <Toggle
+      bind:checked={field.searchable}
+      thin
+      text="Searchable" />
   {/if}
 
   {#if field.type === 'string'}
