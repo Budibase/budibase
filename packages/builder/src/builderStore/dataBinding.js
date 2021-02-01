@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
+import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -114,6 +115,37 @@ export const getContextBindings = (rootComponent, componentId) => {
       })
     })
   })
+
+  // Add logged in user bindings
+  const tables = get(backendUiStore).tables
+  const userTable = tables.find(table => table._id === TableNames.USERS)
+  const schema = {
+    ...userTable.schema,
+    _id: { type: "string" },
+    _rev: { type: "string" },
+  }
+  const keys = Object.keys(schema).sort()
+  keys.forEach(key => {
+    const fieldSchema = schema[key]
+    // Replace certain bindings with a new property to help display components
+    let runtimeBoundKey = key
+    if (fieldSchema.type === "link") {
+      runtimeBoundKey = `${key}_count`
+    } else if (fieldSchema.type === "attachment") {
+      runtimeBoundKey = `${key}_first`
+    }
+
+    contextBindings.push({
+      type: "context",
+      runtimeBinding: `user.${runtimeBoundKey}`,
+      readableBinding: `Current User.${key}`,
+      fieldSchema,
+      providerId: "user",
+      tableId: TableNames.USERS,
+      field: key,
+    })
+  })
+
   return contextBindings
 }
 

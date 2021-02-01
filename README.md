@@ -86,6 +86,10 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
   <img src="https://i.imgur.com/cJpgqm8.png">
 </p>
 
+### Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
+
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
@@ -106,6 +110,8 @@ The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps be
 Budibase wants to make sure anyone can use the tools we develop and we know a lot of people need to be able to host the apps they make on their own systems - that is why we've decided to try and make self hosting as easy as possible!
 
 Currently, you can host your apps using Docker or Digital Ocean. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
+
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/droplets/new?onboarding_origin=marketplace&i=09038e&fleetUuid=bb04f9c8-1de8-4687-b2ae-1d5177a0535b&appId=77729671&type=applications&size=s-4vcpu-8gb&region=nyc1&refcode=0caaa6085a82&image=budibase-20-04)
 
 
 ## 🎓 Learning Budibase
@@ -154,6 +160,7 @@ If you have a question or would like to talk with other Budibase users, please h
 
 ![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
 
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -174,6 +181,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/pngwn"><img src="https://avatars1.githubusercontent.com/u/12937446?v=4?s=100" width="100px;" alt=""/><br /><sub><b>pngwn</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=pngwn" title="Code">💻</a> <a href="https://github.com/Budibase/budibase/commits?author=pngwn" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/HugoLd"><img src="https://avatars0.githubusercontent.com/u/26521848?v=4?s=100" width="100px;" alt=""/><br /><sub><b>HugoLd</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=HugoLd" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/victoriasloan"><img src="https://avatars.githubusercontent.com/u/9913651?v=4?s=100" width="100px;" alt=""/><br /><sub><b>victoriasloan</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=victoriasloan" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/yashank09"><img src="https://avatars.githubusercontent.com/u/37672190?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yashank09</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=yashank09" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/SOVLOOKUP"><img src="https://avatars.githubusercontent.com/u/53158137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>SOVLOOKUP</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=SOVLOOKUP" title="Code">💻</a></td>
   </tr>
 </table>
 
