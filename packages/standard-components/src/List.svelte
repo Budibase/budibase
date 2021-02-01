@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
-  const { API, styleable, DataProvider, builderStore } = getContext("sdk")
+  const { API, styleable, Provider, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let datasource = []
@@ -26,9 +26,9 @@
       <p>Add some components too</p>
     {:else}
       {#each rows as row}
-        <DataProvider {row}>
+        <Provider data={row}>
           <slot />
-        </DataProvider>
+        </Provider>
       {/each}
     {/if}
   {:else if loaded && $builderStore.inBuilder}

@@ -1,7 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte"
 
-  const { API, screenStore, routeStore, DataProvider, styleable } = getContext(
+  const { API, screenStore, routeStore, Provider, styleable } = getContext(
     "sdk"
   )
   const component = getContext("component")
@@ -39,8 +39,8 @@
 
 {#if row}
   <div use:styleable={$component.styles}>
-    <DataProvider {row}>
+    <Provider data={row}>
       <slot />
-    </DataProvider>
+    </Provider>
   </div>
 {/if}
