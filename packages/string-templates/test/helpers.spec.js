@@ -167,7 +167,7 @@ describe("test the date helpers", () => {
   it("should allow use of the date helper with now time", async () => {
     const date = new Date()
     const output = await processString("{{ date now 'DD' }}", {})
-    expect(output).toBe(date.getDate().toString())
+    expect(parseInt(output)).toBe(date.getDate())
   })
 })
 
