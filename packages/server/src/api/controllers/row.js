@@ -215,6 +215,30 @@ exports.fetchView = async function(ctx) {
   }
 }
 
+exports.search = async function(ctx) {
+  const appId = ctx.user.appId
+
+  // special case for users, fetch through the user controller
+  // let rows
+  // SHOULD WE PREVENT SEARCHING FOR USERS?
+  // if (ctx.params.tableId === ViewNames.USERS) {
+  //   await usersController.fetch(ctx)
+  //   rows = ctx.body
+  // } else {
+
+  const db = new CouchDB(appId)
+
+  const query = ctx.request.body.query
+  query.tableId = ctx.params.tableId
+
+  const response = await db.find({
+    selector: query,
+  })
+  ctx.body = response.docs
+  // const rows = response.docs.map(row => row.doc)
+  // ctx.body = await linkRows.attachLinkInfo(appId, rows)
+}
+
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
 
@@ -225,6 +249,7 @@ exports.fetchTableRows = async function(ctx) {
     rows = ctx.body
   } else {
     const db = new CouchDB(appId)
+
     const response = await db.allDocs(
       getRowParams(ctx.params.tableId, null, {
         include_docs: true,
