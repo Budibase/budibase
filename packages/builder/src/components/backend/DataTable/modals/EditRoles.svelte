@@ -9,6 +9,7 @@
   let permissions = []
   let selectedRole = {}
   let errors = []
+  let builtInRoles = ['Admin', 'Power', 'Basic', 'Public']
   $: selectedRoleId = selectedRole._id
   $: otherRoles = $backendUiStore.roles.filter(
     role => role._id !== selectedRoleId
@@ -102,7 +103,7 @@
     {/each}
   </Select>
   {#if selectedRole}
-    <Input label="Name" bind:value={selectedRole.name} thin />
+    <Input label="Name" bind:value={selectedRole.name} thin disabled={builtInRoles.includes(selectedRole.name)}/>
     <Select
       thin
       secondary
