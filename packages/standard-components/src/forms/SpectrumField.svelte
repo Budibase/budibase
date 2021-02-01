@@ -8,6 +8,7 @@
   export let fieldState
   export let fieldApi
   export let fieldSchema
+  export let defaultValue
 
   // Get contexts
   const formContext = getContext("form")
@@ -16,16 +17,14 @@
   const component = getContext("component")
 
   // Register field with form
-  $: formApi = formContext?.formApi
-  $: labelPosition = fieldGroupContext?.labelPosition || "above"
-  $: formField = formApi?.registerField(field)
+  const formApi = formContext?.formApi
+  const labelPosition = fieldGroupContext?.labelPosition || "above"
+  const formField = formApi?.registerField(field, defaultValue)
 
   // Expose field properties to parent component
-  $: {
-    fieldState = formField?.fieldState
-    fieldApi = formField?.fieldApi
-    fieldSchema = formField?.fieldSchema
-  }
+  fieldState = formField?.fieldState
+  fieldApi = formField?.fieldApi
+  fieldSchema = formField?.fieldSchema
 
   // Extract label position from field group context
   $: labelPositionClass =

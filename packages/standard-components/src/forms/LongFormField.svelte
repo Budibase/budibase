@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import { RichText } from "@budibase/bbui"
   import SpectrumField from "./SpectrumField.svelte"
 
@@ -8,17 +9,17 @@
 
   let fieldState
   let fieldApi
-  let previousValue = ""
-  let value = ""
 
-  $: {
-    // Only actually update the value when it changes, so that we don't trigger
-    // validation unnecessarily
-    if (value !== previousValue) {
-      fieldApi?.setValue(value)
-      previousValue = value
-    }
-  }
+  // Update form value from bound value after we've mounted
+  let value
+  let mounted = false
+  $: mounted && fieldApi?.setValue(value)
+
+  // Get the fields initial value after initialising
+  onMount(() => {
+    value = $fieldState?.value
+    mounted = true
+  })
 
   // Options for rich text component
   const options = {
@@ -37,8 +38,8 @@
   }
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi>
-  {#if fieldState}
+<SpectrumField {label} {field} bind:fieldState bind:fieldApi defaultValue="">
+  {#if mounted}
     <div>
       <RichText bind:value {options} />
     </div>
