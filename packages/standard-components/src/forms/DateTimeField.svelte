@@ -57,7 +57,8 @@
       <div
         id={`${$fieldState.fieldId}-wrapper`}
         aria-disabled="false"
-        aria-invalid="false"
+        aria-invalid={!$fieldState.valid}
+        class:is-invalid={!$fieldState.valid}
         class="flatpickr spectrum-InputGroup spectrum-Datepicker"
         class:is-focused={open}
         aria-readonly="false"
@@ -65,12 +66,21 @@
         aria-haspopup="true">
         <div
           on:click={flatpickr?.open}
-          class="spectrum-Textfield spectrum-InputGroup-textfield">
+          class="spectrum-Textfield spectrum-InputGroup-textfield"
+          class:is-invalid={!$fieldState.valid}>
+          {#if !$fieldState.valid}
+            <svg
+              class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+              focusable="false"
+              aria-hidden="true">
+              <use xlink:href="#spectrum-icon-18-Alert" />
+            </svg>
+          {/if}
           <input
             data-input
             type="text"
             class="spectrum-Textfield-input spectrum-InputGroup-input"
-            aria-invalid="false"
+            aria-invalid={!$fieldState.valid}
             {placeholder}
             id={$fieldState.fieldId}
             value={$fieldState.value} />
@@ -79,6 +89,7 @@
           type="button"
           class="spectrum-Picker spectrum-InputGroup-button"
           tabindex="-1"
+          class:is-invalid={!$fieldState.valid}
           on:click={flatpickr?.open}>
           <svg
             class="spectrum-Icon spectrum-Icon--sizeM"
@@ -108,6 +119,7 @@
       --spectrum-alias-single-line-width,
       var(--spectrum-global-dimension-size-2400)
     );
+    overflow: hidden;
   }
   .flatpickr .spectrum-Textfield {
     width: auto;
