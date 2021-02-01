@@ -101,7 +101,7 @@
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
-              {@html helper.description}
+              <div class="description">{@html helper.description}</div>
             </div>
           </li>
         {/each}
@@ -191,5 +191,17 @@
   .syntax-error a {
     color: var(--red);
     text-decoration: underline;
+  }
+
+  .description :global(p) {
+    color: var(--grey-7);
+  }
+
+  .description :global(p:hover) {
+    color: var(--ink);
+  }
+
+  .description :global(p a) {
+    color: var(--grey-7);
   }
 </style>
