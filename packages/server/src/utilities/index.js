@@ -111,16 +111,28 @@ exports.getCookieName = (name = "builder") => {
  * @param {string} name The name of the cookie to set.
  * @param {string|object} value The value of cookie which will be set.
  */
-exports.setCookie = (ctx, name, value) => {
+exports.setCookie = (ctx, value, name = "builder") => {
   const expires = new Date()
   expires.setDate(expires.getDate() + 1)
 
-  ctx.cookies.set(exports.getCookieName(name), value, {
-    expires,
-    path: "/",
-    httpOnly: false,
-    overwrite: true,
-  })
+  const cookieName = exports.getCookieName(name)
+  if (!value) {
+    ctx.cookies.set(cookieName)
+  } else {
+    ctx.cookies.set(cookieName, value, {
+      expires,
+      path: "/",
+      httpOnly: false,
+      overwrite: true,
+    })
+  }
+}
+
+/**
+ * Utility function, simply calls setCookie with an empty string for value
+ */
+exports.clearCookie = (ctx, name) => {
+  exports.setCookie(ctx, "", name)
 }
 
 exports.isClient = ctx => {
