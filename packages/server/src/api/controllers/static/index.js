@@ -177,7 +177,6 @@ exports.serveApp = async function(ctx) {
   })
 
   const appHbs = fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
-  console.log(appHbs)
   ctx.body = await processString(appHbs, {
     head,
     body: html,

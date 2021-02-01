@@ -105,10 +105,16 @@ async function createInstance(template) {
 
   // replicate the template data to the instance DB
   if (template) {
-    const templatePath = await downloadTemplate(...template.key.split("/"))
-    const dbDumpReadStream = fs.createReadStream(
-      join(templatePath, "db", "dump.txt")
-    )
+    let dbDumpReadStream
+
+    if (template.fileImportPath) {
+      dbDumpReadStream = fs.createReadStream(template.fileImportPath)
+    } else {
+      const templatePath = await downloadTemplate(...template.key.split("/"))
+      dbDumpReadStream = fs.createReadStream(
+        join(templatePath, "db", "dump.txt")
+      )
+    }
     const { ok } = await db.load(dbDumpReadStream)
     if (!ok) {
       throw "Error loading database dump from template."
