@@ -4,7 +4,7 @@
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { Button, Heading, Modal } from "@budibase/bbui"
+  import { Button, Heading, Modal, Spacer } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
 
@@ -43,13 +43,22 @@
     modal.show()
   }
 
+  function initiateAppImport() {
+    template = { fromFile: true }
+    modal.show()
+  }
+
   checkIfKeysAndApps()
 </script>
 
 <div class="container">
   <div class="header">
     <Heading medium black>Welcome to the Budibase Beta</Heading>
-    <Button primary on:click={modal.show}>Create New Web App</Button>
+    <div class="button-group">
+      <Button secondary on:click={initiateAppImport}>Import Web App</Button>
+      <Spacer medium />
+      <Button primary on:click={modal.show}>Create New Web App</Button>
+    </div>
   </div>
 
   <div class="banner">
@@ -102,5 +111,10 @@
     font-size: 24px;
     color: white;
     font-weight: 500;
+  }
+
+  .button-group {
+    display: flex;
+    flex-direction: row;
   }
 </style>

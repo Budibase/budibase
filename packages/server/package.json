@@ -22,7 +22,8 @@
       "maintainer": "Budibase",
       "icon": "./build/icons/",
       "target": [
-        "deb"
+        "deb",
+        "AppImage"
       ],
       "category": "Development"
     },

@@ -26,10 +26,5 @@ router
   )
   .post("/api/views", authorized(BUILDER), usage, viewController.save)
   .post("/api/views/export", authorized(BUILDER), viewController.exportView)
-  .get(
-    "/api/views/export/download/:fileName",
-    authorized(BUILDER),
-    viewController.downloadExport
-  )
 
 module.exports = router
