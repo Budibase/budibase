@@ -1284,5 +1284,28 @@
         "key": "label"
       }
     ]
+  },
+  "relationshipfield": {
+    "name": "Relationship Picker",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/relationship",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Choose an option"
+      }
+    ]
   }
 }
