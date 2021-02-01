@@ -37,7 +37,9 @@
     // duplicate input field.
     // We need to blur both because the focus styling does not get properly
     // applied.
-    const els = document.querySelectorAll(`#${$fieldState.id}-wrapper input`)
+    const els = document.querySelectorAll(
+      `#${$fieldState.fieldId}-wrapper input`
+    )
     els.forEach(el => el.blur())
   }
 </script>
@@ -51,9 +53,9 @@
       on:close={onClose}
       options={flatpickrOptions}
       on:change={handleChange}
-      element={`#${$fieldState.id}-wrapper`}>
+      element={`#${$fieldState.fieldId}-wrapper`}>
       <div
-        id={`${$fieldState.id}-wrapper`}
+        id={`${$fieldState.fieldId}-wrapper`}
         aria-disabled="false"
         aria-invalid="false"
         class="flatpickr spectrum-InputGroup spectrum-Datepicker"
@@ -61,14 +63,16 @@
         aria-readonly="false"
         aria-required="false"
         aria-haspopup="true">
-        <div class="spectrum-Textfield spectrum-InputGroup-textfield">
+        <div
+          on:click={flatpickr?.open}
+          class="spectrum-Textfield spectrum-InputGroup-textfield">
           <input
             data-input
             type="text"
             class="spectrum-Textfield-input spectrum-InputGroup-input"
             aria-invalid="false"
             {placeholder}
-            id={$fieldState.id}
+            id={$fieldState.fieldId}
             value={$fieldState.value} />
         </div>
         <button
@@ -86,10 +90,19 @@
         </button>
       </div>
     </Flatpickr>
+    {#if open}
+      <div class="overlay" on:mousedown|self={flatpickr?.close} />
+    {/if}
   {/if}
 </SpectrumField>
 
 <style>
+  .spectrum-Textfield-input {
+    pointer-events: none;
+  }
+  .spectrum-Textfield:hover {
+    cursor: pointer;
+  }
   .flatpickr {
     width: var(
       --spectrum-alias-single-line-width,
@@ -98,5 +111,13 @@
   }
   .flatpickr .spectrum-Textfield {
     width: auto;
+  }
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999;
   }
 </style>
