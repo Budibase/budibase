@@ -50,6 +50,9 @@
   div {
     background-color: white;
   }
+  div :global(> div) {
+    width: auto !important;
+  }
   div :global(.ql-snow.ql-toolbar:after, .ql-snow .ql-toolbar:after) {
     display: none;
   }
