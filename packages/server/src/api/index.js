@@ -5,6 +5,7 @@ const zlib = require("zlib")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
 const { isDev } = require("../utilities")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
+const pkg = require("../../package.json")
 
 const router = new Router()
 const env = require("../environment")
@@ -32,6 +33,7 @@ router
     await next()
   })
   .use("/health", ctx => (ctx.status = 200))
+  .use("/version", ctx => (ctx.body = pkg.version))
   .use(authenticated)
 
 // error handling middleware
