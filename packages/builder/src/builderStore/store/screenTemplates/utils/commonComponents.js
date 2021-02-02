@@ -2,14 +2,6 @@ import { get } from "svelte/store"
 import { Component } from "./Component"
 import { rowListUrl } from "../rowListScreen"
 import { backendUiStore } from "builderStore"
-import StringFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/StringFieldSelect.svelte"
-import NumberFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/NumberFieldSelect.svelte"
-import OptionsFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/OptionsFieldSelect.svelte"
-import BooleanFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/BooleanFieldSelect.svelte"
-import LongFormFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/LongFormFieldSelect.svelte"
-import DateTimeFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/DateTimeFieldSelect.svelte"
-import AttachmentFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/AttachmentFieldSelect.svelte"
-import RelationshipFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/RelationshipFieldSelect.svelte"
 
 export function makeLinkComponent(tableName) {
   return new Component("@budibase/standard-components/link")
