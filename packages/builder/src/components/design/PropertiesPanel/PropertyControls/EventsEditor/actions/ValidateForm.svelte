@@ -10,7 +10,6 @@
     $store.selectedComponentId,
     "ValidateForm"
   )
-  $: console.log(actionProviders)
 </script>
 
 <div class="root">
