@@ -1,7 +1,10 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-
+  import { Button } from "@budibase/bbui"
+  import { currentAsset } from "builderStore"
+  import { findClosestMatchingComponent } from "builderStore/storeUtils"
+  import { makeSchemaFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -94,6 +97,17 @@
   const onInstanceNameChange = name => {
     onChange("_instanceName", name)
   }
+
+  const resetFormFields = () => {
+    const form = findClosestMatchingComponent(
+      $currentAsset.props,
+      componentInstance._id,
+      component => component._component.endsWith("/form")
+    )
+    const tableId = form?.datasource?.tableId
+    const fields = makeSchemaFormComponents(tableId).map(field => field.json())
+    onChange("_children", fields)
+  }
 </script>
 
 <div class="settings-view-container">
@@ -137,6 +151,10 @@
     <div class="empty">
       This component doesn't have any additional settings.
     </div>
+  {/if}
+
+  {#if componentDefinition?.component?.endsWith('/fieldgroup')}
+    <Button secondary wide on:click={resetFormFields}>Reset Fields</Button>
   {/if}
 </div>
 
