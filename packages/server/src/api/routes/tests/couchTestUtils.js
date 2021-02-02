@@ -37,35 +37,56 @@ exports.defaultHeaders = appId => {
   return headers
 }
 
-exports.createTable = async (request, appId, table) => {
-  if (table != null && table._id) {
-    delete table._id
-  }
-  table = table || {
-    name: "TestTable",
-    type: "table",
-    key: "name",
-    schema: {
-      name: {
+exports.BASE_TABLE = {
+  name: "TestTable",
+  type: "table",
+  key: "name",
+  schema: {
+    name: {
+      type: "string",
+      constraints: {
         type: "string",
-        constraints: {
-          type: "string",
-        },
-      },
-      description: {
-        type: "string",
-        constraints: {
-          type: "string",
-        },
       },
     },
+    description: {
+      type: "string",
+      constraints: {
+        type: "string",
+      },
+    },
+  },
+}
+
+exports.createTable = async (request, appId, table, removeId = true) => {
+  if (removeId && table != null && table._id) {
+    delete table._id
   }
+  table = table || exports.BASE_TABLE
 
   const res = await request
     .post(`/api/tables`)
     .set(exports.defaultHeaders(appId))
     .send(table)
   return res.body
+}
+
+exports.createLinkedTable = async (request, appId) => {
+  // get the ID to link to
+  const table = await exports.createTable(request, appId)
+  table.schema.link = {
+    type: "link",
+    fieldName: "link",
+    tableId: table._id,
+  }
+  return exports.createTable(request, appId, table, false)
+}
+
+exports.createAttachmentTable = async (request, appId) => {
+  const table = await exports.createTable(request, appId)
+  table.schema.attachment = {
+    type: "attachment",
+  }
+  return exports.createTable(request, appId, table, false)
 }
 
 exports.getAllFromTable = async (request, appId, tableId) => {
