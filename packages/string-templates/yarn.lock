@@ -270,10 +270,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/handlebars-helpers@^0.11.1":
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.1.tgz#fe8672612fb4ad8fd3bad338ee15759f45e421eb"
-  integrity sha512-s72LhOhlHk43QYGVcqjogaGa4h4e6y6X1AfshqWBWceTRYBs/9tUnoYDUiRJ/Mt3WoTmx8Hj5GOZekSqrUsOFQ==
+"@budibase/handlebars-helpers@^0.11.3":
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.3.tgz#b6e5c91b83e8906e7d7ff10ddde277a3d561016e"
+  integrity sha512-MS1ptZEYq8o9J3tNLM7cZ2RGSSJIer4GiMIUHtbBI3sC9UKqZebao1JYNfmZKpNjntuqhZKgjqc5GfnVIEjsYQ==
   dependencies:
     arr-flatten "^1.1.0"
     array-sort "^0.1.4"
