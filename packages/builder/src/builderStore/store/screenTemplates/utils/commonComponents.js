@@ -1,5 +1,15 @@
+import { get } from "svelte/store"
 import { Component } from "./Component"
 import { rowListUrl } from "../rowListScreen"
+import { backendUiStore } from "builderStore"
+import StringFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/StringFieldSelect.svelte"
+import NumberFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/NumberFieldSelect.svelte"
+import OptionsFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/OptionsFieldSelect.svelte"
+import BooleanFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/BooleanFieldSelect.svelte"
+import LongFormFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/LongFormFieldSelect.svelte"
+import DateTimeFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/DateTimeFieldSelect.svelte"
+import AttachmentFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/AttachmentFieldSelect.svelte"
+import RelationshipFieldSelect from "../../../../components/design/PropertiesPanel/PropertyControls/RelationshipFieldSelect.svelte"
 
 export function makeLinkComponent(tableName) {
   return new Component("@budibase/standard-components/link")
@@ -22,13 +32,12 @@ export function makeLinkComponent(tableName) {
     })
 }
 
-export function makeMainContainer() {
-  return new Component("@budibase/standard-components/container")
+export function makeMainForm() {
+  return new Component("@budibase/standard-components/form")
     .type("div")
     .normalStyle({
       width: "700px",
       padding: "0px",
-      background: "white",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
       margin: "auto",
@@ -39,7 +48,26 @@ export function makeMainContainer() {
       "padding-left": "48px",
       "margin-bottom": "20px",
     })
-    .instanceName("Container")
+    .instanceName("Form")
+}
+
+export function makeMainContainer() {
+  return new Component("@budibase/standard-components/container")
+    .type("div")
+    .normalStyle({
+      width: "700px",
+      padding: "0px",
+      "border-radius": "0.5rem",
+      "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+      margin: "auto",
+      "margin-top": "20px",
+      "padding-top": "48px",
+      "padding-bottom": "48px",
+      "padding-right": "48px",
+      "padding-left": "48px",
+      "margin-bottom": "20px",
+    })
+    .instanceName("Form")
 }
 
 export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
@@ -78,7 +106,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .addChild(identifierText)
 }
 
-export function makeSaveButton(table, providerId) {
+export function makeSaveButton(table, formId) {
   return new Component("@budibase/standard-components/button")
     .normalStyle({
       background: "#000000",
@@ -99,8 +127,14 @@ export function makeSaveButton(table, providerId) {
       disabled: false,
       onClick: [
         {
+          "##eventHandlerType": "Validate Form",
           parameters: {
-            providerId,
+            componentId: formId,
+          },
+        },
+        {
+          parameters: {
+            providerId: formId,
           },
           "##eventHandlerType": "Save Row",
         },
@@ -141,4 +175,44 @@ export function makeTitleContainer(title) {
     })
     .instanceName("Title Container")
     .addChild(heading)
+}
+
+const fieldTypeToComponentMap = {
+  string: "stringfield",
+  number: "numberfield",
+  options: "optionsfield",
+  boolean: "booleanfield",
+  longform: "longformfield",
+  datetime: "datetimefield",
+  attachment: "attachmentfield",
+  link: "relationshipfield",
+}
+
+export function makeSchemaFormComponents(tableId) {
+  const tables = get(backendUiStore).tables
+  const schema = tables.find(table => table._id === tableId)?.schema ?? {}
+  let components = []
+  let fields = Object.keys(schema)
+  fields.forEach(field => {
+    const fieldSchema = schema[field]
+    const componentType = fieldTypeToComponentMap[fieldSchema.type]
+    const fullComponentType = `@budibase/standard-components/${componentType}`
+    if (componentType) {
+      const component = new Component(fullComponentType)
+        .instanceName(field)
+        .customProps({
+          field,
+          label: field,
+          placeholder: field,
+        })
+      if (fieldSchema.type === "options") {
+        component.customProps({ placeholder: "Choose an option " })
+      }
+      if (fieldSchema.type === "boolean") {
+        component.customProps({ text: field, label: "" })
+      }
+      components.push(component)
+    }
+  })
+  return components
 }

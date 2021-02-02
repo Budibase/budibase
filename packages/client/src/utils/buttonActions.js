@@ -7,7 +7,7 @@ import { ActionTypes } from "../constants"
 const saveRowHandler = async (action, context) => {
   const { fields, providerId } = action.parameters
   if (providerId) {
-    let draft = context[`${providerId}_draft`]
+    let draft = context[providerId]
     if (fields) {
       for (let [key, entry] of Object.entries(fields)) {
         draft[key] = await enrichDataBinding(entry.value, context)

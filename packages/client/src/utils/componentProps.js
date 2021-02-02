@@ -35,8 +35,10 @@ export const enrichProps = async (props, context, user) => {
   const totalContext = {
     ...context,
     user,
+
+    // This is only required for legacy bindings that used "data" rather than a
+    // component ID.
     data: context[context.closestComponentId],
-    data_draft: context[`${context.closestComponentId}_draft`],
   }
 
   // Enrich all data bindings in top level props
