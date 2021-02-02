@@ -9,9 +9,7 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { coerceRowValues } = require("../../utilities")
-const env = require("../../environment")
-const { OBJ_STORE_DIRECTORY } = require("../../constants")
+const { coerceRowValues, enrichRows } = require("../../utilities")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -51,32 +49,6 @@ async function findRow(db, appId, tableId, rowId) {
     throw "Supplied tableId does not match the rows tableId"
   }
   return row
-}
-
-/**
- * This function "enriches" the input rows with anything they are supposed to contain, for example
- * link records or attachment links.
- */
-async function enrichRows(appId, table, rows) {
-  // attach any linked row information
-  const enriched = await linkRows.attachLinkInfo(appId, rows)
-  // update the attachments URL depending on hosting
-  if (env.CLOUD && env.SELF_HOSTED) {
-    for (let [property, column] of Object.entries(table.schema)) {
-      if (column.type === "attachment") {
-        for (let row of enriched) {
-          if (row[property] == null || row[property].length === 0) {
-            continue
-          }
-          row[property].forEach(attachment => {
-            attachment.url = `${OBJ_STORE_DIRECTORY}/${appId}/${attachment.url}`
-            attachment.url = attachment.url.replace("//", "/")
-          })
-        }
-      }
-    }
-  }
-  return enriched
 }
 
 exports.patch = async function(ctx) {
@@ -249,12 +221,12 @@ exports.fetchTableRows = async function(ctx) {
   const db = new CouchDB(appId)
 
   // special case for users, fetch through the user controller
-  let rows, table = await db.get(ctx.params.tableId)
+  let rows,
+    table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === ViewNames.USERS) {
     await usersController.fetch(ctx)
     rows = ctx.body
   } else {
-
     const response = await db.allDocs(
       getRowParams(ctx.params.tableId, null, {
         include_docs: true,
@@ -359,7 +331,7 @@ exports.fetchEnrichedRow = async function(ctx) {
   let linkedRows = await enrichRows(
     appId,
     table,
-    response.rows.map(row => row.doc),
+    response.rows.map(row => row.doc)
   )
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
