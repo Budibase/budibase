@@ -103,7 +103,7 @@
               <div class="description">
                 {@html helper.description}
               </div>
-              <pre>{helper.example}</pre>
+              <pre>{helper.example || ''}</pre>
             </div>
           </li>
         {/each}
