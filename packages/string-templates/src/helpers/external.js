@@ -14,6 +14,8 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
   "url",
   "string",
   "comparison",
+  "object",
+  "regex",
 ]
 
 const DATE_NAME = "date"
