@@ -311,4 +311,9 @@ describe("Cover a few complex use cases", () => {
     const output = await processString(`{{first ( split "a-b-c" "-") 2}}`, {})
     expect(output).toBe(`a,b`)
   })
+
+  it("should confirm a subtraction validity", () => {
+    const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
+    expect(validity).toBe(true)
+  })
 })
