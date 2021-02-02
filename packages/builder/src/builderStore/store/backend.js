@@ -120,7 +120,9 @@ export const getBackendUiStore = () => {
       },
       save: async (datasourceId, query) => {
         const integrations = get(store).integrations
-        const dataSource = get(store).datasources.filter(ds => ds._id === datasourceId)
+        const dataSource = get(store).datasources.filter(
+          ds => ds._id === datasourceId
+        )
         // check if readable attribute is found
         if (dataSource.length !== 0) {
           const integration = integrations[dataSource[0].source]
