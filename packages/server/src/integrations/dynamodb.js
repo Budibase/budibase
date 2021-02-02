@@ -17,20 +17,27 @@ const SCHEMA = {
       type: FIELD_TYPES.PASSWORD,
       required: true,
     },
+    endpoint: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      default: "https://dynamodb.us-east-1.amazonaws.com",
+    },
   },
   query: {
     create: {
       type: QUERY_TYPES.FIELDS,
+      customisable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
           required: true,
         },
-        customisable: true,
       },
     },
     read: {
       type: QUERY_TYPES.FIELDS,
+      customisable: true,
+      readable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
@@ -39,27 +46,48 @@ const SCHEMA = {
         index: {
           type: FIELD_TYPES.STRING,
         },
-        customisable: true,
+      },
+    },
+    scan: {
+      type: QUERY_TYPES.FIELDS,
+      customisable: true,
+      readable: true,
+      fields: {
+        table: {
+          type: FIELD_TYPES.STRING,
+          required: true,
+        },
+        index: {
+          type: FIELD_TYPES.STRING,
+        },
+      },
+    },
+    get: {
+      type: QUERY_TYPES.FIELDS,
+      customisable: true,
+      readable: true,
+      fields: {
+        table: {
+          type: FIELD_TYPES.STRING,
+          required: true,
+        },
       },
     },
     update: {
       type: QUERY_TYPES.FIELDS,
+      customisable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
           required: true,
         },
-        customisable: true,
       },
     },
     delete: {
       type: QUERY_TYPES.FIELDS,
+      customisable: true,
       fields: {
         table: {
-          type: FIELD_TYPES.STRING,
-          required: true,
-        },
-        key: {
           type: FIELD_TYPES.STRING,
           required: true,
         },
@@ -72,7 +100,15 @@ class DynamoDBIntegration {
   constructor(config) {
     this.config = config
     this.connect()
-    this.client = new AWS.DynamoDB.DocumentClient()
+    let options = {
+      correctClockSkew: true,
+    }
+    if (config.endpoint) {
+      options.endpoint = config.endpoint
+    }
+    this.client = new AWS.DynamoDB.DocumentClient({
+      correctClockSkew: true,
+    })
   }
 
   async connect() {
@@ -80,37 +116,65 @@ class DynamoDBIntegration {
   }
 
   async create(query) {
-    const response = await this.client.query({
+    const params = {
       TableName: query.table,
-      Item: query.json,
-    })
-    return response
+      ...query.json,
+    }
+    return this.client.put(params).promise()
   }
 
   async read(query) {
-    const response = await this.client.query({
-      TableName: query.Table,
+    const params = {
+      TableName: query.table,
       ...query.json,
-    })
+    }
+    if (query.index) {
+      params.IndexName = query.index
+    }
+    const response = await this.client.query(params).promise()
+    if (response.Items) {
+      return response.Items
+    }
     return response
+  }
+
+  async scan(query) {
+    const params = {
+      TableName: query.table,
+      ...query.json,
+    }
+    if (query.index) {
+      params.IndexName = query.index
+    }
+    const response = await this.client.scan(params).promise()
+    if (response.Items) {
+      return response.Items
+    }
+    return response
+  }
+
+  async get(query) {
+    const params = {
+      TableName: query.table,
+      ...query.json,
+    }
+    return this.client.get(params).promise()
   }
 
   async update(query) {
-    const response = await this.client.query({
+    const params = {
       TableName: query.Table,
       ...query.json,
-    })
-    return response
+    }
+    return this.client.update(params).promise()
   }
 
   async delete(query) {
-    const response = await this.client.query({
-      TableName: query.Table,
-      Key: {
-        id: query.key,
-      },
-    })
-    return response
+    const params = {
+      TableName: query.table,
+      ...query.json,
+    }
+    return this.client.delete(params).promise()
   }
 }
 
