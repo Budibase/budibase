@@ -57,7 +57,10 @@ exports.BASE_TABLE = {
   },
 }
 
-exports.createTable = async (request, appId, table) => {
+exports.createTable = async (request, appId, table, removeId = true) => {
+  if (removeId && table != null && table._id) {
+    delete table._id
+  }
   table = table || exports.BASE_TABLE
 
   const res = await request
@@ -75,7 +78,7 @@ exports.createLinkedTable = async (request, appId) => {
     fieldName: "link",
     tableId: table._id,
   }
-  return exports.createTable(request, appId, table)
+  return exports.createTable(request, appId, table, false)
 }
 
 exports.createAttachmentTable = async (request, appId) => {
@@ -83,7 +86,7 @@ exports.createAttachmentTable = async (request, appId) => {
   table.schema.attachment = {
     type: "attachment",
   }
-  return exports.createTable(request, appId, table)
+  return exports.createTable(request, appId, table, false)
 }
 
 exports.getAllFromTable = async (request, appId, tableId) => {
