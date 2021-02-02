@@ -48,9 +48,13 @@ async function enrichQueryFields(fields, parameters) {
   }
 
   if (enrichedQuery.json || enrichedQuery.customData) {
-    enrichedQuery.json = JSON.parse(
-      enrichedQuery.json || enrichedQuery.customData
-    )
+    try {
+      enrichedQuery.json = JSON.parse(
+        enrichedQuery.json || enrichedQuery.customData
+      )
+    } catch (err) {
+      throw { message: `JSON Invalid - error: ${err}` }
+    }
     delete enrichedQuery.customData
   }
 
