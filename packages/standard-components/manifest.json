@@ -132,18 +132,8 @@
       },
       {
         "type": "text",
-        "label": "Text 1",
-        "key": "text1"
-      },
-      {
-        "type": "text",
-        "label": "Text 2",
-        "key": "text2"
-      },
-      {
-        "type": "text",
-        "label": "Text 3",
-        "key": "text3"
+        "label": "Subheading",
+        "key": "subheading"
       },
       {
         "type": "screen",

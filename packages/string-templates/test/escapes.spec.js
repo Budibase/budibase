@@ -18,14 +18,14 @@ describe("Handling context properties with spaces in their name", () => {
   })
 
   it("should be able to handle a property with a space in its name", async () => {
-    const output = await processString("hello my name is {{ person name }}", {
+    const output = await processString("hello my name is {{ [person name] }}", {
       "person name": "Mike",
     })
     expect(output).toBe("hello my name is Mike")
   })
 
   it("should be able to handle an object with layers that requires escaping", async () => {
-    const output = await processString("testcase {{ testing.test case }}", {
+    const output = await processString("testcase {{ testing.[test case] }}", {
       testing: {
         "test case": 1
       }
@@ -44,8 +44,19 @@ describe("attempt some complex problems", () => {
         },
       },
     }
-    const hbs = "{{ New Repeater.Get Actors.first_name }} {{ New Repeater.Get Actors.last_name }}"
+    const hbs = "{{ [New Repeater].[Get Actors].[first_name] }} {{ [New Repeater].[Get Actors].[last_name] }}"
     const output = await processString(hbs, context)
     expect(output).toBe("Bob Bobert")
+  })
+
+  it("should be able to process an odd string produced by builder", async () => {
+    const context = {
+      "c306d140d7e854f388bae056db380a0eb": {
+        "test prop": "test",
+      }
+    }
+    const hbs = "null{{ [c306d140d7e854f388bae056db380a0eb].[test prop] }}"
+    const output = await processString(hbs, context)
+    expect(output).toBe("nulltest")
   })
 })
