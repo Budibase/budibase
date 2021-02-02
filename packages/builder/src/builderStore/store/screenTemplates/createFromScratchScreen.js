@@ -9,5 +9,6 @@ const createScreen = () => {
   return new Screen()
     .mainType("div")
     .component("@budibase/standard-components/container")
+    .instanceName("New Screen")
     .json()
 }

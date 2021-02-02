@@ -9,7 +9,10 @@ export const createContextStore = existingContext => {
     store.update(state => {
       if (componentId) {
         state[componentId] = data
-        state[`${componentId}_draft`] = cloneDeep(data)
+
+        // Keep track of the closest component ID so we can later hydrate a "data" prop.
+        // This is only required for legacy bindings that used "data" rather than a
+        // component ID.
         state.closestComponentId = componentId
       }
       return state
