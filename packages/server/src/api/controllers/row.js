@@ -190,7 +190,14 @@ exports.fetchView = async function(ctx) {
 
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
-    const table = await db.get(ctx.params.tableId)
+    let table
+    try {
+      table = await db.get(ctx.params.tableId)
+    } catch (err) {
+      table = {
+        schema: {},
+      }
+    }
     ctx.body = await enrichRows(appId, table, response.rows)
   }
 
