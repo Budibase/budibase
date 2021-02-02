@@ -15,7 +15,7 @@
 
 <div class="root">
   <Label size="m" color="dark">Form</Label>
-  <DataList secondary bind:value={parameters.componentId} label="asd">
+  <DataList secondary bind:value={parameters.componentId}>
     <option value="" />
     {#if actionProviders}
       {#each actionProviders as component}
