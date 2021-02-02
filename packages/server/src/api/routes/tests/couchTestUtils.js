@@ -4,7 +4,6 @@ const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")
-const { cloneDeep } = require("lodash/fp")
 
 const TEST_CLIENT_ID = "test-client-id"
 
