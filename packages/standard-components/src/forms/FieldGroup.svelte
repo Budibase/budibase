@@ -9,9 +9,9 @@
 </script>
 
 <div use:styleable={$component.styles}>
-  <form
+  <div
     class="spectrum-Form"
     class:spectrum-Form--labelsAbove={labelPosition === 'above'}>
     <slot />
-  </form>
+  </div>
 </div>

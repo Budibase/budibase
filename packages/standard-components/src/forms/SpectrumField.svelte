@@ -56,6 +56,10 @@
 </FieldGroupFallback>
 
 <style>
+  .spectrum-Form-itemField {
+    width: 360px;
+  }
+
   .error {
     color: var(
       --spectrum-semantic-negative-color-default,
