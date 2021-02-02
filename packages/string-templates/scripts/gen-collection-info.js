@@ -78,11 +78,14 @@ function getCommentInfo(file, func) {
   docs.description = docs.description.replace(/\n/g, " ")
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
   docs.description = docs.description.replace(/is is/g, "is")
-  const example = docs.description.split("```")
-  if (example.length > 1) {
-    docs.example = example[1]
+  const examples = docs.tags
+    .filter(el => el.title === "example")
+    .map(el => el.description)
+  const blocks = docs.description.split("```")
+  if (examples.length > 0) {
+    docs.example = examples.join(" ")
   }
-  docs.description = example[0].trim()
+  docs.description = blocks[0].trim()
   return docs
 }
 
