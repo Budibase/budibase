@@ -302,6 +302,11 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
+  it("should make sure object functions check out valid", () => {
+    const validity = isValid("{{ JSONstringify obj }}")
+    expect(validity).toBe(true)
+  })
+
   it("should be able to solve an example from docs", async () => {
     const output = await processString(`{{first ( split "a-b-c" "-") 2}}`, {})
     expect(output).toBe(`a,b`)
