@@ -110,7 +110,7 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
-  const specialCases = ["isNumber", "expected a number"]
+  const specialCases = ["string", "number", "object", "array"]
   // don't really need a real context to check if its valid
   const context = {}
   try {
@@ -118,7 +118,7 @@ module.exports.isValid = string => {
     return true
   } catch (err) {
     const msg = err ? err.message : ""
-    const foundCase = specialCases.find(spCase => msg.includes(spCase))
+    const foundCase = specialCases.find(spCase => msg.toLowerCase().includes(spCase))
     // special case for maths functions - don't have inputs yet
     return !!foundCase
   }
