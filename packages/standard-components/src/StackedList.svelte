@@ -6,9 +6,7 @@
 
   export let imageUrl = ""
   export let heading = ""
-  export let text1 = ""
-  export let text2 = ""
-  export let text3 = ""
+  export let subheading = ""
   export let destinationUrl = ""
 
   $: showImage = !!imageUrl
@@ -16,16 +14,16 @@
 
 <div class="container" use:styleable={$component.styles}>
   <a href={destinationUrl}>
-    <div class="content">
+    <div class="stackedlist">
       {#if showImage}
         <div class="image-block">
           <img class="image" src={imageUrl} alt="" />
         </div>
       {/if}
-      <h2 class="heading">{heading}</h2>
-      <h4 class="text">{text1}</h4>
-      <h4 class="text">{text2}</h4>
-      <h4 class="text3">{text3}</h4>
+      <div class="content">
+        <div class="heading">{heading}</div>
+        <div class="subheading">{subheading}</div>
+      </div>
     </div>
   </a>
 </div>
@@ -34,61 +32,51 @@
   a {
     text-decoration: none;
     color: inherit;
+    cursor: pointer;
   }
   .container {
-    padding: 20px;
+    padding: 1rem 1.5rem;
+    min-height: 3rem;
+    display: block;
+    align-items: flex-start;
+  }
+
+  .stackedlist {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  .subheading {
+    opacity: 0.6;
   }
 
   .content {
-    display: grid;
-    grid-template-columns: 120px 300px 1fr 1fr 1fr;
-    align-items: center;
-    gap: 20px;
-    min-height: 80px;
-  }
-
-  @media (max-width: 800px) {
-    .content {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-  }
-  .image-block {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .image {
-    padding: 2px;
-    max-width: 80px;
-    max-height: 80px;
-    margin-right: 20px;
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 auto;
   }
 
   .heading {
-    font-size: 24px;
-    margin: 0;
-    min-width: 200px;
+    font-weight: 600;
   }
 
-  .text {
-    font-size: 16px;
-    font-weight: 400;
+  .image-block {
+    display: flex;
+    flex: 0 0 auto;
+    margin-right: 1.5rem;
+    color: inherit;
+    text-decoration: none;
   }
 
-  .text3 {
-    text-align: end;
-    font-size: 16px;
-    font-weight: 400;
-  }
-
-  @media (max-width: 800px) {
-    .text3 {
-      text-align: start;
-    }
+  .image {
+    display: block;
+    overflow: hidden;
+    width: 3rem;
+    max-width: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+    border-radius: 99px;
   }
 </style>
