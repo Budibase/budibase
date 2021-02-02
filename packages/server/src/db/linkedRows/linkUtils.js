@@ -31,11 +31,14 @@ exports.createLinkView = async appId => {
           thisId: doc1.rowId,
           fieldName: doc1.fieldName,
         })
-        emit([doc2.tableId, doc2.rowId], {
-          id: doc1.rowId,
-          thisId: doc2.rowId,
-          fieldName: doc2.fieldName,
-        })
+        // if linking to same table can't emit twice
+        if (doc1.tableId !== doc2.tableId) {
+          emit([doc2.tableId, doc2.rowId], {
+            id: doc1.rowId,
+            thisId: doc2.rowId,
+            fieldName: doc2.fieldName,
+          })
+        }
       }
     }.toString(),
   }
