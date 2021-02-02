@@ -23,6 +23,10 @@ if (env.NODE_ENV !== "production") {
   router.get("/_builder/:file*", controller.serveBuilder)
 }
 
+if (env.SELF_HOSTED) {
+  router.get("/", controller.serveSelfHostPage)
+}
+
 router
   .post(
     "/api/attachments/process",

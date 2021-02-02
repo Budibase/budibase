@@ -1,8 +1,11 @@
 version: "3"
 
+# optional ports are specified throughout for more advanced use cases.
+
 services:
   app-service:
     restart: always
+    #build: ./build/server
     image: budibase/budibase-apps
     ports:
       - "${APP_PORT}:4002"
@@ -20,6 +23,7 @@ services:
 
   worker-service:
     restart: always
+    #build: ./build/worker
     image: budibase/budibase-worker
     ports:
       - "${WORKER_PORT}:4003"
@@ -62,7 +66,7 @@ services:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
     ports:
       - "${MAIN_PORT}:10000"
-      - "9901:9901"
+      #- "9901:9901"
     depends_on:
       - minio-service
       - worker-service
@@ -77,8 +81,8 @@ services:
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
-      - "4369:4369"
-      - "9100:9100"
+      #- "4369:4369"
+      #- "9100:9100"
     volumes:
       - couchdb_data:/couchdb
 

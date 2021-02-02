@@ -2,6 +2,7 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { rowListUrl } from "./rowListScreen"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
+import { makePropSafe } from "@budibase/string-templates"
 import {
   makeBreadcrumbContainer,
   makeTitleContainer,
@@ -58,8 +59,8 @@ function generateTitleContainer(table, title, formId) {
       onClick: [
         {
           parameters: {
-            rowId: `{{ ${formId}._id }}`,
-            revId: `{{ ${formId}._rev }}`,
+            rowId: `{{ ${makePropSafe(formId)}._id }}`,
+            revId: `{{ ${makePropSafe(formId)}._rev }}`,
             tableId: table._id,
           },
           "##eventHandlerType": "Delete Row",
@@ -113,7 +114,7 @@ const createScreen = table => {
   const formId = form._json._id
   const rowDetailId = screen._json.props._id
   const heading = table.primaryDisplay
-    ? `{{ ${rowDetailId}.${table.primaryDisplay} }}`
+    ? `{{ ${makePropSafe(rowDetailId)}.${makePropSafe(table.primaryDisplay)} }}`
     : null
   form
     .addChild(makeBreadcrumbContainer(table.name, heading || "Edit"))

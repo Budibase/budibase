@@ -1,7 +1,11 @@
 const Helper = require("./Helper")
 const { SafeString } = require("handlebars")
 const externalHandlebars = require("./external")
-const { HelperFunctionNames, HelperFunctionBuiltin } = require("./constants")
+const {
+  HelperFunctionNames,
+  HelperFunctionBuiltin,
+  LITERAL_MARKER,
+} = require("./constants")
 
 const HTML_SWAPS = {
   "<": "&lt;",
@@ -26,6 +30,12 @@ const HELPERS = [
     return text.replace(/[<>]/g, tag => {
       return HTML_SWAPS[tag] || tag
     })
+  }),
+  // adds a note for post-processor
+  new Helper(HelperFunctionNames.LITERAL, value => {
+    const type = typeof value
+    const outputVal = type === "object" ? JSON.stringify(value) : value
+    return `{{-${LITERAL_MARKER}-${type}-${outputVal}-}}`
   }),
 ]
 
