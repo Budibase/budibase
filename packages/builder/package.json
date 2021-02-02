@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -64,9 +64,9 @@
   },
   "dependencies": {
     "@budibase/bbui": "^1.56.0",
-    "@budibase/client": "^0.6.2",
+    "@budibase/client": "^0.7.0",
     "@budibase/colorpicker": "^1.0.1",
-    "@budibase/string-templates": "^0.6.2",
+    "@budibase/string-templates": "^0.7.0",
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@sentry/browser": "5.19.1",
     "@svelteschool/svelte-forms": "^0.7.0",
