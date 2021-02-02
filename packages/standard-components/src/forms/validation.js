@@ -58,7 +58,13 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
 }
 
 const presenceConstraint = value => {
-  return value == null || value === "" ? "Required" : null
+  let invalid
+  if (Array.isArray(value)) {
+    invalid = value.length === 0
+  } else {
+    invalid = value == null || value === ""
+  }
+  return invalid ? "Required" : null
 }
 
 const lengthConstraint = maxLength => value => {
