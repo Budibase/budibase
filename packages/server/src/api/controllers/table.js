@@ -108,7 +108,7 @@ exports.save = async function(ctx) {
   }
 
   // update linked rows
-  await linkRows.updateLinks({
+  const linkResp = await linkRows.updateLinks({
     appId,
     eventType: oldTable
       ? linkRows.EventType.TABLE_UPDATED
@@ -116,6 +116,9 @@ exports.save = async function(ctx) {
     table: tableToSave,
     oldTable: oldTable,
   })
+  if (linkResp != null && linkResp._rev) {
+    tableToSave._rev = linkResp._rev
+  }
 
   // don't perform any updates until relationships have been
   // checked by the updateLinks function

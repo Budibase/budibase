@@ -3,6 +3,8 @@ const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const fs = require("fs")
 const { cloneDeep } = require("lodash/fp")
 const CouchDB = require("../db")
+const { OBJ_STORE_DIRECTORY } = require("../constants")
+const linkRows = require("../db/linkedRows")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -210,4 +212,35 @@ exports.getAllApps = async () => {
       .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
   }
+}
+
+/**
+ * This function "enriches" the input rows with anything they are supposed to contain, for example
+ * link records or attachment links.
+ * @param {string} appId the ID of the application for which rows are being enriched.
+ * @param {object} table the table from which these rows came from originally, this is used to determine
+ * the schema of the rows and then enrich.
+ * @param {object[]} rows the rows which are to be enriched.
+ * @returns {object[]} the enriched rows will be returned.
+ */
+exports.enrichRows = async (appId, table, rows) => {
+  // attach any linked row information
+  const enriched = await linkRows.attachLinkInfo(appId, rows)
+  // update the attachments URL depending on hosting
+  if (env.CLOUD && env.SELF_HOSTED) {
+    for (let [property, column] of Object.entries(table.schema)) {
+      if (column.type === "attachment") {
+        for (let row of enriched) {
+          if (row[property] == null || row[property].length === 0) {
+            continue
+          }
+          row[property].forEach(attachment => {
+            attachment.url = `${OBJ_STORE_DIRECTORY}/${appId}/${attachment.url}`
+            attachment.url = attachment.url.replace("//", "/")
+          })
+        }
+      }
+    }
+  }
+  return enriched
 }

@@ -3,7 +3,11 @@ const {
   createTable,
   supertest,
   defaultHeaders,
+  createLinkedTable,
+  createAttachmentTable,
 } = require("./couchTestUtils");
+const { enrichRows } = require("../../../utilities")
+const env = require("../../../environment")
 
 describe("/rows", () => {
   let request
@@ -269,5 +273,45 @@ describe("/rows", () => {
       expect(Object.keys(result.body.errors)).toEqual(["name"])
 
     })
+  })
+
+  describe("enrich row unit test", () => {
+    it("should allow enriching some linked rows", async () => {
+      const table = await createLinkedTable(request, appId)
+      const firstRow = (await createRow({
+        name: "Test Contact",
+        description: "original description",
+        tableId: table._id
+      })).body
+      const secondRow = (await createRow({
+        name: "Test 2",
+        description: "og desc",
+        link: [firstRow._id],
+        tableId: table._id,
+      })).body
+      const enriched = await enrichRows(appId, table, [secondRow])
+      expect(enriched[0].link.length).toBe(1)
+      expect(enriched[0].link[0]).toBe(firstRow._id)
+    })
+  })
+
+  it("should allow enriching attachment rows", async () => {
+    const table = await createAttachmentTable(request, appId)
+    const row = (await createRow({
+      name: "test",
+      description: "test",
+      attachment: [{
+        url: "/test/thing",
+      }],
+      tableId: table._id,
+    })).body
+    // the environment needs configured for this
+    env.CLOUD = 1
+    env.SELF_HOSTED = 1
+    const enriched = await enrichRows(appId, table, [row])
+    expect(enriched[0].attachment[0].url).toBe(`/app-assets/assets/${appId}/test/thing`)
+    // remove env config
+    env.CLOUD = undefined
+    env.SELF_HOSTED = undefined
   })
 })
