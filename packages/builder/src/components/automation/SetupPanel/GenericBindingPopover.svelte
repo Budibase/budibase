@@ -83,6 +83,7 @@
               <div class="binding__description">
                 {@html helper.description || ''}
               </div>
+              <pre>{helper.example || ''}</pre>
             </div>
           {/each}
         </div>

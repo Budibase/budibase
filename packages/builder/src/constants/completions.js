@@ -7,6 +7,7 @@ export function handlebarsCompletions() {
     Object.entries(manifest[key]).map(([helperName, helperConfig]) => ({
       text: helperName,
       path: helperName,
+      example: helperConfig.example,
       label: helperName,
       displayText: helperName,
       description: helperConfig.description,
