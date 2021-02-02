@@ -1,5 +1,5 @@
 <script>
-  import { DataList, Label } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
 
@@ -15,14 +15,14 @@
 
 <div class="root">
   <Label size="m" color="dark">Form</Label>
-  <DataList secondary bind:value={parameters.componentId}>
+  <Select secondary bind:value={parameters.componentId}>
     <option value="" />
     {#if actionProviders}
       {#each actionProviders as component}
         <option value={component._id}>{component._instanceName}</option>
       {/each}
     {/if}
-  </DataList>
+  </Select>
 </div>
 
 <style>
