@@ -75,7 +75,10 @@ export const deleteRows = async ({ tableId, rows }) => {
  * be properly displayed.
  */
 export const enrichRows = async (rows, tableId) => {
-  if (rows && rows.length && tableId) {
+  if (!Array.isArray(rows)) {
+    return []
+  }
+  if (rows.length && tableId) {
     // Fetch table schema so we can check column types
     const tableDefinition = await fetchTableDefinition(tableId)
     const schema = tableDefinition && tableDefinition.schema
