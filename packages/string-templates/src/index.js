@@ -118,7 +118,9 @@ module.exports.isValid = string => {
     return true
   } catch (err) {
     const msg = err ? err.message : ""
-    const foundCase = specialCases.find(spCase => msg.toLowerCase().includes(spCase))
+    const foundCase = specialCases.find(spCase =>
+      msg.toLowerCase().includes(spCase)
+    )
     // special case for maths functions - don't have inputs yet
     return !!foundCase
   }
