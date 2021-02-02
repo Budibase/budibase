@@ -1,5 +1,4 @@
 import { writable } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
 
 export const createContextStore = existingContext => {
   const store = writable({ ...existingContext })
