@@ -4,15 +4,15 @@ const {
 
 describe("Handling context properties with spaces in their name", () => {
   it("should allow through literal specifiers", async () => {
-    const output = await processString("test {{ [test thing] }}", {
-      "test thing": 1
+    const output = await processString("test {{ [one thing] }}", {
+      "one thing": 1
     })
     expect(output).toBe("test 1")
   })
 
   it("should convert to dot notation where required", async () => {
-    const output = await processString("test {{ test[0] }}", {
-      test: [2]
+    const output = await processString("test {{ one[0] }}", {
+      one: [2]
     })
     expect(output).toBe("test 2")
   })
@@ -25,9 +25,9 @@ describe("Handling context properties with spaces in their name", () => {
   })
 
   it("should be able to handle an object with layers that requires escaping", async () => {
-    const output = await processString("testcase {{ testing.[test case] }}", {
-      testing: {
-        "test case": 1
+    const output = await processString("testcase {{ thing.[one case] }}", {
+      thing: {
+        "one case": 1
       }
     })
     expect(output).toBe("testcase 1")
@@ -52,10 +52,10 @@ describe("attempt some complex problems", () => {
   it("should be able to process an odd string produced by builder", async () => {
     const context = {
       "c306d140d7e854f388bae056db380a0eb": {
-        "test prop": "test",
+        "one prop": "test",
       }
     }
-    const hbs = "null{{ [c306d140d7e854f388bae056db380a0eb].[test prop] }}"
+    const hbs = "null{{ [c306d140d7e854f388bae056db380a0eb].[one prop] }}"
     const output = await processString(hbs, context)
     expect(output).toBe("nulltest")
   })
