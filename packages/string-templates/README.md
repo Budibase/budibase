@@ -2,26 +2,30 @@
 This package provides a common system for string templating across the Budibase Builder, client and server.
 The templating is provided through the use of [Handlebars](https://handlebarsjs.com/) an extension of Mustache
 which is capable of carrying out logic. We have also extended the base Handlebars functionality through the use 
-of a set of helpers provided through the [handlebars-helpers](https://github.com/helpers/handlebars-helpers) package.
+of a set of helpers provided through the [handlebars-helpers](https://github.com/budibase/handlebars-helpers) package.
 
 We have not implemented all the helpers provided by the helpers package as some of them provide functionality
 we felt would not be beneficial. The following collections of helpers have been implemented:
-1. [Math](https://github.com/helpers/handlebars-helpers/tree/master#math) - a set of useful helpers for 
+1. [Math](https://github.com/budibase/handlebars-helpers/tree/master#math) - a set of useful helpers for 
 carrying out logic pertaining to numbers e.g. `avg`, `add`, `abs` and so on.
-2. [Array](https://github.com/helpers/handlebars-helpers/tree/master#array) - some very specific helpers
+2. [Array](https://github.com/budibase/handlebars-helpers/tree/master#array) - some very specific helpers
 for use with arrays, useful for example in automations. Helpers like `first`, `last`, `after` and `join` 
 can be useful for getting particular portions of arrays or turning them into strings.
-3. [Number](https://github.com/helpers/handlebars-helpers/tree/master#number) - unlike the math helpers these
+3. [Number](https://github.com/budibase/handlebars-helpers/tree/master#number) - unlike the math helpers these
 are useful for converting numbers into useful formats for display, e.g. `bytes`, `addCommas` and `toPrecision`.
-4. [URL](https://github.com/helpers/handlebars-helpers/tree/master#url) - very specific helpers for dealing with URLs,
+4. [URL](https://github.com/budibase/handlebars-helpers/tree/master#url) - very specific helpers for dealing with URLs,
 such as `encodeURI`, `escape`, `stripQueryString` and `stripProtocol`. These are primarily useful
 for building up particular URLs to hit as say part of an automation.
-5. [String](https://github.com/helpers/handlebars-helpers/tree/master#string) - these helpers are useful for building 
+5. [String](https://github.com/budibase/handlebars-helpers/tree/master#string) - these helpers are useful for building 
 strings and preparing them for display, e.g. `append`, `camelcase`, `capitalize` and `ellipsis`.
-6. [Comparison](https://github.com/helpers/handlebars-helpers/tree/master#comparison) - these helpers are mainly for 
+6. [Comparison](https://github.com/budibase/handlebars-helpers/tree/master#comparison) - these helpers are mainly for 
 building strings when particular conditions are met, for example `and`, `or`, `gt`, `lt`, `not` and so on. This is a very
 extensive set of helpers but is mostly as would be expected from a set of logical operators.
-7. [Date](https://github.com/helpers/helper-date) - last but certainly not least is a moment based date helper, which can
+7. [Object](https://github.com/budibase/handlebars-helpers/tree/master#object) - useful operator for parsing objects, as well
+as converting them to JSON strings.
+8. [Regex](https://github.com/budibase/handlebars-helpers/tree/master#regex) - allows performing regex tests on strings that 
+can be used in conditional statements.
+9. [Date](https://github.com/helpers/helper-date) - last but certainly not least is a moment based date helper, which can
 format ISO/timestamp based dates into something human-readable. An example of this would be `{{date dateProperty "DD-MM-YYYY"}}`.
 
 ## Date formatting
