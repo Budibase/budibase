@@ -37,6 +37,7 @@ const SCHEMA = {
     read: {
       type: QUERY_TYPES.FIELDS,
       customisable: true,
+      readable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
@@ -50,6 +51,7 @@ const SCHEMA = {
     scan: {
       type: QUERY_TYPES.FIELDS,
       customisable: true,
+      readable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
@@ -63,6 +65,7 @@ const SCHEMA = {
     get: {
       type: QUERY_TYPES.FIELDS,
       customisable: true,
+      readable: true,
       fields: {
         table: {
           type: FIELD_TYPES.STRING,
