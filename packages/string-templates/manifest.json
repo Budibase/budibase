@@ -20,7 +20,6 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "handlebars {{avg \"[1, 2, 3, 4, 5]\"}} <!-- results in: '3' --> ",
       "description": "<p>Returns the average of all numbers in the given array.</p>\n"
     },
     "ceil": {
@@ -113,7 +112,6 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "handlebars {{sum \"[1, 2, 3, 4, 5]\"}} <!-- results in: '15' --> ",
       "description": "<p>Returns the sum of all numbers in the given array.</p>\n"
     },
     "times": {
@@ -132,7 +130,6 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{after array 1}} <!-- results in: '[\"c\"]' --> ",
       "description": "<p>Returns all of the items in an array after the specified index. Opposite of <a href=\"#before\">before</a>.</p>\n"
     },
     "arrayify": {
@@ -140,7 +137,6 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "handlebars {{arrayify \"foo\"}} <!-- results in: [ \"foo\" ] --> ",
       "description": "<p>Cast the given <code>value</code> to an array.</p>\n"
     },
     "before": {
@@ -149,7 +145,6 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{before array 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
       "description": "<p>Return all of the items in the collection before the specified count. Opposite of <a href=\"#after\">after</a>.</p>\n"
     },
     "eachIndex": {
@@ -158,7 +153,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] --> {{#eachIndex array}} {{item}} is {{index}} {{/eachIndex}} ",
       "description": "<p>Iterates the array, listing an item and the index of it.</p>\n"
     },
     "filter": {
@@ -168,7 +162,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#filter array \"foo\"}}AAA{{else}}BBB{{/filter}} <!-- results in: 'BBB' --> ",
       "description": "<p>Block helper that filters the given array and renders the block for values that evaluate to <code>true</code>, otherwise the inverse block is returned.</p>\n"
     },
     "first": {
@@ -177,7 +170,6 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "handlebars {{first \"['a', 'b', 'c', 'd', 'e']\" 2}} <!-- results in: '[\"a\", \"b\"]' --> ",
       "description": "<p>Returns the first item, or first <code>n</code> items of an array.</p>\n"
     },
     "forEach": {
@@ -185,7 +177,6 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "handlebars <!-- accounts = [ {'name': 'John', 'email': 'john@example.com'}, {'name': 'Malcolm', 'email': 'malcolm@example.com'}, {'name': 'David', 'email': 'david@example.com'} ] --> {{#forEach accounts}} <a href=\"mailto:{{ email }}\" title=\"Send an email to {{ name }}\"> {{ name }} </a>{{#unless isLast}}, {{/unless}} {{/forEach}} ",
       "description": "<p>Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - <code>index</code> - <code>total</code> - <code>isFirst</code> - <code>isLast</code> Also, <code>@index</code> is exposed as a private variable, and additional private variables may be defined as hash arguments.</p>\n"
     },
     "inArray": {
@@ -195,7 +186,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#inArray array \"d\"}} foo {{else}} bar {{/inArray}} <!-- results in: 'bar' --> ",
       "description": "<p>Block helper that renders the block if an array has the given <code>value</code>. Optionally specify an inverse block to render when the array does not have the given value.</p>\n"
     },
     "isArray": {
@@ -203,7 +193,6 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "handlebars {{isArray \"abc\"}} <!-- results in: false --> <!-- array: [1, 2, 3] --> {{isArray array}} <!-- results in: true --> ",
       "description": "<p>Returns true if <code>value</code> is an es5 array.</p>\n"
     },
     "itemAt": {
@@ -212,7 +201,6 @@
         "idx"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{itemAt array 1}} <!-- results in: 'b' --> ",
       "description": "<p>Returns the item from <code>array</code> at index <code>idx</code>.</p>\n"
     },
     "join": {
@@ -221,7 +209,6 @@
         "separator"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{join array}} <!-- results in: 'a, b, c' --> {{join array '-'}} <!-- results in: 'a-b-c' --> ",
       "description": "<p>Join all elements of array into a string, optionally using a given separator.</p>\n"
     },
     "equalsLength": {
@@ -239,7 +226,6 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- var value = ['a', 'b', 'c', 'd', 'e'] --> {{last value}} <!-- results in: ['e'] --> {{last value 2}} <!-- results in: ['d', 'e'] --> {{last value 3}} <!-- results in: ['c', 'd', 'e'] --> ",
       "description": "<p>Returns the last item, or last <code>n</code> items of an array or string. Opposite of <a href=\"#first\">first</a>.</p>\n"
     },
     "length": {
@@ -247,7 +233,6 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "handlebars {{length '[\"a\", \"b\", \"c\"]'}} <!-- results in: 3 --> <!-- results in: myArray = ['a', 'b', 'c', 'd', 'e']; --> {{length myArray}} <!-- results in: 5 --> <!-- results in: myObject = {'a': 'a', 'b': 'b'}; --> {{length myObject}} <!-- results in: 2 --> ",
       "description": "<p>Returns the length of the given string or array.</p>\n"
     },
     "lengthEqual": {
@@ -265,7 +250,6 @@
         "fn"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'], and \"double\" is a fictitious function that duplicates letters --> {{map array double}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
       "description": "<p>Returns a new array, created by calling <code>function</code> on each element of the given <code>array</code>. For example,</p>\n"
     },
     "pluck": {
@@ -274,7 +258,6 @@
         "prop"
       ],
       "numArgs": 2,
-      "example": "handlebars // {{pluck items \"data.title\"}} <!-- results in: '[\"aa\", \"bb\", \"cc\"]' --> ",
       "description": "<p>Map over the given object or array or objects and create an array of values from the given <code>prop</code>. Dot-notation may be used (as a string) to get nested properties.</p>\n"
     },
     "reverse": {
@@ -282,7 +265,6 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "handlebars <!-- value: 'abcd' --> {{reverse value}} <!-- results in: 'dcba' --> <!-- value: ['a', 'b', 'c', 'd'] --> {{reverse value}} <!-- results in: ['d', 'c', 'b', 'a'] --> ",
       "description": "<p>Reverse the elements in an array, or the characters in a string.</p>\n"
     },
     "some": {
@@ -292,7 +274,6 @@
         "provided"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: [1, 'b', 3] --> {{#some array isString}} Render me if the array has a string. {{else}} Render me if it doesn't. {{/some}} <!-- results in: 'Render me if the array has a string.' --> ",
       "description": "<p>Block helper that returns the block if the callback returns true for some value in the given array.</p>\n"
     },
     "sort": {
@@ -301,7 +282,6 @@
         "key"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{sort array}} <!-- results in: '[\"a\", \"b\", \"c\"]' --> ",
       "description": "<p>Sort the given <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "sortBy": {
@@ -310,7 +290,6 @@
         "props"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: [{a: 'zzz'}, {a: 'aaa'}] --> {{sortBy array \"a\"}} <!-- results in: '[{\"a\":\"aaa\"}, {\"a\":\"zzz\"}]' --> ",
       "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "withAfter": {
@@ -320,7 +299,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withAfter array 3}} {{this}} {{/withAfter}} <!-- results in: \"de\" --> ",
       "description": "<p>Use the items in the array <em>after</em> the specified index as context inside a block. Opposite of <a href=\"#withBefore\">withBefore</a>.</p>\n"
     },
     "withBefore": {
@@ -330,7 +308,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c', 'd', 'e'] --> {{#withBefore array 3}} {{this}} {{/withBefore}} <!-- results in: 'ab' --> ",
       "description": "<p>Use the items in the array <em>before</em> the specified index as context inside a block. Opposite of <a href=\"#withAfter\">withAfter</a>.</p>\n"
     },
     "withFirst": {
@@ -340,7 +317,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withFirst array}} {{this}} {{/withFirst}} <!-- results in: 'a' --> ",
       "description": "<p>Use the first item in a collection inside a handlebars block expression. Opposite of <a href=\"#withLast\">withLast</a>.</p>\n"
     },
     "withGroup": {
@@ -350,7 +326,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a','b','c','d','e','f','g','h'] --> {{#withGroup array 4}} {{#each this}} {{.}} {{each}} <br> {{/withGroup}} <!-- results in: --> <!-- 'a','b','c','d'<br> --> <!-- 'e','f','g','h'<br> --> ",
       "description": "<p>Block helper that groups array elements by given group <code>size</code>.</p>\n"
     },
     "withLast": {
@@ -360,7 +335,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['a', 'b', 'c'] --> {{#withLast array}} {{this}} {{/withLast}} <!-- results in: 'c' --> ",
       "description": "<p>Use the last item or <code>n</code> items in an array as context inside a block. Opposite of <a href=\"#withFirst\">withFirst</a>.</p>\n"
     },
     "withSort": {
@@ -370,7 +344,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- array: ['b', 'a', 'c'] --> {{#withSort array}}{{this}}{{/withSort}} <!-- results in: 'abc' --> ",
       "description": "<p>Block helper that sorts a collection and exposes the sorted collection as context inside the block.</p>\n"
     },
     "unique": {
@@ -379,7 +352,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- array: ['a', 'a', 'c', 'b', 'e', 'e'] --> {{#each (unique array)}}{{.}}{{/each}} <!-- results in: 'acbe' --> ",
       "description": "<p>Block helper that return an array with all duplicate values removed. Best used along with a <a href=\"#each\">each</a> helper.</p>\n"
     }
   },
@@ -419,7 +391,6 @@
         "fractionDigits"
       ],
       "numArgs": 2,
-      "example": "handlebars {{toExponential number digits}}; ",
       "description": "<p>Returns a string representing the given number in exponential notation.</p>\n"
     },
     "toFixed": {
@@ -428,7 +399,6 @@
         "digits"
       ],
       "numArgs": 2,
-      "example": "handlebars {{toFixed \"1.1234\" 2}} //=> '1.12' ",
       "description": "<p>Formats the given number using fixed-point notation.</p>\n"
     },
     "toFloat": {
@@ -451,7 +421,6 @@
         "precision"
       ],
       "numArgs": 2,
-      "example": "handlebars {{toPrecision \"1.1234\" 2}} //=> '1.1' ",
       "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n"
     }
   },
@@ -514,7 +483,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars <!-- url = 'http://foo.bar' --> {{stripProtocol url}} <!-- results in: '//foo.bar' --> ",
       "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n"
     }
   },
@@ -525,7 +493,6 @@
         "suffix"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- given that \"item.stem\" is \"foo\" --> {{append item.stem \".html\"}} <!-- results in: 'foo.html' --> ",
       "description": "<p>Append the specified <code>suffix</code> to the given string.</p>\n"
     },
     "camelcase": {
@@ -533,7 +500,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{camelcase \"foo bar baz\"}}; <!-- results in: 'fooBarBaz' --> ",
       "description": "<p>camelCase the characters in the given <code>string</code>.</p>\n"
     },
     "capitalize": {
@@ -541,7 +507,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{capitalize \"foo bar baz\"}} <!-- results in: \"Foo bar baz\" --> ",
       "description": "<p>Capitalize the first word in a sentence.</p>\n"
     },
     "capitalizeAll": {
@@ -549,7 +514,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{capitalizeAll \"foo bar baz\"}} <!-- results in: \"Foo Bar Baz\" --> ",
       "description": "<p>Capitalize all words in a string.</p>\n"
     },
     "center": {
@@ -565,7 +529,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{chop \"_ABC_\"}} <!-- results in: 'ABC' --> {{chop \"-ABC-\"}} <!-- results in: 'ABC' --> {{chop \" ABC \"}} <!-- results in: 'ABC' --> ",
       "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n"
     },
     "dashcase": {
@@ -573,7 +536,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{dashcase \"a-b-c d_e\"}} <!-- results in: 'a-b-c-d-e' --> ",
       "description": "<p>dash-case the characters in <code>string</code>. Replaces non-word characters and periods with hyphens.</p>\n"
     },
     "dotcase": {
@@ -581,7 +543,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{dotcase \"a-b-c d_e\"}} <!-- results in: 'a.b.c.d.e' --> ",
       "description": "<p>dot.case the characters in <code>string</code>.</p>\n"
     },
     "downcase": {
@@ -589,7 +550,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{downcase \"aBcDeF\"}} <!-- results in: 'abcdef' --> ",
       "description": "<p>Lowercase all of the characters in the given string. Alias for <a href=\"#lowercase\">lowercase</a>.</p>\n"
     },
     "ellipsis": {
@@ -598,7 +558,6 @@
         "length"
       ],
       "numArgs": 2,
-      "example": "handlebars {{ellipsis (sanitize \"<span>foo bar baz</span>\"), 7}} <!-- results in: 'foo bar…' --> {{ellipsis \"foo bar baz\", 7}} <!-- results in: 'foo bar…' --> ",
       "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {
@@ -606,7 +565,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{hyphenate \"foo bar baz qux\"}} <!-- results in: \"foo-bar-baz-qux\" --> ",
       "description": "<p>Replace spaces in a string with hyphens.</p>\n"
     },
     "isString": {
@@ -614,7 +572,6 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "handlebars {{isString \"foo\"}} <!-- results in: 'true' --> ",
       "description": "<p>Return true if <code>value</code> is a string.</p>\n"
     },
     "lowercase": {
@@ -622,7 +579,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{lowercase \"Foo BAR baZ\"}} <!-- results in: 'foo bar baz' --> ",
       "description": "<p>Lowercase all characters in the given string.</p>\n"
     },
     "occurrences": {
@@ -631,7 +587,6 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "handlebars {{occurrences \"foo bar foo bar baz\" \"foo\"}} <!-- results in: 2 --> ",
       "description": "<p>Return the number of occurrences of <code>substring</code> within the given <code>string</code>.</p>\n"
     },
     "pascalcase": {
@@ -639,7 +594,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{pascalcase \"foo bar baz\"}} <!-- results in: 'FooBarBaz' --> ",
       "description": "<p>PascalCase the characters in <code>string</code>.</p>\n"
     },
     "pathcase": {
@@ -647,7 +601,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{pathcase \"a-b-c d_e\"}} <!-- results in: 'a/b/c/d/e' --> ",
       "description": "<p>path/case the characters in <code>string</code>.</p>\n"
     },
     "plusify": {
@@ -655,7 +608,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{plusify \"foo bar baz\"}} <!-- results in: 'foo+bar+baz' --> ",
       "description": "<p>Replace spaces in the given string with pluses.</p>\n"
     },
     "prepend": {
@@ -664,7 +616,6 @@
         "prefix"
       ],
       "numArgs": 2,
-      "example": "handlebars <!-- given that \"val\" is \"bar\" --> {{prepend val \"foo-\"}} <!-- results in: 'foo-bar' --> ",
       "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n"
     },
     "raw": {
@@ -672,7 +623,6 @@
         "options"
       ],
       "numArgs": 1,
-      "example": "handlebars {{{{#raw}}}} {{foo}} {{{{/raw}}}} <!-- results in: '{{foo}}' --> ",
       "description": "<p>Render a block without processing mustache templates inside the block.</p>\n"
     },
     "remove": {
@@ -681,7 +631,6 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "handlebars {{remove \"a b a b a b\" \"a \"}} <!-- results in: 'b b b' --> ",
       "description": "<p>Remove all occurrences of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "removeFirst": {
@@ -690,7 +639,6 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "handlebars {{remove \"a b a b a b\" \"a\"}} <!-- results in: ' b a b a b' --> ",
       "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "replace": {
@@ -700,7 +648,6 @@
         "b"
       ],
       "numArgs": 3,
-      "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b z b z b' --> ",
       "description": "<p>Replace all occurrences of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "replaceFirst": {
@@ -710,7 +657,6 @@
         "b"
       ],
       "numArgs": 3,
-      "example": "handlebars {{replace \"a b a b a b\" \"a\" \"z\"}} <!-- results in: 'z b a b a b' --> ",
       "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "sentence": {
@@ -718,7 +664,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{sentence \"hello world. goodbye world.\"}} <!-- results in: 'Hello world. Goodbye world.' --> ",
       "description": "<p>Sentence case the given string</p>\n"
     },
     "snakecase": {
@@ -726,7 +671,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{snakecase \"a-b-c d_e\"}} <!-- results in: 'a_b_c_d_e' --> ",
       "description": "<p>snake_case the characters in the given <code>string</code>.</p>\n"
     },
     "split": {
@@ -734,7 +678,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{split \"a,b,c\" \",\"}} <!-- results in: ['a', 'b', 'c'] --> ",
       "description": "<p>Split <code>string</code> by the given <code>character</code>.</p>\n"
     },
     "startsWith": {
@@ -744,7 +687,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars {{#startsWith \"Goodbye\" \"Hello, world!\"}} Whoops {{else}} Bro, do you even hello world? {{/startsWith}} ",
       "description": "<p>Tests whether a string begins with the given prefix.</p>\n"
     },
     "titleize": {
@@ -752,7 +694,6 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "handlebars {{titleize \"this title case\"}} <!-- results in: 'This Is Title Case' --> ",
       "description": "<p>Title case the given string.</p>\n"
     },
     "trim": {
@@ -760,7 +701,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC' --> ",
       "description": "<p>Removes extraneous whitespace from the beginning and end of a string.</p>\n"
     },
     "trimLeft": {
@@ -768,7 +708,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{trim \" ABC \"}} <!-- results in: 'ABC ' --> ",
       "description": "<p>Removes extraneous whitespace from the beginning of a string.</p>\n"
     },
     "trimRight": {
@@ -776,7 +715,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{trimRight \" ABC \"}} <!-- results in: ' ABC' --> ",
       "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n"
     },
     "truncate": {
@@ -786,7 +724,6 @@
         "suffix"
       ],
       "numArgs": 3,
-      "example": "handlebars truncate(\"foo bar baz\", 7); <!-- results in: 'foo bar' --> truncate(sanitize(\"<span>foo bar baz</span>\", 7)); <!-- results in: 'foo bar' --> ",
       "description": "<p>Truncate a string to the specified <code>length</code>. Also see <a href=\"#ellipsis\">ellipsis</a>.</p>\n"
     },
     "truncateWords": {
@@ -796,7 +733,6 @@
         "suffix"
       ],
       "numArgs": 3,
-      "example": "handlebars truncateWords(\"foo bar baz\", 1); <!-- results in: 'foo…' --> truncateWords(\"foo bar baz\", 2); <!-- results in: 'foo bar…' --> truncateWords(\"foo bar baz\", 3); <!-- results in: 'foo bar baz' --> ",
       "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n"
     },
     "upcase": {
@@ -804,7 +740,6 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "handlebars {{upcase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
       "description": "<p>Uppercase all of the characters in the given string. Alias for <a href=\"#uppercase\">uppercase</a>.</p>\n"
     },
     "uppercase": {
@@ -813,7 +748,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars {{uppercase \"aBcDeF\"}} <!-- results in: 'ABCDEF' --> ",
       "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n"
     }
   },
@@ -825,7 +759,6 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "handlebars <!-- {great: true, magnificent: true} --> {{#and great magnificent}}A{{else}}B{{/and}} <!-- results in: 'A' --> ",
       "description": "<p>Helper that renders the block if <strong>both</strong> of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression.</p>\n"
     },
     "compare": {
@@ -846,7 +779,6 @@
         "options"
       ],
       "numArgs": 4,
-      "example": "handlebars <!-- array = ['a', 'b', 'c'] --> {{#contains array \"d\"}} This will not be rendered. {{else}} This will be rendered. {{/contains}} ",
       "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n"
     },
     "default": {
@@ -915,7 +847,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars {{#ifEven value}} render A {{else}} render B {{/ifEven}} ",
       "description": "<p>Return true if the given value is an even number.</p>\n"
     },
     "ifNth": {
@@ -933,7 +864,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars {{#ifOdd value}} render A {{else}} render B {{/ifOdd}} ",
       "description": "<p>Block helper that renders a block if <code>value</code> is <strong>an odd number</strong>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "is": {
@@ -994,7 +924,6 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "handlebars {{#or a b c}} If any value is true this will be rendered. {{/or}} ",
       "description": "<p>Block helper that renders a block if <strong>any of</strong> the given values is truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "unlessEq": {
