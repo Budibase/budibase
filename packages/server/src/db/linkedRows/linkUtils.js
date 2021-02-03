@@ -84,6 +84,13 @@ exports.getLinkDocuments = async function({
     // filter to get unique entries
     const foundIds = []
     linkRows = linkRows.filter(link => {
+      // make sure anything unique is the correct key
+      if (
+        (tableId && link.key[0] !== tableId) ||
+        (rowId && link.key[1] !== rowId)
+      ) {
+        return false
+      }
       const unique = foundIds.indexOf(link.id) === -1
       if (unique) {
         foundIds.push(link.id)

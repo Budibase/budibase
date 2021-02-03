@@ -2,7 +2,11 @@ const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
-const { removeNull, addConstants, removeHandlebarsStatements } = require("./utilities")
+const {
+  removeNull,
+  addConstants,
+  removeHandlebarsStatements,
+} = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
@@ -121,7 +125,13 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
-  const validCases = ["string", "number", "object", "array", "cannot read property"]
+  const validCases = [
+    "string",
+    "number",
+    "object",
+    "array",
+    "cannot read property",
+  ]
   // this is a portion of a specific string always output by handlebars in the case of a syntax error
   const invalidCases = [`expecting '`]
   // don't really need a real context to check if its valid
