@@ -26,12 +26,21 @@
     fieldApi.setValue(dates[0])
   }
 
+  const clearDateOnBackspace = event => {
+    if (["Backspace", "Clear", "Delete"].includes(event.key)) {
+      fieldApi.setValue(null)
+      flatpickr.close()
+    }
+  }
+
   const onOpen = () => {
     open = true
+    document.addEventListener("keyup", clearDateOnBackspace)
   }
 
   const onClose = () => {
     open = false
+    document.removeEventListener("keyup", clearDateOnBackspace)
 
     // Manually blur all input fields since flatpickr creates a second
     // duplicate input field.
