@@ -291,14 +291,29 @@ describe("Cover a few complex use cases", () => {
     expect(output).toBe("e")
   })
 
+  it("should allow a complex forIn case", async () => {
+    const input = `{{#forIn (JSONparse '{"a":1, "b":2, "c":3}' )}}number: {{.}}\n{{/forIn}}`
+    const output = await processString(input, {})
+    expect(output).toBe("number: 1\nnumber: 2\nnumber: 3\n")
+  })
+
   it("should make sure case is valid", () => {
     const validity = isValid("{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}")
+    expect(validity).toBe(true)
+  })
+
+  it("should make sure object functions check out valid", () => {
+    const validity = isValid("{{ JSONstringify obj }}")
     expect(validity).toBe(true)
   })
 
   it("should be able to solve an example from docs", async () => {
     const output = await processString(`{{first ( split "a-b-c" "-") 2}}`, {})
     expect(output).toBe(`a,b`)
+  })
 
+  it("should confirm a subtraction validity", () => {
+    const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
+    expect(validity).toBe(true)
   })
 })

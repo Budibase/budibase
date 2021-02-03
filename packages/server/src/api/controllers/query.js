@@ -1,7 +1,17 @@
-const handlebars = require("handlebars")
+const { processString } = require("@budibase/string-templates")
 const CouchDB = require("../../db")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { integrations } = require("../../integrations")
+
+function formatResponse(resp) {
+  if (typeof resp === "string") {
+    resp = JSON.parse(resp)
+  }
+  if (!Array.isArray(resp)) {
+    resp = [resp]
+  }
+  return resp
+}
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
@@ -29,19 +39,22 @@ exports.save = async function(ctx) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-function enrichQueryFields(fields, parameters) {
+async function enrichQueryFields(fields, parameters) {
   const enrichedQuery = {}
 
   // enrich the fields with dynamic parameters
-  for (let key in fields) {
-    const template = handlebars.compile(fields[key])
-    enrichedQuery[key] = template(parameters)
+  for (let key of Object.keys(fields)) {
+    enrichedQuery[key] = await processString(fields[key], parameters)
   }
 
   if (enrichedQuery.json || enrichedQuery.customData) {
-    enrichedQuery.json = JSON.parse(
-      enrichedQuery.json || enrichedQuery.customData
-    )
+    try {
+      enrichedQuery.json = JSON.parse(
+        enrichedQuery.json || enrichedQuery.customData
+      )
+    } catch (err) {
+      throw { message: `JSON Invalid - error: ${err}` }
+    }
     delete enrichedQuery.customData
   }
 
@@ -62,9 +75,11 @@ exports.preview = async function(ctx) {
 
   const { fields, parameters, queryVerb } = ctx.request.body
 
-  const enrichedQuery = enrichQueryFields(fields, parameters)
+  const enrichedQuery = await enrichQueryFields(fields, parameters)
 
-  ctx.body = await new Integration(datasource.config)[queryVerb](enrichedQuery)
+  ctx.body = formatResponse(
+    await new Integration(datasource.config)[queryVerb](enrichedQuery)
+  )
 }
 
 exports.execute = async function(ctx) {
@@ -80,17 +95,15 @@ exports.execute = async function(ctx) {
     return
   }
 
-  const enrichedQuery = enrichQueryFields(
+  const enrichedQuery = await enrichQueryFields(
     query.fields,
     ctx.request.body.parameters
   )
 
   // call the relevant CRUD method on the integration class
-  const response = await new Integration(datasource.config)[query.queryVerb](
-    enrichedQuery
+  ctx.body = formatResponse(
+    await new Integration(datasource.config)[query.queryVerb](enrichedQuery)
   )
-
-  ctx.body = response
 }
 
 exports.destroy = async function(ctx) {

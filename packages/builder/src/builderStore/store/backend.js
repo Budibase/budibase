@@ -119,6 +119,18 @@ export const getBackendUiStore = () => {
         return json
       },
       save: async (datasourceId, query) => {
+        const integrations = get(store).integrations
+        const dataSource = get(store).datasources.filter(
+          ds => ds._id === datasourceId
+        )
+        // check if readable attribute is found
+        if (dataSource.length !== 0) {
+          const integration = integrations[dataSource[0].source]
+          const readable = integration.query[query.queryVerb].readable
+          if (readable) {
+            query.readable = readable
+          }
+        }
         query.datasourceId = datasourceId
         const response = await api.post(`/api/queries`, query)
         const json = await response.json()
