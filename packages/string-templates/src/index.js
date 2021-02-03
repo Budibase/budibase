@@ -91,7 +91,9 @@ module.exports.processStringSync = (string, context) => {
   }
   string = processors.preprocess(string)
   // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-  const template = hbsInstance.compile(string)
+  const template = hbsInstance.compile(string, {
+    strict: false,
+  })
   return processors.postprocess(template(clonedContext))
 }
 
