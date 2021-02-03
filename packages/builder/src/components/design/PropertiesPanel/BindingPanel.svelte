@@ -170,6 +170,11 @@
     border-width: 1px 0 1px 0;
   }
 
+  pre,
+  .description {
+    white-space: normal;
+  }
+
   li:hover {
     color: var(--ink);
     font-weight: 500;
