@@ -118,7 +118,7 @@
   const makeFieldState = (field, defaultValue) => {
     return writable({
       field,
-      fieldId: `id-${generateID()}-${field}`,
+      fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
       valid: true,
