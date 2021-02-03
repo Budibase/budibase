@@ -17,6 +17,11 @@ const SCHEMA = {
       type: FIELD_TYPES.STRING,
       default: "localhost",
     },
+    port: {
+      type: FIELD_TYPES.NUMBER,
+      required: false,
+      default: 1433,
+    },
     database: {
       type: FIELD_TYPES.STRING,
       default: "root",
