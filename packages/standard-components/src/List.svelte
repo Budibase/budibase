@@ -20,8 +20,8 @@
   }
 </script>
 
-<div use:styleable={$component.styles}>
-  {#if rows.length > 0}
+{#if rows.length > 0}
+  <div use:styleable={$component.styles}>
     {#if $component.children === 0 && $builderStore.inBuilder}
       <p>Add some components too</p>
     {:else}
@@ -31,10 +31,12 @@
         </Provider>
       {/each}
     {/if}
-  {:else if loaded && $builderStore.inBuilder}
+  </div>
+{:else if loaded && $builderStore.inBuilder}
+  <div use:styleable={$component.styles}>
     <p>Feed me some data</p>
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
   p {
