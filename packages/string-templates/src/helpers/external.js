@@ -1,5 +1,5 @@
 const helpers = require("@budibase/handlebars-helpers")
-const dateHelper = require("helper-date")
+const dateHelper = require("./date")
 const { HelperFunctionBuiltin } = require("./constants")
 
 /**
