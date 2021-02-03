@@ -139,8 +139,8 @@ function run() {
     date: {
       args: ["datetime", "format"],
       numArgs: 2,
-      example: '{{date now "YYYY"}}',
-      description: "Format a date using moment.js data formatting.",
+      example: '{{date now "DD-MM-YYYY"}}',
+      description: "Format a date using moment.js date formatting.",
     },
   }
   // convert all markdown to HTML
