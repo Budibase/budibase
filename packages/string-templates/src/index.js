@@ -83,25 +83,21 @@ module.exports.processObjectSync = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context) => {
-  const input = cloneDeep(string)
+  if (!exports.isValid(string)) {
+    return string
+  }
   let clonedContext = removeNull(cloneDeep(context))
   clonedContext = addConstants(clonedContext)
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  try {
-    string = processors.preprocess(string)
-    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const template = hbsInstance.compile(string, {
-      strict: false,
-    })
-    return processors.postprocess(template(clonedContext))
-  } catch (err) {
-    // suggested that we should always return input if an error occurs, incase string wasn't supposed to
-    // contain any handlebars statements
-    return input
-  }
+  string = processors.preprocess(string)
+  // this does not throw an error when template can't be fulfilled, have to try correct beforehand
+  const template = hbsInstance.compile(string, {
+    strict: false,
+  })
+  return processors.postprocess(template(clonedContext))
 }
 
 /**
@@ -119,9 +115,9 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
-  const validCases = ["string", "number", "object", "array"]
+  const validCases = ["string", "number", "object", "array", "cannot read property"]
   // this is a portion of a specific string always output by handlebars in the case of a syntax error
-  const invalidCases = [`expecting 'id', 'string', 'number'`]
+  const invalidCases = [`expecting '`]
   // don't really need a real context to check if its valid
   const context = {}
   try {

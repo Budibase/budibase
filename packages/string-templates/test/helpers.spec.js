@@ -317,9 +317,12 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
-  it("should confirm an invalid string", () => {
-    const validity = isValid("{{ awdd () ")
-    expect(validity).toBe(false)
+  it("should confirm a bunch of invalid strings", () => {
+    const invalids = ["{{ awd )", "{{ awdd () ", "{{ awdwad ", "{{ awddawd }"]
+    for (let invalid of invalids) {
+      const validity = isValid(invalid)
+      expect(validity).toBe(false)
+    }
   })
 
   it("input a garbage string, expect it to be returned", async () => {
