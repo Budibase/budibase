@@ -10,13 +10,15 @@ const dayjs = require("dayjs")
  */
 
 function isOptions(val) {
-  return typeof(val) === "object" && typeof(val.hash) === "object"
+  return typeof val === "object" && typeof val.hash === "object"
 }
 
 function isApp(thisArg) {
-  return typeof(thisArg) === "object"
-    && typeof(thisArg.options) === "object"
-    && typeof(thisArg.app) === "object"
+  return (
+    typeof thisArg === "object" &&
+    typeof thisArg.options === "object" &&
+    typeof thisArg.app === "object"
+  )
 }
 
 function getContext(thisArg, locals, options) {
@@ -66,7 +68,7 @@ module.exports = function dateHelper(str, pattern, options) {
     return dayjs().format("MMMM DD, YYYY")
   }
 
-  const defaults = {lang: "en", date: new Date(str)}
+  const defaults = { lang: "en", date: new Date(str) }
   const opts = getContext(this, defaults, options)
 
   // set the language to use
