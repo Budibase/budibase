@@ -7,7 +7,7 @@ import {
   makeBreadcrumbContainer,
   makeTitleContainer,
   makeSaveButton,
-  makeSchemaFormComponents,
+  makeTableFormComponents,
   makeMainForm,
 } from "./utils/commonComponents"
 
@@ -106,7 +106,7 @@ const createScreen = table => {
     })
 
   // Add all form fields from this schema to the field group
-  makeSchemaFormComponents(table._id).forEach(component => {
+  makeTableFormComponents(table._id).forEach(component => {
     fieldGroup.addChild(component)
   })
 

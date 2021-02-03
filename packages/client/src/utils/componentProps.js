@@ -46,10 +46,7 @@ export const enrichProps = async (props, context, user) => {
 
   // Enrich button actions if they exist
   if (props._component.endsWith("/button") && enrichedProps.onClick) {
-    enrichedProps.onClick = enrichButtonActions(
-      enrichedProps.onClick,
-      totalContext
-    )
+    enrichedProps.onClick = enrichButtonActions(enrichedProps.onClick)
   }
 
   return enrichedProps

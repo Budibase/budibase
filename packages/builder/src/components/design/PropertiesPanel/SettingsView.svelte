@@ -5,7 +5,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { currentAsset } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
-  import { makeSchemaFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
+  import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -106,9 +106,12 @@
       componentInstance._id,
       component => component._component.endsWith("/form")
     )
-    const tableId = form?.datasource?.tableId
-    const fields = makeSchemaFormComponents(tableId).map(field => field.json())
-    onChange("_children", fields)
+    const datasource = form?.datasource
+    const fields = makeDatasourceFormComponents(datasource)
+    onChange(
+      "_children",
+      fields.map(field => field.json())
+    )
   }
 </script>
 

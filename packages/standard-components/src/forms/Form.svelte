@@ -133,12 +133,7 @@
     } else {
       table = await API.fetchTableDefinition(datasource?.tableId)
       if (table) {
-        if (datasource.type === "query") {
-          console.log("No implementation for queries yet")
-          schema = {}
-        } else {
-          schema = table.schema || {}
-        }
+        schema = table.schema || {}
       }
     }
     loaded = true
