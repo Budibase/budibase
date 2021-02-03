@@ -43,25 +43,6 @@ export function makeMainForm() {
     .instanceName("Form")
 }
 
-export function makeMainContainer() {
-  return new Component("@budibase/standard-components/container")
-    .type("div")
-    .normalStyle({
-      width: "700px",
-      padding: "0px",
-      "border-radius": "0.5rem",
-      "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      margin: "auto",
-      "margin-top": "20px",
-      "padding-top": "48px",
-      "padding-bottom": "48px",
-      "padding-right": "48px",
-      "padding-left": "48px",
-      "margin-bottom": "20px",
-    })
-    .instanceName("Form")
-}
-
 export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
   const link = makeLinkComponent(tableName).instanceName("Back Link")
 
@@ -180,11 +161,30 @@ const fieldTypeToComponentMap = {
   link: "relationshipfield",
 }
 
-export function makeSchemaFormComponents(tableId) {
+export function makeTableFormComponents(tableId) {
   const tables = get(backendUiStore).tables
   const schema = tables.find(table => table._id === tableId)?.schema ?? {}
+  return makeSchemaFormComponents(schema)
+}
+
+export function makeQueryFormComponents(queryId) {
+  const queries = get(backendUiStore).queries
+  const schema = queries.find(query => query._id === queryId)?.schema ?? []
+  return makeSchemaFormComponents(schema)
+}
+
+export function makeDatasourceFormComponents(datasource) {
+  if (!datasource) {
+    return []
+  }
+  return datasource.type === "table"
+    ? makeTableFormComponents(datasource.tableId)
+    : makeQueryFormComponents(datasource._id)
+}
+
+function makeSchemaFormComponents(schema) {
   let components = []
-  let fields = Object.keys(schema)
+  let fields = Object.keys(schema || {})
   fields.forEach(field => {
     const fieldSchema = schema[field]
     const componentType = fieldTypeToComponentMap[fieldSchema.type]
