@@ -1,4 +1,5 @@
 import flatpickr from "flatpickr"
+import { isEmpty } from "lodash/fp"
 
 export const createValidatorFromConstraints = (constraints, field, table) => {
   let checks = []
@@ -19,27 +20,27 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     }
 
     // Min / max number constraint
-    if (constraints.numericality?.greaterThanOrEqualTo != null) {
+    if (!isEmpty(constraints.numericality?.greaterThanOrEqualTo)) {
       const min = constraints.numericality.greaterThanOrEqualTo
       checks.push(numericalConstraint(x => x >= min, `Minimum value is ${min}`))
     }
-    if (constraints.numericality?.lessThanOrEqualTo != null) {
+    if (!isEmpty(constraints.numericality?.lessThanOrEqualTo)) {
       const max = constraints.numericality.lessThanOrEqualTo
       checks.push(numericalConstraint(x => x <= max, `Maximum value is ${max}`))
     }
 
     // Inclusion constraint
-    if (constraints.inclusion != null) {
+    if (!isEmpty(constraints.inclusion)) {
       const options = constraints.inclusion
       checks.push(inclusionConstraint(options))
     }
 
     // Date constraint
-    if (constraints.datetime?.earliest != null) {
+    if (!isEmpty(constraints.datetime?.earliest)) {
       const limit = constraints.datetime.earliest
       checks.push(dateConstraint(limit, true))
     }
-    if (constraints.datetime?.latest != null) {
+    if (!isEmpty(constraints.datetime?.latest)) {
       const limit = constraints.datetime.latest
       checks.push(dateConstraint(limit, false))
     }
