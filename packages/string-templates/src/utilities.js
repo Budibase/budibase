@@ -32,3 +32,16 @@ module.exports.addConstants = obj => {
   }
   return obj
 }
+
+module.exports.removeHandlebarsStatements = string => {
+  let regexp = new RegExp(exports.FIND_HBS_REGEX)
+  let matches = string.match(regexp)
+  if (matches == null) {
+    return string
+  }
+  for (let match of matches) {
+    const idx = string.indexOf(match)
+    string = exports.swapStrings(string, idx, match.length, "Invalid Binding")
+  }
+  return string
+}
