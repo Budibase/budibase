@@ -50,8 +50,10 @@ destroyable(server)
 
 server.on("close", () => console.log("Server Closed"))
 
-module.exports = server.listen(env.PORT || 4001, async () => {
+module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
+  env._set("PORT", server.address().port)
+  eventEmitter.emitPort(env.PORT)
   automations.init()
   if (env.SELF_HOSTED) {
     await selfhost.init()
