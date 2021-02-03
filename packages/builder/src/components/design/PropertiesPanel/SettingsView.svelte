@@ -2,6 +2,7 @@
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
   import { Button } from "@budibase/bbui"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { currentAsset } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeSchemaFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
@@ -50,6 +51,7 @@
     "layoutId",
     "routing.roleId",
   ]
+  let confirmResetFieldsDialog
 
   $: settings = componentDefinition?.settings ?? []
   $: isLayout = assetInstance && assetInstance.favicon
@@ -154,9 +156,17 @@
   {/if}
 
   {#if componentDefinition?.component?.endsWith('/fieldgroup')}
-    <Button secondary wide on:click={resetFormFields}>Reset Fields</Button>
+    <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
+      Reset Fields
+    </Button>
   {/if}
 </div>
+<ConfirmDialog
+  bind:this={confirmResetFieldsDialog}
+  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to reset this Field Group?`}
+  okText="Reset"
+  onOk={resetFormFields}
+  title="Confirm Reset Fields" />
 
 <style>
   .settings-view-container {
