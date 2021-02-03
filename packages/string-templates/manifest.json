@@ -1097,8 +1097,8 @@
         "format"
       ],
       "numArgs": 2,
-      "example": "{{date now \"YYYY\"}}",
-      "description": "<p>Format a date using moment.js data formatting.</p>\n"
+      "example": "{{date now \"DD-MM-YYYY\"}}",
+      "description": "<p>Format a date using moment.js date formatting.</p>\n"
     }
   }
 }

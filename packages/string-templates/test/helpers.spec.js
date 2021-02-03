@@ -1,5 +1,6 @@
 const {
   processString,
+  processObject,
   isValid,
 } = require("../src/index")
 
@@ -315,5 +316,26 @@ describe("Cover a few complex use cases", () => {
   it("should confirm a subtraction validity", () => {
     const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
     expect(validity).toBe(true)
+  })
+
+  it("should confirm a bunch of invalid strings", () => {
+    const invalids = ["{{ awd )", "{{ awdd () ", "{{ awdwad ", "{{ awddawd }"]
+    for (let invalid of invalids) {
+      const validity = isValid(invalid)
+      expect(validity).toBe(false)
+    }
+  })
+
+  it("input a garbage string, expect it to be returned", async () => {
+    const input = `{{{{{{ } {{ ]] ] ] }}} {{ ] {{ {   } { dsa { dddddd }}}}}}} }DDD`
+    const output = await processString(input, {})
+    expect(output).toBe(input)
+  })
+
+  it("getting a nice date from the user", async () => {
+    const input = {text: `{{ date user.subscriptionDue "DD-MM" }}`}
+    const context = JSON.parse(`{"user":{"email":"test@test.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@test.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`)
+    const output = await processObject(input, context)
+    expect(output.text).toBe("12-01")
   })
 })
