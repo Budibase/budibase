@@ -83,18 +83,25 @@ module.exports.processObjectSync = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context) => {
+  const input = cloneDeep(string)
   let clonedContext = removeNull(cloneDeep(context))
   clonedContext = addConstants(clonedContext)
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  string = processors.preprocess(string)
-  // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-  const template = hbsInstance.compile(string, {
-    strict: false,
-  })
-  return processors.postprocess(template(clonedContext))
+  try {
+    string = processors.preprocess(string)
+    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
+    const template = hbsInstance.compile(string, {
+      strict: false,
+    })
+    return processors.postprocess(template(clonedContext))
+  } catch (err) {
+    // suggested that we should always return input if an error occurs, incase string wasn't supposed to
+    // contain any handlebars statements
+    return input
+  }
 }
 
 /**
@@ -112,19 +119,27 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
-  const specialCases = ["string", "number", "object", "array"]
+  const validCases = ["string", "number", "object", "array"]
+  // this is a portion of a specific string always output by handlebars in the case of a syntax error
+  const invalidCases = [`expecting 'id', 'string', 'number'`]
   // don't really need a real context to check if its valid
   const context = {}
   try {
     hbsInstance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
-    const msg = err ? err.message : ""
-    const foundCase = specialCases.find(spCase =>
-      msg.toLowerCase().includes(spCase)
+    const msg = err && err.message ? err.message : err
+    if (!msg) {
+      return false
+    }
+    const invalidCase = invalidCases.some(invalidCase =>
+      msg.toLowerCase().includes(invalidCase)
+    )
+    const validCase = validCases.some(validCase =>
+      msg.toLowerCase().includes(validCase)
     )
     // special case for maths functions - don't have inputs yet
-    return !!foundCase
+    return validCase && !invalidCase
   }
 }
 

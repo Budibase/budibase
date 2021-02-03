@@ -316,4 +316,15 @@ describe("Cover a few complex use cases", () => {
     const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
     expect(validity).toBe(true)
   })
+
+  it("should confirm an invalid string", () => {
+    const validity = isValid("{{ awdd () ")
+    expect(validity).toBe(false)
+  })
+
+  it("input a garbage string, expect it to be returned", async () => {
+    const input = `{{{{{{ } {{ ]] ] ] }}} {{ ] {{ {   } { dsa { dddddd }}}}}}} }DDD`
+    const output = await processString(input, {})
+    expect(output).toBe(input)
+  })
 })
