@@ -7,6 +7,7 @@ const { existsSync } = require("fs-extra")
 const initialiseBudibase = require("./utilities/initialiseBudibase")
 const { budibaseAppsDir } = require("./utilities/budibaseDir")
 const { openNewGitHubIssue, debugInfo } = require("electron-util")
+const eventEmitter = require("./events")
 
 const budibaseDir = budibaseAppsDir()
 const envFile = join(budibaseDir, ".env")
@@ -17,7 +18,11 @@ async function startApp() {
   }
   // evict environment from cache, so it reloads when next asked
   delete require.cache[require.resolve("./environment")]
+  // store the port incase its going to get overridden
+  const port = process.env.PORT
   require("dotenv").config({ path: envFile })
+  // overwrite the port - don't want to use dotenv for the port
+  require("./environment")._set("PORT", port)
 
   unhandled({
     showDialog: true,
@@ -34,9 +39,6 @@ async function startApp() {
     },
   })
 
-  const APP_URL = "http://localhost:4001/_builder"
-  const APP_TITLE = "Budibase Builder"
-
   let win
 
   function handleRedirect(e, url) {
@@ -46,22 +48,26 @@ async function startApp() {
 
   async function createWindow() {
     app.server = require("./app")
-    win = new BrowserWindow({
-      width: 1920,
-      height: 1080,
-      icon: join(__dirname, "..", "build", "icons", "512x512.png"),
-    })
-    win.setTitle(APP_TITLE)
-    win.loadURL(APP_URL)
-    if (isDev) {
-      win.webContents.openDevTools()
-    } else {
-      autoUpdater.checkForUpdatesAndNotify()
-    }
+    eventEmitter.on("internal:port", port => {
+      const APP_URL = `http://localhost:${port}/_builder`
+      const APP_TITLE = "Budibase Builder"
+      win = new BrowserWindow({
+        width: 1920,
+        height: 1080,
+        icon: join(__dirname, "..", "build", "icons", "512x512.png"),
+      })
+      win.setTitle(APP_TITLE)
+      win.loadURL(APP_URL)
+      if (isDev) {
+        win.webContents.openDevTools()
+      } else {
+        autoUpdater.checkForUpdatesAndNotify()
+      }
 
-    // open _blank in default browser
-    win.webContents.on("new-window", handleRedirect)
-    win.webContents.on("will-navigate", handleRedirect)
+      // open _blank in default browser
+      win.webContents.on("new-window", handleRedirect)
+      win.webContents.on("will-navigate", handleRedirect)
+    })
   }
 
   app.whenReady().then(createWindow)

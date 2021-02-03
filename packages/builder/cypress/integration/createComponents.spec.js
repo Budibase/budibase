@@ -1,7 +1,7 @@
 xcontext("Create Components", () => {
   before(() => {
     cy.server()
-    cy.visit("localhost:4001/_builder")
+    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
     // https://on.cypress.io/type
     cy.createApp("Table App", "Table App Description")
     cy.createTable("dog", "name", "age")

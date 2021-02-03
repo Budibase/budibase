@@ -1,7 +1,7 @@
 context("Create a automation", () => {
   before(() => {
     cy.server()
-    cy.visit("localhost:4001/_builder")
+    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
 
     cy.createApp(
       "Automation Test App",

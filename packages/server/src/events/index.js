@@ -19,6 +19,10 @@ class BudibaseEmitter extends EventEmitter {
   emitTable(eventName, appId, table = null) {
     tableEmission({ emitter: this, eventName, appId, table })
   }
+
+  emitPort(portNumber) {
+    this.emit("internal:port", portNumber)
+  }
 }
 
 const emitter = new BudibaseEmitter()
