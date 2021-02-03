@@ -63,7 +63,7 @@ module.exports.processors = [
         return statement
       }
     }
-    if (HelperNames().some(option => possibleHelper.includes(option))) {
+    if (HelperNames().some(option => option.includes(possibleHelper))) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`
