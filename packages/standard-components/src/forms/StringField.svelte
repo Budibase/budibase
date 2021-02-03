@@ -11,7 +11,12 @@
   let fieldApi
 
   const onBlur = event => {
-    fieldApi.setValue(event.target.value)
+    let value = event.target.value
+    if (type === "number") {
+      const float = parseFloat(value)
+      value = isNaN(float) ? null : float
+    }
+    fieldApi.setValue(value)
   }
 </script>
 
