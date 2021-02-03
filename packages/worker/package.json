@@ -1,7 +1,7 @@
 {
   "name": "@budibase/deployment",
   "email": "hi@budibase.com",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Budibase Deployment Server",
   "main": "src/index.js",
   "repository": {
