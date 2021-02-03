@@ -2,7 +2,7 @@ const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
-const { removeNull, addConstants } = require("./utilities")
+const { removeNull, addConstants, removeHandlebarsStatements } = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
@@ -86,18 +86,24 @@ module.exports.processStringSync = (string, context) => {
   if (!exports.isValid(string)) {
     return string
   }
+  // take a copy of input incase error
+  const input = string
   let clonedContext = removeNull(cloneDeep(context))
   clonedContext = addConstants(clonedContext)
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  string = processors.preprocess(string)
-  // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-  const template = hbsInstance.compile(string, {
-    strict: false,
-  })
-  return processors.postprocess(template(clonedContext))
+  try {
+    string = processors.preprocess(string)
+    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
+    const template = hbsInstance.compile(string, {
+      strict: false,
+    })
+    return processors.postprocess(template(clonedContext))
+  } catch (err) {
+    return removeHandlebarsStatements(input)
+  }
 }
 
 /**
