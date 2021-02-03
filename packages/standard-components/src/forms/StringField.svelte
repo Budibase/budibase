@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import "@spectrum-css/textfield/dist/index-vars.css"
   import SpectrumField from "./SpectrumField.svelte"
 
@@ -9,14 +10,24 @@
 
   let fieldState
   let fieldApi
+  let input
 
-  const onBlur = event => {
-    let value = event.target.value
+  const updateValue = value => {
     if (type === "number") {
       const float = parseFloat(value)
       value = isNaN(float) ? null : float
     }
     fieldApi.setValue(value)
+  }
+
+  const onBlur = event => {
+    updateValue(event.target.value)
+  }
+
+  const updateValueOnEnter = event => {
+    if (event.key === "Enter") {
+      updateValue(event.target.value)
+    }
   }
 </script>
 
@@ -32,6 +43,8 @@
         </svg>
       {/if}
       <input
+        on:keyup={updateValueOnEnter}
+        bind:this={input}
         id={$fieldState.fieldId}
         value={$fieldState.value || ''}
         placeholder={placeholder || ''}
