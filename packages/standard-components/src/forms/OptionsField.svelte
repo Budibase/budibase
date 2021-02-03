@@ -1,7 +1,4 @@
 <script>
-  import "@spectrum-css/picker/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
   import SpectrumField from "./SpectrumField.svelte"
   import Picker from "./Picker.svelte"
 
