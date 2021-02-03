@@ -1,4 +1,7 @@
 <script>
+  import "@spectrum-css/picker/dist/index-vars.css"
+  import "@spectrum-css/popover/dist/index-vars.css"
+  import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
 
   export let fieldState
