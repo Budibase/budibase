@@ -421,7 +421,7 @@ export const getFrontendStore = () => {
                 return
               }
               component._id = uuid()
-              component.children?.forEach(randomizeIds)
+              component._children?.forEach(randomizeIds)
             }
             randomizeIds(componentToPaste)
           }
