@@ -19,8 +19,8 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
 ]
 
 const ADDED_HELPERS = {
-  "date": date,
-  "duration": duration,
+  date: date,
+  duration: duration,
 }
 
 exports.registerAll = handlebars => {

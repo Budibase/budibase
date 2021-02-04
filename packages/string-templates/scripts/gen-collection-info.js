@@ -26,9 +26,10 @@ const ADDED_HELPERS = {
       args: ["time", "durationType"],
       numArgs: 2,
       example: '{{duration timeLeft "seconds"}} -> a few seconds',
-      description: "Produce a humanized duration left/until given an amount of time and the type of time measurement."
-    }
-  }
+      description:
+        "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
+    },
+  },
 }
 
 function fixSpecialCases(name, obj) {
