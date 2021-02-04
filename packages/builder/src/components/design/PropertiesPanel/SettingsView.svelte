@@ -11,11 +11,12 @@
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import OptionSelect from "./PropertyControls/OptionSelect.svelte"
-  import MultiTableViewFieldSelect from "./PropertyControls/MultiTableViewFieldSelect.svelte"
   import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
-  import TableViewSelect from "./PropertyControls/TableViewSelect.svelte"
-  import TableViewFieldSelect from "./PropertyControls/TableViewFieldSelect.svelte"
+  import DatasourceSelect from "./PropertyControls/DatasourceSelect.svelte"
+  import FieldSelect from "./PropertyControls/FieldSelect.svelte"
+  import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
+  import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
@@ -60,7 +61,7 @@
   const controlMap = {
     text: Input,
     select: OptionSelect,
-    datasource: TableViewSelect,
+    datasource: DatasourceSelect,
     screen: ScreenSelect,
     detailScreen: DetailScreenSelect,
     boolean: Checkbox,
@@ -69,8 +70,9 @@
     table: TableSelect,
     color: ColorPicker,
     icon: IconSelect,
-    field: TableViewFieldSelect,
-    multifield: MultiTableViewFieldSelect,
+    field: FieldSelect,
+    multifield: MultiFieldSelect,
+    schema: SchemaSelect,
     "field/string": StringFieldSelect,
     "field/number": NumberFieldSelect,
     "field/options": OptionsFieldSelect,
