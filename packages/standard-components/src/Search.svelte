@@ -6,29 +6,30 @@
   const { API, styleable, DataProvider, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let datasource = []
+  export let table = []
+  export let columns = []
+  export let pageSize = 50
+  export let noRowsMessage = "Feed me some data"
 
   let rows = []
   let loaded = false
-  let table
-  let searchableFields = []
+  // let searchableFields = []
   let search = {}
+  let tableDefinition
+  let schema = {}
 
-  $: schema = table?.schema || {}
-  $: searchableFields = Object.keys(schema).filter(
-    key => schema[key].searchable
-  )
+  $: columns = Object.keys(schema).filter(key => schema[key].searchable)
 
-  $: console.log(search)
+  $: fetchData(table)
 
-  $: fetchData(datasource)
-
-  async function fetchData(datasource) {
-    if (!isEmpty(datasource)) {
-      table = await API.fetchTableDefinition(datasource.tableId)
-      rows = await API.fetchDatasource({
-        ...datasource,
-        search
+  async function fetchData(table) {
+    if (!isEmpty(table)) {
+      const tableDef = await API.fetchTableDefinition(table)
+      schema = tableDef.schema
+      rows = await API.searchTable({
+        tableId: table,
+        search,
+        pageSize,
       })
     }
     loaded = true
@@ -37,7 +38,7 @@
 
 <div use:styleable={$component.styles}>
   <div class="query-builder">
-    {#each searchableFields as field}
+    {#each columns as field}
       <div class="form-field">
         <Label extraSmall grey>{schema[field].name}</Label>
         {#if schema[field].type === 'options'}
@@ -50,9 +51,7 @@
           <!-- {:else if schema[field].type === 'datetime'}
           <DatePicker bind:value={search[field]} /> --->
         {:else if schema[field].type === 'boolean'}
-          <Toggle
-            text={schema[field].name}
-            bind:checked={search[field]} />
+          <Toggle text={schema[field].name} bind:checked={search[field]} />
         {:else if schema[field].type === 'number'}
           <Input type="number" bind:value={search[field]} />
         {:else if schema[field].type === 'string'}
@@ -60,11 +59,15 @@
         {/if}
       </div>
     {/each}
-    <Button blue on:click={() => fetchData(datasource)}>Search</Button>
-    <Button red on:click={() => {
-      search = {}
-      fetchData(datasource)
-    }}>Reset</Button>
+    <Button blue on:click={() => fetchData(table)}>Search</Button>
+    <Button
+      red
+      on:click={() => {
+        search = {}
+        fetchData(table)
+      }}>
+      Reset
+    </Button>
   </div>
   {#if rows.length > 0}
     {#if $component.children === 0 && $builderStore.inBuilder}
@@ -77,7 +80,7 @@
       {/each}
     {/if}
   {:else if loaded && $builderStore.inBuilder}
-    <p>Feed me some data</p>
+    <p>{noRowsMessage}</p>
   {/if}
 </div>
 

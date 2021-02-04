@@ -111,6 +111,11 @@
         "type": "datasource",
         "label": "Data",
         "key": "datasource"
+      },
+      {
+        "type": "text",
+        "label": "No Rows Message",
+        "key": "noRowsMessage"
       }
     ]
   },
@@ -123,9 +128,20 @@
     "dataProvider": true,
     "settings": [
       {
-        "type": "datasource",
-        "label": "Data",
-        "key": "datasource"
+        "type": "table",
+        "label": "Table",
+        "key": "table"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "valueColumns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "text",
+        "label": "No Rows Message",
+        "key": "noRowsMessage"
       }
     ]
   },

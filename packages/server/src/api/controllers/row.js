@@ -218,6 +218,8 @@ exports.fetchView = async function(ctx) {
 exports.search = async function(ctx) {
   const appId = ctx.user.appId
 
+  const { pageSize = 10, cursor } = ctx.query
+
   // special case for users, fetch through the user controller
   // let rows
   // SHOULD WE PREVENT SEARCHING FOR USERS?
@@ -230,11 +232,15 @@ exports.search = async function(ctx) {
 
   const query = ctx.request.body.query
   query.tableId = ctx.params.tableId
+  // query._id = { $gte: cursor }
 
   const response = await db.find({
     selector: query,
+    limit: pageSize,
   })
   ctx.body = response.docs
+
+  // TODO: probably attach relationships
   // const rows = response.docs.map(row => row.doc)
   // ctx.body = await linkRows.attachLinkInfo(appId, rows)
 }
