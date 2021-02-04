@@ -69,8 +69,9 @@ export const getDatasourceForProvider = component => {
   }
 
   // Extract datasource from component instance
+  const validSettingTypes = ["datasource", "table", "schema"]
   const datasourceSetting = def.settings.find(setting => {
-    return setting.type === "datasource" || setting.type === "table"
+    return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
     return null
@@ -80,15 +81,14 @@ export const getDatasourceForProvider = component => {
   // example an actual datasource object, or a table ID string.
   // Convert the datasource setting into a proper datasource object so that
   // we can use it properly
-  if (datasourceSetting.type === "datasource") {
-    return component[datasourceSetting?.key]
-  } else if (datasourceSetting.type === "table") {
+  if (datasourceSetting.type === "table") {
     return {
       tableId: component[datasourceSetting?.key],
       type: "table",
     }
+  } else {
+    return component[datasourceSetting?.key]
   }
-  return null
 }
 
 /**
