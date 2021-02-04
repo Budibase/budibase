@@ -1060,6 +1060,10 @@
         "defaultValue": "spectrum--light",
         "options": [
           {
+            "label": "Lightest",
+            "value": "spectrum--lightest"
+          },
+          {
             "label": "Light",
             "value": "spectrum--light"
           },
