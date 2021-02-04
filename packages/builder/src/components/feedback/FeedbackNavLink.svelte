@@ -6,7 +6,7 @@
   import FeedbackIframe from "./FeedbackIframe.svelte"
   import analytics from "analytics"
 
-  const FIVE_MINUTES = 30000
+  const FIVE_MINUTES = 300000
 
   let iconContainer
   let popover
