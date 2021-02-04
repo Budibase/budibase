@@ -5,18 +5,31 @@ const fs = require("fs")
 const doctrine = require("doctrine")
 const marked = require("marked")
 
-const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
-
-const FILENAME = `${DIRECTORY}/manifest.json`
-
 /**
  * full list of supported helpers can be found here:
- * https://github.com/helpers/handlebars-helpers
+ * https://github.com/budibase/handlebars-helpers
  */
 
+const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
 const COLLECTIONS = ["math", "array", "number", "url", "string", "comparison"]
-
+const FILENAME = `${DIRECTORY}/manifest.json`
 const outputJSON = {}
+const ADDED_HELPERS = {
+  date: {
+    date: {
+      args: ["datetime", "format"],
+      numArgs: 2,
+      example: '{{date now "DD-MM-YYYY"}} -> 21-01-2021',
+      description: "Format a date using moment.js date formatting.",
+    },
+    duration: {
+      args: ["time", "durationType"],
+      numArgs: 2,
+      example: '{{duration timeLeft "seconds"}} -> a few seconds',
+      description: "Produce a humanized duration left/until given an amount of time and the type of time measurement."
+    }
+  }
+}
 
 function fixSpecialCases(name, obj) {
   const args = obj.args
@@ -134,15 +147,15 @@ function run() {
     }
     outputJSON[collection] = collectionInfo
   }
-  // add the date helper
-  outputJSON["date"] = {
-    date: {
-      args: ["datetime", "format"],
-      numArgs: 2,
-      example: '{{date now "DD-MM-YYYY"}}',
-      description: "Format a date using moment.js date formatting.",
-    },
+  // add extra helpers
+  for (let [collectionName, collection] of Object.entries(ADDED_HELPERS)) {
+    let input = collection
+    if (outputJSON[collectionName]) {
+      input = Object.assign(outputJSON[collectionName], collection)
+    }
+    outputJSON[collectionName] = input
   }
+
   // convert all markdown to HTML
   for (let collection of Object.values(outputJSON)) {
     for (let helper of Object.values(collection)) {

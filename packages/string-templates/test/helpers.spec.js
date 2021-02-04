@@ -318,6 +318,17 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
+  it("test a very complex duration output", async () => {
+    const currentTime = new Date(1612432082000).toISOString(),
+      eventTime = new Date(1612432071000).toISOString()
+    const input = `{{duration ( subtract (date currentTime "X")(date eventTime "X")) "seconds"}}`
+    const output = await processString(input, {
+      currentTime,
+      eventTime,
+    })
+    expect(output).toBe("a few seconds")
+  })
+
   it("should confirm a bunch of invalid strings", () => {
     const invalids = ["{{ awd )", "{{ awdd () ", "{{ awdwad ", "{{ awddawd }"]
     for (let invalid of invalids) {
