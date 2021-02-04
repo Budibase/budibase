@@ -78,7 +78,7 @@
     "field/longform": LongFormFieldSelect,
     "field/datetime": DateTimeFieldSelect,
     "field/attachment": AttachmentFieldSelect,
-    "field/relationship": RelationshipFieldSelect,
+    "field/link": RelationshipFieldSelect,
   }
 
   const getControl = type => {

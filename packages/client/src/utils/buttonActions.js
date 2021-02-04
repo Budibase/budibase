@@ -34,7 +34,7 @@ const deleteRowHandler = async (action, context) => {
 }
 
 const triggerAutomationHandler = async (action, context) => {
-  const { fields } = action.parameters()
+  const { fields } = action.parameters
   if (fields) {
     const params = {}
     for (let field in fields) {
