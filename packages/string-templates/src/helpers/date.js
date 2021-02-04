@@ -64,12 +64,12 @@ function initialSteps(str, pattern, options) {
     pattern = null
     str = null
   }
-  return {str, pattern, options}
+  return { str, pattern, options }
 }
 
 function setLocale(str, pattern, options) {
   // if options is null then it'll get updated here
-  ({str, pattern, options} = initialSteps(str, pattern, options))
+  ;({ str, pattern, options } = initialSteps(str, pattern, options))
   const defaults = { lang: "en", date: new Date(str) }
   const opts = getContext(this, defaults, options)
 
@@ -78,7 +78,7 @@ function setLocale(str, pattern, options) {
 }
 
 module.exports.date = (str, pattern, options) => {
-  ({str, pattern, options} = initialSteps(str, pattern, options))
+  ;({ str, pattern, options } = initialSteps(str, pattern, options))
 
   // if no args are passed, return a formatted date
   if (str == null && pattern == null) {
@@ -92,7 +92,7 @@ module.exports.date = (str, pattern, options) => {
 }
 
 module.exports.duration = (str, pattern, format) => {
-  ({str, pattern} = initialSteps(str, pattern))
+  ;({ str, pattern } = initialSteps(str, pattern))
 
   setLocale(str, pattern)
 
