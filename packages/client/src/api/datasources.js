@@ -5,6 +5,13 @@ import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
 import { enrichRows } from "./rows"
 
+export const searchTable = async ({ tableId, search, pageSize }) => {
+  const rows = await searchTableData(tableId, search, pageSize)
+  return rows
+  // Enrich rows so they can displayed properly
+  // return await enrichRows(rows, tableId)
+}
+
 /**
  * Fetches all rows for a particular Budibase data source.
  */
@@ -14,15 +21,10 @@ export const fetchDatasource = async datasource => {
   }
 
   // Fetch all rows in data source
-  const { type, tableId, fieldName, search } = datasource
+  const { type, tableId, fieldName } = datasource
   let rows = []
   if (type === "table") {
-    // TODO refactor
-    if (search) {
-      rows = await searchTableData(tableId, search)
-    } else {
-      rows = await fetchTableData(tableId)
-    }
+    rows = await fetchTableData(tableId)
   } else if (type === "view") {
     rows = await fetchViewData(datasource)
   } else if (type === "query") {
