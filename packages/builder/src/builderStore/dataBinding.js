@@ -99,37 +99,37 @@ export const getContextBindings = (rootComponent, componentId) => {
   // Extract any components which provide data contexts
   const dataProviders = getDataProviderComponents(rootComponent, componentId)
   let contextBindings = []
+
+  // Create bindings for each data provider
   dataProviders.forEach(component => {
-    const datasource = getDatasourceForProvider(component)
-    if (!datasource) {
-      return
-    }
-
-    // Get schema and table for the datasource
     const isForm = component._component.endsWith("/form")
-    let { schema, table } = getSchemaForDatasource(datasource, isForm)
-    if (!schema || !table) {
+    const datasource = getDatasourceForProvider(component)
+    let tableName, schema
+
+    // Forms are an edge case which do not need table schemas
+    if (isForm) {
+      schema = buildFormSchema(component)
+      tableName = "Schema"
+    } else {
+      if (!datasource) {
+        return
+      }
+
+      // Get schema and table for the datasource
+      const info = getSchemaForDatasource(datasource, isForm)
+      schema = info.schema
+      tableName = info.table?.name
+
+      // Add _id and _rev fields for certain types
+      if (datasource.type === "table" || datasource.type === "link") {
+        schema["_id"] = { type: "string" }
+        schema["_rev"] = { type: "string " }
+      }
+    }
+    if (!schema || !tableName) {
       return
     }
 
-    // Forms are an edge case. They can have a schema which will be exposed as
-    // bindable properties, but they can also have custom fields which we need
-    // to find and provide.
-    if (isForm) {
-      const formSchema = buildFormSchema(component)
-      console.log(formSchema)
-      Object.keys(formSchema).forEach(field => {
-        if (!schema[field]) {
-          schema[field] = formSchema[field]
-        }
-      })
-    }
-
-    // Add _id and _rev fields for certain types
-    if (datasource.type === "table" || datasource.type === "link") {
-      schema["_id"] = { type: "string" }
-      schema["_rev"] = { type: "string " }
-    }
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
@@ -148,11 +148,13 @@ export const getContextBindings = (rootComponent, componentId) => {
         runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
           runtimeBoundKey
         )}`,
-        readableBinding: `${component._instanceName}.${table.name}.${key}`,
+        readableBinding: `${component._instanceName}.${tableName}.${key}`,
+        // Field schema and provider are required to construct relationship
+        // datasource options, based on bindable properties
         fieldSchema,
         providerId: component._id,
-        tableId: datasource.tableId,
-        field: key,
+        // tableId: table._id,
+        // field: key,
       })
     })
   })
@@ -180,10 +182,12 @@ export const getContextBindings = (rootComponent, componentId) => {
       type: "context",
       runtimeBinding: `user.${runtimeBoundKey}`,
       readableBinding: `Current User.${key}`,
+      // Field schema and provider are required to construct relationship
+      // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
-      tableId: TableNames.USERS,
-      field: key,
+      // tableId: TableNames.USERS,
+      // field: key,
     })
   })
 
