@@ -60,13 +60,18 @@
   .nav__menu {
     display: flex;
     margin-top: 40px;
-    gap: 16px;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
   }
-  .nav__menu > a {
+
+  .nav__menu > * {
+    margin-right: 16px;
+  }
+
+  :global(.nav__menu > a) {
     font-size: 1.5em;
     text-decoration: none;
+    margin-right: 16px;
   }
 </style>
