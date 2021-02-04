@@ -133,7 +133,15 @@
     } else {
       table = await API.fetchTableDefinition(datasource?.tableId)
       if (table) {
-        schema = table.schema || {}
+        if (datasource?.type === "query") {
+          schema = {}
+          const params = table.parameters || []
+          params.forEach(param => {
+            schema[param.name] = { ...param, type: "string" }
+          })
+        } else {
+          schema = table.schema || {}
+        }
       }
     }
     loaded = true

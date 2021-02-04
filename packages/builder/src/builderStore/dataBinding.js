@@ -105,11 +105,27 @@ export const getContextBindings = (rootComponent, componentId) => {
       return
     }
 
-    // Get schema and add _id and _rev fields for certain types
-    let { schema, table } = getSchemaForDatasource(datasource)
+    // Get schema and table for the datasource
+    const isForm = component._component.endsWith("/form")
+    let { schema, table } = getSchemaForDatasource(datasource, isForm)
     if (!schema || !table) {
       return
     }
+
+    // Forms are an edge case. They can have a schema which will be exposed as
+    // bindable properties, but they can also have custom fields which we need
+    // to find and provide.
+    if (isForm) {
+      const formSchema = buildFormSchema(component)
+      console.log(formSchema)
+      Object.keys(formSchema).forEach(field => {
+        if (!schema[field]) {
+          schema[field] = formSchema[field]
+        }
+      })
+    }
+
+    // Add _id and _rev fields for certain types
     if (datasource.type === "table" || datasource.type === "link") {
       schema["_id"] = { type: "string" }
       schema["_rev"] = { type: "string " }
@@ -177,7 +193,7 @@ export const getContextBindings = (rootComponent, componentId) => {
 /**
  * Gets a schema for a datasource object.
  */
-export const getSchemaForDatasource = datasource => {
+export const getSchemaForDatasource = (datasource, isForm = false) => {
   let schema, table
   if (datasource) {
     const { type } = datasource
@@ -191,12 +207,44 @@ export const getSchemaForDatasource = datasource => {
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+      } else if (type === "query" && isForm) {
+        schema = {}
+        const params = table.parameters || []
+        params.forEach(param => {
+          schema[param.name] = { ...param, type: "string" }
+        })
       } else {
         schema = cloneDeep(table.schema)
       }
     }
   }
   return { schema, table }
+}
+
+/**
+ * Builds a form schema given a form component.
+ * A form schema is a schema of all the fields nested anywhere within a form.
+ */
+const buildFormSchema = component => {
+  let schema = {}
+  if (!component) {
+    return schema
+  }
+  const def = store.actions.components.getDefinition(component._component)
+  const fieldSetting = def?.settings?.find(
+    setting => setting.key === "field" && setting.type.startsWith("field/")
+  )
+  if (fieldSetting && component.field) {
+    const type = fieldSetting.type.split("field/")[1]
+    if (type) {
+      schema[component.field] = { name: component.field, type }
+    }
+  }
+  component._children?.forEach(child => {
+    const childSchema = buildFormSchema(child)
+    schema = { ...schema, ...childSchema }
+  })
+  return schema
 }
 
 /**

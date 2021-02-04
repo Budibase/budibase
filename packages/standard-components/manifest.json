@@ -1282,7 +1282,7 @@
     "styleable": true,
     "settings": [
       {
-        "type": "field/relationship",
+        "type": "field/link",
         "label": "Field",
         "key": "field"
       },
