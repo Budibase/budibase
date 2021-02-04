@@ -20,13 +20,12 @@
   let exportFormat = FORMATS[0].key
 
   async function exportView() {
-    const response = await api.post(
-      `/api/views/export?format=${exportFormat}`,
-      view
+    download(
+      `/api/views/export?view=${encodeURIComponent(
+        view.name
+      )}&format=${exportFormat}`
     )
-    const downloadInfo = await response.json()
     onClosed()
-    window.location = downloadInfo.url
   }
 </script>
 
