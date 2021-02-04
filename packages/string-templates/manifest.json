@@ -1097,8 +1097,17 @@
         "format"
       ],
       "numArgs": 2,
-      "example": "{{date now \"DD-MM-YYYY\"}}",
+      "example": "{{date now \"DD-MM-YYYY\"}} -> 21-01-2021",
       "description": "<p>Format a date using moment.js date formatting.</p>\n"
+    },
+    "duration": {
+      "args": [
+        "time",
+        "durationType"
+      ],
+      "numArgs": 2,
+      "example": "{{duration timeLeft \"seconds\"}} -> a few seconds",
+      "description": "<p>Produce a humanized duration left/until given an amount of time and the type of time measurement.</p>\n"
     }
   }
 }
