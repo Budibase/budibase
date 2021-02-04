@@ -123,7 +123,7 @@ export const getContextBindings = (rootComponent, componentId) => {
       // Add _id and _rev fields for certain types
       if (datasource.type === "table" || datasource.type === "link") {
         schema["_id"] = { type: "string" }
-        schema["_rev"] = { type: "string " }
+        schema["_rev"] = { type: "string" }
       }
     }
     if (!schema || !tableName) {
