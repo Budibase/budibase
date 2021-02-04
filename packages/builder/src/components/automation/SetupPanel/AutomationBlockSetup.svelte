@@ -62,13 +62,13 @@
         {/each}
       </Select>
     {:else if value.customType === 'password'}
-      <Input type="password" extraThin bind:value={block.inputs[key]}/>
+      <Input type="password" extraThin bind:value={block.inputs[key]} />
     {:else if value.customType === 'email'}
       <BindableInput
-        type={"email"}
+        type={'email'}
         extraThin
         bind:value={block.inputs[key]}
-      {bindings} />
+        {bindings} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
     {:else if value.customType === 'row'}
@@ -82,7 +82,7 @@
         type={value.customType}
         extraThin
         bind:value={block.inputs[key]}
-      {bindings} />
+        {bindings} />
     {/if}
   </div>
 {/each}
