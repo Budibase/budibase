@@ -13,7 +13,10 @@
 
   onMount(() => {
     const interval = setInterval(() => {
-      $store.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
+      store.update(state => {
+        state.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
+        return state
+      })
     }, FIVE_MINUTES)
     return () => clearInterval(interval)
   })
