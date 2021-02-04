@@ -14,9 +14,10 @@
   async function exportApp() {
     appExportLoading = true
     try {
-      download(`/api/backups/export?appId=${_id}`)
+      download(`/api/backups/export?appId=${_id}&appname=${name}`)
       notifier.success("App Export Complete.")
     } catch (err) {
+      console.error(err)
       notifier.danger("App Export Failed.")
     } finally {
       appExportLoading = false
