@@ -416,7 +416,14 @@ export const getFrontendStore = () => {
           if (cut) {
             state.componentToPaste = null
           } else {
-            componentToPaste._id = uuid()
+            const randomizeIds = component => {
+              if (!component) {
+                return
+              }
+              component._id = uuid()
+              component.children?.forEach(randomizeIds)
+            }
+            randomizeIds(componentToPaste)
           }
 
           if (mode === "inside") {
