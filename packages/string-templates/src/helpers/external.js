@@ -1,5 +1,5 @@
 const helpers = require("@budibase/handlebars-helpers")
-const dateHelper = require("./date")
+const { date, duration } = require("./date")
 const { HelperFunctionBuiltin } = require("./constants")
 
 /**
@@ -18,10 +18,15 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
   "regex",
 ]
 
-const DATE_NAME = "date"
+const ADDED_HELPERS = {
+  "date": date,
+  "duration": duration,
+}
 
 exports.registerAll = handlebars => {
-  handlebars.registerHelper(DATE_NAME, dateHelper)
+  for (let [name, helper] of Object.entries(ADDED_HELPERS)) {
+    handlebars.registerHelper(name, helper)
+  }
   let externalNames = []
   for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     // collect information about helper
@@ -43,12 +48,13 @@ exports.registerAll = handlebars => {
     })
   }
   // add date external functionality
-  externalNames.push(DATE_NAME)
-  exports.externalHelperNames = externalNames
+  exports.externalHelperNames = externalNames.concat(Object.keys(ADDED_HELPERS))
 }
 
 exports.unregisterAll = handlebars => {
-  handlebars.unregisterHelper(DATE_NAME)
+  for (let name of Object.keys(ADDED_HELPERS)) {
+    handlebars.unregisterHelper(name)
+  }
   for (let name of module.exports.externalHelperNames) {
     handlebars.unregisterHelper(name)
   }

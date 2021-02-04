@@ -1,4 +1,7 @@
 const dayjs = require("dayjs")
+dayjs.extend(require("dayjs/plugin/duration"))
+dayjs.extend(require("dayjs/plugin/advancedFormat"))
+dayjs.extend(require("dayjs/plugin/relativeTime"))
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -50,7 +53,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-module.exports = function dateHelper(str, pattern, options) {
+function initialSteps(str, pattern, options) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -61,6 +64,21 @@ module.exports = function dateHelper(str, pattern, options) {
     pattern = null
     str = null
   }
+  return {str, pattern, options}
+}
+
+function setLocale(str, pattern, options) {
+  // if options is null then it'll get updated here
+  ({str, pattern, options} = initialSteps(str, pattern, options))
+  const defaults = { lang: "en", date: new Date(str) }
+  const opts = getContext(this, defaults, options)
+
+  // set the language to use
+  dayjs.locale(opts.lang || opts.language)
+}
+
+module.exports.date = (str, pattern, options) => {
+  ({str, pattern, options} = initialSteps(str, pattern, options))
 
   // if no args are passed, return a formatted date
   if (str == null && pattern == null) {
@@ -68,11 +86,20 @@ module.exports = function dateHelper(str, pattern, options) {
     return dayjs().format("MMMM DD, YYYY")
   }
 
-  const defaults = { lang: "en", date: new Date(str) }
-  const opts = getContext(this, defaults, options)
-
-  // set the language to use
-  dayjs.locale(opts.lang || opts.language)
+  setLocale(str, pattern, options)
 
   return dayjs(new Date(str)).format(pattern)
+}
+
+module.exports.duration = (str, pattern, format) => {
+  ({str, pattern} = initialSteps(str, pattern))
+
+  setLocale(str, pattern)
+
+  const duration = dayjs.duration(str, pattern)
+  if (!isOptions(format)) {
+    return duration.format(format)
+  } else {
+    return duration.humanize()
+  }
 }
