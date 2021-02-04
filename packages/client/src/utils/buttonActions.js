@@ -17,19 +17,10 @@ const saveRowHandler = async (action, context) => {
   }
 }
 
-const deleteRowHandler = async (action, context) => {
+const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
-    const [enrichTable, enrichRow, enrichRev] = await Promise.all([
-      enrichDataBinding(tableId, context),
-      enrichDataBinding(rowId, context),
-      enrichDataBinding(revId, context),
-    ])
-    await deleteRow({
-      tableId: enrichTable,
-      rowId: enrichRow,
-      revId: enrichRev,
-    })
+    await deleteRow({ tableId, rowId, revId })
   }
 }
 

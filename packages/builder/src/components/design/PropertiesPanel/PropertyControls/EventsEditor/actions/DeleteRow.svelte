@@ -15,8 +15,9 @@
   )
   $: {
     // Automatically set rev and table ID based on row ID
-    if (parameters.rowId) {
-      parameters.revId = parameters.rowId.replace("_id", "_rev")
+    if (parameters.providerId) {
+      parameters.rowId = `{{ ${parameters.providerId}._id }}`
+      parameters.revId = `{{ ${parameters.providerId}._rev }}`
       const providerComponent = dataProviderComponents.find(
         provider => provider._id === parameters.providerId
       )
@@ -37,12 +38,10 @@
     </div>
   {:else}
     <Label size="m" color="dark">Datasource</Label>
-    <Select secondary bind:value={parameters.rowId}>
+    <Select secondary bind:value={parameters.providerId}>
       <option value="" />
       {#each dataProviderComponents as provider}
-        <option value={`{{ ${provider._id}._id }}`}>
-          {provider._instanceName}
-        </option>
+        <option value={provider._id}>{provider._instanceName}</option>
       {/each}
     </Select>
   {/if}
