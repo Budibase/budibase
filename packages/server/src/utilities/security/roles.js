@@ -66,14 +66,23 @@ exports.getRole = async (appId, roleId) => {
   if (!roleId) {
     return null
   }
-  let role
+  let role = {}
+  // built in roles mostly come from the in-code implementation,
+  // but can be extended by a doc stored about them (e.g. permissions)
   if (isBuiltin(roleId)) {
     role = cloneDeep(
       Object.values(exports.BUILTIN_ROLES).find(role => role._id === roleId)
     )
-  } else {
+  }
+  try {
     const db = new CouchDB(appId)
-    role = await db.get(roleId)
+    const dbRole = await db.get(roleId)
+    role = Object.assign(role, dbRole)
+  } catch (err) {
+    // only throw an error if there is no role at all
+    if (Object.keys(role).length === 0) {
+      throw err
+    }
   }
   return role
 }

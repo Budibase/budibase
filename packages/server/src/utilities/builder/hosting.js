@@ -23,6 +23,7 @@ exports.HostingTypes = {
 }
 
 exports.getHostingInfo = async () => {
+  console.trace("DID A GET!")
   const db = new CouchDB(BUILDER_CONFIG_DB)
   let doc
   try {
