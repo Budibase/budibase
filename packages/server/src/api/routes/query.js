@@ -11,13 +11,6 @@ const joiValidator = require("../../middleware/joi-validator")
 
 const router = Router()
 
-const QueryVerb = {
-  Create: "create",
-  Read: "read",
-  Update: "update",
-  Delete: "delete",
-}
-
 function generateQueryValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -31,7 +24,7 @@ function generateQueryValidation() {
       name: Joi.string(),
       default: Joi.string()
     })),
-    queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
+    queryVerb: Joi.string().allow().required(),
     schema: Joi.object({}).required().unknown(true)
   }))
 }
@@ -40,7 +33,7 @@ function generateQueryPreviewValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     fields: Joi.object().required(),
-    queryVerb: Joi.string().allow(...Object.values(QueryVerb)).required(),
+    queryVerb: Joi.string().allow().required(),
     datasourceId: Joi.string().required(),
     parameters: Joi.object({}).required().unknown(true)
   }))
@@ -59,6 +52,11 @@ router
     authorized(BUILDER),
     generateQueryPreviewValidation(),
     queryController.preview
+  )
+  .get(
+    "/api/queries/:queryId",
+    authorized(PermissionTypes.QUERY, PermissionLevels.READ),
+    queryController.find
   )
   .post(
     "/api/queries/:queryId",
