@@ -43,3 +43,4 @@ exports.AuthTypes = AuthTypes
 exports.USERS_TABLE_SCHEMA = USERS_TABLE_SCHEMA
 exports.BUILDER_CONFIG_DB = "builder-config-db"
 exports.HOSTING_DOC = "hosting-doc"
+exports.OBJ_STORE_DIRECTORY = "/app-assets/assets"

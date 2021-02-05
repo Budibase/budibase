@@ -2,7 +2,11 @@ const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
-const { removeNull, addConstants } = require("./utilities")
+const {
+  removeNull,
+  addConstants,
+  removeHandlebarsStatements,
+} = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
@@ -83,16 +87,27 @@ module.exports.processObjectSync = (object, context) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context) => {
+  if (!exports.isValid(string)) {
+    return string
+  }
+  // take a copy of input incase error
+  const input = string
   let clonedContext = removeNull(cloneDeep(context))
   clonedContext = addConstants(clonedContext)
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  string = processors.preprocess(string)
-  // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-  const template = hbsInstance.compile(string)
-  return processors.postprocess(template(clonedContext))
+  try {
+    string = processors.preprocess(string)
+    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
+    const template = hbsInstance.compile(string, {
+      strict: false,
+    })
+    return processors.postprocess(template(clonedContext))
+  } catch (err) {
+    return removeHandlebarsStatements(input)
+  }
 }
 
 /**
@@ -110,17 +125,33 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = string => {
-  const specialCases = ["isNumber", "expected a number"]
+  const validCases = [
+    "string",
+    "number",
+    "object",
+    "array",
+    "cannot read property",
+  ]
+  // this is a portion of a specific string always output by handlebars in the case of a syntax error
+  const invalidCases = [`expecting '`]
   // don't really need a real context to check if its valid
   const context = {}
   try {
     hbsInstance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
-    const msg = err ? err.message : ""
-    const foundCase = specialCases.find(spCase => msg.includes(spCase))
+    const msg = err && err.message ? err.message : err
+    if (!msg) {
+      return false
+    }
+    const invalidCase = invalidCases.some(invalidCase =>
+      msg.toLowerCase().includes(invalidCase)
+    )
+    const validCase = validCases.some(validCase =>
+      msg.toLowerCase().includes(validCase)
+    )
     // special case for maths functions - don't have inputs yet
-    return !!foundCase
+    return validCase && !invalidCase
   }
 }
 

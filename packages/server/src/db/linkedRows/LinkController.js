@@ -252,7 +252,11 @@ class LinkController {
           tableId: table._id,
           fieldName: fieldName,
         }
-        await this._db.put(linkedTable)
+        const response = await this._db.put(linkedTable)
+        // special case for when linking back to self, make sure rev updated
+        if (linkedTable._id === table._id) {
+          table._rev = response.rev
+        }
       }
     }
     return table

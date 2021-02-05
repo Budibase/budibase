@@ -83,6 +83,7 @@
               <div class="binding__description">
                 {@html helper.description || ''}
               </div>
+              <pre>{helper.example || ''}</pre>
             </div>
           {/each}
         </div>
@@ -166,7 +167,13 @@
   .binding__description {
     color: var(--grey-8);
     margin-top: 2px;
+    white-space: normal;
   }
+
+  pre {
+    white-space: normal;
+  }
+
   .binding__type {
     font-family: monospace;
     background-color: var(--grey-2);

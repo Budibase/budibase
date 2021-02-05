@@ -36,7 +36,7 @@
     return [...acc, ...viewsArr]
   }, [])
   $: queries = $backendUiStore.queries
-    .filter(query => query.queryVerb === "read")
+    .filter(query => query.queryVerb === "read" || query.readable)
     .map(query => ({
       label: query.name,
       name: query.name,
