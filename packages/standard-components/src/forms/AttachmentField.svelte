@@ -1,5 +1,5 @@
 <script>
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
   import Dropzone from "../attachments/Dropzone.svelte"
   import { onMount } from "svelte"
 
@@ -21,8 +21,14 @@
   })
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi defaultValue={[]}>
+<Field
+  {label}
+  {field}
+  type="attachment"
+  bind:fieldState
+  bind:fieldApi
+  defaultValue={[]}>
   {#if mounted}
     <Dropzone bind:files={value} />
   {/if}
-</SpectrumField>
+</Field>

@@ -1,5 +1,5 @@
 <script>
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
   import Picker from "./Picker.svelte"
 
   export let field
@@ -23,7 +23,13 @@
   }
 </script>
 
-<SpectrumField {field} {label} bind:fieldState bind:fieldApi bind:fieldSchema>
+<Field
+  {field}
+  {label}
+  type="options"
+  bind:fieldState
+  bind:fieldApi
+  bind:fieldSchema>
   {#if fieldState}
     <Picker
       bind:open
@@ -35,4 +41,4 @@
       isOptionSelected={option => option === $fieldState.value}
       onSelectOption={selectOption} />
   {/if}
-</SpectrumField>
+</Field>

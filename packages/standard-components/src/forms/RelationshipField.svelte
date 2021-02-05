@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
   import Picker from "./Picker.svelte"
 
   const { API } = getContext("sdk")
@@ -62,9 +62,10 @@
   }
 </script>
 
-<SpectrumField
+<Field
   {label}
   {field}
+  type="link"
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
@@ -77,4 +78,4 @@
     onSelectOption={toggleOption}
     getOptionLabel={getDisplayName}
     getOptionValue={option => option._id} />
-</SpectrumField>
+</Field>
