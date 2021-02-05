@@ -35,7 +35,7 @@ const createScreen = table => {
   const form = makeMainForm()
     .instanceName("Form")
     .customProps({
-      theme: "spectrum--light",
+      theme: "spectrum--lightest",
       size: "spectrum--medium",
       datasource: {
         label: table.name,

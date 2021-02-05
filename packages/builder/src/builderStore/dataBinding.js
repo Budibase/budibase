@@ -69,8 +69,9 @@ export const getDatasourceForProvider = component => {
   }
 
   // Extract datasource from component instance
+  const validSettingTypes = ["datasource", "table", "schema"]
   const datasourceSetting = def.settings.find(setting => {
-    return setting.type === "datasource" || setting.type === "table"
+    return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
     return null
@@ -80,15 +81,14 @@ export const getDatasourceForProvider = component => {
   // example an actual datasource object, or a table ID string.
   // Convert the datasource setting into a proper datasource object so that
   // we can use it properly
-  if (datasourceSetting.type === "datasource") {
-    return component[datasourceSetting?.key]
-  } else if (datasourceSetting.type === "table") {
+  if (datasourceSetting.type === "table") {
     return {
       tableId: component[datasourceSetting?.key],
       type: "table",
     }
+  } else {
+    return component[datasourceSetting?.key]
   }
-  return null
 }
 
 /**
@@ -99,21 +99,37 @@ export const getContextBindings = (rootComponent, componentId) => {
   // Extract any components which provide data contexts
   const dataProviders = getDataProviderComponents(rootComponent, componentId)
   let contextBindings = []
+
+  // Create bindings for each data provider
   dataProviders.forEach(component => {
+    const isForm = component._component.endsWith("/form")
     const datasource = getDatasourceForProvider(component)
-    if (!datasource) {
+    let tableName, schema
+
+    // Forms are an edge case which do not need table schemas
+    if (isForm) {
+      schema = buildFormSchema(component)
+      tableName = "Schema"
+    } else {
+      if (!datasource) {
+        return
+      }
+
+      // Get schema and table for the datasource
+      const info = getSchemaForDatasource(datasource, isForm)
+      schema = info.schema
+      tableName = info.table?.name
+
+      // Add _id and _rev fields for certain types
+      if (datasource.type === "table" || datasource.type === "link") {
+        schema["_id"] = { type: "string" }
+        schema["_rev"] = { type: "string" }
+      }
+    }
+    if (!schema || !tableName) {
       return
     }
 
-    // Get schema and add _id and _rev fields for certain types
-    let { schema, table } = getSchemaForDatasource(datasource)
-    if (!schema || !table) {
-      return
-    }
-    if (datasource.type === "table" || datasource.type === "link") {
-      schema["_id"] = { type: "string" }
-      schema["_rev"] = { type: "string " }
-    }
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
@@ -132,11 +148,13 @@ export const getContextBindings = (rootComponent, componentId) => {
         runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
           runtimeBoundKey
         )}`,
-        readableBinding: `${component._instanceName}.${table.name}.${key}`,
+        readableBinding: `${component._instanceName}.${tableName}.${key}`,
+        // Field schema and provider are required to construct relationship
+        // datasource options, based on bindable properties
         fieldSchema,
         providerId: component._id,
-        tableId: datasource.tableId,
-        field: key,
+        // tableId: table._id,
+        // field: key,
       })
     })
   })
@@ -164,10 +182,12 @@ export const getContextBindings = (rootComponent, componentId) => {
       type: "context",
       runtimeBinding: `user.${runtimeBoundKey}`,
       readableBinding: `Current User.${key}`,
+      // Field schema and provider are required to construct relationship
+      // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
-      tableId: TableNames.USERS,
-      field: key,
+      // tableId: TableNames.USERS,
+      // field: key,
     })
   })
 
@@ -177,7 +197,7 @@ export const getContextBindings = (rootComponent, componentId) => {
 /**
  * Gets a schema for a datasource object.
  */
-export const getSchemaForDatasource = datasource => {
+export const getSchemaForDatasource = (datasource, isForm = false) => {
   let schema, table
   if (datasource) {
     const { type } = datasource
@@ -191,12 +211,44 @@ export const getSchemaForDatasource = datasource => {
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+      } else if (type === "query" && isForm) {
+        schema = {}
+        const params = table.parameters || []
+        params.forEach(param => {
+          schema[param.name] = { ...param, type: "string" }
+        })
       } else {
         schema = cloneDeep(table.schema)
       }
     }
   }
   return { schema, table }
+}
+
+/**
+ * Builds a form schema given a form component.
+ * A form schema is a schema of all the fields nested anywhere within a form.
+ */
+const buildFormSchema = component => {
+  let schema = {}
+  if (!component) {
+    return schema
+  }
+  const def = store.actions.components.getDefinition(component._component)
+  const fieldSetting = def?.settings?.find(
+    setting => setting.key === "field" && setting.type.startsWith("field/")
+  )
+  if (fieldSetting && component.field) {
+    const type = fieldSetting.type.split("field/")[1]
+    if (type) {
+      schema[component.field] = { name: component.field, type }
+    }
+  }
+  component._children?.forEach(child => {
+    const childSchema = buildFormSchema(child)
+    schema = { ...schema, ...childSchema }
+  })
+  return schema
 }
 
 /**

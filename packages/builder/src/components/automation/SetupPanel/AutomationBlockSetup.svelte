@@ -64,7 +64,11 @@
     {:else if value.customType === 'password'}
       <Input type="password" extraThin bind:value={block.inputs[key]} />
     {:else if value.customType === 'email'}
-      <Input type="email" extraThin bind:value={block.inputs[key]} />
+      <BindableInput
+        type={'email'}
+        extraThin
+        bind:value={block.inputs[key]}
+        {bindings} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
     {:else if value.customType === 'row'}
@@ -75,7 +79,7 @@
       <SchemaSetup bind:value={block.inputs[key]} />
     {:else if value.type === 'string' || value.type === 'number'}
       <BindableInput
-        type="string"
+        type={value.customType}
         extraThin
         bind:value={block.inputs[key]}
         {bindings} />

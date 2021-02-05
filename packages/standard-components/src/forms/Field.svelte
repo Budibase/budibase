@@ -9,6 +9,7 @@
   export let fieldApi
   export let fieldSchema
   export let defaultValue
+  export let type
 
   // Get contexts
   const formContext = getContext("form")
@@ -44,6 +45,10 @@
       {:else if !fieldState}
         <Placeholder>
           Add the Field setting to start using your component
+        </Placeholder>
+      {:else if fieldSchema?.type && fieldSchema?.type !== type}
+        <Placeholder>
+          This Field setting is the wrong data type for this component
         </Placeholder>
       {:else}
         <slot />

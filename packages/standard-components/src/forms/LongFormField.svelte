@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { RichText } from "@budibase/bbui"
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
 
   export let field
   export let label
@@ -38,13 +38,19 @@
   }
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi defaultValue="">
+<Field
+  {label}
+  {field}
+  type="longform"
+  bind:fieldState
+  bind:fieldApi
+  defaultValue="">
   {#if mounted}
     <div>
       <RichText bind:value {options} />
     </div>
   {/if}
-</SpectrumField>
+</Field>
 
 <style>
   div {
