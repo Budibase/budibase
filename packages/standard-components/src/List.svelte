@@ -2,7 +2,9 @@
   import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
-  const { API, styleable, Provider, builderStore } = getContext("sdk")
+  const { API, styleable, Provider, builderStore, ActionTypes } = getContext(
+    "sdk"
+  )
   const component = getContext("component")
 
   export let datasource = []
@@ -18,25 +20,34 @@
     }
     loaded = true
   }
+
+  $: actions = [
+    {
+      type: ActionTypes.RefreshDatasource,
+      callback: () => fetchData(datasource),
+    },
+  ]
 </script>
 
-{#if rows.length > 0}
-  <div use:styleable={$component.styles}>
-    {#if $component.children === 0 && $builderStore.inBuilder}
-      <p>Add some components too</p>
-    {:else}
-      {#each rows as row}
-        <Provider data={row}>
-          <slot />
-        </Provider>
-      {/each}
-    {/if}
-  </div>
-{:else if loaded && $builderStore.inBuilder}
-  <div use:styleable={$component.styles}>
-    <p>Feed me some data</p>
-  </div>
-{/if}
+<Provider {actions}>
+  {#if rows.length > 0}
+    <div use:styleable={$component.styles}>
+      {#if $component.children === 0 && $builderStore.inBuilder}
+        <p>Add some components too</p>
+      {:else}
+        {#each rows as row}
+          <Provider data={row}>
+            <slot />
+          </Provider>
+        {/each}
+      {/if}
+    </div>
+  {:else if loaded && $builderStore.inBuilder}
+    <div use:styleable={$component.styles}>
+      <p>Feed me some data</p>
+    </div>
+  {/if}
+</Provider>
 
 <style>
   p {
