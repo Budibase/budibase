@@ -26,6 +26,7 @@ function generateQueryValidation() {
     name: Joi.string().required(),
     fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
+    readable: Joi.boolean(),
     parameters: Joi.array().items(Joi.object({
       name: Joi.string(),
       default: Joi.string()

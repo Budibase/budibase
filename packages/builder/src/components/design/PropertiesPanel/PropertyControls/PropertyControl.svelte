@@ -21,6 +21,7 @@
   let bindingDrawer
   let temporaryBindableValue = value
   let anchor
+  let valid
 
   $: bindableProperties = getBindableProperties(
     $currentAsset.props,
@@ -79,7 +80,7 @@
       class="icon"
       data-cy={`${key}-binding-button`}
       on:click={bindingDrawer.show}>
-      <Icon name="edit" />
+      <Icon name="lightning" />
     </div>
   {/if}
 </div>
@@ -90,10 +91,11 @@
     </Body>
   </div>
   <heading slot="buttons">
-    <Button thin blue on:click={handleClose}>Save</Button>
+    <Button thin blue disabled={!valid} on:click={handleClose}>Save</Button>
   </heading>
   <div slot="body">
     <BindingPanel
+      bind:valid
       value={safeValue}
       close={handleClose}
       on:update={e => (temporaryBindableValue = e.detail)}
@@ -142,7 +144,7 @@
     border-top-right-radius: var(--border-radius-m);
     border-bottom-right-radius: var(--border-radius-m);
     color: var(--grey-7);
-    font-size: 16px;
+    font-size: 14px;
   }
   .icon:hover {
     color: var(--ink);

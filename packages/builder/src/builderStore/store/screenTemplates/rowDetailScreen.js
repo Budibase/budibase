@@ -2,6 +2,7 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { rowListUrl } from "./rowListScreen"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
+import { makePropSafe } from "@budibase/string-templates"
 import {
   makeMainContainer,
   makeBreadcrumbContainer,
@@ -12,7 +13,7 @@ import {
 export default function(tables) {
   return tables.map(table => {
     const heading = table.primaryDisplay
-      ? `{{ data.${table.primaryDisplay} }}`
+      ? `{{ data.${makePropSafe(table.primaryDisplay)} }}`
       : null
     return {
       name: `${table.name} - Detail`,
@@ -60,8 +61,8 @@ function generateTitleContainer(table, title, providerId) {
       onClick: [
         {
           parameters: {
-            rowId: `{{ ${providerId}._id }}`,
-            revId: `{{ ${providerId}._rev }}`,
+            rowId: `{{ ${makePropSafe(providerId)}._id }}`,
+            revId: `{{ ${makePropSafe(providerId)}._rev }}`,
             tableId: table._id,
           },
           "##eventHandlerType": "Delete Row",

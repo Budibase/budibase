@@ -31,11 +31,14 @@ exports.createLinkView = async appId => {
           thisId: doc1.rowId,
           fieldName: doc1.fieldName,
         })
-        emit([doc2.tableId, doc2.rowId], {
-          id: doc1.rowId,
-          thisId: doc2.rowId,
-          fieldName: doc2.fieldName,
-        })
+        // if linking to same table can't emit twice
+        if (doc1.tableId !== doc2.tableId) {
+          emit([doc2.tableId, doc2.rowId], {
+            id: doc1.rowId,
+            thisId: doc2.rowId,
+            fieldName: doc2.fieldName,
+          })
+        }
       }
     }.toString(),
   }
@@ -81,6 +84,13 @@ exports.getLinkDocuments = async function({
     // filter to get unique entries
     const foundIds = []
     linkRows = linkRows.filter(link => {
+      // make sure anything unique is the correct key
+      if (
+        (tableId && link.key[0] !== tableId) ||
+        (rowId && link.key[1] !== rowId)
+      ) {
+        return false
+      }
       const unique = foundIds.indexOf(link.id) === -1
       if (unique) {
         foundIds.push(link.id)

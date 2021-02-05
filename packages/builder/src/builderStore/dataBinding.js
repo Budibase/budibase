@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
+import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
@@ -106,7 +107,9 @@ export const getContextBindings = (rootComponent, componentId) => {
 
       contextBindings.push({
         type: "context",
-        runtimeBinding: `${component._id}.${runtimeBoundKey}`,
+        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
+          runtimeBoundKey
+        )}`,
         readableBinding: `${component._instanceName}.${table.name}.${key}`,
         fieldSchema,
         providerId: component._id,
@@ -167,7 +170,7 @@ export const getComponentBindings = rootComponent => {
     return {
       type: "instance",
       providerId: component._id,
-      runtimeBinding: `${component._id}`,
+      runtimeBinding: `${makePropSafe(component._id)}`,
       readableBinding: `${component._instanceName}`,
     }
   })
@@ -199,43 +202,52 @@ export const getSchemaForDatasource = datasource => {
 }
 
 /**
- * Converts a readable data binding into a runtime data binding
+ * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
-export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
+  const convertFrom =
+    convertTo === "runtimeBinding" ? "readableBinding" : "runtimeBinding"
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
+  const convertFromProps = bindableProperties
+    .map(el => el[convertFrom])
+    .sort((a, b) => {
+      return b.length - a.length
+    })
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
   let result = textWithBindings
-  boundValues.forEach(boundValue => {
-    const binding = bindableProperties.find(({ readableBinding }) => {
-      return boundValue === `{{ ${readableBinding} }}`
-    })
-    if (binding) {
-      result = result.replace(boundValue, `{{ ${binding.runtimeBinding} }}`)
+  for (let boundValue of boundValues) {
+    let newBoundValue = boundValue
+    for (let from of convertFromProps) {
+      if (newBoundValue.includes(from)) {
+        const binding = bindableProperties.find(el => el[convertFrom] === from)
+        newBoundValue = newBoundValue.replace(from, binding[convertTo])
+      }
     }
-  })
+    result = result.replace(boundValue, newBoundValue)
+  }
   return result
+}
+
+/**
+ * Converts a readable data binding into a runtime data binding
+ */
+export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+  return bindingReplacement(
+    bindableProperties,
+    textWithBindings,
+    "runtimeBinding"
+  )
 }
 
 /**
  * Converts a runtime data binding into a readable data binding
  */
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
-  if (typeof textWithBindings !== "string") {
-    return textWithBindings
-  }
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
-  let result = textWithBindings
-  boundValues.forEach(boundValue => {
-    const binding = bindableProperties.find(({ runtimeBinding }) => {
-      return boundValue === `{{ ${runtimeBinding} }}`
-    })
-    // Show invalid bindings as invalid rather than a long ID
-    result = result.replace(
-      boundValue,
-      `{{ ${binding?.readableBinding ?? "Invalid binding"} }}`
-    )
-  })
-  return result
+  return bindingReplacement(
+    bindableProperties,
+    textWithBindings,
+    "readableBinding"
+  )
 }

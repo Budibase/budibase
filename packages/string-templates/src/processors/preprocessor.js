@@ -1,9 +1,11 @@
 const { HelperNames } = require("../helpers")
 const { swapStrings, isAlphaNumeric } = require("../utilities")
 
+const FUNCTION_CASES = ["#", "else", "/"]
+
 const PreprocessorNames = {
   SWAP_TO_DOT: "swap-to-dot-notation",
-  HANDLE_SPACES: "handle-spaces-in-properties",
+  FIX_FUNCTIONS: "fix-functions",
   FINALISE: "finalise",
 }
 
@@ -37,42 +39,16 @@ module.exports.processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.HANDLE_SPACES, statement => {
-    // exclude helpers and brackets, regex will only find double brackets
-    const exclusions = HelperNames()
-    // find all the parts split by spaces
-    const splitBySpaces = statement
-      .split(" ")
-      .filter(el => el !== "{{" && el !== "}}")
-    // remove braces if they are found and weren't spaced out
-    splitBySpaces[0] = splitBySpaces[0].replace("{", "")
-    splitBySpaces[splitBySpaces.length - 1] = splitBySpaces[
-      splitBySpaces.length - 1
-    ].replace("}", "")
-    // remove the excluded elements
-    const propertyParts = splitBySpaces.filter(
-      part => exclusions.indexOf(part) === -1
-    )
-    // rebuild to get the full property
-    const fullProperty = propertyParts.join(" ")
-    // now work out the dot notation layers and split them up
-    const propertyLayers = fullProperty.split(".")
-    // find the layers which need to be wrapped and wrap them
-    for (let layer of propertyLayers) {
-      if (layer.indexOf(" ") !== -1) {
-        statement = swapStrings(
-          statement,
-          statement.indexOf(layer),
-          layer.length,
-          `[${layer}]`
-        )
-      }
+  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, statement => {
+    for (let specialCase of FUNCTION_CASES) {
+      const toFind = `{ ${specialCase}`,
+        replacement = `{${specialCase}`
+      statement = statement.replace(new RegExp(toFind, "g"), replacement)
     }
-    // remove the edge case of double brackets being entered (in-case user already has specified)
-    return statement.replace(/\[\[/g, "[").replace(/]]/g, "]")
+    return statement
   }),
 
-  new Preprocessor(Preprocessor.FINALISE, statement => {
+  new Preprocessor(PreprocessorNames.FINALISE, statement => {
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
       insideStatement = insideStatement.slice(1)
@@ -81,9 +57,17 @@ module.exports.processors = [
       insideStatement = insideStatement.slice(0, insideStatement.length - 1)
     }
     const possibleHelper = insideStatement.split(" ")[0]
-    if (HelperNames().some(option => possibleHelper === option)) {
+    // function helpers can't be wrapped
+    for (let specialCase of FUNCTION_CASES) {
+      if (possibleHelper.includes(specialCase)) {
+        return statement
+      }
+    }
+    if (HelperNames().some(option => option.includes(possibleHelper))) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`
   }),
 ]
+
+module.exports.PreprocessorNames = PreprocessorNames
