@@ -59,6 +59,7 @@ function generateTitleContainer(table, title, formId) {
       onClick: [
         {
           parameters: {
+            providerId: formId,
             rowId: `{{ ${makePropSafe(formId)}._id }}`,
             revId: `{{ ${makePropSafe(formId)}._rev }}`,
             tableId: table._id,
