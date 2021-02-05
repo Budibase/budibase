@@ -3,6 +3,7 @@ export { notificationStore } from "./notification"
 export { routeStore } from "./routes"
 export { screenStore } from "./screens"
 export { builderStore } from "./builder"
+export { datasourceStore } from "./datasource"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

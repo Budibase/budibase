@@ -4,28 +4,28 @@ export const createContextStore = existingContext => {
   const store = writable({ ...existingContext })
 
   // Adds a data context layer to the tree
-  const provideData = (key, data) => {
-    if (!key) {
+  const provideData = (providerId, data) => {
+    if (!providerId) {
       return
     }
     store.update(state => {
-      state[key] = data
+      state[providerId] = data
 
       // Keep track of the closest component ID so we can later hydrate a "data" prop.
       // This is only required for legacy bindings that used "data" rather than a
       // component ID.
-      state.closestComponentId = key
+      state.closestComponentId = providerId
       return state
     })
   }
 
   // Adds an action context layer to the tree
-  const provideAction = (key, actionType, callback) => {
-    if (!key || !actionType) {
+  const provideAction = (providerId, actionType, callback) => {
+    if (!providerId || !actionType) {
       return
     }
     store.update(state => {
-      state[`${key}_${actionType}`] = callback
+      state[`${providerId}_${actionType}`] = callback
       return state
     })
   }
