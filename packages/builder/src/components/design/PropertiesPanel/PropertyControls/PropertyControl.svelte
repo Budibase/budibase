@@ -138,7 +138,7 @@
     align-items: center;
     display: flex;
     box-sizing: border-box;
-    padding-left: var(--spacing-xs);
+    padding-left: 7px;
     border-left: 1px solid var(--grey-4);
     background-color: var(--grey-2);
     border-top-right-radius: var(--border-radius-m);
