@@ -169,7 +169,11 @@ export function makeTableFormComponents(tableId) {
 
 export function makeQueryFormComponents(queryId) {
   const queries = get(backendUiStore).queries
-  const schema = queries.find(query => query._id === queryId)?.schema ?? []
+  const params = queries.find(query => query._id === queryId)?.parameters ?? []
+  let schema = {}
+  params.forEach(param => {
+    schema[param.name] = { ...param, type: "string" }
+  })
   return makeSchemaFormComponents(schema)
 }
 

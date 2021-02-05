@@ -1,5 +1,4 @@
 import flatpickr from "flatpickr"
-import { isEmpty } from "lodash/fp"
 
 export const createValidatorFromConstraints = (constraints, field, table) => {
   let checks = []
@@ -14,33 +13,33 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     }
 
     // String length constraint
-    if (constraints.length?.maximum) {
+    if (exists(constraints.length?.maximum)) {
       const length = constraints.length.maximum
       checks.push(lengthConstraint(length))
     }
 
     // Min / max number constraint
-    if (!isEmpty(constraints.numericality?.greaterThanOrEqualTo)) {
+    if (exists(constraints.numericality?.greaterThanOrEqualTo)) {
       const min = constraints.numericality.greaterThanOrEqualTo
       checks.push(numericalConstraint(x => x >= min, `Minimum value is ${min}`))
     }
-    if (!isEmpty(constraints.numericality?.lessThanOrEqualTo)) {
+    if (exists(constraints.numericality?.lessThanOrEqualTo)) {
       const max = constraints.numericality.lessThanOrEqualTo
       checks.push(numericalConstraint(x => x <= max, `Maximum value is ${max}`))
     }
 
     // Inclusion constraint
-    if (!isEmpty(constraints.inclusion)) {
+    if (exists(constraints.inclusion)) {
       const options = constraints.inclusion
       checks.push(inclusionConstraint(options))
     }
 
     // Date constraint
-    if (!isEmpty(constraints.datetime?.earliest)) {
+    if (exists(constraints.datetime?.earliest)) {
       const limit = constraints.datetime.earliest
       checks.push(dateConstraint(limit, true))
     }
-    if (!isEmpty(constraints.datetime?.latest)) {
+    if (exists(constraints.datetime?.latest)) {
       const limit = constraints.datetime.latest
       checks.push(dateConstraint(limit, false))
     }
@@ -57,6 +56,8 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     return null
   }
 }
+
+const exists = value => value != null && value !== ""
 
 const presenceConstraint = value => {
   let invalid

@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte"
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
 
   export let field
   export let label
@@ -31,7 +30,12 @@
   }
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi>
+<Field
+  {label}
+  {field}
+  type={type === 'number' ? 'number' : 'string'}
+  bind:fieldState
+  bind:fieldApi>
   {#if fieldState}
     <div class="spectrum-Textfield" class:is-invalid={!$fieldState.valid}>
       {#if !$fieldState.valid}
@@ -53,4 +57,4 @@
         class="spectrum-Textfield-input" />
     </div>
   {/if}
-</SpectrumField>
+</Field>

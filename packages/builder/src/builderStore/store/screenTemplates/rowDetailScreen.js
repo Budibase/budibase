@@ -59,6 +59,7 @@ function generateTitleContainer(table, title, formId) {
       onClick: [
         {
           parameters: {
+            providerId: formId,
             rowId: `{{ ${makePropSafe(formId)}._id }}`,
             revId: `{{ ${makePropSafe(formId)}._rev }}`,
             tableId: table._id,
@@ -90,7 +91,7 @@ const createScreen = table => {
   const form = makeMainForm()
     .instanceName("Form")
     .customProps({
-      theme: "spectrum--light",
+      theme: "spectrum--lightest",
       size: "spectrum--medium",
       datasource: {
         label: table.name,

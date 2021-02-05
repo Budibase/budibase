@@ -21,7 +21,7 @@ export const propsAreSame = (a, b) => {
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
-export const enrichProps = async (props, context, user) => {
+export const enrichProps = async (props, context) => {
   // Exclude all private props that start with an underscore
   let validProps = {}
   Object.entries(props)
@@ -34,7 +34,6 @@ export const enrichProps = async (props, context, user) => {
   // Duplicate the closest context as "data" which the builder requires
   const totalContext = {
     ...context,
-    user,
 
     // This is only required for legacy bindings that used "data" rather than a
     // component ID.

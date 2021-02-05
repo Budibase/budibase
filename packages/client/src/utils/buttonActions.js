@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import { enrichDataBinding, enrichDataBindings } from "./enrichDataBinding"
 import { routeStore, builderStore } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
@@ -10,35 +9,26 @@ const saveRowHandler = async (action, context) => {
     let draft = context[providerId]
     if (fields) {
       for (let [key, entry] of Object.entries(fields)) {
-        draft[key] = await enrichDataBinding(entry.value, context)
+        draft[key] = entry.value
       }
     }
     await saveRow(draft)
   }
 }
 
-const deleteRowHandler = async (action, context) => {
+const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
-    const [enrichTable, enrichRow, enrichRev] = await Promise.all([
-      enrichDataBinding(tableId, context),
-      enrichDataBinding(rowId, context),
-      enrichDataBinding(revId, context),
-    ])
-    await deleteRow({
-      tableId: enrichTable,
-      rowId: enrichRow,
-      revId: enrichRev,
-    })
+    await deleteRow({ tableId, rowId, revId })
   }
 }
 
-const triggerAutomationHandler = async (action, context) => {
-  const { fields } = action.parameters()
+const triggerAutomationHandler = async action => {
+  const { fields } = action.parameters
   if (fields) {
     const params = {}
     for (let field in fields) {
-      params[field] = await enrichDataBinding(fields[field].value, context)
+      params[field] = fields[field].value
     }
     await triggerAutomation(action.parameters.automationId, params)
   }
@@ -60,12 +50,27 @@ const queryExecutionHandler = async action => {
   })
 }
 
-const validateFormHandler = async (action, context) => {
-  const { componentId } = action.parameters
-  const fn = context[`${componentId}_${ActionTypes.ValidateForm}`]
+const executeActionHandler = async (context, componentId, actionType) => {
+  const fn = context[`${componentId}_${actionType}`]
   if (fn) {
     return await fn()
   }
+}
+
+const validateFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ValidateForm
+  )
+}
+
+const refreshDatasourceHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.RefreshDatasource
+  )
 }
 
 const handlerMap = {
@@ -75,6 +80,7 @@ const handlerMap = {
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
+  ["Refresh Datasource"]: refreshDatasourceHandler,
 }
 
 /**

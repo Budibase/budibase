@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte"
   import "@spectrum-css/checkbox/dist/index-vars.css"
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
 
   export let field
   export let label
@@ -15,9 +14,10 @@
   }
 </script>
 
-<SpectrumField
+<Field
   {label}
   {field}
+  type="boolean"
   bind:fieldState
   bind:fieldApi
   defaultValue={false}>
@@ -48,4 +48,4 @@
       </label>
     </div>
   {/if}
-</SpectrumField>
+</Field>
