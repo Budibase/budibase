@@ -4,7 +4,9 @@ const os = require("os")
 const fs = require("fs-extra")
 
 exports.exportAppDump = async function(ctx) {
-  const { appId, appname } = ctx.query
+  const { appId } = ctx.query
+
+  const appname = decodeURI(ctx.query.appname)
 
   const backupsDir = path.join(os.homedir(), ".budibase", "backups")
   fs.ensureDirSync(backupsDir)
