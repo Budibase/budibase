@@ -2,17 +2,23 @@
   import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
+  export let datasource = []
+
   const { API, styleable, Provider, builderStore, ActionTypes } = getContext(
     "sdk"
   )
   const component = getContext("component")
-
-  export let datasource = []
-
   let rows = []
   let loaded = false
 
   $: fetchData(datasource)
+  $: actions = [
+    {
+      type: ActionTypes.RefreshDatasource,
+      callback: () => fetchData(datasource),
+      metadata: { datasource },
+    },
+  ]
 
   async function fetchData(datasource) {
     if (!isEmpty(datasource)) {
@@ -20,13 +26,6 @@
     }
     loaded = true
   }
-
-  $: actions = [
-    {
-      type: ActionTypes.RefreshDatasource,
-      callback: () => fetchData(datasource),
-    },
-  ]
 </script>
 
 <Provider {actions}>
