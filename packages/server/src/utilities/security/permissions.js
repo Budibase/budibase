@@ -7,6 +7,7 @@ const PermissionLevels = {
   ADMIN: "admin",
 }
 
+// these are the global types, that govern the underlying default behaviour
 const PermissionTypes = {
   TABLE: "table",
   USER: "user",
