@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Budibase self hosting️</title>
+  <style>
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+    }
+
+    .main {
+      padding: 0 20px;
+      margin: 30px auto;
+      width: 60%;
+    }
+
+    h2 {
+      font-size: clamp(24px, 1.5vw, 30px);
+      text-align: center;
+      line-height: 1.3;
+      font-weight: bold;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+
+    .card {
+      display: grid;
+      background-color: #222222;
+      grid-template-columns: 1fr;
+      align-items: center;
+      padding: 2.5rem 1.75rem;
+      border-radius: 12px;
+      color: white;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 24px;
+      font-family: sans-serif;
+      font-weight: 600;
+    }
+
+    .card h3 b {
+      text-wrap: normal;
+      font-size: 36px;
+      padding-right: 14px;
+    }
+
+    .card p {
+      color: #ffffff;
+      opacity: 0.8;
+      font-size: 18px;
+      text-align: left;
+      line-height: 1.3;
+      margin-top: 1rem;
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      margin: auto;
+    }
+
+    .top-text {
+      text-align: center;
+      color: #707070;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .button {
+      cursor: pointer;
+      display: block;
+      background: #4285f4;
+      color: white;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 6px;
+      max-width: 120px;
+      text-align: center;
+      transition: 200ms background ease;
+      text-decoration: none;
+    }
+
+    .info {
+      background: #f5f5f5;
+      padding: 1rem 1rem 1rem 1rem;
+      border: #ccc 1px solid;
+      border-radius: 6px;
+      margin-top: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .info p {
+      margin-left: 20px;
+      color: #222222;
+      font-family: sans-serif;
+    }
+
+    .info p {
+      margin-right: 20px;
+    }
+
+    .info svg {
+      margin-left: 20px;
+    }
+
+    .info a {
+      color: #4285f4;
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="logo">
+      {{logo}}
+    </div>
+    <h2>Get started with Budibase Self Hosting</h2>
+    <p class="top-text">Use the address <b id="url"></b> in your Builder</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3><b>📚</b>Documentation</h3>
+        <p>
+          Find out more about your self hosted platform.
+        </p>
+        <a class="button"
+           href="https://docs.budibase.com/self-hosting/introduction-to-self-hosting">
+          Documentation
+        </a>
+      </div>
+      <div class="card">
+        <h3><b>💻</b>Next steps</h3>
+        <p>
+          Find out how to make use of your self hosted Budibase platform.
+        </p>
+        <a class="button"
+           href="https://docs.budibase.com/self-hosting/builder-settings">
+          Next steps
+        </a>
+      </div>
+    </div>
+    <div class="info">
+      <svg preserveAspectRatio="xMidYMid meet" height="28px" width="28px" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink" stroke="none" class="icon-7f6730be--text-3f89f380">
+        <g>
+          <path d="M12.2 8.98c.06-.01.12-.03.18-.06.06-.02.12-.05.18-.09l.15-.12c.18-.19.29-.45.29-.71 0-.06-.01-.13-.02-.19a.603.603 0 0 0-.06-.19.757.757 0 0 0-.09-.18c-.03-.05-.08-.1-.12-.15-.28-.27-.72-.37-1.09-.21-.13.05-.23.12-.33.21-.04.05-.09.1-.12.15-.04.06-.07.12-.09.18-.03.06-.05.12-.06.19-.01.06-.02.13-.02.19 0 .26.11.52.29.71.1.09.2.16.33.21.12.05.25.08.38.08.06 0 .13-.01.2-.02M13 16v-4a1 1 0 1 0-2 0v4a1 1 0 1 0 2 0M12 3c-4.962 0-9 4.038-9 9 0 4.963 4.038 9 9 9 4.963 0 9-4.037 9-9 0-4.962-4.037-9-9-9m0 20C5.935 23 1 18.065 1 12S5.935 1 12 1c6.066 0 11 4.935 11 11s-4.934 11-11 11" fill-rule="evenodd">
+          </path>
+        </g>
+      </svg>
+      <p>A <b>Hosting Key</b> will also be required, this can be found in your hosting properties, info found <a href="https://docs.budibase.com/self-hosting/hosting-settings">here</a>.</p>
+    </div>
+  </div>
+  <script>
+    window.addEventListener("load", () => {
+      let url = document.URL.split("//")[1]
+      if (url.substring(url.length - 1) === "/") {
+        url = url.substring(0, url.length - 1)
+      }
+      document.getElementById("url").innerHTML = url
+    })
+  </script>
+</body>
+</html>

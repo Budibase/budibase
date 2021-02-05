@@ -12,6 +12,7 @@ const usage = require("../../middleware/usageQuota")
 const router = Router()
 
 router
+  .get("/api/views/export", authorized(BUILDER), viewController.exportView)
   .get(
     "/api/views/:viewName",
     authorized(PermissionTypes.VIEW, PermissionLevels.READ),
@@ -25,6 +26,5 @@ router
     viewController.destroy
   )
   .post("/api/views", authorized(BUILDER), usage, viewController.save)
-  .post("/api/views/export", authorized(BUILDER), viewController.exportView)
 
 module.exports = router

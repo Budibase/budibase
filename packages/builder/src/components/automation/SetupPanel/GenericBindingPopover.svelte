@@ -3,6 +3,7 @@
   import {
     TextArea,
     Label,
+    Input,
     Heading,
     Body,
     Spacer,
@@ -10,6 +11,9 @@
     Popover,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { isValid } from "@budibase/string-templates"
+  import { handlebarsCompletions } from "constants/completions"
+
   const dispatch = createEventDispatcher()
 
   export let value = ""
@@ -18,9 +22,14 @@
   export let align
   export let popover = null
 
+  let helpers = handlebarsCompletions()
   let getCaretPosition
+  let validity = true
+  let search = ""
 
   $: categories = Object.entries(groupBy("category", bindings))
+  $: value && checkValid()
+  $: searchRgx = new RegExp(search, "ig")
 
   function onClickBinding(binding) {
     const position = getCaretPosition()
@@ -34,18 +43,27 @@
       value += toAdd
     }
   }
+
+  function checkValid() {
+    validity = isValid(value)
+  }
 </script>
 
 <Popover {anchor} {align} bind:this={popover}>
   <div class="container">
     <div class="bindings">
       <Heading small>Available bindings</Heading>
+      <Spacer medium />
+      <Input extraThin placeholder="Search" bind:value={search} />
+      <Spacer medium />
       <div class="bindings__wrapper">
         <div class="bindings__list">
           {#each categories as [categoryName, bindings]}
             <Heading extraSmall>{categoryName}</Heading>
             <Spacer extraSmall />
-            {#each bindings as binding}
+            {#each bindings.filter(binding =>
+              binding.label.match(searchRgx)
+            ) as binding}
               <div class="binding" on:click={() => onClickBinding(binding)}>
                 <span class="binding__label">{binding.label}</span>
                 <span class="binding__type">{binding.type}</span>
@@ -55,6 +73,18 @@
                 </div>
               </div>
             {/each}
+          {/each}
+          <Heading extraSmall>Helpers</Heading>
+          <Spacer extraSmall />
+          {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+            <div class="binding" on:click={() => onClickBinding(helper)}>
+              <span class="binding__label">{helper.label}</span>
+              <br />
+              <div class="binding__description">
+                {@html helper.description || ''}
+              </div>
+              <pre>{helper.example || ''}</pre>
+            </div>
           {/each}
         </div>
       </div>
@@ -70,11 +100,20 @@
         bind:getCaretPosition
         bind:value
         placeholder="Add options from the left, type text, or do both" />
+      {#if !validity}
+        <p class="syntax-error">
+          Current Handlebars syntax is invalid, please check the guide
+          <a href="https://handlebarsjs.com/guide/">here</a>
+          for more details.
+        </p>
+      {/if}
       <div class="controls">
         <a href="https://docs.budibase.com/design/binding">
           <Body small>Learn more about binding</Body>
         </a>
-        <Button on:click={popover.hide} primary>Done</Button>
+        <Button on:click={popover.hide} disabled={!validity} primary>
+          Done
+        </Button>
       </div>
     </div>
   </div>
@@ -128,7 +167,13 @@
   .binding__description {
     color: var(--grey-8);
     margin-top: 2px;
+    white-space: normal;
   }
+
+  pre {
+    white-space: normal;
+  }
+
   .binding__type {
     font-family: monospace;
     background-color: var(--grey-2);
@@ -151,5 +196,15 @@
     grid-gap: var(--spacing-l);
     align-items: center;
     margin-top: var(--spacing-m);
+  }
+
+  .syntax-error {
+    color: var(--red);
+    font-size: 12px;
+  }
+
+  .syntax-error a {
+    color: var(--red);
+    text-decoration: underline;
   }
 </style>

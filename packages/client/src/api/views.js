@@ -18,7 +18,7 @@ export const fetchViewData = async ({
     params.set("calculation", calculation)
   }
   if (groupBy) {
-    params.set("group", groupBy)
+    params.set("group", groupBy ? "true" : "false")
   }
 
   const QUERY_VIEW_URL = field

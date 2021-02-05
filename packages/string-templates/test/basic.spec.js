@@ -1,6 +1,9 @@
 const {
   processObject,
   processString,
+  isValid,
+  makePropSafe,
+  getManifest,
 } = require("../src/index")
 
 describe("Test that the string processing works correctly", () => {
@@ -80,5 +83,30 @@ describe("Test that the object processing works correctly", () => {
       error = err
     }
     expect(error).not.toBeNull()
+  })
+})
+
+describe("check the utility functions", () => {
+  it("should return false for an invalid template string", () => {
+    const valid = isValid("{{ table1.thing prop }}")
+    expect(valid).toBe(false)
+  })
+
+  it("should state this template is valid", () => {
+    const valid = isValid("{{ thing }}")
+    expect(valid).toBe(true)
+  })
+
+  it("should make a property safe", () => {
+    const property = makePropSafe("thing")
+    expect(property).toEqual("[thing]")
+  })
+})
+
+describe("check manifest", () => {
+  it("should be able to retrieve the manifest", () => {
+    const manifest = getManifest()
+    expect(manifest.math).not.toBeNull()
+    expect(manifest.math.abs.description).toBe("<p>Return the magnitude of <code>a</code>.</p>\n")
   })
 })
