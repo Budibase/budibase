@@ -30,16 +30,14 @@ function generateRemoveValidator() {
 router
   .get("/api/permission/builtin", authorized(BUILDER), controller.fetchBuiltin)
   .get("/api/permission/levels", authorized(BUILDER), controller.fetchLevels)
-  .patch(
-    "/api/permission/:roleId/add",
+  .post(
+    "/api/permission/:roleId/:resourceId",
     authorized(BUILDER),
-    generateAddValidator(),
     controller.addPermission
   )
-  .patch(
-    "/api/permission/:roleId/remove",
+  .delete(
+    "/api/permission/:roleId/:resourceId",
     authorized(BUILDER),
-    generateRemoveValidator(),
     controller.removePermission
   )
 
