@@ -1,4 +1,7 @@
 const dayjs = require("dayjs")
+dayjs.extend(require("dayjs/plugin/duration"))
+dayjs.extend(require("dayjs/plugin/advancedFormat"))
+dayjs.extend(require("dayjs/plugin/relativeTime"))
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -50,7 +53,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-module.exports = function dateHelper(str, pattern, options) {
+function initialConfig(str, pattern, options) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -61,18 +64,42 @@ module.exports = function dateHelper(str, pattern, options) {
     pattern = null
     str = null
   }
+  return { str, pattern, options }
+}
+
+function setLocale(str, pattern, options) {
+  // if options is null then it'll get updated here
+  const config = initialConfig(str, pattern, options)
+  const defaults = { lang: "en", date: new Date(config.str) }
+  const opts = getContext(this, defaults, config.options)
+
+  // set the language to use
+  dayjs.locale(opts.lang || opts.language)
+}
+
+module.exports.date = (str, pattern, options) => {
+  const config = initialConfig(str, pattern, options)
 
   // if no args are passed, return a formatted date
-  if (str == null && pattern == null) {
+  if (config.str == null && config.pattern == null) {
     dayjs.locale("en")
     return dayjs().format("MMMM DD, YYYY")
   }
 
-  const defaults = { lang: "en", date: new Date(str) }
-  const opts = getContext(this, defaults, options)
+  setLocale(config.str, config.pattern, config.options)
 
-  // set the language to use
-  dayjs.locale(opts.lang || opts.language)
+  return dayjs(new Date(config.str)).format(config.pattern)
+}
 
-  return dayjs(new Date(str)).format(pattern)
+module.exports.duration = (str, pattern, format) => {
+  const config = initialConfig(str, pattern)
+
+  setLocale(config.str, config.pattern)
+
+  const duration = dayjs.duration(config.str, config.pattern)
+  if (!isOptions(format)) {
+    return duration.format(format)
+  } else {
+    return duration.humanize()
+  }
 }
