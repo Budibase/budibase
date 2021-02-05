@@ -14,7 +14,7 @@
   $: providerKey = key || $component.id
 
   // Add data context
-  $: newContext.actions.provideData(providerKey, data)
+  $: data !== undefined && newContext.actions.provideData(providerKey, data)
 
   // Add actions context
   $: {

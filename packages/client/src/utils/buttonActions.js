@@ -50,12 +50,27 @@ const queryExecutionHandler = async action => {
   })
 }
 
-const validateFormHandler = async (action, context) => {
-  const { componentId } = action.parameters
-  const fn = context[`${componentId}_${ActionTypes.ValidateForm}`]
+const executeActionHandler = async (context, componentId, actionType) => {
+  const fn = context[`${componentId}_${actionType}`]
   if (fn) {
     return await fn()
   }
+}
+
+const validateFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ValidateForm
+  )
+}
+
+const refreshDatasourceHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.RefreshDatasource
+  )
 }
 
 const handlerMap = {
@@ -65,6 +80,7 @@ const handlerMap = {
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
+  ["Refresh Datasource"]: refreshDatasourceHandler,
 }
 
 /**
