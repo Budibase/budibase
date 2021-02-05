@@ -132,7 +132,8 @@
 
 <header>
   <div class="input">
-    <Input placeholder="✎ Edit Query Name" bind:value={query.name} />
+    <div class="label">Enter query name:</div>
+    <Input outline border bind:value={query.name} />
   </div>
   {#if config}
     <div class="props">
@@ -216,7 +217,9 @@
 
 <style>
   .input {
-    width: 300px;
+    width: 500px;
+    display: flex;
+    align-items: center;
   }
 
   .select {
@@ -287,5 +290,13 @@
   .viewer {
     margin-top: -28px;
     z-index: -2;
+  }
+
+  .label {
+    font-family: var(--font-sans);
+    color: var(--grey-8);
+    font-size: var(--font-size-s);
+    margin-right: 8px;
+    font-weight: 600;
   }
 </style>

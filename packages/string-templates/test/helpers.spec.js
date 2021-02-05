@@ -1,5 +1,6 @@
 const {
   processString,
+  processObject,
   isValid,
 } = require("../src/index")
 
@@ -291,14 +292,61 @@ describe("Cover a few complex use cases", () => {
     expect(output).toBe("e")
   })
 
+  it("should allow a complex forIn case", async () => {
+    const input = `{{#forIn (JSONparse '{"a":1, "b":2, "c":3}' )}}number: {{.}}\n{{/forIn}}`
+    const output = await processString(input, {})
+    expect(output).toBe("number: 1\nnumber: 2\nnumber: 3\n")
+  })
+
   it("should make sure case is valid", () => {
     const validity = isValid("{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}")
+    expect(validity).toBe(true)
+  })
+
+  it("should make sure object functions check out valid", () => {
+    const validity = isValid("{{ JSONstringify obj }}")
     expect(validity).toBe(true)
   })
 
   it("should be able to solve an example from docs", async () => {
     const output = await processString(`{{first ( split "a-b-c" "-") 2}}`, {})
     expect(output).toBe(`a,b`)
+  })
 
+  it("should confirm a subtraction validity", () => {
+    const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
+    expect(validity).toBe(true)
+  })
+
+  it("test a very complex duration output", async () => {
+    const currentTime = new Date(1612432082000).toISOString(),
+      eventTime = new Date(1612432071000).toISOString()
+    const input = `{{duration ( subtract (date currentTime "X")(date eventTime "X")) "seconds"}}`
+    const output = await processString(input, {
+      currentTime,
+      eventTime,
+    })
+    expect(output).toBe("a few seconds")
+  })
+
+  it("should confirm a bunch of invalid strings", () => {
+    const invalids = ["{{ awd )", "{{ awdd () ", "{{ awdwad ", "{{ awddawd }"]
+    for (let invalid of invalids) {
+      const validity = isValid(invalid)
+      expect(validity).toBe(false)
+    }
+  })
+
+  it("input a garbage string, expect it to be returned", async () => {
+    const input = `{{{{{{ } {{ ]] ] ] }}} {{ ] {{ {   } { dsa { dddddd }}}}}}} }DDD`
+    const output = await processString(input, {})
+    expect(output).toBe(input)
+  })
+
+  it("getting a nice date from the user", async () => {
+    const input = {text: `{{ date user.subscriptionDue "DD-MM" }}`}
+    const context = JSON.parse(`{"user":{"email":"test@test.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@test.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`)
+    const output = await processObject(input, context)
+    expect(output.text).toBe("12-01")
   })
 })

@@ -17,11 +17,12 @@ const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
 const env = require("../../../environment")
+const { OBJ_STORE_DIRECTORY } = require("../../../constants")
 
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
-    return `/app-assets/assets`
+    return OBJ_STORE_DIRECTORY
   } else {
     return "https://cdn.app.budi.live/assets"
   }

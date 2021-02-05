@@ -1,25 +1,31 @@
 const mysql = require("mysql")
+const { FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/mysqljs/mysql",
   datasource: {
     host: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "localhost",
       required: true,
     },
+    port: {
+      type: FIELD_TYPES.NUMBER,
+      default: 1433,
+      required: false,
+    },
     user: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "root",
       required: true,
     },
     password: {
-      type: "password",
+      type: FIELD_TYPES.PASSWORD,
       default: "root",
       required: true,
     },
     database: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       required: true,
     },
   },

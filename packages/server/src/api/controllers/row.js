@@ -9,7 +9,7 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { coerceRowValues } = require("../../utilities")
+const { coerceRowValues, enrichRows } = require("../../utilities")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -190,7 +190,15 @@ exports.fetchView = async function(ctx) {
 
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
-    ctx.body = await linkRows.attachLinkInfo(appId, response.rows)
+    let table
+    try {
+      table = await db.get(ctx.params.tableId)
+    } catch (err) {
+      table = {
+        schema: {},
+      }
+    }
+    ctx.body = await enrichRows(appId, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -247,15 +255,15 @@ exports.search = async function(ctx) {
 
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
+  const db = new CouchDB(appId)
 
   // special case for users, fetch through the user controller
-  let rows
+  let rows,
+    table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === ViewNames.USERS) {
     await usersController.fetch(ctx)
     rows = ctx.body
   } else {
-    const db = new CouchDB(appId)
-
     const response = await db.allDocs(
       getRowParams(ctx.params.tableId, null, {
         include_docs: true,
@@ -263,15 +271,16 @@ exports.fetchTableRows = async function(ctx) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  ctx.body = await linkRows.attachLinkInfo(appId, rows)
+  ctx.body = await enrichRows(appId, table, rows)
 }
 
 exports.find = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
   try {
+    const table = await db.get(ctx.params.tableId)
     const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
-    ctx.body = await linkRows.attachLinkInfo(appId, row)
+    ctx.body = await enrichRows(appId, table, row)
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -356,8 +365,9 @@ exports.fetchEnrichedRow = async function(ctx) {
     keys: linkVals.map(linkVal => linkVal.id),
   })
   // need to include the IDs in these rows for any links they may have
-  let linkedRows = await linkRows.attachLinkInfo(
+  let linkedRows = await enrichRows(
     appId,
+    table,
     response.rows.map(row => row.doc)
   )
   // insert the link rows in the correct place throughout the main row

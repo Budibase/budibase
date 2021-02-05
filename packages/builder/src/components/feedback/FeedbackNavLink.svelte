@@ -1,6 +1,7 @@
 <script>
   import { Popover } from "@budibase/bbui"
   import { store } from "builderStore"
+  import { onMount } from "svelte"
 
   import FeedbackIframe from "./FeedbackIframe.svelte"
   import analytics from "analytics"
@@ -10,9 +11,15 @@
   let iconContainer
   let popover
 
-  setInterval(() => {
-    $store.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
-  }, FIVE_MINUTES)
+  onMount(() => {
+    const interval = setInterval(() => {
+      store.update(state => {
+        state.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
+        return state
+      })
+    }, FIVE_MINUTES)
+    return () => clearInterval(interval)
+  })
 </script>
 
 <div class="container" bind:this={iconContainer} on:click={popover.show}>

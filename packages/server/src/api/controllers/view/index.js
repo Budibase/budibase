@@ -83,23 +83,42 @@ const controller = {
     ctx.message = `View ${ctx.params.viewName} saved successfully.`
   },
   exportView: async ctx => {
-    const view = ctx.query.view
+    const db = new CouchDB(ctx.user.appId)
+    const designDoc = await db.get("_design/database")
+
+    const viewName = decodeURI(ctx.query.view)
+
+    const view = designDoc.views[viewName]
     const format = ctx.query.format
 
-    // Fetch view rows
-    ctx.params.viewName = view.name
-    ctx.query.group = view.groupBy
-    if (view.field) {
-      ctx.query.stats = true
-      ctx.query.field = view.field
+    if (view) {
+      ctx.params.viewName = viewName
+      // Fetch view rows
+      ctx.query = {
+        group: view.meta.groupBy,
+        calculation: view.meta.calculation,
+        stats: !!view.meta.field,
+        field: view.meta.field,
+      }
+    } else {
+      // table all_ view
+      ctx.params.viewName = viewName
     }
+
     await fetchView(ctx)
 
+    let schema = view && view.meta && view.meta.schema
+    if (!schema) {
+      const tableId = ctx.params.tableId || view.meta.tableId
+      const table = await db.get(tableId)
+      schema = table.schema
+    }
+
     // Export part
-    let headers = Object.keys(view.schema)
+    let headers = Object.keys(schema)
     const exporter = exporters[format]
     const exportedFile = exporter(headers, ctx.body)
-    const filename = `${view.name}.${format}`
+    const filename = `${viewName}.${format}`
     fs.writeFileSync(join(os.tmpdir(), filename), exportedFile)
 
     ctx.attachment(filename)

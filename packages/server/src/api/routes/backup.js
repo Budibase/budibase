@@ -6,10 +6,5 @@ const { BUILDER } = require("../../utilities/security/permissions")
 const router = Router()
 
 router.get("/api/backups/export", authorized(BUILDER), controller.exportAppDump)
-// .get(
-//   "/api/backups/download/:fileName",
-//   authorized(BUILDER),
-//   controller.downloadAppDump
-// )
 
 module.exports = router

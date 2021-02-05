@@ -103,6 +103,7 @@
               <div class="description">
                 {@html helper.description}
               </div>
+              <pre>{helper.example || ''}</pre>
             </div>
           </li>
         {/each}
@@ -167,6 +168,11 @@
     cursor: pointer;
     border: var(--border-light);
     border-width: 1px 0 1px 0;
+  }
+
+  pre,
+  .description {
+    white-space: normal;
   }
 
   li:hover {
