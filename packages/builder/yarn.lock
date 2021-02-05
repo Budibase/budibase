@@ -842,10 +842,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.57.2":
-  version "1.57.2"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.57.2.tgz#3fea3df81bf4e0b9b1007dc315454a7a96fd0837"
-  integrity sha512-3D7MdAJb5OIXxGpTIuj1tc356QEuWotO5a222Qxukqx5C+5m3avT9nVQkkfT729us4E+mEB8TJHeoQ7mniqt2Q==
+"@budibase/bbui@^1.58.0":
+  version "1.58.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.58.0.tgz#197a44188138e28a006f5b1074dab53ae7986d72"
+  integrity sha512-YNdBIpD7n50S+8kvYavp2P0pVPL56cHfpaFMWL5jaJynohsc4ERmlH0LmZZfkSFLnkf07OszoLRYcVQOdUgQdg==
   dependencies:
     markdown-it "^12.0.2"
     quill "^1.3.7"
