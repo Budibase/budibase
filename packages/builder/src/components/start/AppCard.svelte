@@ -14,7 +14,9 @@
   async function exportApp() {
     appExportLoading = true
     try {
-      download(`/api/backups/export?appId=${_id}&appname=${name}`)
+      download(
+        `/api/backups/export?appId=${_id}&appname=${encodeURIComponent(name)}`
+      )
       notifier.success("App Export Complete.")
     } catch (err) {
       console.error(err)
@@ -30,13 +32,13 @@
   <Spacer medium />
   <div class="card-footer">
     <TextButton text medium blue href="/_builder/{_id}">
-      Open
-      {name}
-      →
+      Open {name} →
     </TextButton>
     {#if appExportLoading}
       <Spinner size="10" />
-    {:else}<i class="ri-folder-download-line" on:click={exportApp} />{/if}
+    {:else}
+      <i class="ri-folder-download-line" on:click={exportApp} />
+    {/if}
   </div>
 </div>
 
