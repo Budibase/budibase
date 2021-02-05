@@ -1,6 +1,6 @@
 <script>
   import Flatpickr from "svelte-flatpickr"
-  import SpectrumField from "./SpectrumField.svelte"
+  import Field from "./Field.svelte"
   import "flatpickr/dist/flatpickr.css"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
 
@@ -53,7 +53,7 @@
   }
 </script>
 
-<SpectrumField {label} {field} bind:fieldState bind:fieldApi>
+<Field {label} {field} type="datetime" bind:fieldState bind:fieldApi>
   {#if fieldState}
     <Flatpickr
       bind:flatpickr
@@ -114,7 +114,7 @@
       <div class="overlay" on:mousedown|self={flatpickr?.close} />
     {/if}
   {/if}
-</SpectrumField>
+</Field>
 
 <style>
   .spectrum-Textfield-input {
