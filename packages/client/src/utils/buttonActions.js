@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import { enrichDataBinding, enrichDataBindings } from "./enrichDataBinding"
 import { routeStore, builderStore } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
@@ -10,7 +9,7 @@ const saveRowHandler = async (action, context) => {
     let draft = context[providerId]
     if (fields) {
       for (let [key, entry] of Object.entries(fields)) {
-        draft[key] = await enrichDataBinding(entry.value, context)
+        draft[key] = entry.value
       }
     }
     await saveRow(draft)
@@ -24,12 +23,12 @@ const deleteRowHandler = async action => {
   }
 }
 
-const triggerAutomationHandler = async (action, context) => {
+const triggerAutomationHandler = async action => {
   const { fields } = action.parameters
   if (fields) {
     const params = {}
     for (let field in fields) {
-      params[field] = await enrichDataBinding(fields[field].value, context)
+      params[field] = fields[field].value
     }
     await triggerAutomation(action.parameters.automationId, params)
   }
