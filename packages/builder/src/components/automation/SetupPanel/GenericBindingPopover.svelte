@@ -46,7 +46,7 @@
   }
 
   function checkValid() {
-    const runtimeValue = readableToRuntimeBinding(bindings, valueToParse)
+    const runtimeValue = readableToRuntimeBinding(bindings, value)
     validity = isValid(runtimeValue)
   }
 </script>
