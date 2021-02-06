@@ -139,6 +139,11 @@
         "dependsOn": "table"
       },
       {
+        "type": "number",
+        "label": "Result Page Size",
+        "key": "pageSize"
+      },
+      {
         "type": "text",
         "label": "No Rows Message",
         "key": "noRowsMessage"

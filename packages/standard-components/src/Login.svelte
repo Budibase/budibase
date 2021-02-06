@@ -27,12 +27,19 @@
     await authStore.actions.logIn({ email, password })
     loading = false
   }
+
+  function handleKeydown(evt) {
+    console.log(evt.keyCode)
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <div class="root" use:styleable={$component.styles}>
   <div class="content">
     {#if logo}
-      <div class="logo-container"><img src={logo} alt="logo" /></div>
+      <div class="logo-container">
+        <img src={logo} alt="logo" />
+      </div>
     {/if}
 
     {#if title}

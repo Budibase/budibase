@@ -33,7 +33,7 @@ router
   )
   .post(
     "/api/:tableId/rows/search",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    // authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
   )
   .patch(

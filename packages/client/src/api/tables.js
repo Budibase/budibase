@@ -22,12 +22,18 @@ export const fetchTableData = async tableId => {
  * @param {String} tableId - id of the table to search
  * @param {Object} search - Mango Compliant search object
  */
-export const searchTableData = async (tableId, search, pageSize) => {
+export const searchTableData = async ({
+  tableId,
+  search,
+  cursor,
+  pageSize,
+}) => {
   const rows = await API.post({
     url: `/api/${tableId}/rows/search`,
     body: {
       query: search,
       pageSize,
+      cursor,
     },
   })
   return await enrichRows(rows, tableId)
