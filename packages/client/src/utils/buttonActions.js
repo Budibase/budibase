@@ -51,7 +51,10 @@ const navigationHandler = action => {
 
 const queryExecutionHandler = async (action, context) => {
   const { datasourceId, queryId, queryParams } = action.parameters
-  const enrichedQueryParameters = enrichDataBindings(queryParams || {}, context)
+  const enrichedQueryParameters = await enrichDataBindings(
+    queryParams || {},
+    context
+  )
   await executeQuery({
     datasourceId,
     queryId,
