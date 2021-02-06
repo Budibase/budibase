@@ -5,9 +5,10 @@ import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
 import { enrichRows } from "./rows"
 
-export const searchTable = async ({ tableId, search, pageSize }) => {
-  const rows = await searchTableData(tableId, search, pageSize)
+export const searchTable = async ({ tableId, search, page, pageSize }) => {
+  const rows = await searchTableData({ tableId, search, page, pageSize })
   return rows
+  // TODO
   // Enrich rows so they can displayed properly
   // return await enrichRows(rows, tableId)
 }

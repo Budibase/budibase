@@ -224,9 +224,10 @@ exports.fetchView = async function(ctx) {
 }
 
 exports.search = async function(ctx) {
-  const appId = ctx.user.appId
+  // const appId = ctx.user.appId
+  const appId = 'app_5aa5e9cf26694f9ea02f054050d7ae63'
 
-  const { pageSize = 10, cursor } = ctx.query
+  // const { pageSize = 10, cursor } = ctx.query
 
   // special case for users, fetch through the user controller
   // let rows
@@ -238,13 +239,19 @@ exports.search = async function(ctx) {
 
   const db = new CouchDB(appId)
 
-  const query = ctx.request.body.query
+  const { query, pageSize = 10, cursor } = ctx.request.body
+
   query.tableId = ctx.params.tableId
-  // query._id = { $gte: cursor }
+
+  // Paginating
+  if (cursor) {
+    query._id = { $gte: cursor }
+  }
 
   const response = await db.find({
     selector: query,
     limit: pageSize,
+    // sort: ["_id"],
   })
   ctx.body = response.docs
 

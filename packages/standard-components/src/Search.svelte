@@ -1,7 +1,14 @@
 <script>
   import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
-  import { Button, Label, Select, Toggle, Input } from "@budibase/bbui"
+  import {
+    Button,
+    DatePicker,
+    Label,
+    Select,
+    Toggle,
+    Input,
+  } from "@budibase/bbui"
 
   const { API, styleable, DataProvider, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -17,10 +24,11 @@
   let search = {}
   let tableDefinition
   let schema = {}
+  let page = 1
 
   $: columns = Object.keys(schema).filter(key => schema[key].searchable)
-
-  $: fetchData(table)
+  $: cursor = rows[rows.length - 1]?._id
+  $: page && fetchData(table)
 
   async function fetchData(table) {
     if (!isEmpty(table)) {
@@ -30,10 +38,12 @@
         tableId: table,
         search,
         pageSize,
+        cursor,
       })
     }
     loaded = true
   }
+
 </script>
 
 <div use:styleable={$component.styles}>
@@ -48,8 +58,8 @@
               <option>{opt}</option>
             {/each}
           </Select>
-          <!-- {:else if schema[field].type === 'datetime'}
-          <DatePicker bind:value={search[field]} /> --->
+        {:else if schema[field].type === 'datetime'}
+          <DatePicker bind:value={search[field]} />
         {:else if schema[field].type === 'boolean'}
           <Toggle text={schema[field].name} bind:checked={search[field]} />
         {:else if schema[field].type === 'number'}
@@ -82,6 +92,12 @@
   {:else if loaded && $builderStore.inBuilder}
     <p>{noRowsMessage}</p>
   {/if}
+  <div class="pagination">
+    {#if page > 1}
+      <Button blue on:click={() => (page -= 1)}>Back</Button>
+    {/if}
+    <Button blue on:click={() => (page += 1)}>Next</Button>
+  </div>
 </div>
 
 <style>
@@ -101,5 +117,11 @@
 
   .form-field {
     margin-bottom: var(--spacing-m);
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-m);
   }
 </style>
