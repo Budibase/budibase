@@ -60,7 +60,7 @@ context("Create a Table", () => {
   })
 
   it("deletes a table", () => {
-    cy.get(".actions").first().invoke("show").click({ force: true })
+    cy.get(".ri-more-line").first().click({ force: true })
     cy.get("[data-cy=delete-table]").click()
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
