@@ -22,7 +22,12 @@
 </script>
 
 <div>
-  <Multiselect extraThin secondary value={boundValue} on:change={setValue}>
+  <Multiselect
+    align="right"
+    extraThin
+    secondary
+    value={boundValue}
+    on:change={setValue}>
     {#each options as option}
       <option value={option}>{option}</option>
     {/each}

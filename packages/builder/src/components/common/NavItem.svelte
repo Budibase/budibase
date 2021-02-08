@@ -60,6 +60,7 @@
   }
   .nav-item:hover .actions {
     display: flex;
+    visibility: visible;
   }
   .nav-item:hover,
   .nav-item.selected {
@@ -105,7 +106,7 @@
   }
 
   .actions {
-    display: none;
+    visibility: hidden;
     width: 20px;
     height: 20px;
     cursor: pointer;

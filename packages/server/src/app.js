@@ -53,7 +53,8 @@ server.on("close", () => console.log("Server Closed"))
 module.exports = server.listen(env.PORT || 4001, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   automations.init()
-  if (env.SELF_HOSTED) {
+  // only init the self hosting DB info in the Pouch, not needed in self hosting prod
+  if (!env.CLOUD) {
     await selfhost.init()
   }
 })

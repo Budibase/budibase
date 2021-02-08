@@ -106,9 +106,8 @@ context("Create a View", () => {
 
   it("renames a view", () => {
     cy.contains(".nav-item", "Test View")
-      .find(".actions")
-      .invoke("show")
-      .click()
+      .find(".ri-more-line")
+      .click({ force: true })
     cy.get("[data-cy=edit-view]").click()
     cy.get(".menu-container").within(() => {
       cy.get("input").type(" Updated")
@@ -119,9 +118,8 @@ context("Create a View", () => {
 
   it("deletes a view", () => {
     cy.contains(".nav-item", "Test View Updated")
-      .find(".actions")
-      .invoke("show")
-      .click()
+      .find(".ri-more-line")
+      .click({ force: true })
     cy.get("[data-cy=delete-view]").click()
     cy.contains("Delete View").click()
     cy.contains("TestView Updated").should("not.be.visible")

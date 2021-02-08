@@ -66,22 +66,4 @@
   div.icon i {
     font-size: 16px;
   }
-
-  .actions {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    min-width: 400px;
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
 </style>
