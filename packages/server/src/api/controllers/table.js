@@ -38,6 +38,18 @@ async function checkForColumnUpdates(db, oldTable, updatedTable) {
   return updatedRows
 }
 
+async function updateSearchIndex(fields) {
+  console.log("Updating stuff")
+  const resp = await db.createIndex({
+    index: {
+      fields,
+      name: "search_index",
+      ddoc: "search_ddoc",
+      type: "json",
+    },
+  })
+}
+
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const body = await db.allDocs(
