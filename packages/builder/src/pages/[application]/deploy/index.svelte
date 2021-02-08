@@ -25,8 +25,8 @@
         notifier.danger(
           "No budibase API Keys configured. You must set either a self hosted or cloud API key to deploy your budibase app."
         )
+        return
       }
-      return
     }
 
     const DEPLOY_URL = `/api/deploy`

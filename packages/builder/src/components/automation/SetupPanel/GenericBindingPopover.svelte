@@ -12,6 +12,7 @@
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
+  import { readableToRuntimeBinding } from "builderStore/dataBinding"
 
   const dispatch = createEventDispatcher()
 
@@ -44,7 +45,8 @@
   }
 
   function checkValid() {
-    validity = isValid(value)
+    const runtimeValue = readableToRuntimeBinding(bindings, value)
+    validity = isValid(runtimeValue)
   }
 </script>
 
