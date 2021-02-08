@@ -46,7 +46,6 @@ const queryExecutionHandler = async action => {
     datasourceId,
     queryId,
     parameters: queryParams,
-    notify: true,
   })
 }
 
