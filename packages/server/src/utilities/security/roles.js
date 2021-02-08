@@ -1,6 +1,10 @@
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
-const { BUILTIN_PERMISSION_IDS } = require("./permissions")
+const {
+  BUILTIN_PERMISSION_IDS,
+  higherPermission,
+  doesHaveBasePermission,
+} = require("./permissions")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -127,14 +131,26 @@ exports.getUserRoleHierarchy = async (appId, userRoleId) => {
  * Get all of the user permissions which could be found across the role hierarchy
  * @param appId The ID of the application from which roles should be obtained.
  * @param userRoleId The user's role ID, this can be found in their access token.
- * @returns {Promise<string[]>} A list of permission IDs these should all be unique.
+ * @returns {Promise<{basePermissions: string[], permissions: Object}>} the base
+ * permission IDs as well as any custom resource permissions.
  */
-exports.getUserPermissionIds = async (appId, userRoleId) => {
-  return [
-    ...new Set(
-      (await getAllUserRoles(appId, userRoleId)).map(role => role.permissionId)
-    ),
+exports.getUserPermissions = async (appId, userRoleId) => {
+  const rolesHierarchy = await getAllUserRoles(appId, userRoleId)
+  const basePermissions = [
+    ...new Set(rolesHierarchy.map(role => role.permissionId)),
   ]
+  const permissions = {}
+  for (let role of rolesHierarchy) {
+    if (role.permissions) {
+      for (let [resource, level] of Object.entries(role.permissions)) {
+        permissions[resource] = higherPermission(permissions[resource], level)
+      }
+    }
+  }
+  return {
+    basePermissions,
+    permissions,
+  }
 }
 
 class AccessController {

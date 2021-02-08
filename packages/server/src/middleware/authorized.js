@@ -1,10 +1,11 @@
 const {
   BUILTIN_ROLE_IDS,
-  getUserPermissionIds,
+  getUserPermissions,
 } = require("../utilities/security/roles")
 const {
   PermissionTypes,
-  doesHavePermission,
+  doesHaveResourcePermission,
+  doesHaveBasePermission,
 } = require("../utilities/security/permissions")
 const env = require("../environment")
 const { isAPIKeyValid } = require("../utilities/security/apikey")
@@ -13,6 +14,10 @@ const { AuthTypes } = require("../constants")
 const ADMIN_ROLES = [BUILTIN_ROLE_IDS.ADMIN, BUILTIN_ROLE_IDS.BUILDER]
 
 const LOCAL_PASS = new RegExp(["webhooks/trigger", "webhooks/schema"].join("|"))
+
+function hasResource(ctx) {
+  return ctx.resourceId != null
+}
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // webhooks can pass locally
@@ -47,7 +52,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   }
 
   const role = ctx.user.role
-  const permissions = await getUserPermissionIds(ctx.appId, role._id)
+  const { basePermissions, permissions } = await getUserPermissions(
+    ctx.appId,
+    role._id
+  )
   if (ADMIN_ROLES.indexOf(role._id) !== -1) {
     return next()
   }
@@ -56,7 +64,14 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.throw(403, "Not Authorized")
   }
 
-  if (!doesHavePermission(permType, permLevel, permissions)) {
+  if (
+    hasResource(ctx) &&
+    doesHaveResourcePermission(permissions, permLevel, ctx)
+  ) {
+    return next()
+  }
+
+  if (!doesHaveBasePermission(permType, permLevel, basePermissions)) {
     ctx.throw(403, "User does not have permission")
   }
 
