@@ -233,35 +233,27 @@ exports.createIndex = async function(ctx) {
   const appId = "app_1987903cf3604d459969c80cf17651a0"
   const db = new CouchDB(appId)
 
+  // ctx.body = await db.get("_design/search_ddoc")
   ctx.body = await db.createIndex({
     index: {
       fields: ctx.request.body.fields,
-      name: "search_index",
+      name: "other_search_index",
       ddoc: "search_ddoc",
       type: "json",
     },
   })
+  // ctx.body = await db.getIndexes()
 }
 
 exports.search = async function(ctx) {
-  // const appId = ctx.user.appId
-  const appId = "app_1987903cf3604d459969c80cf17651a0"
-
-  // const { pageSize = 10, cursor } = ctx.query
-
-  // special case for users, fetch through the user controller
-  // let rows
-  // SHOULD WE PREVENT SEARCHING FOR USERS?
-  // if (ctx.params.tableId === ViewNames.USERS) {
-  //   await usersController.fetch(ctx)
-  //   rows = ctx.body
-  // } else {
+  const appId = ctx.user.appId
+  // const appId = "app_1987903cf3604d459969c80cf17651a0"
 
   const db = new CouchDB(appId)
 
   const {
     query,
-    pagination: { pageSize = 10, cursor, reverse },
+    pagination: { pageSize = 10, cursor },
   } = ctx.request.body
 
   query.tableId = ctx.params.tableId
@@ -277,7 +269,15 @@ exports.search = async function(ctx) {
     sort: ["_id"],
     skip: 1,
   })
+
   const rows = response.docs
+
+  // delete passwords from users
+  if (query.tableId === ViewNames.USERS) {
+    for (let row of rows) {
+      delete row.password
+    }
+  }
 
   ctx.body = await linkRows.attachLinkInfo(appId, rows)
 }
