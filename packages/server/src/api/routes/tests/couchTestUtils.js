@@ -4,6 +4,9 @@ const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")
+const {
+  BUILTIN_PERMISSION_IDS,
+} = require("../../../utilities/security/permissions")
 
 const TEST_CLIENT_ID = "test-client-id"
 
@@ -67,6 +70,21 @@ exports.createTable = async (request, appId, table, removeId = true) => {
     .post(`/api/tables`)
     .set(exports.defaultHeaders(appId))
     .send(table)
+  return res.body
+}
+
+exports.createRole = async (request, appId) => {
+  const roleBody = {
+    name: "NewRole",
+    inherits: BUILTIN_ROLE_IDS.BASIC,
+    permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
+  }
+  const res = await request
+    .post(`/api/roles`)
+    .send(roleBody)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
   return res.body
 }
 
