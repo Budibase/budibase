@@ -4,6 +4,7 @@ import { backendUiStore, store } from "builderStore"
 import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
+import { search } from "../../../server/src/api/controllers/row"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -64,6 +65,7 @@ export const getDatasourceForProvider = component => {
     return {
       tableId: component[datasourceSetting?.key],
       type: "table",
+      searchableOnly: datasourceSetting.searchableOnly,
     }
   }
   return null
@@ -195,6 +197,12 @@ export const getSchemaForDatasource = datasource => {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
       } else {
         schema = cloneDeep(table.schema)
+        // Find searchable fields only
+        if (datasource.searchableOnly) {
+          Object.keys(table.schema).forEach(key => {
+            if (!table.schema[key].searchable) delete schema[key]
+          })
+        }
       }
     }
   }

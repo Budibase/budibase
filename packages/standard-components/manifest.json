@@ -130,7 +130,8 @@
       {
         "type": "table",
         "label": "Table",
-        "key": "table"
+        "key": "table",
+        "searchableOnly": true
       },
       {
         "type": "multifield",

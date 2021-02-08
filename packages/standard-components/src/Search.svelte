@@ -31,7 +31,7 @@
 
   $: fetchData(table, pagination)
   // omit empty strings
-  $: parsedSearch = Object.keys(search).reduce((acc, next) => search[next] ? { ...acc, [next]: search[next] } : acc, {})
+  $: parsedSearch = Object.keys(search).reduce((acc, next) => search[next] === "" ? acc : { ...acc, [next]: search[next] }, {})
 
   async function fetchData(table, pagination) {
     if (!isEmpty(table)) {

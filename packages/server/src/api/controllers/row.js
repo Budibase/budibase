@@ -229,6 +229,20 @@ exports.fetchView = async function(ctx) {
   }
 }
 
+exports.createIndex = async function(ctx) {
+  const appId = "app_1987903cf3604d459969c80cf17651a0"
+  const db = new CouchDB(appId)
+
+  ctx.body = await db.createIndex({
+    index: {
+      fields: ctx.request.body.fields,
+      name: "search_index",
+      ddoc: "search_ddoc",
+      type: "json",
+    },
+  })
+}
+
 exports.search = async function(ctx) {
   // const appId = ctx.user.appId
   const appId = "app_1987903cf3604d459969c80cf17651a0"
