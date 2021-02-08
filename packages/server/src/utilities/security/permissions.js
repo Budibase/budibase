@@ -30,12 +30,11 @@ function Permission(type, level) {
  */
 function getAllowedLevels(userPermLevel) {
   switch (userPermLevel) {
-    case PermissionLevels.READ:
-      return [PermissionLevels.READ]
-    case PermissionLevels.WRITE:
-      return [PermissionLevels.READ, PermissionLevels.WRITE]
     case PermissionLevels.EXECUTE:
       return [PermissionLevels.EXECUTE]
+    case PermissionLevels.READ:
+      return [PermissionLevels.EXECUTE, PermissionLevels.READ]
+    case PermissionLevels.WRITE:
     case PermissionLevels.ADMIN:
       return [
         PermissionLevels.READ,
@@ -114,6 +113,25 @@ exports.doesHavePermission = (permType, permLevel, permissionIds) => {
     }
   }
   return false
+}
+
+exports.higherPermission = (perm1, perm2) => {
+  function toNum(perm) {
+    switch (perm) {
+      // not everything has execute privileges
+      case PermissionLevels.EXECUTE:
+        return 0
+      case PermissionLevels.READ:
+        return 1
+      case PermissionLevels.WRITE:
+        return 2
+      case PermissionLevels.ADMIN:
+        return 3
+      default:
+        return -1
+    }
+  }
+  return toNum(perm1) > toNum(perm2) ? perm1 : perm2
 }
 
 // utility as a lot of things need simply the builder permission
