@@ -149,6 +149,10 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
+    <Toggle
+      bind:checked={field.constraints.oneToMany}
+      thin
+      text="One to many?" />
     <Select label="Table" thin secondary bind:value={field.tableId}>
       <option value="">Choose an option</option>
       {#each tableOptions as table}
