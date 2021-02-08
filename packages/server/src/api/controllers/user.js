@@ -64,15 +64,13 @@ exports.create = async function(ctx) {
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const user = ctx.request.body
-  const dbUser = await db.get(ctx.request.body._id)
   if (user.password) {
     user.password = await bcrypt.hash(user.password)
   } else {
     delete user.password
   }
-  const newData = { ...dbUser, ...user }
 
-  const response = await db.put(newData)
+  const response = await db.put(user)
   user._rev = response.rev
 
   ctx.status = 200

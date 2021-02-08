@@ -53,7 +53,7 @@
     }
   }
 
-  // The "safe" value is the value with eny bindings made readable
+  // The "safe" value is the value with any bindings made readable
   // If there is no value set, any default value is used
   const getSafeValue = (value, defaultValue, bindableProperties) => {
     const enriched = runtimeToReadableBinding(bindableProperties, value)
@@ -125,7 +125,7 @@
 
   .control {
     flex: 1;
-    display: flex;
+    display: inline-block;
     padding-left: 2px;
     overflow: hidden;
   }
