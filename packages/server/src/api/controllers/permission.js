@@ -26,6 +26,8 @@ async function updatePermissionOnRole(
   const dbRoles = body.rows.map(row => row.doc)
   const docUpdates = []
 
+  // TODO NEED TO HANDLE BUILTINS HERE - THE dbRoles doesn't contain them
+
   // now try to find any roles which need updated, e.g. removing the
   // resource from another role and then adding to the new role
   for (let role of dbRoles) {
