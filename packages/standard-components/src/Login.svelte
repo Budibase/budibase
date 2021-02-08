@@ -1,6 +1,8 @@
 <script>
   import { getContext } from "svelte"
 
+  const ENTER_KEY = 13
+
   const { authStore, styleable } = getContext("sdk")
   const component = getContext("component")
 
@@ -29,7 +31,9 @@
   }
 
   function handleKeydown(evt) {
-    console.log(evt.keyCode)
+    if (evt.keyCode === ENTER_KEY) {
+      login()
+    }
   }
 </script>
 

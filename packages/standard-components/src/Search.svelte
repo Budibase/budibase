@@ -16,68 +16,97 @@
   export let table = []
   export let columns = []
   export let pageSize = 50
-  export let noRowsMessage = "Feed me some data"
+  export let noRowsMessage = "No Rows"
 
   let rows = []
   let loaded = false
-  // let searchableFields = []
   let search = {}
   let tableDefinition
-  let schema = {}
-  let page = 1
+  let schema
 
-  $: columns = Object.keys(schema).filter(key => schema[key].searchable)
-  $: cursor = rows[rows.length - 1]?._id
-  $: page && fetchData(table)
+  // pagination
+  let pagination = {
+    page: 1
+  }
 
-  async function fetchData(table) {
+  $: fetchData(table, pagination)
+  // omit empty strings
+  $: parsedSearch = Object.keys(search).reduce((acc, next) => search[next] ? { ...acc, [next]: search[next] } : acc, {})
+
+  async function fetchData(table, pagination) {
     if (!isEmpty(table)) {
       const tableDef = await API.fetchTableDefinition(table)
       schema = tableDef.schema
       rows = await API.searchTable({
         tableId: table,
-        search,
-        pageSize,
-        cursor,
+        search: parsedSearch,
+        pagination: {
+          pageSize,
+          ...pagination
+        }
       })
     }
     loaded = true
   }
 
+  function nextPage() {
+    // set cursor to last element
+    pagination = {
+      // lastCursor: rows[0],
+      cursor: rows[rows.length - 1]?._id,
+      reverse: true,
+      page: pagination.page += 1
+    }
+  }
+
+  // TODO: implement 
+  function previousPage() {
+    pagination = {
+      cursor: lastCursor,
+      reverse: true,
+      page: pagination.page - 1
+    }
+  }
 </script>
 
 <div use:styleable={$component.styles}>
   <div class="query-builder">
-    {#each columns as field}
-      <div class="form-field">
-        <Label extraSmall grey>{schema[field].name}</Label>
-        {#if schema[field].type === 'options'}
-          <Select secondary bind:value={search[field]}>
-            <option value="">Choose an option</option>
-            {#each schema[field].constraints.inclusion as opt}
-              <option>{opt}</option>
-            {/each}
-          </Select>
-        {:else if schema[field].type === 'datetime'}
-          <DatePicker bind:value={search[field]} />
-        {:else if schema[field].type === 'boolean'}
-          <Toggle text={schema[field].name} bind:checked={search[field]} />
-        {:else if schema[field].type === 'number'}
-          <Input type="number" bind:value={search[field]} />
-        {:else if schema[field].type === 'string'}
-          <Input bind:value={search[field]} />
-        {/if}
-      </div>
-    {/each}
-    <Button blue on:click={() => fetchData(table)}>Search</Button>
-    <Button
-      red
-      on:click={() => {
-        search = {}
-        fetchData(table)
-      }}>
-      Reset
-    </Button>
+    {#if schema}
+      {#each columns as field}
+        <div class="form-field">
+          <Label extraSmall grey>{schema[field].name}</Label>
+          {#if schema[field].type === 'options'}
+            <Select secondary bind:value={search[field]}>
+              <option value="">Choose an option</option>
+              {#each schema[field].constraints.inclusion as opt}
+                <option>{opt}</option>
+              {/each}
+            </Select>
+          {:else if schema[field].type === 'datetime'}
+            <DatePicker bind:value={search[field]} />
+          {:else if schema[field].type === 'boolean'}
+            <Toggle text={schema[field].name} bind:checked={search[field]} />
+          {:else if schema[field].type === 'number'}
+            <Input type="number" bind:value={search[field]} />
+          {:else if schema[field].type === 'string'}
+            <Input bind:value={search[field]} />
+          {/if}
+        </div>
+      {/each}
+    {/if}
+    <div class="actions">
+      <Button
+        secondary
+        on:click={() => {
+          search = {}
+          pagination = {
+            page: 1
+          }
+        }}>
+        Reset
+      </Button>
+      <Button primary on:click={() => fetchData(table)}>Search</Button>
+    </div>
   </div>
   {#if rows.length > 0}
     {#if $component.children === 0 && $builderStore.inBuilder}
@@ -90,13 +119,17 @@
       {/each}
     {/if}
   {:else if loaded && $builderStore.inBuilder}
+    <p>Feed me some data</p>
+  {:else}
     <p>{noRowsMessage}</p>
   {/if}
   <div class="pagination">
-    {#if page > 1}
-      <Button blue on:click={() => (page -= 1)}>Back</Button>
+    <!-- {#if pagination.page > 1}
+      <Button blue on:click={previousPage}>Back</Button>
+    {/if} -->
+    {#if rows.length === pageSize}
+      <Button primary on:click={nextPage}>Next</Button>
     {/if}
-    <Button blue on:click={() => (page += 1)}>Next</Button>
   </div>
 </div>
 
@@ -113,6 +146,13 @@
     padding: var(--spacing-m);
     background: var(--background);
     border-radius: var(--border-radius-s);
+  }
+
+  .actions {
+    display: grid;
+    grid-gap: var(--spacing-s);
+    justify-content: flex-end;
+    grid-auto-flow: column;
   }
 
   .form-field {
