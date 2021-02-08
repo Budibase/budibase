@@ -32,6 +32,11 @@ router
     rowController.save
   )
   .post(
+    "/api/createindex",
+    // authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    rowController.createIndex
+  )
+  .post(
     "/api/:tableId/rows/search",
     // authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
