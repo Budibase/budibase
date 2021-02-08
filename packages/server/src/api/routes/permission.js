@@ -10,34 +10,36 @@ const joiValidator = require("../../middleware/joi-validator")
 
 const router = Router()
 
-function generateAddValidator() {
+function generateValidator() {
   const permLevelArray = Object.values(PermissionLevels)
   // prettier-ignore
-  return joiValidator.body(Joi.object({
-    permissions: Joi.object()
-      .pattern(/.*/, [Joi.string().valid(...permLevelArray)])
-      .required()
-  }).unknown(true))
-}
-
-function generateRemoveValidator() {
-  // prettier-ignore
-  return joiValidator.body(Joi.object({
-    permissions: Joi.array().items(Joi.string())
+  return joiValidator.params(Joi.object({
+    level: Joi.string().valid(...permLevelArray).required(),
+    resourceId: Joi.string(),
+    roleId: Joi.string(),
   }).unknown(true))
 }
 
 router
   .get("/api/permission/builtin", authorized(BUILDER), controller.fetchBuiltin)
   .get("/api/permission/levels", authorized(BUILDER), controller.fetchLevels)
-  .post(
-    "/api/permission/:roleId/:resourceId",
+  .get(
+    "/api/permission/:resourceId",
     authorized(BUILDER),
+    controller.getResourcePerms
+  )
+  // adding a specific role/level for the resource overrides the underlying access control
+  .post(
+    "/api/permission/:roleId/:resourceId/:level",
+    authorized(BUILDER),
+    generateValidator(),
     controller.addPermission
   )
+  // deleting the level defaults it back the underlying access control for the resource
   .delete(
-    "/api/permission/:roleId/:resourceId",
+    "/api/permission/:roleId/:resourceId/:level",
     authorized(BUILDER),
+    generateValidator(),
     controller.removePermission
   )
 
