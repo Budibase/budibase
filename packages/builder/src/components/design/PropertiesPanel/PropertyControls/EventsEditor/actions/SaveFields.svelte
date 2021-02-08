@@ -32,7 +32,7 @@
   // this statement initialises fields from parameters.fields
   $: fields =
     fields ||
-    Object.keys(parameterFields || { "": "" }).map(name => ({
+    Object.keys(parameterFields || {}).map(name => ({
       name,
       value:
         (parameterFields &&
