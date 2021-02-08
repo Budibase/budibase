@@ -57,12 +57,14 @@ exports.patch = async function(ctx) {
   let row = await db.get(ctx.params.id)
   const table = await db.get(row.tableId)
   const patchfields = ctx.request.body
-  row = coerceRowValues(row, table)
 
+  // need to build up full patch fields before coerce
   for (let key of Object.keys(patchfields)) {
     if (!table.schema[key]) continue
     row[key] = patchfields[key]
   }
+
+  row = coerceRowValues(row, table)
 
   const validateResult = await validate({
     row,
@@ -89,6 +91,8 @@ exports.patch = async function(ctx) {
 
   // Creation of a new user goes to the user controller
   if (row.tableId === ViewNames.USERS) {
+    // the row has been updated, need to put it into the ctx
+    ctx.request.body = row
     await usersController.update(ctx)
     return
   }
@@ -157,6 +161,8 @@ exports.save = async function(ctx) {
 
   // Creation of a new user goes to the user controller
   if (row.tableId === ViewNames.USERS) {
+    // the row has been updated, need to put it into the ctx
+    ctx.request.body = row
     await usersController.create(ctx)
     return
   }
