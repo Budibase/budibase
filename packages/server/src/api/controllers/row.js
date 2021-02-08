@@ -231,7 +231,7 @@ exports.fetchView = async function(ctx) {
 
 exports.search = async function(ctx) {
   // const appId = ctx.user.appId
-  const appId = 'app_5aa5e9cf26694f9ea02f054050d7ae63'
+  const appId = "app_1987903cf3604d459969c80cf17651a0"
 
   // const { pageSize = 10, cursor } = ctx.query
 
@@ -245,7 +245,10 @@ exports.search = async function(ctx) {
 
   const db = new CouchDB(appId)
 
-  const { query, pageSize = 10, cursor } = ctx.request.body
+  const {
+    query,
+    pagination: { pageSize = 10, cursor, reverse },
+  } = ctx.request.body
 
   query.tableId = ctx.params.tableId
 
@@ -257,13 +260,12 @@ exports.search = async function(ctx) {
   const response = await db.find({
     selector: query,
     limit: pageSize,
-    // sort: ["_id"],
+    sort: ["_id"],
+    skip: 1,
   })
-  ctx.body = response.docs
+  const rows = response.docs
 
-  // TODO: probably attach relationships
-  // const rows = response.docs.map(row => row.doc)
-  // ctx.body = await linkRows.attachLinkInfo(appId, rows)
+  ctx.body = await linkRows.attachLinkInfo(appId, rows)
 }
 
 exports.fetchTableRows = async function(ctx) {

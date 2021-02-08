@@ -135,12 +135,12 @@
       {
         "type": "multifield",
         "label": "Columns",
-        "key": "valueColumns",
+        "key": "columns",
         "dependsOn": "table"
       },
       {
         "type": "number",
-        "label": "Result Page Size",
+        "label": "Rows Per Page",
         "key": "pageSize"
       },
       {
