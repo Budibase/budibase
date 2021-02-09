@@ -3,6 +3,15 @@ import { Component } from "./Component"
 import { rowListUrl } from "../rowListScreen"
 import { backendUiStore } from "builderStore"
 
+export function spectrumColor(number) {
+  // Acorn throws a parsing error in this file if the word g-l-o-b-a-l is found
+  // (without dashes - I can't even type it in a comment).
+  // God knows why. It seems to think optional chaining further down the
+  // file is invalid if the word g-l-o-b-a-l is found - hence the reason this
+  // statement is split into parts.
+  return "color: var(--spectrum-glo" + `bal-color-gray-${number});`
+}
+
 export function makeLinkComponent(tableName) {
   return new Component("@budibase/standard-components/link")
     .normalStyle({
@@ -12,6 +21,7 @@ export function makeLinkComponent(tableName) {
     .hoverStyle({
       color: "#4285f4",
     })
+    .customStyle(spectrumColor(700))
     .text(tableName)
     .customProps({
       url: `/${tableName.toLowerCase()}`,
@@ -52,6 +62,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
       "margin-right": "4px",
       "margin-left": "4px",
     })
+    .customStyle(spectrumColor(700))
     .text(">")
     .instanceName("Arrow")
 
@@ -64,6 +75,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
   const identifierText = new Component("@budibase/standard-components/text")
     .type("none")
     .normalStyle(textStyling)
+    .customStyle(spectrumColor(700))
     .text(text)
     .instanceName("Identifier")
 
@@ -132,6 +144,7 @@ export function makeTitleContainer(title) {
       "margin-left": "0px",
       flex: "1 1 auto",
     })
+    .customStyle(spectrumColor(900))
     .type("h3")
     .instanceName("Title")
     .text(title)
