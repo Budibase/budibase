@@ -23,6 +23,7 @@ function generateValidator() {
 router
   .get("/api/permission/builtin", authorized(BUILDER), controller.fetchBuiltin)
   .get("/api/permission/levels", authorized(BUILDER), controller.fetchLevels)
+  .get("/api/permission", authorized(BUILDER), controller.fetch)
   .get(
     "/api/permission/:resourceId",
     authorized(BUILDER),

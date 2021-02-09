@@ -73,6 +73,22 @@ exports.createTable = async (request, appId, table, removeId = true) => {
   return res.body
 }
 
+exports.createRow = async (request, appId, tableId, row = null) => {
+  row = row || {
+    name: "Test Contact",
+    description: "original description",
+    status: "new",
+    tableId: tableId,
+  }
+  const res = await request
+    .post(`/api/${tableId}/rows`)
+    .send(row)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
+  return res.body
+}
+
 exports.createRole = async (request, appId) => {
   const roleBody = {
     name: "NewRole",

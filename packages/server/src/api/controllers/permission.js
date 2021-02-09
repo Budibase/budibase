@@ -18,6 +18,16 @@ const PermissionUpdateType = {
   ADD: "add",
 }
 
+// utility function to stop this repetition - permissions always stored under roles
+async function getAllDBRoles(db) {
+  const body = await db.allDocs(
+    getRoleParams(null, {
+      include_docs: true,
+    })
+  )
+  return body.rows.map(row => row.doc)
+}
+
 async function updatePermissionOnRole(
   appId,
   { roleId, resourceId, level },
@@ -27,12 +37,7 @@ async function updatePermissionOnRole(
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = isBuiltin(roleId)
   const dbRoleId = getDBRoleID(roleId)
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  const dbRoles = body.rows.map(row => row.doc)
+  const dbRoles = await getAllDBRoles(db)
   const docUpdates = []
 
   // the permission is for a built in, make sure it exists
@@ -85,6 +90,28 @@ exports.fetchBuiltin = function(ctx) {
 exports.fetchLevels = function(ctx) {
   // for now only provide the read/write perms externally
   ctx.body = [PermissionLevels.WRITE, PermissionLevels.READ]
+}
+
+exports.fetch = async function(ctx) {
+  const db = new CouchDB(ctx.appId)
+  const roles = await getAllDBRoles(db)
+  let permissions = {}
+  // create an object with structure role ID -> resource ID -> level
+  for (let role of roles) {
+    if (role.permissions) {
+      const roleId = getExternalRoleID(role._id)
+      if (permissions[roleId] == null) {
+        permissions[roleId] = {}
+      }
+      for (let [resource, level] of Object.entries(role.permissions)) {
+        permissions[roleId][resource] = higherPermission(
+          permissions[roleId][resource],
+          level
+        )
+      }
+    }
+  }
+  ctx.body = permissions
 }
 
 exports.getResourcePerms = async function(ctx) {
