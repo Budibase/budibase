@@ -8,8 +8,6 @@
   export let schema
   export let linkedRows = []
 
-  console.log(schema)
-  console.log(linkedRows)
   let rows = []
 
   $: label = capitalise(schema.name)
@@ -34,11 +32,8 @@
     return row[linkedTable.primaryDisplay || "_id"]
   }
 
-  let oneToManyRow = getPrettyName(linkedRows[0]) || ''
-
-  function oneToManyValueSetter(value) {
-    linkedRows = [value]
-  }
+  $: console.log(rows)
+  $: console.log(linkedRows)
 </script>
 
 {#if linkedTable.primaryDisplay == null}
@@ -50,10 +45,10 @@
   </Label>
 {:else}
   {#if schema.oneToMany}
-    <Select on:change={e => oneToManyValueSetter(e.target.value)} value={getPrettyName(oneToManyRow)} name="Test" label="Flavour">
+    <Select on:change={e => linkedRows = [e.target.value]} name={label} {label}>
       <option value="">Choose an option</option>
       {#each rows as row}
-        <option value={row._id}>{getPrettyName(row)}</option>
+        <option selected={row._id === linkedRows[0]} value={row._id}>{getPrettyName(row)}</option>
       {/each}
     </Select>
   {:else}
