@@ -1,10 +1,10 @@
-const { 
+const {
   supertest,
   createApplication,
   defaultHeaders,
   builderEndpointShouldBlockNormalUsers,
   getDocument,
-  insertDocument
+  insertDocument,
 } = require("./couchTestUtils")
 let { generateDatasourceID, generateQueryID } = require("../../../db/utils")
 
@@ -21,11 +21,11 @@ const TEST_DATASOURCE = {
 const TEST_QUERY = {
   _id: generateQueryID(DATASOURCE_ID),
   datasourceId: DATASOURCE_ID,
-  name:"New Query",
-  parameters:[],
-  fields:{},
-  schema:{},
-  queryVerb:"read",
+  name: "New Query",
+  parameters: [],
+  fields: {},
+  schema: {},
+  queryVerb: "read",
 }
 
 describe("/queries", () => {
@@ -37,8 +37,8 @@ describe("/queries", () => {
   let query
 
   beforeAll(async () => {
-    ({ request, server } = await supertest())
-  });
+    ;({ request, server } = await supertest())
+  })
 
   afterAll(() => {
     server.close()
@@ -47,7 +47,7 @@ describe("/queries", () => {
   beforeEach(async () => {
     app = await createApplication(request)
     appId = app.instance._id
-  });
+  })
 
   async function createDatasource() {
     return await insertDocument(appId, TEST_DATASOURCE)
@@ -63,65 +63,68 @@ describe("/queries", () => {
         .post(`/api/queries`)
         .send(TEST_QUERY)
         .set(defaultHeaders(appId))
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
-        expect(res.res.statusMessage).toEqual(`Query ${TEST_QUERY.name} saved successfully.`);            
-        expect(res.body).toEqual({
-          _rev: res.body._rev,
-          ...TEST_QUERY,
-        });
+      expect(res.res.statusMessage).toEqual(
+        `Query ${TEST_QUERY.name} saved successfully.`
+      )
+      expect(res.body).toEqual({
+        _rev: res.body._rev,
+        ...TEST_QUERY,
       })
-    });
+    })
+  })
 
   describe("fetch", () => {
     let datasource
 
     beforeEach(async () => {
       datasource = await createDatasource()
-    });
+    })
 
     afterEach(() => {
       delete datasource._rev
-    });
+    })
 
     it("returns all the queries from the server", async () => {
       const query = await createQuery()
       const res = await request
         .get(`/api/queries`)
         .set(defaultHeaders(appId))
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
-        const queries = res.body;
-        expect(queries).toEqual([
-          {
-            "_rev": query.rev,
-            ...TEST_QUERY
-          }
-        ]);            
+      const queries = res.body
+      expect(queries).toEqual([
+        {
+          _rev: query.rev,
+          ...TEST_QUERY,
+          readable: true,
+        },
+      ])
     })
 
     it("should apply authorization to endpoint", async () => {
-        await builderEndpointShouldBlockNormalUsers({
-          request,
-          method: "GET",
-          url: `/api/datasources`,
-          appId: appId,
-        })
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "GET",
+        url: `/api/datasources`,
+        appId: appId,
       })
-    });
+    })
+  })
 
   describe("destroy", () => {
-    let datasource;
+    let datasource
 
     beforeEach(async () => {
       datasource = await createDatasource()
-    });
+    })
 
     afterEach(() => {
       delete datasource._rev
-    });
+    })
 
     it("deletes a query and returns a success message", async () => {
       const query = await createQuery()
@@ -134,10 +137,10 @@ describe("/queries", () => {
       const res = await request
         .get(`/api/queries`)
         .set(defaultHeaders(appId))
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      
-        expect(res.body).toEqual([])
+
+      expect(res.body).toEqual([])
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -148,5 +151,5 @@ describe("/queries", () => {
         appId: appId,
       })
     })
-  });
-});
+  })
+})
