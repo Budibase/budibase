@@ -152,6 +152,7 @@
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
     <Toggle
+      disabled={originalName}
       bind:checked={field.oneToMany}
       thin
       text="One to many?" />
