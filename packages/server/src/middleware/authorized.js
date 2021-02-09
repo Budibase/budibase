@@ -43,12 +43,8 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // don't expose builder endpoints in the cloud
   if (env.CLOUD && permType === PermissionTypes.BUILDER) return
 
-  if (!ctx.auth.authenticated) {
-    ctx.throw(403, "Session not authenticated")
-  }
-
   if (!ctx.user) {
-    ctx.throw(403, "User not found")
+    ctx.throw(403, "No user info found")
   }
 
   const role = ctx.user.role
@@ -56,11 +52,15 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.appId,
     role._id
   )
-  if (ADMIN_ROLES.indexOf(role._id) !== -1) {
-    return next()
-  }
+  const isAdmin = ADMIN_ROLES.indexOf(role._id) !== -1
+  const isAuthed = ctx.auth.authenticated
 
-  if (permType === PermissionTypes.BUILDER) {
+  // this may need to change in the future, right now only admins
+  // can have access to builder features, this is hard coded into
+  // our rules
+  if (isAdmin && isAuthed) {
+    return next()
+  } else if (permType === PermissionTypes.BUILDER) {
     ctx.throw(403, "Not Authorized")
   }
 
@@ -69,6 +69,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     doesHaveResourcePermission(permissions, permLevel, ctx)
   ) {
     return next()
+  }
+
+  if (!isAuthed) {
+    ctx.throw(403, "Session not authenticated")
   }
 
   if (!doesHaveBasePermission(permType, permLevel, basePermissions)) {

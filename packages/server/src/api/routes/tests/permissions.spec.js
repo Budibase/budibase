@@ -5,6 +5,8 @@ const {
   supertest,
   defaultHeaders,
   addPermission,
+  publicHeaders,
+  makeBasicRow,
 } = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 
@@ -102,7 +104,22 @@ describe("/permission", () => {
 
   describe("check public user allowed", () => {
     it("should be able to read the row", async () => {
-      // TODO
+      const res = await request
+        .get(`/api/${table._id}/rows`)
+        .set(publicHeaders(appId))
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body[0]._id).toEqual(row._id)
+    })
+
+    it("shouldn't allow writing from a public user", async () => {
+      const res = await request
+        .post(`/api/${table._id}/rows`)
+        .send(makeBasicRow(table._id))
+        .set(publicHeaders(appId))
+        .expect("Content-Type", /json/)
+        .expect(403)
+      expect(res.status).toEqual(403)
     })
   })
 })

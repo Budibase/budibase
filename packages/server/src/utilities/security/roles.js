@@ -77,7 +77,7 @@ exports.getRole = async (appId, roleId) => {
   }
   try {
     const db = new CouchDB(appId)
-    const dbRole = await db.get(roleId)
+    const dbRole = await db.get(exports.getDBRoleID(roleId))
     role = Object.assign(role, dbRole)
     // finalise the ID
     role._id = exports.getExternalRoleID(role._id)
