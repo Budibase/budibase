@@ -36,7 +36,9 @@
 {:else if type === 'boolean'}
   <Toggle text={label} bind:checked={value} data-cy="{meta.name}-input" />
 {:else if type === 'link'}
-  <LinkedRowSelector bind:linkedRows={value} schema={meta} />
+  <div>
+    <LinkedRowSelector bind:linkedRows={value} schema={meta} />
+  </div>
 {:else if type === 'longform'}
   <div>
     <Label extraSmall grey>{label}</Label>
