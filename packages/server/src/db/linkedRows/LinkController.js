@@ -140,7 +140,7 @@ class LinkController {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             // first check the doc we're linking to exists
             try {
-              await this._db.get(linkId)
+              await Promise.all([this._db.get(linkId), this._db.get(row._id)])
             } catch (err) {
               // skip links that don't exist
               continue
