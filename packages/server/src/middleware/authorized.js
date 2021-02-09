@@ -64,12 +64,12 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.throw(403, "Not Authorized")
   }
 
-  // if (
-  //   hasResource(ctx) &&
-  //   doesHaveResourcePermission(permissions, permLevel, ctx)
-  // ) {
-  //   return next()
-  // }
+  if (
+    hasResource(ctx) &&
+    doesHaveResourcePermission(permissions, permLevel, ctx)
+  ) {
+    return next()
+  }
 
   if (!doesHaveBasePermission(permType, permLevel, basePermissions)) {
     ctx.throw(403, "User does not have permission")
