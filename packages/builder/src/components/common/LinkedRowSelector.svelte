@@ -31,9 +31,6 @@
   function getPrettyName(row) {
     return row[linkedTable.primaryDisplay || "_id"]
   }
-
-  $: console.log(rows)
-  $: console.log(linkedRows)
 </script>
 
 {#if linkedTable.primaryDisplay == null}
