@@ -7,10 +7,7 @@ import { enrichRows } from "./rows"
 
 export const searchTable = async ({ tableId, search, pagination }) => {
   const rows = await searchTableData({ tableId, search, pagination })
-  return rows
-  // TODO
-  // Enrich rows so they can displayed properly
-  // return await enrichRows(rows, tableId)
+  return await enrichRows(rows, tableId)
 }
 
 /**

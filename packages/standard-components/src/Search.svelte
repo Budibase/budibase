@@ -28,7 +28,6 @@
   let page = 0
 
   $: fetchData(table, page)
-  $: searchable = [...(table.indexes || []), ...columns]
   // omit empty strings
   $: parsedSearch = Object.keys(search).reduce(
     (acc, next) =>
@@ -114,14 +113,12 @@
     <p>{noRowsMessage}</p>
   {/if}
   <div class="pagination">
-    <!-- <Button primary on:click={previousPage}>First</Button> -->
     {#if page > 0}
       <Button primary on:click={previousPage}>Back</Button>
     {/if}
     {#if rows.length === pageSize}
       <Button primary on:click={nextPage}>Next</Button>
     {/if}
-    <!-- <Button primary on:click={previousPage}>Last</Button> -->
   </div>
 </div>
 
