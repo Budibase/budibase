@@ -1294,12 +1294,6 @@
         "type": "text",
         "label": "Label",
         "key": "label"
-      },
-      {
-        "type": "text",
-        "label": "Placeholder",
-        "key": "placeholder",
-        "placeholder": "Choose an option"
       }
     ]
   }
