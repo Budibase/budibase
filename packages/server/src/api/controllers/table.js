@@ -212,6 +212,15 @@ exports.destroy = async function(ctx) {
   // don't remove the table itself until very end
   await db.remove(tableToDelete)
 
+  // remove table search index
+  const currentIndexes = await db.getIndexes()
+  const existingIndex = currentIndexes.indexes.find(
+    existing => existing.name === `search:${ctx.params.tableId}`
+  )
+  if (existingIndex) {
+    await db.deleteIndex(existingIndex)
+  }
+
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, appId, tableToDelete)
   ctx.status = 200

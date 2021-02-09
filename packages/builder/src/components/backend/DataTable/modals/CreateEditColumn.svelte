@@ -89,22 +89,14 @@
   }
 
   function onChangePrimaryIndex(e) {
-    const enabled = e.target.checked
-    if (enabled) {
-      indexes[0] = field.name
-    } else {
-      indexes.shift()
-      indexes = indexes
-    }
+    indexes = e.target.checked ? [field.name] : []
   }
 
   function onChangeSecondaryIndex(e) {
-    const enabled = e.target.checked
-    if (enabled) {
+    if (e.target.checked) {
       indexes[1] = field.name
     } else {
-      indexes.pop()
-      indexes = indexes
+      indexes = indexes.slice(0, 1)
     }
   }
 
