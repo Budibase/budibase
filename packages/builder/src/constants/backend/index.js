@@ -78,7 +78,6 @@ export const FIELDS = {
     constraints: {
       type: "array",
       presence: false,
-      oneToMany: false
     },
   },
 }
