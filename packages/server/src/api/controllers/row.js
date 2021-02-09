@@ -233,6 +233,8 @@ exports.createIndex = async function(ctx) {
   const appId = "app_1987903cf3604d459969c80cf17651a0"
   const db = new CouchDB(appId)
 
+  const indexes = await db.getIndexes()
+
   // ctx.body = await db.get("_design/search_ddoc")
   ctx.body = await db.createIndex({
     index: {
@@ -246,28 +248,32 @@ exports.createIndex = async function(ctx) {
 }
 
 exports.search = async function(ctx) {
-  const appId = ctx.user.appId
-  // const appId = "app_1987903cf3604d459969c80cf17651a0"
+  // const appId = ctx.user.appId
+  const appId = "app_1987903cf3604d459969c80cf17651a0"
 
   const db = new CouchDB(appId)
 
   const {
     query,
-    pagination: { pageSize = 10, cursor },
+    pagination: { pageSize = 10, page },
   } = ctx.request.body
 
   query.tableId = ctx.params.tableId
 
   // Paginating
-  if (cursor) {
-    query._id = { $gte: cursor }
-  }
+  // if (cursor) {
+  //   if (backwards) {
+  //     query._id = { $lte: cursor }
+  //   } else {
+  //     query._id = { $gte: cursor }
+  //   }
+  // }
 
   const response = await db.find({
     selector: query,
     limit: pageSize,
-    sort: ["_id"],
-    skip: 1,
+    skip: pageSize * page,
+    // sort: ["_id"],
   })
 
   const rows = response.docs
@@ -279,6 +285,7 @@ exports.search = async function(ctx) {
     }
   }
 
+  // ctx.body = response
   ctx.body = await linkRows.attachLinkInfo(appId, rows)
 }
 

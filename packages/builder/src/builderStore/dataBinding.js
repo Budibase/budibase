@@ -64,7 +64,6 @@ export const getDatasourceForProvider = component => {
     return {
       tableId: component[datasourceSetting?.key],
       type: "table",
-      searchableOnly: datasourceSetting.searchableOnly,
     }
   }
   return null
@@ -196,12 +195,6 @@ export const getSchemaForDatasource = datasource => {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
       } else {
         schema = cloneDeep(table.schema)
-        // Find searchable fields only
-        if (datasource.searchableOnly) {
-          Object.keys(table.schema).forEach(key => {
-            if (!table.schema[key].searchable) delete schema[key]
-          })
-        }
       }
     }
   }

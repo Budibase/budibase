@@ -127,7 +127,7 @@
     <Toggle
       bind:checked={field.searchable}
       thin
-      text="Searchable" />
+      text="Index for Search" />
   {/if}
 
   {#if field.type === 'string'}
