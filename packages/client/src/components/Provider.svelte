@@ -11,15 +11,20 @@
   // Clone and create new data context for this component tree
   const context = getContext("context")
   const component = getContext("component")
-  const newContext = createContextStore($context)
+  const newContext = createContextStore()
   setContext("context", newContext)
+
+  let initiated = false
   $: providerKey = key || $component.id
+
+  // Add data context
+  $: {
+    newContext.actions.provideData(providerKey, $context, data)
+    initiated = true
+  }
 
   // Instance ID is unique to each instance of a provider
   let instanceId
-
-  // Add data context
-  $: data !== undefined && newContext.actions.provideData(providerKey, data)
 
   // Add actions context
   $: {
@@ -51,4 +56,6 @@
   })
 </script>
 
-<slot />
+{#if initiated}
+  <slot />
+{/if}
