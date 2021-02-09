@@ -24,6 +24,7 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
+  let oneToMany = false;
   let confirmDeleteDialog
   let deletion
 
@@ -41,6 +42,7 @@
         originalName,
         field,
         primaryDisplay,
+        oneToMany,
       })
       return state
     })
@@ -150,7 +152,7 @@
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
     <Toggle
-      bind:checked={field.constraints.oneToMany}
+      bind:checked={field.oneToMany}
       thin
       text="One to many?" />
     <Select label="Table" thin secondary bind:value={field.tableId}>
