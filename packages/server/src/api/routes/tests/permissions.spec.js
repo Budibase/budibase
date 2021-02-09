@@ -48,7 +48,7 @@ describe("/permission", () => {
   describe("test", () => {
     it("should be able to add permission to a role for the table", async () => {
       expect(perms.length).toEqual(1)
-      expect(perms[0].id).toEqual(`${STD_ROLE_ID}`)
+      expect(perms[0]._id).toEqual(`${STD_ROLE_ID}`)
     })
 
     it("should get the resource permissions", async () => {

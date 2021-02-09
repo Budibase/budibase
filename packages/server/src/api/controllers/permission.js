@@ -71,10 +71,11 @@ async function updatePermissionOnRole(
   }
 
   const response = await db.bulkDocs(docUpdates)
-  return response.map(resp => ({
-    ...resp,
-    _id: getExternalRoleID(resp._id),
-  }))
+  return response.map(resp => {
+    resp._id = getExternalRoleID(resp.id)
+    delete resp.id
+    return resp
+  })
 }
 
 exports.fetchBuiltin = function(ctx) {

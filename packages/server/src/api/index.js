@@ -47,6 +47,7 @@ router.use(async (ctx, next) => {
       message: err.message,
       status: ctx.status,
     }
+    console.trace(err)
   }
 })
 
