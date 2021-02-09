@@ -25,15 +25,13 @@
   let schema
 
   // pagination
-  let pagination = {
-    page: 1
-  }
+  let page = 0
 
-  $: fetchData(table, pagination)
+  $: fetchData(table, page)
   // omit empty strings
   $: parsedSearch = Object.keys(search).reduce((acc, next) => search[next] === "" ? acc : { ...acc, [next]: search[next] }, {})
 
-  async function fetchData(table, pagination) {
+  async function fetchData(table, page) {
     if (!isEmpty(table)) {
       const tableDef = await API.fetchTableDefinition(table)
       schema = tableDef.schema
@@ -42,7 +40,7 @@
         search: parsedSearch,
         pagination: {
           pageSize,
-          ...pagination
+          page
         }
       })
     }
@@ -50,22 +48,11 @@
   }
 
   function nextPage() {
-    // set cursor to last element
-    pagination = {
-      // lastCursor: rows[0],
-      cursor: rows[rows.length - 1]?._id,
-      reverse: true,
-      page: pagination.page += 1
-    }
+    page += 1
   }
 
-  // TODO: implement 
   function previousPage() {
-    pagination = {
-      cursor: lastCursor,
-      reverse: true,
-      page: pagination.page - 1
-    }
+    page -= 1
   }
 </script>
 
@@ -99,9 +86,7 @@
         secondary
         on:click={() => {
           search = {}
-          pagination = {
-            page: 1
-          }
+          page = 0
         }}>
         Reset
       </Button>
@@ -124,12 +109,14 @@
     <p>{noRowsMessage}</p>
   {/if}
   <div class="pagination">
-    <!-- {#if pagination.page > 1}
-      <Button blue on:click={previousPage}>Back</Button>
-    {/if} -->
+    <!-- <Button primary on:click={previousPage}>First</Button> -->
+    {#if page > 0}
+      <Button primary on:click={previousPage}>Back</Button>
+    {/if}
     {#if rows.length === pageSize}
       <Button primary on:click={nextPage}>Next</Button>
     {/if}
+    <!-- <Button primary on:click={previousPage}>Last</Button> -->
   </div>
 </div>
 
@@ -160,8 +147,10 @@
   }
 
   .pagination {
-    display: flex;
+    display: grid;
+    grid-gap: var(--spacing-s);
     justify-content: flex-end;
     margin-top: var(--spacing-m);
+    grid-auto-flow: column;
   }
 </style>
