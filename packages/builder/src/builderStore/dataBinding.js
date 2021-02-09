@@ -153,8 +153,6 @@ export const getContextBindings = (rootComponent, componentId) => {
         // datasource options, based on bindable properties
         fieldSchema,
         providerId: component._id,
-        // tableId: table._id,
-        // field: key,
       })
     })
   })
@@ -186,8 +184,6 @@ export const getContextBindings = (rootComponent, componentId) => {
       // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
-      // tableId: TableNames.USERS,
-      // field: key,
     })
   })
 
