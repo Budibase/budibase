@@ -7,6 +7,7 @@ const {
   generateTableID,
   generateRowID,
 } = require("../../db/utils")
+const { isEqual } = require("lodash/fp")
 
 async function checkForColumnUpdates(db, oldTable, updatedTable) {
   let updatedRows
@@ -36,18 +37,6 @@ async function checkForColumnUpdates(db, oldTable, updatedTable) {
     delete updatedTable._rename
   }
   return updatedRows
-}
-
-async function updateSearchIndex(fields) {
-  console.log("Updating stuff")
-  const resp = await db.createIndex({
-    index: {
-      fields,
-      name: "search_index",
-      ddoc: "search_ddoc",
-      type: "json",
-    },
-  })
 }
 
 exports.fetch = async function(ctx) {
@@ -139,6 +128,46 @@ exports.save = async function(ctx) {
   }
   const result = await db.post(tableToSave)
   tableToSave._rev = result.rev
+
+  // create relevant search indexes
+  if (tableToSave.indexes && tableToSave.indexes.length > 0) {
+    const currentIndexes = await db.getIndexes()
+    const indexName = `search:${result.id}`
+
+    const existingIndex = currentIndexes.indexes.find(
+      existing => existing.name === indexName
+    )
+
+    if (existingIndex) {
+      const currentFields = existingIndex.def.fields.map(
+        field => Object.keys(field)[0]
+      )
+
+      // if index fields have changed, delete the original index
+      if (!isEqual(currentFields, tableToSave.indexes)) {
+        await db.deleteIndex(existingIndex)
+        // create/recreate the index with fields
+        await db.createIndex({
+          index: {
+            fields: tableToSave.indexes,
+            name: indexName,
+            ddoc: "search_ddoc",
+            type: "json",
+          },
+        })
+      }
+    } else {
+      // create/recreate the index with fields
+      await db.createIndex({
+        index: {
+          fields: tableToSave.indexes,
+          name: indexName,
+          ddoc: "search_ddoc",
+          type: "json",
+        },
+      })
+    }
+  }
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, tableToSave)

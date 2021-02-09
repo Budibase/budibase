@@ -1,5 +1,12 @@
 <script>
-  import { Input, Button, TextButton, Select, Toggle } from "@budibase/bbui"
+  import {
+    Input,
+    Button,
+    Label,
+    TextButton,
+    Select,
+    Toggle,
+  } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -24,6 +31,7 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
+  let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
   let deletion
 
@@ -41,6 +49,7 @@
         originalName,
         field,
         primaryDisplay,
+        indexes,
       })
       return state
     })
@@ -79,8 +88,24 @@
     }
   }
 
-  function onChangeSearchable() {
+  function onChangePrimaryIndex(e) {
+    const enabled = e.target.checked
+    if (enabled) {
+      indexes[0] = field.name
+    } else {
+      indexes.shift()
+      indexes = indexes
+    }
+  }
 
+  function onChangeSecondaryIndex(e) {
+    const enabled = e.target.checked
+    if (enabled) {
+      indexes[1] = field.name
+    } else {
+      indexes.pop()
+      indexes = indexes
+    }
   }
 
   function confirmDelete() {
@@ -124,10 +149,20 @@
       on:change={onChangePrimaryDisplay}
       thin
       text="Use as table display column" />
+
+    <Label gray small>Search Indexes</Label>
     <Toggle
-      bind:checked={field.searchable}
+      checked={indexes[0] === field.name}
+      disabled={indexes[1] === field.name}
+      on:change={onChangePrimaryIndex}
       thin
-      text="Index for Search" />
+      text="Primary" />
+    <Toggle
+      checked={indexes[1] === field.name}
+      disabled={!indexes[0] || indexes[0] === field.name}
+      on:change={onChangeSecondaryIndex}
+      thin
+      text="Secondary" />
   {/if}
 
   {#if field.type === 'string'}
