@@ -40,6 +40,17 @@ exports.defaultHeaders = appId => {
   return headers
 }
 
+exports.publicHeaders = appId => {
+  const headers = {
+    Accept: "application/json",
+  }
+  if (appId) {
+    headers["x-budibase-app-id"] = appId
+  }
+
+  return headers
+}
+
 exports.BASE_TABLE = {
   name: "TestTable",
   type: "table",
@@ -73,13 +84,17 @@ exports.createTable = async (request, appId, table, removeId = true) => {
   return res.body
 }
 
-exports.createRow = async (request, appId, tableId, row = null) => {
-  row = row || {
+exports.makeBasicRow = tableId => {
+  return {
     name: "Test Contact",
     description: "original description",
     status: "new",
     tableId: tableId,
   }
+}
+
+exports.createRow = async (request, appId, tableId, row = null) => {
+  row = row || exports.makeBasicRow(tableId)
   const res = await request
     .post(`/api/${tableId}/rows`)
     .send(row)
