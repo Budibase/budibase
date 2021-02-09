@@ -40,7 +40,7 @@
   "gitHead": "1a80b09fd093f2599a68f7db72ad639dd50922dd",
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "^1.1.0",
-    "@budibase/bbui": "^1.58.3",
+    "@budibase/bbui": "^1.58.4",
     "@budibase/svelte-ag-grid": "^0.0.16",
     "@spectrum-css/actionbutton": "^1.0.0-beta.1",
     "@spectrum-css/button": "^3.0.0-beta.6",
