@@ -8,6 +8,8 @@
   export let schema
   export let linkedRows = []
 
+  console.log(schema)
+  console.log(linkedRows)
   let rows = []
 
   $: label = capitalise(schema.name)
@@ -31,6 +33,12 @@
   function getPrettyName(row) {
     return row[linkedTable.primaryDisplay || "_id"]
   }
+
+  let oneToManyRow = getPrettyName(linkedRows[0]) || ''
+
+  function oneToManyValueSetter(value) {
+    linkedRows = [value]
+  }
 </script>
 
 {#if linkedTable.primaryDisplay == null}
@@ -41,13 +49,22 @@
     table.
   </Label>
 {:else}
-  <Multiselect
-    secondary
-    bind:value={linkedRows}
-    {label}
-    placeholder="Choose some options">
-    {#each rows as row}
-      <option value={row._id}>{getPrettyName(row)}</option>
-    {/each}
-  </Multiselect>
+  {#if schema.oneToMany}
+    <Select on:change={e => oneToManyValueSetter(e.target.value)} value={getPrettyName(oneToManyRow)} name="Test" label="Flavour">
+      <option value="">Choose an option</option>
+      {#each rows as row}
+        <option value={row._id}>{getPrettyName(row)}</option>
+      {/each}
+    </Select>
+  {:else}
+    <Multiselect
+      secondary
+      bind:value={linkedRows}
+      {label}
+      placeholder="Choose some options">
+      {#each rows as row}
+        <option value={row._id}>{getPrettyName(row)}</option>
+      {/each}
+    </Multiselect>
+  {/if}
 {/if}
