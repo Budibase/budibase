@@ -138,6 +138,13 @@ class LinkController {
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
+            // first check the doc we're linking to exists
+            try {
+              await this._db.get(linkId)
+            } catch (err) {
+              // skip links that don't exist
+              continue
+            }
             operations.push(
               new LinkDocument(
                 table._id,
