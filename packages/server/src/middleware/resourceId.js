@@ -21,13 +21,17 @@ class ResourceIdGetter {
       main = this.main,
       sub = this.sub
     return (ctx, next) => {
-      if (main != null && ctx.request[parameter][main]) {
-        ctx.resourceId = ctx.request[parameter][main]
+      const request = ctx.request[parameter] || ctx[parameter]
+      if (request == null) {
+        return next()
       }
-      if (sub != null && ctx.request[parameter][sub]) {
-        ctx.subResourceId = ctx.request[parameter][sub]
+      if (main != null && request[main]) {
+        ctx.resourceId = request[main]
       }
-      next()
+      if (sub != null && request[sub]) {
+        ctx.subResourceId = request[sub]
+      }
+      return next()
     }
   }
 }

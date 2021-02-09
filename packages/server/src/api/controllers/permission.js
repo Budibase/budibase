@@ -3,8 +3,15 @@ const {
   PermissionLevels,
   higherPermission,
 } = require("../../utilities/security/permissions")
+const {
+  isBuiltin,
+  getDBRoleID,
+  getExternalRoleID,
+  BUILTIN_ROLES,
+} = require("../../utilities/security/roles")
 const { getRoleParams } = require("../../db/utils")
 const CouchDB = require("../../db")
+const { cloneDeep } = require("lodash/fp")
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -18,6 +25,8 @@ async function updatePermissionOnRole(
 ) {
   const db = new CouchDB(appId)
   const remove = updateType === PermissionUpdateType.REMOVE
+  const isABuiltin = isBuiltin(roleId)
+  const dbRoleId = getDBRoleID(roleId)
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
@@ -26,7 +35,12 @@ async function updatePermissionOnRole(
   const dbRoles = body.rows.map(row => row.doc)
   const docUpdates = []
 
-  // TODO NEED TO HANDLE BUILTINS HERE - THE dbRoles doesn't contain them
+  // the permission is for a built in, make sure it exists
+  if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
+    const builtin = cloneDeep(BUILTIN_ROLES[roleId])
+    builtin._id = getDBRoleID(builtin._id)
+    dbRoles.push(builtin)
+  }
 
   // now try to find any roles which need updated, e.g. removing the
   // resource from another role and then adding to the new role
@@ -34,18 +48,18 @@ async function updatePermissionOnRole(
     let updated = false
     const rolePermissions = role.permissions ? role.permissions : {}
     // handle the removal/updating the role which has this permission first
-    // the updating (role._id !== roleId) is required because a resource/level can
+    // the updating (role._id !== dbRoleId) is required because a resource/level can
     // only be permitted in a single role (this reduces hierarchy confusion and simplifies
     // the general UI for this, rather than needing to show everywhere it is used)
     if (
-      (role._id !== roleId || remove) &&
+      (role._id !== dbRoleId || remove) &&
       rolePermissions[resourceId] === level
     ) {
       delete rolePermissions[resourceId]
       updated = true
     }
     // handle the adding, we're on the correct role, at it to this
-    if (!remove && role._id === roleId) {
+    if (!remove && role._id === dbRoleId) {
       rolePermissions[resourceId] = level
       updated = true
     }
@@ -56,7 +70,11 @@ async function updatePermissionOnRole(
     }
   }
 
-  return db.bulkDocs(docUpdates)
+  const response = await db.bulkDocs(docUpdates)
+  return response.map(resp => ({
+    ...resp,
+    _id: getExternalRoleID(resp._id),
+  }))
 }
 
 exports.fetchBuiltin = function(ctx) {
@@ -81,8 +99,9 @@ exports.getResourcePerms = async function(ctx) {
   for (let role of roles) {
     // update the various roleIds in the resource permissions
     if (role.permissions && role.permissions[resourceId]) {
-      resourcePerms[role._id] = higherPermission(
-        resourcePerms[role._id],
+      const roleId = getExternalRoleID(role._id)
+      resourcePerms[roleId] = higherPermission(
+        resourcePerms[roleId],
         role.permissions[resourceId]
       )
     }

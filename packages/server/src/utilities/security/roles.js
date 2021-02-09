@@ -1,10 +1,7 @@
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
-const {
-  BUILTIN_PERMISSION_IDS,
-  higherPermission,
-  doesHaveBasePermission,
-} = require("./permissions")
+const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
+const { generateRoleID, DocumentTypes, SEPARATOR } = require("../../db/utils")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -48,15 +45,15 @@ exports.BUILTIN_ROLES = {
 }
 
 exports.BUILTIN_ROLE_ID_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
-  level => level._id
+  role => role._id
 )
 
 exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
-  level => level.name
+  role => role.name
 )
 
 function isBuiltin(role) {
-  return exports.BUILTIN_ROLE_ID_ARRAY.indexOf(role) !== -1
+  return exports.BUILTIN_ROLE_ID_ARRAY.some(builtin => role.includes(builtin))
 }
 
 /**
@@ -82,6 +79,8 @@ exports.getRole = async (appId, roleId) => {
     const db = new CouchDB(appId)
     const dbRole = await db.get(roleId)
     role = Object.assign(role, dbRole)
+    // finalise the ID
+    role._id = exports.getExternalRoleID(role._id)
   } catch (err) {
     // only throw an error if there is no role at all
     if (Object.keys(role).length === 0) {
@@ -200,6 +199,27 @@ class AccessController {
     }
     return null
   }
+}
+
+/**
+ * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
+ */
+exports.getDBRoleID = roleId => {
+  if (roleId.startsWith(DocumentTypes.ROLE)) {
+    return roleId
+  }
+  return generateRoleID(roleId)
+}
+
+/**
+ * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
+ */
+exports.getExternalRoleID = roleId => {
+  // for built in roles we want to remove the DB role ID element (role_)
+  if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
+    return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
+  }
+  return roleId
 }
 
 exports.AccessController = AccessController
