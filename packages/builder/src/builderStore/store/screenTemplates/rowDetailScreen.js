@@ -9,6 +9,7 @@ import {
   makeSaveButton,
   makeTableFormComponents,
   makeMainForm,
+  spectrumColor,
 } from "./utils/commonComponents"
 
 export default function(tables) {
@@ -52,6 +53,7 @@ function generateTitleContainer(table, title, formId) {
       background: "transparent",
       color: "#4285f4",
     })
+    .customStyle(spectrumColor(700))
     .text("Delete")
     .customProps({
       className: "",
