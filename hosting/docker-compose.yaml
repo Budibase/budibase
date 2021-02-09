@@ -84,7 +84,7 @@ services:
       #- "4369:4369"
       #- "9100:9100"
     volumes:
-      - couchdb_data:/couchdb
+      - couchdb_data:/opt/couchdb/data
 
   couch-init:
     image: curlimages/curl
