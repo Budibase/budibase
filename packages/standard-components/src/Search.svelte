@@ -28,8 +28,13 @@
   let page = 0
 
   $: fetchData(table, page)
+  $: searchable = [...(table.indexes || []), ...columns]
   // omit empty strings
-  $: parsedSearch = Object.keys(search).reduce((acc, next) => search[next] === "" ? acc : { ...acc, [next]: search[next] }, {})
+  $: parsedSearch = Object.keys(search).reduce(
+    (acc, next) =>
+      search[next] === "" ? acc : { ...acc, [next]: search[next] },
+    {}
+  )
 
   async function fetchData(table, page) {
     if (!isEmpty(table)) {
@@ -40,8 +45,8 @@
         search: parsedSearch,
         pagination: {
           pageSize,
-          page
-        }
+          page,
+        },
       })
     }
     loaded = true
