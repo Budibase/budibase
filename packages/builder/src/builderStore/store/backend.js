@@ -232,8 +232,9 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, oneToMany = false }) => {
         store.update(state => {
+          console.log(state)
           // delete the original if renaming
           // need to handle if the column had no name, empty string
           if (originalName || originalName === "") {
@@ -247,6 +248,10 @@ export const getBackendUiStore = () => {
           // Optionally set display column
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
+          }
+          // Set one-to-many
+          if (oneToMany) {
+            state.draftTable.oneToMany = field.name
           }
 
           state.draftTable.schema[field.name] = cloneDeep(field)
