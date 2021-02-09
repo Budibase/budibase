@@ -29,6 +29,11 @@ export class Component extends BaseStructure {
     return this
   }
 
+  customStyle(styling) {
+    this._json._styles.custom = styling
+    return this
+  }
+
   instanceName(name) {
     this._json._instanceName = name
     return this
