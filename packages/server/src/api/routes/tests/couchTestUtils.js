@@ -88,6 +88,21 @@ exports.createRole = async (request, appId) => {
   return res.body
 }
 
+exports.addPermission = async (
+  request,
+  appId,
+  role,
+  resource,
+  level = "read"
+) => {
+  const res = await request
+    .post(`/api/permission/${role}/${resource}/${level}`)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
+  return res.body
+}
+
 exports.createLinkedTable = async (request, appId) => {
   // get the ID to link to
   const table = await exports.createTable(request, appId)

@@ -3,16 +3,18 @@ const {
   createTable,
   supertest,
   defaultHeaders,
+  addPermission,
 } = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 
-const STD_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
+const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 
 describe("/permission", () => {
   let server
   let request
   let appId
   let table
+  let perms
 
   beforeAll(async () => {
     ;({ request, server } = await supertest())
@@ -26,6 +28,7 @@ describe("/permission", () => {
     let app = await createApplication(request)
     appId = app.instance._id
     table = await createTable(request, appId)
+    perms = await addPermission(request, appId, STD_ROLE_ID, table._id)
   })
 
   describe("levels", () => {
@@ -42,10 +45,15 @@ describe("/permission", () => {
     })
   })
 
-  describe("add", () => {
+  describe("test", () => {
     it("should be able to add permission to a role for the table", async () => {
+      expect(perms.length).toEqual(1)
+      expect(perms[0].id).toEqual(`${STD_ROLE_ID}`)
+    })
+
+    it("should get the resource permissions", async () => {
       const res = await request
-        .post(`/api/permission/${STD_ROLE_ID}/${table._id}/read`)
+        .get(`/api/permission/${table._id}`)
         .set(defaultHeaders(appId))
         .expect("Content-Type", /json/)
         .expect(200)
