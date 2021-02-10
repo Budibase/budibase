@@ -15,7 +15,7 @@
 
   export let table = []
   export let columns = []
-  export let pageSize = 50
+  export let pageSize
   export let noRowsMessage
 
   let rows = []
