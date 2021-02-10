@@ -48,8 +48,8 @@
       title={isUsersTable ? 'Create New User' : 'Create New Row'}
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
-    <ExportButton view={tableView} />
     <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
+    <ExportButton view={tableView} />
   {/if}
   {#if isUsersTable}
     <EditRolesButton />
