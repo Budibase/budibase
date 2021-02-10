@@ -16,7 +16,7 @@
   export let table = []
   export let columns = []
   export let pageSize = 50
-  export let noRowsMessage = "No Rows"
+  export let noRowsMessage
 
   let rows = []
   let loaded = false
@@ -94,23 +94,32 @@
         }}>
         Reset
       </Button>
-      <Button primary on:click={() => fetchData(table)}>Search</Button>
+      <Button
+        primary
+        on:click={() => {
+          page = 0
+          fetchData(table, page)
+        }}>
+        Search
+      </Button>
     </div>
   </div>
-  {#if rows.length > 0}
-    {#if $component.children === 0 && $builderStore.inBuilder}
-      <p>Add some components too</p>
+  {#if loaded}
+    {#if rows.length > 0}
+      {#if $component.children === 0 && $builderStore.inBuilder}
+        <p>Add some components too</p>
+      {:else}
+        {#each rows as row}
+          <DataProvider {row}>
+            <slot />
+          </DataProvider>
+        {/each}
+      {/if}
+    {:else if $builderStore.inBuilder}
+      <p>Feed me some data</p>
     {:else}
-      {#each rows as row}
-        <DataProvider {row}>
-          <slot />
-        </DataProvider>
-      {/each}
+      <p>{noRowsMessage}</p>
     {/if}
-  {:else if loaded && $builderStore.inBuilder}
-    <p>Feed me some data</p>
-  {:else}
-    <p>{noRowsMessage}</p>
   {/if}
   <div class="pagination">
     {#if page > 0}
@@ -133,7 +142,6 @@
 
   .query-builder {
     padding: var(--spacing-m);
-    background: var(--background);
     border-radius: var(--border-radius-s);
   }
 

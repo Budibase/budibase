@@ -146,7 +146,8 @@
       {
         "type": "text",
         "label": "No Rows Message",
-        "key": "noRowsMessage"
+        "key": "noRowsMessage",
+        "defaultValue": "No Rows"
       }
     ]
   },
