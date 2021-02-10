@@ -8,6 +8,11 @@ const {
   PermissionTypes,
 } = require("../../utilities/security/permissions")
 const joiValidator = require("../../middleware/joi-validator")
+const {
+  bodyResource,
+  bodySubResource,
+  paramResource,
+} = require("../../middleware/resourceId")
 
 const router = Router()
 
@@ -50,23 +55,27 @@ router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)
   .post(
     "/api/queries",
+    bodySubResource("datasourceId", "_id"),
     authorized(BUILDER),
     generateQueryValidation(),
     queryController.save
   )
   .post(
     "/api/queries/preview",
+    bodyResource("datasourceId"),
     authorized(BUILDER),
     generateQueryPreviewValidation(),
     queryController.preview
   )
   .post(
     "/api/queries/:queryId",
+    paramResource("queryId"),
     authorized(PermissionTypes.QUERY, PermissionLevels.WRITE),
     queryController.execute
   )
   .delete(
     "/api/queries/:queryId/:revId",
+    paramResource("queryId"),
     authorized(BUILDER),
     queryController.destroy
   )
