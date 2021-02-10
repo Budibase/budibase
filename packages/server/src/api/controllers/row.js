@@ -256,7 +256,9 @@ exports.search = async function(ctx) {
     }
   }
 
-  ctx.body = await linkRows.attachLinkInfo(appId, rows)
+  const table = await db.get(ctx.params.tableId)
+
+  ctx.body = await enrichRows(appId, table, rows)
 }
 
 exports.fetchTableRows = async function(ctx) {

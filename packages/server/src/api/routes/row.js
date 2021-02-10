@@ -41,6 +41,7 @@ router
   )
   .post(
     "/api/:tableId/rows/search",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
   )
