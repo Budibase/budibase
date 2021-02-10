@@ -39,6 +39,18 @@ const USERS_TABLE_SCHEMA = {
   primaryDisplay: "email",
 }
 
+exports.FieldTypes = {
+  STRING: "string",
+  LONGFORM: "longform",
+  OPTIONS: "options",
+  NUMBER: "number",
+  BOOLEAN: "boolean",
+  DATETIME: "datetime",
+  ATTACHMENT: "attachment",
+  LINK: "link",
+  AUTO: "auto",
+}
+
 exports.AuthTypes = AuthTypes
 exports.USERS_TABLE_SCHEMA = USERS_TABLE_SCHEMA
 exports.BUILDER_CONFIG_DB = "builder-config-db"

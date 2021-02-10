@@ -2,48 +2,49 @@ const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
+const { FieldTypes } = require("../constants")
 
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
 const TYPE_TRANSFORM_MAP = {
-  link: {
+  [FieldTypes.LINK]: {
     "": [],
     [null]: [],
     [undefined]: undefined,
   },
-  options: {
+  [FieldTypes.OPTIONS]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  string: {
+  [FieldTypes.STRING]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  longform: {
+  [FieldTypes.LONGFORM]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  number: {
+  [FieldTypes.NUMBER]: {
     "": null,
     [null]: null,
     [undefined]: undefined,
     parse: n => parseFloat(n),
   },
-  datetime: {
+  [FieldTypes.DATETIME]: {
     "": null,
     [undefined]: undefined,
     [null]: null,
   },
-  attachment: {
+  [FieldTypes.ATTACHMENT]: {
     "": [],
     [null]: [],
     [undefined]: undefined,
   },
-  boolean: {
+  [FieldTypes.BOOLEAN]: {
     "": null,
     [null]: null,
     [undefined]: undefined,
@@ -102,7 +103,7 @@ exports.outputProcessing = async (appId, table, rows) => {
   // update the attachments URL depending on hosting
   if (env.CLOUD && env.SELF_HOSTED) {
     for (let [property, column] of Object.entries(table.schema)) {
-      if (column.type === "attachment") {
+      if (column.type === FieldTypes.ATTACHMENT) {
         for (let row of outputRows) {
           if (row[property] == null || row[property].length === 0) {
             continue
