@@ -6,8 +6,6 @@
     Input,
     Label,
     ModalContent,
-    Button,
-    Spacer,
     Toggle,
   } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
@@ -28,6 +26,13 @@
   let dataImport
   let error = ""
   let createAutoscreens = true
+  let autoColumns = {
+    createdBy: false,
+    createdAt: false,
+    updatedBy: false,
+    updatedAt: false,
+    autoNumber: false,
+  }
 
   function checkValid(evt) {
     const tableName = evt.target.value
@@ -42,6 +47,7 @@
     let newTable = {
       name,
       schema: dataImport.schema || {},
+      autoColumns,
       dataImport,
     }
 
@@ -93,6 +99,30 @@
     on:input={checkValid}
     bind:value={name}
     {error} />
+  <div class="autocolumns">
+    <label>Auto columns</label>
+    <div class="toggles">
+      <div class="toggle-1">
+        <Toggle
+            text="Created by"
+            bind:checked={autoColumns.createdBy} />
+        <Toggle
+            text="Created at"
+            bind:checked={autoColumns.createdAt} />
+        <Toggle
+            text="Autonumber"
+            bind:checked={autoColumns.autoNumber} />
+      </div>
+      <div class="toggle-2">
+        <Toggle
+            text="Updated by"
+            bind:checked={autoColumns.updatedBy} />
+        <Toggle
+            text="Updated at"
+            bind:checked={autoColumns.updatedAt} />
+      </div>
+    </div>
+  </div>
   <Toggle
     text="Generate screens in the design section"
     bind:checked={createAutoscreens} />
@@ -101,3 +131,25 @@
     <TableDataImport bind:dataImport />
   </div>
 </ModalContent>
+
+<style>
+  .autocolumns {
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--grey-1);
+  }
+
+  .toggles {
+    display: flex;
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 10px;
+  }
+
+  .toggle-1 :global(> *) {
+    margin-top: 10px;
+  }
+  .toggle-2 :global(> *) {
+    margin-top: 10px;
+    margin-left: 10px;
+  }
+</style>

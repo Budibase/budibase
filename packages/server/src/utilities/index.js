@@ -3,59 +3,8 @@ const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const fs = require("fs")
 const { cloneDeep } = require("lodash/fp")
 const CouchDB = require("../db")
-const { OBJ_STORE_DIRECTORY } = require("../constants")
-const linkRows = require("../db/linkedRows")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
-
-/**
- * A map of how we convert various properties in rows to each other based on the row type.
- */
-const TYPE_TRANSFORM_MAP = {
-  link: {
-    "": [],
-    [null]: [],
-    [undefined]: undefined,
-  },
-  options: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  string: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  longform: {
-    "": "",
-    [null]: "",
-    [undefined]: undefined,
-  },
-  number: {
-    "": null,
-    [null]: null,
-    [undefined]: undefined,
-    parse: n => parseFloat(n),
-  },
-  datetime: {
-    "": null,
-    [undefined]: undefined,
-    [null]: null,
-  },
-  attachment: {
-    "": [],
-    [null]: [],
-    [undefined]: undefined,
-  },
-  boolean: {
-    "": null,
-    [null]: null,
-    [undefined]: undefined,
-    true: true,
-    false: false,
-  },
-}
 
 function confirmAppId(possibleAppId) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -159,43 +108,6 @@ exports.walkDir = (dirPath, callback) => {
   }
 }
 
-/**
- * This will coerce a value to the correct types based on the type transform map
- * @param {object} row The value to coerce
- * @param {object} type The type fo coerce to
- * @returns {object} The coerced value
- */
-exports.coerceValue = (value, type) => {
-  // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value)) {
-    return TYPE_TRANSFORM_MAP[type][value]
-  } else if (TYPE_TRANSFORM_MAP[type].parse) {
-    return TYPE_TRANSFORM_MAP[type].parse(value)
-  }
-
-  return value
-}
-
-/**
- * This will coerce the values in a row to the correct types based on the type transform map and the
- * table schema.
- * @param {object} row The row which is to be coerced to correct values based on schema, this input
- * row will not be updated.
- * @param {object} table The table that has been retrieved from DB, this must contain the expected
- * schema for the rows.
- * @returns {object} The updated row will be returned with all values coerced.
- */
-exports.coerceRowValues = (row, table) => {
-  const clonedRow = cloneDeep(row)
-  for (let [key, value] of Object.entries(clonedRow)) {
-    const field = table.schema[key]
-    if (!field) continue
-
-    clonedRow[key] = exports.coerceValue(value, field.type)
-  }
-  return clonedRow
-}
-
 exports.getLogoUrl = () => {
   return "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
 }
@@ -212,35 +124,4 @@ exports.getAllApps = async () => {
       .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
   }
-}
-
-/**
- * This function "enriches" the input rows with anything they are supposed to contain, for example
- * link records or attachment links.
- * @param {string} appId the ID of the application for which rows are being enriched.
- * @param {object} table the table from which these rows came from originally, this is used to determine
- * the schema of the rows and then enrich.
- * @param {object[]} rows the rows which are to be enriched.
- * @returns {object[]} the enriched rows will be returned.
- */
-exports.enrichRows = async (appId, table, rows) => {
-  // attach any linked row information
-  const enriched = await linkRows.attachLinkInfo(appId, rows)
-  // update the attachments URL depending on hosting
-  if (env.CLOUD && env.SELF_HOSTED) {
-    for (let [property, column] of Object.entries(table.schema)) {
-      if (column.type === "attachment") {
-        for (let row of enriched) {
-          if (row[property] == null || row[property].length === 0) {
-            continue
-          }
-          row[property].forEach(attachment => {
-            attachment.url = `${OBJ_STORE_DIRECTORY}/${appId}/${attachment.url}`
-            attachment.url = attachment.url.replace("//", "/")
-          })
-        }
-      }
-    }
-  }
-  return enriched
 }
