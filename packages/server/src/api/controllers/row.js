@@ -9,7 +9,10 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { coerceRowValues, enrichRows } = require("../../utilities")
+const {
+  inputProcessing,
+  outputProcessing,
+} = require("../../utilities/rowProcessor")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -64,7 +67,7 @@ exports.patch = async function(ctx) {
     row[key] = patchfields[key]
   }
 
-  row = coerceRowValues(row, table)
+  row = inputProcessing(ctx.user, table, row)
 
   const validateResult = await validate({
     row,
@@ -134,7 +137,7 @@ exports.save = async function(ctx) {
 
   const table = await db.get(row.tableId)
 
-  row = coerceRowValues(row, table)
+  row = inputProcessing(ctx.user, table, row)
 
   const validateResult = await validate({
     row,
@@ -204,7 +207,7 @@ exports.fetchView = async function(ctx) {
         schema: {},
       }
     }
-    ctx.body = await enrichRows(appId, table, response.rows)
+    ctx.body = await outputProcessing(appId, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -247,7 +250,7 @@ exports.fetchTableRows = async function(ctx) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  ctx.body = await enrichRows(appId, table, rows)
+  ctx.body = await outputProcessing(appId, table, rows)
 }
 
 exports.find = async function(ctx) {
@@ -256,7 +259,7 @@ exports.find = async function(ctx) {
   try {
     const table = await db.get(ctx.params.tableId)
     const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
-    ctx.body = await enrichRows(appId, table, row)
+    ctx.body = await outputProcessing(appId, table, row)
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -341,7 +344,7 @@ exports.fetchEnrichedRow = async function(ctx) {
     keys: linkVals.map(linkVal => linkVal.id),
   })
   // need to include the IDs in these rows for any links they may have
-  let linkedRows = await enrichRows(
+  let linkedRows = await outputProcessing(
     appId,
     table,
     response.rows.map(row => row.doc)

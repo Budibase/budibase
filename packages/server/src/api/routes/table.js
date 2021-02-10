@@ -7,8 +7,30 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("../../utilities/security/permissions")
+const joiValidator = require("../../middleware/joi-validator")
+const Joi = require("joi")
 
 const router = Router()
+
+function generateSaveValidator() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    _id: Joi.string(),
+    _rev: Joi.string(),
+    type: Joi.string().valid("table"),
+    primaryDisplay: Joi.string(),
+    schema: Joi.object().required(),
+    name: Joi.string().required(),
+    views: Joi.object(),
+    autoColumns: Joi.object({
+      createdBy: Joi.boolean(),
+      createdAt: Joi.boolean(),
+      updatedBy: Joi.boolean(),
+      updatedAt: Joi.boolean(),
+    }),
+    dataImport: Joi.object(),
+  }).unknown(true))
+}
 
 router
   .get("/api/tables", authorized(BUILDER), tableController.fetch)
@@ -23,6 +45,7 @@ router
     // allows control over updating a table
     bodyResource("_id"),
     authorized(BUILDER),
+    generateSaveValidator(),
     tableController.save
   )
   .post(
