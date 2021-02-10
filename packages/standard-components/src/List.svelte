@@ -6,6 +6,7 @@
   const component = getContext("component")
 
   export let datasource = []
+  export let noRowsMessage = "Feed me some data"
 
   let rows = []
   let loaded = false
@@ -32,7 +33,7 @@
       {/each}
     {/if}
   {:else if loaded && $builderStore.inBuilder}
-    <p>Feed me some data</p>
+    <p>{noRowsMessage}</p>
   {/if}
 </div>
 

@@ -229,6 +229,38 @@ exports.fetchView = async function(ctx) {
   }
 }
 
+exports.search = async function(ctx) {
+  const appId = ctx.user.appId
+
+  const db = new CouchDB(appId)
+
+  const {
+    query,
+    pagination: { pageSize = 10, page },
+  } = ctx.request.body
+
+  query.tableId = ctx.params.tableId
+
+  const response = await db.find({
+    selector: query,
+    limit: pageSize,
+    skip: pageSize * page,
+  })
+
+  const rows = response.docs
+
+  // delete passwords from users
+  if (query.tableId === ViewNames.USERS) {
+    for (let row of rows) {
+      delete row.password
+    }
+  }
+
+  const table = await db.get(ctx.params.tableId)
+
+  ctx.body = await enrichRows(appId, table, rows)
+}
+
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
