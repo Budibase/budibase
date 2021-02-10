@@ -39,6 +39,12 @@ router
     usage,
     rowController.save
   )
+  .post(
+    "/api/:tableId/rows/search",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    rowController.search
+  )
   .patch(
     "/api/:tableId/rows/:rowId",
     paramSubResource("tableId", "rowId"),
