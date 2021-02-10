@@ -3,6 +3,7 @@
   import Field from "./Field.svelte"
   import "flatpickr/dist/flatpickr.css"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
+  import { generateID } from "../helpers"
 
   export let field
   export let label
@@ -14,8 +15,9 @@
   let open = false
   let flatpickr
 
+  $: flatpickrId = `${$fieldState?.id}-${generateID()}-wrapper`
   $: flatpickrOptions = {
-    element: `#${$fieldState?.id}-wrapper`,
+    element: `#${flatpickrId}`,
     enableTime: enableTime || false,
     altInput: true,
     altFormat: enableTime ? "F j Y, H:i" : "F j, Y",
@@ -46,9 +48,7 @@
     // duplicate input field.
     // We need to blur both because the focus styling does not get properly
     // applied.
-    const els = document.querySelectorAll(
-      `#${$fieldState.fieldId}-wrapper input`
-    )
+    const els = document.querySelectorAll(`#${flatpickrId} input`)
     els.forEach(el => el.blur())
   }
 </script>
@@ -62,9 +62,9 @@
       on:close={onClose}
       options={flatpickrOptions}
       on:change={handleChange}
-      element={`#${$fieldState.fieldId}-wrapper`}>
+      element={`#${flatpickrId}`}>
       <div
-        id={`${$fieldState.fieldId}-wrapper`}
+        id={flatpickrId}
         aria-disabled="false"
         aria-invalid={!$fieldState.valid}
         class:is-invalid={!$fieldState.valid}
@@ -124,14 +124,11 @@
     cursor: pointer;
   }
   .flatpickr {
-    width: var(
-      --spectrum-alias-single-line-width,
-      var(--spectrum-global-dimension-size-2400)
-    );
+    width: 100%;
     overflow: hidden;
   }
   .flatpickr .spectrum-Textfield {
-    width: auto;
+    width: 100%;
   }
   .overlay {
     position: fixed;

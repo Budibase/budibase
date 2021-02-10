@@ -10,7 +10,7 @@
     Input,
   } from "@budibase/bbui"
 
-  const { API, styleable, DataProvider, builderStore } = getContext("sdk")
+  const { API, styleable, Provider, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let table = []
@@ -39,7 +39,7 @@
     if (!isEmpty(table)) {
       const tableDef = await API.fetchTableDefinition(table)
       schema = tableDef.schema
-      rows = await API.searchTable({
+      rows = await API.searchTableData({
         tableId: table,
         search: parsedSearch,
         pagination: {
@@ -107,18 +107,16 @@
   {#if loaded}
     {#if rows.length > 0}
       {#if $component.children === 0 && $builderStore.inBuilder}
-        <p>Add some components too</p>
+        <p><i class="ri-image-line" />Add some components to display</p>
       {:else}
         {#each rows as row}
-          <DataProvider {row}>
+          <Provider data={row}>
             <slot />
-          </DataProvider>
+          </Provider>
         {/each}
       {/if}
-    {:else if $builderStore.inBuilder}
-      <p>Feed me some data</p>
-    {:else}
-      <p>{noRowsMessage}</p>
+    {:else if noRowsMessage}
+      <p><i class="ri-search-2-line" />{noRowsMessage}</p>
     {/if}
   {/if}
   <div class="pagination">
@@ -133,11 +131,19 @@
 
 <style>
   p {
+    margin: 0 var(--spacing-m);
+    background-color: var(--grey-2);
+    color: var(--grey-6);
+    font-size: var(--font-size-s);
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-s);
     display: grid;
     place-items: center;
-    background: #f5f5f5;
-    border: #ccc 1px solid;
-    padding: var(--spacing-m);
+  }
+  p i {
+    margin-bottom: var(--spacing-m);
+    font-size: 1.5rem;
+    color: var(--grey-5);
   }
 
   .query-builder {
