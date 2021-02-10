@@ -46,6 +46,11 @@
         innerVal = value.target.value
       }
     }
+
+    if (type === "number") {
+      innerVal = parseInt(innerVal)
+    }
+
     if (typeof innerVal === "string") {
       onChange(replaceBindings(innerVal))
     } else {
@@ -72,6 +77,7 @@
       value={safeValue}
       on:change={handleChange}
       onChange={handleChange}
+      {type}
       {...props}
       name={key} />
   </div>
