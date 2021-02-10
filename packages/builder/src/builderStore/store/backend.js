@@ -328,6 +328,30 @@ export const getBackendUiStore = () => {
         return response
       },
     },
+    permissions: {
+      fetch: async () => {
+        const response = await api.get("/api/permission")
+        const json = await response.json()
+        return json
+      },
+      fetchLevels: async () => {
+        const response = await api.get("/api/permission/levels")
+        const json = await response.json()
+        return json
+      },
+      forResource: async resourceId => {
+        const response = await api.get(`/api/permission/${resourceId}`)
+        const json = await response.json()
+        return json
+      },
+      save: async ({ role, resource, level }) => {
+        const response = await api.post(
+          `/api/permission/${role}/${resource}/${level}`
+        )
+        const json = await response.json()
+        return json
+      },
+    },
   }
 
   return store
