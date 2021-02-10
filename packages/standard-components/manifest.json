@@ -111,6 +111,44 @@
         "type": "datasource",
         "label": "Data",
         "key": "datasource"
+      },
+      {
+        "type": "text",
+        "label": "No Rows Message",
+        "key": "noRowsMessage"
+      }
+    ]
+  },
+  "search": {
+    "name": "Search",
+    "description": "A searchable list of items.",
+    "icon": "ri-search-line",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "number",
+        "label": "Rows Per Page",
+        "defaultValue": 25,
+        "key": "pageSize"
+      },
+      {
+        "type": "text",
+        "label": "No Rows Message",
+        "key": "noRowsMessage",
+        "defaultValue": "No Rows"
       }
     ]
   },
