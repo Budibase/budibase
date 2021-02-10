@@ -14,6 +14,7 @@ exports.fetchInfo = async ctx => {
 }
 
 exports.save = async ctx => {
+  console.trace("DID A SAVE!")
   const db = new CouchDB(BUILDER_CONFIG_DB)
   const { type } = ctx.request.body
   if (type === HostingTypes.CLOUD && ctx.request.body._rev) {

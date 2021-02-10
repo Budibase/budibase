@@ -3,6 +3,7 @@
   "datagrid",
   "list",
   "button",
+  "search",
   {
     "name": "Form",
     "icon": "ri-file-edit-line",

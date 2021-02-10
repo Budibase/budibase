@@ -1,7 +1,5 @@
 const {
   createApplication,
-  createTable,
-  createView,
   supertest,
   defaultHeaders,
 } = require("./couchTestUtils")
@@ -20,8 +18,6 @@ describe("/roles", () => {
   let server
   let request
   let appId
-  let table
-  let view
 
   beforeAll(async () => {
     ;({ request, server } = await supertest())
@@ -34,8 +30,6 @@ describe("/roles", () => {
   beforeEach(async () => {
     let app = await createApplication(request)
     appId = app.instance._id
-    table = await createTable(request, appId)
-    view = await createView(request, appId, table._id)
   })
 
   describe("create", () => {
