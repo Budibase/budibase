@@ -1,6 +1,8 @@
 <script>
   import { getContext } from "svelte"
 
+  const ENTER_KEY = 13
+
   const { authStore, styleable } = getContext("sdk")
   const component = getContext("component")
 
@@ -27,8 +29,15 @@
     await authStore.actions.logIn({ email, password })
     loading = false
   }
+
+  function handleKeydown(evt) {
+    if (evt.keyCode === ENTER_KEY) {
+      login()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <div class="root" use:styleable={$component.styles}>
   <div class="content">
     {#if logo}

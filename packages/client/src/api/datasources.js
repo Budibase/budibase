@@ -1,9 +1,14 @@
 import { cloneDeep } from "lodash/fp"
-import { fetchTableData } from "./tables"
+import { fetchTableData, searchTableData } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
 import { enrichRows } from "./rows"
+
+export const searchTable = async ({ tableId, search, pagination }) => {
+  const rows = await searchTableData({ tableId, search, pagination })
+  return await enrichRows(rows, tableId)
+}
 
 /**
  * Fetches all rows for a particular Budibase data source.

@@ -232,7 +232,7 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, indexes }) => {
         store.update(state => {
           // delete the original if renaming
           // need to handle if the column had no name, empty string
@@ -247,6 +247,10 @@ export const getBackendUiStore = () => {
           // Optionally set display column
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
+          }
+
+          if (indexes) {
+            state.draftTable.indexes = indexes
           }
 
           state.draftTable.schema[field.name] = cloneDeep(field)
