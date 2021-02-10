@@ -6,6 +6,7 @@
   import GroupByButton from "./buttons/GroupByButton.svelte"
   import FilterButton from "./buttons/FilterButton.svelte"
   import ExportButton from "./buttons/ExportButton.svelte"
+  import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
 
   export let view = {}
 
@@ -54,4 +55,5 @@
     <GroupByButton {view} />
   {/if}
   <ExportButton {view} />
+  <ManageAccessButton resourceId={decodeURI(name)} />
 </Table>

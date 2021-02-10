@@ -5,6 +5,7 @@
   import CreateViewButton from "./buttons/CreateViewButton.svelte"
   import ExportButton from "./buttons/ExportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
+  import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
   import * as api from "./api"
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
@@ -48,6 +49,7 @@
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
     <ExportButton view={tableView} />
+    <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
   {/if}
   {#if isUsersTable}
     <EditRolesButton />
