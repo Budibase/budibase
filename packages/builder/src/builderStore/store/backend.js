@@ -331,11 +331,6 @@ export const getBackendUiStore = () => {
       },
     },
     permissions: {
-      fetch: async () => {
-        const response = await api.get("/api/permission")
-        const json = await response.json()
-        return json
-      },
       fetchLevels: async () => {
         const response = await api.get("/api/permission/levels")
         const json = await response.json()
