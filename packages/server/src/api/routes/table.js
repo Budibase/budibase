@@ -22,12 +22,6 @@ function generateSaveValidator() {
     schema: Joi.object().required(),
     name: Joi.string().required(),
     views: Joi.object(),
-    autoColumns: Joi.object({
-      createdBy: Joi.boolean(),
-      createdAt: Joi.boolean(),
-      updatedBy: Joi.boolean(),
-      updatedAt: Joi.boolean(),
-    }),
     dataImport: Joi.object(),
   }).unknown(true))
 }

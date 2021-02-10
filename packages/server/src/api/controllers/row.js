@@ -13,6 +13,7 @@ const {
   inputProcessing,
   outputProcessing,
 } = require("../../utilities/rowProcessor")
+const { FieldTypes } = require("../../constants")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -261,7 +262,7 @@ exports.search = async function(ctx) {
 
   const table = await db.get(ctx.params.tableId)
 
-  ctx.body = await enrichRows(appId, table, rows)
+  ctx.body = await outputProcessing(appId, table, rows)
 }
 
 exports.fetchTableRows = async function(ctx) {
@@ -384,7 +385,7 @@ exports.fetchEnrichedRow = async function(ctx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
-    if (field.type === "link") {
+    if (field.type === FieldTypes.LINK) {
       row[fieldName] = linkedRows.filter(
         linkRow => linkRow.tableId === field.tableId
       )

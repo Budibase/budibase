@@ -8,6 +8,7 @@ const {
   generateRowID,
 } = require("../../db/utils")
 const { isEqual } = require("lodash/fp")
+const { FieldTypes } = require("../../constants")
 
 async function checkForColumnUpdates(db, oldTable, updatedTable) {
   let updatedRows
@@ -91,7 +92,7 @@ exports.save = async function(ctx) {
   }
 
   // rename row fields when table column is renamed
-  if (_rename && tableToSave.schema[_rename.updated].type === "link") {
+  if (_rename && tableToSave.schema[_rename.updated].type === FieldTypes.LINK) {
     ctx.throw(400, "Cannot rename a linked column.")
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
     ctx.throw(400, "Cannot rename the display column.")

@@ -2,6 +2,7 @@ const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
+const { FieldTypes } = require("../../constants")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -26,7 +27,7 @@ function LinkDocument(
   // build the ID out of unique references to this link document
   this._id = generateLinkID(tableId1, tableId2, rowId1, rowId2)
   // required for referencing in view
-  this.type = "link"
+  this.type = FieldTypes.LINK
   this.doc1 = {
     tableId: tableId1,
     fieldName: fieldName1,
@@ -75,7 +76,7 @@ class LinkController {
     }
     for (let fieldName of Object.keys(table.schema)) {
       const { type } = table.schema[fieldName]
-      if (type === "link") {
+      if (type === FieldTypes.LINK) {
         return true
       }
     }
@@ -123,7 +124,7 @@ class LinkController {
       // get the links this row wants to make
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
-      if (field.type === "link" && rowField != null) {
+      if (field.type === FieldTypes.LINK && rowField != null) {
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
@@ -234,7 +235,7 @@ class LinkController {
     const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
-      if (field.type === "link") {
+      if (field.type === FieldTypes.LINK) {
         // handle this in a separate try catch, want
         // the put to bubble up as an error, if can't update
         // table for some reason
@@ -247,7 +248,7 @@ class LinkController {
         // create the link field in the other table
         linkedTable.schema[field.fieldName] = {
           name: field.fieldName,
-          type: "link",
+          type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
           tableId: table._id,
           fieldName: fieldName,
@@ -274,7 +275,10 @@ class LinkController {
     for (let fieldName of Object.keys(oldTable.schema)) {
       const field = oldTable.schema[fieldName]
       // this field has been removed from the table schema
-      if (field.type === "link" && newTable.schema[fieldName] == null) {
+      if (
+        field.type === FieldTypes.LINK &&
+        newTable.schema[fieldName] == null
+      ) {
         await this.removeFieldFromTable(fieldName)
       }
     }
@@ -295,7 +299,7 @@ class LinkController {
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       try {
-        if (field.type === "link") {
+        if (field.type === FieldTypes.LINK) {
           const linkedTable = await this._db.get(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)

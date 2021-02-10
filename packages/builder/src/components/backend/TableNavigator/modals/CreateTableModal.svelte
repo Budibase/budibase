@@ -14,6 +14,8 @@
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
+  import { FIELDS } from "constants/backend"
+  import { cloneDeep } from "lodash/fp"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,
@@ -27,11 +29,22 @@
   let error = ""
   let createAutoscreens = true
   let autoColumns = {
-    createdBy: false,
-    createdAt: false,
-    updatedBy: false,
-    updatedAt: false,
-    autoNumber: false,
+    createdBy: true,
+    createdAt: true,
+    updatedBy: true,
+    updatedAt: true,
+    autoID: true,
+  }
+
+  function addAutoColumns(schema) {
+    for (let [property, enabled] of Object.entries(autoColumns)) {
+      if (!enabled) {
+        continue
+      }
+      const autoColDef = cloneDeep(FIELDS.AUTO)
+      autoColDef.subtype = property
+      schema[property] = autoColDef
+    }
   }
 
   function checkValid(evt) {
@@ -46,8 +59,7 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: dataImport.schema || {},
-      autoColumns,
+      schema: addAutoColumns(dataImport.schema || {}),
       dataImport,
     }
 
@@ -100,7 +112,7 @@
     bind:value={name}
     {error} />
   <div class="autocolumns">
-    <label>Auto columns</label>
+    <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
       <div class="toggle-1">
         <Toggle
@@ -110,8 +122,8 @@
             text="Created at"
             bind:checked={autoColumns.createdAt} />
         <Toggle
-            text="Autonumber"
-            bind:checked={autoColumns.autoNumber} />
+            text="Auto ID"
+            bind:checked={autoColumns.autoID} />
       </div>
       <div class="toggle-2">
         <Toggle
@@ -142,14 +154,14 @@
     display: flex;
     width: 100%;
     margin-top: 6px;
-    margin-bottom: 10px;
   }
 
   .toggle-1 :global(> *) {
-    margin-top: 10px;
+    margin-bottom: 10px;
   }
+
   .toggle-2 :global(> *) {
-    margin-top: 10px;
-    margin-left: 10px;
+    margin-bottom: 10px;
+    margin-left: 20px;
   }
 </style>

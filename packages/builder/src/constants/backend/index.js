@@ -80,6 +80,13 @@ export const FIELDS = {
       presence: false,
     },
   },
+  AUTO: {
+    name: "Auto Column",
+    icon: "ri-magic-line",
+    type: "auto",
+    // no constraints for auto-columns
+    // these are fully created serverside
+  }
 }
 
 export const FILE_TYPES = {
