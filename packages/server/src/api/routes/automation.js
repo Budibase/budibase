@@ -8,6 +8,7 @@ const {
   PermissionTypes,
 } = require("../../utilities/security/permissions")
 const Joi = require("joi")
+const { bodyResource, paramResource } = require("../../middleware/resourceId")
 
 const router = Router()
 
@@ -64,9 +65,15 @@ router
     controller.getDefinitionList
   )
   .get("/api/automations", authorized(BUILDER), controller.fetch)
-  .get("/api/automations/:id", authorized(BUILDER), controller.find)
+  .get(
+    "/api/automations/:id",
+    paramResource("id"),
+    authorized(BUILDER),
+    controller.find
+  )
   .put(
     "/api/automations",
+    bodyResource("_id"),
     authorized(BUILDER),
     generateValidator(true),
     controller.update
@@ -79,9 +86,15 @@ router
   )
   .post(
     "/api/automations/:id/trigger",
+    paramResource("id"),
     authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
     controller.trigger
   )
-  .delete("/api/automations/:id/:rev", authorized(BUILDER), controller.destroy)
+  .delete(
+    "/api/automations/:id/:rev",
+    paramResource("id"),
+    authorized(BUILDER),
+    controller.destroy
+  )
 
 module.exports = router
