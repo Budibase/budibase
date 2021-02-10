@@ -54,6 +54,6 @@
   {#if view.calculation}
     <GroupByButton {view} />
   {/if}
-  <ExportButton {view} />
   <ManageAccessButton resourceId={decodeURI(name)} />
+  <ExportButton {view} />
 </Table>

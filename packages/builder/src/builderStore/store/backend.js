@@ -30,6 +30,7 @@ export const getBackendUiStore = () => {
         const queries = await queriesResponse.json()
         const integrationsResponse = await api.get("/api/integrations")
         const integrations = await integrationsResponse.json()
+        const permissionLevels = await store.actions.permissions.fetchLevels()
 
         store.update(state => {
           state.selectedDatabase = db
@@ -37,6 +38,7 @@ export const getBackendUiStore = () => {
           state.datasources = datasources
           state.queries = queries
           state.integrations = integrations
+          state.permissionLevels = permissionLevels
           return state
         })
       },
@@ -346,6 +348,13 @@ export const getBackendUiStore = () => {
       },
       save: async ({ role, resource, level }) => {
         const response = await api.post(
+          `/api/permission/${role}/${resource}/${level}`
+        )
+        const json = await response.json()
+        return json
+      },
+      delete: async ({ role, resource, level }) => {
+        const response = await api.delete(
           `/api/permission/${role}/${resource}/${level}`
         )
         const json = await response.json()
