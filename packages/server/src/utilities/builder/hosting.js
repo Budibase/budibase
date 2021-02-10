@@ -94,17 +94,22 @@ exports.getDeployedApps = async () => {
   }
   const workerUrl = !env.CLOUD ? await exports.getWorkerUrl() : env.WORKER_URL
   const hostingKey = !env.CLOUD ? hostingInfo.selfHostKey : env.HOSTING_KEY
-  const response = await fetch(`${workerUrl}/api/apps`, {
-    method: "GET",
-    headers: {
-      "x-budibase-auth": hostingKey,
-    },
-  })
-  const json = await response.json()
-  for (let value of Object.values(json)) {
-    if (value.url) {
-      value.url = value.url.toLowerCase()
+  try {
+    const response = await fetch(`${workerUrl}/api/apps`, {
+      method: "GET",
+      headers: {
+        "x-budibase-auth": hostingKey,
+      },
+    })
+    const json = await response.json()
+    for (let value of Object.values(json)) {
+      if (value.url) {
+        value.url = value.url.toLowerCase()
+      }
     }
+    return json
+  } catch (err) {
+    // error, cannot determine deployed apps, don't stop app creation - sort this later
+    return {}
   }
-  return json
 }
