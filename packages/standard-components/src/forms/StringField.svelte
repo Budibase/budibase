@@ -58,3 +58,9 @@
     </div>
   {/if}
 </Field>
+
+<style>
+  .spectrum-Textfield {
+    width: 100%;
+  }
+</style>
