@@ -1,7 +1,9 @@
 const {
   BUILTIN_PERMISSIONS,
   PermissionLevels,
+  PermissionTypes,
   higherPermission,
+  getBuiltinPermissionByID,
 } = require("../../utilities/security/permissions")
 const {
   isBuiltin,
@@ -9,13 +11,54 @@ const {
   getExternalRoleID,
   BUILTIN_ROLES,
 } = require("../../utilities/security/roles")
-const { getRoleParams } = require("../../db/utils")
+const { getRoleParams, DocumentTypes } = require("../../db/utils")
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
 
 const PermissionUpdateType = {
   REMOVE: "remove",
   ADD: "add",
+}
+
+function getBasePermissions(resourceId) {
+  const docType = DocumentTypes.filter(docType =>
+    resourceId.startsWith(docType)
+  )[0]
+  const levelsToFind = [PermissionLevels.WRITE, PermissionLevels.READ]
+  let type
+  switch (docType) {
+    case DocumentTypes.TABLE:
+    case DocumentTypes.ROW:
+      type = PermissionTypes.TABLE
+      break
+    case DocumentTypes.AUTOMATION:
+      type = PermissionTypes.AUTOMATION
+      break
+    case DocumentTypes.WEBHOOK:
+      type = PermissionTypes.WEBHOOK
+      break
+    case DocumentTypes.QUERY:
+    case DocumentTypes.DATASOURCE:
+      type = PermissionTypes.QUERY
+      break
+    default:
+      // views don't have an ID, will end up here
+      type = PermissionTypes.VIEW
+      break
+  }
+
+  const permissions = {}
+  for (let [roleId, role] of Object.entries(BUILTIN_ROLES)) {
+    if (!role.permissionId) {
+      continue
+    }
+    const perms = getBuiltinPermissionByID(role.permissionId)
+    const typedPermission = perms.permissions.find(perm => perm.type === type)
+    if (typedPermission) {
+      // TODO: need to get the lowest role
+      // TODO: store the read/write with the lowest role
+    }
+  }
 }
 
 // utility function to stop this repetition - permissions always stored under roles

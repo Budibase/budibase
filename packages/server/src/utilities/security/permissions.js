@@ -97,6 +97,11 @@ exports.BUILTIN_PERMISSIONS = {
   },
 }
 
+exports.getBuiltinPermissionByID = id => {
+  const perms = Object.values(exports.BUILTIN_PERMISSIONS)
+  return perms.find(perm => perm._id === id)
+}
+
 exports.doesHaveResourcePermission = (
   permissions,
   permLevel,
