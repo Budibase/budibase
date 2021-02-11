@@ -13,9 +13,8 @@
   let dropdown
   let anchor
 
-  $: noChildrenAllowed =
-    !component ||
-    !store.actions.components.getDefinition(component._component)?.hasChildren
+  $: definition = store.actions.components.getDefinition(component?._component)
+  $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
 
   const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
@@ -130,7 +129,7 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={`Are you sure you wish to delete this '${lastPartOfName(component)}' component?`}
+  body={`Are you sure you wish to delete this '${definition?.name}' component?`}
   okText="Delete Component"
   onOk={deleteComponent} />
 

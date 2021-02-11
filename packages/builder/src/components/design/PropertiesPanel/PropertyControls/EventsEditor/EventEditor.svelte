@@ -1,15 +1,6 @@
 <script>
-  import {
-    Button,
-    Body,
-    DropdownMenu,
-    ModalContent,
-    Spacer,
-  } from "@budibase/bbui"
-  import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
+  import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
-  import { createEventDispatcher } from "svelte"
-  import { automationStore } from "builderStore"
 
   const EVENT_TYPE_KEY = "##eventHandlerType"
 

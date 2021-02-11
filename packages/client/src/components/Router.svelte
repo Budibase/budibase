@@ -7,9 +7,6 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  // Set context flag so components know that we're now inside the screenslot
-  setContext("screenslot", true)
-
   // Only wrap this as an array to take advantage of svelte keying,
   // to ensure the svelte-spa-router is fully remounted when route config
   // changes
