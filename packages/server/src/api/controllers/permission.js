@@ -45,7 +45,7 @@ function getPermissionType(resourceId) {
   }
 }
 
-async function getBasePermissions(resourceId) {
+function getBasePermissions(resourceId) {
   const type = getPermissionType(resourceId)
   const permissions = {}
   for (let [roleId, role] of Object.entries(BUILTIN_ROLES)) {
@@ -153,6 +153,7 @@ exports.fetch = async function(ctx) {
       if (permissions[roleId] == null) {
         permissions[roleId] = {}
       }
+      // TODO: need to work this out
       for (let [resource, level] of Object.entries(role.permissions)) {
         permissions[roleId][resource] = higherPermission(
           permissions[roleId][resource],
@@ -173,16 +174,13 @@ exports.getResourcePerms = async function(ctx) {
     })
   )
   const roles = body.rows.map(row => row.doc)
-  const resourcePerms = {}
+  const resourcePerms = getBasePermissions(resourceId)
   for (let level of SUPPORTED_LEVELS) {
-    for (let role of roles)
     // update the various roleIds in the resource permissions
-    if (role.permissions && role.permissions[resourceId]) {
-      const roleId = getExternalRoleID(role._id)
-      resourcePerms[level] = higherPermission(
-        resourcePerms[roleId],
-        role.permissions[resourceId]
-      )
+    for (let role of roles) {
+      if (role.permissions && role.permissions[resourceId]) {
+        resourcePerms[level] = getExternalRoleID(role._id)
+      }
     }
   }
   ctx.body = resourcePerms
