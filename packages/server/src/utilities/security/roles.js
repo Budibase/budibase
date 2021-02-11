@@ -57,6 +57,29 @@ function isBuiltin(role) {
 }
 
 /**
+ * Returns whichever builtin roleID is lower.
+ */
+exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
+  const MAX = Object.values(BUILTIN_IDS).length + 1
+  function toNum(id) {
+    if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
+      return MAX
+    }
+    let role = exports.BUILTIN_ROLES[id],
+      count = 0
+    do {
+      if (!role) {
+        break
+      }
+      role = exports.BUILTIN_ROLES[role.inherits]
+      count++
+    } while (role !== null)
+    return count
+  }
+  return toNum(roleId1) > toNum(roleId2) ? roleId2 : roleId1
+}
+
+/**
  * Gets the role object, this is mainly useful for two purposes, to check if the level exists and
  * to check if the role inherits any others.
  * @param {string} appId The app in which to look for the role.
@@ -220,31 +243,6 @@ exports.getExternalRoleID = roleId => {
     return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
   }
   return roleId
-}
-
-/**
- * Returns whichever roleID is lower.
- */
-exports.lowerRoleID = async (appId, roleId1, roleId2) => {
-  // TODO: need to make this function work
-  const MAX = Object.values(BUILTIN_IDS).length + 1
-  async function toNum(id) {
-    if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
-      return MAX
-    }
-    let role = await exports.getRole(appId, id),
-      count = 0
-    do {
-      if (!role) {
-        break
-      }
-      role = exports.BUILTIN_ROLES[role.inherits]
-      count++
-    } while (role !== null)
-    return count
-  }
-  const [num1, num2] = Promise.all([toNum(roleId1), toNum(roleId2)])
-  return num1 > num2 ? roleId2 : roleId1
 }
 
 exports.AccessController = AccessController
