@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
 
   export const className = ""
@@ -38,8 +38,11 @@
     <h2 class="heading">{heading}</h2>
     <h4 class="text">{description}</h4>
     <a
+      use:linkable
       style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
-      href={linkUrl}>{linkText}</a>
+      href={linkUrl}>
+      {linkText}
+    </a>
   </div>
 </div>
 
