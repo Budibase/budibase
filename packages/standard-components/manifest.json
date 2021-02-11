@@ -118,6 +118,11 @@
         "label": "Empty Text",
         "key": "noRowsMessage",
         "defaultValue": "No rows found."
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
       }
     ]
   },
