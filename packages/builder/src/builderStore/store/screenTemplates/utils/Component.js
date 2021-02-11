@@ -14,15 +14,9 @@ export class Component extends BaseStructure {
         active: {},
         selected: {},
       },
-      type: "",
       _instanceName: "",
       _children: [],
     }
-  }
-
-  type(type) {
-    this._json.type = type
-    return this
   }
 
   normalStyle(styling) {
@@ -35,14 +29,25 @@ export class Component extends BaseStructure {
     return this
   }
 
-  text(text) {
-    this._json.text = text
+  customStyle(styling) {
+    this._json._styles.custom = styling
     return this
   }
 
-  // TODO: do we need this
   instanceName(name) {
     this._json._instanceName = name
+    return this
+  }
+
+  // Shorthand for custom props "type"
+  type(type) {
+    this._json.type = type
+    return this
+  }
+
+  // Shorthand for custom props "text"
+  text(text) {
+    this._json.text = text
     return this
   }
 }
