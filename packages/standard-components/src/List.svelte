@@ -33,7 +33,7 @@
   <div use:styleable={$component.styles}>
     {#if rows.length > 0}
       {#if $component.children === 0 && $builderStore.inBuilder}
-        <p><i class="ri-image-line" />Add some components to display</p>
+        <p><i class="ri-image-line" />Add some components to display.</p>
       {:else}
         {#each rows as row}
           <Provider data={row}>
