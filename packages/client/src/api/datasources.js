@@ -1,14 +1,8 @@
 import { cloneDeep } from "lodash/fp"
-import { fetchTableData, searchTableData } from "./tables"
+import { fetchTableData } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
-import { enrichRows } from "./rows"
-
-export const searchTable = async ({ tableId, search, pagination }) => {
-  const rows = await searchTableData({ tableId, search, pagination })
-  return await enrichRows(rows, tableId)
-}
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -33,7 +27,7 @@ export const fetchDatasource = async datasource => {
         parameters[param.name] = param.default
       }
     }
-    return await executeQuery({ queryId: datasource._id, parameters })
+    rows = await executeQuery({ queryId: datasource._id, parameters })
   } else if (type === "link") {
     rows = await fetchRelationshipData({
       rowId: datasource.rowId,
@@ -42,6 +36,6 @@ export const fetchDatasource = async datasource => {
     })
   }
 
-  // Enrich rows so they can displayed properly
-  return await enrichRows(rows, tableId)
+  // Enrich the result is always an array
+  return Array.isArray(rows) ? rows : []
 }
