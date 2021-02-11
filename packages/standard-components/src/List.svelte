@@ -4,6 +4,7 @@
 
   export let datasource
   export let noRowsMessage
+  export let filter
 
   const { API, styleable, Provider, builderStore, ActionTypes } = getContext(
     "sdk"
@@ -13,6 +14,7 @@
   let loaded = false
 
   $: fetchData(datasource)
+  $: filteredRows = filterRows(rows, filter)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -21,21 +23,34 @@
     },
   ]
 
-  async function fetchData(datasource) {
+  const fetchData = async datasource => {
     if (!isEmpty(datasource)) {
       rows = await API.fetchDatasource(datasource)
     }
     loaded = true
   }
+
+  const filterRows = (rows, filter) => {
+    if (!Object.keys(filter || {}).length) {
+      return rows
+    }
+    let filteredData = [...rows]
+    Object.keys(filter).forEach(field => {
+      filteredData = filteredData.filter(row => {
+        return row[field] === filter[field].value
+      })
+    })
+    return filteredData
+  }
 </script>
 
 <Provider {actions}>
   <div use:styleable={$component.styles}>
-    {#if rows.length > 0}
+    {#if filteredRows.length > 0}
       {#if $component.children === 0 && $builderStore.inBuilder}
         <p><i class="ri-image-line" />Add some components to display.</p>
       {:else}
-        {#each rows as row}
+        {#each filteredRows as row}
           <Provider data={row}>
             <slot />
           </Provider>

@@ -18,6 +18,7 @@
   import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
+  import FilterEditor from "./PropertyControls/FilterEditor.svelte"
   import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
@@ -73,6 +74,7 @@
     field: FieldSelect,
     multifield: MultiFieldSelect,
     schema: SchemaSelect,
+    filter: FilterEditor,
     "field/string": StringFieldSelect,
     "field/number": NumberFieldSelect,
     "field/options": OptionsFieldSelect,
