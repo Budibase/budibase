@@ -25,7 +25,7 @@ const PermissionUpdateType = {
 const SUPPORTED_LEVELS = [PermissionLevels.WRITE, PermissionLevels.READ]
 
 function getPermissionType(resourceId) {
-  const docType = DocumentTypes.filter(docType =>
+  const docType = Object.values(DocumentTypes).filter(docType =>
     resourceId.startsWith(docType)
   )[0]
   switch (docType) {
@@ -54,7 +54,10 @@ function getBasePermissions(resourceId) {
     }
     const perms = getBuiltinPermissionByID(role.permissionId)
     const typedPermission = perms.permissions.find(perm => perm.type === type)
-    if (typedPermission) {
+    if (
+      typedPermission &&
+      SUPPORTED_LEVELS.indexOf(typedPermission.level) !== -1
+    ) {
       const level = typedPermission.level
       permissions[level] = lowerBuiltinRoleID(permissions[level], roleId)
       if (isPermissionLevelHigherThanRead(level)) {
@@ -148,18 +151,15 @@ exports.fetch = async function(ctx) {
   let permissions = {}
   // create an object with structure role ID -> resource ID -> level
   for (let role of roles) {
-    if (role.permissions) {
-      const roleId = getExternalRoleID(role._id)
-      if (permissions[roleId] == null) {
-        permissions[roleId] = {}
+    if (!role.permissions) {
+      continue
+    }
+    const roleId = getExternalRoleID(role._id)
+    for (let [resource, level] of Object.entries(role.permissions)) {
+      if (permissions[resource] == null) {
+        permissions[resource] = getBasePermissions(resource)
       }
-      // TODO: need to work this out
-      for (let [resource, level] of Object.entries(role.permissions)) {
-        permissions[roleId][resource] = higherPermission(
-          permissions[roleId][resource],
-          level
-        )
-      }
+      permissions[resource][level] = roleId
     }
   }
   ctx.body = permissions
@@ -178,7 +178,7 @@ exports.getResourcePerms = async function(ctx) {
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of roles) {
-      if (role.permissions && role.permissions[resourceId]) {
+      if (role.permissions && role.permissions[resourceId] === level) {
         resourcePerms[level] = getExternalRoleID(role._id)
       }
     }

@@ -63,6 +63,7 @@ function getAllowedLevels(userPermLevel) {
 }
 
 exports.BUILTIN_PERMISSION_IDS = {
+  PUBLIC: "public",
   READ_ONLY: "read_only",
   WRITE: "write",
   ADMIN: "admin",
@@ -70,6 +71,13 @@ exports.BUILTIN_PERMISSION_IDS = {
 }
 
 exports.BUILTIN_PERMISSIONS = {
+  PUBLIC: {
+    _id: exports.BUILTIN_PERMISSION_IDS.PUBLIC,
+    name: "Public",
+    permissions: [
+      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE)
+    ],
+  },
   READ_ONLY: {
     _id: exports.BUILTIN_PERMISSION_IDS.READ_ONLY,
     name: "Read only",

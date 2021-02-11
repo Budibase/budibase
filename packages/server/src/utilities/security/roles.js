@@ -37,7 +37,7 @@ exports.BUILTIN_ROLES = {
     .addPermission(BUILTIN_PERMISSION_IDS.WRITE)
     .addInheritance(BUILTIN_IDS.PUBLIC),
   PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public").addPermission(
-    BUILTIN_PERMISSION_IDS.READ_ONLY
+    BUILTIN_PERMISSION_IDS.PUBLIC
   ),
   BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder").addPermission(
     BUILTIN_PERMISSION_IDS.ADMIN
@@ -57,26 +57,36 @@ function isBuiltin(role) {
 }
 
 /**
+ * Works through the inheritance ranks to see how far up the builtin stack this ID is.
+ */
+function builtinRoleToNumber(id) {
+  const MAX = Object.values(BUILTIN_IDS).length + 1
+  if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
+    return MAX
+  }
+  let role = exports.BUILTIN_ROLES[id],
+    count = 0
+  do {
+    if (!role) {
+      break
+    }
+    role = exports.BUILTIN_ROLES[role.inherits]
+    count++
+  } while (role !== null)
+  return count
+}
+
+/**
  * Returns whichever builtin roleID is lower.
  */
 exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
-  const MAX = Object.values(BUILTIN_IDS).length + 1
-  function toNum(id) {
-    if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
-      return MAX
-    }
-    let role = exports.BUILTIN_ROLES[id],
-      count = 0
-    do {
-      if (!role) {
-        break
-      }
-      role = exports.BUILTIN_ROLES[role.inherits]
-      count++
-    } while (role !== null)
-    return count
+  if (!roleId1) {
+    return roleId2
   }
-  return toNum(roleId1) > toNum(roleId2) ? roleId2 : roleId1
+  if (!roleId2) {
+    return roleId1
+  }
+  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2) ? roleId2 : roleId1
 }
 
 /**
