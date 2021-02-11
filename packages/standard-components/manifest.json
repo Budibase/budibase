@@ -142,7 +142,7 @@
       },
       {
         "type": "number",
-        "label": "Rows Per Page",
+        "label": "Rows/Page",
         "defaultValue": 25,
         "key": "pageSize"
       },
