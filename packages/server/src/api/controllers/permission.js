@@ -4,11 +4,13 @@ const {
   PermissionTypes,
   higherPermission,
   getBuiltinPermissionByID,
+  isPermissionLevelHigherThanRead,
 } = require("../../utilities/security/permissions")
 const {
   isBuiltin,
   getDBRoleID,
   getExternalRoleID,
+  lowerBuiltinRoleID,
   BUILTIN_ROLES,
 } = require("../../utilities/security/roles")
 const { getRoleParams, DocumentTypes } = require("../../db/utils")
@@ -20,33 +22,31 @@ const PermissionUpdateType = {
   ADD: "add",
 }
 
-function getBasePermissions(resourceId) {
+const SUPPORTED_LEVELS = [PermissionLevels.WRITE, PermissionLevels.READ]
+
+function getPermissionType(resourceId) {
   const docType = DocumentTypes.filter(docType =>
     resourceId.startsWith(docType)
   )[0]
-  const levelsToFind = [PermissionLevels.WRITE, PermissionLevels.READ]
-  let type
   switch (docType) {
     case DocumentTypes.TABLE:
     case DocumentTypes.ROW:
-      type = PermissionTypes.TABLE
-      break
+      return PermissionTypes.TABLE
     case DocumentTypes.AUTOMATION:
-      type = PermissionTypes.AUTOMATION
-      break
+      return PermissionTypes.AUTOMATION
     case DocumentTypes.WEBHOOK:
-      type = PermissionTypes.WEBHOOK
-      break
+      return PermissionTypes.WEBHOOK
     case DocumentTypes.QUERY:
     case DocumentTypes.DATASOURCE:
-      type = PermissionTypes.QUERY
-      break
+      return PermissionTypes.QUERY
     default:
       // views don't have an ID, will end up here
-      type = PermissionTypes.VIEW
-      break
+      return PermissionTypes.VIEW
   }
+}
 
+async function getBasePermissions(resourceId) {
+  const type = getPermissionType(resourceId)
   const permissions = {}
   for (let [roleId, role] of Object.entries(BUILTIN_ROLES)) {
     if (!role.permissionId) {
@@ -55,10 +55,17 @@ function getBasePermissions(resourceId) {
     const perms = getBuiltinPermissionByID(role.permissionId)
     const typedPermission = perms.permissions.find(perm => perm.type === type)
     if (typedPermission) {
-      // TODO: need to get the lowest role
-      // TODO: store the read/write with the lowest role
+      const level = typedPermission.level
+      permissions[level] = lowerBuiltinRoleID(permissions[level], roleId)
+      if (isPermissionLevelHigherThanRead(level)) {
+        permissions[PermissionLevels.READ] = lowerBuiltinRoleID(
+          permissions[PermissionLevels.READ],
+          roleId
+        )
+      }
     }
   }
+  return permissions
 }
 
 // utility function to stop this repetition - permissions always stored under roles
@@ -132,7 +139,7 @@ exports.fetchBuiltin = function(ctx) {
 
 exports.fetchLevels = function(ctx) {
   // for now only provide the read/write perms externally
-  ctx.body = [PermissionLevels.WRITE, PermissionLevels.READ]
+  ctx.body = SUPPORTED_LEVELS
 }
 
 exports.fetch = async function(ctx) {
@@ -167,11 +174,12 @@ exports.getResourcePerms = async function(ctx) {
   )
   const roles = body.rows.map(row => row.doc)
   const resourcePerms = {}
-  for (let role of roles) {
+  for (let level of SUPPORTED_LEVELS) {
+    for (let role of roles)
     // update the various roleIds in the resource permissions
     if (role.permissions && role.permissions[resourceId]) {
       const roleId = getExternalRoleID(role._id)
-      resourcePerms[roleId] = higherPermission(
+      resourcePerms[level] = higherPermission(
         resourcePerms[roleId],
         role.permissions[resourceId]
       )

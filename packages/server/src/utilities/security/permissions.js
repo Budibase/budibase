@@ -23,6 +23,22 @@ function Permission(type, level) {
   this.type = type
 }
 
+function levelToNumber(perm) {
+  switch (perm) {
+    // not everything has execute privileges
+    case PermissionLevels.EXECUTE:
+      return 0
+    case PermissionLevels.READ:
+      return 1
+    case PermissionLevels.WRITE:
+      return 2
+    case PermissionLevels.ADMIN:
+      return 3
+    default:
+      return -1
+  }
+}
+
 /**
  * Given the specified permission level for the user return the levels they are allowed to carry out.
  * @param {string} userPermLevel The permission level of the user.
@@ -149,22 +165,11 @@ exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
 }
 
 exports.higherPermission = (perm1, perm2) => {
-  function toNum(perm) {
-    switch (perm) {
-      // not everything has execute privileges
-      case PermissionLevels.EXECUTE:
-        return 0
-      case PermissionLevels.READ:
-        return 1
-      case PermissionLevels.WRITE:
-        return 2
-      case PermissionLevels.ADMIN:
-        return 3
-      default:
-        return -1
-    }
-  }
-  return toNum(perm1) > toNum(perm2) ? perm1 : perm2
+  return levelToNumber(perm1) > levelToNumber(perm2) ? perm1 : perm2
+}
+
+exports.isPermissionLevelHigherThanRead = level => {
+  return levelToNumber(level) > 1
 }
 
 // utility as a lot of things need simply the builder permission
