@@ -19,6 +19,7 @@
   let drawer
 
   export let value = {}
+  export let otherSources
 
   $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
@@ -88,7 +89,7 @@
   class="dropdownbutton"
   bind:this={anchorRight}
   on:click={dropdownRight.show}>
-  <span>{value?.label ? value.label : 'Choose option'}</span>
+  <span>{value?.label ?? 'Choose option'}</span>
   <Icon name="arrowdown" />
 </div>
 {#if value?.type === 'query'}
@@ -175,6 +176,22 @@
         </li>
       {/each}
     </ul>
+
+    {#if otherSources?.length}
+      <hr />
+      <div class="title">
+        <Heading extraSmall>Other</Heading>
+      </div>
+      <ul>
+        {#each otherSources as source}
+          <li
+            class:selected={value === source}
+            on:click={() => handleSelected(source)}>
+            {source.label}
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </div>
 </DropdownMenu>
 
