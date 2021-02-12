@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
-const { getRole, BUILTIN_ROLES } = require("../utilities/security/roles")
+const { getRole, getBuiltinRoles } = require("../utilities/security/roles")
 const { AuthTypes } = require("../constants")
 const {
   getAppId,
@@ -20,6 +20,7 @@ module.exports = async (ctx, next) => {
   // we hold it in state as a
   let appId = getAppId(ctx)
   const cookieAppId = ctx.cookies.get(getCookieName("currentapp"))
+  const builtinRoles = getBuiltinRoles()
   if (appId && cookieAppId !== appId) {
     setCookie(ctx, appId, "currentapp")
   } else if (cookieAppId) {
@@ -40,7 +41,7 @@ module.exports = async (ctx, next) => {
     ctx.appId = appId
     ctx.user = {
       appId,
-      role: BUILTIN_ROLES.PUBLIC,
+      role: builtinRoles.PUBLIC,
     }
     await next()
     return
