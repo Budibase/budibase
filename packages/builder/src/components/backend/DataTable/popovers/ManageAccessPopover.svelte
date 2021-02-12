@@ -29,7 +29,9 @@
 
 <div class="popover">
   <h5>Who Can Access This Data?</h5>
-  <Label extraSmall grey>Specify the minimum access level role for this data.</Label>
+  <div class="note">
+    <Label extraSmall grey>Specify the minimum access level role for this data.</Label>
+  </div>
   <Spacer large />
   <div class="row">
     <Label extraSmall grey>Level</Label>
@@ -81,5 +83,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-m);
+  }
+
+  .note {
+    margin-top: 10px;
+    margin-bottom: 0;
   }
 </style>
