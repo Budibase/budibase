@@ -26,7 +26,7 @@ Role.prototype.addInheritance = function(inherits) {
   return this
 }
 
-exports.BUILTIN_ROLES = {
+const BUILTIN_ROLES = {
   ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin")
     .addPermission(BUILTIN_PERMISSION_IDS.ADMIN)
     .addInheritance(BUILTIN_IDS.POWER),
@@ -44,11 +44,15 @@ exports.BUILTIN_ROLES = {
   ),
 }
 
-exports.BUILTIN_ROLE_ID_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
+exports.getBuiltinRoles = () => {
+  return cloneDeep(BUILTIN_ROLES)
+}
+
+exports.BUILTIN_ROLE_ID_ARRAY = Object.values(BUILTIN_ROLES).map(
   role => role._id
 )
 
-exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
+exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(BUILTIN_ROLES).map(
   role => role.name
 )
 
@@ -60,17 +64,18 @@ function isBuiltin(role) {
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
 function builtinRoleToNumber(id) {
+  const builtins = exports.getBuiltinRoles()
   const MAX = Object.values(BUILTIN_IDS).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
     return MAX
   }
-  let role = exports.BUILTIN_ROLES[id],
+  let role = builtins,
     count = 0
   do {
     if (!role) {
       break
     }
-    role = exports.BUILTIN_ROLES[role.inherits]
+    role = builtins[role.inherits]
     count++
   } while (role !== null)
   return count
@@ -107,7 +112,7 @@ exports.getRole = async (appId, roleId) => {
   // but can be extended by a doc stored about them (e.g. permissions)
   if (isBuiltin(roleId)) {
     role = cloneDeep(
-      Object.values(exports.BUILTIN_ROLES).find(role => role._id === roleId)
+      Object.values(BUILTIN_ROLES).find(role => role._id === roleId)
     )
   }
   try {
