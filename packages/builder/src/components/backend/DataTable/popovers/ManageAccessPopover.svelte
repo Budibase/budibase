@@ -29,6 +29,7 @@
 
 <div class="popover">
   <h5>Who Can Access This Data?</h5>
+  <Label extraSmall grey>Specify the minimum access level role for this data.</Label>
   <Spacer large />
   <div class="row">
     <Label extraSmall grey>Level</Label>

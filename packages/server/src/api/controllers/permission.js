@@ -1,72 +1,42 @@
 const {
   BUILTIN_PERMISSIONS,
   PermissionLevels,
-  PermissionTypes,
-  higherPermission,
-  getBuiltinPermissionByID,
   isPermissionLevelHigherThanRead,
+  higherPermission,
 } = require("../../utilities/security/permissions")
 const {
   isBuiltin,
   getDBRoleID,
   getExternalRoleID,
-  lowerBuiltinRoleID,
   BUILTIN_ROLES,
 } = require("../../utilities/security/roles")
-const { getRoleParams, DocumentTypes } = require("../../db/utils")
+const { getRoleParams } = require("../../db/utils")
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
+const {
+  CURRENTLY_SUPPORTED_LEVELS,
+  getBasePermissions,
+} = require("../../utilities/security/utilities")
 
 const PermissionUpdateType = {
   REMOVE: "remove",
   ADD: "add",
 }
 
-const SUPPORTED_LEVELS = [PermissionLevels.WRITE, PermissionLevels.READ]
+const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
-function getPermissionType(resourceId) {
-  const docType = Object.values(DocumentTypes).filter(docType =>
-    resourceId.startsWith(docType)
-  )[0]
-  switch (docType) {
-    case DocumentTypes.TABLE:
-    case DocumentTypes.ROW:
-      return PermissionTypes.TABLE
-    case DocumentTypes.AUTOMATION:
-      return PermissionTypes.AUTOMATION
-    case DocumentTypes.WEBHOOK:
-      return PermissionTypes.WEBHOOK
-    case DocumentTypes.QUERY:
-    case DocumentTypes.DATASOURCE:
-      return PermissionTypes.QUERY
-    default:
-      // views don't have an ID, will end up here
-      return PermissionTypes.VIEW
+// quick function to perform a bit of weird logic, make sure fetch calls
+// always say a write role also has read permission
+function fetchLevelPerms(permissions, level, roleId) {
+  if (!permissions) {
+    permissions = {}
   }
-}
-
-function getBasePermissions(resourceId) {
-  const type = getPermissionType(resourceId)
-  const permissions = {}
-  for (let [roleId, role] of Object.entries(BUILTIN_ROLES)) {
-    if (!role.permissionId) {
-      continue
-    }
-    const perms = getBuiltinPermissionByID(role.permissionId)
-    const typedPermission = perms.permissions.find(perm => perm.type === type)
-    if (
-      typedPermission &&
-      SUPPORTED_LEVELS.indexOf(typedPermission.level) !== -1
-    ) {
-      const level = typedPermission.level
-      permissions[level] = lowerBuiltinRoleID(permissions[level], roleId)
-      if (isPermissionLevelHigherThanRead(level)) {
-        permissions[PermissionLevels.READ] = lowerBuiltinRoleID(
-          permissions[PermissionLevels.READ],
-          roleId
-        )
-      }
-    }
+  permissions[level] = roleId
+  if (
+    isPermissionLevelHigherThanRead(level) &&
+    !permissions[PermissionLevels.READ]
+  ) {
+    permissions[PermissionLevels.READ] = roleId
   }
   return permissions
 }
@@ -118,7 +88,10 @@ async function updatePermissionOnRole(
     }
     // handle the adding, we're on the correct role, at it to this
     if (!remove && role._id === dbRoleId) {
-      rolePermissions[resourceId] = level
+      rolePermissions[resourceId] = higherPermission(
+        rolePermissions[resourceId],
+        level
+      )
       updated = true
     }
     // handle the update, add it to bulk docs to perform at end
@@ -156,13 +129,20 @@ exports.fetch = async function(ctx) {
     }
     const roleId = getExternalRoleID(role._id)
     for (let [resource, level] of Object.entries(role.permissions)) {
-      if (permissions[resource] == null) {
-        permissions[resource] = getBasePermissions(resource)
-      }
-      permissions[resource][level] = roleId
+      permissions[resource] = fetchLevelPerms(
+        permissions[resource],
+        level,
+        roleId
+      )
     }
   }
-  ctx.body = permissions
+  // apply the base permissions
+  const finalPermissions = {}
+  for (let [resource, permission] of Object.entries(permissions)) {
+    const basePerms = getBasePermissions(resource)
+    finalPermissions[resource] = Object.assign(basePerms, permission)
+  }
+  ctx.body = finalPermissions
 }
 
 exports.getResourcePerms = async function(ctx) {
@@ -174,16 +154,20 @@ exports.getResourcePerms = async function(ctx) {
     })
   )
   const roles = body.rows.map(row => row.doc)
-  const resourcePerms = getBasePermissions(resourceId)
+  let permissions = {}
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of roles) {
       if (role.permissions && role.permissions[resourceId] === level) {
-        resourcePerms[level] = getExternalRoleID(role._id)
+        permissions = fetchLevelPerms(
+          permissions,
+          level,
+          getExternalRoleID(role._id)
+        )
       }
     }
   }
-  ctx.body = resourcePerms
+  ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
 }
 
 exports.addPermission = async function(ctx) {
