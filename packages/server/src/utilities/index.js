@@ -1,7 +1,6 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const fs = require("fs")
-const { cloneDeep } = require("lodash/fp")
 const CouchDB = require("../db")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR

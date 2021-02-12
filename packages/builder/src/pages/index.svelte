@@ -48,6 +48,11 @@
     modal.show()
   }
 
+  function closeModal() {
+    template = null
+    modal.hide()
+  }
+
   checkIfKeysAndApps()
 </script>
 
@@ -73,7 +78,7 @@
   <AppList />
 </div>
 
-<Modal bind:this={modal} padding={false} width="600px">
+<Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>
   <CreateAppModal {hasKey} {template} />
 </Modal>
 

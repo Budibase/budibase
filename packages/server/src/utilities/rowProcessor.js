@@ -8,43 +8,49 @@ const { FieldTypes } = require("../constants")
  * A map of how we convert various properties in rows to each other based on the row type.
  */
 const TYPE_TRANSFORM_MAP = {
-  [FieldTypes.LINK]: {
+  link: {
     "": [],
     [null]: [],
     [undefined]: undefined,
+    parse: link => {
+      if (typeof link === "string") {
+        return [link]
+      }
+      return link
+    },
   },
-  [FieldTypes.OPTIONS]: {
+  options: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  [FieldTypes.STRING]: {
+  string: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  [FieldTypes.LONGFORM]: {
+  longform: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  [FieldTypes.NUMBER]: {
+  number: {
     "": null,
     [null]: null,
     [undefined]: undefined,
     parse: n => parseFloat(n),
   },
-  [FieldTypes.DATETIME]: {
+  datetime: {
     "": null,
     [undefined]: undefined,
     [null]: null,
   },
-  [FieldTypes.ATTACHMENT]: {
+  attachment: {
     "": [],
     [null]: [],
     [undefined]: undefined,
   },
-  [FieldTypes.BOOLEAN]: {
+  boolean: {
     "": null,
     [null]: null,
     [undefined]: undefined,
@@ -55,18 +61,19 @@ const TYPE_TRANSFORM_MAP = {
 
 /**
  * This will coerce a value to the correct types based on the type transform map
- * @param {any} value The value to coerce
- * @param {string} type The type fo coerce to
- * @returns {any} The coerced value
+ * @param {object} row The value to coerce
+ * @param {object} type The type fo coerce to
+ * @returns {object} The coerced value
  */
-exports.coerce = (value, type) => {
+exports.coerceValue = (row, type) => {
   // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value)) {
-    return TYPE_TRANSFORM_MAP[type][value]
+  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
+    return TYPE_TRANSFORM_MAP[type][row]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
-    return TYPE_TRANSFORM_MAP[type].parse(value)
+    return TYPE_TRANSFORM_MAP[type].parse(row)
   }
-  return value
+
+  return row
 }
 
 /**

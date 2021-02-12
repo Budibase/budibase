@@ -4,6 +4,7 @@ import svelte from "rollup-plugin-svelte"
 import postcss from "rollup-plugin-postcss"
 import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
+import svg from "rollup-plugin-svg"
 
 import builtins from "rollup-plugin-node-builtins"
 
@@ -33,5 +34,6 @@ export default {
     }),
     commonjs(),
     json(),
+    svg(),
   ],
 }

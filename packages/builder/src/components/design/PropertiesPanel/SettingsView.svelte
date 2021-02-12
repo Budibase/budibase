@@ -1,22 +1,35 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-
+  import { Button } from "@budibase/bbui"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { currentAsset } from "builderStore"
+  import { findClosestMatchingComponent } from "builderStore/storeUtils"
+  import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import OptionSelect from "./PropertyControls/OptionSelect.svelte"
-  import MultiTableViewFieldSelect from "./PropertyControls/MultiTableViewFieldSelect.svelte"
   import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
-  import TableViewSelect from "./PropertyControls/TableViewSelect.svelte"
-  import TableViewFieldSelect from "./PropertyControls/TableViewFieldSelect.svelte"
+  import DatasourceSelect from "./PropertyControls/DatasourceSelect.svelte"
+  import FieldSelect from "./PropertyControls/FieldSelect.svelte"
+  import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
+  import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
+  import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
+  import NumberFieldSelect from "./PropertyControls/NumberFieldSelect.svelte"
+  import OptionsFieldSelect from "./PropertyControls/OptionsFieldSelect.svelte"
+  import BooleanFieldSelect from "./PropertyControls/BooleanFieldSelect.svelte"
+  import LongFormFieldSelect from "./PropertyControls/LongFormFieldSelect.svelte"
+  import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
+  import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
+  import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
 
   export let componentDefinition = {}
   export let componentInstance = {}
@@ -39,6 +52,7 @@
     "layoutId",
     "routing.roleId",
   ]
+  let confirmResetFieldsDialog
 
   $: settings = componentDefinition?.settings ?? []
   $: isLayout = assetInstance && assetInstance.favicon
@@ -47,7 +61,7 @@
   const controlMap = {
     text: Input,
     select: OptionSelect,
-    datasource: TableViewSelect,
+    datasource: DatasourceSelect,
     screen: ScreenSelect,
     detailScreen: DetailScreenSelect,
     boolean: Checkbox,
@@ -56,8 +70,17 @@
     table: TableSelect,
     color: ColorPicker,
     icon: IconSelect,
-    field: TableViewFieldSelect,
-    multifield: MultiTableViewFieldSelect,
+    field: FieldSelect,
+    multifield: MultiFieldSelect,
+    schema: SchemaSelect,
+    "field/string": StringFieldSelect,
+    "field/number": NumberFieldSelect,
+    "field/options": OptionsFieldSelect,
+    "field/boolean": BooleanFieldSelect,
+    "field/longform": LongFormFieldSelect,
+    "field/datetime": DateTimeFieldSelect,
+    "field/attachment": AttachmentFieldSelect,
+    "field/link": RelationshipFieldSelect,
   }
 
   const getControl = type => {
@@ -77,6 +100,20 @@
 
   const onInstanceNameChange = name => {
     onChange("_instanceName", name)
+  }
+
+  const resetFormFields = () => {
+    const form = findClosestMatchingComponent(
+      $currentAsset.props,
+      componentInstance._id,
+      component => component._component.endsWith("/form")
+    )
+    const datasource = form?.datasource
+    const fields = makeDatasourceFormComponents(datasource)
+    onChange(
+      "_children",
+      fields.map(field => field.json())
+    )
   }
 </script>
 
@@ -114,7 +151,7 @@
           value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
           {componentInstance}
           onChange={val => onChange(setting.key, val)}
-          props={{ options: setting.options }} />
+          props={{ options: setting.options, placeholder: setting.placeholder }} />
       {/if}
     {/each}
   {:else}
@@ -122,7 +159,19 @@
       This component doesn't have any additional settings.
     </div>
   {/if}
+
+  {#if componentDefinition?.component?.endsWith('/fieldgroup')}
+    <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
+      Reset Fields
+    </Button>
+  {/if}
 </div>
+<ConfirmDialog
+  bind:this={confirmResetFieldsDialog}
+  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to reset this Field Group?`}
+  okText="Reset"
+  onOk={resetFormFields}
+  title="Confirm Reset Fields" />
 
 <style>
   .settings-view-container {
