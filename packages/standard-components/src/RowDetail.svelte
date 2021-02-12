@@ -1,46 +1,57 @@
 <script>
   import { onMount, getContext } from "svelte"
 
-  const { API, screenStore, routeStore, DataProvider, styleable } = getContext(
-    "sdk"
-  )
-  const component = getContext("component")
-
   export let table
 
+  const {
+    API,
+    screenStore,
+    routeStore,
+    Provider,
+    styleable,
+    ActionTypes,
+  } = getContext("sdk")
+  const component = getContext("component")
   let headers = []
   let row
 
-  async function fetchFirstRow() {
-    const rows = await API.fetchTableData(table)
-    return Array.isArray(rows) && rows.length ? rows[0] : { tableId: table }
+  const fetchFirstRow = async tableId => {
+    const rows = await API.fetchTableData(tableId)
+    return Array.isArray(rows) && rows.length ? rows[0] : { tableId }
   }
 
-  async function fetchData() {
-    if (!table) {
+  const fetchData = async (rowId, tableId) => {
+    if (!tableId) {
       return
     }
 
     const pathParts = window.location.pathname.split("/")
-    const routeParamId = $routeStore.routeParams.id
 
     // if srcdoc, then we assume this is the builder preview
-    if ((pathParts.length === 0 || pathParts[0] === "srcdoc") && table) {
-      row = await fetchFirstRow()
-    } else if (routeParamId) {
-      row = await API.fetchRow({ tableId: table, rowId: routeParamId })
+    if ((pathParts.length === 0 || pathParts[0] === "srcdoc") && tableId) {
+      row = await fetchFirstRow(tableId)
+    } else if (rowId) {
+      row = await API.fetchRow({ tableId, rowId })
     } else {
       throw new Error("Row ID was not supplied to RowDetail")
     }
   }
 
-  onMount(fetchData)
+  $: actions = [
+    {
+      type: ActionTypes.RefreshDatasource,
+      callback: () => fetchData($routeStore.routeParams.id, table),
+      metadata: { datasource: { type: "table", tableId: table } },
+    },
+  ]
+
+  onMount(() => fetchData($routeStore.routeParams.id, table))
 </script>
 
 {#if row}
-  <div use:styleable={$component.styles}>
-    <DataProvider {row}>
+  <Provider data={row} {actions}>
+    <div use:styleable={$component.styles}>
       <slot />
-    </DataProvider>
-  </div>
+    </div>
+  </Provider>
 {/if}

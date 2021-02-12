@@ -5,7 +5,6 @@
   import { isEmpty } from "lodash/fp"
 
   const { API } = getContext("sdk")
-  const dataContext = getContext("data")
 
   export let title
   export let datasource

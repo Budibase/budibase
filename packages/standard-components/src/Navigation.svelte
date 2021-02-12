@@ -1,12 +1,15 @@
 <script>
   import { getContext } from "svelte"
 
-  const { authStore, linkable, styleable } = getContext("sdk")
+  const { authStore, linkable, styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let logoUrl
 
   const logOut = async () => {
+    if ($builderStore.inBuilder) {
+      return
+    }
     await authStore.actions.logOut()
   }
 </script>

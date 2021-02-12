@@ -9,7 +9,6 @@ export const layout = [
     key: "display",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Block", value: "block" },
       { label: "Inline Block", value: "inline-block" },
       { label: "Flex", value: "flex" },
@@ -37,7 +36,6 @@ export const layout = [
     key: "justify-content",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
       { label: "Center", value: "center" },
@@ -51,7 +49,6 @@ export const layout = [
     key: "align-items",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
       { label: "Center", value: "center" },
@@ -64,7 +61,6 @@ export const layout = [
     key: "flex-wrap",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Wrap", value: "wrap" },
       { label: "No wrap", value: "nowrap" },
     ],
@@ -74,7 +70,6 @@ export const layout = [
     key: "gap",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -93,7 +88,6 @@ export const margin = [
     key: "margin",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -113,7 +107,6 @@ export const margin = [
     key: "margin-top",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -133,7 +126,6 @@ export const margin = [
     key: "margin-right",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -153,7 +145,6 @@ export const margin = [
     key: "margin-bottom",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -173,7 +164,6 @@ export const margin = [
     key: "margin-left",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -196,7 +186,6 @@ export const padding = [
     key: "padding",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -214,7 +203,6 @@ export const padding = [
     key: "padding-top",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -232,7 +220,6 @@ export const padding = [
     key: "padding-right",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -250,7 +237,6 @@ export const padding = [
     key: "padding-bottom",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -268,7 +254,6 @@ export const padding = [
     key: "padding-left",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
       { label: "8px", value: "8px" },
@@ -289,7 +274,6 @@ export const size = [
     key: "flex",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Shrink", value: "0 1 auto" },
       { label: "Grow", value: "1 1 auto" },
     ],
@@ -338,7 +322,6 @@ export const position = [
     key: "position",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Static", value: "static" },
       { label: "Relative", value: "relative" },
       { label: "Fixed", value: "fixed" },
@@ -375,7 +358,6 @@ export const position = [
     key: "z-index",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "-9999", value: "-9999" },
       { label: "-3", value: "-3" },
       { label: "-2", value: "-2" },
@@ -395,7 +377,6 @@ export const typography = [
     key: "font-family",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Arial", value: "Arial" },
       { label: "Arial Black", value: "Arial Black" },
       { label: "Cursive", value: "Cursive" },
@@ -418,7 +399,6 @@ export const typography = [
     key: "font-weight",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "200", value: "200" },
       { label: "300", value: "300" },
       { label: "400", value: "400" },
@@ -434,7 +414,6 @@ export const typography = [
     key: "font-size",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "8px", value: "8px" },
       { label: "10px", value: "10px" },
       { label: "12px", value: "12px" },
@@ -454,7 +433,6 @@ export const typography = [
     key: "line-height",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "1", value: "1" },
       { label: "1.25", value: "1.25" },
       { label: "1.5", value: "1.5" },
@@ -496,7 +474,6 @@ export const typography = [
     key: "text-decoration-line",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Underline", value: "underline" },
       { label: "Overline", value: "overline" },
       { label: "Line-through", value: "line-through" },
@@ -516,7 +493,6 @@ export const background = [
     key: "background-image",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "none" },
       {
         label: "Warm Flame",
@@ -603,7 +579,6 @@ export const border = [
     key: "border-radius",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0" },
       { label: "X Small", value: "0.125rem" },
       { label: "Small", value: "0.25rem" },
@@ -619,7 +594,6 @@ export const border = [
     key: "border-width",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0" },
       { label: "X Small", value: "0.5px" },
       { label: "Small", value: "1px" },
@@ -638,7 +612,6 @@ export const border = [
     key: "border-style",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "none" },
       { label: "Hidden", value: "hidden" },
       { label: "Dotted", value: "dotted" },
@@ -659,7 +632,6 @@ export const effects = [
     key: "opacity",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "0", value: "0" },
       { label: "0.2", value: "0.2" },
       { label: "0.4", value: "0.4" },
@@ -673,7 +645,6 @@ export const effects = [
     key: "transform",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "0" },
       { label: "45 deg", value: "rotate(45deg)" },
       { label: "90 deg", value: "rotate(90deg)" },
@@ -690,7 +661,6 @@ export const effects = [
     key: "box-shadow",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "none" },
       { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
       {
@@ -723,7 +693,6 @@ export const transitions = [
     key: "transition-property",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "None", value: "none" },
       { label: "All", value: "all" },
       { label: "Background Color", value: "background color" },
@@ -745,7 +714,6 @@ export const transitions = [
     control: OptionSelect,
     placeholder: "sec",
     options: [
-      { label: "Choose option", value: "" },
       { label: "0.4s", value: "0.4s" },
       { label: "0.6s", value: "0.6s" },
       { label: "0.8s", value: "0.8s" },
@@ -759,7 +727,6 @@ export const transitions = [
     key: "transition-timing-function",
     control: OptionSelect,
     options: [
-      { label: "Choose option", value: "" },
       { label: "Linear", value: "linear" },
       { label: "Ease", value: "ease" },
       { label: "Ease in", value: "ease-in" },

@@ -4,20 +4,19 @@ import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 import { makePropSafe } from "@budibase/string-templates"
 import {
-  makeMainContainer,
   makeBreadcrumbContainer,
   makeTitleContainer,
   makeSaveButton,
+  makeMainForm,
+  spectrumColor,
+  makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
 export default function(tables) {
   return tables.map(table => {
-    const heading = table.primaryDisplay
-      ? `{{ data.${makePropSafe(table.primaryDisplay)} }}`
-      : null
     return {
       name: `${table.name} - Detail`,
-      create: () => createScreen(table, heading),
+      create: () => createScreen(table),
       id: ROW_DETAIL_TEMPLATE,
     }
   })
@@ -26,9 +25,9 @@ export default function(tables) {
 export const ROW_DETAIL_TEMPLATE = "ROW_DETAIL_TEMPLATE"
 export const rowDetailUrl = table => sanitizeUrl(`/${table.name}/:id`)
 
-function generateTitleContainer(table, title, providerId) {
+function generateTitleContainer(table, title, formId) {
   // have to override style for this, its missing margin
-  const saveButton = makeSaveButton(table, providerId).normalStyle({
+  const saveButton = makeSaveButton(table, formId).normalStyle({
     background: "#000000",
     "border-width": "0",
     "border-style": "None",
@@ -54,6 +53,7 @@ function generateTitleContainer(table, title, providerId) {
       background: "transparent",
       color: "#4285f4",
     })
+    .customStyle(spectrumColor(700))
     .text("Delete")
     .customProps({
       className: "",
@@ -61,8 +61,9 @@ function generateTitleContainer(table, title, providerId) {
       onClick: [
         {
           parameters: {
-            rowId: `{{ ${makePropSafe(providerId)}._id }}`,
-            revId: `{{ ${makePropSafe(providerId)}._rev }}`,
+            providerId: formId,
+            rowId: `{{ ${makePropSafe(formId)}._id }}`,
+            revId: `{{ ${makePropSafe(formId)}._rev }}`,
             tableId: table._id,
           },
           "##eventHandlerType": "Delete Row",
@@ -82,23 +83,47 @@ function generateTitleContainer(table, title, providerId) {
     .addChild(saveButton)
 }
 
-const createScreen = (table, heading) => {
+const createScreen = table => {
   const screen = new Screen()
     .component("@budibase/standard-components/rowdetail")
     .table(table._id)
     .instanceName(`${table.name} - Detail`)
     .route(rowDetailUrl(table))
-    .name("")
 
-  const dataform = new Component(
-    "@budibase/standard-components/dataformwide"
-  ).instanceName("Form")
+  const form = makeMainForm()
+    .instanceName("Form")
+    .customProps({
+      theme: "spectrum--lightest",
+      size: "spectrum--medium",
+      datasource: {
+        label: table.name,
+        tableId: table._id,
+        type: "table",
+      },
+    })
 
-  const providerId = screen._json.props._id
-  const container = makeMainContainer()
+  const fieldGroup = new Component("@budibase/standard-components/fieldgroup")
+    .instanceName("Field Group")
+    .customProps({
+      labelPosition: "left",
+    })
+
+  // Add all form fields from this schema to the field group
+  const datasource = { type: "table", tableId: table._id }
+  makeDatasourceFormComponents(datasource).forEach(component => {
+    fieldGroup.addChild(component)
+  })
+
+  // Add all children to the form
+  const formId = form._json._id
+  const rowDetailId = screen._json.props._id
+  const heading = table.primaryDisplay
+    ? `{{ ${makePropSafe(rowDetailId)}.${makePropSafe(table.primaryDisplay)} }}`
+    : null
+  form
     .addChild(makeBreadcrumbContainer(table.name, heading || "Edit"))
-    .addChild(generateTitleContainer(table, heading || "Edit Row", providerId))
-    .addChild(dataform)
+    .addChild(generateTitleContainer(table, heading || "Edit Row", formId))
+    .addChild(fieldGroup)
 
-  return screen.addChild(container).json()
+  return screen.addChild(form).json()
 }
