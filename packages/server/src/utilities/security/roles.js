@@ -69,7 +69,7 @@ function builtinRoleToNumber(id) {
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
     return MAX
   }
-  let role = builtins,
+  let role = builtins[id],
     count = 0
   do {
     if (!role) {
