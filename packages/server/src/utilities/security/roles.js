@@ -86,7 +86,9 @@ exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
   if (!roleId2) {
     return roleId1
   }
-  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2) ? roleId2 : roleId1
+  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
+    ? roleId2
+    : roleId1
 }
 
 /**
