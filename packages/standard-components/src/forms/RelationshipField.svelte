@@ -7,6 +7,7 @@
 
   export let field
   export let label
+  export let placeholder
 
   let fieldState
   let fieldApi
@@ -15,8 +16,29 @@
   // Picker state
   let options = []
   let tableDefinition
+  let fieldText = ""
+  
+  const setFieldText = (value) => {
+    if (fieldSchema?.oneToMany) {
+      if (value?.length) {
+        const row = options.find(row => row._id === value)
+        if (!row) return placeholder  || 'Choose an option'
+        return getDisplayName(row)
+      } else {
+        return placeholder  || 'Choose an option'
+      } 
+    } else {
+      if (value?.length) {
+        return `${value?.length ?? 0} selected rows`
+      } else {
+        return placeholder  || 'Choose some options'
+      } 
+    }
+  }
 
-  $: fieldText = `${$fieldState?.value?.length ?? 0} selected rows`
+  $: console.log(placeholder)
+
+  $: fieldText = setFieldText($fieldState?.value)
   $: valueLookupMap = getValueLookupMap($fieldState?.value)
   $: isOptionSelected = option => valueLookupMap[option] === true
   $: linkedTableId = fieldSchema?.tableId
@@ -54,10 +76,14 @@
   }
 
   const toggleOption = option => {
-    if ($fieldState.value.includes(option)) {
+    if (fieldSchema.oneToMany) {
+      fieldApi.setValue([option])
+    } else {
+      if ($fieldState.value.includes(option)) {
       fieldApi.setValue($fieldState.value.filter(x => x !== option))
     } else {
       fieldApi.setValue([...$fieldState.value, option])
+    }
     }
   }
 </script>
