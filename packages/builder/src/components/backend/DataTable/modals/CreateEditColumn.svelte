@@ -51,11 +51,8 @@
         originalName,
         field,
         primaryDisplay,
-<<<<<<< HEAD
         oneToMany,
-=======
         indexes,
->>>>>>> develop
       })
       return state
     })
