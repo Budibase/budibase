@@ -75,7 +75,7 @@ exports.BUILTIN_PERMISSIONS = {
     _id: exports.BUILTIN_PERMISSION_IDS.PUBLIC,
     name: "Public",
     permissions: [
-      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE)
+      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
     ],
   },
   READ_ONLY: {
