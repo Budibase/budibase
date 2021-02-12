@@ -1,7 +1,6 @@
-import { get } from "svelte/store"
 import { Component } from "./Component"
 import { rowListUrl } from "../rowListScreen"
-import { backendUiStore } from "builderStore"
+import { getSchemaForDatasource } from "../../../dataBinding"
 
 export function spectrumColor(number) {
   // Acorn throws a parsing error in this file if the word g-l-o-b-a-l is found
@@ -174,37 +173,15 @@ const fieldTypeToComponentMap = {
   link: "relationshipfield",
 }
 
-export function makeTableFormComponents(tableId) {
-  const tables = get(backendUiStore).tables
-  const schema = tables.find(table => table._id === tableId)?.schema ?? {}
-  return makeSchemaFormComponents(schema)
-}
-
-export function makeQueryFormComponents(queryId) {
-  const queries = get(backendUiStore).queries
-  const params = queries.find(query => query._id === queryId)?.parameters ?? []
-  let schema = {}
-  params.forEach(param => {
-    schema[param.name] = { ...param, type: "string" }
-  })
-  return makeSchemaFormComponents(schema)
-}
-
 export function makeDatasourceFormComponents(datasource) {
-  if (!datasource) {
-    return []
-  }
-  return datasource.type === "table"
-    ? makeTableFormComponents(datasource.tableId)
-    : makeQueryFormComponents(datasource._id)
-}
-
-function makeSchemaFormComponents(schema) {
+  const { schema } = getSchemaForDatasource(datasource, true)
   let components = []
   let fields = Object.keys(schema || {})
   fields.forEach(field => {
     const fieldSchema = schema[field]
-    const componentType = fieldTypeToComponentMap[fieldSchema.type]
+    const fieldType =
+      typeof fieldSchema === "object" ? fieldSchema.type : fieldSchema
+    const componentType = fieldTypeToComponentMap[fieldType]
     const fullComponentType = `@budibase/standard-components/${componentType}`
     if (componentType) {
       const component = new Component(fullComponentType)
@@ -214,10 +191,10 @@ function makeSchemaFormComponents(schema) {
           label: field,
           placeholder: field,
         })
-      if (fieldSchema.type === "options") {
+      if (fieldType === "options") {
         component.customProps({ placeholder: "Choose an option " })
       }
-      if (fieldSchema.type === "boolean") {
+      if (fieldType === "boolean") {
         component.customProps({ text: field, label: "" })
       }
       components.push(component)

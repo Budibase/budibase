@@ -100,7 +100,10 @@
   }
   .spectrum-Popover {
     max-height: 240px;
-    width: var(--spectrum-global-dimension-size-2400);
+    width: 100%;
     z-index: 999;
+  }
+  .spectrum-Picker {
+    width: 100%;
   }
 </style>

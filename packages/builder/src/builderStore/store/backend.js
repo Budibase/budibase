@@ -232,7 +232,7 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false, oneToMany = false }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, indexes, oneToMany = false }) => {
         store.update(state => {
           console.log(state)
           // delete the original if renaming
@@ -252,6 +252,10 @@ export const getBackendUiStore = () => {
           // Set one-to-many
           if (oneToMany) {
             state.draftTable.oneToMany = field.name
+          }
+
+          if (indexes) {
+            state.draftTable.indexes = indexes
           }
 
           state.draftTable.schema[field.name] = cloneDeep(field)

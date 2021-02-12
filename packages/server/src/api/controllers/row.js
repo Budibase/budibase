@@ -54,7 +54,7 @@ async function findRow(db, appId, tableId, rowId) {
 exports.patch = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  let row = await db.get(ctx.params.id)
+  let row = await db.get(ctx.params.rowId)
   const table = await db.get(row.tableId)
   const patchfields = ctx.request.body
 
@@ -123,7 +123,7 @@ exports.save = async function(ctx) {
   // if the row obj had an _id then it will have been retrieved
   const existingRow = ctx.preExisting
   if (existingRow) {
-    ctx.params.id = row._id
+    ctx.params.rowId = row._id
     await exports.patch(ctx)
     return
   }
@@ -227,6 +227,38 @@ exports.fetchView = async function(ctx) {
       value: row.value,
     }))
   }
+}
+
+exports.search = async function(ctx) {
+  const appId = ctx.user.appId
+
+  const db = new CouchDB(appId)
+
+  const {
+    query,
+    pagination: { pageSize = 10, page },
+  } = ctx.request.body
+
+  query.tableId = ctx.params.tableId
+
+  const response = await db.find({
+    selector: query,
+    limit: pageSize,
+    skip: pageSize * page,
+  })
+
+  const rows = response.docs
+
+  // delete passwords from users
+  if (query.tableId === ViewNames.USERS) {
+    for (let row of rows) {
+      delete row.password
+    }
+  }
+
+  const table = await db.get(ctx.params.tableId)
+
+  ctx.body = await enrichRows(appId, table, rows)
 }
 
 exports.fetchTableRows = async function(ctx) {

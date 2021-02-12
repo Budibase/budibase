@@ -1,6 +1,7 @@
 const CouchDB = require("../../db")
 const { cloneDeep } = require("lodash/fp")
-const { BUILTIN_PERMISSION_IDS } = require("./permissions")
+const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
+const { generateRoleID, DocumentTypes, SEPARATOR } = require("../../db/utils")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -44,15 +45,15 @@ exports.BUILTIN_ROLES = {
 }
 
 exports.BUILTIN_ROLE_ID_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
-  level => level._id
+  role => role._id
 )
 
 exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
-  level => level.name
+  role => role.name
 )
 
 function isBuiltin(role) {
-  return exports.BUILTIN_ROLE_ID_ARRAY.indexOf(role) !== -1
+  return exports.BUILTIN_ROLE_ID_ARRAY.some(builtin => role.includes(builtin))
 }
 
 /**
@@ -66,14 +67,25 @@ exports.getRole = async (appId, roleId) => {
   if (!roleId) {
     return null
   }
-  let role
+  let role = {}
+  // built in roles mostly come from the in-code implementation,
+  // but can be extended by a doc stored about them (e.g. permissions)
   if (isBuiltin(roleId)) {
     role = cloneDeep(
       Object.values(exports.BUILTIN_ROLES).find(role => role._id === roleId)
     )
-  } else {
+  }
+  try {
     const db = new CouchDB(appId)
-    role = await db.get(roleId)
+    const dbRole = await db.get(exports.getDBRoleID(roleId))
+    role = Object.assign(role, dbRole)
+    // finalise the ID
+    role._id = exports.getExternalRoleID(role._id)
+  } catch (err) {
+    // only throw an error if there is no role at all
+    if (Object.keys(role).length === 0) {
+      throw err
+    }
   }
   return role
 }
@@ -118,14 +130,26 @@ exports.getUserRoleHierarchy = async (appId, userRoleId) => {
  * Get all of the user permissions which could be found across the role hierarchy
  * @param appId The ID of the application from which roles should be obtained.
  * @param userRoleId The user's role ID, this can be found in their access token.
- * @returns {Promise<string[]>} A list of permission IDs these should all be unique.
+ * @returns {Promise<{basePermissions: string[], permissions: Object}>} the base
+ * permission IDs as well as any custom resource permissions.
  */
-exports.getUserPermissionIds = async (appId, userRoleId) => {
-  return [
-    ...new Set(
-      (await getAllUserRoles(appId, userRoleId)).map(role => role.permissionId)
-    ),
+exports.getUserPermissions = async (appId, userRoleId) => {
+  const rolesHierarchy = await getAllUserRoles(appId, userRoleId)
+  const basePermissions = [
+    ...new Set(rolesHierarchy.map(role => role.permissionId)),
   ]
+  const permissions = {}
+  for (let role of rolesHierarchy) {
+    if (role.permissions) {
+      for (let [resource, level] of Object.entries(role.permissions)) {
+        permissions[resource] = higherPermission(permissions[resource], level)
+      }
+    }
+  }
+  return {
+    basePermissions,
+    permissions,
+  }
 }
 
 class AccessController {
@@ -175,6 +199,27 @@ class AccessController {
     }
     return null
   }
+}
+
+/**
+ * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
+ */
+exports.getDBRoleID = roleId => {
+  if (roleId.startsWith(DocumentTypes.ROLE)) {
+    return roleId
+  }
+  return generateRoleID(roleId)
+}
+
+/**
+ * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
+ */
+exports.getExternalRoleID = roleId => {
+  // for built in roles we want to remove the DB role ID element (role_)
+  if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
+    return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
+  }
+  return roleId
 }
 
 exports.AccessController = AccessController

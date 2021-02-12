@@ -5,6 +5,7 @@ const {
   defaultHeaders,
   createLinkedTable,
   createAttachmentTable,
+  makeBasicRow,
 } = require("./couchTestUtils");
 const { enrichRows } = require("../../../utilities")
 const env = require("../../../environment")
@@ -30,12 +31,7 @@ describe("/rows", () => {
     app = await createApplication(request)
     appId = app.instance._id
     table = await createTable(request, appId)
-    row = {
-      name: "Test Contact",
-      description: "original description",
-      status: "new",
-      tableId: table._id
-    }
+    row = makeBasicRow(table._id)
   })
 
   const createRow = async r => 
