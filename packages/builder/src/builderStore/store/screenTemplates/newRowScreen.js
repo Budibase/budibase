@@ -6,7 +6,7 @@ import {
   makeMainForm,
   makeTitleContainer,
   makeSaveButton,
-  makeTableFormComponents,
+  makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
 export default function(tables) {
@@ -51,7 +51,8 @@ const createScreen = table => {
     })
 
   // Add all form fields from this schema to the field group
-  makeTableFormComponents(table._id).forEach(component => {
+  const datasource = { type: "table", tableId: table._id }
+  makeDatasourceFormComponents(datasource).forEach(component => {
     fieldGroup.addChild(component)
   })
 
