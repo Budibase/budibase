@@ -57,7 +57,7 @@ exports.fetch = async function(ctx) {
       include_docs: true,
     })
   )
-  const roles = body.rows.map(row => row.doc)
+  let roles = body.rows.map(row => row.doc)
 
   // need to combine builtin with any DB record of them (for sake of permissions)
   for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
@@ -68,6 +68,8 @@ exports.fetch = async function(ctx) {
     if (dbBuiltin == null) {
       roles.push(builtinRole)
     } else {
+      // remove role and all back after combining with the builtin
+      roles = roles.filter(role => role._id !== dbBuiltin._id)
       dbBuiltin._id = getExternalRoleID(dbBuiltin._id)
       roles.push(Object.assign(builtinRole, dbBuiltin))
     }
