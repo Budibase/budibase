@@ -348,13 +348,6 @@ export const getBackendUiStore = () => {
         const json = await response.json()
         return json
       },
-      delete: async ({ role, resource, level }) => {
-        const response = await api.delete(
-          `/api/permission/${role}/${resource}/${level}`
-        )
-        const json = await response.json()
-        return json
-      },
     },
   }
 
