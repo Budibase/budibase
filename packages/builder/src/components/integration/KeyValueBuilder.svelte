@@ -23,8 +23,8 @@
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 <div class="container">
   {#each fields as field, idx}
-    <Input outline thin bind:value={field.name} />
-    <Input outline bind:value={field.value} />
+    <Input placeholder="Key" outline thin bind:value={field.name} />
+    <Input placeholder="Value" outline thin bind:value={field.value} />
     <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
   {/each}
 </div>
@@ -36,6 +36,7 @@
     grid-template-columns: 1fr 1fr 20px;
     grid-gap: var(--spacing-m);
     align-items: center;
+    margin-bottom: var(--spacing-m);
   }
 
   .ri-close-circle-fill,
