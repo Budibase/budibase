@@ -10,7 +10,12 @@
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import { FIELDS, getAutoColumnInformation, buildAutoColumn, AUTO_COLUMN_SUB_TYPES } from "constants/backend"
+  import {
+    FIELDS,
+    getAutoColumnInformation,
+    buildAutoColumn,
+    AUTO_COLUMN_SUB_TYPES,
+  } from "constants/backend"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
@@ -45,15 +50,21 @@
     UNEDITABLE_USER_FIELDS.includes(field.name)
 
   // used to select what different options can be displayed for column type
-  $: canBeSearched = field.type !== 'link' &&
-      field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
-      field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  $: canBeDisplay = field.type !== 'link' && field.type !== AUTO_COL
-  $: canBeRequired = field.type !== 'link' && !uneditable && field.type !== AUTO_COL
+  $: canBeSearched =
+    field.type !== "link" &&
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
+  $: canBeDisplay = field.type !== "link" && field.type !== AUTO_COL
+  $: canBeRequired =
+    field.type !== "link" && !uneditable && field.type !== AUTO_COL
 
   async function saveColumn() {
     if (field.type === AUTO_COL) {
-      field = buildAutoColumn($backendUiStore.draftTable.name, field.name, field.subtype)
+      field = buildAutoColumn(
+        $backendUiStore.draftTable.name,
+        field.name,
+        field.subtype
+      )
     }
     backendUiStore.update(state => {
       backendUiStore.actions.tables.saveField({
@@ -78,9 +89,7 @@
   }
 
   function handleFieldConstraints(event) {
-    const definition = fieldDefinitions[
-      event.target.value.toUpperCase()
-    ]
+    const definition = fieldDefinitions[event.target.value.toUpperCase()]
     if (!definition) {
       return
     }

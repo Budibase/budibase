@@ -2,12 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import {
-    Input,
-    Label,
-    ModalContent,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -109,23 +104,13 @@
     <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle
-            text="Created by"
-            bind:checked={autoColumns.createdBy} />
-        <Toggle
-            text="Created at"
-            bind:checked={autoColumns.createdAt} />
-        <Toggle
-            text="Auto ID"
-            bind:checked={autoColumns.autoID} />
+        <Toggle text="Created by" bind:checked={autoColumns.createdBy} />
+        <Toggle text="Created at" bind:checked={autoColumns.createdAt} />
+        <Toggle text="Auto ID" bind:checked={autoColumns.autoID} />
       </div>
       <div class="toggle-2">
-        <Toggle
-            text="Updated by"
-            bind:checked={autoColumns.updatedBy} />
-        <Toggle
-            text="Updated at"
-            bind:checked={autoColumns.updatedAt} />
+        <Toggle text="Updated by" bind:checked={autoColumns.updatedBy} />
+        <Toggle text="Updated at" bind:checked={autoColumns.updatedAt} />
       </div>
     </div>
   </div>
