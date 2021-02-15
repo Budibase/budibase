@@ -72,11 +72,11 @@ class RestIntegration {
     this.config = config
   }
 
-  async create({ path, headers = {}, requestBody }) {
+  async create({ path, headers = {}, json }) {
     const response = await fetch(this.config.url + path, {
       method: "POST",
       headers,
-      body: requestBody,
+      body: JSON.stringify(json),
     })
 
     return await response.json()
@@ -90,11 +90,11 @@ class RestIntegration {
     return await response.json()
   }
 
-  async update({ path, headers = {}, requestBody }) {
+  async update({ path, headers = {}, json }) {
     const response = await fetch(this.config.url + path, {
       method: "POST",
       headers,
-      body: requestBody,
+      body: JSON.stringify(json),
     })
 
     return await response.json()
