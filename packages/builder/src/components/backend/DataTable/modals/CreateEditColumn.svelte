@@ -6,6 +6,8 @@
     TextButton,
     Select,
     Toggle,
+    Radio,
+
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
@@ -31,8 +33,15 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
-    
-  let oneToMany = false;
+
+  let relationshipTypes = [
+    {text: 'Many to many (N:N)', value: 'many-to-many',},
+    {text: 'One to many (1:N)', value: 'one-to-many',}
+  ]
+  let relationshipType = 'many-to-many';
+
+  $: console.log(relationshipType)
+
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
   let deletion
@@ -51,7 +60,7 @@
         originalName,
         field,
         primaryDisplay,
-        oneToMany,
+        relationshipType,
         indexes,
       })
       return state
@@ -187,11 +196,14 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-    <Toggle
-      disabled={originalName}
-      bind:checked={field.oneToMany}
-      thin
-      text="One to many?" />
+  <div>
+      <Label grey extraSmall>Select relationship type</Label>
+      <div class="radio-buttons">
+        {#each relationshipTypes as {text, value}}
+          <Radio name="Relationship type" {value} bind:group={relationshipType} label={text} showLabel/>
+        {/each}
+      </div>
+    </div>
     <Select label="Table" thin secondary bind:value={field.tableId}>
       <option value="">Choose an option</option>
       {#each tableOptions as table}
@@ -220,6 +232,11 @@
   title="Confirm Deletion" />
 
 <style>
+  .radio-buttons {
+    display: flex;
+    gap: var(--spacing-m);
+    font-size: var(--font-size-xs)
+  }
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);

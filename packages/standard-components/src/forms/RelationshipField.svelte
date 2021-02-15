@@ -19,7 +19,7 @@
   let fieldText = ""
   
   const setFieldText = (value) => {
-    if (fieldSchema?.oneToMany) {
+    if (fieldSchema?.relationshipType === 'one-to-many') {
       if (value?.length && options?.length) {
         const row = options.find(row => row._id === value[0])
         return row.name
@@ -73,7 +73,7 @@
   }
 
   const toggleOption = option => {
-    if (fieldSchema.oneToMany) {
+    if (fieldSchema.type === 'one-to-many') {
       fieldApi.setValue([option])
     } else {
       if ($fieldState.value.includes(option)) {

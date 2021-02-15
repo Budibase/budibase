@@ -41,7 +41,7 @@
     table.
   </Label>
 {:else}
-  {#if schema.oneToMany}
+  {#if schema.relationshipType === 'one-to-many'}
     <Select secondary on:change={e => linkedRows = [e.target.value]} name={label} {label}>
       <option value="">Choose an option</option>
       {#each rows as row}
