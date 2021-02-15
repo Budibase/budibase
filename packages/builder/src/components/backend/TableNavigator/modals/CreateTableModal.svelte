@@ -14,8 +14,7 @@
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-  import { FIELDS } from "constants/backend"
-  import { cloneDeep } from "lodash/fp"
+  import { AUTO_COLUMN_SUB_TYPES, buildAutoColumn } from "constants/backend"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,
@@ -23,33 +22,34 @@
     ROW_LIST_TEMPLATE,
   ]
 
+  $: tableNames = $backendUiStore.tables.map(table => table.name)
+
   let modal
   let name
   let dataImport
   let error = ""
   let createAutoscreens = true
   let autoColumns = {
-    createdBy: true,
-    createdAt: true,
-    updatedBy: true,
-    updatedAt: true,
-    autoID: true,
+    [AUTO_COLUMN_SUB_TYPES.AUTO_ID]: {enabled: true, name: "Auto ID"},
+    [AUTO_COLUMN_SUB_TYPES.CREATED_BY]: {enabled: true, name: "Created By"},
+    [AUTO_COLUMN_SUB_TYPES.CREATED_AT]: {enabled: true, name: "Created At"},
+    [AUTO_COLUMN_SUB_TYPES.UPDATED_BY]: {enabled: true, name: "Updated By"},
+    [AUTO_COLUMN_SUB_TYPES.UPDATED_AT]: {enabled: true, name: "Updated At"},
   }
 
-  function addAutoColumns(schema) {
-    for (let [property, enabled] of Object.entries(autoColumns)) {
-      if (!enabled) {
+  function addAutoColumns(tableName, schema) {
+    for (let [subtype, col] of Object.entries(autoColumns)) {
+      if (!col.enabled) {
         continue
       }
-      const autoColDef = cloneDeep(FIELDS.AUTO)
-      autoColDef.subtype = property
-      schema[property] = autoColDef
+      schema[col.name] = buildAutoColumn(tableName, col.name, subtype)
     }
+    return schema
   }
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if ($backendUiStore.models?.some(model => model.name === tableName)) {
+    if (tableNames.includes(tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
     }
@@ -59,7 +59,7 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: addAutoColumns(dataImport.schema || {}),
+      schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
     }
 

@@ -80,13 +80,14 @@ export const FIELDS = {
       presence: false,
     },
   },
-  AUTO: {
-    name: "Auto Column",
-    icon: "ri-magic-line",
-    type: "auto",
-    // no constraints for auto-columns
-    // these are fully created serverside
-  }
+}
+
+export const AUTO_COLUMN_SUB_TYPES = {
+  CREATED_BY: "createdBy",
+  CREATED_AT: "createdAt",
+  UPDATED_BY: "updatedBy",
+  UPDATED_AT: "updatedAt",
+  AUTO_ID: "autoID",
 }
 
 export const FILE_TYPES = {
@@ -106,4 +107,44 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
+}
+
+export const USER_TABLE_ID = "ta_users"
+
+export function isAutoColumnUserRelationship(subtype) {
+  return subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
+    subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
+}
+
+export function buildAutoColumn(tableName, name, subtype) {
+  let type
+  switch (subtype) {
+    case AUTO_COLUMN_SUB_TYPES.UPDATED_BY:
+    case AUTO_COLUMN_SUB_TYPES.CREATED_BY:
+      type = FIELDS.LINK.type
+      break
+    case AUTO_COLUMN_SUB_TYPES.AUTO_ID:
+      type = FIELDS.NUMBER.type
+      break
+    default:
+      type = FIELDS.STRING.type
+      break
+  }
+  if (Object.values(AUTO_COLUMN_SUB_TYPES).indexOf(subtype) === -1) {
+    throw "Cannot build auto column with supplied subtype"
+  }
+  const base = {
+    name,
+    type,
+    subtype,
+    icon: "ri-magic-line",
+    autocolumn: true,
+    // no constraints, this should never have valid inputs
+    constraints: {},
+  }
+  if (isAutoColumnUserRelationship(subtype)) {
+    base.tableId = USER_TABLE_ID
+    base.fieldName = `${tableName}-${name}`
+  }
+  return base
 }

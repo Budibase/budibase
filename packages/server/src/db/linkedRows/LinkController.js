@@ -25,7 +25,14 @@ function LinkDocument(
   rowId2
 ) {
   // build the ID out of unique references to this link document
-  this._id = generateLinkID(tableId1, tableId2, rowId1, rowId2)
+  this._id = generateLinkID(
+    tableId1,
+    tableId2,
+    rowId1,
+    rowId2,
+    fieldName1,
+    fieldName2
+  )
   // required for referencing in view
   this.type = FieldTypes.LINK
   this.doc1 = {

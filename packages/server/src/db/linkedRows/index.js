@@ -5,7 +5,7 @@ const {
   createLinkView,
   getUniqueByProp,
 } = require("./linkUtils")
-const _ = require("lodash")
+const { flatten } = require("lodash")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -101,7 +101,7 @@ exports.attachLinkInfo = async (appId, rows) => {
   }
   let tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
-  let responses = _.flatten(
+  let responses = flatten(
     await Promise.all(
       tableIds.map(tableId =>
         getLinkDocuments({

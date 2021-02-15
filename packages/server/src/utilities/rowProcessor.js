@@ -2,13 +2,18 @@ const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
-const { FieldTypes } = require("../constants")
+const { FieldTypes, AutoFieldSubTypes } = require("../constants")
+const CouchDB = require("../db")
+const { ViewNames } = require("../db/utils")
+
+const BASE_AUTO_ID = 1
+const USER_TABLE_ID = ViewNames.USERS
 
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
 const TYPE_TRANSFORM_MAP = {
-  link: {
+  [FieldTypes.LINK]: {
     "": [],
     [null]: [],
     [undefined]: undefined,
@@ -19,44 +24,102 @@ const TYPE_TRANSFORM_MAP = {
       return link
     },
   },
-  options: {
+  [FieldTypes.OPTIONS]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  string: {
+  [FieldTypes.STRING]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  longform: {
+  [FieldTypes.LONGFORM]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
   },
-  number: {
+  [FieldTypes.NUMBER]: {
     "": null,
     [null]: null,
     [undefined]: undefined,
     parse: n => parseFloat(n),
   },
-  datetime: {
+  [FieldTypes.DATETIME]: {
     "": null,
     [undefined]: undefined,
     [null]: null,
   },
-  attachment: {
+  [FieldTypes.ATTACHMENT]: {
     "": [],
     [null]: [],
     [undefined]: undefined,
   },
-  boolean: {
+  [FieldTypes.BOOLEAN]: {
     "": null,
     [null]: null,
     [undefined]: undefined,
     true: true,
     false: false,
   },
+  [FieldTypes.AUTO]: {
+    parse: () => undefined,
+  },
+}
+
+function getAutoRelationshipName(table, columnName) {
+  return `${table.name}-${columnName}`
+}
+
+/**
+ * This will update any auto columns that are found on the row/table with the correct information based on
+ * time now and the current logged in user making the request.
+ * @param {Object} user The user to be used for an appId as well as the createdBy and createdAt fields.
+ * @param {Object} table The table which is to be used for the schema, as well as handling auto IDs incrementing.
+ * @param {Object} row The row which is to be updated with information for the auto columns.
+ * @returns {Promise<{row: Object, table: Object}>} The updated row and table, the table may need to be updated
+ * for automatic ID purposes.
+ */
+async function processAutoColumn(user, table, row) {
+  let now = new Date().toISOString()
+  // if a row doesn't have a revision then it doesn't exist yet
+  const creating = !row._rev
+  let tableUpdated = false
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if (!schema.autocolumn) {
+      continue
+    }
+    switch (schema.subtype) {
+      case AutoFieldSubTypes.CREATED_BY:
+        if (creating) {
+          row[key] = [user.userId]
+        }
+        break
+      case AutoFieldSubTypes.CREATED_AT:
+        if (creating) {
+          row[key] = now
+        }
+        break
+      case AutoFieldSubTypes.UPDATED_BY:
+        row[key] = [user.userId]
+        break
+      case AutoFieldSubTypes.UPDATED_AT:
+        row[key] = now
+        break
+      case AutoFieldSubTypes.AUTO_ID:
+        schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
+        row[key] = schema.lastID
+        tableUpdated = true
+        break
+    }
+  }
+  if (tableUpdated) {
+    const db = new CouchDB(user.appId)
+    const response = await db.put(table)
+    // update the revision
+    table._rev = response._rev
+  }
+  return { table, row }
 }
 
 /**
@@ -65,7 +128,7 @@ const TYPE_TRANSFORM_MAP = {
  * @param {object} type The type fo coerce to
  * @returns {object} The coerced value
  */
-exports.coerceValue = (row, type) => {
+exports.coerce = (row, type) => {
   // eslint-disable-next-line no-prototype-builtins
   if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
     return TYPE_TRANSFORM_MAP[type][row]
@@ -84,15 +147,17 @@ exports.coerceValue = (row, type) => {
  * @param {object} table the table which the row is being saved to.
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-exports.inputProcessing = (user, table, row) => {
-  const clonedRow = cloneDeep(row)
+exports.inputProcessing = async (user, table, row) => {
+  let clonedRow = cloneDeep(row)
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
-    if (!field) continue
-
+    if (!field) {
+      continue
+    }
     clonedRow[key] = exports.coerce(value, field.type)
   }
-  return clonedRow
+  // handle auto columns - this returns an object like {table, row}
+  return processAutoColumn(user, table, clonedRow)
 }
 
 /**
