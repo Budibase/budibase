@@ -14,7 +14,7 @@
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-  import { AUTO_COLUMN_SUB_TYPES, buildAutoColumn } from "constants/backend"
+  import { buildAutoColumn, getAutoColumnInformation } from "constants/backend"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,
@@ -29,13 +29,7 @@
   let dataImport
   let error = ""
   let createAutoscreens = true
-  let autoColumns = {
-    [AUTO_COLUMN_SUB_TYPES.AUTO_ID]: {enabled: true, name: "Auto ID"},
-    [AUTO_COLUMN_SUB_TYPES.CREATED_BY]: {enabled: true, name: "Created By"},
-    [AUTO_COLUMN_SUB_TYPES.CREATED_AT]: {enabled: true, name: "Created At"},
-    [AUTO_COLUMN_SUB_TYPES.UPDATED_BY]: {enabled: true, name: "Updated By"},
-    [AUTO_COLUMN_SUB_TYPES.UPDATED_AT]: {enabled: true, name: "Updated At"},
-  }
+  let autoColumns = getAutoColumnInformation()
 
   function addAutoColumns(tableName, schema) {
     for (let [subtype, col] of Object.entries(autoColumns)) {

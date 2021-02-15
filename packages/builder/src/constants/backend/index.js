@@ -79,15 +79,23 @@ export const FIELDS = {
       type: "array",
       presence: false,
     },
-  },
+  }
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
+  AUTO_ID: "autoID",
   CREATED_BY: "createdBy",
   CREATED_AT: "createdAt",
   UPDATED_BY: "updatedBy",
   UPDATED_AT: "updatedAt",
-  AUTO_ID: "autoID",
+}
+
+export const AUTO_COLUMN_DISPLAY_NAMES = {
+  AUTO_ID: "Auto ID",
+  CREATED_BY: "Created By",
+  CREATED_AT: "Created At",
+  UPDATED_BY: "Updated By",
+  UPDATED_AT: "Updated At",
 }
 
 export const FILE_TYPES = {
@@ -116,18 +124,29 @@ export function isAutoColumnUserRelationship(subtype) {
     subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
 }
 
+export function getAutoColumnInformation(enabled = true) {
+  let info = {}
+  for (let [key, subtype] of Object.entries(AUTO_COLUMN_SUB_TYPES)) {
+    info[subtype] = {enabled, name: AUTO_COLUMN_DISPLAY_NAMES[key]}
+  }
+  return info
+}
+
 export function buildAutoColumn(tableName, name, subtype) {
-  let type
+  let type, constraints
   switch (subtype) {
     case AUTO_COLUMN_SUB_TYPES.UPDATED_BY:
     case AUTO_COLUMN_SUB_TYPES.CREATED_BY:
       type = FIELDS.LINK.type
+      constraints = FIELDS.LINK.constraints
       break
     case AUTO_COLUMN_SUB_TYPES.AUTO_ID:
       type = FIELDS.NUMBER.type
+      constraints = FIELDS.NUMBER.constraints
       break
     default:
       type = FIELDS.STRING.type
+      constraints = FIELDS.STRING.constraints
       break
   }
   if (Object.values(AUTO_COLUMN_SUB_TYPES).indexOf(subtype) === -1) {
@@ -139,8 +158,7 @@ export function buildAutoColumn(tableName, name, subtype) {
     subtype,
     icon: "ri-magic-line",
     autocolumn: true,
-    // no constraints, this should never have valid inputs
-    constraints: {},
+    constraints,
   }
   if (isAutoColumnUserRelationship(subtype)) {
     base.tableId = USER_TABLE_ID
