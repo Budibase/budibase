@@ -25,7 +25,7 @@
   const emptyField = () => ({ name: "", value: "" })
 
   $: bindableProperties = getBindableProperties(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
 
