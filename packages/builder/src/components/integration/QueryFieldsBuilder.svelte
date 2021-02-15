@@ -19,11 +19,6 @@
   $: fieldKeys = Object.keys(fields)
   $: schemaKeys = Object.keys(schema.fields)
 
-  $: console.log({
-    fields,
-    schema
-  })
-
   function updateCustomFields({ detail }) {
     fields.customData = detail.value
   }
@@ -34,15 +29,19 @@
   <div class="field">
     {#each schemaKeys as field}
       {#if schema.fields[field]?.type === "object"}
-        <Label extraSmall grey>{field}</Label>
-        <KeyValueBuilder bind:object={fields[field]} /> 
+        <div>
+          <Label extraSmall grey>{field}</Label>
+          <KeyValueBuilder bind:object={fields[field]} /> 
+        </div>
       {:else if schema.fields[field]?.type === "json"}
-        <Label extraSmall grey>{field}</Label>
-        <Editor
-          mode="json"
-          on:change={({ detail }) => fields[field] = detail.value}
-          readOnly={!editable}
-          value={fields[field]} />
+        <div>
+          <Label extraSmall grey>{field}</Label>
+          <Editor
+            mode="json"
+            on:change={({ detail }) => fields[field] = detail.value}
+            readOnly={!editable}
+            value={fields[field]} />
+        </div>
       {:else}
         <Input
           label={field}
