@@ -20,10 +20,9 @@
   
   const setFieldText = (value) => {
     if (fieldSchema?.oneToMany) {
-      if (value?.length) {
-        const row = options.find(row => row._id === value)
-        if (!row) return placeholder  || 'Choose an option'
-        return getDisplayName(row)
+      if (value?.length && options?.length) {
+        const row = options.find(row => row._id === value[0])
+        return row.name
       } else {
         return placeholder  || 'Choose an option'
       } 
@@ -36,9 +35,7 @@
     }
   }
 
-  $: console.log(placeholder)
-
-  $: fieldText = setFieldText($fieldState?.value)
+  $: options, fieldText = setFieldText($fieldState?.value)
   $: valueLookupMap = getValueLookupMap($fieldState?.value)
   $: isOptionSelected = option => valueLookupMap[option] === true
   $: linkedTableId = fieldSchema?.tableId
