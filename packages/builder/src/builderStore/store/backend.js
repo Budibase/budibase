@@ -234,7 +234,7 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false, indexes, oneToMany = false }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, indexes, relationshipType = 'many-to-many' }) => {
         store.update(state => {
           console.log(state)
           // delete the original if renaming
@@ -252,8 +252,8 @@ export const getBackendUiStore = () => {
             state.draftTable.primaryDisplay = field.name
           }
           // Set one-to-many
-          if (oneToMany) {
-            state.draftTable.oneToMany = field.name
+          if (relationshipType) {
+            state.draftTable.relationshipType = field.name
           }
 
           if (indexes) {
