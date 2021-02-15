@@ -38,9 +38,9 @@
     {text: 'Many to many (N:N)', value: 'many-to-many',},
     {text: 'One to many (1:N)', value: 'one-to-many',}
   ]
-  let relationshipType = 'many-to-many';
+  let types = ['Many to many (N:N)', 'One to many (1:N)']
 
-  $: console.log(relationshipType)
+  let selectedRelationshipType = 'Many to many (N:N)'
 
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
@@ -60,7 +60,7 @@
         originalName,
         field,
         primaryDisplay,
-        relationshipType,
+        relationshipType: relationshipTypes.find(type => type.value === selectedRelationshipType),
         indexes,
       })
       return state
@@ -199,8 +199,8 @@
   <div>
       <Label grey extraSmall>Select relationship type</Label>
       <div class="radio-buttons">
-        {#each relationshipTypes as {text, value}}
-          <Radio name="Relationship type" {value} bind:group={relationshipType} label={text} showLabel/>
+        {#each types as type}
+          <Radio name="Relationship type" value={type} bind:group={selectedRelationshipType} label={type} showLabel/>
         {/each}
       </div>
     </div>
