@@ -10,4 +10,5 @@ exports.FIELD_TYPES = {
   PASSWORD: "password",
   LIST: "list",
   OBJECT: "object",
+  JSON: "json",
 }

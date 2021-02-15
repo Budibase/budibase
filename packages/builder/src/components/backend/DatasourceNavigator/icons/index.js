@@ -8,6 +8,7 @@ import Airtable from "./Airtable.svelte"
 import SqlServer from "./SQLServer.svelte"
 import MySQL from "./MySQL.svelte"
 import ArangoDB from "./ArangoDB.svelte"
+import Rest from "./Rest.svelte"
 
 export default {
   POSTGRES: Postgres,
@@ -20,4 +21,5 @@ export default {
   AIRTABLE: Airtable,
   MYSQL: MySQL,
   ARANGODB: ArangoDB,
+  REST: Rest,
 }

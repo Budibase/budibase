@@ -181,7 +181,13 @@
         {#if data}
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
             {#if tab === 'JSON'}
-              <pre class="preview">{JSON.stringify(data[0], undefined, 2)}</pre>
+            <pre class="preview">
+              {#if !data[0]}
+                Please run your query to fetch some data.
+              {:else}
+                {JSON.stringify(data[0], undefined, 2)}
+              {/if}
+            </pre>
             {:else if tab === 'PREVIEW'}
               <ExternalDataSourceTable {query} {data} />
             {:else if tab === 'SCHEMA'}

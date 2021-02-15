@@ -8,6 +8,7 @@
     Select,
   } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
+  import KeyValueBuilder from "./KeyValueBuilder.svelte"
 
   export let fields = {}
   export let schema
@@ -27,53 +28,21 @@
     fields.customData = detail.value
   }
 
-  function updateSubfieldName({ names, definition }) {
-    console.log(names, definition)
-    const temp = definition[names.old]
-    definition[names.new] = temp
-    delete definition[names.old]
-    // fields = fields
-  }
-
-  // function addCustomField() {
-
-  // }
-
-  // function removeCustomField() {
-
-  // }
 </script>
 
 <form on:submit|preventDefault>
   <div class="field">
     {#each schemaKeys as field}
-      <!-- New Stuff -->
       {#if schema.fields[field]?.type === "object"}
         <Label extraSmall grey>{field}</Label>
-        <div class="inner-fields"> 
-          {#each Object.keys(fields[field] || {}) as subfield}
-            <Input outline thin on:change={e => updateSubfieldName({ 
-                names: { 
-                  new: e.target.value, 
-                  old: subfield 
-                }, 
-                definition: fields[field] 
-              })} 
-            />
-            <Input outline bind:value={fields[field][subfield]} />
-            <i class="ri-close-circle-fill" on:click={() => { 
-              delete fields[field][subfield] 
-              fields[field] = fields[field]
-            }} />
-          {/each}
-        </div>
-        <i class="ri-add-circle-fill" on:click={() => {
-          // set new empty field
-          fields[field] = {
-            ...fields[field] || {},
-            [""]: ""
-          }
-        }} />
+        <KeyValueBuilder bind:object={fields[field]} /> 
+      {:else if schema.fields[field]?.type === "json"}
+        <Label extraSmall grey>{field}</Label>
+        <Editor
+          mode="json"
+          on:change={({ detail }) => fields[field] = detail.value}
+          readOnly={!editable}
+          value={fields[field]} />
       {:else}
         <Input
           label={field}
@@ -97,10 +66,6 @@
 {/if}
 
 <style>
-  form {
-    width: 600px;
-  }
-
   .field {
     margin-bottom: var(--spacing-m);
     display: grid;
@@ -109,11 +74,4 @@
     align-items: center;
   }
 
-  .inner-fields {
-    margin-bottom: var(--spacing-m);
-    display: grid;
-    grid-template-columns: 1fr 1fr 20px;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
 </style>
