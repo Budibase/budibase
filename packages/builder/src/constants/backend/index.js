@@ -79,7 +79,7 @@ export const FIELDS = {
       type: "array",
       presence: false,
     },
-  }
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
@@ -120,14 +120,16 @@ export const Roles = {
 export const USER_TABLE_ID = "ta_users"
 
 export function isAutoColumnUserRelationship(subtype) {
-  return subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
+  return (
+    subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
     subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
+  )
 }
 
 export function getAutoColumnInformation(enabled = true) {
   let info = {}
   for (let [key, subtype] of Object.entries(AUTO_COLUMN_SUB_TYPES)) {
-    info[subtype] = {enabled, name: AUTO_COLUMN_DISPLAY_NAMES[key]}
+    info[subtype] = { enabled, name: AUTO_COLUMN_DISPLAY_NAMES[key] }
   }
   return info
 }
