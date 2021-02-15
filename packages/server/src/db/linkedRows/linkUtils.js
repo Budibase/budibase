@@ -24,7 +24,8 @@ exports.createLinkView = async appId => {
   const designDoc = await db.get("_design/database")
   const view = {
     map: function(doc) {
-      if (doc.type === FieldTypes.LINK) {
+      // everything in this must remain constant as its going to Pouch, no external variables
+      if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
         emit([doc1.tableId, doc1.rowId], {
