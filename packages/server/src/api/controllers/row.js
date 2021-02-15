@@ -58,18 +58,17 @@ async function findRow(db, appId, tableId, rowId) {
 exports.patch = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  let row = await db.get(ctx.params.rowId)
-  const table = await db.get(row.tableId)
+  let dbRow = await db.get(ctx.params.rowId)
+  let dbTable = await db.get(dbRow.tableId)
   const patchfields = ctx.request.body
-
   // need to build up full patch fields before coerce
   for (let key of Object.keys(patchfields)) {
-    if (!table.schema[key]) continue
-    row[key] = patchfields[key]
+    if (!dbTable.schema[key]) continue
+    dbRow[key] = patchfields[key]
   }
 
-  row = inputProcessing(ctx.user, table, row)
-
+  // this returns the table and row incase they have been updated
+  let { table, row } = await inputProcessing(ctx.user, dbTable, dbRow)
   const validateResult = await validate({
     row,
     table,
@@ -114,32 +113,34 @@ exports.patch = async function(ctx) {
 exports.save = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  let row = ctx.request.body
-  row.tableId = ctx.params.tableId
+  let inputs = ctx.request.body
+  inputs.tableId = ctx.params.tableId
 
   // TODO: find usage of this and break out into own endpoint
-  if (ctx.request.body.type === "delete") {
+  if (inputs.type === "delete") {
     await bulkDelete(ctx)
-    ctx.body = ctx.request.body.rows
+    ctx.body = inputs.rows
     return
   }
 
   // if the row obj had an _id then it will have been retrieved
   const existingRow = ctx.preExisting
   if (existingRow) {
-    ctx.params.rowId = row._id
+    ctx.params.rowId = inputs._id
     await exports.patch(ctx)
     return
   }
 
-  if (!row._rev && !row._id) {
-    row._id = generateRowID(row.tableId)
+  if (!inputs._rev && !inputs._id) {
+    inputs._id = generateRowID(inputs.tableId)
   }
 
-  const table = await db.get(row.tableId)
-
-  row = inputProcessing(ctx.user, table, row)
-
+  // this returns the table and row incase they have been updated
+  let { table, row } = await inputProcessing(
+    ctx.user,
+    await db.get(inputs.tableId),
+    inputs
+  )
   const validateResult = await validate({
     row,
     table,

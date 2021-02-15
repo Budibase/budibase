@@ -51,6 +51,14 @@ exports.FieldTypes = {
   AUTO: "auto",
 }
 
+exports.AutoFieldSubTypes = {
+  CREATED_BY: "createdBy",
+  CREATED_AT: "createdAt",
+  UPDATED_BY: "updatedBy",
+  UPDATED_AT: "updatedAt",
+  AUTO_ID: "autoID",
+}
+
 exports.AuthTypes = AuthTypes
 exports.USERS_TABLE_SCHEMA = USERS_TABLE_SCHEMA
 exports.BUILDER_CONFIG_DB = "builder-config-db"
