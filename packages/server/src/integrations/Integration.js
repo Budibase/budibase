@@ -9,4 +9,5 @@ exports.FIELD_TYPES = {
   NUMBER: "number",
   PASSWORD: "password",
   LIST: "list",
+  OBJECT: "object",
 }

@@ -58,7 +58,13 @@ async function enrichQueryFields(fields, parameters) {
 
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
-    enrichedQuery[key] = await processString(fields[key], parameters)
+    if (typeof fields[key] === "object") {
+      // enrich nested fields object
+      enrichedQuery[key] = await enrichQueryFields(fields[key], parameters)
+    } else {
+      // enrich string value as normal
+      enrichedQuery[key] = await processString(fields[key], parameters)
+    }
   }
 
   if (enrichedQuery.json || enrichedQuery.customData) {
