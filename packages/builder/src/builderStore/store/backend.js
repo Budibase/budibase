@@ -30,6 +30,7 @@ export const getBackendUiStore = () => {
         const queries = await queriesResponse.json()
         const integrationsResponse = await api.get("/api/integrations")
         const integrations = await integrationsResponse.json()
+        const permissionLevels = await store.actions.permissions.fetchLevels()
 
         store.update(state => {
           state.selectedDatabase = db
@@ -37,6 +38,7 @@ export const getBackendUiStore = () => {
           state.datasources = datasources
           state.queries = queries
           state.integrations = integrations
+          state.permissionLevels = permissionLevels
           return state
         })
       },
@@ -331,6 +333,25 @@ export const getBackendUiStore = () => {
         const response = await api.post("/api/roles", role)
         await store.actions.roles.fetch()
         return response
+      },
+    },
+    permissions: {
+      fetchLevels: async () => {
+        const response = await api.get("/api/permission/levels")
+        const json = await response.json()
+        return json
+      },
+      forResource: async resourceId => {
+        const response = await api.get(`/api/permission/${resourceId}`)
+        const json = await response.json()
+        return json
+      },
+      save: async ({ role, resource, level }) => {
+        const response = await api.post(
+          `/api/permission/${role}/${resource}/${level}`
+        )
+        const json = await response.json()
+        return json
       },
     },
   }
