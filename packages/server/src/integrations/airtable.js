@@ -50,7 +50,7 @@ const SCHEMA = {
       },
     },
     delete: {
-      type: FIELD_TYPES.JSON,
+      type: QUERY_TYPES.JSON,
     },
   },
 }
