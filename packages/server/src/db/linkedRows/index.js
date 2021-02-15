@@ -118,8 +118,12 @@ exports.attachLinkInfo = async (appId, rows) => {
     // have to get unique as the previous table query can
     // return duplicates, could be querying for both tables in a relation
     const linkVals = getUniqueByProp(
-      responses.filter(el => el.thisId === row._id),
-      "id"
+      responses
+        // find anything that matches the row's ID we are searching for
+        .filter(el => el.thisId === row._id)
+        // create a unique ID which we can use for getting only unique ones
+        .map(el => ({ ...el, unique: el.id + el.fieldName })),
+      "unique"
     )
     for (let linkVal of linkVals) {
       // work out which link pertains to this row
