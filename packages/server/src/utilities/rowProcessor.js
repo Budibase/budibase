@@ -4,10 +4,8 @@ const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../constants")
 const CouchDB = require("../db")
-const { ViewNames } = require("../db/utils")
 
 const BASE_AUTO_ID = 1
-const USER_TABLE_ID = ViewNames.USERS
 
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
@@ -65,10 +63,6 @@ const TYPE_TRANSFORM_MAP = {
   [FieldTypes.AUTO]: {
     parse: () => undefined,
   },
-}
-
-function getAutoRelationshipName(table, columnName) {
-  return `${table.name}-${columnName}`
 }
 
 /**
