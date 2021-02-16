@@ -5,7 +5,6 @@
 
 const rimraf = require("rimraf")
 const { join, resolve } = require("path")
-// const run = require("../../cli/src/commands/run/runHandler")
 const initialiseBudibase = require("../../server/src/utilities/initialiseBudibase")
 
 const homedir = join(require("os").homedir(), ".budibase")

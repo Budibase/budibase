@@ -49,3 +49,9 @@
     </div>
   {/if}
 </Field>
+
+<style>
+  .spectrum-Checkbox {
+    width: 100%;
+  }
+</style>

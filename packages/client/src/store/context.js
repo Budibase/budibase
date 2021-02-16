@@ -1,20 +1,27 @@
-import { writable } from "svelte/store"
+import { writable, derived } from "svelte/store"
 
-export const createContextStore = () => {
-  const store = writable({})
+export const createContextStore = oldContext => {
+  const newContext = writable({})
+  const contexts = oldContext ? [oldContext, newContext] : [newContext]
+  const totalContext = derived(contexts, $contexts => {
+    return $contexts.reduce((total, context) => ({ ...total, ...context }), {})
+  })
 
   // Adds a data context layer to the tree
-  const provideData = (providerId, context, data) => {
-    let newData = { ...context }
-    if (providerId && data !== undefined) {
-      newData[providerId] = data
+  const provideData = (providerId, data) => {
+    if (!providerId || data === undefined) {
+      return
+    }
+    newContext.update(state => {
+      state[providerId] = data
 
       // Keep track of the closest component ID so we can later hydrate a "data" prop.
       // This is only required for legacy bindings that used "data" rather than a
       // component ID.
-      newData.closestComponentId = providerId
-    }
-    store.set(newData)
+      state.closestComponentId = providerId
+
+      return state
+    })
   }
 
   // Adds an action context layer to the tree
@@ -22,14 +29,14 @@ export const createContextStore = () => {
     if (!providerId || !actionType) {
       return
     }
-    store.update(state => {
+    newContext.update(state => {
       state[`${providerId}_${actionType}`] = callback
       return state
     })
   }
 
   return {
-    subscribe: store.subscribe,
+    subscribe: totalContext.subscribe,
     actions: { provideData, provideAction },
   }
 }

@@ -65,4 +65,7 @@
   div :global(.ql-snow .ql-formats:after) {
     display: none;
   }
+  div :global(.ql-editor p) {
+    word-break: break-all;
+  }
 </style>
