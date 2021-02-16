@@ -107,7 +107,7 @@ const getContextBindings = (asset, componentId) => {
     // Forms are an edge case which do not need table schemas
     if (isForm) {
       schema = buildFormSchema(component)
-      tableName = "Schema"
+      tableName = "Fields"
     } else {
       if (!datasource) {
         return
