@@ -50,13 +50,18 @@
   }
 </script>
 
-<Table title={decodeURI(name)} schema={view.schema} {data} {loading} bind:hideAutocolumns>
+<Table
+  title={decodeURI(name)}
+  schema={view.schema}
+  {data}
+  {loading}
+  bind:hideAutocolumns>
   <FilterButton {view} />
   <CalculateButton {view} />
   {#if view.calculation}
     <GroupByButton {view} />
   {/if}
   <ManageAccessButton resourceId={decodeURI(name)} />
-  <HideAutocolumnButton bind:hideAutocolumns/>
+  <HideAutocolumnButton bind:hideAutocolumns />
   <ExportButton {view} />
 </Table>
