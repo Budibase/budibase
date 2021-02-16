@@ -104,13 +104,21 @@
     <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle text="Created by" bind:checked={autoColumns.createdBy} />
-        <Toggle text="Created at" bind:checked={autoColumns.createdAt} />
-        <Toggle text="Auto ID" bind:checked={autoColumns.autoID} />
+        <Toggle
+          text="Created by"
+          bind:checked={autoColumns.createdBy.enabled} />
+        <Toggle
+          text="Created at"
+          bind:checked={autoColumns.createdAt.enabled} />
+        <Toggle text="Auto ID" bind:checked={autoColumns.autoID.enabled} />
       </div>
       <div class="toggle-2">
-        <Toggle text="Updated by" bind:checked={autoColumns.updatedBy} />
-        <Toggle text="Updated at" bind:checked={autoColumns.updatedAt} />
+        <Toggle
+          text="Updated by"
+          bind:checked={autoColumns.updatedBy.enabled} />
+        <Toggle
+          text="Updated at"
+          bind:checked={autoColumns.updatedAt.enabled} />
       </div>
     </div>
   </div>
