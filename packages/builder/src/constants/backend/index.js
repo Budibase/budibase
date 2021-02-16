@@ -92,3 +92,11 @@ export const HostingTypes = {
   CLOUD: "cloud",
   SELF: "self",
 }
+
+export const Roles = {
+  ADMIN: "ADMIN",
+  POWER: "POWER",
+  BASIC: "BASIC",
+  PUBLIC: "PUBLIC",
+  BUILDER: "BUILDER",
+}

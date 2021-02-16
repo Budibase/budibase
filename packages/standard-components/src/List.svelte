@@ -2,7 +2,8 @@
   import { getContext } from "svelte"
   import { isEmpty } from "lodash/fp"
 
-  export let datasource = []
+  export let datasource
+  export let noRowsMessage
 
   const { API, styleable, Provider, builderStore, ActionTypes } = getContext(
     "sdk"
@@ -29,10 +30,10 @@
 </script>
 
 <Provider {actions}>
-  {#if rows.length > 0}
-    <div use:styleable={$component.styles}>
+  <div use:styleable={$component.styles}>
+    {#if rows.length > 0}
       {#if $component.children === 0 && $builderStore.inBuilder}
-        <p>Add some components too</p>
+        <p><i class="ri-image-line" />Add some components to display.</p>
       {:else}
         {#each rows as row}
           <Provider data={row}>
@@ -40,20 +41,26 @@
           </Provider>
         {/each}
       {/if}
-    </div>
-  {:else if loaded && $builderStore.inBuilder}
-    <div use:styleable={$component.styles}>
-      <p>Feed me some data</p>
-    </div>
-  {/if}
+    {:else if loaded && noRowsMessage}
+      <p><i class="ri-list-check-2" />{noRowsMessage}</p>
+    {/if}
+  </div>
 </Provider>
 
 <style>
   p {
+    margin: 0 var(--spacing-m);
+    background-color: var(--grey-2);
+    color: var(--grey-6);
+    font-size: var(--font-size-s);
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-s);
     display: grid;
     place-items: center;
-    background: #f5f5f5;
-    border: #ccc 1px solid;
-    padding: var(--spacing-m);
+  }
+  p i {
+    margin-bottom: var(--spacing-m);
+    font-size: 1.5rem;
+    color: var(--grey-5);
   }
 </style>

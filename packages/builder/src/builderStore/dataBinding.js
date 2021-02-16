@@ -235,7 +235,9 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
         schema = {}
         const params = table.parameters || []
         params.forEach(param => {
-          schema[param.name] = { ...param, type: "string" }
+          if (param?.name) {
+            schema[param.name] = { ...param, type: "string" }
+          }
         })
       } else {
         schema = cloneDeep(table.schema)

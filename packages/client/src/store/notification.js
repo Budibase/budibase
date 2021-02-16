@@ -5,11 +5,20 @@ const NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
   const _notifications = writable([])
+  let block = false
 
   const send = (message, type = "default") => {
+    if (block) {
+      return
+    }
     _notifications.update(state => {
       return [...state, { id: generate(), type, message }]
     })
+  }
+
+  const blockNotifications = (timeout = 1000) => {
+    block = true
+    setTimeout(() => (block = false), timeout)
   }
 
   const notifications = derived(_notifications, ($_notifications, set) => {
@@ -36,6 +45,7 @@ const createNotificationStore = () => {
     warning: msg => send(msg, "warning"),
     info: msg => send(msg, "info"),
     success: msg => send(msg, "success"),
+    blockNotifications,
   }
 }
 

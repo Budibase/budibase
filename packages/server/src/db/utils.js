@@ -170,8 +170,8 @@ exports.getAppParams = (appId = null, otherProps = {}) => {
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-exports.generateRoleID = () => {
-  return `${DocumentTypes.ROLE}${SEPARATOR}${newid()}`
+exports.generateRoleID = id => {
+  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
 }
 
 /**

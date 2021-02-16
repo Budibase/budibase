@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { notificationStore } from "./notification"
 
 export const createDatasourceStore = () => {
   const store = writable([])
@@ -66,6 +67,9 @@ export const createDatasourceStore = () => {
     const relatedInstances = get(store).filter(instance => {
       return instance.datasourceId === datasourceId
     })
+    if (relatedInstances?.length) {
+      notificationStore.blockNotifications(1000)
+    }
     relatedInstances?.forEach(instance => {
       instance.refresh()
     })

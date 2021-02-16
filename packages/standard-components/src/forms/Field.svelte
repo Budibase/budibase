@@ -61,8 +61,13 @@
 </FieldGroupFallback>
 
 <style>
+  label {
+    white-space: nowrap;
+  }
+
   .spectrum-Form-itemField {
-    width: 360px;
+    position: relative;
+    width: 100%;
   }
 
   .error {
@@ -72,5 +77,10 @@
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
+  }
+
+  .spectrum-FieldLabel--right,
+  .spectrum-FieldLabel--left {
+    padding-right: var(--spectrum-global-dimension-size-200);
   }
 </style>
