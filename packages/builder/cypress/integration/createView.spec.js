@@ -28,7 +28,7 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq(["group", "age", "rating"])
+      expect(headers).to.deep.eq([ 'rating', 'age', 'group' ])
     })
   })
 
@@ -59,21 +59,13 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq([
-        "field",
-        "sum",
-        "min",
-        "max",
-        "count",
-        "sumsqr",
-        "avg",
-      ])
+      expect(headers).to.deep.eq([ 'avg', 'sumsqr', 'count', 'max', 'min', 'sum', 'field' ])
     })
     cy.get(".ag-cell").then($values => {
       const values = Array.from($values).map(header =>
         header.textContent.trim()
       )
-      expect(values).to.deep.eq(["age", "155", "20", "49", "5", "5347", "31"])
+      expect(values).to.deep.eq([ '31', '5347', '5', '49', '20', '155', 'age' ])
     })
   })
 
@@ -92,15 +84,7 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([
-          "Students",
-          "70",
-          "20",
-          "25",
-          "3",
-          "1650",
-          "23.333333333333332",
-        ])
+        expect(values).to.deep.eq([ 'Students', '23.333333333333332', '1650', '3', '25', '20', '70' ])
       })
   })
 
