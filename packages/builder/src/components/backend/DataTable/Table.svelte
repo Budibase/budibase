@@ -91,7 +91,7 @@
       if (hideAutocolumns && value.autocolumn) {
         continue
       }
-      result.push({
+      let config = {
         headerCheckboxSelection: false,
         headerComponent: TableHeader,
         headerComponentParams: {
@@ -100,7 +100,6 @@
         },
         headerName: value.displayFieldName || key,
         field: key,
-        autocolumn: !!value.autocolumn,
         sortable: true,
         cellRenderer: getRenderer({
           schema: schema[key],
@@ -113,12 +112,15 @@
         autoHeight: true,
         resizable: true,
         minWidth: 200,
-      })
+      }
+      // sort auto-columns to the end if they are present
+      if (value.autocolumn) {
+        result.push(config)
+      } else {
+        result.unshift(config)
+      }
     }
-    // sort auto-columns to the end if they are present
     columnDefs = result
-      .filter(col => !col.autocolumn)
-      .concat(result.filter(col => col.autocolumn))
   }
 
   function selectRelationship(row, fieldName) {
