@@ -252,8 +252,8 @@ export const getBackendUiStore = () => {
             state.draftTable.primaryDisplay = field.name
           }
           // Set one-to-many
-          if (relationshipType) {
-            state.draftTable.relationshipType = field.name
+          if (field.type === 'link') {
+            state.draftTable.relationshipType = relationshipType
           }
 
           if (indexes) {

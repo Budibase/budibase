@@ -31,8 +31,6 @@
   function getPrettyName(row) {
     return row[linkedTable.primaryDisplay || "_id"]
   }
-
-  $: console.log(schema.relationshipType)
 </script>
 
 {#if linkedTable.primaryDisplay == null}
