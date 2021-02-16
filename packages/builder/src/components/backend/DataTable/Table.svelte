@@ -116,7 +116,9 @@
       })
     }
     // sort auto-columns to the end if they are present
-    columnDefs = result.filter(col => !col.autocolumn).concat(result.filter(col => col.autocolumn))
+    columnDefs = result
+      .filter(col => !col.autocolumn)
+      .concat(result.filter(col => col.autocolumn))
   }
 
   function selectRelationship(row, fieldName) {

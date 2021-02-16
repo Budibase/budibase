@@ -60,9 +60,7 @@
   on:mouseleave={() => (hovered = false)}>
   <div>
     <div class="col-icon">
-      {#if field.autocolumn}
-        <i class="auto ri-magic-fill"></i>
-      {/if}
+      {#if field.autocolumn}<i class="auto ri-magic-fill" />{/if}
       <span class="column-header-name">{displayName}</span>
     </div>
     <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon icon`} />
