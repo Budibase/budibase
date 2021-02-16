@@ -1,4 +1,5 @@
 const { flatten } = require("lodash")
+const { cloneDeep } = require("lodash/fp")
 
 const PermissionLevels = {
   READ: "read",
@@ -70,7 +71,7 @@ exports.BUILTIN_PERMISSION_IDS = {
   POWER: "power",
 }
 
-exports.BUILTIN_PERMISSIONS = {
+const BUILTIN_PERMISSIONS = {
   PUBLIC: {
     _id: exports.BUILTIN_PERMISSION_IDS.PUBLIC,
     name: "Public",
@@ -121,8 +122,12 @@ exports.BUILTIN_PERMISSIONS = {
   },
 }
 
+exports.getBuiltinPermissions = () => {
+  return cloneDeep(BUILTIN_PERMISSIONS)
+}
+
 exports.getBuiltinPermissionByID = id => {
-  const perms = Object.values(exports.BUILTIN_PERMISSIONS)
+  const perms = Object.values(BUILTIN_PERMISSIONS)
   return perms.find(perm => perm._id === id)
 }
 
@@ -155,7 +160,7 @@ exports.doesHaveResourcePermission = (
 }
 
 exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
-  const builtins = Object.values(exports.BUILTIN_PERMISSIONS)
+  const builtins = Object.values(BUILTIN_PERMISSIONS)
   let permissions = flatten(
     builtins
       .filter(builtin => permissionIds.indexOf(builtin._id) !== -1)
