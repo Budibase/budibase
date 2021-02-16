@@ -387,8 +387,13 @@ exports.fetchEnrichedRow = async function(ctx) {
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
     if (field.type === FieldTypes.LINK) {
-      row[fieldName] = linkedRows.filter(
-        linkRow => linkRow.tableId === field.tableId
+      // find the links that pertain to this field, get their indexes
+      const linkIndexes = linkVals
+        .filter(link => link.fieldName === fieldName)
+        .map(link => linkVals.indexOf(link))
+      // find the rows that the links state are linked to this field
+      row[fieldName] = linkedRows.filter((linkRow, index) =>
+        linkIndexes.includes(index)
       )
     }
   }
