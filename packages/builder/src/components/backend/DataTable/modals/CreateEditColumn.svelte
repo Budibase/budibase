@@ -40,7 +40,7 @@
   ]
   let types = ['Many to many (N:N)', 'One to many (1:N)']
 
-  let selectedRelationshipType = 'Many to many (N:N)'
+  let selectedRelationshipType = field.relationshipType
 
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
@@ -55,12 +55,16 @@
     UNEDITABLE_USER_FIELDS.includes(field.name)
 
   async function saveColumn() {
+    // Set relationship type if it's 
+    if (field.type === 'link') {
+      field.relationshipType = relationshipTypes.find(type => type.text === selectedRelationshipType).value
+    } 
+
     backendUiStore.update(state => {
       backendUiStore.actions.tables.saveField({
         originalName,
         field,
         primaryDisplay,
-        relationshipType: relationshipTypes.find(type => type.text === selectedRelationshipType).value,
         indexes,
       })
       return state
