@@ -1,7 +1,6 @@
 const CouchDB = require("../index")
 const Sentry = require("@sentry/node")
 const { ViewNames, getQueryIndex } = require("../utils")
-const { FieldTypes } = require("../../constants")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
