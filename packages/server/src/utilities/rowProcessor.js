@@ -101,9 +101,11 @@ async function processAutoColumn(user, table, row) {
         row[key] = now
         break
       case AutoFieldSubTypes.AUTO_ID:
-        schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
-        row[key] = schema.lastID
-        tableUpdated = true
+        if (creating) {
+          schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
+          row[key] = schema.lastID
+          tableUpdated = true
+        }
         break
     }
   }

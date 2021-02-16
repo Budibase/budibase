@@ -6,6 +6,7 @@
   import ExportButton from "./buttons/ExportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
+  import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
   import * as api from "./api"
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
@@ -14,6 +15,7 @@
 
   let data = []
   let loading = false
+  let hideAutocolumns
 
   $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS
   $: title = $backendUiStore.selectedTable.name
@@ -41,6 +43,7 @@
   tableId={$backendUiStore.selectedTable?._id}
   {data}
   allowEditing={true}
+  bind:hideAutocolumns
   {loading}>
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
@@ -50,6 +53,7 @@
     <CreateViewButton />
     <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
     <ExportButton view={tableView} />
+    <HideAutocolumnButton bind:hideAutocolumns />
   {/if}
   {#if isUsersTable}
     <EditRolesButton />
