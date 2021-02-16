@@ -53,6 +53,7 @@ context("Create a View", () => {
     cy.wait(50)
     cy.get(".menu-container").find("select").eq(1).select("age")
     cy.contains("Save").click()
+    cy.wait(100)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
@@ -65,7 +66,6 @@ context("Create a View", () => {
       let values = Array.from($values).map(header =>
         header.textContent.trim()
       )
-      values = values.filter(value => value !== "")
       expect(values).to.deep.eq([ '31', '5347', '5', '49', '20', '155', 'age' ])
     })
   })
