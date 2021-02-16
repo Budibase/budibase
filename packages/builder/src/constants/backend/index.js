@@ -1,5 +1,3 @@
-import { TableNames } from "../index"
-
 export const FIELDS = {
   STRING: {
     name: "Text",
