@@ -6,7 +6,7 @@ const {
 } = require("../../utilities/security/permissions")
 const {
   lowerBuiltinRoleID,
-  BUILTIN_ROLES,
+  getBuiltinRoles,
 } = require("../../utilities/security/roles")
 const { DocumentTypes } = require("../../db/utils")
 
@@ -44,7 +44,7 @@ exports.getPermissionType = resourceId => {
 exports.getBasePermissions = resourceId => {
   const type = exports.getPermissionType(resourceId)
   const permissions = {}
-  for (let [roleId, role] of Object.entries(BUILTIN_ROLES)) {
+  for (let [roleId, role] of Object.entries(getBuiltinRoles())) {
     if (!role.permissionId) {
       continue
     }

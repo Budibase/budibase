@@ -30,7 +30,9 @@
 <div class="popover">
   <h5>Who Can Access This Data?</h5>
   <div class="note">
-    <Label extraSmall grey>Specify the minimum access level role for this data.</Label>
+    <Label extraSmall grey>
+      Specify the minimum access level role for this data.
+    </Label>
   </div>
   <Spacer large />
   <div class="row">
