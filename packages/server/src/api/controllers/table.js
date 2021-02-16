@@ -70,6 +70,8 @@ exports.save = async function(ctx) {
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await db.get(ctx.request.body._id)
+    // update _rev just to make sure its always accurate
+    tableToSave._rev = oldTable._rev
   }
 
   // make sure that types don't change of a column, have to remove
