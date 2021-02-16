@@ -62,9 +62,10 @@ context("Create a View", () => {
       expect(headers).to.deep.eq([ 'avg', 'sumsqr', 'count', 'max', 'min', 'sum', 'field' ])
     })
     cy.get(".ag-cell").then($values => {
-      const values = Array.from($values).map(header =>
+      let values = Array.from($values).map(header =>
         header.textContent.trim()
       )
+      values = values.filter(value => value !== "")
       expect(values).to.deep.eq([ '31', '5347', '5', '49', '20', '155', 'age' ])
     })
   })
