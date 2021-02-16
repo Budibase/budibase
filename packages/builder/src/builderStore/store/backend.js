@@ -234,9 +234,8 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false, indexes, relationshipType = 'many-to-many' }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, indexes, relationshipType }) => {
         store.update(state => {
-          console.log(state)
           // delete the original if renaming
           // need to handle if the column had no name, empty string
           if (originalName || originalName === "") {
@@ -251,7 +250,8 @@ export const getBackendUiStore = () => {
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
           }
-          // Set one-to-many
+          
+          // Set relationship type
           if (field.type === 'link') {
             state.draftTable.relationshipType = relationshipType
           }
