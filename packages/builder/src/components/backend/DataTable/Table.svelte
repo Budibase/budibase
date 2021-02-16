@@ -100,6 +100,7 @@
         },
         headerName: value.displayFieldName || key,
         field: key,
+        autocolumn: !!value.autocolumn,
         sortable: true,
         cellRenderer: getRenderer({
           schema: schema[key],
@@ -114,8 +115,8 @@
         minWidth: 200,
       })
     }
-
-    columnDefs = result
+    // sort auto-columns to the end if they are present
+    columnDefs = result.filter(col => !col.autocolumn).concat(result.filter(col => col.autocolumn))
   }
 
   function selectRelationship(row, fieldName) {
