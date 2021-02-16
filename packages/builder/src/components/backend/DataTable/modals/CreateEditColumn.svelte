@@ -60,7 +60,7 @@
         originalName,
         field,
         primaryDisplay,
-        relationshipType: relationshipTypes.find(type => type.value === selectedRelationshipType),
+        relationshipType: relationshipTypes.find(type => type.text === selectedRelationshipType).value,
         indexes,
       })
       return state
@@ -200,7 +200,9 @@
       <Label grey extraSmall>Select relationship type</Label>
       <div class="radio-buttons">
         {#each types as type}
-          <Radio name="Relationship type" value={type} bind:group={selectedRelationshipType} label={type} showLabel/>
+          <Radio name="Relationship type" value={type} bind:group={selectedRelationshipType}>
+            <label for={type}>{type}</label>
+          </Radio>
         {/each}
       </div>
     </div>
@@ -232,6 +234,10 @@
   title="Confirm Deletion" />
 
 <style>
+  label {
+    display: grid;
+    place-items: center;
+  }
   .radio-buttons {
     display: flex;
     gap: var(--spacing-m);
