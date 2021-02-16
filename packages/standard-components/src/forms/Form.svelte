@@ -18,16 +18,16 @@
   let table
   let fieldMap = {}
 
-  // Checks if the closest data context matches the model for this forms
-  // datasource, and use it as the initial form values if so
+  // Returns the closes data context which isn't a built in context
   const getInitialValues = context => {
-    return context && context.tableId === datasource?.tableId ? context : {}
+    if (["user", "url"].includes(context.closestComponentId)) {
+      return {}
+    }
+    return context[`${context.closestComponentId}`] || {}
   }
 
-  // Use the closest data context as the initial form values if it matches
-  const initialValues = getInitialValues(
-    $context[`${$context.closestComponentId}`]
-  )
+  // Use the closest data context as the initial form values
+  const initialValues = getInitialValues($context)
 
   // Form state contains observable data about the form
   const formState = writable({ values: initialValues, errors: {}, valid: true })

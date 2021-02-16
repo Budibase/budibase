@@ -11,21 +11,24 @@ const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 /**
  * Gets all bindable data context fields and instance fields.
  */
-export const getBindableProperties = (rootComponent, componentId) => {
-  return getContextBindings(rootComponent, componentId)
+export const getBindableProperties = (asset, componentId) => {
+  const contextBindings = getContextBindings(asset, componentId)
+  const userBindings = getUserBindings()
+  const urlBindings = getUrlBindings(asset, componentId)
+  return [...contextBindings, ...userBindings, ...urlBindings]
 }
 
 /**
  * Gets all data provider components above a component.
  */
-export const getDataProviderComponents = (rootComponent, componentId) => {
-  if (!rootComponent || !componentId) {
+export const getDataProviderComponents = (asset, componentId) => {
+  if (!asset || !componentId) {
     return []
   }
 
   // Get the component tree leading up to this component, ignoring the component
   // itself
-  const path = findComponentPath(rootComponent, componentId)
+  const path = findComponentPath(asset.props, componentId)
   path.pop()
 
   // Filter by only data provider components
@@ -38,18 +41,14 @@ export const getDataProviderComponents = (rootComponent, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getActionProviderComponents = (
-  rootComponent,
-  componentId,
-  actionType
-) => {
-  if (!rootComponent || !componentId) {
+export const getActionProviderComponents = (asset, componentId, actionType) => {
+  if (!asset || !componentId) {
     return []
   }
 
   // Get the component tree leading up to this component, ignoring the component
   // itself
-  const path = findComponentPath(rootComponent, componentId)
+  const path = findComponentPath(asset.props, componentId)
   path.pop()
 
   // Filter by only data provider components
@@ -92,13 +91,12 @@ export const getDatasourceForProvider = component => {
 }
 
 /**
- * Gets all bindable data contexts. These are fields of schemas of data contexts
- * provided by data provider components, such as lists or row detail components.
+ * Gets all bindable data properties from component data contexts.
  */
-export const getContextBindings = (rootComponent, componentId) => {
+const getContextBindings = (asset, componentId) => {
   // Extract any components which provide data contexts
-  const dataProviders = getDataProviderComponents(rootComponent, componentId)
-  let contextBindings = []
+  const dataProviders = getDataProviderComponents(asset, componentId)
+  let bindings = []
 
   // Create bindings for each data provider
   dataProviders.forEach(component => {
@@ -109,7 +107,7 @@ export const getContextBindings = (rootComponent, componentId) => {
     // Forms are an edge case which do not need table schemas
     if (isForm) {
       schema = buildFormSchema(component)
-      tableName = "Schema"
+      tableName = "Fields"
     } else {
       if (!datasource) {
         return
@@ -143,7 +141,7 @@ export const getContextBindings = (rootComponent, componentId) => {
         runtimeBoundKey = `${key}_first`
       }
 
-      contextBindings.push({
+      bindings.push({
         type: "context",
         runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
           runtimeBoundKey
@@ -157,7 +155,14 @@ export const getContextBindings = (rootComponent, componentId) => {
     })
   })
 
-  // Add logged in user bindings
+  return bindings
+}
+
+/**
+ * Gets all bindable properties from the logged in user.
+ */
+const getUserBindings = () => {
+  let bindings = []
   const tables = get(backendUiStore).tables
   const userTable = tables.find(table => table._id === TableNames.USERS)
   const schema = {
@@ -176,7 +181,7 @@ export const getContextBindings = (rootComponent, componentId) => {
       runtimeBoundKey = `${key}_first`
     }
 
-    contextBindings.push({
+    bindings.push({
       type: "context",
       runtimeBinding: `user.${runtimeBoundKey}`,
       readableBinding: `Current User.${key}`,
@@ -187,7 +192,26 @@ export const getContextBindings = (rootComponent, componentId) => {
     })
   })
 
-  return contextBindings
+  return bindings
+}
+
+/**
+ * Gets all bindable properties from URL parameters.
+ */
+const getUrlBindings = asset => {
+  const url = asset?.routing?.route ?? ""
+  const split = url.split("/")
+  let params = []
+  split.forEach(part => {
+    if (part.startsWith(":") && part.length > 1) {
+      params.push(part.replace(/:/g, "").replace(/\?/g, ""))
+    }
+  })
+  return params.map(param => ({
+    type: "context",
+    runtimeBinding: `url.${param}`,
+    readableBinding: `URL.${param}`,
+  }))
 }
 
 /**

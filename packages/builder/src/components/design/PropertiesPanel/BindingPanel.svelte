@@ -24,7 +24,7 @@
 
   $: value && checkValid()
   $: bindableProperties = getBindableProperties(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: dispatch("update", value)

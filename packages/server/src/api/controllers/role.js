@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const {
-  BUILTIN_ROLES,
+  getBuiltinRoles,
   BUILTIN_ROLE_IDS,
   Role,
   getRole,
@@ -58,10 +58,11 @@ exports.fetch = async function(ctx) {
     })
   )
   let roles = body.rows.map(row => row.doc)
+  const builtinRoles = getBuiltinRoles()
 
   // need to combine builtin with any DB record of them (for sake of permissions)
   for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
-    const builtinRole = BUILTIN_ROLES[builtinRoleId]
+    const builtinRole = builtinRoles[builtinRoleId]
     const dbBuiltin = roles.filter(
       dbRole => getExternalRoleID(dbRole._id) === builtinRoleId
     )[0]
