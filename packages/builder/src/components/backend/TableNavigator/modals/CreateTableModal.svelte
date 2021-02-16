@@ -9,7 +9,7 @@
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-  import { buildAutoColumn, getAutoColumnInformation } from "constants/backend"
+  import { buildAutoColumn, getAutoColumnInformation } from "utilities/backend"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,

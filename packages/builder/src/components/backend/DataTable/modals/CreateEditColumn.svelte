@@ -12,10 +12,12 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
-    getAutoColumnInformation,
-    buildAutoColumn,
     AUTO_COLUMN_SUB_TYPES,
   } from "constants/backend"
+  import {
+    getAutoColumnInformation,
+    buildAutoColumn,
+  } from "utilities/backend"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
