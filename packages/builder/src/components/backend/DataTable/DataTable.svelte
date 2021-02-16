@@ -58,5 +58,4 @@
     <!-- always have the export last -->
     <ExportButton view={tableView} />
   {/if}
-
 </Table>

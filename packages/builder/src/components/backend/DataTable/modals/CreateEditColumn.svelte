@@ -10,14 +10,8 @@
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import {
-    FIELDS,
-    AUTO_COLUMN_SUB_TYPES,
-  } from "constants/backend"
-  import {
-    getAutoColumnInformation,
-    buildAutoColumn,
-  } from "builderStore/utils"
+  import { FIELDS, AUTO_COLUMN_SUB_TYPES } from "constants/backend"
+  import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"

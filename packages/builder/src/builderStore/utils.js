@@ -3,7 +3,7 @@ import {
   AUTO_COLUMN_DISPLAY_NAMES,
   AUTO_COLUMN_SUB_TYPES,
   FIELDS,
-  isAutoColumnUserRelationship
+  isAutoColumnUserRelationship,
 } from "../constants/backend"
 
 export function getAutoColumnInformation(enabled = true) {
