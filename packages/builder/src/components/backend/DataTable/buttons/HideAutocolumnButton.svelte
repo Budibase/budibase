@@ -1,7 +1,7 @@
 <script>
   import { TextButton } from "@budibase/bbui"
 
-  export let hideAutocolumns = true
+  export let hideAutocolumns
 
   let anchor
   let dropdown

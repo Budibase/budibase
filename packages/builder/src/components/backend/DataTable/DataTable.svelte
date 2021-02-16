@@ -13,7 +13,7 @@
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
 
-  let hideAutocolumns
+  let hideAutocolumns = true
   let data = []
   let loading = false
   $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS

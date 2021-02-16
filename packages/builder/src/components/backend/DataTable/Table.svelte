@@ -24,7 +24,7 @@
   export let allowEditing = false
   export let loading = false
   export let theme = "alpine"
-  export let hideAutocolumns = false
+  export let hideAutocolumns
 
   let columnDefs = []
   let selectedRows = []
