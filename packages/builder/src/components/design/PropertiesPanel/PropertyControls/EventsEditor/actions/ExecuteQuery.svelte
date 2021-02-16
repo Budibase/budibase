@@ -10,7 +10,7 @@
     ds => ds._id === parameters.datasourceId
   )
   $: bindableProperties = getBindableProperties(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   ).map(property => ({
     ...property,

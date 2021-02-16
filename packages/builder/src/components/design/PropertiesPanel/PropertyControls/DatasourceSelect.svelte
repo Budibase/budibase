@@ -47,7 +47,7 @@
       type: "query",
     }))
   $: bindableProperties = getBindableProperties(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: queryBindableProperties = bindableProperties.map(property => ({
