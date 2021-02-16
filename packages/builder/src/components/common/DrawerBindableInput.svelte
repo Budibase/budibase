@@ -30,7 +30,7 @@
   <Input
     thin
     value={readableValue}
-    on:change={event => onChange(event.detail)}
+    on:change={event => onChange(event.target.value)}
     placeholder="/screen" />
   <div class="icon" on:click={bindingDrawer.show}>
     <Icon name="lightning" />
