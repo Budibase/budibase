@@ -1,3 +1,5 @@
+import { TableNames } from "../index"
+
 export const FIELDS = {
   STRING: {
     name: "Text",
@@ -117,8 +119,6 @@ export const Roles = {
   BUILDER: "BUILDER",
 }
 
-export const USER_TABLE_ID = "ta_users"
-
 export function isAutoColumnUserRelationship(subtype) {
   return (
     subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
@@ -163,7 +163,7 @@ export function buildAutoColumn(tableName, name, subtype) {
     constraints,
   }
   if (isAutoColumnUserRelationship(subtype)) {
-    base.tableId = USER_TABLE_ID
+    base.tableId = TableNames.USERS
     base.fieldName = `${tableName}-${name}`
   }
   return base
