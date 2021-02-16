@@ -13,10 +13,11 @@
 
 <div bind:this={anchor}>
   <TextButton text small on:click={hideOrUnhide}>
-    <i class="ri-magic-fill"></i>
     {#if hideAutocolumns}
+      <i class="ri-magic-fill"></i>
       Show Auto Columns
     {:else}
+      <i class="ri-magic-line"></i>
       Hide Auto Columns
     {/if}
   </TextButton>

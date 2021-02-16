@@ -6,10 +6,10 @@
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
+  import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-  import { buildAutoColumn, getAutoColumnInformation } from "utilities/backend"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,

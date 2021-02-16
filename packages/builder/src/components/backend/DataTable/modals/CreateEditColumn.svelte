@@ -17,7 +17,7 @@
   import {
     getAutoColumnInformation,
     buildAutoColumn,
-  } from "utilities/backend"
+  } from "builderStore/utils"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"

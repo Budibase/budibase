@@ -259,14 +259,18 @@ class LinkController {
         } catch (err) {
           continue
         }
-        // create the link field in the other table
-        linkedTable.schema[field.fieldName] = {
+        const linkConfig = {
           name: field.fieldName,
           type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
           tableId: table._id,
           fieldName: fieldName,
         }
+        if (field.autocolumn) {
+          linkConfig.autocolumn = field.autocolumn
+        }
+        // create the link field in the other table
+        linkedTable.schema[field.fieldName] = linkConfig
         const response = await this._db.put(linkedTable)
         // special case for when linking back to self, make sure rev updated
         if (linkedTable._id === table._id) {

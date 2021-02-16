@@ -13,10 +13,9 @@
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
 
+  let hideAutocolumns
   let data = []
   let loading = false
-  let hideAutocolumns
-
   $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS
   $: title = $backendUiStore.selectedTable.name
   $: schema = $backendUiStore.selectedTable.schema
@@ -52,10 +51,12 @@
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
     <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
-    <ExportButton view={tableView} />
+    {#if isUsersTable}
+      <EditRolesButton />
+    {/if}
     <HideAutocolumnButton bind:hideAutocolumns />
+    <!-- always have the export last -->
+    <ExportButton view={tableView} />
   {/if}
-  {#if isUsersTable}
-    <EditRolesButton />
-  {/if}
+
 </Table>
