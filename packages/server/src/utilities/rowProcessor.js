@@ -167,7 +167,7 @@ exports.inputProcessing = async (user, table, row) => {
  */
 exports.outputProcessing = async (appId, table, rows) => {
   // attach any linked row information
-  const outputRows = await linkRows.attachLinkedRows(appId, rows)
+  const outputRows = await linkRows.attachLinkedDisplayName(appId, table, rows)
   // update the attachments URL depending on hosting
   if (env.CLOUD && env.SELF_HOSTED) {
     for (let [property, column] of Object.entries(table.schema)) {

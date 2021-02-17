@@ -277,3 +277,20 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
     otherProps
   )
 }
+
+/**
+ * This can be used with the db.find functionality to get a list of IDs
+ */
+exports.getMultiIDParams = (ids, fields = null) => {
+  let config = {
+    selector: {
+      _id: {
+        $in: ids,
+      },
+    },
+  }
+  if (fields) {
+    config.fields = fields
+  }
+  return config
+}

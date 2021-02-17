@@ -7,6 +7,8 @@ const {
 } = require("./linkUtils")
 const { flatten } = require("lodash")
 const CouchDB = require("../../db")
+const { getMultiIDParams } = require("../../db/utils")
+const { FieldTypes } = require("../../constants")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -28,10 +30,16 @@ exports.IncludeDocs = IncludeDocs
 exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
 
+function getLinkedTableIDs(table) {
+  return Object.values(table.schema)
+    .filter(column => column.type === FieldTypes.LINK)
+    .map(column => column.tableId)
+}
+
 async function getLinksForRows(appId, rows) {
-  let tableIds = [...new Set(rows.map(el => el.tableId))]
+  const tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
-  let responses = flatten(
+  const responses = flatten(
     await Promise.all(
       tableIds.map(tableId =>
         getLinkDocuments({
@@ -117,7 +125,7 @@ exports.updateLinks = async function({
  * @returns {Promise<object>} The updated row (this may be the same if no links were found). If an array was input
  * then an array will be output, object input -> object output.
  */
-exports.attachLinkInfo = async (appId, rows) => {
+exports.attachLinkIDs = async (appId, rows) => {
   // handle a single row as well as multiple
   let wasArray = true
   if (!(rows instanceof Array)) {
@@ -143,25 +151,37 @@ exports.attachLinkInfo = async (appId, rows) => {
   return wasArray ? rows : rows[0]
 }
 
-exports.attachLinkedRows = async (appId, rows) => {
+/**
+ * Given information about the table we can extract the display name from the linked rows, this
+ * is what we do for showing the display name of each linked row when in a table format.
+ * @param {string} appId The app in which the tables/rows/links exist.
+ * @param {object} table The table from which the rows originated.
+ * @param {array<object>} rows The rows which are to be enriched with the linked display names/IDs.
+ * @returns {Promise<Array>} The enriched rows after having display names/IDs attached to the linked fields.
+ */
+exports.attachLinkedDisplayName = async (appId, table, rows) => {
+  const linkedTableIds = getLinkedTableIDs(table)
+  if (linkedTableIds.length === 0) {
+    return rows
+  }
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   const db = new CouchDB(appId)
+  const linkedTables = (await db.find(getMultiIDParams(linkedTableIds))).docs
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
-  const linkedRows = (
-    await db.find({
-      selector: {
-        _id: {
-          $in: links.map(link => link.id),
-        },
-      },
-    })
-  ).docs
+  const fields = [
+    "_id",
+    ...linkedTables
+      .filter(table => table.displayName != null)
+      .map(table => table.displayName),
+  ]
+  const linkedRowIds = links.map(link => link.id)
+  const linked = (await db.find(getMultiIDParams(linkedRowIds, fields))).docs
   for (let row of rows) {
     links
       .filter(link => link.thisId === row._id)
@@ -169,9 +189,15 @@ exports.attachLinkedRows = async (appId, rows) => {
         if (row[link.fieldName] == null) {
           row[link.fieldName] = []
         }
-        const linkedRow = linkedRows.find(row => row._id === link.id)
-        if (linkedRow) {
-          row[link.fieldName].push(linkedRow)
+        const linkedTableId = table.schema[link.fieldName].tableId
+        const linkedRow = linked.find(row => row._id === link.id)
+        const linkedTable = linkedTables.find(
+          table => table._id === linkedTableId
+        )
+        if (linkedRow && linkedTable) {
+          row[link.fieldName].push(
+            linkedRow[linkedTable.displayName] || linkedRow._id
+          )
         }
       })
   }

@@ -287,7 +287,7 @@ describe("/rows", () => {
       })).body
       const enriched = await outputProcessing(appId, table, [secondRow])
       expect(enriched[0].link.length).toBe(1)
-      expect(enriched[0].link[0]._id).toBe(firstRow._id)
+      expect(enriched[0].link[0]).toBe("Test Contact")
     })
   })
 

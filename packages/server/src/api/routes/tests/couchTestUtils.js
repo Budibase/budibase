@@ -137,6 +137,7 @@ exports.addPermission = async (
 exports.createLinkedTable = async (request, appId) => {
   // get the ID to link to
   const table = await exports.createTable(request, appId)
+  table.displayName = "name"
   table.schema.link = {
     type: "link",
     fieldName: "link",
