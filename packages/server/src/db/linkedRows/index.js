@@ -6,6 +6,7 @@ const {
   getUniqueByProp,
 } = require("./linkUtils")
 const { flatten } = require("lodash")
+const CouchDB = require("../../db")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -26,6 +27,30 @@ exports.EventType = EventType
 exports.IncludeDocs = IncludeDocs
 exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
+
+async function getLinksForRows(appId, rows) {
+  let tableIds = [...new Set(rows.map(el => el.tableId))]
+  // start by getting all the link values for performance reasons
+  let responses = flatten(
+    await Promise.all(
+      tableIds.map(tableId =>
+        getLinkDocuments({
+          appId,
+          tableId: tableId,
+          includeDocs: IncludeDocs.EXCLUDE,
+        })
+      )
+    )
+  )
+  // have to get unique as the previous table query can
+  // return duplicates, could be querying for both tables in a relation
+  return getUniqueByProp(
+    responses
+      // create a unique ID which we can use for getting only unique ones
+      .map(el => ({ ...el, unique: el.id + el.fieldName })),
+    "unique"
+  )
+}
 
 /**
  * Update link documents for a row or table - this is to be called by the API controller when a change is occurring.
@@ -99,42 +124,56 @@ exports.attachLinkInfo = async (appId, rows) => {
     rows = [rows]
     wasArray = false
   }
-  let tableIds = [...new Set(rows.map(el => el.tableId))]
-  // start by getting all the link values for performance reasons
-  let responses = flatten(
-    await Promise.all(
-      tableIds.map(tableId =>
-        getLinkDocuments({
-          appId,
-          tableId: tableId,
-          includeDocs: IncludeDocs.EXCLUDE,
-        })
-      )
-    )
-  )
+
+  const links = await getLinksForRows(appId, rows)
   // now iterate through the rows and all field information
   for (let row of rows) {
-    // get all links for row, ignore fieldName for now
-    // have to get unique as the previous table query can
-    // return duplicates, could be querying for both tables in a relation
-    const linkVals = getUniqueByProp(
-      responses
-        // find anything that matches the row's ID we are searching for
-        .filter(el => el.thisId === row._id)
-        // create a unique ID which we can use for getting only unique ones
-        .map(el => ({ ...el, unique: el.id + el.fieldName })),
-      "unique"
-    )
-    for (let linkVal of linkVals) {
-      // work out which link pertains to this row
-      if (!(row[linkVal.fieldName] instanceof Array)) {
-        row[linkVal.fieldName] = [linkVal.id]
-      } else {
-        row[linkVal.fieldName].push(linkVal.id)
-      }
-    }
+    // find anything that matches the row's ID we are searching for and join it
+    links
+      .filter(el => el.thisId === row._id)
+      .forEach(link => {
+        if (row[link.fieldName] == null) {
+          row[link.fieldName] = []
+        }
+        row[link.fieldName].push(link.id)
+      })
   }
   // if it was an array when it came in then handle it as an array in response
   // otherwise return the first element as there was only one input
+  return wasArray ? rows : rows[0]
+}
+
+exports.attachLinkedRows = async (appId, rows) => {
+  let wasArray = true
+  if (!(rows instanceof Array)) {
+    rows = [rows]
+    wasArray = false
+  }
+  const db = new CouchDB(appId)
+  const links = (await getLinksForRows(appId, rows)).filter(link =>
+    rows.some(row => row._id === link.thisId)
+  )
+  const linkedRows = (
+    await db.find({
+      selector: {
+        _id: {
+          $in: links.map(link => link.id),
+        },
+      },
+    })
+  ).docs
+  for (let row of rows) {
+    links
+      .filter(link => link.thisId === row._id)
+      .forEach(link => {
+        if (row[link.fieldName] == null) {
+          row[link.fieldName] = []
+        }
+        const linkedRow = linkedRows.find(row => row._id === link.id)
+        if (linkedRow) {
+          row[link.fieldName].push(linkedRow)
+        }
+      })
+  }
   return wasArray ? rows : rows[0]
 }
