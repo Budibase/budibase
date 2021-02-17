@@ -20,6 +20,7 @@
   <button
     id={$fieldState.fieldId}
     class="spectrum-Picker"
+    disabled={$fieldState.disabled}
     class:is-invalid={!$fieldState.valid}
     class:is-open={open}
     aria-haspopup="listbox"
