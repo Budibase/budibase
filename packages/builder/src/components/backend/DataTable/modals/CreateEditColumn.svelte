@@ -45,7 +45,7 @@
   $: uneditable =
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
-  $: invalid = (field.type === FIELDS.LINK.type && !field.tableId)
+  $: invalid = field.type === FIELDS.LINK.type && !field.tableId
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -235,7 +235,9 @@
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveColumn} bind:disabled={invalid}>Save Column</Button>
+    <Button primary on:click={saveColumn} bind:disabled={invalid}>
+      Save Column
+    </Button>
   </footer>
 </div>
 <ConfirmDialog
