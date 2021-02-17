@@ -1,4 +1,5 @@
 const { flatten } = require("lodash")
+const { cloneDeep } = require("lodash/fp")
 
 const PermissionLevels = {
   READ: "read",
@@ -21,6 +22,22 @@ const PermissionTypes = {
 function Permission(type, level) {
   this.level = level
   this.type = type
+}
+
+function levelToNumber(perm) {
+  switch (perm) {
+    // not everything has execute privileges
+    case PermissionLevels.EXECUTE:
+      return 0
+    case PermissionLevels.READ:
+      return 1
+    case PermissionLevels.WRITE:
+      return 2
+    case PermissionLevels.ADMIN:
+      return 3
+    default:
+      return -1
+  }
 }
 
 /**
@@ -47,13 +64,21 @@ function getAllowedLevels(userPermLevel) {
 }
 
 exports.BUILTIN_PERMISSION_IDS = {
+  PUBLIC: "public",
   READ_ONLY: "read_only",
   WRITE: "write",
   ADMIN: "admin",
   POWER: "power",
 }
 
-exports.BUILTIN_PERMISSIONS = {
+const BUILTIN_PERMISSIONS = {
+  PUBLIC: {
+    _id: exports.BUILTIN_PERMISSION_IDS.PUBLIC,
+    name: "Public",
+    permissions: [
+      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
+    ],
+  },
   READ_ONLY: {
     _id: exports.BUILTIN_PERMISSION_IDS.READ_ONLY,
     name: "Read only",
@@ -97,6 +122,15 @@ exports.BUILTIN_PERMISSIONS = {
   },
 }
 
+exports.getBuiltinPermissions = () => {
+  return cloneDeep(BUILTIN_PERMISSIONS)
+}
+
+exports.getBuiltinPermissionByID = id => {
+  const perms = Object.values(BUILTIN_PERMISSIONS)
+  return perms.find(perm => perm._id === id)
+}
+
 exports.doesHaveResourcePermission = (
   permissions,
   permLevel,
@@ -126,7 +160,7 @@ exports.doesHaveResourcePermission = (
 }
 
 exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
-  const builtins = Object.values(exports.BUILTIN_PERMISSIONS)
+  const builtins = Object.values(BUILTIN_PERMISSIONS)
   let permissions = flatten(
     builtins
       .filter(builtin => permissionIds.indexOf(builtin._id) !== -1)
@@ -144,22 +178,11 @@ exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
 }
 
 exports.higherPermission = (perm1, perm2) => {
-  function toNum(perm) {
-    switch (perm) {
-      // not everything has execute privileges
-      case PermissionLevels.EXECUTE:
-        return 0
-      case PermissionLevels.READ:
-        return 1
-      case PermissionLevels.WRITE:
-        return 2
-      case PermissionLevels.ADMIN:
-        return 3
-      default:
-        return -1
-    }
-  }
-  return toNum(perm1) > toNum(perm2) ? perm1 : perm2
+  return levelToNumber(perm1) > levelToNumber(perm2) ? perm1 : perm2
+}
+
+exports.isPermissionLevelHigherThanRead = level => {
+  return levelToNumber(level) > 1
 }
 
 // utility as a lot of things need simply the builder permission

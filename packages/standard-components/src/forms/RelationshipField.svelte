@@ -24,7 +24,7 @@
   $: fetchTable(linkedTableId)
 
   const fetchTable = async id => {
-    if (id != null) {
+    if (id) {
       const result = await API.fetchTableDefinition(id)
       if (!result.error) {
         tableDefinition = result
@@ -33,7 +33,7 @@
   }
 
   const fetchRows = async id => {
-    if (id != null) {
+    if (id) {
       const rows = await API.fetchTableData(id)
       options = rows && !rows.error ? rows : []
     }

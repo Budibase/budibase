@@ -71,21 +71,22 @@ describe("/permission", () => {
         .set(defaultHeaders(appId))
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body[STD_ROLE_ID]).toEqual("read")
+      expect(res.body["read"]).toEqual(STD_ROLE_ID)
+      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
     })
 
     it("should get resource permissions with multiple roles", async () => {
       perms = await addPermission(request, appId, HIGHER_ROLE_ID, table._id, "write")
       const res = await getTablePermissions()
-      expect(res.body[HIGHER_ROLE_ID]).toEqual("write")
-      expect(res.body[STD_ROLE_ID]).toEqual("read")
+      expect(res.body["read"]).toEqual(STD_ROLE_ID)
+      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
       const allRes = await request
         .get(`/api/permission`)
         .set(defaultHeaders(appId))
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(allRes.body[HIGHER_ROLE_ID][table._id]).toEqual("write")
-      expect(allRes.body[STD_ROLE_ID][table._id]).toEqual("read")
+      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
+      expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
     })
   })
 

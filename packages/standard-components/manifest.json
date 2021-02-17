@@ -181,9 +181,10 @@
         "key": "subheading"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "Link URL",
-        "key": "destinationUrl"
+        "key": "destinationUrl",
+        "placeholder": "/screen"
       }
     ]
   },
@@ -214,9 +215,10 @@
         "key": "linkText"
       },
       {
-        "type": "screen",
-        "label": "Link Url",
-        "key": "linkUrl"
+        "type": "text",
+        "label": "Link URL",
+        "key": "linkUrl",
+        "placeholder": "/screen"
       },
       {
         "type": "color",
@@ -383,9 +385,10 @@
         "key": "text"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "URL",
-        "key": "url"
+        "key": "url",
+        "placeholder": "/screen"
       },
       {
         "type": "boolean",
@@ -456,9 +459,10 @@
         "key": "linkText"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "Link URL",
-        "key": "linkUrl"
+        "key": "linkUrl",
+        "placeholder": "/screen"
       },
       {
         "type": "color",
