@@ -34,7 +34,7 @@ module.exports.init = function() {
   actions.init().then(() => {
     triggers.automationQueue.process(async job => {
       try {
-        if (env.CLOUD && job.data.automation) {
+        if (env.CLOUD && job.data.automation && !env.SELF_HOSTED) {
           job.data.automation.apiKey = await updateQuota(job.data.automation)
         }
         if (env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
