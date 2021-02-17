@@ -26,7 +26,7 @@ Role.prototype.addInheritance = function(inherits) {
   return this
 }
 
-exports.BUILTIN_ROLES = {
+const BUILTIN_ROLES = {
   ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin")
     .addPermission(BUILTIN_PERMISSION_IDS.ADMIN)
     .addInheritance(BUILTIN_IDS.POWER),
@@ -37,23 +37,63 @@ exports.BUILTIN_ROLES = {
     .addPermission(BUILTIN_PERMISSION_IDS.WRITE)
     .addInheritance(BUILTIN_IDS.PUBLIC),
   PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public").addPermission(
-    BUILTIN_PERMISSION_IDS.READ_ONLY
+    BUILTIN_PERMISSION_IDS.PUBLIC
   ),
   BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder").addPermission(
     BUILTIN_PERMISSION_IDS.ADMIN
   ),
 }
 
-exports.BUILTIN_ROLE_ID_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
+exports.getBuiltinRoles = () => {
+  return cloneDeep(BUILTIN_ROLES)
+}
+
+exports.BUILTIN_ROLE_ID_ARRAY = Object.values(BUILTIN_ROLES).map(
   role => role._id
 )
 
-exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(exports.BUILTIN_ROLES).map(
+exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(BUILTIN_ROLES).map(
   role => role.name
 )
 
 function isBuiltin(role) {
   return exports.BUILTIN_ROLE_ID_ARRAY.some(builtin => role.includes(builtin))
+}
+
+/**
+ * Works through the inheritance ranks to see how far up the builtin stack this ID is.
+ */
+function builtinRoleToNumber(id) {
+  const builtins = exports.getBuiltinRoles()
+  const MAX = Object.values(BUILTIN_IDS).length + 1
+  if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
+    return MAX
+  }
+  let role = builtins[id],
+    count = 0
+  do {
+    if (!role) {
+      break
+    }
+    role = builtins[role.inherits]
+    count++
+  } while (role !== null)
+  return count
+}
+
+/**
+ * Returns whichever builtin roleID is lower.
+ */
+exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
+  if (!roleId1) {
+    return roleId2
+  }
+  if (!roleId2) {
+    return roleId1
+  }
+  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
+    ? roleId2
+    : roleId1
 }
 
 /**
@@ -72,7 +112,7 @@ exports.getRole = async (appId, roleId) => {
   // but can be extended by a doc stored about them (e.g. permissions)
   if (isBuiltin(roleId)) {
     role = cloneDeep(
-      Object.values(exports.BUILTIN_ROLES).find(role => role._id === roleId)
+      Object.values(BUILTIN_ROLES).find(role => role._id === roleId)
     )
   }
   try {

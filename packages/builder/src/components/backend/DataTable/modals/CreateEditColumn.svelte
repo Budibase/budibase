@@ -142,7 +142,7 @@
       thin
       text="Use as table display column" />
 
-    <Label gray small>Search Indexes</Label>
+    <Label grey small>Search Indexes</Label>
     <Toggle
       checked={indexes[0] === field.name}
       disabled={indexes[1] === field.name}
