@@ -10,6 +10,7 @@
   export let fieldSchema
   export let defaultValue
   export let type
+  export let disabled = false
 
   // Get contexts
   const formContext = getContext("form")
@@ -20,7 +21,7 @@
   // Register field with form
   const formApi = formContext?.formApi
   const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field, defaultValue)
+  const formField = formApi?.registerField(field, defaultValue, disabled)
 
   // Expose field properties to parent component
   fieldState = formField?.fieldState

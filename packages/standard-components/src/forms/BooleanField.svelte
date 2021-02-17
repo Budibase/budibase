@@ -5,6 +5,7 @@
   export let field
   export let label
   export let text
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -17,6 +18,7 @@
 <Field
   {label}
   {field}
+  {disabled}
   type="boolean"
   bind:fieldState
   bind:fieldApi
@@ -26,6 +28,7 @@
       <label class="spectrum-Checkbox" class:is-invalid={!$fieldState.valid}>
         <input
           checked={$fieldState.value}
+          disabled={$fieldState.disabled}
           on:change={onChange}
           type="checkbox"
           class="spectrum-Checkbox-input"
