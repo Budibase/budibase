@@ -8,7 +8,7 @@ const {
   generateRowID,
 } = require("../../db/utils")
 const { isEqual } = require("lodash/fp")
-const { FieldTypes } = require("../../constants")
+const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
 
 async function checkForColumnUpdates(db, oldTable, updatedTable) {
   let updatedRows
@@ -40,6 +40,27 @@ async function checkForColumnUpdates(db, oldTable, updatedTable) {
   return updatedRows
 }
 
+// makes sure the passed in table isn't going to reset the auto ID
+function makeSureTableUpToDate(table, tableToSave) {
+  if (!table) {
+    return tableToSave
+  }
+  // sure sure rev is up to date
+  tableToSave._rev = table._rev
+  // make sure auto IDs are always updated - these are internal
+  // so the client may not know they have changed
+  for (let [field, column] of Object.entries(table.schema)) {
+    if (
+      column.autocolumn &&
+      column.subtype === AutoFieldSubTypes.AUTO_ID &&
+      tableToSave.schema[field]
+    ) {
+      tableToSave.schema[field].lastID = column.lastID
+    }
+  }
+  return tableToSave
+}
+
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const body = await db.allDocs(
@@ -59,7 +80,7 @@ exports.save = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
   const { dataImport, ...rest } = ctx.request.body
-  const tableToSave = {
+  let tableToSave = {
     type: "table",
     _id: generateTableID(),
     views: {},
@@ -70,8 +91,7 @@ exports.save = async function(ctx) {
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await db.get(ctx.request.body._id)
-    // update _rev just to make sure its always accurate
-    tableToSave._rev = oldTable._rev
+    tableToSave = makeSureTableUpToDate(oldTable, tableToSave)
   }
 
   // make sure that types don't change of a column, have to remove
