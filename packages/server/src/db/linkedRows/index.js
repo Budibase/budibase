@@ -159,7 +159,7 @@ exports.attachLinkIDs = async (appId, rows) => {
  * @param {array<object>} rows The rows which are to be enriched with the linked display names/IDs.
  * @returns {Promise<Array>} The enriched rows after having display names/IDs attached to the linked fields.
  */
-exports.attachLinkedDisplayName = async (appId, table, rows) => {
+exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -170,18 +170,14 @@ exports.attachLinkedDisplayName = async (appId, table, rows) => {
     wasArray = false
   }
   const db = new CouchDB(appId)
-  const linkedTables = (await db.find(getMultiIDParams(linkedTableIds))).docs
+  const linkedTables = await Promise.all(linkedTableIds.map(id => db.get(id)))
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
-  const fields = [
-    "_id",
-    ...linkedTables
-      .filter(table => table.displayName != null)
-      .map(table => table.displayName),
-  ]
   const linkedRowIds = links.map(link => link.id)
-  const linked = (await db.find(getMultiIDParams(linkedRowIds, fields))).docs
+  const linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
+    row => row.doc
+  )
   for (let row of rows) {
     links
       .filter(link => link.thisId === row._id)
@@ -194,10 +190,13 @@ exports.attachLinkedDisplayName = async (appId, table, rows) => {
         const linkedTable = linkedTables.find(
           table => table._id === linkedTableId
         )
-        if (linkedRow && linkedTable) {
-          row[link.fieldName].push(
-            linkedRow[linkedTable.displayName] || linkedRow._id
-          )
+        if (!linkedRow || !linkedTable) {
+          return
+        }
+        // need to handle an edge case where relationship just wasn't found
+        const value = linkedRow[linkedTable.primaryDisplay] || linkedRow._id
+        if (value) {
+          row[link.fieldName].push(value)
         }
       })
   }
