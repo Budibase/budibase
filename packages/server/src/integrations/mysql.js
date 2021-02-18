@@ -3,6 +3,7 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/mysqljs/mysql",
+  friendlyName: "MySQL",
   datasource: {
     host: {
       type: FIELD_TYPES.STRING,

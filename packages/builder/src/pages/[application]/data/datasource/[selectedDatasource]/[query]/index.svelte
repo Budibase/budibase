@@ -36,6 +36,8 @@
 <style>
   section {
     overflow: scroll;
+    width: 800px;
+    margin: 0 auto;
   }
   ::-webkit-scrollbar {
     width: 0px;

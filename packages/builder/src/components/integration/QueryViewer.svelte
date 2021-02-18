@@ -4,6 +4,7 @@
   import {
     Select,
     Button,
+    Body,
     Label,
     Input,
     TextArea,
@@ -16,7 +17,7 @@
   import { FIELDS } from "constants/backend"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
-  import EditQueryParamsPopover from "components/backend/DatasourceNavigator/popovers/EditQueryParamsPopover.svelte"
+  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { backendUiStore } from "builderStore"
 
   const PREVIEW_HEADINGS = [
@@ -60,8 +61,8 @@
 
   $: datasourceType = datasource?.source
 
-  $: config = $backendUiStore.integrations[datasourceType]?.query
-  $: docsLink = $backendUiStore.integrations[datasourceType]?.docs
+  $: integrationInfo = $backendUiStore.integrations[datasourceType]
+  $: queryConfig = integrationInfo?.query
 
   $: shouldShowQueryConfig = config && query.queryVerb
 
@@ -130,63 +131,99 @@
   }
 </script>
 
-<header>
-  <div class="input">
+<section class="config">
+  <Heading medium>Query {integrationInfo.friendlyName}</Heading>
+  <hr />
+  <Spacer medium />
+  <Heading small>Config</Heading>
+  <Spacer medium />
+  <Body small grey>Provide a name for your query and select its function.</Body>
+  <Spacer medium />
+  <div class="config-field">
+    <Label small>Query Name</Label>
+    <Input thin bind:value={query.name} />
+  </div>
+  <Spacer medium />
+  {#if queryConfig}
+    <div class="config-field">
+      <Label small>Function</Label>
+      <Select primary outline thin bind:value={query.queryVerb}>
+        {#each Object.keys(queryConfig) as queryVerb}
+          <option value={queryVerb}>{queryConfig[queryVerb]?.displayName || queryVerb}</option>
+        {/each}
+      </Select>
+    </div>
+    <Spacer medium />
+    <hr />
+    <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+    <hr />
+  {/if}
+  <!-- <div class="input">
     <div class="label">Enter query name:</div>
     <Input outline border bind:value={query.name} />
-  </div>
-  {#if config}
-    <div class="props">
-      <div class="query-type">
+  </div> -->
+  <!-- {#if config} -->
+  <!-- <div class="props"> -->
+  <!-- <div class="query-type">
         Query type:
         <span class="query-type-span">{config[query.queryVerb].type}</span>
-      </div>
-      <div class="select">
+      </div> -->
+  <!-- <div class="select">
         <Select primary thin bind:value={query.queryVerb}>
           {#each Object.keys(config) as queryVerb}
             <option value={queryVerb}>{queryVerb}</option>
           {/each}
         </Select>
-      </div>
-    </div>
+      </div> -->
+  <!-- </div>
     <EditQueryParamsPopover
       bind:parameters={query.parameters}
-      bindable={false} />
-  {/if}
-</header>
-<Spacer extraLarge />
+      bindable={false} /> -->
+  <!-- {/if} -->
+</section>
+<Spacer large />
 
 {#if shouldShowQueryConfig}
   <section>
     <div class="config">
+      <Heading small>Fields</Heading>
+      <Spacer medium />
       <IntegrationQueryEditor
         {query}
         schema={config[query.queryVerb]}
         bind:parameters />
 
-      <Spacer extraLarge />
-      <Spacer large />
+      <Spacer medium />
+      <hr />
+      <Spacer medium />
 
       <div class="viewer-controls">
+        <Heading small>Query Results</Heading>
         <Button
-          blue
+          secondary
+          thin
           disabled={data.length === 0 || !query.name}
           on:click={saveQuery}>
           Save Query
         </Button>
-        <Button primary on:click={previewQuery}>Run Query</Button>
+        <Button thin primary on:click={previewQuery}>Run Query</Button>
       </div>
-
+      <Body small grey>
+        Below, you can preview the results from your query and change the
+        schema.
+      </Body>
       <section class="viewer">
         {#if data}
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
             {#if tab === 'JSON'}
-            <pre class="preview">
+              <pre class="preview">
               {#if !data[0]}
+                  
                 Please run your query to fetch some data.
-              {:else}
-                {JSON.stringify(data[0], undefined, 2)}
-              {/if}
+
+                {:else}
+                  {JSON.stringify(data[0], undefined, 2)}
+                {/if}
             </pre>
             {:else if tab === 'PREVIEW'}
               <ExternalDataSourceTable {query} {data} />
@@ -222,28 +259,16 @@
 {/if}
 
 <style>
-  .input {
-    width: 500px;
-    display: flex;
+  .config-field {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    grid-gap: var(--spacing-l);
     align-items: center;
-  }
-
-  .select {
-    width: 200px;
-    margin-right: 40px;
-  }
-
-  .props {
-    display: flex;
-    flex-direction: row;
-    margin-left: auto;
-    align-items: center;
-    gap: var(--layout-l);
   }
 
   .field {
     display: grid;
-    grid-template-columns: 1fr 1fr 50px;
+    grid-template-columns: 1fr 1fr 5%;
     gap: var(--spacing-l);
   }
 
@@ -260,12 +285,6 @@
     cursor: pointer;
   }
 
-  .query-type {
-    font-family: var(--font-sans);
-    color: var(--grey-8);
-    font-size: var(--font-size-s);
-  }
-
   .query-type-span {
     text-transform: uppercase;
   }
@@ -278,31 +297,18 @@
     white-space: pre-wrap;
   }
 
-  header {
-    display: flex;
-    align-items: center;
-  }
-
   .viewer-controls {
     display: flex;
     flex-direction: row;
-    margin-left: auto;
-    direction: rtl;
-    z-index: 5;
+    /* margin-left: auto; */
+    /* direction: rtl; */
+    /* z-index: 5; */
     gap: var(--spacing-m);
     min-width: 150px;
   }
 
   .viewer {
-    margin-top: -28px;
-    z-index: -2;
-  }
-
-  .label {
-    font-family: var(--font-sans);
-    color: var(--grey-8);
-    font-size: var(--font-size-s);
-    margin-right: 8px;
-    font-weight: 600;
+    /* margin-top: -28px; */
+    /* z-index: -2; */
   }
 </style>

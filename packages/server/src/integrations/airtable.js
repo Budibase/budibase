@@ -3,6 +3,7 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://airtable.com/api",
+  friendlyName: "Airtable",
   datasource: {
     apiKey: {
       type: FIELD_TYPES.STRING,

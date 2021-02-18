@@ -22,35 +22,36 @@
   function updateCustomFields({ detail }) {
     fields.customData = detail.value
   }
-
 </script>
 
 <form on:submit|preventDefault>
   <div class="field">
     {#each schemaKeys as field}
-      {#if schema.fields[field]?.type === "object"}
+      {#if schema.fields[field]?.type === 'object'}
         <div>
           <Label extraSmall grey>{field}</Label>
-          <KeyValueBuilder bind:object={fields[field]} /> 
+          <KeyValueBuilder bind:object={fields[field]} />
         </div>
-      {:else if schema.fields[field]?.type === "json"}
+      {:else if schema.fields[field]?.type === 'json'}
         <div>
           <Label extraSmall grey>{field}</Label>
           <Editor
             mode="json"
-            on:change={({ detail }) => fields[field] = detail.value}
+            on:change={({ detail }) => (fields[field] = detail.value)}
             readOnly={!editable}
             value={fields[field]} />
         </div>
       {:else}
-        <Input
-          label={field}
-          placeholder="Enter {field} name"
-          outline
-          disabled={!editable}
-          type={schema.fields[field]?.type}
-          required={schema.fields[field]?.required}
-          bind:value={fields[field]} />
+        <div class="horizontal">
+          <Label small>{field}</Label>
+          <Input
+            placeholder="Enter {field} name"
+            outline
+            disabled={!editable}
+            type={schema.fields[field]?.type}
+            required={schema.fields[field]?.required}
+            bind:value={fields[field]} />
+        </div>
       {/if}
     {/each}
   </div>
@@ -73,4 +74,10 @@
     align-items: center;
   }
 
+  .horizontal {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    grid-gap: var(--spacing-l);
+    align-items: center;
+  }
 </style>
