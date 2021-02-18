@@ -98,53 +98,72 @@ class RestIntegration {
     this.config = config
   }
 
+  async parseResponse(response) {
+    switch (this.headers.Accept) {
+      case "application/json":
+        return await response.json()
+      case "text/html":
+        return await response.text()
+      default:
+        return await response.json()
+    }
+  }
+
   async create({ path, queryString, headers = {}, json }) {
+    this.headers = {
+      ...this.config.defaultHeaders,
+      ...headers,
+    }
+
     const response = await fetch(this.config.url + path + queryString, {
       method: "POST",
-      headers: {
-        ...this.config.defaultHeaders,
-        ...headers,
-      },
+      headers: this.headers,
       body: JSON.stringify(json),
     })
 
-    return await response.json()
+    return await this.parseResponse(response)
   }
 
   async read({ path, queryString, headers = {} }) {
+    this.headers = {
+      ...this.config.defaultHeaders,
+      ...headers,
+    }
+
     const response = await fetch(this.config.url + path + queryString, {
-      headers: {
-        ...this.config.defaultHeaders,
-        ...headers,
-      },
+      headers: this.headers,
     })
 
-    return await response.json()
+    return await this.parseResponse(response)
   }
 
   async update({ path, queryString, headers = {}, json }) {
+    this.headers = {
+      ...this.config.defaultHeaders,
+      ...headers,
+    }
+
     const response = await fetch(this.config.url + path + queryString, {
       method: "POST",
-      headers: {
-        ...this.config.defaultHeaders,
-        ...headers,
-      },
+      headers: this.headers,
       body: JSON.stringify(json),
     })
 
-    return await response.json()
+    return await this.parseResponse(response)
   }
 
   async delete({ path, queryString, headers = {} }) {
+    this.headers = {
+      ...this.config.defaultHeaders,
+      ...headers,
+    }
+
     const response = await fetch(this.config.url + path + queryString, {
       method: "DELETE",
-      headers: {
-        ...this.config.defaultHeaders,
-        ...headers,
-      },
+      headers: this.headers,
     })
 
-    return await response.json()
+    return await this.parseResponse(response)
   }
 }
 
