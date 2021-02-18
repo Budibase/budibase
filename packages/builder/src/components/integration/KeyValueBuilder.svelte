@@ -23,8 +23,8 @@
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 <div class="container">
   {#each fields as field, idx}
-    <Input placeholder="Key" outline thin bind:value={field.name} />
-    <Input placeholder="Value" outline thin bind:value={field.value} />
+    <Input placeholder="Key" thin outline bind:value={field.name} />
+    <Input placeholder="Value" thin outline bind:value={field.value} />
     <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
   {/each}
 </div>

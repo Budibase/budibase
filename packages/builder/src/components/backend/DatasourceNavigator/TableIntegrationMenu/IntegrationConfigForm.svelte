@@ -7,18 +7,19 @@
 
 <form>
   {#each Object.keys(integration) as configKey}
-    <div class="form-row">
-      {#if typeof integration[configKey] === 'object'}
-        <Label small>{configKey}</Label>
-        <KeyValueBuilder bind:object={integration[configKey]} />
-      {:else}
+    {#if typeof integration[configKey] === 'object'}
+      <Label small>{configKey}</Label>
+      <Spacer small />
+      <KeyValueBuilder bind:object={integration[configKey]} />
+    {:else}
+      <div class="form-row">
         <Label small>{configKey}</Label>
         <Input
           outline
           type={integration[configKey].type}
           bind:value={integration[configKey]} />
-      {/if}
-    </div>
+      </div>
+    {/if}
   {/each}
 </form>
 

@@ -29,7 +29,7 @@
     {#each schemaKeys as field}
       {#if schema.fields[field]?.type === 'object'}
         <div>
-          <Label extraSmall grey>{field}</Label>
+          <Label small>{field}</Label>
           <KeyValueBuilder bind:object={fields[field]} />
         </div>
       {:else if schema.fields[field]?.type === 'json'}
@@ -45,7 +45,7 @@
         <div class="horizontal">
           <Label small>{field}</Label>
           <Input
-            placeholder="Enter {field} name"
+            placeholder="Enter {field}"
             outline
             disabled={!editable}
             type={schema.fields[field]?.type}

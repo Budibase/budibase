@@ -64,7 +64,7 @@
   $: integrationInfo = $backendUiStore.integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
 
-  $: shouldShowQueryConfig = config && query.queryVerb
+  $: shouldShowQueryConfig = queryConfig && query.queryVerb
 
   function newField() {
     fields = [...fields, {}]
@@ -134,14 +134,13 @@
 <section class="config">
   <Heading medium>Query {integrationInfo.friendlyName}</Heading>
   <hr />
-  <Spacer medium />
   <Heading small>Config</Heading>
   <Spacer medium />
   <Body small grey>Provide a name for your query and select its function.</Body>
   <Spacer medium />
   <div class="config-field">
     <Label small>Query Name</Label>
-    <Input thin bind:value={query.name} />
+    <Input thin outline bind:value={query.name} />
   </div>
   <Spacer medium />
   {#if queryConfig}
@@ -153,7 +152,6 @@
         {/each}
       </Select>
     </div>
-    <Spacer medium />
     <hr />
     <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
     <hr />
@@ -189,29 +187,33 @@
       <Heading small>Fields</Heading>
       <Spacer medium />
       <IntegrationQueryEditor
+        {datasource}
         {query}
-        schema={config[query.queryVerb]}
+        schema={queryConfig[query.queryVerb]}
         bind:parameters />
 
-      <Spacer medium />
       <hr />
-      <Spacer medium />
 
       <div class="viewer-controls">
         <Heading small>Query Results</Heading>
-        <Button
-          secondary
-          thin
-          disabled={data.length === 0 || !query.name}
-          on:click={saveQuery}>
-          Save Query
-        </Button>
+        <div>
+          <Button
+            secondary
+            thin
+            disabled={data.length === 0 || !query.name}
+            on:click={saveQuery}>
+            Save Query
+          </Button>
         <Button thin primary on:click={previewQuery}>Run Query</Button>
+        </div>
       </div>
       <Body small grey>
         Below, you can preview the results from your query and change the
         schema.
       </Body>
+
+      <Spacer medium />
+
       <section class="viewer">
         {#if data}
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
@@ -276,6 +278,11 @@
     font-size: var(--font-size-s);
   }
 
+  hr {
+    margin-top: var(--layout-m);
+    margin-bottom: var(--layout-m);
+  }
+
   .config {
     margin-bottom: var(--spacing-s);
   }
@@ -283,10 +290,6 @@
   .delete {
     align-self: center;
     cursor: pointer;
-  }
-
-  .query-type-span {
-    text-transform: uppercase;
   }
 
   .preview {
@@ -300,15 +303,8 @@
   .viewer-controls {
     display: flex;
     flex-direction: row;
-    /* margin-left: auto; */
-    /* direction: rtl; */
-    /* z-index: 5; */
+    justify-content: space-between;
     gap: var(--spacing-m);
     min-width: 150px;
-  }
-
-  .viewer {
-    /* margin-top: -28px; */
-    /* z-index: -2; */
   }
 </style>
