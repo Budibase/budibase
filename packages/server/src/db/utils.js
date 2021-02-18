@@ -279,18 +279,11 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
 }
 
 /**
- * This can be used with the db.find functionality to get a list of IDs
+ * This can be used with the db.allDocs to get a list of IDs
  */
-exports.getMultiIDParams = (ids, fields = null) => {
-  let config = {
-    selector: {
-      _id: {
-        $in: ids,
-      },
-    },
+exports.getMultiIDParams = ids => {
+  return {
+    keys: ids,
+    include_docs: true,
   }
-  if (fields) {
-    config.fields = fields
-  }
-  return config
 }
