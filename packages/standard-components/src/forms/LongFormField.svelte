@@ -6,6 +6,7 @@
   export let field
   export let label
   export let placeholder
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -41,12 +42,13 @@
 <Field
   {label}
   {field}
+  {disabled}
   type="longform"
   bind:fieldState
   bind:fieldApi
   defaultValue="">
   {#if mounted}
-    <div>
+    <div class:disabled={$fieldState.disabled}>
       <RichText bind:value {options} />
     </div>
   {/if}
@@ -67,5 +69,13 @@
   }
   div :global(.ql-editor p) {
     word-break: break-all;
+  }
+
+  div.disabled {
+    pointer-events: none !important;
+    background-color: rgb(244, 244, 244);
+  }
+  div.disabled :global(.ql-container *) {
+    color: var(--spectrum-alias-text-color-disabled) !important;
   }
 </style>

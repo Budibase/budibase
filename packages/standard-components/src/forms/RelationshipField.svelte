@@ -7,6 +7,7 @@
 
   export let field
   export let label
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -65,6 +66,7 @@
 <Field
   {label}
   {field}
+  {disabled}
   type="link"
   bind:fieldState
   bind:fieldApi

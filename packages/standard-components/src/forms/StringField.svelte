@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let type = "text"
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -33,11 +34,15 @@
 <Field
   {label}
   {field}
+  {disabled}
   type={type === 'number' ? 'number' : 'string'}
   bind:fieldState
   bind:fieldApi>
   {#if fieldState}
-    <div class="spectrum-Textfield" class:is-invalid={!$fieldState.valid}>
+    <div
+      class="spectrum-Textfield"
+      class:is-invalid={!$fieldState.valid}
+      class:is-disabled={$fieldState.disabled}>
       {#if !$fieldState.valid}
         <svg
           class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
@@ -49,6 +54,7 @@
       <input
         on:keyup={updateValueOnEnter}
         bind:this={input}
+        disabled={$fieldState.disabled}
         id={$fieldState.fieldId}
         value={$fieldState.value || ''}
         placeholder={placeholder || ''}

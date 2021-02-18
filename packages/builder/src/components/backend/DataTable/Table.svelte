@@ -24,6 +24,7 @@
   export let allowEditing = false
   export let loading = false
   export let theme = "alpine"
+  export let hideAutocolumns
 
   let columnDefs = []
   let selectedRows = []
@@ -85,8 +86,12 @@
       return !(isUsersTable && ["email", "roleId"].includes(key))
     }
 
-    Object.entries(schema || {}).forEach(([key, value]) => {
-      result.push({
+    for (let [key, value] of Object.entries(schema || {})) {
+      // skip autocolumns if hiding
+      if (hideAutocolumns && value.autocolumn) {
+        continue
+      }
+      let config = {
         headerCheckboxSelection: false,
         headerComponent: TableHeader,
         headerComponentParams: {
@@ -107,9 +112,14 @@
         autoHeight: true,
         resizable: true,
         minWidth: 200,
-      })
-    })
-
+      }
+      // sort auto-columns to the end if they are present
+      if (value.autocolumn) {
+        result.push(config)
+      } else {
+        result.unshift(config)
+      }
+    }
     columnDefs = result
   }
 
@@ -150,13 +160,15 @@
   </div>
 </div>
 <div class="grid-wrapper">
-  <AgGrid
-    {theme}
-    {options}
-    {data}
-    {columnDefs}
-    {loading}
-    on:select={({ detail }) => (selectedRows = detail)} />
+  {#key columnDefs.length}
+    <AgGrid
+      {theme}
+      {options}
+      {data}
+      {columnDefs}
+      {loading}
+      on:select={({ detail }) => (selectedRows = detail)} />
+  {/key}
 </div>
 
 <style>

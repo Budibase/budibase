@@ -8,6 +8,7 @@
   export let datasource
   export let theme
   export let size
+  export let disabled = false
 
   const component = getContext("component")
   const context = getContext("context")
@@ -34,11 +35,23 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, defaultValue = null) => {
+    registerField: (field, defaultValue = null, fieldDisabled = false) => {
       if (!field) {
         return
       }
+
+      // Auto columns are always disabled
+      const isAutoColumn = !!schema?.[field]?.autocolumn
+
       if (fieldMap[field] != null) {
+        // Update disabled property just so that toggling the disabled field
+        // state in the builder makes updates in real time.
+        // We only need this because of optimisations which prevent fully
+        // remounting when settings change.
+        fieldMap[field].fieldState.update(state => {
+          state.disabled = disabled || fieldDisabled || isAutoColumn
+          return state
+        })
         return fieldMap[field]
       }
 
@@ -47,7 +60,11 @@
       const validate = createValidatorFromConstraints(constraints, field, table)
 
       fieldMap[field] = {
-        fieldState: makeFieldState(field, defaultValue),
+        fieldState: makeFieldState(
+          field,
+          defaultValue,
+          disabled || fieldDisabled || isAutoColumn
+        ),
         fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
@@ -115,13 +132,14 @@
   }
 
   // Creates observable state data about a specific field
-  const makeFieldState = (field, defaultValue) => {
+  const makeFieldState = (field, defaultValue, fieldDisabled) => {
     return writable({
       field,
       fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
       valid: true,
+      disabled: fieldDisabled,
     })
   }
 

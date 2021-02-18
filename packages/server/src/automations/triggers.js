@@ -2,7 +2,7 @@ const CouchDB = require("../db")
 const emitter = require("../events/index")
 const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
 const { getAutomationParams } = require("../db/utils")
-const { coerceValue } = require("../utilities")
+const { coerce } = require("../utilities/rowProcessor")
 
 let automationQueue = new InMemoryQueue("automationQueue")
 
@@ -240,8 +240,8 @@ module.exports.externalTrigger = async function(automation, params) {
       // values are likely to be submitted as strings, so we shall convert to correct type
       const coercedFields = {}
       const fields = automation.definition.trigger.inputs.fields
-      for (let key in fields) {
-        coercedFields[key] = coerceValue(params.fields[key], fields[key])
+      for (let key of Object.keys(fields)) {
+        coercedFields[key] = coerce(params.fields[key], fields[key])
       }
       params.fields = coercedFields
     }
