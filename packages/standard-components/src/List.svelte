@@ -35,10 +35,10 @@
       return rows
     }
     let filteredData = [...rows]
-    Object.keys(filter).forEach(field => {
-      if (filter[field].value != null && filter[field].value !== "") {
+    Object.entries(filter).forEach(([field, value]) => {
+      if (value != null && value !== "") {
         filteredData = filteredData.filter(row => {
-          return row[field] === filter[field].value
+          return row[field] === value
         })
       }
     })
