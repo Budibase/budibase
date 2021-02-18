@@ -20,8 +20,12 @@ const SCHEMA = {
     create: {
       displayName: "POST",
       type: QUERY_TYPES.FIELDS,
+      urlDisplay: true,
       fields: {
         path: {
+          type: FIELD_TYPES.STRING,
+        },
+        queryString: {
           type: FIELD_TYPES.STRING,
         },
         headers: {
@@ -35,8 +39,12 @@ const SCHEMA = {
     read: {
       displayName: "GET",
       type: QUERY_TYPES.FIELDS,
+      urlDisplay: true,
       fields: {
         path: {
+          type: FIELD_TYPES.STRING,
+        },
+        queryString: {
           type: FIELD_TYPES.STRING,
         },
         headers: {
@@ -47,8 +55,12 @@ const SCHEMA = {
     update: {
       displayName: "PUT",
       type: QUERY_TYPES.FIELDS,
+      urlDisplay: true,
       fields: {
         path: {
+          type: FIELD_TYPES.STRING,
+        },
+        queryString: {
           type: FIELD_TYPES.STRING,
         },
         headers: {
@@ -62,8 +74,12 @@ const SCHEMA = {
     delete: {
       displayName: "DELETE",
       type: QUERY_TYPES.FIELDS,
+      urlDisplay: true,
       fields: {
         path: {
+          type: FIELD_TYPES.STRING,
+        },
+        queryString: {
           type: FIELD_TYPES.STRING,
         },
         headers: {
@@ -82,8 +98,8 @@ class RestIntegration {
     this.config = config
   }
 
-  async create({ path, headers = {}, json }) {
-    const response = await fetch(this.config.url + path, {
+  async create({ path, queryString, headers = {}, json }) {
+    const response = await fetch(this.config.url + path + queryString, {
       method: "POST",
       headers: {
         ...this.config.defaultHeaders,
@@ -95,8 +111,8 @@ class RestIntegration {
     return await response.json()
   }
 
-  async read({ path, headers = {} }) {
-    const response = await fetch(this.config.url + path, {
+  async read({ path, queryString, headers = {} }) {
+    const response = await fetch(this.config.url + path + queryString, {
       headers: {
         ...this.config.defaultHeaders,
         ...headers,
@@ -106,8 +122,8 @@ class RestIntegration {
     return await response.json()
   }
 
-  async update({ path, headers = {}, json }) {
-    const response = await fetch(this.config.url + path, {
+  async update({ path, queryString, headers = {}, json }) {
+    const response = await fetch(this.config.url + path + queryString, {
       method: "POST",
       headers: {
         ...this.config.defaultHeaders,
@@ -119,8 +135,8 @@ class RestIntegration {
     return await response.json()
   }
 
-  async delete({ path, headers = {} }) {
-    const response = await fetch(this.config.url + path, {
+  async delete({ path, queryString, headers = {} }) {
+    const response = await fetch(this.config.url + path + queryString, {
       method: "DELETE",
       headers: {
         ...this.config.defaultHeaders,

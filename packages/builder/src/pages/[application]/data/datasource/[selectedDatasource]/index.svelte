@@ -50,6 +50,7 @@
 
       <Spacer medium />
       <IntegrationConfigForm integration={datasource.config} />
+      <Spacer medium />
 
       <hr />
 
