@@ -40,9 +40,11 @@
   onConfirm={saveRow}>
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
-    <div>
-      <RowFieldControl {meta} bind:value={row[key]} />
-    </div>
+    {#if !meta.autocolumn}
+      <div>
+        <RowFieldControl {meta} bind:value={row[key]} />
+      </div>
+    {/if}
   {/each}
 </ModalContent>
 

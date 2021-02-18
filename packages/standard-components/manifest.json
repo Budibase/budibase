@@ -1140,6 +1140,12 @@
             "value": "spectrum--large"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1190,6 +1196,12 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1212,6 +1224,12 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1235,6 +1253,12 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1257,6 +1281,12 @@
         "type": "text",
         "label": "Text",
         "key": "text"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1280,6 +1310,12 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Type something..."
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1308,6 +1344,12 @@
         "label": "Show Time",
         "key": "enableTime",
         "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1325,6 +1367,12 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -1342,6 +1390,12 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   }

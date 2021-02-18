@@ -138,10 +138,22 @@ exports.generateAutomationID = () => {
  * @param {string} tableId2 The ID of the linked table.
  * @param {string} rowId1 The ID of the linker row.
  * @param {string} rowId2 The ID of the linked row.
+ * @param {string} fieldName1 The name of the field in the linker row.
+ * @param {string} fieldName2 the name of the field in the linked row.
  * @returns {string} The new link doc ID which the automation doc can be stored under.
  */
-exports.generateLinkID = (tableId1, tableId2, rowId1, rowId2) => {
-  return `${DocumentTypes.LINK}${SEPARATOR}${tableId1}${SEPARATOR}${tableId2}${SEPARATOR}${rowId1}${SEPARATOR}${rowId2}`
+exports.generateLinkID = (
+  tableId1,
+  tableId2,
+  rowId1,
+  rowId2,
+  fieldName1,
+  fieldName2
+) => {
+  const tables = `${SEPARATOR}${tableId1}${SEPARATOR}${tableId2}`
+  const rows = `${SEPARATOR}${rowId1}${SEPARATOR}${rowId2}`
+  const fields = `${SEPARATOR}${fieldName1}${SEPARATOR}${fieldName2}`
+  return `${DocumentTypes.LINK}${tables}${rows}${fields}`
 }
 
 /**
