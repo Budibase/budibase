@@ -3,7 +3,7 @@
 
   export let object = {}
 
-  let fields = []
+  let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
 
   $: object = fields.reduce(
     (acc, next) => ({ ...acc, [next.name]: next.value }),

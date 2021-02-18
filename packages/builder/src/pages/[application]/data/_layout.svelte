@@ -8,11 +8,11 @@
 
   const tabs = [
     {
-      title: "Tables",
+      title: "Internal",
       key: "table",
     },
     {
-      title: "Data Sources",
+      title: "External",
       key: "datasource",
     },
   ]
@@ -67,6 +67,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
+    background: var(--background);
   }
 
   .nav {

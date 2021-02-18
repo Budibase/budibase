@@ -1,9 +1,10 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { Button, Spacer, Icon } from "@budibase/bbui"
+  import { Button, Heading, Body, Spacer, Icon } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
+  import ICONS from "components/backend/DatasourceNavigator/icons"
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === $backendUiStore.selectedDatasourceId
@@ -28,22 +29,35 @@
   <section>
     <Spacer medium />
     <header>
+      <div class="datasource-icon">
+        <svelte:component
+          this={ICONS[datasource.source]}
+          height="30"
+          width="30" />
+      </div>
       <h3 class="section-title">{datasource.name}</h3>
     </header>
     <Spacer extraLarge />
     <div class="container">
+
       <div class="config-header">
-        <h5>Configuration</h5>
+        <Heading small>Configuration</Heading>
         <Button secondary on:click={saveDatasource}>Save</Button>
       </div>
+      <Body small grey>
+        Connect your database to Budibase using the config below.
+      </Body>
+
       <Spacer medium />
       <IntegrationConfigForm integration={datasource.config} />
-    </div>
-    <Spacer extraLarge />
-    <div class="container">
+
+      <hr />
+
+      <Spacer extraLarge />
+
       <div class="query-header">
-        <h5>Queries</h5>
-        <Button blue on:click={() => $goto('../new')}>Create Query</Button>
+        <Heading small>Queries</Heading>
+        <Button secondary on:click={() => $goto('../new')}>Add Query</Button>
       </div>
       <Spacer extraLarge />
       <div class="query-list">
@@ -54,7 +68,6 @@
             <p>→</p>
           </div>
         {/each}
-        <Spacer medium />
       </div>
     </div>
   </section>
@@ -71,6 +84,8 @@
 
   header {
     margin: 0 0 var(--spacing-xs) 0;
+    display: flex;
+    gap: var(--spacing-m);
   }
 
   .section-title {
@@ -85,13 +100,12 @@
 
   .container {
     border-radius: var(--border-radius-m);
-    background: var(--background);
-    padding: var(--layout-s);
     margin: 0 auto;
   }
 
   h5 {
     margin: 0 !important;
+    font-size: var(--font-size-l);
   }
 
   .query-header {
@@ -115,7 +129,8 @@
     display: grid;
     grid-template-columns: 2fr 0.75fr 20px;
     align-items: center;
-    padding: var(--spacing-m) var(--layout-xs);
+    padding-left: var(--spacing-m);
+    padding-right: var(--spacing-m);
     gap: var(--layout-xs);
     transition: 200ms background ease;
   }

@@ -3,6 +3,7 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/arangodb/arangojs",
+  friendlyName: "ArangoDB",
   datasource: {
     url: {
       type: FIELD_TYPES.STRING,

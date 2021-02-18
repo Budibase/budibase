@@ -4,6 +4,7 @@ const { QUERY_TYPES, FIELD_TYPES } = require("./Integration")
 const SCHEMA = {
   docs:
     "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html",
+  friendlyName: "ElasticSearch",
   datasource: {
     url: {
       type: "string",

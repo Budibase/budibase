@@ -1,4 +1,4 @@
-<script>
+<!--<script>
   import { backendUiStore, store, allScreens } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input, TextButton, Icon } from "@budibase/bbui"
@@ -17,9 +17,7 @@
   function hideEditor() {
     dropdown?.hide()
   }
-</script>
-
-<div on:click|stopPropagation bind:this={anchor}>
+</script><div on:click|stopPropagation bind:this={anchor}>
   <TextButton text on:click={dropdown.show} active={false}>
     <Icon name="add" />
     Add Parameters
@@ -29,11 +27,9 @@
       <ParameterBuilder bind:parameters {bindable} />
     </div>
   </DropdownMenu>
-</div>
-
-<style>
+</div><style>
   .wrapper {
     padding: var(--spacing-xl);
     min-width: 600px;
   }
-</style>
+</style>-->

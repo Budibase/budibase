@@ -1,5 +1,5 @@
 <script>
-  import { Button, Input, Heading, Spacer } from "@budibase/bbui"
+  import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
   import BindableInput from "components/common/BindableInput.svelte"
   import {
     readableToRuntimeBinding,
@@ -30,7 +30,16 @@
 </script>
 
 <section>
-  <Heading extraSmall black>Parameters</Heading>
+  <div class="controls">
+    <Heading small>Parameters</Heading>
+    {#if !bindable}
+      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+    {/if}
+  </div>
+  <Body small grey>
+    Parameters come in two parts: the parameter name, and a default/fallback
+    value.
+  </Body>
   <Spacer large />
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
@@ -59,14 +68,16 @@
       {/if}
     {/each}
   </div>
-  {#if !bindable}
-    <Button secondary on:click={newQueryParameter}>Add Parameter</Button>
-  {/if}
 </section>
 
 <style>
   .parameters.bindable {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
   }
 
   .parameters {

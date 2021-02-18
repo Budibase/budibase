@@ -3,6 +3,7 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/dabit3/dynamodb-documentclient-cheat-sheet",
+  friendlyName: "DynamoDB",
   datasource: {
     region: {
       type: FIELD_TYPES.STRING,
