@@ -43,13 +43,19 @@
     <div class="root">
       {#if !Object.keys(tempValue || {}).length}
         <p>Add your first filter column.</p>
-        <Spacer small />
+      {:else}
+        <p>
+          Results are filtered to only those which match all of the following
+          constaints.
+        </p>
       {/if}
+      <Spacer small />
       <div class="fields">
         <SaveFields
           parameterFields={value}
           {schemaFields}
-          on:fieldschanged={onFieldsChanged} />
+          valueLabel="Equals"
+          on:change={onFieldsChanged} />
       </div>
     </div>
   </div>
@@ -57,17 +63,18 @@
 
 <style>
   .root {
-    padding: var(--spacing-m);
-    min-height: 40vh;
+    padding: var(--spacing-l);
+    min-height: calc(40vh - 2 * var(--spacing-l));
   }
 
   p {
     margin: 0 0 var(--spacing-s) 0;
+    font-size: var(--font-size-s);
   }
 
   .fields {
     display: grid;
-    column-gap: var(--spacing-s);
+    column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     grid-template-columns: auto 1fr auto 1fr auto;
     align-items: baseline;

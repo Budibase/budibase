@@ -1,12 +1,5 @@
 <script>
-  import {
-    Button,
-    TextArea,
-    Label,
-    Input,
-    Heading,
-    Select,
-  } from "@budibase/bbui"
+  import { Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
 
   export let fields = {}

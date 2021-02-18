@@ -13,8 +13,8 @@
 </script>
 
 <div class="root">
-  <Label size="m" color="dark">Form</Label>
-  <Select secondary bind:value={parameters.componentId}>
+  <Label small>Form</Label>
+  <Select thin secondary bind:value={parameters.componentId}>
     <option value="" />
     {#if actionProviders}
       {#each actionProviders as component}
