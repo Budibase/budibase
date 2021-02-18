@@ -1,5 +1,5 @@
 <script>
-  import { Input } from "@budibase/bbui"
+  import { Button, Input } from "@budibase/bbui"
 
   export let object = {}
 
@@ -28,7 +28,7 @@
     <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
   {/each}
 </div>
-<i class="ri-add-circle-fill" on:click={addEntry} />
+<Button secondary thin outline on:click={addEntry}>Add</Button>
 
 <style>
   .container {
@@ -39,8 +39,7 @@
     margin-bottom: var(--spacing-m);
   }
 
-  .ri-close-circle-fill,
-  .ri-add-circle-fill {
+  .ri-close-circle-fill {
     cursor: pointer;
   }
 </style>

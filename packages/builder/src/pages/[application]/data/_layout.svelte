@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { Switcher, Modal } from "@budibase/bbui"
+  import { Button, Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
@@ -27,10 +27,9 @@
   <div class="nav">
     <Switcher headings={tabs} bind:value={tab}>
       <div class="title">
-        <i
-          data-cy={`new-${tab}`}
-          class="ri-add-circle-fill"
-          on:click={modal.show} />
+        <Button blue data-cy={`new-${tab}`} on:click={modal.show}>
+          <i class="ri-add-fill" />
+        </Button>
       </div>
       {#if tab === 'table'}
         <TableNavigator />
@@ -82,7 +81,7 @@
     position: relative;
   }
 
-  i {
+  .title {
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);

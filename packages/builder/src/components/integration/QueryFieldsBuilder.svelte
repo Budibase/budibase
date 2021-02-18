@@ -6,6 +6,7 @@
     Input,
     Heading,
     Select,
+    Spacer
   } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
@@ -30,6 +31,7 @@
       {#if schema.fields[field]?.type === 'object'}
         <div>
           <Label small>{field}</Label>
+          <Spacer small />
           <KeyValueBuilder bind:object={fields[field]} />
         </div>
       {:else if schema.fields[field]?.type === 'json'}
@@ -57,6 +59,8 @@
   </div>
 </form>
 {#if schema.customisable}
+  <Label small>Query</Label>
+  <Spacer small />
   <Editor
     label="Query"
     mode="json"
