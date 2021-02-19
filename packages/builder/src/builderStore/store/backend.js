@@ -234,7 +234,13 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({ originalName, field, primaryDisplay = false, indexes, relationshipType }) => {
+      saveField: ({
+        originalName,
+        field,
+        primaryDisplay = false,
+        indexes,
+        relationshipType,
+      }) => {
         store.update(state => {
           // delete the original if renaming
           // need to handle if the column had no name, empty string
@@ -250,9 +256,9 @@ export const getBackendUiStore = () => {
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
           }
-          
+
           // Set relationship type
-          if (field.type === 'link') {
+          if (field.type === "link") {
             state.draftTable.relationshipType = relationshipType
           }
 
