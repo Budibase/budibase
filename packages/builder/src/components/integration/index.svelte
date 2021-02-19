@@ -8,7 +8,7 @@
   const QueryTypes = {
     SQL: "sql",
     JSON: "json",
-    FIELDS: "fields"
+    FIELDS: "fields",
   }
 
   export let query
@@ -16,7 +16,9 @@
   export let schema
   export let editable = true
 
-  $: urlDisplay = schema.urlDisplay && `${datasource.config.url}${query.fields.path}${query.fields.queryString}`
+  $: urlDisplay =
+    schema.urlDisplay &&
+    `${datasource.config.url}${query.fields.path}${query.fields.queryString}`
 
   function updateQuery({ detail }) {
     query.fields[schema.type] = detail.value
@@ -54,10 +56,10 @@
 {/if}
 
 <style>
-.url-row {
-  display: grid;
-  grid-template-columns: 20% 1fr;
-  grid-gap: var(--spacing-l);
-  align-items: center;
-}
+  .url-row {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    grid-gap: var(--spacing-l);
+    align-items: center;
+  }
 </style>

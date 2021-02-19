@@ -3,6 +3,8 @@
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let integration
+
+  let unsaved = false
 </script>
 
 <form>
@@ -10,13 +12,14 @@
     {#if typeof integration[configKey] === 'object'}
       <Label small>{configKey}</Label>
       <Spacer small />
-      <KeyValueBuilder bind:object={integration[configKey]} />
+      <KeyValueBuilder bind:object={integration[configKey]} on:change />
     {:else}
       <div class="form-row">
         <Label small>{configKey}</Label>
         <Input
           outline
           type={integration[configKey].type}
+          on:change
           bind:value={integration[configKey]} />
       </div>
     {/if}
