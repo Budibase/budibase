@@ -4,11 +4,13 @@ const {
   getLinkDocuments,
   createLinkView,
   getUniqueByProp,
+  getRelatedTableForField,
+  getLinkedTableIDs,
+  getLinkedTable,
 } = require("./linkUtils")
 const { flatten } = require("lodash")
 const CouchDB = require("../../db")
 const { getMultiIDParams } = require("../../db/utils")
-const { FieldTypes } = require("../../constants")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -29,26 +31,6 @@ exports.EventType = EventType
 exports.IncludeDocs = IncludeDocs
 exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
-
-function getLinkedTableIDs(table) {
-  return Object.values(table.schema)
-    .filter(column => column.type === FieldTypes.LINK)
-    .map(column => column.tableId)
-}
-
-function getRelatedTableForField(table, fieldName) {
-  // look to see if its on the table, straight in the schema
-  const field = table.schema[fieldName]
-  if (field != null) {
-    return field.tableId
-  }
-  for (let column of Object.values(table.schema)) {
-    if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
-      return column.tableId
-    }
-  }
-  return null
-}
 
 async function getLinksForRows(appId, rows) {
   const tableIds = [...new Set(rows.map(el => el.tableId))]
@@ -172,7 +154,6 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
     return rows
   }
   const db = new CouchDB(appId)
-  const linkedTables = await Promise.all(linkedTableIds.map(id => db.get(id)))
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
@@ -180,27 +161,26 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
   const linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
     row => row.doc
   )
+  // will populate this as we find them
+  const linkedTables = []
   for (let row of rows) {
-    links
-      .filter(link => link.thisId === row._id)
-      .forEach(link => {
-        if (row[link.fieldName] == null) {
-          row[link.fieldName] = []
-        }
-        const linkedTableId = getRelatedTableForField(table, link.fieldName)
-        const linkedRow = linked.find(row => row._id === link.id)
-        const linkedTable = linkedTables.find(
-          table => table._id === linkedTableId
-        )
-        if (!linkedRow || !linkedTable) {
-          return
-        }
-        // need to handle an edge case where relationship just wasn't found
-        const value = linkedRow[linkedTable.primaryDisplay] || linkedRow._id
-        if (value) {
-          row[link.fieldName].push(value)
-        }
-      })
+    for (let link of links.filter(link => link.thisId === row._id)) {
+      if (row[link.fieldName] == null) {
+        row[link.fieldName] = []
+      }
+      const linkedRow = linked.find(row => row._id === link.id)
+      const linkedTableId =
+        linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
+      const linkedTable = await getLinkedTable(db, linkedTableId, linkedTables)
+      if (!linkedRow || !linkedTable) {
+        continue
+      }
+      // need to handle an edge case where relationship just wasn't found
+      const value = linkedRow[linkedTable.primaryDisplay] || linkedRow._id
+      if (value) {
+        row[link.fieldName].push(value)
+      }
+    }
   }
   return rows
 }
