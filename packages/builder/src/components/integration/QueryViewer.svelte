@@ -201,7 +201,9 @@
               {#if !data[0]}
                   
                   
+                  
                 Please run your query to fetch some data.
+
 
 
                 {:else}

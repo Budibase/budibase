@@ -3,6 +3,8 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/dabit3/dynamodb-documentclient-cheat-sheet",
+  description:
+    "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
   friendlyName: "DynamoDB",
   datasource: {
     region: {

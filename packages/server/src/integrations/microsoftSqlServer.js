@@ -3,6 +3,8 @@ const { FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/tediousjs/node-mssql",
+  description:
+    "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
   friendlyName: "MS SQL Server",
   datasource: {
     user: {
