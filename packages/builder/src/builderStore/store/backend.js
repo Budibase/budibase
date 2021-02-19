@@ -234,12 +234,7 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-      saveField: ({
-        originalName,
-        field,
-        primaryDisplay = false,
-        indexes,
-      }) => {
+      saveField: ({ originalName, field, primaryDisplay = false, indexes }) => {
         store.update(state => {
           // delete the original if renaming
           // need to handle if the column had no name, empty string
