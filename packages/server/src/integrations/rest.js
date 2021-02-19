@@ -3,6 +3,8 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/node-fetch/node-fetch",
+  description:
+    "Representational state transfer (REST) is a de-facto standard for a software architecture for interactive applications that typically use multiple Web services. ",
   friendlyName: "REST API",
   datasource: {
     url: {

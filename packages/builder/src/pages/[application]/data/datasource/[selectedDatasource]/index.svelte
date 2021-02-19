@@ -11,6 +11,7 @@
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === $backendUiStore.selectedDatasourceId
   )
+  $: integration = datasource && $backendUiStore.integrations[datasource.source]
 
   async function saveDatasource() {
     // Create datasource
@@ -38,7 +39,6 @@
       )
       return false
     }
-
     return true
   })
 </script>
@@ -55,12 +55,17 @@
       </div>
       <h3 class="section-title">{datasource.name}</h3>
     </header>
-    <Spacer extraLarge />
+
+    <Body small grey lh>{integration.description}</Body>
+
+    <hr />
+
     <div class="container">
       <div class="config-header">
         <Heading small>Configuration</Heading>
         <Button secondary on:click={saveDatasource}>Save</Button>
       </div>
+
       <Body small grey>
         Connect your database to Budibase using the config below.
       </Body>
@@ -72,8 +77,6 @@
       <Spacer medium />
 
       <hr />
-
-      <Spacer extraLarge />
 
       <div class="query-header">
         <Heading small>Queries</Heading>
@@ -97,9 +100,14 @@
   h3 {
     margin: 0;
   }
+
   section {
     margin: 0 auto;
     width: 800px;
+  }
+
+  hr {
+    margin-bottom: var(--layout-m);
   }
 
   header {

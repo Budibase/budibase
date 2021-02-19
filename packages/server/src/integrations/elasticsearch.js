@@ -4,6 +4,8 @@ const { QUERY_TYPES, FIELD_TYPES } = require("./Integration")
 const SCHEMA = {
   docs:
     "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html",
+  description:
+    "Elasticsearch is a search engine based on the Lucene library. It provides a distributed, multitenant-capable full-text search engine with an HTTP web interface and schema-free JSON documents.",
   friendlyName: "ElasticSearch",
   datasource: {
     url: {
