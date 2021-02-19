@@ -53,6 +53,10 @@ module.exports.getAction = async function(actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
   }
+  // worker pools means that a worker may not have manifest
+  if (env.CLOUD && MANIFEST == null) {
+    MANIFEST = await module.exports.init()
+  }
   // env setup to get async packages
   if (!MANIFEST || !MANIFEST.packages || !MANIFEST.packages[actionName]) {
     return null
@@ -86,8 +90,10 @@ module.exports.init = async function() {
         ? Object.assign(MANIFEST.packages, BUILTIN_DEFINITIONS)
         : BUILTIN_DEFINITIONS
   } catch (err) {
+    console.error(err)
     Sentry.captureException(err)
   }
+  return MANIFEST
 }
 
 module.exports.DEFINITIONS = BUILTIN_DEFINITIONS

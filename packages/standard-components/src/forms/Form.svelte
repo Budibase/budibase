@@ -8,6 +8,7 @@
   export let datasource
   export let theme
   export let size
+  export let disabled = false
 
   const component = getContext("component")
   const context = getContext("context")
@@ -18,27 +19,39 @@
   let table
   let fieldMap = {}
 
-  // Checks if the closest data context matches the model for this forms
-  // datasource, and use it as the initial form values if so
+  // Returns the closes data context which isn't a built in context
   const getInitialValues = context => {
-    return context && context.tableId === datasource?.tableId ? context : {}
+    if (["user", "url"].includes(context.closestComponentId)) {
+      return {}
+    }
+    return context[`${context.closestComponentId}`] || {}
   }
 
-  // Use the closest data context as the initial form values if it matches
-  const initialValues = getInitialValues(
-    $context[`${$context.closestComponentId}`]
-  )
+  // Use the closest data context as the initial form values
+  const initialValues = getInitialValues($context)
 
   // Form state contains observable data about the form
   const formState = writable({ values: initialValues, errors: {}, valid: true })
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, defaultValue = null) => {
+    registerField: (field, defaultValue = null, fieldDisabled = false) => {
       if (!field) {
         return
       }
+
+      // Auto columns are always disabled
+      const isAutoColumn = !!schema?.[field]?.autocolumn
+
       if (fieldMap[field] != null) {
+        // Update disabled property just so that toggling the disabled field
+        // state in the builder makes updates in real time.
+        // We only need this because of optimisations which prevent fully
+        // remounting when settings change.
+        fieldMap[field].fieldState.update(state => {
+          state.disabled = disabled || fieldDisabled || isAutoColumn
+          return state
+        })
         return fieldMap[field]
       }
 
@@ -47,7 +60,11 @@
       const validate = createValidatorFromConstraints(constraints, field, table)
 
       fieldMap[field] = {
-        fieldState: makeFieldState(field, defaultValue),
+        fieldState: makeFieldState(
+          field,
+          defaultValue,
+          disabled || fieldDisabled || isAutoColumn
+        ),
         fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
@@ -115,13 +132,14 @@
   }
 
   // Creates observable state data about a specific field
-  const makeFieldState = (field, defaultValue) => {
+  const makeFieldState = (field, defaultValue, fieldDisabled) => {
     return writable({
       field,
       fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
       valid: true,
+      disabled: fieldDisabled,
     })
   }
 

@@ -14,7 +14,6 @@
   } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
-  import { FIELDS } from "constants/backend"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
