@@ -30,7 +30,7 @@ context("Create a Table", () => {
     // Unset table display column
     cy.contains("display column").click()
     cy.contains("Save Column").click()
-    cy.contains("nameupdated").should("have.text", "nameupdated")
+    cy.contains("nameupdated ").should("have.text", "nameupdated ")
   })
 
   it("edits a row", () => {

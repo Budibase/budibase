@@ -62,9 +62,11 @@
   on:mouseover={() => (hovered = true)}
   on:mouseleave={() => (hovered = false)}>
   <div class="column-header">
-    {#if field.autocolumn}<i class="auto ri-magic-fill" />{/if}
     <div class="column-header-text">
-      <div class="column-header-name">{displayName}</div>
+      <div class="column-header-name">
+        {displayName}
+        {#if field.autocolumn}<i class="auto ri-magic-fill" />{/if}
+      </div>
       {#if type}
         <div class="column-header-type">{type}</div>
       {/if}
@@ -149,10 +151,12 @@
     font-weight: 500;
   }
   .auto {
-    font-size: var(--font-size-xs);
+    font-size: 9px;
     transition: none;
-    margin-right: 6px;
-    margin-top: 2px;
+    position: relative;
+    margin-left: 2px;
+    top: -3px;
+    color: var(--grey-6);
   }
 
   .icon:hover {
