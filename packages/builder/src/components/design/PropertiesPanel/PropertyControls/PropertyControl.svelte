@@ -24,7 +24,7 @@
   let valid
 
   $: bindableProperties = getBindableProperties(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)

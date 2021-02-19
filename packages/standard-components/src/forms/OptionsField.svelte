@@ -5,6 +5,7 @@
   export let field
   export let label
   export let placeholder
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -26,6 +27,7 @@
 <Field
   {field}
   {label}
+  {disabled}
   type="options"
   bind:fieldState
   bind:fieldApi

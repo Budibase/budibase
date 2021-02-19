@@ -59,8 +59,11 @@
   on:mouseover={() => (hovered = true)}
   on:mouseleave={() => (hovered = false)}>
   <div>
-    <span class="column-header-name">{displayName}</span>
-    <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
+    <div class="col-icon">
+      {#if field.autocolumn}<i class="auto ri-magic-fill" />{/if}
+      <span class="column-header-name">{displayName}</span>
+    </div>
+    <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon icon`} />
   </div>
   <Modal bind:this={modal}>
     <ModalContent
@@ -73,11 +76,11 @@
   <section class:show={hovered || filterActive}>
     {#if editable && hovered}
       <span on:click|stopPropagation={showModal}>
-        <i class="ri-pencil-line" />
+        <i class="ri-pencil-line icon" />
       </span>
     {/if}
     <span on:click|stopPropagation={toggleMenu} bind:this={menuButton}>
-      <i class="ri-filter-line" class:active={filterActive} />
+      <i class="ri-filter-line icon" class:active={filterActive} />
     </span>
   </section>
 </header>
@@ -117,18 +120,29 @@
     top: 2px;
   }
 
-  i {
+  .icon {
     transition: 0.2s all;
     font-size: var(--font-size-m);
     font-weight: 500;
   }
 
-  i:hover {
+  .col-icon {
+    display: flex;
+  }
+
+  .auto {
+    font-size: var(--font-size-xs);
+    transition: none;
+    margin-right: 6px;
+    margin-top: 2px;
+  }
+
+  .icon:hover {
     color: var(--blue);
   }
 
-  i.active,
-  i:hover {
+  .icon.active,
+  .icon:hover {
     color: var(--blue);
   }
 </style>

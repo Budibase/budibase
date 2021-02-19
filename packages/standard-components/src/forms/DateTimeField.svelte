@@ -9,6 +9,7 @@
   export let label
   export let placeholder
   export let enableTime
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -53,7 +54,7 @@
   }
 </script>
 
-<Field {label} {field} type="datetime" bind:fieldState bind:fieldApi>
+<Field {label} {field} {disabled} type="datetime" bind:fieldState bind:fieldApi>
   {#if fieldState}
     <Flatpickr
       bind:flatpickr
@@ -67,6 +68,7 @@
         id={flatpickrId}
         aria-disabled="false"
         aria-invalid={!$fieldState.valid}
+        class:is-disabled={$fieldState.disabled}
         class:is-invalid={!$fieldState.valid}
         class="flatpickr spectrum-InputGroup spectrum-Datepicker"
         class:is-focused={open}
@@ -76,6 +78,7 @@
         <div
           on:click={flatpickr?.open}
           class="spectrum-Textfield spectrum-InputGroup-textfield"
+          class:is-disabled={$fieldState.disabled}
           class:is-invalid={!$fieldState.valid}>
           {#if !$fieldState.valid}
             <svg
@@ -88,6 +91,7 @@
           <input
             data-input
             type="text"
+            disabled={$fieldState.disabled}
             class="spectrum-Textfield-input spectrum-InputGroup-input"
             aria-invalid={!$fieldState.valid}
             {placeholder}
@@ -98,6 +102,7 @@
           type="button"
           class="spectrum-Picker spectrum-InputGroup-button"
           tabindex="-1"
+          disabled={$fieldState.disabled}
           class:is-invalid={!$fieldState.valid}
           on:click={flatpickr?.open}>
           <svg
@@ -120,7 +125,7 @@
   .spectrum-Textfield-input {
     pointer-events: none;
   }
-  .spectrum-Textfield:hover {
+  .spectrum-Textfield:not(.is-disabled):hover {
     cursor: pointer;
   }
   .flatpickr {

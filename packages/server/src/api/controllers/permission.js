@@ -1,5 +1,5 @@
 const {
-  BUILTIN_PERMISSIONS,
+  getBuiltinPermissions,
   PermissionLevels,
   isPermissionLevelHigherThanRead,
   higherPermission,
@@ -8,11 +8,10 @@ const {
   isBuiltin,
   getDBRoleID,
   getExternalRoleID,
-  BUILTIN_ROLES,
+  getBuiltinRoles,
 } = require("../../utilities/security/roles")
 const { getRoleParams } = require("../../db/utils")
 const CouchDB = require("../../db")
-const { cloneDeep } = require("lodash/fp")
 const {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
@@ -65,7 +64,7 @@ async function updatePermissionOnRole(
 
   // the permission is for a built in, make sure it exists
   if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
-    const builtin = cloneDeep(BUILTIN_ROLES[roleId])
+    const builtin = getBuiltinRoles()[roleId]
     builtin._id = getDBRoleID(builtin._id)
     dbRoles.push(builtin)
   }
@@ -110,7 +109,7 @@ async function updatePermissionOnRole(
 }
 
 exports.fetchBuiltin = function(ctx) {
-  ctx.body = Object.values(BUILTIN_PERMISSIONS)
+  ctx.body = Object.values(getBuiltinPermissions())
 }
 
 exports.fetchLevels = function(ctx) {

@@ -6,7 +6,7 @@
   export let parameters
 
   $: actionProviders = getActionProviderComponents(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId,
     "ValidateForm"
   )
