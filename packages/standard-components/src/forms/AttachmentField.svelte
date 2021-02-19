@@ -5,6 +5,7 @@
 
   export let field
   export let label
+  export let disabled = false
 
   let fieldState
   let fieldApi
@@ -24,11 +25,21 @@
 <Field
   {label}
   {field}
+  {disabled}
   type="attachment"
   bind:fieldState
   bind:fieldApi
   defaultValue={[]}>
   {#if mounted}
-    <Dropzone bind:files={value} />
+    <div class:disabled={$fieldState.disabled}>
+      <Dropzone bind:files={value} />
+    </div>
   {/if}
 </Field>
+
+<style>
+  div.disabled :global(> *) {
+    background-color: var(--spectrum-global-color-gray-200) !important;
+    pointer-events: none !important;
+  }
+</style>

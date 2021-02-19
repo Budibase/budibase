@@ -6,7 +6,7 @@
   export let parameters
 
   $: dataProviders = getDataProviderComponents(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
 </script>

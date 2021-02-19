@@ -18,7 +18,6 @@
   import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
-  import ScreenSelect from "./PropertyControls/ScreenSelect.svelte"
   import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
@@ -62,7 +61,6 @@
     text: Input,
     select: OptionSelect,
     datasource: DatasourceSelect,
-    screen: ScreenSelect,
     detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,

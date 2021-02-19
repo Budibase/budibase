@@ -30,7 +30,9 @@
     Object.keys(viewTable.schema).filter(
       field =>
         view.calculation === "count" ||
-        viewTable.schema[field].type === "number"
+        // don't want to perform calculations based on auto ID
+        (viewTable.schema[field].type === "number" &&
+          !viewTable.schema[field].autocolumn)
     )
 
   function saveView() {
