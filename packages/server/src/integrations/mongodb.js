@@ -3,6 +3,9 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/mongodb/node-mongodb-native",
+  friendlyName: "MongoDB",
+  description:
+    "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
   datasource: {
     connectionString: {
       type: FIELD_TYPES.STRING,
