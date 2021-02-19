@@ -1387,6 +1387,11 @@
         "key": "label"
       },
       {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
