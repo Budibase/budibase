@@ -199,7 +199,10 @@ export function makeDatasourceFormComponents(datasource) {
         component.customProps({ placeholder: "Choose an option " })
       }
       if (fieldType === "link") {
-        let placeholder = fieldSchema.relationshipType === 'one-to-many' ? 'Choose an option' : 'Choose some options'
+        let placeholder =
+          fieldSchema.relationshipType === "one-to-many"
+            ? "Choose an option"
+            : "Choose some options"
         component.customProps({ placeholder })
       }
       if (fieldType === "boolean") {
