@@ -36,6 +36,20 @@ function getLinkedTableIDs(table) {
     .map(column => column.tableId)
 }
 
+function getRelatedTableForField(table, fieldName) {
+  // look to see if its on the table, straight in the schema
+  const field = table.schema[fieldName]
+  if (field != null) {
+    return field.tableId
+  }
+  for (let column of Object.values(table.schema)) {
+    if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
+      return column.tableId
+    }
+  }
+  return null
+}
+
 async function getLinksForRows(appId, rows) {
   const tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
@@ -185,7 +199,7 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
         if (row[link.fieldName] == null) {
           row[link.fieldName] = []
         }
-        const linkedTableId = table.schema[link.fieldName].tableId
+        const linkedTableId = getRelatedTableForField(table, link.fieldName)
         const linkedRow = linked.find(row => row._id === link.id)
         const linkedTable = linkedTables.find(
           table => table._id === linkedTableId
