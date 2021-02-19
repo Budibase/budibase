@@ -156,30 +156,7 @@
     <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
     <hr />
   {/if}
-  <!-- <div class="input">
-    <div class="label">Enter query name:</div>
-    <Input outline border bind:value={query.name} />
-  </div> -->
-  <!-- {#if config} -->
-  <!-- <div class="props"> -->
-  <!-- <div class="query-type">
-        Query type:
-        <span class="query-type-span">{config[query.queryVerb].type}</span>
-      </div> -->
-  <!-- <div class="select">
-        <Select primary thin bind:value={query.queryVerb}>
-          {#each Object.keys(config) as queryVerb}
-            <option value={queryVerb}>{queryVerb}</option>
-          {/each}
-        </Select>
-      </div> -->
-  <!-- </div>
-    <EditQueryParamsPopover
-      bind:parameters={query.parameters}
-      bindable={false} /> -->
-  <!-- {/if} -->
 </section>
-<Spacer large />
 
 {#if shouldShowQueryConfig}
   <section>
@@ -196,7 +173,7 @@
 
       <div class="viewer-controls">
         <Heading small>Query Results</Heading>
-        <div>
+        <div class="button-container">
           <Button
             secondary
             thin
@@ -204,7 +181,8 @@
             on:click={saveQuery}>
             Save Query
           </Button>
-        <Button thin primary on:click={previewQuery}>Run Query</Button>
+          <Spacer medium />
+          <Button thin primary on:click={previewQuery}>Run Query</Button>
         </div>
       </div>
       <Body small grey>
@@ -212,7 +190,7 @@
         schema.
       </Body>
 
-      <Spacer medium />
+      <Spacer large />
 
       <section class="viewer">
         {#if data}
@@ -274,8 +252,8 @@
     gap: var(--spacing-l);
   }
 
-  a {
-    font-size: var(--font-size-s);
+  .button-container {
+    display: flex;
   }
 
   hr {
