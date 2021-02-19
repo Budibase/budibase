@@ -20,6 +20,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   const AUTO_COL = "auto"
+  const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
 
   export let onClosed
@@ -55,15 +56,16 @@
   $: uneditable =
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
+  $: invalid = field.type === FIELDS.LINK.type && !field.tableId
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
-    field.type !== "link" &&
+    field.type !== LINK_TYPE &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  $: canBeDisplay = field.type !== "link" && field.type !== AUTO_COL
+  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_COL
   $: canBeRequired =
-    field.type !== "link" && !uneditable && field.type !== AUTO_COL
+    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
 
   async function saveColumn() {
     // Set relationship type if it's 
@@ -100,13 +102,17 @@
     }
   }
 
-  function handleFieldConstraints(event) {
+  function handleTypeChange(event) {
     const definition = fieldDefinitions[event.target.value.toUpperCase()]
     if (!definition) {
       return
     }
     field.type = definition.type
     field.constraints = definition.constraints
+    // remove any extra fields that may not be related to this type
+    delete field.autocolumn
+    delete field.subtype
+    delete field.tableId
   }
 
   function onChangeRequired(e) {
@@ -154,7 +160,7 @@
     secondary
     thin
     label="Type"
-    on:change={handleFieldConstraints}
+    on:change={handleTypeChange}
     bind:value={field.type}>
     {#each Object.values(fieldDefinitions) as field}
       <option value={field.type}>{field.name}</option>
@@ -255,7 +261,9 @@
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveColumn}>Save Column</Button>
+    <Button primary on:click={saveColumn} bind:disabled={invalid}>
+      Save Column
+    </Button>
   </footer>
 </div>
 <ConfirmDialog
