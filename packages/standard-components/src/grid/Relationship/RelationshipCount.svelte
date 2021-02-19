@@ -24,8 +24,8 @@
   .item {
     font-size: var(--font-size-xs);
     padding: var(--spacing-xs) var(--spacing-s);
-    border: 1px solid #888;
-    color: #666;
+    border: 1px solid var(--grey-5);
+    color: var(--grey-7);
     line-height: normal;
     border-radius: 4px;
   }
