@@ -157,6 +157,11 @@ exports.inputProcessing = (user, table, row) => {
  * @returns {object[]} the enriched rows will be returned.
  */
 exports.outputProcessing = async (appId, table, rows) => {
+  let wasArray = true
+  if (!(rows instanceof Array)) {
+    rows = [rows]
+    wasArray = false
+  }
   // attach any linked row information
   const outputRows = await linkRows.attachLinkedPrimaryDisplay(
     appId,
@@ -179,5 +184,5 @@ exports.outputProcessing = async (appId, table, rows) => {
       }
     }
   }
-  return outputRows
+  return wasArray ? outputRows : outputRows[0]
 }

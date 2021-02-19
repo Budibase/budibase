@@ -140,13 +140,6 @@ exports.updateLinks = async function({
  * then an array will be output, object input -> object output.
  */
 exports.attachLinkIDs = async (appId, rows) => {
-  // handle a single row as well as multiple
-  let wasArray = true
-  if (!(rows instanceof Array)) {
-    rows = [rows]
-    wasArray = false
-  }
-
   const links = await getLinksForRows(appId, rows)
   // now iterate through the rows and all field information
   for (let row of rows) {
@@ -162,7 +155,7 @@ exports.attachLinkIDs = async (appId, rows) => {
   }
   // if it was an array when it came in then handle it as an array in response
   // otherwise return the first element as there was only one input
-  return wasArray ? rows : rows[0]
+  return rows
 }
 
 /**
@@ -177,11 +170,6 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
-  }
-  let wasArray = true
-  if (!(rows instanceof Array)) {
-    rows = [rows]
-    wasArray = false
   }
   const db = new CouchDB(appId)
   const linkedTables = await Promise.all(linkedTableIds.map(id => db.get(id)))
@@ -214,5 +202,5 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
         }
       })
   }
-  return wasArray ? rows : rows[0]
+  return rows
 }
