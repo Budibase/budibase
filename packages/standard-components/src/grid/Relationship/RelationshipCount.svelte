@@ -2,13 +2,14 @@
   export let columnName
   export let row
 
-  $: count =
-    row && columnName && Array.isArray(row[columnName])
-      ? row[columnName].length
-      : 0
+  $: items = row?.[columnName] || []
 </script>
 
-<div class="container">{count} related row(s)</div>
+<div class="container">
+  {#each items as item}
+    <div class="item">{item}</div>
+  {/each}
+</div>
 
 <style>
   .container {
@@ -18,5 +19,14 @@
     align-items: center;
     gap: var(--spacing-xs);
     width: 100%;
+  }
+
+  .item {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border: 1px solid #888;
+    color: #666;
+    line-height: normal;
+    border-radius: 4px;
   }
 </style>

@@ -136,7 +136,7 @@ const getContextBindings = (asset, componentId) => {
       // Replace certain bindings with a new property to help display components
       let runtimeBoundKey = key
       if (fieldSchema.type === "link") {
-        runtimeBoundKey = `${key}_count`
+        runtimeBoundKey = `${key}_text`
       } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
@@ -176,7 +176,7 @@ const getUserBindings = () => {
     // Replace certain bindings with a new property to help display components
     let runtimeBoundKey = key
     if (fieldSchema.type === "link") {
-      runtimeBoundKey = `${key}_count`
+      runtimeBoundKey = `${key}_text`
     } else if (fieldSchema.type === "attachment") {
       runtimeBoundKey = `${key}_first`
     }
