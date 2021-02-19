@@ -32,7 +32,7 @@
         <div>
           <Label small>{field}</Label>
           <Spacer small />
-          <KeyValueBuilder bind:object={fields[field]} />
+          <KeyValueBuilder readOnly={!editable} bind:object={fields[field]} />
         </div>
       {:else if schema.fields[field]?.type === 'json'}
         <div>
@@ -59,8 +59,6 @@
   </div>
 </form>
 {#if schema.customisable}
-  <Label small>Query</Label>
-  <Spacer small />
   <Editor
     label="Query"
     mode="json"

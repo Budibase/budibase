@@ -2,6 +2,7 @@
   import { Button, Input } from "@budibase/bbui"
 
   export let object = {}
+  export let readOnly
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
 
@@ -21,14 +22,18 @@
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
-<div class="container">
+<div class="container" class:readOnly>
   {#each fields as field, idx}
     <Input placeholder="Key" thin outline bind:value={field.name} />
     <Input placeholder="Value" thin outline bind:value={field.value} />
-    <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
+    {#if !readOnly}
+      <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
+    {/if}
   {/each}
 </div>
-<Button secondary thin outline on:click={addEntry}>Add</Button>
+{#if !readOnly}
+  <Button secondary thin outline on:click={addEntry}>Add</Button>
+{/if}
 
 <style>
   .container {

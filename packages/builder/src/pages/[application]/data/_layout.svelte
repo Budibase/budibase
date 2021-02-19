@@ -27,9 +27,10 @@
   <div class="nav">
     <Switcher headings={tabs} bind:value={tab}>
       <div class="title">
-        <Button blue data-cy={`new-${tab}`} on:click={modal.show}>
-          <i class="ri-add-fill" />
-        </Button>
+        <i
+          data-cy={`new-${tab}`}
+          class="ri-add-circle-fill"
+          on:click={modal.show} />
       </div>
       {#if tab === 'table'}
         <TableNavigator />
@@ -81,7 +82,7 @@
     position: relative;
   }
 
-  .title {
+  i {
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);

@@ -60,10 +60,4 @@
   grid-gap: var(--spacing-l);
   align-items: center;
 }
-
-pre {
-  background: var(--background);
-  border-radius: var(--border-radius-s);
-  margin: 0;
-}
 </style>
