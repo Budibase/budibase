@@ -239,7 +239,6 @@ export const getBackendUiStore = () => {
         field,
         primaryDisplay = false,
         indexes,
-        relationshipType,
       }) => {
         store.update(state => {
           // delete the original if renaming
@@ -255,11 +254,6 @@ export const getBackendUiStore = () => {
           // Optionally set display column
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
-          }
-
-          // Set relationship type
-          if (field.type === "link") {
-            state.draftTable.relationshipType = relationshipType
           }
 
           if (indexes) {
