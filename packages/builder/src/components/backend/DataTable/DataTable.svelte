@@ -6,15 +6,16 @@
   import ExportButton from "./buttons/ExportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
+  import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
   import * as api from "./api"
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
 
+  let hideAutocolumns = true
   let data = []
   let loading = false
-
   $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS
   $: title = $backendUiStore.selectedTable.name
   $: schema = $backendUiStore.selectedTable.schema
@@ -41,6 +42,7 @@
   tableId={$backendUiStore.selectedTable?._id}
   {data}
   allowEditing={true}
+  bind:hideAutocolumns
   {loading}>
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
@@ -49,9 +51,11 @@
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
     <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
+    {#if isUsersTable}
+      <EditRolesButton />
+    {/if}
+    <HideAutocolumnButton bind:hideAutocolumns />
+    <!-- always have the export last -->
     <ExportButton view={tableView} />
-  {/if}
-  {#if isUsersTable}
-    <EditRolesButton />
   {/if}
 </Table>

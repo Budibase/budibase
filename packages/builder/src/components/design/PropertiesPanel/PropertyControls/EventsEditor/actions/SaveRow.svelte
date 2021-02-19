@@ -11,7 +11,7 @@
   export let parameters
 
   $: dataProviderComponents = getDataProviderComponents(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: providerComponent = dataProviderComponents.find(

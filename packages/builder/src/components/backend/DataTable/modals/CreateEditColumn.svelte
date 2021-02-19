@@ -12,12 +12,14 @@
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import { FIELDS } from "constants/backend"
+  import { FIELDS, AUTO_COLUMN_SUB_TYPES } from "constants/backend"
+  import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
+  const AUTO_COL = "auto"
   let fieldDefinitions = cloneDeep(FIELDS)
 
   export let onClosed
@@ -54,12 +56,28 @@
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
 
+  // used to select what different options can be displayed for column type
+  $: canBeSearched =
+    field.type !== "link" &&
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
+  $: canBeDisplay = field.type !== "link" && field.type !== AUTO_COL
+  $: canBeRequired =
+    field.type !== "link" && !uneditable && field.type !== AUTO_COL
+
   async function saveColumn() {
     // Set relationship type if it's 
     if (field.type === 'link') {
       field.relationshipType = relationshipTypes.find(type => type.text === selectedRelationshipType).value
     } 
 
+    if (field.type === AUTO_COL) {
+      field = buildAutoColumn(
+        $backendUiStore.draftTable.name,
+        field.name,
+        field.subtype
+      )
+    }
     backendUiStore.update(state => {
       backendUiStore.actions.tables.saveField({
         originalName,
@@ -83,11 +101,12 @@
   }
 
   function handleFieldConstraints(event) {
-    const { type, constraints } = fieldDefinitions[
-      event.target.value.toUpperCase()
-    ]
-    field.type = type
-    field.constraints = constraints
+    const definition = fieldDefinitions[event.target.value.toUpperCase()]
+    if (!definition) {
+      return
+    }
+    field.type = definition.type
+    field.constraints = definition.constraints
   }
 
   function onChangeRequired(e) {
@@ -140,9 +159,10 @@
     {#each Object.values(fieldDefinitions) as field}
       <option value={field.type}>{field.name}</option>
     {/each}
+    <option value={AUTO_COL}>Auto Column</option>
   </Select>
 
-  {#if field.type !== 'link' && !uneditable}
+  {#if canBeRequired}
     <Toggle
       checked={required}
       on:change={onChangeRequired}
@@ -151,7 +171,7 @@
       text="Required" />
   {/if}
 
-  {#if field.type !== 'link'}
+  {#if canBeDisplay}
     <Toggle
       bind:checked={primaryDisplay}
       on:change={onChangePrimaryDisplay}
@@ -159,6 +179,8 @@
       text="Use as table display column" />
 
     <Label grey small>Search Indexes</Label>
+  {/if}
+  {#if canBeSearched}
     <Toggle
       checked={indexes[0] === field.name}
       disabled={indexes[1] === field.name}
@@ -220,9 +242,16 @@
       label={`Column Name in Other Table`}
       thin
       bind:value={field.fieldName} />
+  {:else if field.type === AUTO_COL}
+    <Select label="Auto Column Type" thin secondary bind:value={field.subtype}>
+      <option value="">Choose a subtype</option>
+      {#each Object.entries(getAutoColumnInformation()) as [subtype, info]}
+        <option value={subtype}>{info.name}</option>
+      {/each}
+    </Select>
   {/if}
   <footer class="create-column-options">
-    {#if !uneditable && originalName}
+    {#if !uneditable && originalName != null}
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>
