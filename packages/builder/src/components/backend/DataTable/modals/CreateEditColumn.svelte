@@ -204,7 +204,7 @@
       <Label grey extraSmall>Select relationship type</Label>
       <div class="radio-buttons">
         {#each types as type}
-          <Radio name="Relationship type" value={type} bind:group={selectedRelationshipType}>
+          <Radio disabled={originalName} name="Relationship type" value={type} bind:group={selectedRelationshipType}>
             <label for={type}>{type}</label>
           </Radio>
         {/each}
