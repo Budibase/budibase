@@ -40,7 +40,7 @@
   ]
   let types = ['Many to many (N:N)', 'One to many (1:N)']
 
-  let selectedRelationshipType = field.relationshipType
+  let selectedRelationshipType = relationshipTypes.find(type => type.value === field.relationshipType)?.text || 'Many to many (N:N)'
 
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
