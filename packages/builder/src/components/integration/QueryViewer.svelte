@@ -131,10 +131,9 @@
 </script>
 
 <section class="config">
-  <Heading medium>Query {integrationInfo.friendlyName}</Heading>
+  <Heading medium lh>Query {integrationInfo?.friendlyName}</Heading>
   <hr />
-  <Heading small>Config</Heading>
-  <Spacer medium />
+  <Heading small lh>Config</Heading>
   <Body small grey>Provide a name for your query and select its function.</Body>
   <Spacer medium />
   <div class="config-field">
@@ -147,7 +146,9 @@
       <Label small>Function</Label>
       <Select primary outline thin bind:value={query.queryVerb}>
         {#each Object.keys(queryConfig) as queryVerb}
-          <option value={queryVerb}>{queryConfig[queryVerb]?.displayName || queryVerb}</option>
+          <option value={queryVerb}>
+            {queryConfig[queryVerb]?.displayName || queryVerb}
+          </option>
         {/each}
       </Select>
     </div>
@@ -160,7 +161,8 @@
 {#if shouldShowQueryConfig}
   <section>
     <div class="config">
-      <Heading small>Fields</Heading>
+      <Heading small lh>Fields</Heading>
+      <Body small grey>Fill in the fields specific to this query.</Body>
       <Spacer medium />
       <IntegrationQueryEditor
         {datasource}
@@ -171,7 +173,7 @@
       <hr />
 
       <div class="viewer-controls">
-        <Heading small>Query Results</Heading>
+        <Heading small lh>Query Results</Heading>
         <div class="button-container">
           <Button
             secondary
@@ -198,7 +200,9 @@
               <pre class="preview">
               {#if !data[0]}
                   
+                  
                 Please run your query to fetch some data.
+
 
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
@@ -283,5 +287,6 @@
     justify-content: space-between;
     gap: var(--spacing-m);
     min-width: 150px;
+    align-items: center;
   }
 </style>

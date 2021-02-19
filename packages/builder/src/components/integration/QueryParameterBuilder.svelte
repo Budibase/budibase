@@ -31,7 +31,7 @@
 
 <section>
   <div class="controls">
-    <Heading small>Parameters</Heading>
+    <Heading small lh>Parameters</Heading>
     {#if !bindable}
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
@@ -79,6 +79,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 40px;
   }
 
   .parameters {

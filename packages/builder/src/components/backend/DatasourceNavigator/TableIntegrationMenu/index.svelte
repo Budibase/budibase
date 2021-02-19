@@ -50,22 +50,6 @@
       </div>
     {/each}
   </div>
-
-  <!-- {#if schema}
-    {#each Object.keys(schema) as configKey}
-      {#if schema[configKey].type === 'object'}
-        <Label small>{configKey}</Label>
-        <KeyValueBuilder bind:object={integration[configKey]} />
-      {:else}
-        <Label small>{configKey}</Label>
-        <Input
-          outline
-          type={integration[configKey].type}
-          bind:value={integration[configKey]} />
-      {/if}
-      <Spacer medium />
-    {/each}
-  {/if} -->
 </section>
 
 <style>

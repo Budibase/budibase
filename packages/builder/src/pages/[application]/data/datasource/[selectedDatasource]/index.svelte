@@ -1,10 +1,12 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer, Icon } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
+
+  let unsaved = false
 
   $: datasource = $backendUiStore.datasources.find(
     ds => ds._id === $backendUiStore.selectedDatasourceId
@@ -14,6 +16,7 @@
     // Create datasource
     await backendUiStore.actions.datasources.save(datasource)
     notifier.success(`Datasource ${name} saved successfully.`)
+    unsaved = false
   }
 
   function onClickQuery(query) {
@@ -23,6 +26,21 @@
     backendUiStore.actions.queries.select(query)
     $goto(`../${query._id}`)
   }
+
+  function setUnsaved() {
+    unsaved = true
+  }
+
+  $beforeUrlChange((event, store) => {
+    if (unsaved) {
+      notifier.danger(
+        "Unsaved changes. Please save your datasource configuration before leaving."
+      )
+      return false
+    }
+
+    return true
+  })
 </script>
 
 {#if datasource}
@@ -39,7 +57,6 @@
     </header>
     <Spacer extraLarge />
     <div class="container">
-
       <div class="config-header">
         <Heading small>Configuration</Heading>
         <Button secondary on:click={saveDatasource}>Save</Button>
@@ -49,7 +66,9 @@
       </Body>
 
       <Spacer medium />
-      <IntegrationConfigForm integration={datasource.config} />
+      <IntegrationConfigForm
+        integration={datasource.config}
+        on:change={setUnsaved} />
       <Spacer medium />
 
       <hr />

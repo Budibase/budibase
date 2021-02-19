@@ -6,7 +6,7 @@
     Input,
     Heading,
     Select,
-    Spacer
+    Spacer,
   } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
