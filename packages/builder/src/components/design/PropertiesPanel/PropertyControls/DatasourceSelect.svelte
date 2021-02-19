@@ -109,6 +109,7 @@
     </div>
     <div class="drawer-contents" slot="body">
       <IntegrationQueryEditor
+        datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
         query={value}
         schema={fetchDatasourceSchema(value)}
         editable={false} />

@@ -1,8 +1,11 @@
 const mysql = require("mysql")
-const { FIELD_TYPES } = require("./Integration")
+const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/mysqljs/mysql",
+  friendlyName: "MySQL",
+  description:
+    "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
   datasource: {
     host: {
       type: FIELD_TYPES.STRING,
@@ -31,16 +34,16 @@ const SCHEMA = {
   },
   query: {
     create: {
-      type: "sql",
+      type: QUERY_TYPES.SQL,
     },
     read: {
-      type: "sql",
+      type: QUERY_TYPES.SQL,
     },
     update: {
-      type: "sql",
+      type: QUERY_TYPES.SQL,
     },
     delete: {
-      type: "sql",
+      type: QUERY_TYPES.SQL,
     },
   },
 }
