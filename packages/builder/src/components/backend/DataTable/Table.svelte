@@ -301,4 +301,13 @@
     padding-top: var(--spacing-xs);
     padding-bottom: var(--spacing-xs);
   }
+
+  :global(.ag-header) {
+    height: 61px !important;
+    min-height: 61px !important;
+  }
+
+  :global(.ag-header-row) {
+    height: 60px !important;
+  }
 </style>
