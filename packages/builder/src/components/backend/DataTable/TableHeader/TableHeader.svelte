@@ -53,7 +53,7 @@
     column.removeEventListener("filterActiveChanged", setFilterActive)
   })
 
-  $: type = FIELDS[field.type.toUpperCase()]?.name
+  $: type = FIELDS[field?.type?.toUpperCase()]?.name
 </script>
 
 <header
