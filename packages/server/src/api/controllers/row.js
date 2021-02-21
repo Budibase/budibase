@@ -94,7 +94,7 @@ exports.patch = async function(ctx) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = {
       ...row,
-      password: ctx.request.body.password
+      password: ctx.request.body.password,
     }
     await usersController.update(ctx)
     return
