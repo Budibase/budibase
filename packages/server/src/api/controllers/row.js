@@ -92,7 +92,10 @@ exports.patch = async function(ctx) {
   // Creation of a new user goes to the user controller
   if (row.tableId === ViewNames.USERS) {
     // the row has been updated, need to put it into the ctx
-    ctx.request.body = row
+    ctx.request.body = {
+      ...row,
+      password: ctx.request.body.password
+    }
     await usersController.update(ctx)
     return
   }
