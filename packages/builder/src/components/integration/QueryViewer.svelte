@@ -133,14 +133,15 @@
 <section class="config">
   <Heading medium lh>Query {integrationInfo?.friendlyName}</Heading>
   <hr />
+  <Spacer extraLarge />
   <Heading small lh>Config</Heading>
   <Body small grey>Provide a name for your query and select its function.</Body>
-  <Spacer medium />
+  <Spacer large />
   <div class="config-field">
     <Label small>Query Name</Label>
     <Input thin outline bind:value={query.name} />
   </div>
-  <Spacer medium />
+  <Spacer extraLarge />
   {#if queryConfig}
     <div class="config-field">
       <Label small>Function</Label>
@@ -152,7 +153,10 @@
         {/each}
       </Select>
     </div>
+    <Spacer extraLarge />
     <hr />
+    <Spacer extraLarge />
+    <Spacer small />
     <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
     <hr />
   {/if}
@@ -160,20 +164,22 @@
 
 {#if shouldShowQueryConfig}
   <section>
+    <Spacer extraLarge />
+    <Spacer small />
     <div class="config">
       <Heading small lh>Fields</Heading>
       <Body small grey>Fill in the fields specific to this query.</Body>
       <Spacer medium />
+      <Spacer extraLarge />
       <IntegrationQueryEditor
         {datasource}
         {query}
         schema={queryConfig[query.queryVerb]}
         bind:parameters />
-
-      <hr />
-
+      <Spacer extraLarge />
+      <Spacer extraLarge />
       <div class="viewer-controls">
-        <Heading small lh>Query Results</Heading>
+        <Heading extraSmall lh>Query Results</Heading>
         <div class="button-container">
           <Button
             secondary
@@ -191,7 +197,7 @@
         schema.
       </Body>
 
-      <Spacer large />
+      <Spacer extraLarge />
 
       <section class="viewer">
         {#if data}
@@ -242,6 +248,8 @@
     </div>
   </section>
 {/if}
+      <Spacer extraLarge />
+      <Spacer extraLarge />
 
 <style>
   .config-field {
@@ -263,7 +271,7 @@
 
   hr {
     margin-top: var(--layout-m);
-    margin-bottom: var(--layout-m);
+    border: 1px solid var(--grey-2);
   }
 
   .config {
@@ -276,7 +284,7 @@
   }
 
   .preview {
-    width: 800px;
+    width: 640px;
     height: 100%;
     overflow-y: auto;
     overflow-wrap: break-word;
