@@ -27,13 +27,11 @@
         schema,
       }
     })
-
   $: hasAutomations = automations && automations.length > 0
-
-  $: selectedAutomation =
-    parameters &&
-    parameters.automationId &&
-    automations.find(a => a._id === parameters.automationId)
+  $: selectedAutomation = automations?.find(
+    a => a._id === parameters?.automationId
+  )
+  $: selectedSchema = selectedAutomation?.schema
 
   const onFieldsChanged = e => {
     parameters.fields = e.detail
@@ -42,95 +40,98 @@
   const setNew = () => {
     automationStatus = AUTOMATION_STATUS.NEW
     parameters.automationId = undefined
+    parameters.fields = {}
   }
 
   const setExisting = () => {
     automationStatus = AUTOMATION_STATUS.EXISTING
     parameters.newAutomationName = ""
+    parameters.fields = {}
+    parameters.automationId = automations[0]?._id
   }
 </script>
 
 <div class="root">
-  <div class="radio-container" on:click={setNew}>
-    <input
-      type="radio"
-      value={AUTOMATION_STATUS.NEW}
-      bind:group={automationStatus}
-      disabled={!hasAutomations} />
-
-    <Label disabled={!hasAutomations}>Create a new automation</Label>
+  <div class="radios">
+    <div class="radio-container" on:click={setNew}>
+      <input
+        type="radio"
+        value={AUTOMATION_STATUS.NEW}
+        bind:group={automationStatus} />
+      <Label small>Create a new automation</Label>
+    </div>
+    <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
+      <input
+        type="radio"
+        value={AUTOMATION_STATUS.EXISTING}
+        bind:group={automationStatus}
+        disabled={!hasAutomations} />
+      <Label small grey={!hasAutomations}>Use an existing automation</Label>
+    </div>
   </div>
 
-  <div class="radio-container" on:click={setExisting}>
-    <input
-      type="radio"
-      value={AUTOMATION_STATUS.EXISTING}
-      bind:group={automationStatus}
-      disabled={!hasAutomations} />
+  <div class="fields">
+    <Label small>Automation</Label>
 
-    <Label disabled={!hasAutomations}>Use an existing automation</Label>
+    {#if automationStatus === AUTOMATION_STATUS.EXISTING}
+      <Select
+        thin
+        secondary
+        bind:value={parameters.automationId}
+        placeholder="Choose automation">
+        {#each automations as automation}
+          <option value={automation._id}>{automation.name}</option>
+        {/each}
+      </Select>
+    {:else}
+      <Input
+        thin
+        bind:value={parameters.newAutomationName}
+        placeholder="Enter automation name" />
+    {/if}
+
+    {#key parameters.automationId}
+      <SaveFields
+        schemaFields={selectedSchema}
+        parameterFields={parameters.fields}
+        fieldLabel="Field"
+        on:change={onFieldsChanged} />
+    {/key}
   </div>
-
-  <Label size="m" color="dark">Automation</Label>
-
-  {#if automationStatus === AUTOMATION_STATUS.EXISTING}
-    <Select
-      secondary
-      bind:value={parameters.automationId}
-      placeholder="Choose automation">
-      <option value="" />
-      {#each automations as automation}
-        <option value={automation._id}>{automation.name}</option>
-      {/each}
-    </Select>
-  {:else}
-    <Input
-      secondary
-      bind:value={parameters.newAutomationName}
-      placeholder="Enter automation name" />
-  {/if}
-
-  <SaveFields
-    schemaFields={automationStatus === AUTOMATION_STATUS.EXISTING && selectedAutomation && selectedAutomation.schema}
-    fieldLabel="Field"
-    on:fieldschanged={onFieldsChanged} />
 </div>
 
 <style>
-  .root {
+  .fields {
     display: grid;
-    column-gap: var(--spacing-s);
+    column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     grid-template-columns: auto 1fr auto 1fr auto;
     align-items: baseline;
   }
 
-  .root :global(> div:nth-child(4)) {
+  .fields :global(> div:nth-child(2)) {
     grid-column: 2 / span 4;
   }
 
+  .radios,
   .radio-container {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .radios {
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-l);
+  }
+  .radio-container {
+    gap: var(--spacing-m);
+  }
+  .radio-container :global(label) {
+    margin: 0;
   }
 
-  .radio-container:nth-child(1) {
-    grid-column: 1 / span 2;
-  }
-
-  .radio-container:nth-child(2) {
-    grid-column: 3 / span 3;
-  }
-
-  .radio-container :global(> label) {
-    margin-left: var(--spacing-m);
-  }
-
-  .radio-container > input {
-    margin-bottom: var(--spacing-s);
-  }
-
-  .radio-container > input:focus {
-    outline: none;
+  input[type="radio"]:checked {
+    background: var(--blue);
   }
 </style>

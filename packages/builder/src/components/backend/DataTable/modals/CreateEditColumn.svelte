@@ -7,7 +7,6 @@
     Select,
     Toggle,
     Radio,
-
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
@@ -38,12 +37,14 @@
     $backendUiStore.selectedTable.primaryDisplay === field.name
 
   let relationshipTypes = [
-    {text: 'Many to many (N:N)', value: 'many-to-many',},
-    {text: 'One to many (1:N)', value: 'one-to-many',}
+    { text: "Many to many (N:N)", value: "many-to-many" },
+    { text: "One to many (1:N)", value: "one-to-many" },
   ]
-  let types = ['Many to many (N:N)', 'One to many (1:N)']
+  let types = ["Many to many (N:N)", "One to many (1:N)"]
 
-  let selectedRelationshipType = relationshipTypes.find(type => type.value === field.relationshipType)?.text || 'Many to many (N:N)'
+  let selectedRelationshipType =
+    relationshipTypes.find(type => type.value === field.relationshipType)
+      ?.text || "Many to many (N:N)"
 
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
@@ -68,10 +69,12 @@
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
 
   async function saveColumn() {
-    // Set relationship type if it's 
-    if (field.type === 'link') {
-      field.relationshipType = relationshipTypes.find(type => type.text === selectedRelationshipType).value
-    } 
+    // Set relationship type if it's
+    if (field.type === "link") {
+      field.relationshipType = relationshipTypes.find(
+        type => type.text === selectedRelationshipType
+      ).value
+    }
 
     if (field.type === AUTO_COL) {
       field = buildAutoColumn(
@@ -228,11 +231,15 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-  <div>
+    <div>
       <Label grey extraSmall>Select relationship type</Label>
       <div class="radio-buttons">
         {#each types as type}
-          <Radio disabled={originalName} name="Relationship type" value={type} bind:group={selectedRelationshipType}>
+          <Radio
+            disabled={originalName}
+            name="Relationship type"
+            value={type}
+            bind:group={selectedRelationshipType}>
             <label for={type}>{type}</label>
           </Radio>
         {/each}
@@ -282,7 +289,7 @@
   .radio-buttons {
     display: flex;
     gap: var(--spacing-m);
-    font-size: var(--font-size-xs)
+    font-size: var(--font-size-xs);
   }
   .actions {
     display: grid;

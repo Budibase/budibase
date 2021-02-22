@@ -1,7 +1,7 @@
 /**
  * API cache for cached request responses.
  */
-import { notificationStore } from "../store/notification"
+import { notificationStore } from "../store"
 let cache = {}
 
 /**
@@ -34,6 +34,9 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     switch (response.status) {
       case 200:
         return response.json()
+      case 401:
+        notificationStore.danger("Invalid credentials")
+        return handleError(`Invalid credentials`)
       case 404:
         notificationStore.danger("Not found")
         return handleError(`${url}: Not Found`)

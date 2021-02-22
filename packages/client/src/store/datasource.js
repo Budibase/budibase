@@ -15,7 +15,7 @@ export const createDatasourceStore = () => {
     let datasourceIds = []
 
     // Extract table ID
-    if (datasource.type === "table") {
+    if (datasource.type === "table" || datasource.type === "view") {
       if (datasource.tableId) {
         datasourceIds.push(datasource.tableId)
       }
