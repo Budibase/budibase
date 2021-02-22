@@ -7,6 +7,9 @@ const { generateUserID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
+const { UserStatus } = require("../../constants")
+
+const INVALID_ERR = "Invalid Credentials"
 
 exports.authenticate = async ctx => {
   const appId = ctx.appId
@@ -27,7 +30,12 @@ exports.authenticate = async ctx => {
   } catch (_) {
     // do not want to throw a 404 - as this could be
     // used to determine valid emails
-    ctx.throw(401, "Invalid Credentials")
+    ctx.throw(401, INVALID_ERR)
+  }
+
+  // check that the user is currently inactive, if this is the case throw invalid
+  if (dbUser.status === UserStatus.INACTIVE) {
+    ctx.throw(401, INVALID_ERR)
   }
 
   // authenticate
@@ -56,7 +64,7 @@ exports.authenticate = async ctx => {
       appId,
     }
   } else {
-    ctx.throw(401, "Invalid credentials.")
+    ctx.throw(401, INVALID_ERR)
   }
 }
 

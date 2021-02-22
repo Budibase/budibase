@@ -11,8 +11,9 @@
   import { capitalise } from "../../../helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
+  export let defaultValue
   export let meta
-  export let value = meta.type === "boolean" ? false : ""
+  export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
   $: type = meta.type
