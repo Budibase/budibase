@@ -1,5 +1,12 @@
 const PouchDB = require("../../../db")
-const { DocumentTypes, SEPARATOR, UNICODE_MAX } = require("../../../db/utils")
+const {
+  DocumentTypes,
+  SEPARATOR,
+  UNICODE_MAX,
+  ViewNames,
+} = require("../../../db/utils")
+
+const EXCLUDED_VIEWS = [ViewNames.USERS, ViewNames.LINK, ViewNames.ROUTING]
 
 exports.getAppQuota = async function(appId) {
   const db = new PouchDB(appId)
@@ -19,9 +26,16 @@ exports.getAppQuota = async function(appId) {
 
   const designDoc = await db.get("_design/database")
 
+  let views = 0
+  for (let viewName of Object.keys(designDoc.views)) {
+    if (EXCLUDED_VIEWS.indexOf(viewName) === -1) {
+      views++
+    }
+  }
+
   return {
     rows: existingRows,
     users: existingUsers,
-    views: Object.keys(designDoc.views).length,
+    views: views,
   }
 }
