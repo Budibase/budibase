@@ -7,6 +7,7 @@ const { generateUserID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
+const { UserStatus } = require("../../constants")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -32,9 +33,8 @@ exports.authenticate = async ctx => {
     ctx.throw(401, INVALID_ERR)
   }
 
-  // check that the user is currently active, make sure its a boolean false
-  // so that older users which don't have this set are handled
-  if (typeof dbUser.active === "boolean" && !dbUser.active) {
+  // check that the user is currently inactive, if this is the case throw invalid
+  if (dbUser.status === UserStatus.INACTIVE) {
     ctx.throw(401, INVALID_ERR)
   }
 

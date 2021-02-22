@@ -29,7 +29,7 @@
     let customSchema = { ...schema }
     delete customSchema["email"]
     delete customSchema["roleId"]
-    delete customSchema["active"]
+    delete customSchema["status"]
     return Object.entries(customSchema)
   }
 
@@ -81,9 +81,9 @@
     {/each}
   </Select>
   <RowFieldControl
-    meta={{ name: 'active', type: 'boolean' }}
-    bind:value={row.active}
-    defaultValue={true} />
+    meta={{ name: 'status', type: 'options', constraints: {inclusion: ['active', 'inactive']} }}
+    bind:value={row.status}
+    defaultValue={'active'} />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}
       <RowFieldControl {meta} bind:value={row[key]} {creating} />

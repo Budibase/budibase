@@ -18,6 +18,11 @@ exports.AuthTypes = {
   EXTERNAL: "external",
 }
 
+exports.UserStatus = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+}
+
 exports.USERS_TABLE_SCHEMA = {
   _id: "ta_users",
   type: "table",
@@ -47,13 +52,14 @@ exports.USERS_TABLE_SCHEMA = {
         inclusion: Object.values(BUILTIN_ROLE_IDS),
       },
     },
-    active: {
-      fieldName: "active",
-      name: "active",
-      type: exports.FieldTypes.BOOLEAN,
+    status: {
+      fieldName: "status",
+      name: "status",
+      type: exports.FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.BOOLEAN,
+        type: exports.FieldTypes.STRING,
         presence: false,
+        inclusion: Object.values(exports.UserStatus),
       },
     },
   },
