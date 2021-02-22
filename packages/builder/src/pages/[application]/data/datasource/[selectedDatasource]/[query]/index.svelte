@@ -28,19 +28,24 @@
 </script>
 
 <section>
-  {#if $backendUiStore.selectedDatabase._id && selectedQuery}
-    <QueryInterface query={selectedQuery} />
-  {/if}
+  <div class="inner">
+    {#if $backendUiStore.selectedDatabase._id && selectedQuery}
+      <QueryInterface query={selectedQuery} />
+    {/if}
+  </div>
 </section>
 
 <style>
   section {
     overflow: scroll;
-    width: 800px;
-    margin: 0 auto;
   }
   ::-webkit-scrollbar {
     width: 0px;
     background: transparent; /* make scrollbar transparent */
+  }
+
+  .inner {
+    width: 640px;
+    margin: 0 auto;
   }
 </style>
