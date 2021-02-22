@@ -7,7 +7,7 @@ const { inputProcessing } = require("../../../utilities/rowProcessor")
 const { USERS_TABLE_SCHEMA } = require("../../../constants")
 
 exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
-  let updatedRows
+  let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns = []
   if (oldTable && oldTable.schema && updatedTable.schema) {
@@ -172,7 +172,7 @@ class TableSaveFunctions {
       this.oldTable,
       table
     )
-    this.rows.concat(response.rows)
+    this.rows = this.rows.concat(response.rows)
     return table
   }
 
