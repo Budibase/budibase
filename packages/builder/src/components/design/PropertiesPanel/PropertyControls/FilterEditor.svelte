@@ -1,5 +1,5 @@
 <script>
-  import { Button, Drawer, Spacer } from "@budibase/bbui"
+  import { Button, Drawer, Spacer, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifier } from "builderStore/store/notifications"
   import {
@@ -41,15 +41,15 @@
   </heading>
   <div slot="body">
     <div class="root">
-      {#if !Object.keys(tempValue || {}).length}
-        <p>Add your first filter column.</p>
-      {:else}
-        <p>
+      <Body small grey>
+        {#if !Object.keys(tempValue || {}).length}
+          Add your first filter column.
+        {:else}
           Results are filtered to only those which match all of the following
           constaints.
-        </p>
-      {/if}
-      <Spacer small />
+        {/if}
+      </Body>
+      <Spacer medium />
       <div class="fields">
         <SaveFields
           parameterFields={value}
@@ -65,11 +65,6 @@
   .root {
     padding: var(--spacing-l);
     min-height: calc(40vh - 2 * var(--spacing-l));
-  }
-
-  p {
-    margin: 0 0 var(--spacing-s) 0;
-    font-size: var(--font-size-s);
   }
 
   .fields {

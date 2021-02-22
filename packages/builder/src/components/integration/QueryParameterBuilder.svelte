@@ -1,5 +1,5 @@
 <script>
-  import { Button, Input, Label } from "@budibase/bbui"
+  import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -30,7 +30,22 @@
 </script>
 
 <section>
-  <Label small>Parameters</Label>
+  <div class="controls">
+    <Heading small lh>Parameters</Heading>
+    {#if !bindable}
+      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+    {/if}
+  </div>
+  <Body small grey>
+    {#if !bindable}
+      Parameters come in two parts: the parameter name, and a default/fallback
+      value.
+    {:else}
+      Enter a value for each parameter. The default values will be used for any
+      values left blank.
+    {/if}
+  </Body>
+  <Spacer large />
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
       <Input
@@ -58,14 +73,18 @@
       {/if}
     {/each}
   </div>
-  {#if !bindable}
-    <Button secondary on:click={newQueryParameter}>Add Parameter</Button>
-  {/if}
 </section>
 
 <style>
   .parameters.bindable {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
   }
 
   .parameters {

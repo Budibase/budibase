@@ -3,6 +3,9 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://docs.couchdb.org/en/stable/",
+  friendlyName: "CouchDB",
+  description:
+    "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
   datasource: {
     url: {
       type: FIELD_TYPES.STRING,

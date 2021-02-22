@@ -1,3 +1,11 @@
+function removeSpacing(headers) {
+  let newHeaders = []
+  for (let header of headers) {
+    newHeaders.push(header.replace(/\s\s+/g, " "))
+  }
+  return newHeaders
+}
+
 context("Create a View", () => {
   before(() => {
     cy.visit("localhost:4001/_builder")
@@ -28,7 +36,7 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq([ 'rating', 'age', 'group' ])
+      expect(removeSpacing(headers)).to.deep.eq([ "rating Number", "age Number", "group Text" ])
     })
   })
 
@@ -60,13 +68,19 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq([ 'avg', 'sumsqr', 'count', 'max', 'min', 'sum', 'field' ])
+      expect(removeSpacing(headers)).to.deep.eq([ "avg Number",
+        "sumsqr Number",
+        "count Number",
+        "max Number",
+        "min Number",
+        "sum Number",
+        "field Text" ])
     })
     cy.get(".ag-cell").then($values => {
       let values = Array.from($values).map(header =>
         header.textContent.trim()
       )
-      expect(values).to.deep.eq([ '31', '5347', '5', '49', '20', '155', 'age' ])
+      expect(values).to.deep.eq([ "31", "5347", "5", "49", "20", "155", "age" ])
     })
   })
 
@@ -85,7 +99,7 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([ 'Students', '23.333333333333332', '1650', '3', '25', '20', '70' ])
+        expect(values).to.deep.eq([ "Students", "23.333333333333332", "1650", "3", "25", "20", "70" ])
       })
   })
 

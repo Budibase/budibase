@@ -119,8 +119,8 @@ export const enrichRows = async (rows, tableId) => {
         for (let key of keys) {
           const type = schema[key].type
           if (type === "link") {
-            // Enrich row with the count of any relationship fields
-            row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
+            // Enrich row a string join of relationship fields
+            row[`${key}_text`] = row[key]?.join(", ") || ""
           } else if (type === "attachment") {
             // Enrich row with the first image URL for any attachment fields
             let url = null

@@ -1,8 +1,8 @@
 <script>
   export let icon
   export let title
-  export let subtitle
-  export let disabled
+  export let subtitle = undefined
+  export let disabled = false
 </script>
 
 <div class="dropdown-item" class:disabled on:click {...$$restProps}>

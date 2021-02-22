@@ -6,6 +6,8 @@
     TextButton,
     Select,
     Toggle,
+    Radio,
+
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
@@ -18,6 +20,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   const AUTO_COL = "auto"
+  const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
 
   export let onClosed
@@ -33,6 +36,15 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
+
+  let relationshipTypes = [
+    {text: 'Many to many (N:N)', value: 'many-to-many',},
+    {text: 'One to many (1:N)', value: 'one-to-many',}
+  ]
+  let types = ['Many to many (N:N)', 'One to many (1:N)']
+
+  let selectedRelationshipType = relationshipTypes.find(type => type.value === field.relationshipType)?.text || 'Many to many (N:N)'
+
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
   let deletion
@@ -44,17 +56,23 @@
   $: uneditable =
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
+  $: invalid = field.type === FIELDS.LINK.type && !field.tableId
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
-    field.type !== "link" &&
+    field.type !== LINK_TYPE &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  $: canBeDisplay = field.type !== "link" && field.type !== AUTO_COL
+  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_COL
   $: canBeRequired =
-    field.type !== "link" && !uneditable && field.type !== AUTO_COL
+    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
 
   async function saveColumn() {
+    // Set relationship type if it's 
+    if (field.type === 'link') {
+      field.relationshipType = relationshipTypes.find(type => type.text === selectedRelationshipType).value
+    } 
+
     if (field.type === AUTO_COL) {
       field = buildAutoColumn(
         $backendUiStore.draftTable.name,
@@ -84,13 +102,17 @@
     }
   }
 
-  function handleFieldConstraints(event) {
+  function handleTypeChange(event) {
     const definition = fieldDefinitions[event.target.value.toUpperCase()]
     if (!definition) {
       return
     }
     field.type = definition.type
     field.constraints = definition.constraints
+    // remove any extra fields that may not be related to this type
+    delete field.autocolumn
+    delete field.subtype
+    delete field.tableId
   }
 
   function onChangeRequired(e) {
@@ -138,7 +160,7 @@
     secondary
     thin
     label="Type"
-    on:change={handleFieldConstraints}
+    on:change={handleTypeChange}
     bind:value={field.type}>
     {#each Object.values(fieldDefinitions) as field}
       <option value={field.type}>{field.name}</option>
@@ -206,6 +228,16 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
+  <div>
+      <Label grey extraSmall>Select relationship type</Label>
+      <div class="radio-buttons">
+        {#each types as type}
+          <Radio disabled={originalName} name="Relationship type" value={type} bind:group={selectedRelationshipType}>
+            <label for={type}>{type}</label>
+          </Radio>
+        {/each}
+      </div>
+    </div>
     <Select label="Table" thin secondary bind:value={field.tableId}>
       <option value="">Choose an option</option>
       {#each tableOptions as table}
@@ -229,7 +261,9 @@
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveColumn}>Save Column</Button>
+    <Button primary on:click={saveColumn} bind:disabled={invalid}>
+      Save Column
+    </Button>
   </footer>
 </div>
 <ConfirmDialog
@@ -241,6 +275,15 @@
   title="Confirm Deletion" />
 
 <style>
+  label {
+    display: grid;
+    place-items: center;
+  }
+  .radio-buttons {
+    display: flex;
+    gap: var(--spacing-m);
+    font-size: var(--font-size-xs)
+  }
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);

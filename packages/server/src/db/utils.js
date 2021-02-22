@@ -277,3 +277,13 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
     otherProps
   )
 }
+
+/**
+ * This can be used with the db.allDocs to get a list of IDs
+ */
+exports.getMultiIDParams = ids => {
+  return {
+    keys: ids,
+    include_docs: true,
+  }
+}

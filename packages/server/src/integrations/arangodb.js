@@ -3,6 +3,9 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://github.com/arangodb/arangojs",
+  friendlyName: "ArangoDB",
+  description:
+    "ArangoDB is a scalable open-source multi-model database natively supporting graph, document and search. All supported data models & access patterns can be combined in queries allowing for maximal flexibility. ",
   datasource: {
     url: {
       type: FIELD_TYPES.STRING,
