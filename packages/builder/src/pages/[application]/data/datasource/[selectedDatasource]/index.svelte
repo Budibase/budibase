@@ -45,13 +45,13 @@
 
 {#if datasource}
   <section>
-    <Spacer medium />
+    <Spacer extraLarge />
     <header>
       <div class="datasource-icon">
         <svelte:component
           this={ICONS[datasource.source]}
-          height="20"
-          width="20" />
+          height="26"
+          width="26" />
       </div>
       <h3 class="section-title">{datasource.name}</h3>
     </header>
@@ -101,7 +101,7 @@
 <style>
   h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 24px;
   }
 
   section {
