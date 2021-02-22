@@ -36,6 +36,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
+    border-right: 1px solid var(--grey-2);
   }
 
   .content {
