@@ -81,7 +81,7 @@
     {/each}
   </Select>
   <RowFieldControl
-    meta={{ name: 'status', type: 'options', constraints: {inclusion: ['active', 'inactive']} }}
+    meta={{ name: 'status', type: 'options', constraints: { inclusion: ['active', 'inactive'] } }}
     bind:value={row.status}
     defaultValue={'active'} />
   {#each customSchemaKeys as [key, meta]}
