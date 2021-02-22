@@ -204,7 +204,9 @@
         {#if data}
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
             {#if tab === 'JSON'}
-              <pre class="preview">
+              <pre
+                class="preview">
+                <!-- prettier-ignore -->
                 {#if !data[0]}
                   
                   Please run your query to fetch some data.
