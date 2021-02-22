@@ -114,8 +114,7 @@
         bind:getCaretPosition
         thin
         bind:value
-        placeholder="Add text, or click the objects on the left to add them to
-        the textbox." />
+        placeholder="Add text, or click the objects on the left to add them to the textbox." />
       {#if !valid}
         <p class="syntax-error">
           Current Handlebars syntax is invalid, please check the guide
@@ -144,8 +143,11 @@
   }
 
   .text {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-l);
     font-family: var(--font-sans);
+  }
+  .text :global(textarea) {
+    min-height: 100px;
   }
   .text :global(p) {
     margin: 0;

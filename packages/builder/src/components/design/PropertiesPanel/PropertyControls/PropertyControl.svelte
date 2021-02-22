@@ -7,6 +7,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
+  import { capitalise } from "../../../../helpers"
 
   export let label = ""
   export let bindable = true
@@ -88,26 +89,26 @@
       on:click={bindingDrawer.show}>
       <Icon name="lightning" />
     </div>
+    <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
+      <div slot="description">
+        <Body extraSmall grey>
+          Add the objects on the left to enrich your text.
+        </Body>
+      </div>
+      <heading slot="buttons">
+        <Button thin blue disabled={!valid} on:click={handleClose}>Save</Button>
+      </heading>
+      <div slot="body">
+        <BindingPanel
+          bind:valid
+          value={safeValue}
+          close={handleClose}
+          on:update={e => (temporaryBindableValue = e.detail)}
+          {bindableProperties} />
+      </div>
+    </Drawer>
   {/if}
 </div>
-<Drawer bind:this={bindingDrawer} title="Bindings">
-  <div slot="description">
-    <Body extraSmall grey>
-      Add the objects on the left to enrich your text.
-    </Body>
-  </div>
-  <heading slot="buttons">
-    <Button thin blue disabled={!valid} on:click={handleClose}>Save</Button>
-  </heading>
-  <div slot="body">
-    <BindingPanel
-      bind:valid
-      value={safeValue}
-      close={handleClose}
-      on:update={e => (temporaryBindableValue = e.detail)}
-      {bindableProperties} />
-  </div>
-</Drawer>
 
 <style>
   .property-control {

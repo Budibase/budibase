@@ -1,9 +1,7 @@
 <script>
-  import { onMount } from "svelte"
-  import { TextArea, Label, Input, Heading, Spacer } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
-  import ParameterBuilder from "./QueryParameterBuilder.svelte"
   import FieldsBuilder from "./QueryFieldsBuilder.svelte"
+  import { Label, Input } from "@budibase/bbui"
 
   const QueryTypes = {
     SQL: "sql",
@@ -15,6 +13,7 @@
   export let datasource
   export let schema
   export let editable = true
+  export let height = 500
 
   $: urlDisplay =
     schema.urlDisplay &&
@@ -29,6 +28,7 @@
   {#key query._id}
     {#if schema.type === QueryTypes.SQL}
       <Editor
+        editorHeight={height}
         label="Query"
         mode="sql"
         on:change={updateQuery}
@@ -37,6 +37,7 @@
         parameters={query.parameters} />
     {:else if schema.type === QueryTypes.JSON}
       <Editor
+        editorHeight={height}
         label="Query"
         mode="json"
         on:change={updateQuery}
