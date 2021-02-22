@@ -6,8 +6,6 @@ const {
   ViewNames,
 } = require("../../../db/utils")
 
-const EXCLUDED_VIEWS = [ViewNames.USERS, ViewNames.LINK, ViewNames.ROUTING]
-
 exports.getAppQuota = async function(appId) {
   const db = new PouchDB(appId)
 
@@ -28,7 +26,7 @@ exports.getAppQuota = async function(appId) {
 
   let views = 0
   for (let viewName of Object.keys(designDoc.views)) {
-    if (EXCLUDED_VIEWS.indexOf(viewName) === -1) {
+    if (Object.values(ViewNames).indexOf(viewName) === -1) {
       views++
     }
   }
