@@ -18,25 +18,25 @@
   let options = []
   let tableDefinition
   let fieldText = ""
-  
-  const setFieldText = (value) => {
-    if (fieldSchema?.relationshipType === 'one-to-many') {
+
+  const setFieldText = value => {
+    if (fieldSchema?.relationshipType === "one-to-many") {
       if (value?.length && options?.length) {
         const row = options.find(row => row._id === value[0])
         return row.name
       } else {
-        return placeholder  || 'Choose an option'
-      } 
+        return placeholder || "Choose an option"
+      }
     } else {
       if (value?.length) {
         return `${value?.length ?? 0} selected rows`
       } else {
-        return placeholder  || 'Choose some options'
-      } 
+        return placeholder || "Choose some options"
+      }
     }
   }
 
-  $: options, fieldText = setFieldText($fieldState?.value)
+  $: options, (fieldText = setFieldText($fieldState?.value))
   $: valueLookupMap = getValueLookupMap($fieldState?.value)
   $: isOptionSelected = option => valueLookupMap[option] === true
   $: linkedTableId = fieldSchema?.tableId
@@ -74,14 +74,14 @@
   }
 
   const toggleOption = option => {
-    if (fieldSchema.type === 'one-to-many') {
+    if (fieldSchema.type === "one-to-many") {
       fieldApi.setValue([option])
     } else {
       if ($fieldState.value.includes(option)) {
-      fieldApi.setValue($fieldState.value.filter(x => x !== option))
-    } else {
-      fieldApi.setValue([...$fieldState.value, option])
-    }
+        fieldApi.setValue($fieldState.value.filter(x => x !== option))
+      } else {
+        fieldApi.setValue([...$fieldState.value, option])
+      }
     }
   }
 </script>
