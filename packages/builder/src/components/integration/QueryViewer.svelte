@@ -177,9 +177,11 @@
         schema={queryConfig[query.queryVerb]}
         bind:parameters />
       <Spacer extraLarge />
+      <hr />
       <Spacer extraLarge />
+      <Spacer medium />
       <div class="viewer-controls">
-        <Heading extraSmall lh>Query Results</Heading>
+        <Heading small lh>Results</Heading>
         <div class="button-container">
           <Button
             secondary
@@ -198,6 +200,7 @@
       </Body>
 
       <Spacer extraLarge />
+      <Spacer medium />
 
       <section class="viewer">
         {#if data}
@@ -205,13 +208,7 @@
             {#if tab === 'JSON'}
               <pre class="preview">
               {#if !data[0]}
-                  
-                  
-                  
                 Please run your query to fetch some data.
-
-
-
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
                 {/if}
@@ -248,8 +245,8 @@
     </div>
   </section>
 {/if}
-      <Spacer extraLarge />
-      <Spacer extraLarge />
+<Spacer extraLarge />
+<Spacer extraLarge />
 
 <style>
   .config-field {
@@ -283,12 +280,20 @@
     cursor: pointer;
   }
 
+  .viewer {
+    min-height: 200px;
+  }
+
   .preview {
-    width: 640px;
     height: 100%;
+    min-height: 120px;
     overflow-y: auto;
     overflow-wrap: break-word;
     white-space: pre-wrap;
+    background-color: var(--grey-1);
+    padding: var(--spacing-m);
+    border-radius: 8px;
+    color: var(--grey-6);
   }
 
   .viewer-controls {
