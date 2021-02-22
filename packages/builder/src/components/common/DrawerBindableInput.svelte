@@ -10,10 +10,13 @@
 
   export let value = ""
   export let bindings = []
+  export let thin = true
+  export let title = "Bindings"
+  export let placeholder
 
   let bindingDrawer
-  let tempValue = value
 
+  $: tempValue = value
   $: readableValue = runtimeToReadableBinding(bindings, value)
 
   const handleClose = () => {
@@ -28,15 +31,15 @@
 
 <div class="control">
   <Input
-    thin
+    {thin}
     value={readableValue}
     on:change={event => onChange(event.target.value)}
-    placeholder="/screen" />
+    {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
     <Icon name="lightning" />
   </div>
 </div>
-<Drawer bind:this={bindingDrawer} title="Bindings">
+<Drawer bind:this={bindingDrawer} {title}>
   <div slot="description">
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
@@ -57,7 +60,6 @@
 <style>
   .control {
     flex: 1;
-    margin-left: var(--spacing-l);
     position: relative;
   }
 

@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
   import {
     Select,
@@ -7,7 +6,6 @@
     Body,
     Label,
     Input,
-    TextArea,
     Heading,
     Spacer,
     Switcher,
@@ -133,14 +131,15 @@
 <section class="config">
   <Heading medium lh>Query {integrationInfo?.friendlyName}</Heading>
   <hr />
+  <Spacer extraLarge />
   <Heading small lh>Config</Heading>
   <Body small grey>Provide a name for your query and select its function.</Body>
-  <Spacer medium />
+  <Spacer large />
   <div class="config-field">
     <Label small>Query Name</Label>
     <Input thin outline bind:value={query.name} />
   </div>
-  <Spacer medium />
+  <Spacer extraLarge />
   {#if queryConfig}
     <div class="config-field">
       <Label small>Function</Label>
@@ -152,7 +151,10 @@
         {/each}
       </Select>
     </div>
+    <Spacer extraLarge />
     <hr />
+    <Spacer extraLarge />
+    <Spacer small />
     <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
     <hr />
   {/if}
@@ -160,20 +162,24 @@
 
 {#if shouldShowQueryConfig}
   <section>
+    <Spacer extraLarge />
+    <Spacer small />
     <div class="config">
       <Heading small lh>Fields</Heading>
       <Body small grey>Fill in the fields specific to this query.</Body>
       <Spacer medium />
+      <Spacer extraLarge />
       <IntegrationQueryEditor
         {datasource}
         {query}
         schema={queryConfig[query.queryVerb]}
         bind:parameters />
-
+      <Spacer extraLarge />
       <hr />
-
+      <Spacer extraLarge />
+      <Spacer medium />
       <div class="viewer-controls">
-        <Heading small lh>Query Results</Heading>
+        <Heading small lh>Results</Heading>
         <div class="button-container">
           <Button
             secondary
@@ -191,20 +197,17 @@
         schema.
       </Body>
 
-      <Spacer large />
+      <Spacer extraLarge />
+      <Spacer medium />
 
       <section class="viewer">
         {#if data}
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
             {#if tab === 'JSON'}
               <pre class="preview">
-              {#if !data[0]}
+                {#if !data[0]}
                   
-                  
-                  
-                Please run your query to fetch some data.
-
-
+                  Please run your query to fetch some data.
 
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
@@ -242,6 +245,8 @@
     </div>
   </section>
 {/if}
+<Spacer extraLarge />
+<Spacer extraLarge />
 
 <style>
   .config-field {
@@ -263,7 +268,7 @@
 
   hr {
     margin-top: var(--layout-m);
-    margin-bottom: var(--layout-m);
+    border: 1px solid var(--grey-2);
   }
 
   .config {
@@ -275,12 +280,20 @@
     cursor: pointer;
   }
 
+  .viewer {
+    min-height: 200px;
+  }
+
   .preview {
-    width: 800px;
     height: 100%;
+    min-height: 120px;
     overflow-y: auto;
     overflow-wrap: break-word;
     white-space: pre-wrap;
+    background-color: var(--grey-1);
+    padding: var(--spacing-m);
+    border-radius: 8px;
+    color: var(--grey-6);
   }
 
   .viewer-controls {

@@ -13,8 +13,10 @@
 </script>
 
 <div class="root">
-  <Label size="m" color="dark">Screen</Label>
+  <Label small>Screen</Label>
   <DrawerBindableInput
+    title="Destination URL"
+    placeholder="/screen"
     value={parameters.url}
     on:change={value => (parameters.url = value.detail)}
     {bindings} />

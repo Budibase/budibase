@@ -8,8 +8,8 @@ const saveRowHandler = async (action, context) => {
   if (providerId) {
     let draft = context[providerId]
     if (fields) {
-      for (let [key, entry] of Object.entries(fields)) {
-        draft[key] = entry.value
+      for (let [field, value] of Object.entries(fields)) {
+        draft[field] = value
       }
     }
     await saveRow(draft)
@@ -26,11 +26,7 @@ const deleteRowHandler = async action => {
 const triggerAutomationHandler = async action => {
   const { fields } = action.parameters
   if (fields) {
-    const params = {}
-    for (let field in fields) {
-      params[field] = fields[field].value
-    }
-    await triggerAutomation(action.parameters.automationId, params)
+    await triggerAutomation(action.parameters.automationId, fields)
   }
 }
 

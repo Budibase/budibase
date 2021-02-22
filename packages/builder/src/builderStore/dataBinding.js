@@ -232,6 +232,15 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+
+        // Some calc views don't include a "name" property inside the schema
+        if (schema) {
+          Object.keys(schema).forEach(field => {
+            if (!schema[field].name) {
+              schema[field].name = field
+            }
+          })
+        }
       } else if (type === "query" && isForm) {
         schema = {}
         const params = table.parameters || []
