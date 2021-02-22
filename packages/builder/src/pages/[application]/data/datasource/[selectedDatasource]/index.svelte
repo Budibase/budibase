@@ -13,11 +13,6 @@
   )
   $: integration = datasource && $backendUiStore.integrations[datasource.source]
 
-  $: console.log({
-    datasource,
-    integration,
-  })
-
   async function saveDatasource() {
     // Create datasource
     await backendUiStore.actions.datasources.save(datasource)
