@@ -8,6 +8,8 @@ const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
 
+const INVALID_ERR = "Invalid Credentials"
+
 exports.authenticate = async ctx => {
   const appId = ctx.appId
   if (!appId) ctx.throw(400, "No appId")
@@ -27,7 +29,13 @@ exports.authenticate = async ctx => {
   } catch (_) {
     // do not want to throw a 404 - as this could be
     // used to determine valid emails
-    ctx.throw(401, "Invalid Credentials")
+    ctx.throw(401, INVALID_ERR)
+  }
+
+  // check that the user is currently active, make sure its a boolean false
+  // so that older users which don't have this set are handled
+  if (typeof dbUser.active === "boolean" && !dbUser.active) {
+    ctx.throw(401, INVALID_ERR)
   }
 
   // authenticate
@@ -56,7 +64,7 @@ exports.authenticate = async ctx => {
       appId,
     }
   } else {
-    ctx.throw(401, "Invalid credentials.")
+    ctx.throw(401, INVALID_ERR)
   }
 }
 
