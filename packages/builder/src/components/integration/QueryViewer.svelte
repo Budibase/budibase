@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
   import {
     Select,
@@ -7,7 +6,6 @@
     Body,
     Label,
     Input,
-    TextArea,
     Heading,
     Spacer,
     Switcher,
@@ -203,7 +201,9 @@
                   
                   
                   
+                  
                 Please run your query to fetch some data.
+
 
 
 
