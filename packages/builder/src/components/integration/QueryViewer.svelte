@@ -92,7 +92,7 @@
 
       if (response.status !== 200) throw new Error(json.message)
 
-      data = json || []
+      data = json.rows || []
 
       if (data.length === 0) {
         notifier.info(
@@ -103,9 +103,9 @@
 
       notifier.success("Query executed successfully.")
 
-      // Assume all the fields are strings and create a basic schema
-      // from the first record returned by the query
-      fields = Object.keys(json[0]).map(field => ({
+      // Assume all the fields are strings and create a basic schema from the
+      // unique fields returned by the server
+      fields = json.schemaFields.map(field => ({
         name: field,
         type: "STRING",
       }))

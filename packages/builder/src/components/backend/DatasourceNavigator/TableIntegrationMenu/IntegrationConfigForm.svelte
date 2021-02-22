@@ -3,13 +3,14 @@
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let integration
+  export let schema
 
   let unsaved = false
 </script>
 
 <form>
-  {#each Object.keys(integration) as configKey}
-    {#if typeof integration[configKey] === 'object'}
+  {#each Object.keys(schema) as configKey}
+    {#if typeof schema[configKey].type === 'object'}
       <Label small>{configKey}</Label>
       <Spacer small />
       <KeyValueBuilder bind:object={integration[configKey]} on:change />
@@ -18,7 +19,7 @@
         <Label small>{configKey}</Label>
         <Input
           outline
-          type={integration[configKey].type}
+          type={schema[configKey].type}
           on:change
           bind:value={integration[configKey]} />
       </div>

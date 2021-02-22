@@ -8,7 +8,7 @@ const SCHEMA = {
   friendlyName: "Airtable",
   datasource: {
     apiKey: {
-      type: FIELD_TYPES.STRING,
+      type: FIELD_TYPES.PASSWORD,
       default: "enter api key",
       required: true,
     },
