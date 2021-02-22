@@ -115,9 +115,17 @@ exports.preview = async function(ctx) {
 
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
-  ctx.body = formatResponse(
+  const rows = formatResponse(
     await new Integration(datasource.config)[queryVerb](enrichedQuery)
   )
+
+  // get all the potential fields in the schema
+  const keys = rows.flatMap(Object.keys)
+
+  ctx.body = {
+    rows,
+    schemaFields: [...new Set(keys)],
+  }
 }
 
 exports.execute = async function(ctx) {

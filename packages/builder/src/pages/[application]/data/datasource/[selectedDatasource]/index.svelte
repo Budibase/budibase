@@ -13,6 +13,11 @@
   )
   $: integration = datasource && $backendUiStore.integrations[datasource.source]
 
+  $: console.log({
+    datasource,
+    integration,
+  })
+
   async function saveDatasource() {
     // Create datasource
     await backendUiStore.actions.datasources.save(datasource)
@@ -74,6 +79,7 @@
 
       <Spacer extraLarge />
       <IntegrationConfigForm
+        schema={integration.datasource}
         integration={datasource.config}
         on:change={setUnsaved} />
       <Spacer extraLarge />
