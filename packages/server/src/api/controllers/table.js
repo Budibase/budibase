@@ -9,6 +9,7 @@ const {
 } = require("../../db/utils")
 const { isEqual } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
+const { inputProcessing } = require("../../utilities/rowProcessor")
 
 async function checkForColumnUpdates(db, oldTable, updatedTable) {
   let updatedRows
@@ -59,6 +60,82 @@ function makeSureTableUpToDate(table, tableToSave) {
     }
   }
   return tableToSave
+}
+
+async function handleDataImport(user, table, dataImport) {
+  const db = new CouchDB(user.appId)
+  if (dataImport && dataImport.csvString) {
+    // Populate the table with rows imported from CSV in a bulk update
+    const data = await csvParser.transform(dataImport)
+
+    for (let i = 0; i < data.length; i++) {
+      let row = data[i]
+      row._id = generateRowID(table._id)
+      row.tableId = table._id
+      const processed = inputProcessing(user, table, row)
+      row = processed.row
+      // these auto-fields will never actually link anywhere (always builder)
+      for (let [fieldName, schema] of Object.entries(table.schema)) {
+        if (
+          schema.autocolumn &&
+          (schema.subtype === AutoFieldSubTypes.CREATED_BY ||
+            schema.subtype === AutoFieldSubTypes.UPDATED_BY)
+        ) {
+          delete row[fieldName]
+        }
+      }
+      table = processed.table
+      data[i] = row
+    }
+
+    await db.bulkDocs(data)
+    let response = await db.put(table)
+    table._rev = response._rev
+  }
+  return table
+}
+
+async function handleSearchIndexes(db, table) {
+  // create relevant search indexes
+  if (table.indexes && table.indexes.length > 0) {
+    const currentIndexes = await db.getIndexes()
+    const indexName = `search:${table._id}`
+
+    const existingIndex = currentIndexes.indexes.find(
+      existing => existing.name === indexName
+    )
+
+    if (existingIndex) {
+      const currentFields = existingIndex.def.fields.map(
+        field => Object.keys(field)[0]
+      )
+
+      // if index fields have changed, delete the original index
+      if (!isEqual(currentFields, table.indexes)) {
+        await db.deleteIndex(existingIndex)
+        // create/recreate the index with fields
+        await db.createIndex({
+          index: {
+            fields: table.indexes,
+            name: indexName,
+            ddoc: "search_ddoc",
+            type: "json",
+          },
+        })
+      }
+    } else {
+      // create/recreate the index with fields
+      await db.createIndex({
+        index: {
+          fields: table.indexes,
+          name: indexName,
+          ddoc: "search_ddoc",
+          type: "json",
+        },
+      })
+    }
+  }
+  return table
 }
 
 exports.fetch = async function(ctx) {
@@ -152,60 +229,11 @@ exports.save = async function(ctx) {
   const result = await db.post(tableToSave)
   tableToSave._rev = result.rev
 
-  // create relevant search indexes
-  if (tableToSave.indexes && tableToSave.indexes.length > 0) {
-    const currentIndexes = await db.getIndexes()
-    const indexName = `search:${result.id}`
-
-    const existingIndex = currentIndexes.indexes.find(
-      existing => existing.name === indexName
-    )
-
-    if (existingIndex) {
-      const currentFields = existingIndex.def.fields.map(
-        field => Object.keys(field)[0]
-      )
-
-      // if index fields have changed, delete the original index
-      if (!isEqual(currentFields, tableToSave.indexes)) {
-        await db.deleteIndex(existingIndex)
-        // create/recreate the index with fields
-        await db.createIndex({
-          index: {
-            fields: tableToSave.indexes,
-            name: indexName,
-            ddoc: "search_ddoc",
-            type: "json",
-          },
-        })
-      }
-    } else {
-      // create/recreate the index with fields
-      await db.createIndex({
-        index: {
-          fields: tableToSave.indexes,
-          name: indexName,
-          ddoc: "search_ddoc",
-          type: "json",
-        },
-      })
-    }
-  }
+  tableToSave = await handleSearchIndexes(db, tableToSave)
+  tableToSave = await handleDataImport(ctx.user, tableToSave, dataImport)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, tableToSave)
-
-  if (dataImport && dataImport.csvString) {
-    // Populate the table with rows imported from CSV in a bulk update
-    const data = await csvParser.transform(dataImport)
-
-    for (let row of data) {
-      row._id = generateRowID(tableToSave._id)
-      row.tableId = tableToSave._id
-    }
-
-    await db.bulkDocs(data)
-  }
 
   ctx.status = 200
   ctx.message = `Table ${ctx.request.body.name} saved successfully.`

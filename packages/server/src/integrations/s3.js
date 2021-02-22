@@ -2,6 +2,9 @@ const AWS = require("aws-sdk")
 
 const SCHEMA = {
   docs: "https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html",
+  description:
+    "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance.",
+  friendlyName: "Amazon S3",
   datasource: {
     region: {
       type: "string",

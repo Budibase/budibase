@@ -3,7 +3,6 @@ const { OBJ_STORE_DIRECTORY } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../constants")
-const CouchDB = require("../db")
 
 const BASE_AUTO_ID = 1
 
@@ -71,14 +70,13 @@ const TYPE_TRANSFORM_MAP = {
  * @param {Object} user The user to be used for an appId as well as the createdBy and createdAt fields.
  * @param {Object} table The table which is to be used for the schema, as well as handling auto IDs incrementing.
  * @param {Object} row The row which is to be updated with information for the auto columns.
- * @returns {Promise<{row: Object, table: Object}>} The updated row and table, the table may need to be updated
+ * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-async function processAutoColumn(user, table, row) {
+function processAutoColumn(user, table, row) {
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
-  let tableUpdated = false
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
@@ -104,16 +102,9 @@ async function processAutoColumn(user, table, row) {
         if (creating) {
           schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
           row[key] = schema.lastID
-          tableUpdated = true
         }
         break
     }
-  }
-  if (tableUpdated) {
-    const db = new CouchDB(user.appId)
-    const response = await db.put(table)
-    // update the revision
-    table._rev = response._rev
   }
   return { table, row }
 }
@@ -143,7 +134,7 @@ exports.coerce = (row, type) => {
  * @param {object} table the table which the row is being saved to.
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-exports.inputProcessing = async (user, table, row) => {
+exports.inputProcessing = (user, table, row) => {
   let clonedRow = cloneDeep(row)
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
@@ -166,8 +157,17 @@ exports.inputProcessing = async (user, table, row) => {
  * @returns {object[]} the enriched rows will be returned.
  */
 exports.outputProcessing = async (appId, table, rows) => {
+  let wasArray = true
+  if (!(rows instanceof Array)) {
+    rows = [rows]
+    wasArray = false
+  }
   // attach any linked row information
-  const outputRows = await linkRows.attachLinkInfo(appId, rows)
+  const outputRows = await linkRows.attachLinkedPrimaryDisplay(
+    appId,
+    table,
+    rows
+  )
   // update the attachments URL depending on hosting
   if (env.CLOUD && env.SELF_HOSTED) {
     for (let [property, column] of Object.entries(table.schema)) {
@@ -184,5 +184,5 @@ exports.outputProcessing = async (appId, table, rows) => {
       }
     }
   }
-  return outputRows
+  return wasArray ? outputRows : outputRows[0]
 }

@@ -24,7 +24,7 @@
     timeOnly: {
       hour: "numeric",
       minute: "numeric",
-      hour12: true,
+      hourCycle: "h12",
     },
   }
   const POLL_INTERVAL = 5000

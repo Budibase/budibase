@@ -13,7 +13,6 @@
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
-  import { getSchemaForDatasource } from "builderStore/dataBinding"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -96,7 +95,7 @@
   </div>
   {#if value?.type === 'query'}
     <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query'} bind:this={drawer}>
+    <Drawer title={'Query Parameters'} bind:this={drawer}>
       <div slot="buttons">
         <Button
           blue
@@ -116,10 +115,12 @@
             parameters={queries.find(query => query._id === value._id).parameters}
             bindings={queryBindableProperties} />
         {/if}
+        <!--        <Spacer large />-->
         <IntegrationQueryEditor
           height={200}
           query={value}
           schema={fetchQueryDefinition(value)}
+          datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
           editable={false} />
         <Spacer large />
       </div>

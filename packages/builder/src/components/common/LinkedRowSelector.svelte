@@ -41,13 +41,22 @@
     table.
   </Label>
 {:else}
-  <Multiselect
-    secondary
-    bind:value={linkedRows}
-    {label}
-    placeholder="Choose some options">
-    {#each rows as row}
-      <option value={row._id}>{getPrettyName(row)}</option>
-    {/each}
-  </Multiselect>
+  {#if schema.relationshipType === 'one-to-many'}
+    <Select thin secondary on:change={e => linkedRows = [e.target.value]} name={label} {label}>
+      <option value="">Choose an option</option>
+      {#each rows as row}
+        <option selected={row._id === linkedRows[0]} value={row._id}>{getPrettyName(row)}</option>
+      {/each}
+    </Select>
+  {:else}
+    <Multiselect
+      secondary
+      bind:value={linkedRows}
+      {label}
+      placeholder="Choose some options">
+      {#each rows as row}
+        <option value={row._id}>{getPrettyName(row)}</option>
+      {/each}
+    </Multiselect>
+  {/if}
 {/if}

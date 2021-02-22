@@ -14,6 +14,7 @@ const {
   outputProcessing,
 } = require("../../utilities/rowProcessor")
 const { FieldTypes } = require("../../constants")
+const { isEqual } = require("lodash")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -68,7 +69,7 @@ exports.patch = async function(ctx) {
   }
 
   // this returns the table and row incase they have been updated
-  let { table, row } = await inputProcessing(ctx.user, dbTable, dbRow)
+  let { table, row } = inputProcessing(ctx.user, dbTable, dbRow)
   const validateResult = await validate({
     row,
     table,
@@ -101,6 +102,10 @@ exports.patch = async function(ctx) {
   }
 
   const response = await db.put(row)
+  // don't worry about rev, tables handle rev/lastID updates
+  if (!isEqual(dbTable, table)) {
+    await db.put(table)
+  }
   row._rev = response.rev
   row.type = "row"
 
@@ -136,11 +141,8 @@ exports.save = async function(ctx) {
   }
 
   // this returns the table and row incase they have been updated
-  let { table, row } = await inputProcessing(
-    ctx.user,
-    await db.get(inputs.tableId),
-    inputs
-  )
+  const dbTable = await db.get(inputs.tableId)
+  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
   const validateResult = await validate({
     row,
     table,
@@ -174,6 +176,10 @@ exports.save = async function(ctx) {
 
   row.type = "row"
   const response = await db.put(row)
+  // don't worry about rev, tables handle rev/lastID updates
+  if (!isEqual(dbTable, table)) {
+    await db.put(table)
+  }
   row._rev = response.rev
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.body = row
