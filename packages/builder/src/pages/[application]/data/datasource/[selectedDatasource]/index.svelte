@@ -74,6 +74,7 @@
 
       <Spacer extraLarge />
       <IntegrationConfigForm
+        schema={integration.datasource}
         integration={datasource.config}
         on:change={setUnsaved} />
       <Spacer extraLarge />
