@@ -15,6 +15,7 @@ import { FrontendTypes } from "constants"
 import analytics from "analytics"
 import { findComponentType, findComponentParent } from "../storeUtils"
 import { uuid } from "../uuid"
+import { removeBindings } from "../dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -407,6 +408,9 @@ export const getFrontendStore = () => {
           if (!state.componentToPaste) {
             return state
           }
+
+          // immediately need to remove bindings, currently these aren't valid when pasted
+          state.componentToPaste = removeBindings(state.componentToPaste)
 
           // Clone the component to paste
           // Retain the same ID if cutting as things may be referencing this component
