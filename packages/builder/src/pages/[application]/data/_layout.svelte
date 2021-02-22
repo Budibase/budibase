@@ -80,6 +80,7 @@
     align-items: stretch;
     gap: var(--spacing-l);
     position: relative;
+    border-right: 1px solid var(--grey-2);
   }
 
   i {
