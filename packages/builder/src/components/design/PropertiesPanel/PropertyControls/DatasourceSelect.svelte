@@ -77,7 +77,7 @@
     dropdownRight.hide()
   }
 
-  function fetchDatasourceSchema(query) {
+  function fetchQueryDefinition(query) {
     const source = $backendUiStore.datasources.find(
       ds => ds._id === query.datasourceId
     ).source
@@ -85,44 +85,48 @@
   }
 </script>
 
-<div
-  class="dropdownbutton"
-  bind:this={anchorRight}
-  on:click={dropdownRight.show}>
-  <span>{value?.label ?? 'Choose option'}</span>
-  <Icon name="arrowdown" />
+<div class="container">
+  <div
+    class="dropdownbutton"
+    bind:this={anchorRight}
+    on:click={dropdownRight.show}>
+    <span>{value?.label ?? 'Choose option'}</span>
+    <Icon name="arrowdown" />
+  </div>
+  {#if value?.type === 'query'}
+    <i class="ri-settings-5-line" on:click={drawer.show} />
+    <Drawer title={'Query Parameters'} bind:this={drawer}>
+      <div slot="buttons">
+        <Button
+          blue
+          thin
+          on:click={() => {
+            notifier.success('Query parameters saved.')
+            handleSelected(value)
+            drawer.hide()
+          }}>
+          Save
+        </Button>
+      </div>
+      <div class="drawer-contents" slot="body">
+        {#if value.parameters.length > 0}
+          <ParameterBuilder
+            bind:customParams={value.queryParams}
+            parameters={queries.find(query => query._id === value._id).parameters}
+            bindings={queryBindableProperties} />
+        {/if}
+        <!--        <Spacer large />-->
+        <IntegrationQueryEditor
+          height={200}
+          query={value}
+          schema={fetchQueryDefinition(value)}
+          datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
+          editable={false} />
+        <Spacer large />
+      </div>
+    </Drawer>
+  {/if}
 </div>
-{#if value?.type === 'query'}
-  <i class="ri-settings-5-line" on:click={drawer.show} />
-  <Drawer title={'Query'} bind:this={drawer}>
-    <div slot="buttons">
-      <Button
-        blue
-        thin
-        on:click={() => {
-          notifier.success('Query parameters saved.')
-          handleSelected(value)
-          drawer.hide()
-        }}>
-        Save
-      </Button>
-    </div>
-    <div class="drawer-contents" slot="body">
-      <IntegrationQueryEditor
-        datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
-        query={value}
-        schema={fetchDatasourceSchema(value)}
-        editable={false} />
-      <Spacer large />
-      {#if value.parameters.length > 0}
-        <ParameterBuilder
-          bind:customParams={value.queryParams}
-          parameters={queries.find(query => query._id === value._id).parameters}
-          bindings={queryBindableProperties} />
-      {/if}
-    </div>
-  </Drawer>
-{/if}
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
@@ -197,6 +201,13 @@
 </DropdownMenu>
 
 <style>
+  .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
   .dropdownbutton {
     background-color: var(--grey-2);
     border: var(--border-transparent);
@@ -259,8 +270,8 @@
   }
 
   .drawer-contents {
-    padding: var(--spacing-xl);
-    height: 40vh;
+    padding: var(--spacing-l);
+    height: calc(40vh - 2 * var(--spacing-l));
     overflow-y: auto;
   }
 

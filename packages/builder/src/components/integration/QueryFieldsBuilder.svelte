@@ -1,13 +1,5 @@
 <script>
-  import {
-    Button,
-    TextArea,
-    Label,
-    Input,
-    Heading,
-    Select,
-    Spacer,
-  } from "@budibase/bbui"
+  import { Label, Spacer, Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
 

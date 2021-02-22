@@ -1,10 +1,10 @@
 <script>
   import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
-  import BindableInput from "components/common/BindableInput.svelte"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
 
   export let bindable = true
   export let parameters = []
@@ -37,8 +37,13 @@
     {/if}
   </div>
   <Body small grey>
-    Parameters come in two parts: the parameter name, and a default/fallback
-    value.
+    {#if !bindable}
+      Parameters come in two parts: the parameter name, and a default/fallback
+      value.
+    {:else}
+      Enter a value for each parameter. The default values will be used for any
+      values left blank.
+    {/if}
   </Body>
   <Spacer large />
   <div class="parameters" class:bindable>
@@ -54,9 +59,9 @@
         disabled={bindable}
         bind:value={parameter.default} />
       {#if bindable}
-        <BindableInput
+        <DrawerBindableInput
+          title={`Query parameter "${parameter.name}"`}
           placeholder="Value"
-          type="string"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}
           value={runtimeToReadableBinding(bindings, customParams?.[parameter.name])}

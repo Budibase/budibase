@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
   import {
     Select,
@@ -7,7 +6,6 @@
     Body,
     Label,
     Input,
-    TextArea,
     Heading,
     Spacer,
     Switcher,
@@ -207,8 +205,10 @@
           <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
             {#if tab === 'JSON'}
               <pre class="preview">
-              {#if !data[0]}
-                Please run your query to fetch some data.
+                {#if !data[0]}
+                  
+                  Please run your query to fetch some data.
+
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
                 {/if}
