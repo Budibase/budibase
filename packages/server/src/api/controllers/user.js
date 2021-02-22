@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
 const { getRole } = require("../../utilities/security/roles")
+const { UserStatus } = require("../../constants")
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
@@ -43,8 +44,8 @@ exports.create = async function(ctx) {
     tableId: ViewNames.USERS,
   }
   // add the active status to a user if its not provided
-  if (typeof user.active !== "boolean") {
-    user.active = true
+  if (user.status == null) {
+    user.status = UserStatus.ACTIVE
   }
 
   try {
