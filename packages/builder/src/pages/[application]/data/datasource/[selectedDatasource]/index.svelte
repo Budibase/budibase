@@ -45,20 +45,22 @@
 
 {#if datasource}
   <section>
-    <Spacer medium />
+    <Spacer extraLarge />
     <header>
       <div class="datasource-icon">
         <svelte:component
           this={ICONS[datasource.source]}
-          height="30"
-          width="30" />
+          height="26"
+          width="26" />
       </div>
       <h3 class="section-title">{datasource.name}</h3>
     </header>
 
     <Body small grey lh>{integration.description}</Body>
-
+    <Spacer extraLarge />
     <hr />
+    <Spacer large />
+    <Spacer extraLarge />
 
     <div class="container">
       <div class="config-header">
@@ -70,14 +72,14 @@
         Connect your database to Budibase using the config below.
       </Body>
 
-      <Spacer medium />
+      <Spacer extraLarge />
       <IntegrationConfigForm
         integration={datasource.config}
         on:change={setUnsaved} />
-      <Spacer medium />
-
+      <Spacer extraLarge />
       <hr />
-
+      <Spacer large />
+      <Spacer extraLarge />
       <div class="query-header">
         <Heading small>Queries</Heading>
         <Button secondary on:click={() => $goto('../new')}>Add Query</Button>
@@ -99,15 +101,16 @@
 <style>
   h3 {
     margin: 0;
+    font-size: 24px;
   }
 
   section {
     margin: 0 auto;
-    width: 800px;
+    width: 640px;
   }
 
   hr {
-    margin-bottom: var(--layout-m);
+    border: 1px solid var(--grey-2);
   }
 
   header {
