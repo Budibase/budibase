@@ -67,7 +67,7 @@
     "@budibase/client": "^0.7.8",
     "@budibase/colorpicker": "1.0.1",
     "@budibase/string-templates": "^0.7.8",
-    "@budibase/svelte-ag-grid": "^0.0.16",
+    "@budibase/svelte-ag-grid": "^1.0.4",
     "@sentry/browser": "5.19.1",
     "@svelteschool/svelte-forms": "0.7.0",
     "codemirror": "^5.59.0",

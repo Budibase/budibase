@@ -37,6 +37,7 @@
     rowSelection: allowEditing ? "multiple" : false,
     rowMultiSelectWithClick: true,
     suppressRowClickSelection: false,
+    suppressFieldDotNotation: true,
     paginationAutoPageSize: true,
     pagination: true,
     enableRangeSelection: true,
