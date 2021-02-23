@@ -2,17 +2,11 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import {
-    Input,
-    Label,
-    ModalContent,
-    Button,
-    Spacer,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
+  import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
@@ -23,15 +17,28 @@
     ROW_LIST_TEMPLATE,
   ]
 
+  $: tableNames = $backendUiStore.tables.map(table => table.name)
+
   let modal
   let name
   let dataImport
   let error = ""
   let createAutoscreens = true
+  let autoColumns = getAutoColumnInformation()
+
+  function addAutoColumns(tableName, schema) {
+    for (let [subtype, col] of Object.entries(autoColumns)) {
+      if (!col.enabled) {
+        continue
+      }
+      schema[col.name] = buildAutoColumn(tableName, col.name, subtype)
+    }
+    return schema
+  }
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if ($backendUiStore.models?.some(model => model.name === tableName)) {
+    if (tableNames.includes(tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
     }
@@ -41,7 +48,7 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: dataImport.schema || {},
+      schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
     }
 
@@ -93,6 +100,28 @@
     on:input={checkValid}
     bind:value={name}
     {error} />
+  <div class="autocolumns">
+    <Label extraSmall grey>Auto Columns</Label>
+    <div class="toggles">
+      <div class="toggle-1">
+        <Toggle
+          text="Created by"
+          bind:checked={autoColumns.createdBy.enabled} />
+        <Toggle
+          text="Created at"
+          bind:checked={autoColumns.createdAt.enabled} />
+        <Toggle text="Auto ID" bind:checked={autoColumns.autoID.enabled} />
+      </div>
+      <div class="toggle-2">
+        <Toggle
+          text="Updated by"
+          bind:checked={autoColumns.updatedBy.enabled} />
+        <Toggle
+          text="Updated at"
+          bind:checked={autoColumns.updatedAt.enabled} />
+      </div>
+    </div>
+  </div>
   <Toggle
     text="Generate screens in the design section"
     bind:checked={createAutoscreens} />
@@ -101,3 +130,25 @@
     <TableDataImport bind:dataImport />
   </div>
 </ModalContent>
+
+<style>
+  .autocolumns {
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--grey-1);
+  }
+
+  .toggles {
+    display: flex;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .toggle-1 :global(> *) {
+    margin-bottom: 10px;
+  }
+
+  .toggle-2 :global(> *) {
+    margin-bottom: 10px;
+    margin-left: 20px;
+  }
+</style>

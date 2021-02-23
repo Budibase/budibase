@@ -22,3 +22,7 @@ function validate(schema, property) {
 module.exports.body = schema => {
   return validate(schema, "body")
 }
+
+module.exports.params = schema => {
+  return validate(schema, "params")
+}

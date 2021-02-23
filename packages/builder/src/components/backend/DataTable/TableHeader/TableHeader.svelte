@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { Modal, ModalContent } from "@budibase/bbui"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
+  import { FIELDS } from "constants/backend"
 
   const SORT_ICON_MAP = {
     asc: "ri-arrow-down-fill",
@@ -51,6 +52,8 @@
     column.removeEventListener("sortChanged", setSort)
     column.removeEventListener("filterActiveChanged", setFilterActive)
   })
+
+  $: type = FIELDS[field?.type?.toUpperCase()]?.name
 </script>
 
 <header
@@ -58,9 +61,17 @@
   data-cy="table-header"
   on:mouseover={() => (hovered = true)}
   on:mouseleave={() => (hovered = false)}>
-  <div>
-    <span class="column-header-name">{displayName}</span>
-    <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
+  <div class="column-header">
+    <div class="column-header-text">
+      <div class="column-header-name">
+        {displayName}
+        {#if field.autocolumn}<i class="auto ri-magic-fill" />{/if}
+      </div>
+      {#if type}
+        <div class="column-header-type">{type}</div>
+      {/if}
+    </div>
+    <i class={`${SORT_ICON_MAP[sortDirection]} icon`} />
   </div>
   <Modal bind:this={modal}>
     <ModalContent
@@ -73,11 +84,11 @@
   <section class:show={hovered || filterActive}>
     {#if editable && hovered}
       <span on:click|stopPropagation={showModal}>
-        <i class="ri-pencil-line" />
+        <i class="ri-pencil-line icon" />
       </span>
     {/if}
     <span on:click|stopPropagation={toggleMenu} bind:this={menuButton}>
-      <i class="ri-filter-line" class:active={filterActive} />
+      <i class="ri-filter-line icon" class:active={filterActive} />
     </span>
   </section>
 </header>
@@ -103,6 +114,23 @@
     opacity: 1;
   }
 
+  .column-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .column-header-text {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+  }
+
   .column-header-name {
     white-space: normal !important;
     text-overflow: ellipsis;
@@ -112,23 +140,31 @@
     overflow: hidden;
   }
 
-  .sort-icon {
-    position: relative;
-    top: 2px;
+  .column-header-type {
+    font-size: var(--font-size-xs);
+    color: var(--grey-6);
   }
 
-  i {
+  .icon {
     transition: 0.2s all;
     font-size: var(--font-size-m);
     font-weight: 500;
   }
+  .auto {
+    font-size: 9px;
+    transition: none;
+    position: relative;
+    margin-left: 2px;
+    top: -3px;
+    color: var(--grey-6);
+  }
 
-  i:hover {
+  .icon:hover {
     color: var(--blue);
   }
 
-  i.active,
-  i:hover {
+  .icon.active,
+  .icon:hover {
     color: var(--blue);
   }
 </style>

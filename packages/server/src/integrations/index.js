@@ -8,6 +8,7 @@ const s3 = require("./s3")
 const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
+const rest = require("./rest")
 
 const DEFINITIONS = {
   POSTGRES: postgres.schema,
@@ -20,6 +21,7 @@ const DEFINITIONS = {
   AIRTABLE: airtable.schema,
   MYSQL: mysql.schema,
   ARANGODB: arangodb.schema,
+  REST: rest.schema,
 }
 
 const INTEGRATIONS = {
@@ -33,6 +35,7 @@ const INTEGRATIONS = {
   AIRTABLE: airtable.integration,
   MYSQL: mysql.integration,
   ARANGODB: arangodb.integration,
+  REST: rest.integration,
 }
 
 module.exports = {

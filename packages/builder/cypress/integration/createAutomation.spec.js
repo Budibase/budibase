@@ -17,23 +17,33 @@ context("Create a automation", () => {
     cy.get("[data-cy=new-automation]").click()
     cy.get(".modal").within(() => {
       cy.get("input").type("Add Row")
-      cy.get(".buttons").contains("Create").click()
+      cy.get(".buttons")
+        .contains("Create")
+        .click()
     })
 
     // Add trigger
     cy.contains("Trigger").click()
-    cy.contains("Row Saved").click()
+    cy.contains("Row Created").click()
     cy.get(".setup").within(() => {
-      cy.get("select").first().select("dog")
+      cy.get("select")
+        .first()
+        .select("dog")
     })
 
     // Create action
     cy.contains("Action").click()
     cy.contains("Create Row").click()
     cy.get(".setup").within(() => {
-      cy.get("select").first().select("dog")
-      cy.get("input").first().type("goodboy")
-      cy.get("input").eq(1).type("11")
+      cy.get("select")
+        .first()
+        .select("dog")
+      cy.get("input")
+        .first()
+        .type("goodboy")
+      cy.get("input")
+        .eq(1)
+        .type("11")
     })
 
     // Save

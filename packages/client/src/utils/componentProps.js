@@ -21,7 +21,7 @@ export const propsAreSame = (a, b) => {
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
-export const enrichProps = async (props, dataContexts, dataBindings, user) => {
+export const enrichProps = async (props, context) => {
   // Exclude all private props that start with an underscore
   let validProps = {}
   Object.entries(props)
@@ -32,20 +32,23 @@ export const enrichProps = async (props, dataContexts, dataBindings, user) => {
 
   // Create context of all bindings and data contexts
   // Duplicate the closest context as "data" which the builder requires
-  const context = {
-    ...dataContexts,
-    ...dataBindings,
-    user,
-    data: dataContexts[dataContexts.closestComponentId],
-    data_draft: dataContexts[`${dataContexts.closestComponentId}_draft`],
+  const totalContext = {
+    ...context,
+
+    // This is only required for legacy bindings that used "data" rather than a
+    // component ID.
+    data: context[context.closestComponentId],
   }
 
   // Enrich all data bindings in top level props
-  let enrichedProps = await enrichDataBindings(validProps, context)
+  let enrichedProps = await enrichDataBindings(validProps, totalContext)
 
   // Enrich button actions if they exist
-  if (props._component.endsWith("/button") && enrichedProps.onClick) {
-    enrichedProps.onClick = enrichButtonActions(enrichedProps.onClick, context)
+  if (props._component?.endsWith("/button") && enrichedProps.onClick) {
+    enrichedProps.onClick = enrichButtonActions(
+      enrichedProps.onClick,
+      totalContext
+    )
   }
 
   return enrichedProps

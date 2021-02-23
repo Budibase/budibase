@@ -3,9 +3,12 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://airtable.com/api",
+  description:
+    "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
+  friendlyName: "Airtable",
   datasource: {
     apiKey: {
-      type: FIELD_TYPES.STRING,
+      type: FIELD_TYPES.PASSWORD,
       default: "enter api key",
       required: true,
     },
@@ -50,7 +53,7 @@ const SCHEMA = {
       },
     },
     delete: {
-      type: FIELD_TYPES.JSON,
+      type: QUERY_TYPES.JSON,
     },
   },
 }

@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
 const { getRole } = require("../../utilities/security/roles")
+const { UserStatus } = require("../../constants")
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
@@ -42,6 +43,10 @@ exports.create = async function(ctx) {
     password: hashedPassword,
     tableId: ViewNames.USERS,
   }
+  // add the active status to a user if its not provided
+  if (user.status == null) {
+    user.status = UserStatus.ACTIVE
+  }
 
   try {
     const response = await db.post(user)
@@ -64,13 +69,21 @@ exports.create = async function(ctx) {
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const user = ctx.request.body
+  let dbUser
+  // get user incase password removed
+  if (user._id) {
+    dbUser = await db.get(user._id)
+  }
   if (user.password) {
     user.password = await bcrypt.hash(user.password)
   } else {
     delete user.password
   }
 
-  const response = await db.put(user)
+  const response = await db.put({
+    password: dbUser.password,
+    ...user,
+  })
   user._rev = response.rev
 
   ctx.status = 200

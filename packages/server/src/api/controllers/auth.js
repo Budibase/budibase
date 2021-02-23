@@ -5,6 +5,11 @@ const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
+const { outputProcessing } = require("../../utilities/rowProcessor")
+const { ViewNames } = require("../../db/utils")
+const { UserStatus } = require("../../constants")
+
+const INVALID_ERR = "Invalid Credentials"
 
 exports.authenticate = async ctx => {
   const appId = ctx.appId
@@ -25,7 +30,12 @@ exports.authenticate = async ctx => {
   } catch (_) {
     // do not want to throw a 404 - as this could be
     // used to determine valid emails
-    ctx.throw(401, "Invalid Credentials")
+    ctx.throw(401, INVALID_ERR)
+  }
+
+  // check that the user is currently inactive, if this is the case throw invalid
+  if (dbUser.status === UserStatus.INACTIVE) {
+    ctx.throw(401, INVALID_ERR)
   }
 
   // authenticate
@@ -54,7 +64,7 @@ exports.authenticate = async ctx => {
       appId,
     }
   } else {
-    ctx.throw(401, "Invalid credentials.")
+    ctx.throw(401, INVALID_ERR)
   }
 }
 
@@ -62,12 +72,14 @@ exports.fetchSelf = async ctx => {
   const { userId, appId } = ctx.user
   if (!userId || !appId) {
     ctx.body = {}
-  } else {
-    const database = new CouchDB(appId)
-    const user = await database.get(userId)
-    if (user) {
-      delete user.password
-    }
-    ctx.body = user
+    return
   }
+  const db = new CouchDB(appId)
+  const user = await db.get(userId)
+  const userTable = await db.get(ViewNames.USERS)
+  if (user) {
+    delete user.password
+  }
+  // specifically needs to make sure is enriched
+  ctx.body = await outputProcessing(appId, userTable, user)
 }

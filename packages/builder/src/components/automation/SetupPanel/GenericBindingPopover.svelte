@@ -2,7 +2,6 @@
   import groupBy from "lodash/fp/groupBy"
   import {
     TextArea,
-    Label,
     Input,
     Heading,
     Body,

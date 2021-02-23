@@ -2,7 +2,8 @@
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import { Input, TextArea, Spacer } from "@budibase/bbui"
+  import { Input, Label, TextArea, Spacer } from "@budibase/bbui"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import ICONS from "../icons"
 
   export let integration = {}
@@ -49,17 +50,6 @@
       </div>
     {/each}
   </div>
-
-  {#if schema}
-    {#each Object.keys(schema) as configKey}
-      <Input
-        thin
-        type={schema[configKey].type}
-        label={configKey}
-        bind:value={integration[configKey]} />
-      <Spacer medium />
-    {/each}
-  {/if}
 </section>
 
 <style>

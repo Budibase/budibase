@@ -1,5 +1,15 @@
 import { Component } from "./Component"
 import { rowListUrl } from "../rowListScreen"
+import { getSchemaForDatasource } from "../../../dataBinding"
+
+export function spectrumColor(number) {
+  // Acorn throws a parsing error in this file if the word g-l-o-b-a-l is found
+  // (without dashes - I can't even type it in a comment).
+  // God knows why. It seems to think optional chaining further down the
+  // file is invalid if the word g-l-o-b-a-l is found - hence the reason this
+  // statement is split into parts.
+  return "color: var(--spectrum-glo" + `bal-color-gray-${number});`
+}
 
 export function makeLinkComponent(tableName) {
   return new Component("@budibase/standard-components/link")
@@ -10,6 +20,7 @@ export function makeLinkComponent(tableName) {
     .hoverStyle({
       color: "#4285f4",
     })
+    .customStyle(spectrumColor(700))
     .text(tableName)
     .customProps({
       url: `/${tableName.toLowerCase()}`,
@@ -22,13 +33,12 @@ export function makeLinkComponent(tableName) {
     })
 }
 
-export function makeMainContainer() {
-  return new Component("@budibase/standard-components/container")
+export function makeMainForm() {
+  return new Component("@budibase/standard-components/form")
     .type("div")
     .normalStyle({
       width: "700px",
       padding: "0px",
-      background: "white",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
       margin: "auto",
@@ -39,7 +49,7 @@ export function makeMainContainer() {
       "padding-left": "48px",
       "margin-bottom": "20px",
     })
-    .instanceName("Container")
+    .instanceName("Form")
 }
 
 export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
@@ -51,6 +61,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
       "margin-right": "4px",
       "margin-left": "4px",
     })
+    .customStyle(spectrumColor(700))
     .text(">")
     .instanceName("Arrow")
 
@@ -63,6 +74,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
   const identifierText = new Component("@budibase/standard-components/text")
     .type("none")
     .normalStyle(textStyling)
+    .customStyle(spectrumColor(700))
     .text(text)
     .instanceName("Identifier")
 
@@ -78,7 +90,7 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .addChild(identifierText)
 }
 
-export function makeSaveButton(table, providerId) {
+export function makeSaveButton(table, formId) {
   return new Component("@budibase/standard-components/button")
     .normalStyle({
       background: "#000000",
@@ -99,8 +111,14 @@ export function makeSaveButton(table, providerId) {
       disabled: false,
       onClick: [
         {
+          "##eventHandlerType": "Validate Form",
           parameters: {
-            providerId,
+            componentId: formId,
+          },
+        },
+        {
+          parameters: {
+            providerId: formId,
           },
           "##eventHandlerType": "Save Row",
         },
@@ -125,6 +143,7 @@ export function makeTitleContainer(title) {
       "margin-left": "0px",
       flex: "1 1 auto",
     })
+    .customStyle(spectrumColor(900))
     .type("h3")
     .instanceName("Title")
     .text(title)
@@ -141,4 +160,56 @@ export function makeTitleContainer(title) {
     })
     .instanceName("Title Container")
     .addChild(heading)
+}
+
+const fieldTypeToComponentMap = {
+  string: "stringfield",
+  number: "numberfield",
+  options: "optionsfield",
+  boolean: "booleanfield",
+  longform: "longformfield",
+  datetime: "datetimefield",
+  attachment: "attachmentfield",
+  link: "relationshipfield",
+}
+
+export function makeDatasourceFormComponents(datasource) {
+  const { schema } = getSchemaForDatasource(datasource, true)
+  let components = []
+  let fields = Object.keys(schema || {})
+  fields.forEach(field => {
+    const fieldSchema = schema[field]
+    // skip autocolumns
+    if (fieldSchema.autocolumn) {
+      return
+    }
+    const fieldType =
+      typeof fieldSchema === "object" ? fieldSchema.type : fieldSchema
+    const componentType = fieldTypeToComponentMap[fieldType]
+    const fullComponentType = `@budibase/standard-components/${componentType}`
+    if (componentType) {
+      const component = new Component(fullComponentType)
+        .instanceName(field)
+        .customProps({
+          field,
+          label: field,
+          placeholder: field,
+        })
+      if (fieldType === "options") {
+        component.customProps({ placeholder: "Choose an option " })
+      }
+      if (fieldType === "link") {
+        let placeholder =
+          fieldSchema.relationshipType === "one-to-many"
+            ? "Choose an option"
+            : "Choose some options"
+        component.customProps({ placeholder })
+      }
+      if (fieldType === "boolean") {
+        component.customProps({ text: field, label: "" })
+      }
+      components.push(component)
+    }
+  })
+  return components
 }

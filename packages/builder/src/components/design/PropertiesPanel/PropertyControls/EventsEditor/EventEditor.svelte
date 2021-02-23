@@ -1,15 +1,6 @@
 <script>
-  import {
-    Button,
-    Body,
-    DropdownMenu,
-    ModalContent,
-    Spacer,
-  } from "@budibase/bbui"
-  import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
+  import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
-  import { createEventDispatcher } from "svelte"
-  import { automationStore } from "builderStore"
 
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
@@ -17,11 +8,18 @@
 
   let addActionButton
   let addActionDropdown
-  let selectedAction
+  let selectedAction = actions?.length ? actions[0] : null
 
   $: selectedActionComponent =
     selectedAction &&
     actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
+
+  // Select the first action if we delete an action
+  $: {
+    if (selectedAction && !actions?.includes(selectedAction)) {
+      selectedAction = actions?.[0]
+    }
+  }
 
   const deleteAction = index => {
     actions.splice(index, 1)
@@ -51,11 +49,10 @@
   <div class="actions-list">
     <div>
       <div bind:this={addActionButton}>
-        <Spacer small />
         <Button wide secondary on:click={addActionDropdown.show}>
           Add Action
         </Button>
-        <Spacer medium />
+        <Spacer small />
       </div>
       <DropdownMenu
         bind:this={addActionDropdown}
@@ -74,11 +71,12 @@
     {#if actions && actions.length > 0}
       {#each actions as action, index}
         <div class="action-container">
-          <div class="action-header" on:click={selectAction(action)}>
-            <span class:selected={action === selectedAction}>
-              {index + 1}.
-              {action[EVENT_TYPE_KEY]}
-            </span>
+          <div
+            class="action-header"
+            class:selected={action === selectedAction}
+            on:click={selectAction(action)}>
+            {index + 1}.
+            {action[EVENT_TYPE_KEY]}
           </div>
           <i
             class="ri-close-fill"
@@ -107,20 +105,22 @@
     margin-top: var(--spacing-m);
   }
 
-  .action-header > span {
+  .action-header {
     margin-bottom: var(--spacing-m);
     font-size: var(--font-size-xs);
+    color: var(--grey-7);
+    font-weight: 500;
   }
 
-  .action-header > span:hover,
-  .selected {
+  .action-header:hover,
+  .action-header.selected {
     cursor: pointer;
-    font-weight: 500;
+    color: var(--ink);
   }
 
   .actions-list {
     border-right: var(--border-light);
-    padding: var(--spacing-s);
+    padding: var(--spacing-l);
   }
 
   .available-action {
@@ -136,7 +136,6 @@
   .actions-container {
     height: 40vh;
     display: grid;
-    grid-gap: var(--spacing-m);
     grid-template-columns: 260px 1fr;
     grid-auto-flow: column;
     min-height: 0;
@@ -145,13 +144,16 @@
   }
 
   .action-container {
-    border-top: var(--border-light);
+    border-bottom: 1px solid var(--grey-1);
     display: flex;
     align-items: center;
   }
+  .action-container:last-child {
+    border-bottom: none;
+  }
 
   .selected-action-container {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-l);
   }
 
   a {

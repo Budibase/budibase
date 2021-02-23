@@ -3,15 +3,21 @@
   "datagrid",
   "list",
   "button",
+  "search",
   {
     "name": "Form",
     "icon": "ri-file-edit-line",
     "children": [
-      "dataform",
-      "dataformwide",
-      "input",
-      "richtext",
-      "datepicker"
+      "form",
+      "fieldgroup",
+      "stringfield",
+      "numberfield",
+      "optionsfield",
+      "booleanfield",
+      "longformfield",
+      "datetimefield",
+      "attachmentfield",
+      "relationshipfield"
     ]
   },
   {
@@ -55,8 +61,8 @@
       "screenslot",
       "navigation",
       "login",
-      "rowdetail",
-      "newrow"
+      "rowdetail"
     ]
   }
 ]
+

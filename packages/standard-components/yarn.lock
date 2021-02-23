@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@adobe/spectrum-css-workflow-icons@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.1.0.tgz#79e97f86130e1a30b84c8524cebff93a600dbb8a"
+  integrity sha512-07ec4Pfr+W5II4a36nto3jShBZTbpe39lB977ULYN436UTQsnAdYupezBwFd7eEvOMUawgKfqnxyR2oPxp1SMQ==
+
 "@babel/code-frame@^7.10.4":
   version "7.10.4"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.10.4.tgz#168da1a36e90da68ae8d49c0f1b48c7c6249213a"
@@ -39,10 +44,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.55.1":
-  version "1.56.2"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.56.2.tgz#bb8f7d9b9b5ed06a22df877fbe028780d7602471"
-  integrity sha512-cWYkT1FNwNGTjisxtC5/MlQ1zeu7MYbMJsD6UyCEW3Ku6JIQZ6jyOkV6HKrmNND8VzVfddEGpzR37q+NoDpDFQ==
+"@budibase/bbui@^1.58.13":
+  version "1.58.13"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.58.13.tgz#59df9c73def2d81c75dcbd2266c52c19db88dbd7"
+  integrity sha512-Zk6CKXdBfKsTVzA1Xs5++shdSSZLfphVpZuKVbjfzkgtuhyH7ruucexuSHEpFsxjW5rEKgKIBoRFzCK5vPvN0w==
   dependencies:
     markdown-it "^12.0.2"
     quill "^1.3.7"
@@ -126,6 +131,73 @@
     "@types/estree" "0.0.39"
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
+
+"@spectrum-css/actionbutton@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.0.0-beta.1.tgz#a6684cac108d4a9daefe0be6df8201d3c369a0d6"
+  integrity sha512-QbrPMTkbkmh+dEBP66TFXmF5z3qSde+BnLR5hnlo2XMvKvnblX2VJStEbQ+hTKuSZXCRFADXyXD5o0NOYDTByQ==
+
+"@spectrum-css/button@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.0-beta.6.tgz#007919d3e7a6692e506dc9addcd46aee6b203b1a"
+  integrity sha512-ZoJxezt5Pc006RR7SMG7PfC0VAdWqaGDpd21N8SEykGuz/KmNulqGW8RiSZQGMVX/jk5ZCAthPrH8cI/qtKbMg==
+
+"@spectrum-css/checkbox@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/checkbox/-/checkbox-3.0.0-beta.6.tgz#338c4e58c4570ac8023f7332794fcb45f5ae9374"
+  integrity sha512-Z0Mwu7yn2b+QcZaBqMpKhliTQiF8T/cRyKgTyaIACtJ0FAK5NBJ4h/X6SWW3iXtoUWCH4+p/Hdtq1iQHAFi1qQ==
+
+"@spectrum-css/fieldlabel@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/fieldlabel/-/fieldlabel-3.0.0-beta.7.tgz#f37797565e21b3609b8fbc2dafcea8ea41ffa114"
+  integrity sha512-0pseiPghqlOdALsRtidveWyt2YjfSXTZWDlSkcne/J0/QXBJOQH/7Qfy7TmROQZYRB2LqH1VzmE1zbvGwr5Aog==
+
+"@spectrum-css/icon@^3.0.0-beta.2":
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.0-beta.2.tgz#2dd7258ded74501b56e5fc42d0b6f0a3f4936aeb"
+  integrity sha512-BEHJ68YIXSwsNAqTdq/FrS4A+jtbKzqYrsGKXdDf93ql+fHWYXRCh1EVYGHx/1696mY73DhM4snMpKGIFtXGFA==
+
+"@spectrum-css/inputgroup@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/inputgroup/-/inputgroup-3.0.0-beta.7.tgz#9829812e349bf973fb8835f0586bf013c8c38d23"
+  integrity sha512-pZDpYhtTKZUVG31Rtx7imdwK2ohLyVuTEsl+mj2yDKn+2TOwYRxr6LdbfNhFN4xd0GtSqapKYfbgKBWYpIyiSw==
+
+"@spectrum-css/menu@^3.0.0-beta.5":
+  version "3.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/menu/-/menu-3.0.0-beta.5.tgz#99d5ea7f6760b7a89d5d732f4e91b98dd3f82d74"
+  integrity sha512-jvPD5GbNdX31rdFBLxCG7KoUVGeeNYLzNXDpiGZsWme/djVTwitljgNe7bhVwCVlXZE7H20Ti/YrdafnE154Rw==
+
+"@spectrum-css/page@^3.0.0-beta.0":
+  version "3.0.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/page/-/page-3.0.0-beta.0.tgz#885ea41b44861c5dc3aac904536f9e93c9109b58"
+  integrity sha512-+OD+l3aLisykxJnHfLkdkxMS1Uj1vKGYpKil7W0r5lSWU44eHyRgb8ZK5Vri1+sUO5SSf/CTybeVwtXME9wMLA==
+  dependencies:
+    "@spectrum-css/vars" "^3.0.0-beta.2"
+
+"@spectrum-css/picker@^1.0.0-beta.3":
+  version "1.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.0.0-beta.3.tgz#476593597b5a9e0105397e4e39350869cf6e7965"
+  integrity sha512-jHzFnS5Frd3JSwZ6B8ymH/sVnNqAUBo9p93Zax4VHTUDsPTtTkvxj/Vxo4POmrJEL9v3qUB2Yk13rD2BSfEzLQ==
+
+"@spectrum-css/popover@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/popover/-/popover-3.0.0-beta.6.tgz#787611f020e091234e6ba7e946b0dbd0ed1a2fa2"
+  integrity sha512-dUJlwxoNpB6jOR0g/ywH2cPoUz2FVsL6xPfkm6BSsLp9ejhYy0/OFF4w0Q32Fu9qJDbWJ9qaoOlPpt7IjQ+/GQ==
+
+"@spectrum-css/stepper@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/stepper/-/stepper-3.0.0-beta.7.tgz#fc78435ce878c5e233af13e43ed2c3e8671a2bbc"
+  integrity sha512-TQL2OBcdEgbHBwehMGgqMuWdKZZQPGcBRV5FlF0TUdOT58lEqFAO43Gajqvyte1P23lNmnX8KuMwkRfQdn0RzA==
+
+"@spectrum-css/textfield@^3.0.0-beta.6":
+  version "3.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/textfield/-/textfield-3.0.0-beta.6.tgz#30c044ceb403d6ea82d8046fb8f767f7fe455da6"
+  integrity sha512-U7P8C3Xx8h5X+r+dZu1qbxceIxBn7ZSmMvJyC7MPSPcU3EwdzCUepERNGX7NrQdcX91XSNlPUOF7hZUognBwhQ==
+
+"@spectrum-css/vars@^3.0.0-beta.2":
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-3.0.0-beta.2.tgz#f0b3a2db44aa57b1a82e47ab392c716a3056a157"
+  integrity sha512-HpcRDUkSjKVWUi7+jf6zp33YszXs3qFljaaNVTVOf0m0mqjWWXHxgLrvYlFFlHp5ITbNXds5Cb7EgiXCKmVIpA==
 
 "@types/color-name@^1.1.1":
   version "1.1.1"
@@ -979,6 +1051,11 @@ esprima@^4.0.0:
   resolved "https://registry.yarnpkg.com/esprima/-/esprima-4.0.1.tgz#13b04cdb3e6c5d19df91ab6987a8695619b0aa71"
   integrity sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==
 
+estree-walker@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-0.2.1.tgz#bdafe8095383d8414d5dc2ecf4c9173b6db9412e"
+  integrity sha1-va/oCVOD2EFNXcLs9MkXO225QS4=
+
 estree-walker@^0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-0.6.1.tgz#53049143f40c6eb918b23671d1fe3219f3a1b362"
@@ -1562,6 +1639,11 @@ loader-utils@^1.1.0:
     emojis-list "^3.0.0"
     json5 "^1.0.1"
 
+loadicons@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/loadicons/-/loadicons-1.0.0.tgz#79fd9b08ef2933988c94068cbd246ef3f21cbd04"
+  integrity sha512-KSywiudfuOK5sTdhNMM8hwRpMxZ5TbQlU4ZijMxUFwRW7jpxUmb9YJoLIzDn7+xuxeLzCZWBmLJS2JDjDWCpsw==
+
 local-access@^1.0.1:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/local-access/-/local-access-1.1.0.tgz#e007c76ba2ca83d5877ba1a125fc8dfe23ba4798"
@@ -1667,7 +1749,7 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz#f6c00c1c0b082246e5c4d99dfb8c7c083b2b582a"
   integrity sha1-9sAMHAsIIkblxNmd+4x8CDsrWCo=
 
-minimatch@^3.0.4:
+minimatch@^3.0.2, minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   integrity sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
@@ -2461,6 +2543,13 @@ rollup-plugin-svelte@^6.1.1:
     rollup-pluginutils "^2.8.2"
     sourcemap-codec "^1.4.8"
 
+rollup-plugin-svg@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-svg/-/rollup-plugin-svg-2.0.0.tgz#ce11b55e915d5b2190328c4e6632bd6b4fe12ee9"
+  integrity sha512-DmE7dSQHo1SC5L2uH2qul3Mjyd5oV6U1aVVkyvTLX/mUsRink7f1b1zaIm+32GEBA6EHu8H/JJi3DdWqM53ySQ==
+  dependencies:
+    rollup-pluginutils "^1.3.1"
+
 rollup-plugin-terser@^7.0.2:
   version "7.0.2"
   resolved "https://registry.yarnpkg.com/rollup-plugin-terser/-/rollup-plugin-terser-7.0.2.tgz#e8fbba4869981b2dc35ae7e8a502d5c6c04d324d"
@@ -2470,6 +2559,14 @@ rollup-plugin-terser@^7.0.2:
     jest-worker "^26.2.1"
     serialize-javascript "^4.0.0"
     terser "^5.0.0"
+
+rollup-pluginutils@^1.3.1:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/rollup-pluginutils/-/rollup-pluginutils-1.5.2.tgz#1e156e778f94b7255bfa1b3d0178be8f5c552408"
+  integrity sha1-HhVud4+UtyVb+hs9AXi+j1xVJAg=
+  dependencies:
+    estree-walker "^0.2.1"
+    minimatch "^3.0.2"
 
 rollup-pluginutils@^2.8.2:
   version "2.8.2"

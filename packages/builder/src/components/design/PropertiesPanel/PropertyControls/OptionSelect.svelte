@@ -106,7 +106,9 @@
   }
 
   $: displayLabel =
-    selectedOption && selectedOption.label ? selectedOption.label : value || ""
+    selectedOption && selectedOption.label
+      ? selectedOption.label
+      : value || "Choose option"
 </script>
 
 <div
@@ -129,11 +131,16 @@
         on:keydown={handleEscape}
         class="bb-select-menu">
         <ul>
+          <li
+            on:click|self={() => handleClick(null)}
+            class:selected={value == null || value === ''}>
+            Choose option
+          </li>
           {#if isOptionsObject}
             {#each options as { value: v, label }}
               <li
                 {...handleStyleBind(v)}
-                on:click|self={handleClick(v)}
+                on:click|self={() => handleClick(v)}
                 class:selected={value === v}>
                 {label}
               </li>
@@ -142,7 +149,7 @@
             {#each options as v}
               <li
                 {...handleStyleBind(v)}
-                on:click|self={handleClick(v)}
+                on:click|self={() => handleClick(v)}
                 class:selected={value === v}>
                 {v}
               </li>

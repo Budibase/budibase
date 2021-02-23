@@ -10,13 +10,14 @@
   export let parameters
 
   $: dataProviderComponents = getDataProviderComponents(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: {
     // Automatically set rev and table ID based on row ID
-    if (parameters.rowId) {
-      parameters.revId = parameters.rowId.replace("_id", "_rev")
+    if (parameters.providerId) {
+      parameters.rowId = `{{ ${parameters.providerId}._id }}`
+      parameters.revId = `{{ ${parameters.providerId}._rev }}`
       const providerComponent = dataProviderComponents.find(
         provider => provider._id === parameters.providerId
       )
@@ -36,13 +37,11 @@
       a List
     </div>
   {:else}
-    <Label size="m" color="dark">Datasource</Label>
-    <Select secondary bind:value={parameters.rowId}>
+    <Label small>Datasource</Label>
+    <Select thin secondary bind:value={parameters.providerId}>
       <option value="" />
       {#each dataProviderComponents as provider}
-        <option value={`{{ ${provider._id}._id }}`}>
-          {provider._instanceName}
-        </option>
+        <option value={provider._id}>{provider._instanceName}</option>
       {/each}
     </Select>
   {/if}
@@ -51,22 +50,15 @@
 <style>
   .root {
     display: grid;
-    column-gap: var(--spacing-s);
+    column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: auto 1fr auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: baseline;
-  }
-
-  .root :global(> div:nth-child(2)) {
-    grid-column-start: 2;
-    grid-column-end: 6;
   }
 
   .cannot-use {
     color: var(--red);
     font-size: var(--font-size-s);
-    text-align: center;
-    width: 70%;
     margin: auto;
   }
 </style>

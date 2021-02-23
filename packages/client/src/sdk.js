@@ -4,12 +4,12 @@ import {
   notificationStore,
   routeStore,
   screenStore,
-  bindingStore,
   builderStore,
 } from "./store"
 import { styleable } from "./utils/styleable"
 import { linkable } from "./utils/linkable"
-import DataProvider from "./components/DataProvider.svelte"
+import Provider from "./components/Provider.svelte"
+import { ActionTypes } from "./constants"
 
 export default {
   API,
@@ -20,6 +20,6 @@ export default {
   builderStore,
   styleable,
   linkable,
-  DataProvider,
-  setBindableValue: bindingStore.actions.setBindableValue,
+  Provider,
+  ActionTypes,
 }

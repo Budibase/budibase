@@ -1,5 +1,6 @@
 <script>
   import CodeMirror from "./codemirror"
+  import { Label, Spacer } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { themeStore } from "builderStore"
   import { handlebarsCompletions } from "constants/completions"
@@ -11,11 +12,13 @@
     LIGHT: "default",
   }
 
+  export let label
   export let value = ""
   export let readOnly = false
   export let lineNumbers = true
   export let tab = true
   export let mode
+  export let editorHeight = 500
   // export let parameters = []
 
   let completions = handlebarsCompletions()
@@ -169,15 +172,21 @@
   }
 </script>
 
-<textarea tabindex="0" bind:this={refs.editor} readonly {value} />
+{#if label}
+  <Label small>{label}</Label>
+  <Spacer medium />
+{/if}
+<div style={`--code-mirror-height: ${editorHeight}px`}>
+  <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
+</div>
 
 <style>
   textarea {
     visibility: hidden;
   }
 
-  :global(.CodeMirror) {
-    height: 500px !important;
+  div :global(.CodeMirror) {
+    height: var(--code-mirror-height) !important;
     border-radius: var(--border-radius-s);
     font-family: monospace !important;
     line-height: 1.3;

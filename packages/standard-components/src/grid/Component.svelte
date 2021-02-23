@@ -16,7 +16,6 @@
   const setters = new Map([["number", number]])
   const SDK = getContext("sdk")
   const component = getContext("component")
-  const dataContext = getContext("data")
   const { API, styleable } = SDK
 
   export let datasource = {}

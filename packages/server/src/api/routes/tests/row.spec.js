@@ -5,8 +5,9 @@ const {
   defaultHeaders,
   createLinkedTable,
   createAttachmentTable,
+  makeBasicRow,
 } = require("./couchTestUtils");
-const { enrichRows } = require("../../../utilities")
+const { outputProcessing } = require("../../../utilities/rowProcessor")
 const env = require("../../../environment")
 
 describe("/rows", () => {
@@ -30,12 +31,7 @@ describe("/rows", () => {
     app = await createApplication(request)
     appId = app.instance._id
     table = await createTable(request, appId)
-    row = {
-      name: "Test Contact",
-      description: "original description",
-      status: "new",
-      tableId: table._id
-    }
+    row = makeBasicRow(table._id)
   })
 
   const createRow = async r => 
@@ -289,9 +285,9 @@ describe("/rows", () => {
         link: [firstRow._id],
         tableId: table._id,
       })).body
-      const enriched = await enrichRows(appId, table, [secondRow])
+      const enriched = await outputProcessing(appId, table, [secondRow])
       expect(enriched[0].link.length).toBe(1)
-      expect(enriched[0].link[0]).toBe(firstRow._id)
+      expect(enriched[0].link[0]).toBe("Test Contact")
     })
   })
 
@@ -308,7 +304,7 @@ describe("/rows", () => {
     // the environment needs configured for this
     env.CLOUD = 1
     env.SELF_HOSTED = 1
-    const enriched = await enrichRows(appId, table, [row])
+    const enriched = await outputProcessing(appId, table, [row])
     expect(enriched[0].attachment[0].url).toBe(`/app-assets/assets/${appId}/test/thing`)
     // remove env config
     env.CLOUD = undefined
