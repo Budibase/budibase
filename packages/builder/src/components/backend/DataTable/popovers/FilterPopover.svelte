@@ -169,7 +169,7 @@
   {/if}
   <div class="footer">
     <div class="add-filter">
-    <Button text on:click={addFilter}>Add Filter</Button>
+      <Button text on:click={addFilter}>Add Filter</Button>
     </div>
     <div class="buttons">
       <Button secondary on:click={onClosed}>Cancel</Button>
