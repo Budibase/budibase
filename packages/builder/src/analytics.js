@@ -125,7 +125,12 @@ export default {
   requestFeedbackOnDeploy,
   submitFeedback,
   highlightFeedbackIcon,
-  disabled: ifAnalyticsEnabled(disabled),
+  disabled: () => {
+    if (analyticsEnabled == null) {
+      return true
+    }
+    return ifAnalyticsEnabled(disabled)
+  },
   optIn: ifAnalyticsEnabled(optIn),
   optOut: ifAnalyticsEnabled(optOut),
 }
