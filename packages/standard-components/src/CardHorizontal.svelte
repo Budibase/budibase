@@ -40,7 +40,7 @@
       <p class="subtext">{subtext}</p>
       <a
         style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
-        href={linkUrl}>{linkText}</a>
+        href={linkUrl || '/'}>{linkText}</a>
     </footer>
   </div>
 </div>
@@ -71,6 +71,7 @@
     font-size: 1rem;
     font-weight: 700;
     margin: 0;
+    white-space: pre-wrap;
   }
 
   .text {
@@ -78,6 +79,7 @@
     margin: 0.5rem 0 0 0;
     font-weight: 400;
     line-height: 1.25rem;
+    white-space: pre-wrap;
   }
 
   footer {
@@ -91,6 +93,7 @@
     margin: 0;
     font-weight: 400;
     color: #757575;
+    white-space: pre-wrap;
   }
 
   a {
@@ -99,7 +102,7 @@
     color: var(--linkColor);
     font-weight: 600;
     font-size: 0.85rem;
-    margin: 0;
+    white-space: pre-wrap;
   }
 
   a:hover {
