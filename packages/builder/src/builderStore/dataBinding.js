@@ -7,6 +7,7 @@ import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
+const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 /**
  * Gets all bindable data context fields and instance fields.
@@ -280,6 +281,20 @@ const buildFormSchema = component => {
     schema = { ...schema, ...childSchema }
   })
   return schema
+}
+
+/**
+ * Recurses the input object to remove any instances of bindings.
+ */
+export function removeBindings(obj) {
+  for (let [key, value] of Object.entries(obj)) {
+    if (typeof value === "object") {
+      obj[key] = removeBindings(value)
+    } else if (typeof value === "string") {
+      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, "Invalid binding")
+    }
+  }
+  return obj
 }
 
 /**
