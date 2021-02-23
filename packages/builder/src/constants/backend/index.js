@@ -40,7 +40,7 @@ export const FIELDS = {
     },
   },
   BOOLEAN: {
-    name: "True/False",
+    name: "Boolean",
     icon: "ri-toggle-line",
     type: "boolean",
     constraints: {
