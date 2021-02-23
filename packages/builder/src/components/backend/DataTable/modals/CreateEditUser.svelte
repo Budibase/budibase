@@ -34,11 +34,26 @@
   }
 
   const saveRow = async () => {
+    errors = []
+
+    // Do some basic front end validation first
+    if (!row.email) {
+      errors = [...errors, { message: "Email is required" }]
+    }
+    if (!row.password) {
+      errors = [...errors, { message: "Password is required" }]
+    }
+    if (!row.roleId) {
+      errors = [...errors, { message: "Role is required" }]
+    }
+    if (errors.length) {
+      return false
+    }
+
     const rowResponse = await backendApi.saveRow(
       { ...row, tableId: table._id },
       table._id
     )
-
     if (rowResponse.errors) {
       if (Array.isArray(rowResponse.errors)) {
         errors = rowResponse.errors.map(error => ({ message: error }))
@@ -47,6 +62,9 @@
           .map(([key, error]) => ({ dataPath: key, message: error }))
           .flat()
       }
+      return false
+    } else if (rowResponse.status === 400 && rowResponse.message) {
+      errors = [{ message: rowResponse.message }]
       return false
     }
 
