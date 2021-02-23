@@ -13,7 +13,8 @@
     if (production) {
       return `${appUrl}/${uri}`
     } else {
-      return `http://localhost:4001/${uri}`
+
+      return `${window.location.origin}/${uri}`
     }
   }
 

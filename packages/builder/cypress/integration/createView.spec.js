@@ -8,7 +8,7 @@ function removeSpacing(headers) {
 
 context("Create a View", () => {
   before(() => {
-    cy.visit("localhost:4001/_builder")
+    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
     cy.createApp("View App", "View App Description")
     cy.createTable("data")
     cy.addColumn("data", "group", "Text")

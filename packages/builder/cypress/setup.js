@@ -6,6 +6,7 @@
 const rimraf = require("rimraf")
 const { join, resolve } = require("path")
 const initialiseBudibase = require("../../server/src/utilities/initialiseBudibase")
+const cypressConfig = require("../cypress.json")
 
 const homedir = join(require("os").homedir(), ".budibase")
 
@@ -14,6 +15,7 @@ rimraf.sync(homedir)
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
 process.env.NODE_ENV = "cypress"
 process.env.ENABLE_ANALYTICS = "false"
+process.env.PORT = cypressConfig.env.PORT
 
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
