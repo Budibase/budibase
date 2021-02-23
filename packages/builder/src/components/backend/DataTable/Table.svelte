@@ -51,9 +51,11 @@
   $: isUsersTable = tableId === TableNames.USERS
   $: {
     if (isUsersTable) {
-      schema.email?.displayFieldName = "Email"
-      schema.roleId?.displayFieldName = "Role"
-      schema.status?.displayFieldName = "Status"
+      schema.email.displayFieldName = "Email"
+      schema.roleId.displayFieldName = "Role"
+      if (schema.status) {
+        schema.status.displayFieldName = "Status"
+      }
     }
   }
 
