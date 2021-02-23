@@ -27,7 +27,7 @@ function generateQueryValidation() {
     readable: Joi.boolean(),
     parameters: Joi.array().items(Joi.object({
       name: Joi.string(),
-      default: Joi.string()
+      default: Joi.string().allow(""),
     })),
     queryVerb: Joi.string().allow().required(),
     schema: Joi.object({}).required().unknown(true)

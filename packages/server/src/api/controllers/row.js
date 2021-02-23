@@ -111,7 +111,6 @@ exports.patch = async function(ctx) {
   }
   row._rev = response.rev
   row.type = "row"
-
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
   ctx.body = row
   ctx.status = 200
