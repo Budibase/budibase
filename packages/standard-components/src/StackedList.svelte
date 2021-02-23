@@ -50,6 +50,7 @@
 
   .subheading {
     opacity: 0.6;
+    white-space: pre-wrap;
   }
 
   .content {
@@ -60,6 +61,7 @@
 
   .heading {
     font-weight: 600;
+    white-space: pre-wrap;
   }
 
   .image-block {
