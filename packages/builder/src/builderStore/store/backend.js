@@ -135,6 +135,9 @@ export const getBackendUiStore = () => {
         }
         query.datasourceId = datasourceId
         const response = await api.post(`/api/queries`, query)
+        if (response.status !== 200) {
+          throw new Error("Failed saving query.")
+        }
         const json = await response.json()
         store.update(state => {
           const currentIdx = state.queries.findIndex(
