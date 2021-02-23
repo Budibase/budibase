@@ -39,14 +39,14 @@
     return enrichedStructure
   }
 
-  const onItemChosen = (item, idx) => {
+  const onItemChosen = async (item, idx) => {
     if (item.isCategory) {
       // Select and open this category
       selectedIndex = idx
       popover.show()
     } else {
       // Add this component
-      store.actions.components.create(item.component)
+      await store.actions.components.create(item.component)
       popover.hide()
     }
   }
