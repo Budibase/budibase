@@ -13,11 +13,11 @@ const FAKE_DATETIME = "1970-01-01T00:00:00.000Z"
 
 const BUILTIN_DEFINITIONS = {
   ROW_SAVED: {
-    name: "Row Saved",
+    name: "Row Created",
     event: "row:save",
     icon: "ri-save-line",
     tagline: "Row is added to {{inputs.enriched.table.name}}",
-    description: "Fired when a row is saved to your database",
+    description: "Fired when a row is added to your database",
     stepId: "ROW_SAVED",
     inputs: {},
     schema: {
@@ -36,7 +36,47 @@ const BUILTIN_DEFINITIONS = {
           row: {
             type: "object",
             customType: "row",
-            description: "The new row that was saved",
+            description: "The new row that was created",
+          },
+          id: {
+            type: "string",
+            description: "Row ID - can be used for updating",
+          },
+          revision: {
+            type: "string",
+            description: "Revision of row",
+          },
+        },
+        required: ["row", "id"],
+      },
+    },
+    type: "TRIGGER",
+  },
+  ROW_UPDATED: {
+    name: "Row Updated",
+    event: "row:update",
+    icon: "ri-save-line",
+    tagline: "Row is updated in {{inputs.enriched.table.name}}",
+    description: "Fired when a row is updated in your database",
+    stepId: "ROW_UPDATED",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          tableId: {
+            type: "string",
+            customType: "table",
+            title: "Table",
+          },
+        },
+        required: ["tableId"],
+      },
+      outputs: {
+        properties: {
+          row: {
+            type: "object",
+            customType: "row",
+            description: "The row that was updated",
           },
           id: {
             type: "string",
@@ -79,7 +119,7 @@ const BUILTIN_DEFINITIONS = {
             description: "The row that was deleted",
           },
         },
-        required: ["row", "id"],
+        required: ["row"],
       },
     },
     type: "TRIGGER",
@@ -189,6 +229,13 @@ emitter.on("row:save", async function(event) {
     return
   }
   await queueRelevantRowAutomations(event, "row:save")
+})
+
+emitter.on("row:update", async function(event) {
+  if (!event || !event.row || !event.row.tableId) {
+    return
+  }
+  await queueRelevantRowAutomations(event, "row:update")
 })
 
 emitter.on("row:delete", async function(event) {
