@@ -9,7 +9,6 @@
 
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: automation = $automationStore.selectedAutomation?.automation
-  $: name = automation?.name ?? ""
   $: automationLive = automation?.live
 
   function setAutomationLive(live) {
