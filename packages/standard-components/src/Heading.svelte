@@ -29,7 +29,6 @@
   h4,
   h5,
   h6 {
-    margin: 0.5em 0;
     white-space: pre-wrap;
   }
 </style>
