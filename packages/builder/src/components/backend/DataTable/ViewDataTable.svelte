@@ -53,6 +53,7 @@
 <Table
   title={decodeURI(name)}
   schema={view.schema}
+  tableId={view.tableId}
   {data}
   {loading}
   bind:hideAutocolumns>

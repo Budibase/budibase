@@ -290,7 +290,7 @@ export const getFrontendStore = () => {
           ...extras,
         }
       },
-      create: (componentName, presetProps) => {
+      create: async (componentName, presetProps) => {
         const selected = get(selectedComponent)
         const asset = get(currentAsset)
         const state = get(store)
@@ -346,7 +346,7 @@ export const getFrontendStore = () => {
         parentComponent._children.push(componentInstance)
 
         // Save components and update UI
-        store.actions.preview.saveSelected()
+        await store.actions.preview.saveSelected()
         store.update(state => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
@@ -360,7 +360,7 @@ export const getFrontendStore = () => {
 
         return componentInstance
       },
-      delete: component => {
+      delete: async component => {
         if (!component) {
           return
         }
@@ -375,7 +375,7 @@ export const getFrontendStore = () => {
           )
           store.actions.components.select(parent)
         }
-        store.actions.preview.saveSelected()
+        await store.actions.preview.saveSelected()
       },
       copy: (component, cut = false) => {
         const selectedAsset = get(currentAsset)
@@ -487,7 +487,7 @@ export const getFrontendStore = () => {
         selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
-      updateProp: (name, value) => {
+      updateProp: async (name, value) => {
         let component = get(selectedComponent)
         if (!name || !component) {
           return
@@ -497,7 +497,7 @@ export const getFrontendStore = () => {
           state.selectedComponentId = component._id
           return state
         })
-        store.actions.preview.saveSelected()
+        await store.actions.preview.saveSelected()
       },
       links: {
         save: async (url, title) => {

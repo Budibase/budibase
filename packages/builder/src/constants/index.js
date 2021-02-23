@@ -10,7 +10,7 @@ export const FrontendTypes = {
 }
 
 // fields on the user table that cannot be edited
-export const UNEDITABLE_USER_FIELDS = ["email", "password", "roleId"]
+export const UNEDITABLE_USER_FIELDS = ["email", "password", "roleId", "status"]
 
 export const LAYOUT_NAMES = {
   MASTER: {

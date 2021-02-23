@@ -15,7 +15,7 @@
   import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
   import "@budibase/svelte-ag-grid/dist/index.css"
-  import { TableNames } from "constants"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
 
   export let schema = {}
   export let data = []
@@ -53,6 +53,9 @@
     if (isUsersTable) {
       schema.email.displayFieldName = "Email"
       schema.roleId.displayFieldName = "Role"
+      if (schema.status) {
+        schema.status.displayFieldName = "Status"
+      }
     }
   }
 
@@ -83,7 +86,7 @@
       if (!allowEditing) {
         return false
       }
-      return !(isUsersTable && ["email", "roleId"].includes(key))
+      return !(isUsersTable && UNEDITABLE_USER_FIELDS.includes(key))
     }
 
     for (let [key, value] of Object.entries(schema || {})) {
