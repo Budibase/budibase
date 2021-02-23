@@ -4,6 +4,9 @@ const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")
+const {
+  BUILTIN_PERMISSION_IDS,
+} = require("../../../utilities/security/permissions")
 
 const TEST_CLIENT_ID = "test-client-id"
 
@@ -29,6 +32,17 @@ exports.defaultHeaders = appId => {
   const headers = {
     Accept: "application/json",
     Cookie: [`budibase:builder:local=${builderToken}`],
+  }
+  if (appId) {
+    headers["x-budibase-app-id"] = appId
+  }
+
+  return headers
+}
+
+exports.publicHeaders = appId => {
+  const headers = {
+    Accept: "application/json",
   }
   if (appId) {
     headers["x-budibase-app-id"] = appId
@@ -70,9 +84,60 @@ exports.createTable = async (request, appId, table, removeId = true) => {
   return res.body
 }
 
+exports.makeBasicRow = tableId => {
+  return {
+    name: "Test Contact",
+    description: "original description",
+    status: "new",
+    tableId: tableId,
+  }
+}
+
+exports.createRow = async (request, appId, tableId, row = null) => {
+  row = row || exports.makeBasicRow(tableId)
+  const res = await request
+    .post(`/api/${tableId}/rows`)
+    .send(row)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
+  return res.body
+}
+
+exports.createRole = async (request, appId) => {
+  const roleBody = {
+    name: "NewRole",
+    inherits: BUILTIN_ROLE_IDS.BASIC,
+    permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
+  }
+  const res = await request
+    .post(`/api/roles`)
+    .send(roleBody)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
+  return res.body
+}
+
+exports.addPermission = async (
+  request,
+  appId,
+  role,
+  resource,
+  level = "read"
+) => {
+  const res = await request
+    .post(`/api/permission/${role}/${resource}/${level}`)
+    .set(exports.defaultHeaders(appId))
+    .expect("Content-Type", /json/)
+    .expect(200)
+  return res.body
+}
+
 exports.createLinkedTable = async (request, appId) => {
   // get the ID to link to
   const table = await exports.createTable(request, appId)
+  table.primaryDisplay = "name"
   table.schema.link = {
     type: "link",
     fieldName: "link",

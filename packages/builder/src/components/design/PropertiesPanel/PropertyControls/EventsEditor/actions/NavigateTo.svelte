@@ -1,18 +1,25 @@
 <script>
-  import { DataList, Label } from "@budibase/bbui"
-  import { allScreens } from "builderStore"
+  import { Label } from "@budibase/bbui"
+  import { getBindableProperties } from "builderStore/dataBinding"
+  import { currentAsset, store } from "builderStore"
+  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
 
   export let parameters
+
+  let bindingDrawer
+  let tempValue = parameters.url
+
+  $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 
 <div class="root">
-  <Label size="m" color="dark">Screen</Label>
-  <DataList secondary bind:value={parameters.url}>
-    <option value="" />
-    {#each $allScreens as screen}
-      <option value={screen.routing.route}>{screen.props._instanceName}</option>
-    {/each}
-  </DataList>
+  <Label small>Screen</Label>
+  <DrawerBindableInput
+    title="Destination URL"
+    placeholder="/screen"
+    value={parameters.url}
+    on:change={value => (parameters.url = value.detail)}
+    {bindings} />
 </div>
 
 <style>

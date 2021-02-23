@@ -30,20 +30,22 @@
 {#if schemaFields.length}
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
-      {#if schemaHasOptions(schema)}
-        <Select label={field} extraThin secondary bind:value={value[field]}>
-          <option value="">Choose an option</option>
-          {#each schema.constraints.inclusion as option}
-            <option value={option}>{option}</option>
-          {/each}
-        </Select>
-      {:else if schema.type === 'string' || schema.type === 'number'}
-        <BindableInput
-          extraThin
-          bind:value={value[field]}
-          label={field}
-          type="string"
-          {bindings} />
+      {#if !schema.autocolumn}
+        {#if schemaHasOptions(schema)}
+          <Select label={field} extraThin secondary bind:value={value[field]}>
+            <option value="">Choose an option</option>
+            {#each schema.constraints.inclusion as option}
+              <option value={option}>{option}</option>
+            {/each}
+          </Select>
+        {:else if schema.type === 'string' || schema.type === 'number'}
+          <BindableInput
+            extraThin
+            bind:value={value[field]}
+            label={field}
+            type="string"
+            {bindings} />
+        {/if}
       {/if}
     {/each}
   </div>

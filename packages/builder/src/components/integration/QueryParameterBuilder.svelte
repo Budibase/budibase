@@ -1,10 +1,10 @@
 <script>
-  import { Button, Input, Heading, Spacer } from "@budibase/bbui"
-  import BindableInput from "components/common/BindableInput.svelte"
+  import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
 
   export let bindable = true
   export let parameters = []
@@ -30,7 +30,21 @@
 </script>
 
 <section>
-  <Heading extraSmall black>Parameters</Heading>
+  <div class="controls">
+    <Heading small lh>Parameters</Heading>
+    {#if !bindable}
+      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+    {/if}
+  </div>
+  <Body small grey>
+    {#if !bindable}
+      Parameters come in two parts: the parameter name, and a default/fallback
+      value.
+    {:else}
+      Enter a value for each parameter. The default values will be used for any
+      values left blank.
+    {/if}
+  </Body>
   <Spacer large />
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
@@ -45,9 +59,9 @@
         disabled={bindable}
         bind:value={parameter.default} />
       {#if bindable}
-        <BindableInput
+        <DrawerBindableInput
+          title={`Query parameter "${parameter.name}"`}
           placeholder="Value"
-          type="string"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}
           value={runtimeToReadableBinding(bindings, customParams?.[parameter.name])}
@@ -59,14 +73,18 @@
       {/if}
     {/each}
   </div>
-  {#if !bindable}
-    <Button secondary on:click={newQueryParameter}>Add Parameter</Button>
-  {/if}
 </section>
 
 <style>
   .parameters.bindable {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
   }
 
   .parameters {

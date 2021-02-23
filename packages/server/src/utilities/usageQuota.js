@@ -50,6 +50,9 @@ exports.Properties = {
 }
 
 exports.getAPIKey = async appId => {
+  if (env.SELF_HOSTED) {
+    return { apiKey: null }
+  }
   return apiKeyTable.get({ primary: appId })
 }
 
@@ -63,7 +66,7 @@ exports.getAPIKey = async appId => {
  */
 exports.update = async (apiKey, property, usage) => {
   // don't try validate in builder
-  if (!env.CLOUD) {
+  if (!env.CLOUD || env.SELF_HOSTED) {
     return
   }
   try {

@@ -11,8 +11,9 @@
   import { capitalise } from "../../../helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
+  export let defaultValue
   export let meta
-  export let value = meta.type === "boolean" ? false : ""
+  export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
   $: type = meta.type
@@ -36,7 +37,9 @@
 {:else if type === 'boolean'}
   <Toggle text={label} bind:checked={value} data-cy="{meta.name}-input" />
 {:else if type === 'link'}
-  <LinkedRowSelector bind:linkedRows={value} schema={meta} />
+  <div>
+    <LinkedRowSelector bind:linkedRows={value} schema={meta} />
+  </div>
 {:else if type === 'longform'}
   <div>
     <Label extraSmall grey>{label}</Label>

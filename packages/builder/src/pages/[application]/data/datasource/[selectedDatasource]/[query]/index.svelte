@@ -28,9 +28,11 @@
 </script>
 
 <section>
-  {#if $backendUiStore.selectedDatabase._id && selectedQuery}
-    <QueryInterface query={selectedQuery} />
-  {/if}
+  <div class="inner">
+    {#if $backendUiStore.selectedDatabase._id && selectedQuery}
+      <QueryInterface query={selectedQuery} />
+    {/if}
+  </div>
 </section>
 
 <style>
@@ -40,5 +42,10 @@
   ::-webkit-scrollbar {
     width: 0px;
     background: transparent; /* make scrollbar transparent */
+  }
+
+  .inner {
+    width: 640px;
+    margin: 0 auto;
   }
 </style>

@@ -1,17 +1,12 @@
 import newRowScreen from "./newRowScreen"
 import rowDetailScreen from "./rowDetailScreen"
 import rowListScreen from "./rowListScreen"
-import emptyNewRowScreen from "./emptyNewRowScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
-import emptyRowDetailScreen from "./emptyRowDetailScreen"
 
 const allTemplates = tables => [
-  createFromScratchScreen,
   ...newRowScreen(tables),
   ...rowDetailScreen(tables),
   ...rowListScreen(tables),
-  emptyNewRowScreen,
-  emptyRowDetailScreen,
 ]
 
 // Allows us to apply common behaviour to all create() functions
@@ -22,8 +17,18 @@ const createTemplateOverride = (frontendState, create) => () => {
   return screen
 }
 
-export default (frontendState, tables) =>
-  allTemplates(tables).map(template => ({
+export default (frontendState, tables) => {
+  const enrichTemplate = template => ({
     ...template,
     create: createTemplateOverride(frontendState, template.create),
-  }))
+  })
+
+  const fromScratch = enrichTemplate(createFromScratchScreen)
+  const tableTemplates = allTemplates(tables).map(enrichTemplate)
+  return [
+    fromScratch,
+    ...tableTemplates.sort((templateA, templateB) => {
+      return templateA.name > templateB.name ? 1 : -1
+    }),
+  ]
+}

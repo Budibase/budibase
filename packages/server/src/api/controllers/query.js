@@ -2,6 +2,20 @@ const { processString } = require("@budibase/string-templates")
 const CouchDB = require("../../db")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { integrations } = require("../../integrations")
+const { BaseQueryVerbs } = require("../../constants")
+const env = require("../../environment")
+
+// simple function to append "readable" to all read queries
+function enrichQueries(input) {
+  const wasArray = Array.isArray(input)
+  const queries = wasArray ? input : [input]
+  for (let query of queries) {
+    if (query.queryVerb === BaseQueryVerbs.READ) {
+      query.readable = true
+    }
+  }
+  return wasArray ? queries : queries[0]
+}
 
 function formatResponse(resp) {
   if (typeof resp === "string") {
@@ -21,7 +35,7 @@ exports.fetch = async function(ctx) {
       include_docs: true,
     })
   )
-  ctx.body = body.rows.map(row => row.doc)
+  ctx.body = enrichQueries(body.rows.map(row => row.doc))
 }
 
 exports.save = async function(ctx) {
@@ -44,13 +58,25 @@ async function enrichQueryFields(fields, parameters) {
 
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
-    enrichedQuery[key] = await processString(fields[key], parameters)
+    if (typeof fields[key] === "object") {
+      // enrich nested fields object
+      enrichedQuery[key] = await enrichQueryFields(fields[key], parameters)
+    } else {
+      // enrich string value as normal
+      enrichedQuery[key] = await processString(fields[key], parameters)
+    }
   }
 
-  if (enrichedQuery.json || enrichedQuery.customData) {
+  if (
+    enrichedQuery.json ||
+    enrichedQuery.customData ||
+    enrichedQuery.requestBody
+  ) {
     try {
       enrichedQuery.json = JSON.parse(
-        enrichedQuery.json || enrichedQuery.customData
+        enrichedQuery.json ||
+          enrichedQuery.customData ||
+          enrichedQuery.requestBody
       )
     } catch (err) {
       throw { message: `JSON Invalid - error: ${err}` }
@@ -59,6 +85,18 @@ async function enrichQueryFields(fields, parameters) {
   }
 
   return enrichedQuery
+}
+
+exports.find = async function(ctx) {
+  const db = new CouchDB(ctx.user.appId)
+  const query = enrichQueries(await db.get(ctx.params.queryId))
+  // remove properties that could be dangerous in real app
+  if (env.CLOUD) {
+    delete query.fields
+    delete query.parameters
+    delete query.schema
+  }
+  ctx.body = query
 }
 
 exports.preview = async function(ctx) {
@@ -77,9 +115,17 @@ exports.preview = async function(ctx) {
 
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
-  ctx.body = formatResponse(
+  const rows = formatResponse(
     await new Integration(datasource.config)[queryVerb](enrichedQuery)
   )
+
+  // get all the potential fields in the schema
+  const keys = rows.flatMap(Object.keys)
+
+  ctx.body = {
+    rows,
+    schemaFields: [...new Set(keys)],
+  }
 }
 
 exports.execute = async function(ctx) {

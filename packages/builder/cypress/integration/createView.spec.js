@@ -1,3 +1,11 @@
+function removeSpacing(headers) {
+  let newHeaders = []
+  for (let header of headers) {
+    newHeaders.push(header.replace(/\s\s+/g, " "))
+  }
+  return newHeaders
+}
+
 context("Create a View", () => {
   before(() => {
     cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
@@ -28,7 +36,7 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq(["group", "age", "rating"])
+      expect(removeSpacing(headers)).to.deep.eq([ "rating Number", "age Number", "group Text" ])
     })
   })
 
@@ -53,27 +61,26 @@ context("Create a View", () => {
     cy.wait(50)
     cy.get(".menu-container").find("select").eq(1).select("age")
     cy.contains("Save").click()
+    cy.wait(100)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(headers).to.deep.eq([
-        "field",
-        "sum",
-        "min",
-        "max",
-        "count",
-        "sumsqr",
-        "avg",
-      ])
+      expect(removeSpacing(headers)).to.deep.eq([ "avg Number",
+        "sumsqr Number",
+        "count Number",
+        "max Number",
+        "min Number",
+        "sum Number",
+        "field Text" ])
     })
     cy.get(".ag-cell").then($values => {
-      const values = Array.from($values).map(header =>
+      let values = Array.from($values).map(header =>
         header.textContent.trim()
       )
-      expect(values).to.deep.eq(["age", "155", "20", "49", "5", "5347", "31"])
+      expect(values).to.deep.eq([ "31", "5347", "5", "49", "20", "155", "age" ])
     })
   })
 
@@ -92,15 +99,7 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([
-          "Students",
-          "70",
-          "20",
-          "25",
-          "3",
-          "1650",
-          "23.333333333333332",
-        ])
+        expect(values).to.deep.eq([ "Students", "23.333333333333332", "1650", "3", "25", "20", "70" ])
       })
   })
 

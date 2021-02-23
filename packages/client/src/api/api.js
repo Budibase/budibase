@@ -1,7 +1,7 @@
 /**
  * API cache for cached request responses.
  */
-import { notificationStore } from "../store/notification"
+import { notificationStore } from "../store"
 let cache = {}
 
 /**
@@ -18,14 +18,12 @@ const handleError = error => {
 const makeApiCall = async ({ method, url, body, json = true }) => {
   try {
     const requestBody = json ? JSON.stringify(body) : body
-    let headers = {
+    const inBuilder = window["##BUDIBASE_IN_BUILDER##"]
+    const headers = {
       Accept: "application/json",
-      ...(json && { "Content-Type": "application/json" }),
       "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
-    }
-
-    if (!window["##BUDIBASE_IN_BUILDER##"]) {
-      headers["x-budibase-type"] = "client"
+      ...(json && { "Content-Type": "application/json" }),
+      ...(!inBuilder && { "x-budibase-type": "client" }),
     }
     const response = await fetch(url, {
       method,
@@ -36,6 +34,9 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     switch (response.status) {
       case 200:
         return response.json()
+      case 401:
+        notificationStore.danger("Invalid credentials")
+        return handleError(`Invalid credentials`)
       case 404:
         notificationStore.danger("Not found")
         return handleError(`${url}: Not Found`)

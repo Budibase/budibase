@@ -1,45 +1,32 @@
 import { get } from "svelte/store"
-import { enrichDataBinding, enrichDataBindings } from "./enrichDataBinding"
 import { routeStore, builderStore } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
+import { ActionTypes } from "../constants"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId } = action.parameters
   if (providerId) {
-    let draft = context[`${providerId}_draft`]
+    let draft = context[providerId]
     if (fields) {
-      for (let [key, entry] of Object.entries(fields)) {
-        draft[key] = await enrichDataBinding(entry.value, context)
+      for (let [field, value] of Object.entries(fields)) {
+        draft[field] = value
       }
     }
     await saveRow(draft)
   }
 }
 
-const deleteRowHandler = async (action, context) => {
+const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
-    const [enrichTable, enrichRow, enrichRev] = await Promise.all([
-      enrichDataBinding(tableId, context),
-      enrichDataBinding(rowId, context),
-      enrichDataBinding(revId, context),
-    ])
-    await deleteRow({
-      tableId: enrichTable,
-      rowId: enrichRow,
-      revId: enrichRev,
-    })
+    await deleteRow({ tableId, rowId, revId })
   }
 }
 
-const triggerAutomationHandler = async (action, context) => {
-  const { fields } = action.parameters()
+const triggerAutomationHandler = async action => {
+  const { fields } = action.parameters
   if (fields) {
-    const params = {}
-    for (let field in fields) {
-      params[field] = await enrichDataBinding(fields[field].value, context)
-    }
-    await triggerAutomation(action.parameters.automationId, params)
+    await triggerAutomation(action.parameters.automationId, fields)
   }
 }
 
@@ -49,17 +36,36 @@ const navigationHandler = action => {
   }
 }
 
-const queryExecutionHandler = async (action, context) => {
+const queryExecutionHandler = async action => {
   const { datasourceId, queryId, queryParams } = action.parameters
-  const enrichedQueryParameters = await enrichDataBindings(
-    queryParams || {},
-    context
-  )
   await executeQuery({
     datasourceId,
     queryId,
-    parameters: enrichedQueryParameters,
+    parameters: queryParams,
   })
+}
+
+const executeActionHandler = async (context, componentId, actionType) => {
+  const fn = context[`${componentId}_${actionType}`]
+  if (fn) {
+    return await fn()
+  }
+}
+
+const validateFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ValidateForm
+  )
+}
+
+const refreshDatasourceHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.RefreshDatasource
+  )
 }
 
 const handlerMap = {
@@ -68,6 +74,8 @@ const handlerMap = {
   ["Navigate To"]: navigationHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
+  ["Validate Form"]: validateFormHandler,
+  ["Refresh Datasource"]: refreshDatasourceHandler,
 }
 
 /**
@@ -82,7 +90,18 @@ export const enrichButtonActions = (actions, context) => {
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
-      await handlers[i](actions[i], context)
+      try {
+        const result = await handlers[i](actions[i], context)
+        // A handler returning `false` is a flag to stop execution of handlers
+        if (result === false) {
+          return
+        }
+      } catch (error) {
+        console.error("Error while executing button handler")
+        console.error(error)
+        // Stop executing on an error
+        return
+      }
     }
   }
 }

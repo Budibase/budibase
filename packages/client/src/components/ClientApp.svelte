@@ -3,14 +3,19 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
+  import Provider from "./Provider.svelte"
   import SDK from "../sdk"
-  import { createDataStore, initialise, screenStore, authStore } from "../store"
+  import {
+    createContextStore,
+    initialise,
+    screenStore,
+    authStore,
+  } from "../store"
 
   // Provide contexts
   setContext("sdk", SDK)
   setContext("component", writable({}))
-  setContext("data", createDataStore())
-  setContext("screenslot", false)
+  setContext("context", createContextStore())
 
   let loaded = false
 
@@ -23,6 +28,8 @@
 </script>
 
 {#if loaded && $screenStore.activeLayout}
-  <Component definition={$screenStore.activeLayout.props} />
+  <Provider key="user" data={$authStore}>
+    <Component definition={$screenStore.activeLayout.props} />
+    <NotificationDisplay />
+  </Provider>
 {/if}
-<NotificationDisplay />

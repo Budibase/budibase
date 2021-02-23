@@ -9,7 +9,12 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const usersController = require("./user")
-const { coerceRowValues, enrichRows } = require("../../utilities")
+const {
+  inputProcessing,
+  outputProcessing,
+} = require("../../utilities/rowProcessor")
+const { FieldTypes } = require("../../constants")
+const { isEqual } = require("lodash")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -54,18 +59,17 @@ async function findRow(db, appId, tableId, rowId) {
 exports.patch = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  let row = await db.get(ctx.params.id)
-  const table = await db.get(row.tableId)
+  let dbRow = await db.get(ctx.params.rowId)
+  let dbTable = await db.get(dbRow.tableId)
   const patchfields = ctx.request.body
-
   // need to build up full patch fields before coerce
   for (let key of Object.keys(patchfields)) {
-    if (!table.schema[key]) continue
-    row[key] = patchfields[key]
+    if (!dbTable.schema[key]) continue
+    dbRow[key] = patchfields[key]
   }
 
-  row = coerceRowValues(row, table)
-
+  // this returns the table and row incase they have been updated
+  let { table, row } = inputProcessing(ctx.user, dbTable, dbRow)
   const validateResult = await validate({
     row,
     table,
@@ -101,9 +105,12 @@ exports.patch = async function(ctx) {
   }
 
   const response = await db.put(row)
+  // don't worry about rev, tables handle rev/lastID updates
+  if (!isEqual(dbTable, table)) {
+    await db.put(table)
+  }
   row._rev = response.rev
   row.type = "row"
-
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
   ctx.body = row
   ctx.status = 200
@@ -113,32 +120,31 @@ exports.patch = async function(ctx) {
 exports.save = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
-  let row = ctx.request.body
-  row.tableId = ctx.params.tableId
+  let inputs = ctx.request.body
+  inputs.tableId = ctx.params.tableId
 
   // TODO: find usage of this and break out into own endpoint
-  if (ctx.request.body.type === "delete") {
+  if (inputs.type === "delete") {
     await bulkDelete(ctx)
-    ctx.body = ctx.request.body.rows
+    ctx.body = inputs.rows
     return
   }
 
   // if the row obj had an _id then it will have been retrieved
   const existingRow = ctx.preExisting
   if (existingRow) {
-    ctx.params.id = row._id
+    ctx.params.rowId = inputs._id
     await exports.patch(ctx)
     return
   }
 
-  if (!row._rev && !row._id) {
-    row._id = generateRowID(row.tableId)
+  if (!inputs._rev && !inputs._id) {
+    inputs._id = generateRowID(inputs.tableId)
   }
 
-  const table = await db.get(row.tableId)
-
-  row = coerceRowValues(row, table)
-
+  // this returns the table and row incase they have been updated
+  const dbTable = await db.get(inputs.tableId)
+  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
   const validateResult = await validate({
     row,
     table,
@@ -172,6 +178,10 @@ exports.save = async function(ctx) {
 
   row.type = "row"
   const response = await db.put(row)
+  // don't worry about rev, tables handle rev/lastID updates
+  if (!isEqual(dbTable, table)) {
+    await db.put(table)
+  }
   row._rev = response.rev
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.body = row
@@ -207,7 +217,7 @@ exports.fetchView = async function(ctx) {
         schema: {},
       }
     }
-    ctx.body = await enrichRows(appId, table, response.rows)
+    ctx.body = await outputProcessing(appId, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -232,6 +242,38 @@ exports.fetchView = async function(ctx) {
   }
 }
 
+exports.search = async function(ctx) {
+  const appId = ctx.user.appId
+
+  const db = new CouchDB(appId)
+
+  const {
+    query,
+    pagination: { pageSize = 10, page },
+  } = ctx.request.body
+
+  query.tableId = ctx.params.tableId
+
+  const response = await db.find({
+    selector: query,
+    limit: pageSize,
+    skip: pageSize * page,
+  })
+
+  const rows = response.docs
+
+  // delete passwords from users
+  if (query.tableId === ViewNames.USERS) {
+    for (let row of rows) {
+      delete row.password
+    }
+  }
+
+  const table = await db.get(ctx.params.tableId)
+
+  ctx.body = await outputProcessing(appId, table, rows)
+}
+
 exports.fetchTableRows = async function(ctx) {
   const appId = ctx.user.appId
   const db = new CouchDB(appId)
@@ -250,7 +292,7 @@ exports.fetchTableRows = async function(ctx) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  ctx.body = await enrichRows(appId, table, rows)
+  ctx.body = await outputProcessing(appId, table, rows)
 }
 
 exports.find = async function(ctx) {
@@ -259,7 +301,7 @@ exports.find = async function(ctx) {
   try {
     const table = await db.get(ctx.params.tableId)
     const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
-    ctx.body = await enrichRows(appId, table, row)
+    ctx.body = await outputProcessing(appId, table, row)
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -344,7 +386,7 @@ exports.fetchEnrichedRow = async function(ctx) {
     keys: linkVals.map(linkVal => linkVal.id),
   })
   // need to include the IDs in these rows for any links they may have
-  let linkedRows = await enrichRows(
+  let linkedRows = await outputProcessing(
     appId,
     table,
     response.rows.map(row => row.doc)
@@ -352,9 +394,14 @@ exports.fetchEnrichedRow = async function(ctx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
-    if (field.type === "link") {
-      row[fieldName] = linkedRows.filter(
-        linkRow => linkRow.tableId === field.tableId
+    if (field.type === FieldTypes.LINK) {
+      // find the links that pertain to this field, get their indexes
+      const linkIndexes = linkVals
+        .filter(link => link.fieldName === fieldName)
+        .map(link => linkVals.indexOf(link))
+      // find the rows that the links state are linked to this field
+      row[fieldName] = linkedRows.filter((linkRow, index) =>
+        linkIndexes.includes(index)
       )
     }
   }

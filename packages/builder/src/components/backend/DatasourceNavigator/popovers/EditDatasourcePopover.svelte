@@ -3,7 +3,6 @@
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import IntegrationConfigForm from "../TableIntegrationMenu//IntegrationConfigForm.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let datasource

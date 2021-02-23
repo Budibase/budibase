@@ -3,6 +3,7 @@ import SaveRow from "./SaveRow.svelte"
 import DeleteRow from "./DeleteRow.svelte"
 import ExecuteQuery from "./ExecuteQuery.svelte"
 import TriggerAutomation from "./TriggerAutomation.svelte"
+import ValidateForm from "./ValidateForm.svelte"
 
 // defines what actions are available, when adding a new one
 // the component is the setup panel for the action
@@ -29,5 +30,9 @@ export default [
   {
     name: "Trigger Automation",
     component: TriggerAutomation,
+  },
+  {
+    name: "Validate Form",
+    component: ValidateForm,
   },
 ]

@@ -106,62 +106,56 @@
     "styleable": true,
     "hasChildren": true,
     "dataProvider": true,
+    "actions": ["RefreshDatasource"],
     "settings": [
       {
         "type": "datasource",
         "label": "Data",
         "key": "datasource"
-      }
-    ]
-  },
-  "dataform": {
-    "name": "Form",
-    "icon": "ri-file-edit-line",
-    "styleable": true
-  },
-  "dataformwide": {
-    "name": "Wide Form",
-    "icon": "ri-file-edit-line",
-    "styleable": true
-  },
-  "input": {
-    "name": "Text Field",
-    "description": "A textfield component that allows the user to input text.",
-    "icon": "ri-edit-box-line",
-    "styleable": true,
-    "bindable": true,
-    "settings": [
-      {
-        "type": "text",
-        "label": "Label",
-        "key": "label"
       },
       {
-        "label": "Type",
-        "key": "type",
-        "defaultValue": "text",
-        "options": ["text", "password"]
+        "type": "text",
+        "label": "Empty Text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found."
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
       }
     ]
   },
-  "richtext": {
-    "name": "Rich Text",
-    "description": "A component that allows the user to enter long form text.",
-    "icon": "ri-edit-box-line",
+  "search": {
+    "name": "Search",
+    "description": "A searchable list of items.",
+    "icon": "ri-search-line",
     "styleable": true,
-    "bindable": true
-  },
-  "datepicker": {
-    "name": "Date Picker",
-    "description": "A basic date picker component",
-    "icon": "ri-calendar-line",
-    "styleable": true,
-    "bindable": true,
+    "hasChildren": true,
+    "dataProvider": true,
     "settings": [
       {
+        "type": "table",
+        "label": "Table",
+        "key": "table"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "number",
+        "label": "Rows/Page",
+        "defaultValue": 25,
+        "key": "pageSize"
+      },
+      {
         "type": "text",
-        "label": "Placeholder",
-        "key": "placeholder"
+        "label": "Empty Text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found."
       }
     ]
   },
@@ -187,9 +181,10 @@
         "key": "subheading"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "Link URL",
-        "key": "destinationUrl"
+        "key": "destinationUrl",
+        "placeholder": "/screen"
       }
     ]
   },
@@ -220,9 +215,10 @@
         "key": "linkText"
       },
       {
-        "type": "screen",
-        "label": "Link Url",
-        "key": "linkUrl"
+        "type": "text",
+        "label": "Link URL",
+        "key": "linkUrl",
+        "placeholder": "/screen"
       },
       {
         "type": "color",
@@ -389,9 +385,10 @@
         "key": "text"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "URL",
-        "key": "url"
+        "key": "url",
+        "placeholder": "/screen"
       },
       {
         "type": "boolean",
@@ -462,9 +459,10 @@
         "key": "linkText"
       },
       {
-        "type": "screen",
+        "type": "text",
         "label": "Link URL",
-        "key": "linkUrl"
+        "key": "linkUrl",
+        "placeholder": "/screen"
       },
       {
         "type": "color",
@@ -1087,6 +1085,322 @@
         "label": "Animate",
         "key": "animate",
         "defaultValue": true
+      }
+    ]
+  },
+  "form": {
+    "name": "Form",
+    "icon": "ri-file-text-line",
+    "styleable": true,
+    "hasChildren": true,
+    "dataProvider": true,
+    "actions": ["ValidateForm"],
+    "settings": [
+      {
+        "type": "schema",
+        "label": "Schema",
+        "key": "datasource"
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "defaultValue": "spectrum--light",
+        "options": [
+          {
+            "label": "Lightest",
+            "value": "spectrum--lightest"
+          },
+          {
+            "label": "Light",
+            "value": "spectrum--light"
+          },
+          {
+            "label": "Dark",
+            "value": "spectrum--dark"
+          },
+          {
+            "label": "Darkest",
+            "value": "spectrum--darkest"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "fieldgroup": {
+    "name": "Field Group",
+    "icon": "ri-layout-row-line",
+    "styleable": true,
+    "hasChildren": true,
+    "settings": [
+      {
+        "type": "select",
+        "label": "Labels",
+        "key": "labelPosition",
+        "defaultValue": "above",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left"
+          },
+          {
+            "label": "Right",
+            "value": "right"
+          },
+          {
+            "label": "Above",
+            "value": "above"
+          }
+        ]
+      }
+    ]
+  },
+  "stringfield": {
+    "name": "Text Field",
+    "icon": "ri-t-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "numberfield": {
+    "name": "Number Field",
+    "icon": "ri-edit-box-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "optionsfield": {
+    "name": "Options Picker",
+    "icon": "ri-file-list-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/options",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Choose an option"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "booleanfield": {
+    "name": "Checkbox",
+    "icon": "ri-checkbox-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/boolean",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "longformfield": {
+    "name": "Rich Text",
+    "icon": "ri-file-edit-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/longform",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Type something..."
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "datetimefield": {
+    "name": "Date Picker",
+    "icon": "ri-calendar-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/datetime",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Show Time",
+        "key": "enableTime",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "attachmentfield": {
+    "name": "Attachment",
+    "icon": "ri-image-edit-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/attachment",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "relationshipfield": {
+    "name": "Relationship Picker",
+    "icon": "ri-links-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/link",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   }

@@ -6,7 +6,7 @@
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { backendUiStore } from "builderStore"
 
-  let permissions = []
+  let basePermissions = []
   let selectedRole = {}
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
@@ -16,9 +16,9 @@
   )
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
-  const fetchPermissions = async () => {
-    const permissionsResponse = await api.get("/api/permissions")
-    permissions = await permissionsResponse.json()
+  const fetchBasePermissions = async () => {
+    const permissionsResponse = await api.get("/api/permission/builtin")
+    basePermissions = await permissionsResponse.json()
   }
 
   // Changes the selected role
@@ -81,7 +81,7 @@
     }
   }
 
-  onMount(fetchPermissions)
+  onMount(fetchBasePermissions)
 </script>
 
 <ModalContent
@@ -121,11 +121,11 @@
     <Select
       thin
       secondary
-      label="Permissions"
+      label="Base Permissions"
       bind:value={selectedRole.permissionId}>
       <option value="">Choose permissions</option>
-      {#each permissions as permission}
-        <option value={permission._id}>{permission.name}</option>
+      {#each basePermissions as basePerm}
+        <option value={basePerm._id}>{basePerm.name}</option>
       {/each}
     </Select>
   {/if}

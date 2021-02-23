@@ -17,7 +17,9 @@
     const automationsToCreate = value.filter(
       action => action["##eventHandlerType"] === "Trigger Automation"
     )
-    automationsToCreate.forEach(action => createAutomation(action.parameters))
+    for (let action of automationsToCreate) {
+      await createAutomation(action.parameters)
+    }
 
     dispatch("change", value)
     notifier.success("Component actions saved.")
@@ -27,11 +29,8 @@
   // called by the parent modal when actions are saved
   const createAutomation = async parameters => {
     if (parameters.automationId || !parameters.newAutomationName) return
-
     await automationStore.actions.create({ name: parameters.newAutomationName })
-
     const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
-
     const newBlock = $automationStore.selectedAutomation.constructBlock(
       "TRIGGER",
       "APP",
@@ -39,19 +38,14 @@
     )
 
     newBlock.inputs = {
-      fields: Object.entries(parameters.fields).reduce(
-        (fields, [key, value]) => {
-          fields[key] = value.type
-          return fields
-        },
-        {}
-      ),
+      fields: Object.keys(parameters.fields).reduce((fields, key) => {
+        fields[key] = "string"
+        return fields
+      }, {}),
     }
 
     automationStore.actions.addBlockToAutomation(newBlock)
-
     await automationStore.actions.save($automationStore.selectedAutomation)
-
     parameters.automationId = $automationStore.selectedAutomation.automation._id
     delete parameters.newAutomationName
   }

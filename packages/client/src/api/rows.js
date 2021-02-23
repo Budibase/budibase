@@ -1,4 +1,4 @@
-import { notificationStore } from "../store/notification"
+import { notificationStore, datasourceStore } from "../store"
 import API from "./api"
 import { fetchTableDefinition } from "./tables"
 
@@ -6,6 +6,9 @@ import { fetchTableDefinition } from "./tables"
  * Fetches data about a certain row in a table.
  */
 export const fetchRow = async ({ tableId, rowId }) => {
+  if (!tableId || !rowId) {
+    return
+  }
   const row = await API.get({
     url: `/api/${tableId}/rows/${rowId}`,
   })
@@ -16,6 +19,9 @@ export const fetchRow = async ({ tableId, rowId }) => {
  * Creates a row in a table.
  */
 export const saveRow = async row => {
+  if (!row?.tableId) {
+    return
+  }
   const res = await API.post({
     url: `/api/${row.tableId}/rows`,
     body: row,
@@ -23,6 +29,10 @@ export const saveRow = async row => {
   res.error
     ? notificationStore.danger("An error has occurred")
     : notificationStore.success("Row saved")
+
+  // Refresh related datasources
+  datasourceStore.actions.invalidateDatasource(row.tableId)
+
   return res
 }
 
@@ -30,6 +40,9 @@ export const saveRow = async row => {
  * Updates a row in a table.
  */
 export const updateRow = async row => {
+  if (!row?.tableId || !row?._id) {
+    return
+  }
   const res = await API.patch({
     url: `/api/${row.tableId}/rows/${row._id}`,
     body: row,
@@ -37,6 +50,10 @@ export const updateRow = async row => {
   res.error
     ? notificationStore.danger("An error has occurred")
     : notificationStore.success("Row updated")
+
+  // Refresh related datasources
+  datasourceStore.actions.invalidateDatasource(row.tableId)
+
   return res
 }
 
@@ -44,12 +61,19 @@ export const updateRow = async row => {
  * Deletes a row from a table.
  */
 export const deleteRow = async ({ tableId, rowId, revId }) => {
+  if (!tableId || !rowId || !revId) {
+    return
+  }
   const res = await API.del({
     url: `/api/${tableId}/rows/${rowId}/${revId}`,
   })
   res.error
     ? notificationStore.danger("An error has occurred")
     : notificationStore.success("Row deleted")
+
+  // Refresh related datasources
+  datasourceStore.actions.invalidateDatasource(tableId)
+
   return res
 }
 
@@ -57,6 +81,9 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
  * Deletes many rows from a table.
  */
 export const deleteRows = async ({ tableId, rows }) => {
+  if (!tableId || !rows) {
+    return
+  }
   const res = await API.post({
     url: `/api/${tableId}/rows`,
     body: {
@@ -67,6 +94,10 @@ export const deleteRows = async ({ tableId, rows }) => {
   res.error
     ? notificationStore.danger("An error has occurred")
     : notificationStore.success(`${rows.length} row(s) deleted`)
+
+  // Refresh related datasources
+  datasourceStore.actions.invalidateDatasource(tableId)
+
   return res
 }
 
@@ -75,7 +106,10 @@ export const deleteRows = async ({ tableId, rows }) => {
  * be properly displayed.
  */
 export const enrichRows = async (rows, tableId) => {
-  if (rows && rows.length && tableId) {
+  if (!Array.isArray(rows)) {
+    return []
+  }
+  if (rows.length && tableId) {
     // Fetch table schema so we can check column types
     const tableDefinition = await fetchTableDefinition(tableId)
     const schema = tableDefinition && tableDefinition.schema
@@ -85,8 +119,8 @@ export const enrichRows = async (rows, tableId) => {
         for (let key of keys) {
           const type = schema[key].type
           if (type === "link") {
-            // Enrich row with the count of any relationship fields
-            row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
+            // Enrich row a string join of relationship fields
+            row[`${key}_text`] = row[key]?.join(", ") || ""
           } else if (type === "attachment") {
             // Enrich row with the first image URL for any attachment fields
             let url = null

@@ -1,6 +1,7 @@
 const CouchDB = require("../index")
 const Sentry = require("@sentry/node")
 const { ViewNames, getQueryIndex } = require("../utils")
+const { FieldTypes } = require("../../constants")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
@@ -23,6 +24,7 @@ exports.createLinkView = async appId => {
   const designDoc = await db.get("_design/database")
   const view = {
     map: function(doc) {
+      // everything in this must remain constant as its going to Pouch, no external variables
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
@@ -118,4 +120,36 @@ exports.getUniqueByProp = (array, prop) => {
   return array.filter((obj, pos, arr) => {
     return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos
   })
+}
+
+exports.getLinkedTableIDs = table => {
+  return Object.values(table.schema)
+    .filter(column => column.type === FieldTypes.LINK)
+    .map(column => column.tableId)
+}
+
+exports.getLinkedTable = async (db, id, tables) => {
+  let linkedTable = tables.find(table => table._id === id)
+  if (linkedTable) {
+    return linkedTable
+  }
+  linkedTable = await db.get(id)
+  if (linkedTable) {
+    tables.push(linkedTable)
+  }
+  return linkedTable
+}
+
+exports.getRelatedTableForField = (table, fieldName) => {
+  // look to see if its on the table, straight in the schema
+  const field = table.schema[fieldName]
+  if (field != null) {
+    return field.tableId
+  }
+  for (let column of Object.values(table.schema)) {
+    if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
+      return column.tableId
+    }
+  }
+  return null
 }

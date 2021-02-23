@@ -1,39 +1,61 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
-import { findAllMatchingComponents, findComponentPath } from "./storeUtils"
+import { findComponentPath } from "./storeUtils"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
+const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 /**
  * Gets all bindable data context fields and instance fields.
  */
-export const getBindableProperties = (rootComponent, componentId) => {
-  const contextBindings = getContextBindings(rootComponent, componentId)
-  const componentBindings = getComponentBindings(rootComponent)
-  return [...contextBindings, ...componentBindings]
+export const getBindableProperties = (asset, componentId) => {
+  const contextBindings = getContextBindings(asset, componentId)
+  const userBindings = getUserBindings()
+  const urlBindings = getUrlBindings(asset, componentId)
+  return [...contextBindings, ...userBindings, ...urlBindings]
 }
 
 /**
  * Gets all data provider components above a component.
  */
-export const getDataProviderComponents = (rootComponent, componentId) => {
-  if (!rootComponent || !componentId) {
+export const getDataProviderComponents = (asset, componentId) => {
+  if (!asset || !componentId) {
     return []
   }
 
   // Get the component tree leading up to this component, ignoring the component
   // itself
-  const path = findComponentPath(rootComponent, componentId)
+  const path = findComponentPath(asset.props, componentId)
   path.pop()
 
   // Filter by only data provider components
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
     return def?.dataProvider
+  })
+}
+
+/**
+ * Gets all data provider components above a component.
+ */
+export const getActionProviderComponents = (asset, componentId, actionType) => {
+  if (!asset || !componentId) {
+    return []
+  }
+
+  // Get the component tree leading up to this component, ignoring the component
+  // itself
+  const path = findComponentPath(asset.props, componentId)
+  path.pop()
+
+  // Filter by only data provider components
+  return path.filter(component => {
+    const def = store.actions.components.getDefinition(component._component)
+    return def?.actions?.includes(actionType)
   })
 }
 
@@ -47,8 +69,9 @@ export const getDatasourceForProvider = component => {
   }
 
   // Extract datasource from component instance
+  const validSettingTypes = ["datasource", "table", "schema"]
   const datasourceSetting = def.settings.find(setting => {
-    return setting.type === "datasource" || setting.type === "table"
+    return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
     return null
@@ -58,40 +81,54 @@ export const getDatasourceForProvider = component => {
   // example an actual datasource object, or a table ID string.
   // Convert the datasource setting into a proper datasource object so that
   // we can use it properly
-  if (datasourceSetting.type === "datasource") {
-    return component[datasourceSetting?.key]
-  } else if (datasourceSetting.type === "table") {
+  if (datasourceSetting.type === "table") {
     return {
       tableId: component[datasourceSetting?.key],
       type: "table",
     }
+  } else {
+    return component[datasourceSetting?.key]
   }
-  return null
 }
 
 /**
- * Gets all bindable data contexts. These are fields of schemas of data contexts
- * provided by data provider components, such as lists or row detail components.
+ * Gets all bindable data properties from component data contexts.
  */
-export const getContextBindings = (rootComponent, componentId) => {
+const getContextBindings = (asset, componentId) => {
   // Extract any components which provide data contexts
-  const dataProviders = getDataProviderComponents(rootComponent, componentId)
-  let contextBindings = []
+  const dataProviders = getDataProviderComponents(asset, componentId)
+  let bindings = []
+
+  // Create bindings for each data provider
   dataProviders.forEach(component => {
+    const isForm = component._component.endsWith("/form")
     const datasource = getDatasourceForProvider(component)
-    if (!datasource) {
+    let tableName, schema
+
+    // Forms are an edge case which do not need table schemas
+    if (isForm) {
+      schema = buildFormSchema(component)
+      tableName = "Fields"
+    } else {
+      if (!datasource) {
+        return
+      }
+
+      // Get schema and table for the datasource
+      const info = getSchemaForDatasource(datasource, isForm)
+      schema = info.schema
+      tableName = info.table?.name
+
+      // Add _id and _rev fields for certain types
+      if (datasource.type === "table" || datasource.type === "link") {
+        schema["_id"] = { type: "string" }
+        schema["_rev"] = { type: "string" }
+      }
+    }
+    if (!schema || !tableName) {
       return
     }
 
-    // Get schema and add _id and _rev fields for certain types
-    let { schema, table } = getSchemaForDatasource(datasource)
-    if (!schema || !table) {
-      return
-    }
-    if (datasource.type === "table" || datasource.type === "link") {
-      schema["_id"] = { type: "string" }
-      schema["_rev"] = { type: "string " }
-    }
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
@@ -100,26 +137,33 @@ export const getContextBindings = (rootComponent, componentId) => {
       // Replace certain bindings with a new property to help display components
       let runtimeBoundKey = key
       if (fieldSchema.type === "link") {
-        runtimeBoundKey = `${key}_count`
+        runtimeBoundKey = `${key}_text`
       } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
 
-      contextBindings.push({
+      bindings.push({
         type: "context",
         runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
           runtimeBoundKey
         )}`,
-        readableBinding: `${component._instanceName}.${table.name}.${key}`,
+        readableBinding: `${component._instanceName}.${tableName}.${key}`,
+        // Field schema and provider are required to construct relationship
+        // datasource options, based on bindable properties
         fieldSchema,
         providerId: component._id,
-        tableId: datasource.tableId,
-        field: key,
       })
     })
   })
 
-  // Add logged in user bindings
+  return bindings
+}
+
+/**
+ * Gets all bindable properties from the logged in user.
+ */
+const getUserBindings = () => {
+  let bindings = []
   const tables = get(backendUiStore).tables
   const userTable = tables.find(table => table._id === TableNames.USERS)
   const schema = {
@@ -133,53 +177,48 @@ export const getContextBindings = (rootComponent, componentId) => {
     // Replace certain bindings with a new property to help display components
     let runtimeBoundKey = key
     if (fieldSchema.type === "link") {
-      runtimeBoundKey = `${key}_count`
+      runtimeBoundKey = `${key}_text`
     } else if (fieldSchema.type === "attachment") {
       runtimeBoundKey = `${key}_first`
     }
 
-    contextBindings.push({
+    bindings.push({
       type: "context",
       runtimeBinding: `user.${runtimeBoundKey}`,
       readableBinding: `Current User.${key}`,
+      // Field schema and provider are required to construct relationship
+      // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
-      tableId: TableNames.USERS,
-      field: key,
     })
   })
 
-  return contextBindings
+  return bindings
 }
 
 /**
- * Gets all bindable components. These are form components which allow their
- * values to be bound to.
+ * Gets all bindable properties from URL parameters.
  */
-export const getComponentBindings = rootComponent => {
-  if (!rootComponent) {
-    return []
-  }
-  const componentSelector = component => {
-    const type = component._component
-    const definition = store.actions.components.getDefinition(type)
-    return definition?.bindable
-  }
-  const components = findAllMatchingComponents(rootComponent, componentSelector)
-  return components.map(component => {
-    return {
-      type: "instance",
-      providerId: component._id,
-      runtimeBinding: `${makePropSafe(component._id)}`,
-      readableBinding: `${component._instanceName}`,
+const getUrlBindings = asset => {
+  const url = asset?.routing?.route ?? ""
+  const split = url.split("/")
+  let params = []
+  split.forEach(part => {
+    if (part.startsWith(":") && part.length > 1) {
+      params.push(part.replace(/:/g, "").replace(/\?/g, ""))
     }
   })
+  return params.map(param => ({
+    type: "context",
+    runtimeBinding: `url.${param}`,
+    readableBinding: `URL.${param}`,
+  }))
 }
 
 /**
  * Gets a schema for a datasource object.
  */
-export const getSchemaForDatasource = datasource => {
+export const getSchemaForDatasource = (datasource, isForm = false) => {
   let schema, table
   if (datasource) {
     const { type } = datasource
@@ -193,12 +232,69 @@ export const getSchemaForDatasource = datasource => {
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+
+        // Some calc views don't include a "name" property inside the schema
+        if (schema) {
+          Object.keys(schema).forEach(field => {
+            if (!schema[field].name) {
+              schema[field].name = field
+            }
+          })
+        }
+      } else if (type === "query" && isForm) {
+        schema = {}
+        const params = table.parameters || []
+        params.forEach(param => {
+          if (param?.name) {
+            schema[param.name] = { ...param, type: "string" }
+          }
+        })
       } else {
         schema = cloneDeep(table.schema)
       }
     }
   }
   return { schema, table }
+}
+
+/**
+ * Builds a form schema given a form component.
+ * A form schema is a schema of all the fields nested anywhere within a form.
+ */
+const buildFormSchema = component => {
+  let schema = {}
+  if (!component) {
+    return schema
+  }
+  const def = store.actions.components.getDefinition(component._component)
+  const fieldSetting = def?.settings?.find(
+    setting => setting.key === "field" && setting.type.startsWith("field/")
+  )
+  if (fieldSetting && component.field) {
+    const type = fieldSetting.type.split("field/")[1]
+    if (type) {
+      schema[component.field] = { name: component.field, type }
+    }
+  }
+  component._children?.forEach(child => {
+    const childSchema = buildFormSchema(child)
+    schema = { ...schema, ...childSchema }
+  })
+  return schema
+}
+
+/**
+ * Recurses the input object to remove any instances of bindings.
+ */
+export function removeBindings(obj) {
+  for (let [key, value] of Object.entries(obj)) {
+    if (typeof value === "object") {
+      obj[key] = removeBindings(value)
+    } else if (typeof value === "string") {
+      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, "Invalid binding")
+    }
+  }
+  return obj
 }
 
 /**

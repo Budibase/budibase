@@ -40,7 +40,7 @@ export const FIELDS = {
     },
   },
   BOOLEAN: {
-    name: "True/False",
+    name: "Boolean",
     icon: "ri-toggle-line",
     type: "boolean",
     constraints: {
@@ -82,6 +82,22 @@ export const FIELDS = {
   },
 }
 
+export const AUTO_COLUMN_SUB_TYPES = {
+  AUTO_ID: "autoID",
+  CREATED_BY: "createdBy",
+  CREATED_AT: "createdAt",
+  UPDATED_BY: "updatedBy",
+  UPDATED_AT: "updatedAt",
+}
+
+export const AUTO_COLUMN_DISPLAY_NAMES = {
+  AUTO_ID: "Auto ID",
+  CREATED_BY: "Created By",
+  CREATED_AT: "Created At",
+  UPDATED_BY: "Updated By",
+  UPDATED_AT: "Updated At",
+}
+
 export const FILE_TYPES = {
   IMAGE: ["png", "tiff", "gif", "raw", "jpg", "jpeg"],
   CODE: ["js", "rs", "py", "java", "rb", "hs", "yml"],
@@ -91,4 +107,19 @@ export const FILE_TYPES = {
 export const HostingTypes = {
   CLOUD: "cloud",
   SELF: "self",
+}
+
+export const Roles = {
+  ADMIN: "ADMIN",
+  POWER: "POWER",
+  BASIC: "BASIC",
+  PUBLIC: "PUBLIC",
+  BUILDER: "BUILDER",
+}
+
+export function isAutoColumnUserRelationship(subtype) {
+  return (
+    subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
+    subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
+  )
 }

@@ -11,7 +11,7 @@
   export let parameters
 
   $: dataProviderComponents = getDataProviderComponents(
-    $currentAsset.props,
+    $currentAsset,
     $store.selectedComponentId
   )
   $: providerComponent = dataProviderComponents.find(
@@ -37,8 +37,8 @@
       Repeater
     </div>
   {:else}
-    <Label size="m" color="dark">Datasource</Label>
-    <Select secondary bind:value={parameters.providerId}>
+    <Label small>Datasource</Label>
+    <Select thin secondary bind:value={parameters.providerId}>
       <option value="" />
       {#each dataProviderComponents as provider}
         <option value={provider._id}>{provider._instanceName}</option>
@@ -49,7 +49,7 @@
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
-        on:fieldschanged={onFieldsChanged} />
+        on:change={onFieldsChanged} />
     {/if}
   {/if}
 </div>
@@ -57,7 +57,7 @@
 <style>
   .root {
     display: grid;
-    column-gap: var(--spacing-s);
+    column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     grid-template-columns: auto 1fr auto 1fr auto;
     align-items: baseline;
@@ -71,8 +71,6 @@
   .cannot-use {
     color: var(--red);
     font-size: var(--font-size-s);
-    text-align: center;
-    width: 70%;
     margin: auto;
   }
 </style>

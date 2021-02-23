@@ -14,7 +14,15 @@ const selfhost = require("./selfhost")
 const app = new Koa()
 
 // set up top level koa middleware
-app.use(koaBody({ multipart: true }))
+app.use(
+  koaBody({
+    multipart: true,
+    formLimit: "10mb",
+    jsonLimit: "10mb",
+    textLimit: "10mb",
+    enableTypes: ["json", "form", "text"],
+  })
+)
 
 app.use(
   logger({

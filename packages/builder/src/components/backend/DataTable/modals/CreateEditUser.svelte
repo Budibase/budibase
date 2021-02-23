@@ -29,15 +29,31 @@
     let customSchema = { ...schema }
     delete customSchema["email"]
     delete customSchema["roleId"]
+    delete customSchema["status"]
     return Object.entries(customSchema)
   }
 
   const saveRow = async () => {
+    errors = []
+
+    // Do some basic front end validation first
+    if (!row.email) {
+      errors = [...errors, { message: "Email is required" }]
+    }
+    if (!row.password) {
+      errors = [...errors, { message: "Password is required" }]
+    }
+    if (!row.roleId) {
+      errors = [...errors, { message: "Role is required" }]
+    }
+    if (errors.length) {
+      return false
+    }
+
     const rowResponse = await backendApi.saveRow(
       { ...row, tableId: table._id },
       table._id
     )
-
     if (rowResponse.errors) {
       if (Array.isArray(rowResponse.errors)) {
         errors = rowResponse.errors.map(error => ({ message: error }))
@@ -46,6 +62,9 @@
           .map(([key, error]) => ({ dataPath: key, message: error }))
           .flat()
       }
+      return false
+    } else if (rowResponse.status === 400 && rowResponse.message) {
+      errors = [{ message: rowResponse.message }]
       return false
     }
 
@@ -79,7 +98,13 @@
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>
+  <RowFieldControl
+    meta={{ name: 'status', type: 'options', constraints: { inclusion: ['active', 'inactive'] } }}
+    bind:value={row.status}
+    defaultValue={'active'} />
   {#each customSchemaKeys as [key, meta]}
-    <RowFieldControl {meta} bind:value={row[key]} {creating} />
+    {#if !meta.autocolumn}
+      <RowFieldControl {meta} bind:value={row[key]} {creating} />
+    {/if}
   {/each}
 </ModalContent>

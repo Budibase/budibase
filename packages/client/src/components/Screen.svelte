@@ -2,6 +2,7 @@
   import { fade } from "svelte/transition"
   import { screenStore, routeStore } from "../store"
   import Component from "./Component.svelte"
+  import Provider from "./Provider.svelte"
 
   // Keep route params up to date
   export let params = {}
@@ -12,16 +13,16 @@
 
   // Redirect to home layout if no matching route
   $: screenDefinition == null && routeStore.actions.navigate("/")
-
-  // Make a screen array so we can use keying to properly re-render each screen
-  $: screens = screenDefinition ? [screenDefinition] : []
 </script>
 
-{#each screens as screen (screen._id)}
-  <div in:fade>
-    <Component definition={screen} />
-  </div>
-{/each}
+<!-- Ensure to fully remount when screen changes -->
+{#key screenDefinition?._id}
+  <Provider key="url" data={params}>
+    <div in:fade>
+      <Component definition={screenDefinition} />
+    </div>
+  </Provider>
+{/key}
 
 <style>
   div {
