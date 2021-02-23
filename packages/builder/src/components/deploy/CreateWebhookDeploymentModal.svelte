@@ -23,7 +23,10 @@
   })
 </script>
 
-<ModalContent title="Webhook Endpoints" confirmText="OK" showCancelButton={false}>
+<ModalContent
+  title="Webhook Endpoints"
+  confirmText="OK"
+  showCancelButton={false}>
   <p>See below the list of deployed webhook URLs.</p>
   {#each webhookUrls as webhookUrl}
     <div>

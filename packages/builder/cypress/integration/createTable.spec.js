@@ -1,6 +1,6 @@
 context("Create a Table", () => {
   before(() => {
-    cy.visit("localhost:4001/_builder")
+    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
     cy.createApp("Table App", "Table App Description")
   })
 
