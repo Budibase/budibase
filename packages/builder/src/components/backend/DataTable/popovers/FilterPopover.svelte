@@ -168,7 +168,9 @@
     </div>
   {/if}
   <div class="footer">
+    <div class="add-filter">
     <Button text on:click={addFilter}>Add Filter</Button>
+    </div>
     <div class="buttons">
       <Button secondary on:click={onClosed}>Cancel</Button>
       <Button primary on:click={saveView}>Save</Button>
@@ -212,5 +214,9 @@
   p {
     margin: 0;
     font-size: var(--font-size-xs);
+  }
+
+  .add-filter {
+    margin-right: 16px;
   }
 </style>
