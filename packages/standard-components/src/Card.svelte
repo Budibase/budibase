@@ -40,7 +40,7 @@
     <a
       use:linkable
       style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
-      href={linkUrl}>
+      href={linkUrl || '/'}>
       {linkText}
     </a>
   </div>
@@ -71,6 +71,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
+    white-space: pre-wrap;
   }
 
   .text {
@@ -78,6 +79,7 @@
     margin: 0;
     font-weight: 400;
     line-height: 1.5rem;
+    white-space: pre-wrap;
   }
 
   a {
@@ -85,6 +87,7 @@
     text-decoration: none;
     color: var(--linkColor);
     font-weight: 600;
+    white-space: pre-wrap;
   }
 
   a:hover {
