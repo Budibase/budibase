@@ -64,8 +64,8 @@
     pasteComponent("below")
   }
 
-  const deleteComponent = () => {
-    store.actions.components.delete(component)
+  const deleteComponent = async () => {
+    await store.actions.components.delete(component)
   }
 
   const storeComponentForCopy = (cut = false) => {
