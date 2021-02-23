@@ -55,7 +55,7 @@ const BUILTIN_DEFINITIONS = {
   ROW_UPDATED: {
     name: "Row Updated",
     event: "row:update",
-    icon: "ri-save-line",
+    icon: "ri-refresh-line",
     tagline: "Row is updated in {{inputs.enriched.table.name}}",
     description: "Fired when a row is updated in your database",
     stepId: "ROW_UPDATED",
