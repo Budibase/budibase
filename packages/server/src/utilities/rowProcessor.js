@@ -136,6 +136,8 @@ exports.coerce = (row, type) => {
  */
 exports.inputProcessing = (user, table, row) => {
   let clonedRow = cloneDeep(row)
+  // need to copy the table so it can be differenced on way out
+  const copiedTable = cloneDeep(table)
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
     if (!field) {
@@ -144,7 +146,7 @@ exports.inputProcessing = (user, table, row) => {
     clonedRow[key] = exports.coerce(value, field.type)
   }
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, table, clonedRow)
+  return processAutoColumn(user, copiedTable, clonedRow)
 }
 
 /**
