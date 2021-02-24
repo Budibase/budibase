@@ -23,7 +23,7 @@
     if (fieldSchema?.relationshipType === "one-to-many") {
       if (value?.length && options?.length) {
         const row = options.find(row => row._id === value[0])
-        return row.name
+        return getDisplayName(row)
       } else {
         return placeholder || "Choose an option"
       }
