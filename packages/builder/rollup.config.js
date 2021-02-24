@@ -138,7 +138,7 @@ export default {
 
     // Watch the `dist` directory and refresh the
     // browser on changes when not in production
-    !production && livereload({ watch: outputpath, delay: 500 }),
+    !production && livereload({ watch: outputpath, delay: 500, port: 35730 }),
 
     // If we're building for production (npm run build
     // instead of npm run dev), minify

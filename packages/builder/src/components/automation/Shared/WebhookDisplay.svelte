@@ -13,7 +13,6 @@
     if (production) {
       return `${appUrl}/${uri}`
     } else {
-
       return `${window.location.origin}/${uri}`
     }
   }

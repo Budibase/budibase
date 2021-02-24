@@ -51,7 +51,7 @@ async function getLinksForRows(appId, rows) {
   return getUniqueByProp(
     responses
       // create a unique ID which we can use for getting only unique ones
-      .map(el => ({ ...el, unique: el.id + el.fieldName })),
+      .map(el => ({ ...el, unique: el.id + el.thisId + el.fieldName })),
     "unique"
   )
 }
