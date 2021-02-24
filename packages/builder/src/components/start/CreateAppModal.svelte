@@ -66,8 +66,8 @@
           "non-existing-app-name",
           "App with same name already exists. Please try another app name.",
           value =>
-            !existingAppNames.some(appName =>
-              new RegExp(appName, "ig").test(value)
+            !existingAppNames.some(
+              appName => appName.toLowerCase() === value.toLowerCase()
             )
         )
 

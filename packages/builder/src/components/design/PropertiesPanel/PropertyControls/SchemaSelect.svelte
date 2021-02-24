@@ -4,4 +4,4 @@
   const otherSources = [{ name: "Custom", label: "Custom" }]
 </script>
 
-<DatasourceSelect on:change {...$$props} {otherSources} />
+<DatasourceSelect on:change {...$$props} showAllQueries={true} {otherSources} />
