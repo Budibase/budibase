@@ -10,16 +10,13 @@
 
   export let value = ""
   export let bindings = []
-  export let label
   export let thin = true
   export let title = "Bindings"
   export let placeholder
-  export let panel = BindingPanel
 
   let bindingDrawer
 
   $: tempValue = value
-  $: console.log('Value: ', tempValue)
   $: readableValue = runtimeToReadableBinding(bindings, value)
 
   const handleClose = () => {
@@ -35,7 +32,6 @@
 <div class="control">
   <Input
     {thin}
-    {label}
     value={readableValue}
     on:change={event => onChange(event.target.value)}
     {placeholder} />
@@ -53,7 +49,7 @@
     <Button thin blue on:click={handleClose}>Save</Button>
   </heading>
   <div slot="body">
-    <svelte:component this={panel}
+    <BindingPanel
       value={readableValue}
       close={handleClose}
       on:update={event => (tempValue = event.detail)}

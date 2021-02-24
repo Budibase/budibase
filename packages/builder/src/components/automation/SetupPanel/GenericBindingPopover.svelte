@@ -14,6 +14,8 @@
   import { handlebarsCompletions } from "constants/completions"
   import { readableToRuntimeBinding } from "builderStore/dataBinding"
 
+  const dispatch = createEventDispatcher()
+
   export let value = ""
   export let bindings = []
   export let anchor
@@ -120,10 +122,9 @@
 
 <style>
   .container {
-    height: 40vh;
-    overflow-y: auto;
     display: grid;
     grid-template-columns: 280px 1fr;
+    width: 800px;
   }
 
   .bindings {
