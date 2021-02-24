@@ -40,13 +40,14 @@
   function addToText(readableBinding) {
     const position = getCaretPosition()
     const toAdd = `{{ ${readableBinding} }}`
+
     if (position.start) {
       value =
         value.substring(0, position.start) +
         toAdd +
         value.substring(position.end, value.length)
     } else {
-      value += toAdd
+      value = toAdd
     }
   }
 
@@ -110,7 +111,8 @@
         bind:getCaretPosition
         thin
         bind:value
-        placeholder="Add text, or click the objects on the left to add them to the textbox." />
+        placeholder="Add text, or click the objects on the left to add them to
+        the textbox." />
       {#if !valid}
         <p class="syntax-error">
           Current Handlebars syntax is invalid, please check the guide
