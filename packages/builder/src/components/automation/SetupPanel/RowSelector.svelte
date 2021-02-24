@@ -1,8 +1,7 @@
 <script>
   import { backendUiStore } from "builderStore"
   import { Select } from "@budibase/bbui"
-  import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from './AutomationBindingPanel.svelte'
+  import BindableInput from "../../common/BindableInput.svelte"
 
   export let value
   export let bindings
@@ -40,11 +39,9 @@
             {/each}
           </Select>
         {:else if schema.type === 'string' || schema.type === 'number'}
-          <DrawerBindableInput
-            panel={AutomationBindingPanel}
+          <BindableInput
             extraThin
-            value={value[field]}
-            on:update={e => value[field] = e.detail}
+            bind:value={value[field]}
             label={field}
             type="string"
             {bindings} />

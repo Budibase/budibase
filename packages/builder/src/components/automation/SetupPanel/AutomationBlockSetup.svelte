@@ -5,8 +5,7 @@
   import { Button, Input, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
-  import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from './AutomationBindingPanel.svelte'
+  import BindableInput from "../../common/BindableInput.svelte"
 
   export let block
   export let webhookModal
@@ -65,12 +64,10 @@
     {:else if value.customType === 'password'}
       <Input type="password" extraThin bind:value={block.inputs[key]} />
     {:else if value.customType === 'email'}
-      <DrawerBindableInput
-        panel={AutomationBindingPanel}
+      <BindableInput
         type={'email'}
         extraThin
-        value={block.inputs[key]}
-        on:update={e => block.inputs[key] = e.detail}
+        bind:value={block.inputs[key]}
         {bindings} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
@@ -81,12 +78,10 @@
     {:else if value.customType === 'triggerSchema'}
       <SchemaSetup bind:value={block.inputs[key]} />
     {:else if value.type === 'string' || value.type === 'number'}
-      <DrawerBindableInput
-        panel={AutomationBindingPanel}
+      <BindableInput
         type={value.customType}
         extraThin
-        value={block.inputs[key]}
-        on:update={e => block.inputs[key] = e.detail}
+        bind:value={block.inputs[key]}
         {bindings} />
     {/if}
   </div>
@@ -106,5 +101,12 @@
     font-weight: 500;
     font-size: var(--font-size-xs);
     color: var(--grey-7);
+  }
+
+  textarea {
+    min-height: 150px;
+    font-family: inherit;
+    padding: 12px;
+    margin-top: 8px;
   }
 </style>
