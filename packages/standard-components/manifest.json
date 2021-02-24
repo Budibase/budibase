@@ -1403,5 +1403,47 @@
         "defaultValue": false
       }
     ]
+  },
+  "graph3d": {
+    "name": "3D Force Graph",
+    "description": "3D Force Graph",
+    "icon": "ri-bubble-chart-fill",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "datasource",
+        "label": "Nodes",
+        "key": "nodes"
+      },
+      {
+        "type": "datasource",
+        "label": "Links",
+        "key": "links"
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width",
+        "defaultValue": "100%"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "100%"
+      },
+      {
+        "type": "boolean",
+        "label": "Show NavInfo",
+        "key": "showNavInfo",
+        "defaultValue": true
+      },
+      {
+        "type": "color",
+        "label": "Background Color",
+        "key": "backgroundColor",
+        "defaultValue": "#000011"
+      }
+    ]
   }
 }

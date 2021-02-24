@@ -39,6 +39,7 @@
   "license": "MIT",
   "gitHead": "1a80b09fd093f2599a68f7db72ad639dd50922dd",
   "dependencies": {
+    "3d-force-graph": "^1.67.8",
     "@adobe/spectrum-css-workflow-icons": "^1.1.0",
     "@budibase/bbui": "^1.58.13",
     "@budibase/svelte-ag-grid": "^0.0.16",

@@ -39,7 +39,8 @@
       "area",
       "pie",
       "donut",
-      "candlestick"
+      "candlestick",
+      "graph3d"
     ]
   },
   {
