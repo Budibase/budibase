@@ -52,6 +52,7 @@
       filter: true,
     },
     rowSelection: canEdit ? "multiple" : false,
+    suppressFieldDotNotation: true,
     suppressRowClickSelection: !canEdit,
     paginationAutoPageSize: true,
     pagination,
