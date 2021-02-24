@@ -10,10 +10,12 @@
 
 <form>
   {#each Object.keys(schema) as configKey}
-    {#if typeof schema[configKey].type === 'object'}
+    {#if schema[configKey].type === 'object'}
       <Label small>{configKey}</Label>
       <Spacer small />
-      <KeyValueBuilder bind:object={integration[configKey]} on:change />
+      <KeyValueBuilder
+        defaults={schema[configKey].default}
+        bind:object={integration[configKey]} />
     {:else}
       <div class="form-row">
         <Label small>{configKey}</Label>

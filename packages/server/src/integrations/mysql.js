@@ -14,7 +14,7 @@ const SCHEMA = {
     },
     port: {
       type: FIELD_TYPES.NUMBER,
-      default: 1433,
+      default: 3306,
       required: false,
     },
     user: {
@@ -30,6 +30,10 @@ const SCHEMA = {
     database: {
       type: FIELD_TYPES.STRING,
       required: true,
+    },
+    ssl: {
+      type: FIELD_TYPES.OBJECT,
+      required: false,
     },
   },
   query: {
@@ -51,6 +55,9 @@ const SCHEMA = {
 class MySQLIntegration {
   constructor(config) {
     this.config = config
+    if (Object.keys(config.ssl) === 0) {
+      delete config.ssl
+    }
     this.client = mysql.createConnection(config)
   }
 
