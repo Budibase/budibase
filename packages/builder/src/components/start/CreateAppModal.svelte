@@ -1,5 +1,6 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
+  import { notifier } from "builderStore/store/notifications"
   import {
     store,
     automationStore,
@@ -61,7 +62,15 @@
       const existingAppNames = svelteGet(hostingStore).deployedAppNames
       infoValidation.applicationName = string()
         .required("Your application must have a name.")
-        .notOneOf(existingAppNames)
+        .test(
+          "non-existing-app-name",
+          "App with same name already exists. Please try another app name.",
+          value =>
+            !existingAppNames.some(
+              appName => appName.toLowerCase() === value.toLowerCase()
+            )
+        )
+
       steps = [buildStep(Info), buildStep(User)]
       validationSchemas = [infoValidation, userValidation]
     }
@@ -120,6 +129,11 @@
         template,
       })
       const appJson = await appResp.json()
+
+      if (!appResp.ok) {
+        throw new Error(appJson.message)
+      }
+
       analytics.captureEvent("App Created", {
         name: $createAppStore.values.applicationName,
         appId: appJson._id,
@@ -150,6 +164,8 @@
       $goto(`/${appJson._id}`)
     } catch (error) {
       console.error(error)
+      notifier.danger(error)
+      submitting = false
     }
   }
 
