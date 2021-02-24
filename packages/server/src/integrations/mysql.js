@@ -55,7 +55,7 @@ const SCHEMA = {
 class MySQLIntegration {
   constructor(config) {
     this.config = config
-    if (Object.keys(config.ssl) === 0) {
+    if (Object.keys(config.ssl).length === 0) {
       delete config.ssl
     }
     this.client = mysql.createConnection(config)
