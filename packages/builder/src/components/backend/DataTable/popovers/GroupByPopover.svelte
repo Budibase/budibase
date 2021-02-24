@@ -2,6 +2,7 @@
   import { Button, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
+  import { FIELDS } from "constants/backend"
 
   export let view = {}
   export let onClosed
@@ -9,7 +10,11 @@
   $: viewTable = $backendUiStore.tables.find(
     ({ _id }) => _id === $backendUiStore.selectedView.tableId
   )
-  $: fields = viewTable && Object.keys(viewTable.schema)
+  $: fields =
+    viewTable &&
+    Object.entries(viewTable.schema)
+      .filter(entry => entry[1].type !== FIELDS.LINK.type)
+      .map(([key]) => key)
 
   function saveView() {
     backendUiStore.actions.views.save(view)

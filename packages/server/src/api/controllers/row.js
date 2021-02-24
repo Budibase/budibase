@@ -202,6 +202,11 @@ exports.fetchView = async function(ctx) {
 
   const db = new CouchDB(appId)
   const { calculation, group, field } = ctx.query
+  const designDoc = await db.get("_design/database")
+  const viewInfo = designDoc.views[viewName]
+  if (!viewInfo) {
+    ctx.throw(400, "View does not exist.")
+  }
   const response = await db.query(`database/${viewName}`, {
     include_docs: !calculation,
     group,
@@ -211,7 +216,7 @@ exports.fetchView = async function(ctx) {
     response.rows = response.rows.map(row => row.doc)
     let table
     try {
-      table = await db.get(ctx.params.tableId)
+      table = await db.get(viewInfo.meta.tableId)
     } catch (err) {
       table = {
         schema: {},
