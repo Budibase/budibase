@@ -54,7 +54,9 @@
     if (isUsersTable) {
       schema.email.displayFieldName = "Email"
       schema.roleId.displayFieldName = "Role"
-      schema.status.displayFieldName = "Status"
+      if (schema.status) {
+        schema.status.displayFieldName = "Status"
+      }
     }
   }
 
