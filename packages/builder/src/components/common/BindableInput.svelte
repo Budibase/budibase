@@ -24,7 +24,7 @@
 <div class="container" bind:this={anchor}>
   <Input {...inputProps} bind:value />
   <div class="icon" on:click={popover.show}>
-    <Icon name="edit" />
+    <Icon name="lightning" />
   </div>
 </div>
 <GenericBindingPopover
@@ -54,6 +54,7 @@
     border-bottom-right-radius: var(--border-radius-m);
     color: var(--grey-7);
     font-size: 16px;
+    margin-top: 20px;
   }
   .icon:hover {
     color: var(--ink);

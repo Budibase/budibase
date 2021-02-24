@@ -143,10 +143,18 @@
     margin-top: 0;
   }
   .bindings__wrapper {
-    overflow-y: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
     position: relative;
     flex: 1 1 auto;
+    -ms-overflow-style: none;
   }
+
+  .bindings__wrapper::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
   .bindings__list {
     position: absolute;
     width: 100%;
