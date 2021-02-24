@@ -1,0 +1,12 @@
+{
+  "name": "cli",
+  "version": "0.7.8",
+  "description": "Budibase CLI, for developers, self hosting and migrations.",
+  "main": "src/index.js",
+  "author": "Budibase",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "commander": "^7.1.0"
+  }
+}
