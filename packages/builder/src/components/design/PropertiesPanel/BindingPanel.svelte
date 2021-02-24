@@ -54,10 +54,6 @@
     dispatch("update", originalValue)
     bindingDrawer.close()
   }
-
-  function updateValue({ detail }) {
-    value = detail.value
-  }
 </script>
 
 <div class="drawer-contents">

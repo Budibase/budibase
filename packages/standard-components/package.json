@@ -41,7 +41,7 @@
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "^1.1.0",
     "@budibase/bbui": "^1.58.13",
-    "@budibase/svelte-ag-grid": "^0.0.16",
+    "@budibase/svelte-ag-grid": "^1.0.4",
     "@spectrum-css/actionbutton": "^1.0.0-beta.1",
     "@spectrum-css/button": "^3.0.0-beta.6",
     "@spectrum-css/checkbox": "^3.0.0-beta.6",

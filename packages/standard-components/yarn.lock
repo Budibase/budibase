@@ -56,10 +56,10 @@
     svelte-portal "^1.0.0"
     turndown "^7.0.0"
 
-"@budibase/svelte-ag-grid@^0.0.16":
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-0.0.16.tgz#1b91dc1e27dad034b827dc7b258fa16d3d3bf68f"
-  integrity sha512-Yxnfe03Mo7VhuB4wJSGNoc8jaorH9lertptPt2halef9Z93kkYwdwpldnWVzQT07YdX6soPaVLhupxKrI5Hvtw==
+"@budibase/svelte-ag-grid@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-1.0.4.tgz#41cceec4bde2c4aea8b9da8f610fe36055c7709f"
+  integrity sha512-JZm6qujxnZpqw7Twbegr6se4sHhyWzN0Cibrk5bVBH32hBgzD6dd33fxwrjHKkWFxjys9wRT+cqYgYVlSt9E3w==
   dependencies:
     ag-grid-community "^24.0.0"
 
