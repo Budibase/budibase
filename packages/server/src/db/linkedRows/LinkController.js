@@ -2,7 +2,7 @@ const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
-const { FieldTypes } = require("../../constants")
+const { FieldTypes, RelationshipTypes } = require("../../constants")
 const { isEqual } = require("lodash")
 
 /**
@@ -163,8 +163,30 @@ class LinkController {
             ? linkDoc.doc2.rowId
             : linkDoc.doc1.rowId
         })
+
+        // if 1:N, ensure that this ID is not already attached to another record
+        const linkedTable = await this._db.get(field.tableId)
+        const linkedSchema = linkedTable.schema[field.fieldName]
+
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
+          if (linkedSchema.relationshipType === RelationshipTypes.ONE_TO_MANY) {
+            const links = await getLinkDocuments({
+              appId: this._appId,
+              tableId: field.tableId,
+              rowId: linkId,
+              includeDocs: IncludeDocs.INCLUDE,
+            })
+
+            // The 1 side of 1:N is already related to something else
+            // You must remove the existing relationship
+            if (links.length > 0) {
+              throw new Error(
+                `1:N Relationship Error: Record already linked to another.`
+              )
+            }
+          }
+
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             // first check the doc we're linking to exists
             try {
