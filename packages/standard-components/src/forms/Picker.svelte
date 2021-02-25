@@ -57,7 +57,7 @@
             role="option"
             aria-selected="true"
             tabindex="0"
-            on:click={() => onSelectOption(undefined)}>
+            on:click={() => onSelectOption(null)}>
             <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"

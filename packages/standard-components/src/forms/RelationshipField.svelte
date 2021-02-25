@@ -77,7 +77,7 @@
 
   const toggleOption = id => {
     if (fieldSchema.relationshipType === "one-to-many") {
-      fieldApi.setValue([{ _id: id }])
+      fieldApi.setValue(id ? [{ _id: id }] : [])
     } else {
       if ($fieldState.value.find(option => option?._id === id)) {
         const filtered = $fieldState.value.filter(option => option?._id !== id)
