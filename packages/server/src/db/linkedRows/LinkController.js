@@ -3,7 +3,6 @@ const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
-const { isEqual } = require("lodash")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -131,6 +130,19 @@ class LinkController {
       }
       usedAlready.push(unique)
     }
+  }
+
+  /**
+   * Returns whether the two schemas are equal (in the important parts, not a pure equality check)
+   */
+  areSchemasEqual(schema1, schema2) {
+    const compareFields = ["name", "type", "tableId", "fieldName", "autocolumn"]
+    for (let field of compareFields) {
+      if (schema1[field] !== schema2[field]) {
+        return false
+      }
+    }
+    return true
   }
 
   // all operations here will assume that the table
@@ -310,12 +322,28 @@ class LinkController {
           tableId: table._id,
           fieldName: fieldName,
         }
+
         if (field.autocolumn) {
           linkConfig.autocolumn = field.autocolumn
         }
+
+        if (field.relationshipType) {
+          // Ensure that the other side of the relationship is locked to one record
+          linkConfig.relationshipType = field.relationshipType
+
+          // Update this table to be the many
+          table.schema[field.name].relationshipType =
+            RelationshipTypes.MANY_TO_MANY
+          const response = await this._db.put(table)
+          table._rev = response.rev
+        }
+
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
-        if (existingSchema != null && !isEqual(existingSchema, linkConfig)) {
+        if (
+          existingSchema != null &&
+          !this.areSchemasEqual(existingSchema, linkConfig)
+        ) {
           throw new Error("Cannot overwrite existing column.")
         }
         // create the link field in the other table
