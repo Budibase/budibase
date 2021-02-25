@@ -14,6 +14,7 @@ exports.FieldTypes = {
 
 exports.RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
+  MANY_TO_MANY: "many-to-many",
 }
 
 exports.AuthTypes = {
