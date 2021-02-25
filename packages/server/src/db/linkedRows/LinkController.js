@@ -125,7 +125,9 @@ class LinkController {
       }
       const unique = schema.tableId + schema.fieldName
       if (usedAlready.indexOf(unique) !== -1) {
-        throw "Cannot re-use the linked column name for a linked table."
+        throw new Error(
+          "Cannot re-use the linked column name for a linked table."
+        )
       }
       usedAlready.push(unique)
     }
@@ -292,7 +294,7 @@ class LinkController {
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
         if (existingSchema != null && !isEqual(existingSchema, linkConfig)) {
-          throw "Cannot overwrite existing column."
+          throw new Error("Cannot overwrite existing column.")
         }
         // create the link field in the other table
         linkedTable.schema[field.fieldName] = linkConfig
