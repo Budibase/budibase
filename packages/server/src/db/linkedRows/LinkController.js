@@ -132,6 +132,14 @@ class LinkController {
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
       if (field.type === FieldTypes.LINK && rowField != null) {
+        // if 1:N, ensure that this ID is not already attached to another record
+        const linkedTable = await this._db.get(field.tableId)
+        const linkedSchema = linkedTable.schema[field.fieldName]
+
+        if (linkedSchema.relationshipType === "one-to-many") {
+
+        }
+
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
