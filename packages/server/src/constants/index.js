@@ -12,6 +12,10 @@ exports.FieldTypes = {
   AUTO: "auto",
 }
 
+exports.RelationshipTypes = {
+  ONE_TO_MANY: "one-to-many",
+}
+
 exports.AuthTypes = {
   APP: "app",
   BUILDER: "builder",
