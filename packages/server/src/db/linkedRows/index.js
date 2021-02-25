@@ -175,11 +175,12 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
       if (!linkedRow || !linkedTable) {
         continue
       }
-      // need to handle an edge case where relationship just wasn't found
-      const value = linkedRow[linkedTable.primaryDisplay] || linkedRow._id
-      if (value) {
-        row[link.fieldName].push(value)
+      const obj = { _id: linkedRow._id }
+      // if we know the display column, add it
+      if (linkedRow[linkedTable.primaryDisplay] != null) {
+        obj.primaryDisplay = linkedRow[linkedTable.primaryDisplay]
       }
+      row[link.fieldName].push(obj)
     }
   }
   return rows

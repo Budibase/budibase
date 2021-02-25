@@ -282,12 +282,13 @@ describe("/rows", () => {
       const secondRow = (await createRow({
         name: "Test 2",
         description: "og desc",
-        link: [firstRow._id],
+        link: [{_id: firstRow._id}],
         tableId: table._id,
       })).body
       const enriched = await outputProcessing(appId, table, [secondRow])
       expect(enriched[0].link.length).toBe(1)
-      expect(enriched[0].link[0]).toBe("Test Contact")
+      expect(enriched[0].link[0]._id).toBe(firstRow._id)
+      expect(enriched[0].link[0].primaryDisplay).toBe("Test Contact")
     })
   })
 

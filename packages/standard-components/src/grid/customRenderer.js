@@ -5,7 +5,7 @@ import AttachmentCell from "./AttachmentCell/Button.svelte"
 import ViewDetails from "./ViewDetails/Cell.svelte"
 import Select from "./Select/Wrapper.svelte"
 import DatePicker from "./DateTime/Wrapper.svelte"
-import RelationshipCount from "./Relationship/RelationshipCount.svelte"
+import RelationshipLabel from "./Relationship/RelationshipLabel.svelte"
 
 const renderers = new Map([
   ["boolean", booleanRenderer],
@@ -127,7 +127,7 @@ function linkedRowRenderer(options, constraints, editable, SDK) {
     container.style.placeItems = "center"
     container.style.height = "100%"
 
-    new RelationshipCount({
+    new RelationshipLabel({
       target: container,
       props: {
         row: params.data,

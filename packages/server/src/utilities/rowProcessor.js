@@ -15,6 +15,9 @@ const TYPE_TRANSFORM_MAP = {
     [null]: [],
     [undefined]: undefined,
     parse: link => {
+      if (Array.isArray(link) && typeof link[0] === "object") {
+        return link.map(el => (el && el._id ? el._id : el))
+      }
       if (typeof link === "string") {
         return [link]
       }
@@ -22,8 +25,8 @@ const TYPE_TRANSFORM_MAP = {
     },
   },
   [FieldTypes.OPTIONS]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.STRING]: {
