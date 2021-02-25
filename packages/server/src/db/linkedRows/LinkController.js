@@ -2,7 +2,7 @@ const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
-const { FieldTypes } = require("../../constants")
+const { FieldTypes, RelationshipTypes } = require("../../constants")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -150,7 +150,7 @@ class LinkController {
 
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
-          if (linkedSchema.relationshipType === "one-to-many") {
+          if (linkedSchema.relationshipType === RelationshipTypes.ONE_TO_MANY) {
             const links = await getLinkDocuments({
               appId: this._appId,
               tableId: field.tableId,
