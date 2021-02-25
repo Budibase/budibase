@@ -7,7 +7,7 @@
 
 <div class="container">
   {#each items as item}
-    <div class="item">{item?.primaryDisplay}</div>
+    <div class="item">{item?.primaryDisplay ?? ''}</div>
   {/each}
 </div>
 
