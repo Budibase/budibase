@@ -26,7 +26,7 @@ const TYPE_TRANSFORM_MAP = {
   },
   [FieldTypes.OPTIONS]: {
     "": null,
-    [null]: "",
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.STRING]: {
