@@ -120,7 +120,11 @@ export const enrichRows = async (rows, tableId) => {
           const type = schema[key].type
           if (type === "link") {
             // Enrich row a string join of relationship fields
-            row[`${key}_text`] = row[key]?.join(", ") || ""
+            row[`${key}_text`] =
+              row[key]
+                ?.map(option => option?.primaryDisplay)
+                .filter(option => !!option)
+                .join(", ") || ""
           } else if (type === "attachment") {
             // Enrich row with the first image URL for any attachment fields
             let url = null
