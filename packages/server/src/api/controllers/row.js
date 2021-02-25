@@ -15,6 +15,7 @@ const {
 } = require("../../utilities/rowProcessor")
 const { FieldTypes } = require("../../constants")
 const { isEqual } = require("lodash")
+const { cloneDeep } = require("lodash/fp")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -351,10 +352,15 @@ async function validate({ appId, tableId, row, table }) {
   }
   const errors = {}
   for (let fieldName of Object.keys(table.schema)) {
-    const res = validateJs.single(
-      row[fieldName],
-      table.schema[fieldName].constraints
-    )
+    const constraints = cloneDeep(table.schema[fieldName].constraints)
+    // special case for options, need to always allow unselected (null)
+    if (
+      table.schema[fieldName].type === FieldTypes.OPTIONS &&
+      constraints.inclusion
+    ) {
+      constraints.inclusion.push(null)
+    }
+    const res = validateJs.single(row[fieldName], constraints)
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
