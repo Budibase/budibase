@@ -7,6 +7,7 @@ const {
   DocumentTypes,
   SEPARATOR,
   ViewNames,
+  generateUserID,
 } = require("../../db/utils")
 const usersController = require("./user")
 const {
@@ -140,7 +141,11 @@ exports.save = async function(ctx) {
   }
 
   if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
+    if (inputs.tableId === ViewNames.USERS) {
+      inputs._id = generateUserID(inputs.email)
+    } else {
+      inputs._id = generateRowID(inputs.tableId)
+    }
   }
 
   // this returns the table and row incase they have been updated
