@@ -3,6 +3,7 @@ const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes } = require("../../constants")
+const { isEqual } = require("lodash")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -111,6 +112,23 @@ class LinkController {
       tableId: this._tableId,
       includeDocs: IncludeDocs.INCLUDE,
     })
+  }
+
+  /**
+   * Makes sure the passed in table schema contains valid relationship structures.
+   */
+  validateTable(table) {
+    const usedAlready = []
+    for (let schema of Object.values(table.schema)) {
+      if (schema.type !== FieldTypes.LINK) {
+        continue
+      }
+      const unique = schema.tableId + schema.fieldName
+      if (usedAlready.indexOf(unique) !== -1) {
+        throw "Cannot re-use the linked column name for a linked table."
+      }
+      usedAlready.push(unique)
+    }
   }
 
   // all operations here will assume that the table
@@ -246,6 +264,8 @@ class LinkController {
    */
   async tableSaved() {
     const table = await this.table()
+    // validate the table first
+    this.validateTable(table)
     const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
@@ -268,6 +288,11 @@ class LinkController {
         }
         if (field.autocolumn) {
           linkConfig.autocolumn = field.autocolumn
+        }
+        // check the linked table to make sure we aren't overwriting an existing column
+        const existingSchema = linkedTable.schema[field.fieldName]
+        if (existingSchema != null && !isEqual(existingSchema, linkConfig)) {
+          throw "Cannot overwrite existing column."
         }
         // create the link field in the other table
         linkedTable.schema[field.fieldName] = linkConfig
