@@ -28,10 +28,8 @@
         .flat()
       // Prevent modal closing if there were errors
       return false
-    }
-
-    if (rowResponse.status === 500) {
-      notifier.danger(rowResponse.message)
+    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
+      errors = [{ message: rowResponse.message }]
       return false
     }
 

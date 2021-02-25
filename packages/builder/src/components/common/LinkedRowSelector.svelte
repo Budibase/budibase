@@ -43,16 +43,6 @@
   </Label>
 {:else}
   {#if schema.relationshipType === 'one-to-many'}
-    <Multiselect
-      secondary
-      bind:value={linkedIds}
-      {label}
-      placeholder="Choose some options">
-      {#each rows as row}
-        <option value={row._id}>{getPrettyName(row)}</option>
-      {/each}
-    </Multiselect>
-  {:else}
     <Select
       thin
       secondary
@@ -66,5 +56,15 @@
         </option>
       {/each}
     </Select>
+  {:else}
+    <Multiselect
+      secondary
+      bind:value={linkedIds}
+      {label}
+      placeholder="Choose some options">
+      {#each rows as row}
+        <option value={row._id}>{getPrettyName(row)}</option>
+      {/each}
+    </Multiselect>
   {/if}
 {/if}

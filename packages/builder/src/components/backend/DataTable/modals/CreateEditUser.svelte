@@ -60,7 +60,7 @@
           .flat()
       }
       return false
-    } else if (rowResponse.status === 400 && rowResponse.message) {
+    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
       errors = [{ message: rowResponse.message }]
       return false
     }
