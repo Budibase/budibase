@@ -22,7 +22,7 @@
   const setFieldText = value => {
     if (fieldSchema?.relationshipType === "one-to-many") {
       if (value?.length && options?.length) {
-        const row = options.find(row => row._id === value[0])
+        const row = options.find(row => row._id === value[0]?._id)
         return getDisplayName(row)
       } else {
         return placeholder || "Choose an option"
@@ -60,27 +60,30 @@
   }
 
   const getDisplayName = row => {
-    return row[tableDefinition?.primaryDisplay || "_id"]
+    return row?.[tableDefinition?.primaryDisplay || "_id"] || "-"
   }
 
   const getValueLookupMap = value => {
     let map = {}
     if (value?.length) {
       value.forEach(option => {
-        map[option] = true
+        if (option?._id) {
+          map[option._id] = true
+        }
       })
     }
     return map
   }
 
-  const toggleOption = option => {
-    if (fieldSchema.type === "one-to-many") {
-      fieldApi.setValue([option])
+  const toggleOption = id => {
+    if (fieldSchema.relationshipType === "one-to-many") {
+      fieldApi.setValue(id ? [{ _id: id }] : [])
     } else {
-      if ($fieldState.value.includes(option)) {
-        fieldApi.setValue($fieldState.value.filter(x => x !== option))
+      if ($fieldState.value.find(option => option?._id === id)) {
+        const filtered = $fieldState.value.filter(option => option?._id !== id)
+        fieldApi.setValue(filtered)
       } else {
-        fieldApi.setValue([...$fieldState.value, option])
+        fieldApi.setValue([...$fieldState.value, { _id: id }])
       }
     }
   }
