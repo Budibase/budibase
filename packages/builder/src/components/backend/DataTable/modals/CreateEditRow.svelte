@@ -29,6 +29,12 @@
       // Prevent modal closing if there were errors
       return false
     }
+
+    if (rowResponse.status === 500) {
+      notifier.danger(rowResponse.message)
+      return false
+    }
+
     notifier.success("Row saved successfully.")
     backendUiStore.actions.rows.save(rowResponse)
   }
