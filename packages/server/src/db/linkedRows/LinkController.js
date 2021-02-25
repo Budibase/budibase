@@ -148,8 +148,9 @@ class LinkController {
         const linkedTable = await this._db.get(field.tableId)
         const linkedSchema = linkedTable.schema[field.fieldName]
 
-        if (linkedSchema.relationshipType === "one-to-many") {
-          for (let linkId of rowField) {
+        // iterate through the link IDs in the row field, see if any don't exist already
+        for (let linkId of rowField) {
+          if (linkedSchema.relationshipType === "one-to-many") {
             const links = await getLinkDocuments({
               appId: this._appId,
               tableId: field.tableId,
@@ -164,12 +165,8 @@ class LinkController {
                 `1:N Relationship Error: Record already linked to another.`
               )
             }
-            console.log("ONE TO MANY")
           }
-        }
 
-        // iterate through the link IDs in the row field, see if any don't exist already
-        for (let linkId of rowField) {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             // first check the doc we're linking to exists
             try {
