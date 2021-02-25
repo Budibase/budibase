@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
@@ -9,7 +8,9 @@
   export let linkedRows = []
 
   let rows = []
+  let linkedIds = (linkedRows || [])?.map(row => row?._id || row)
 
+  $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
   $: linkedTable = $backendUiStore.tables.find(
@@ -45,12 +46,12 @@
     <Select
       thin
       secondary
-      on:change={e => (linkedRows = [e.target.value])}
+      on:change={e => (linkedIds = e.target.value ? [e.target.value] : [])}
       name={label}
       {label}>
       <option value="">Choose an option</option>
       {#each rows as row}
-        <option selected={row._id === linkedRows[0]} value={row._id}>
+        <option selected={row._id === linkedIds[0]} value={row._id}>
           {getPrettyName(row)}
         </option>
       {/each}
@@ -58,7 +59,7 @@
   {:else}
     <Multiselect
       secondary
-      bind:value={linkedRows}
+      bind:value={linkedIds}
       {label}
       placeholder="Choose some options">
       {#each rows as row}
