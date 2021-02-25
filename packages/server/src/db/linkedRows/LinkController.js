@@ -3,7 +3,6 @@ const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
-const { isEqual } = require("lodash")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -131,6 +130,19 @@ class LinkController {
       }
       usedAlready.push(unique)
     }
+  }
+
+  /**
+   * Returns whether the two schemas are equal (in the important parts, not a pure equality check)
+   */
+  areSchemasEqual(schema1, schema2) {
+    const compareFields = ["name", "type", "tableId", "fieldName", "autocolumn"]
+    for (let field of compareFields) {
+      if (schema1[field] !== schema2[field]) {
+        return false
+      }
+    }
+    return true
   }
 
   // all operations here will assume that the table
@@ -315,7 +327,10 @@ class LinkController {
         }
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
-        if (existingSchema != null && !isEqual(existingSchema, linkConfig)) {
+        if (
+          existingSchema != null &&
+          !this.areSchemasEqual(existingSchema, linkConfig)
+        ) {
           throw new Error("Cannot overwrite existing column.")
         }
         // create the link field in the other table
