@@ -40,9 +40,6 @@
     if (!row.email) {
       errors = [...errors, { message: "Email is required" }]
     }
-    if (!row.password) {
-      errors = [...errors, { message: "Password is required" }]
-    }
     if (!row.roleId) {
       errors = [...errors, { message: "Role is required" }]
     }
