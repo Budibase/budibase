@@ -25,7 +25,7 @@ const TYPE_TRANSFORM_MAP = {
     },
   },
   [FieldTypes.OPTIONS]: {
-    "": "",
+    "": null,
     [null]: "",
     [undefined]: undefined,
   },
