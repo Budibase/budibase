@@ -11,7 +11,7 @@
   class:link={!!items.length}
   on:click={() => selectRelationship(row, columnName)}>
   {#each items as item}
-    <div class="item">{item}</div>
+    <div class="item">{item?.primaryDisplay ?? ''}</div>
   {/each}
 </div>
 

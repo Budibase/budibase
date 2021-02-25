@@ -1,7 +1,8 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
 
-  export let object = {}
+  export let defaults
+  export let object = defaults || {}
   export let readOnly
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))

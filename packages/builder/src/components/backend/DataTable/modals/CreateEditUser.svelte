@@ -40,9 +40,6 @@
     if (!row.email) {
       errors = [...errors, { message: "Email is required" }]
     }
-    if (!row.password) {
-      errors = [...errors, { message: "Password is required" }]
-    }
     if (!row.roleId) {
       errors = [...errors, { message: "Role is required" }]
     }
@@ -63,7 +60,7 @@
           .flat()
       }
       return false
-    } else if (rowResponse.status === 400 && rowResponse.message) {
+    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
       errors = [{ message: rowResponse.message }]
       return false
     }

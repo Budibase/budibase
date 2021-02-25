@@ -7,6 +7,7 @@ const {
   DocumentTypes,
   SEPARATOR,
   ViewNames,
+  generateUserID,
 } = require("../../db/utils")
 const usersController = require("./user")
 const {
@@ -15,6 +16,7 @@ const {
 } = require("../../utilities/rowProcessor")
 const { FieldTypes } = require("../../constants")
 const { isEqual } = require("lodash")
+const { cloneDeep } = require("lodash/fp")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -139,7 +141,11 @@ exports.save = async function(ctx) {
   }
 
   if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
+    if (inputs.tableId === ViewNames.USERS) {
+      inputs._id = generateUserID(inputs.email)
+    } else {
+      inputs._id = generateRowID(inputs.tableId)
+    }
   }
 
   // this returns the table and row incase they have been updated
@@ -351,10 +357,15 @@ async function validate({ appId, tableId, row, table }) {
   }
   const errors = {}
   for (let fieldName of Object.keys(table.schema)) {
-    const res = validateJs.single(
-      row[fieldName],
-      table.schema[fieldName].constraints
-    )
+    const constraints = cloneDeep(table.schema[fieldName].constraints)
+    // special case for options, need to always allow unselected (null)
+    if (
+      table.schema[fieldName].type === FieldTypes.OPTIONS &&
+      constraints.inclusion
+    ) {
+      constraints.inclusion.push(null)
+    }
+    const res = validateJs.single(row[fieldName], constraints)
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
