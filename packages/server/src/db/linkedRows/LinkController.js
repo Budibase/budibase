@@ -322,9 +322,22 @@ class LinkController {
           tableId: table._id,
           fieldName: fieldName,
         }
+
         if (field.autocolumn) {
           linkConfig.autocolumn = field.autocolumn
         }
+
+        if (field.relationshipType) {
+          // Ensure that the other side of the relationship is locked to one record
+          linkConfig.relationshipType = field.relationshipType
+
+          // Update this table to be the many
+          table.schema[field.name].relationshipType =
+            RelationshipTypes.MANY_TO_MANY
+          const response = await this._db.put(table)
+          table._rev = response.rev
+        }
+
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
         if (
