@@ -185,8 +185,7 @@ const BASE_LAYOUTS = [
           "margin-right": "auto",
           "margin-left": "auto",
           "min-height": "100%",
-          "background-image":
-            "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);",
+          background: "#f5f5f5",
         },
         selected: {},
       },
@@ -240,8 +239,7 @@ const BASE_LAYOUTS = [
           "margin-right": "auto",
           "margin-left": "auto",
           "min-height": "100%",
-          "background-image":
-            "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);",
+          background: "#f5f5f5",
         },
         selected: {},
       },

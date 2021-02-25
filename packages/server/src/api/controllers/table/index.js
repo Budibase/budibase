@@ -89,16 +89,20 @@ exports.save = async function(ctx) {
   }
 
   // update linked rows
-  const linkResp = await linkRows.updateLinks({
-    appId,
-    eventType: oldTable
-      ? linkRows.EventType.TABLE_UPDATED
-      : linkRows.EventType.TABLE_SAVE,
-    table: tableToSave,
-    oldTable: oldTable,
-  })
-  if (linkResp != null && linkResp._rev) {
-    tableToSave._rev = linkResp._rev
+  try {
+    const linkResp = await linkRows.updateLinks({
+      appId,
+      eventType: oldTable
+        ? linkRows.EventType.TABLE_UPDATED
+        : linkRows.EventType.TABLE_SAVE,
+      table: tableToSave,
+      oldTable: oldTable,
+    })
+    if (linkResp != null && linkResp._rev) {
+      tableToSave._rev = linkResp._rev
+    }
+  } catch (err) {
+    ctx.throw(400, err)
   }
 
   // don't perform any updates until relationships have been
