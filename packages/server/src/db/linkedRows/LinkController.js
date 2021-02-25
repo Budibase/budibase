@@ -132,14 +132,6 @@ class LinkController {
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
       if (field.type === FieldTypes.LINK && rowField != null) {
-        // if 1:N, ensure that this ID is not already attached to another record
-        const linkedTable = await this._db.get(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName]
-
-        if (linkedSchema.relationshipType === "one-to-many") {
-
-        }
-
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
@@ -151,6 +143,31 @@ class LinkController {
             ? linkDoc.doc2.rowId
             : linkDoc.doc1.rowId
         })
+
+        // if 1:N, ensure that this ID is not already attached to another record
+        const linkedTable = await this._db.get(field.tableId)
+        const linkedSchema = linkedTable.schema[field.fieldName]
+
+        if (linkedSchema.relationshipType === "one-to-many") {
+          for (let linkId of rowField) {
+            const links = await getLinkDocuments({
+              appId: this._appId,
+              tableId: field.tableId,
+              rowId: linkId,
+              includeDocs: IncludeDocs.INCLUDE,
+            })
+
+            // The 1 side of 1:N is already related to something else
+            // You must remove the existing relationship
+            if (links.length > 0) {
+              throw new Error(
+                `1:N Relationship Error: Record already linked to another.`
+              )
+            }
+            console.log("ONE TO MANY")
+          }
+        }
+
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
