@@ -35,7 +35,7 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, defaultValue = undefined, fieldDisabled = false) => {
+    registerField: (field, defaultValue = null, fieldDisabled = false) => {
       if (!field) {
         return
       }
