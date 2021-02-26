@@ -4,11 +4,11 @@ const { spawn } = require("child_process")
 const { lookpath } = require("lookpath")
 const { downloadFile } = require("../utils")
 const { confirmation } = require("../questions")
+const makeEnvFile = require("./makeEnv")
 
 const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
-  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
-  "https://github.com/Budibase/budibase/blob/master/hosting/hosting.properties"
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml"
 ]
 
 async function checkDockerConfigured() {
@@ -33,7 +33,7 @@ async function init() {
     promises.push(downloadFile(url, `./${fileName}`))
   }
   await Promise.all(promises)
-  console.log("Files have been downloaded, ready to start.")
+  await makeEnvFile()
 }
 
 async function start() {

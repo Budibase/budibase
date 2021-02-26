@@ -10,7 +10,8 @@
     "chalk": "^4.1.0",
     "commander": "^7.1.0",
     "inquirer": "^8.0.0",
-    "lookpath": "^1.1.0"
+    "lookpath": "^1.1.0",
+    "randomstring": "^1.1.5"
   },
   "devDependencies": {
     "eslint": "^7.20.0"
