@@ -39,20 +39,24 @@ class Command {
       getSubHelpDescription(`Get help with ${this.command} options`)
     )
     command.action(async options => {
-      let executed = false
-      if (thisCmd.func) {
-        await thisCmd.func(options)
-        executed = true
-      }
-      for (let opt of thisCmd.opts) {
-        if (options[opt.command.replace("--", "")]) {
-          await opt.func(options)
+      try {
+        let executed = false
+        if (thisCmd.func) {
+          await thisCmd.func(options)
           executed = true
         }
-      }
-      if (!executed) {
-        console.log(getError(`Unknown ${this.command} option.`))
-        command.help()
+        for (let opt of thisCmd.opts) {
+          if (options[opt.command.replace("--", "")]) {
+            await opt.func(options)
+            executed = true
+          }
+        }
+        if (!executed) {
+          console.log(getError(`Unknown ${this.command} option.`))
+          command.help()
+        }
+      } catch (err) {
+        console.log(getError(err))
       }
     })
   }
