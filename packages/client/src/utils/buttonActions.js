@@ -73,6 +73,10 @@ const loginHandler = async action => {
   await authStore.actions.logIn({ email, password })
 }
 
+const logoutHandler = async () => {
+  await authStore.actions.logOut()
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -82,6 +86,7 @@ const handlerMap = {
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log In"]: loginHandler,
+  ["Log Out"]: logoutHandler,
 }
 
 /**
