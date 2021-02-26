@@ -11,6 +11,7 @@
     screenStore,
     authStore,
   } from "../store"
+  import { TableNames, ActionTypes } from "../constants"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -25,10 +26,20 @@
     await authStore.actions.fetchUser()
     loaded = true
   })
+
+  // Register this as a refreshable datasource so that user changes cause
+  // the user object to be refreshed
+  $: actions = [
+    {
+      type: ActionTypes.RefreshDatasource,
+      callback: () => authStore.actions.fetchUser(),
+      metadata: { datasource: { type: "table", tableId: TableNames.USERS } },
+    },
+  ]
 </script>
 
 {#if loaded && $screenStore.activeLayout}
-  <Provider key="user" data={$authStore}>
+  <Provider key="user" data={$authStore} {actions}>
     <Component definition={$screenStore.activeLayout.props} />
     <NotificationDisplay />
   </Provider>
