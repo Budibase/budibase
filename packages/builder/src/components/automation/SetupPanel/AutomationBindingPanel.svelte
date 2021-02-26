@@ -11,11 +11,9 @@
     import { handlebarsCompletions } from "constants/completions"
   
     const dispatch = createEventDispatcher()
-  
-    export let bindableProperties
+
     export let value = ""
     export let bindingDrawer
-    export let valid = true
     export let bindings = []
   
     let originalValue = value
@@ -26,10 +24,7 @@
   
     $: categories = Object.entries(groupBy("category", bindings))
     $: value && checkValid()
-    $: bindableProperties = getBindableProperties(
-      $currentAsset,
-      $store.selectedComponentId
-    )
+
     $: console.log(value)
     $: dispatch("update", value)
     $: searchRgx = new RegExp(search, "ig")
@@ -40,16 +35,16 @@
     }
   
     function addToText(binding) {
-        const position = getCaretPosition()
-        const toAdd = `{{ ${binding.path} }}`
-        if (position.start) {
+      const position = getCaretPosition()
+      const toAdd = `{{ ${binding.path} }}`
+      if (position.start) {
         value =
-            value.substring(0, position.start) +
-            toAdd +
-            value.substring(position.end, value.length)
-        } else {
+          value.substring(0, position.start) +
+          toAdd +
+          value.substring(position.end, value.length)
+      } else {
         value += toAdd
-        }
+      }
     }
     export function cancel() {
       dispatch("update", originalValue)
