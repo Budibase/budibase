@@ -29,12 +29,16 @@ exports.getSubHelpDescription = string => {
   return chalk.green(string)
 }
 
-exports.getError = error => {
+exports.error = error => {
   return chalk.red(`Error - ${error}`)
 }
 
-exports.getSuccess = success => {
+exports.success = success => {
   return chalk.green(success)
+}
+
+exports.info = info => {
+  return chalk.cyan(info)
 }
 
 exports.logErrorToFile = (file, error) => {

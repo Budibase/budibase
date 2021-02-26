@@ -1,7 +1,7 @@
 const {
   getSubHelpDescription,
   getHelpDescription,
-  getError,
+  error,
 } = require("../utils")
 
 class Command {
@@ -52,11 +52,11 @@ class Command {
           }
         }
         if (!executed) {
-          console.log(getError(`Unknown ${this.command} option.`))
+          console.log(error(`Unknown ${this.command} option.`))
           command.help()
         }
       } catch (err) {
-        console.log(getError(err))
+        console.log(error(err))
       }
     })
   }

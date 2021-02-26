@@ -1,5 +1,5 @@
 const { string, number } = require("../questions")
-const { getSuccess } = require("../utils")
+const { success } = require("../utils")
 const fs = require("fs")
 const path = require("path")
 const randomString = require("randomstring")
@@ -36,7 +36,7 @@ module.exports.make = async () => {
   const hostingPort = await number("Please enter the port on which you want your installation to run: ", 10000)
   const fileContents = getContents(hostingPort, hostingKey)
   fs.writeFileSync(FILE_PATH, fileContents)
-  console.log(getSuccess("Configuration has been written successfully - please check .env file for more details."))
+  console.log(success("Configuration has been written successfully - please check .env file for more details."))
 }
 
 module.exports.get = property => {

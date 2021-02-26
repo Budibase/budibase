@@ -1,12 +1,11 @@
 const Command = require("../structures/Command")
 const { CommandWords } = require("../constants")
 const { lookpath } = require("lookpath")
-const { downloadFile, logErrorToFile } = require("../utils")
+const { downloadFile, logErrorToFile, success, info } = require("../utils")
 const { confirmation } = require("../questions")
 const fs = require("fs")
 const compose = require("docker-compose")
 const envFile = require("./makeEnv")
-const chalk = require("chalk")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
@@ -14,6 +13,15 @@ const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml"
 ]
+
+async function downloadFiles() {
+  const promises = []
+  for (let url of FILE_URLS) {
+    const fileName = url.split("/").slice(-1)[0]
+    promises.push(downloadFile(url, `./${fileName}`))
+  }
+  await Promise.all(promises)
+}
 
 async function checkDockerConfigured() {
   const error = "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/self-hosting/hosting-methods/docker-compose#installing-docker"
@@ -48,28 +56,25 @@ async function init() {
     console.log("Stopping.")
     return
   }
-  const promises = []
-  for (let url of FILE_URLS) {
-    const fileName = url.split("/").slice(-1)[0]
-    promises.push(downloadFile(url, `./${fileName}`))
-  }
-  await Promise.all(promises)
+  await downloadFiles()
   await envFile.make()
 }
 
 async function start() {
   await checkDockerConfigured()
   checkInitComplete()
+  console.log(info("Starting services, this may take a moment."))
   const port = envFile.get("MAIN_PORT")
   await handleError(async () => {
     await compose.upAll({cwd: "./", log: false})
   })
-  console.log(chalk.green(`Services started, please go to http://localhost:${port} for next steps.`))
+  console.log(success(`Services started, please go to http://localhost:${port} for next steps.`))
 }
 
 async function status() {
   await checkDockerConfigured()
   checkInitComplete()
+  console.log(info("Budibase status"))
   await handleError(async () => {
     const response = await compose.ps()
     console.log(response.out)
@@ -79,23 +84,31 @@ async function status() {
 async function stop() {
   await checkDockerConfigured()
   checkInitComplete()
+  console.log(info("Stopping services, this may take a moment."))
   await handleError(async () => {
     await compose.stop()
   })
+  console.log(success("Services have been stopped successfully."))
 }
 
 async function update() {
   await checkDockerConfigured()
   checkInitComplete()
+  if (await confirmation("Do you wish to update you docker-compose.yaml and envoy.yaml?")) {
+    await downloadFiles()
+  }
   await handleError(async () => {
     const status = await compose.ps()
     const parts = status.out.split("\n")
     const isUp = parts[2] && parts[2].indexOf("Up") !== -1
-    await compose.stop()
-    console.log(chalk.cyan("Beginning update, this may take a few minutes."))
+    if (isUp) {
+      console.log(info("Stopping services, this may take a moment."))
+      await compose.stop()
+    }
+    console.log(info("Beginning update, this may take a few minutes."))
     await compose.pullMany(BUDIBASE_SERVICES, {log: true})
     if (isUp) {
-      console.log(chalk.green("Update complete, restarting services..."))
+      console.log(success("Update complete, restarting services..."))
       await start()
     }
   })
