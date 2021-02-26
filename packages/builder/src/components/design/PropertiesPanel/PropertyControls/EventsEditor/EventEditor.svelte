@@ -1,10 +1,17 @@
 <script>
+  import {flip} from "svelte/animate";
+  import {dndzone} from "svelte-dnd-action";
   import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
+
+  const flipDurationMs = 150;
 
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
   export let actions
+  actions = actions.map((action, i) => {
+    return {...action, id: i}
+  })
 
   let addActionButton
   let addActionDropdown
@@ -30,19 +37,26 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
+      id: actions.length + 1
     }
     if (!actions) {
       actions = []
     }
-    actions.push(newAction)
+    actions = [...actions, newAction]
     selectedAction = newAction
-    actions = actions
     addActionDropdown.hide()
   }
 
   const selectAction = action => () => {
     selectedAction = action
   }
+
+  function handleDndConsider(e) {
+        actions = e.detail.items;
+    }
+    function handleDndFinalize(e) {
+        actions = e.detail.items;
+    }
 </script>
 
 <div class="actions-container">
@@ -69,21 +83,23 @@
     </div>
 
     {#if actions && actions.length > 0}
-      {#each actions as action, index}
-        <div class="action-container">
-          <div
-            class="action-header"
-            class:selected={action === selectedAction}
-            on:click={selectAction(action)}>
-            {index + 1}.
-            {action[EVENT_TYPE_KEY]}
+      <div class="action-dnd-container" use:dndzone={{items: actions, flipDurationMs, dropTargetStyle: { outline: 'none'}}} on:consider={handleDndConsider} on:finalize={handleDndFinalize}>
+        {#each actions as action, index (action.id)}
+          <div class="action-container" animate:flip={{duration: flipDurationMs}}>
+            <div
+              class="action-header"
+              class:selected={action === selectedAction}
+              on:click={selectAction(action)}>
+              {index + 1}.
+              {action[EVENT_TYPE_KEY]}
+            </div>
+            <i
+              class="ri-close-fill"
+              style="margin-left: auto;"
+              on:click={() => deleteAction(index)} />
           </div>
-          <i
-            class="ri-close-fill"
-            style="margin-left: auto;"
-            on:click={() => deleteAction(index)} />
-        </div>
-      {/each}
+        {/each}
+      </div>
     {/if}
   </div>
   <div class="action-config">
