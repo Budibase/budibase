@@ -47,6 +47,8 @@
     }
     return bindings
   }
+
+  $: console.log('Bindings in Block Setup: ', bindings)
 </script>
 
 <div class="block-label">{block.name}</div>
