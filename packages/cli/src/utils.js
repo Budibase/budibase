@@ -1,9 +1,11 @@
 const chalk = require("chalk")
 const fs = require("fs")
 const axios = require("axios")
+const path = require("path")
 
-exports.downloadFile = async (url, path) => {
-  const writer = fs.createWriteStream(path)
+exports.downloadFile = async (url, filePath) => {
+  filePath = path.resolve(filePath)
+  const writer = fs.createWriteStream(filePath)
 
   const response = await axios({
     url,
