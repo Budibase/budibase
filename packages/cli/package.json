@@ -6,8 +6,11 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "axios": "^0.21.1",
     "chalk": "^4.1.0",
-    "commander": "^7.1.0"
+    "commander": "^7.1.0",
+    "inquirer": "^8.0.0",
+    "lookpath": "^1.1.0"
   },
   "devDependencies": {
     "eslint": "^7.20.0"
