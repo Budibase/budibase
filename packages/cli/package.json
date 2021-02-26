@@ -8,5 +8,8 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "commander": "^7.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0"
   }
 }
