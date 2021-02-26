@@ -29,10 +29,22 @@ COUCH_DB_PORT=4005
 BUDIBASE_ENVIRONMENT=PRODUCTION`
 }
 
-module.exports = async () => {
+module.exports.filePath = FILE_PATH
+
+module.exports.make = async () => {
   const hostingKey = await string("Please input the password you'd like to use as your hosting key: ")
   const hostingPort = await number("Please enter the port on which you want your installation to run: ", 10000)
-  const fileContents = getContents(hostingKey, hostingPort)
+  const fileContents = getContents(hostingPort, hostingKey)
   fs.writeFileSync(FILE_PATH, fileContents)
   console.log(getSuccess("Configuration has been written successfully - please check .env file for more details."))
+}
+
+module.exports.get = property => {
+  const props = fs.readFileSync(FILE_PATH, "utf8").split(property)
+  if (props[0].charAt(0) === "=") {
+    property = props[0]
+  } else {
+    property = props[1]
+  }
+  return property.split("=")[1].split("\n")[0]
 }

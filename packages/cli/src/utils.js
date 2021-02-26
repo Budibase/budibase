@@ -36,3 +36,7 @@ exports.getError = error => {
 exports.getSuccess = success => {
   return chalk.green(success)
 }
+
+exports.logErrorToFile = (file, error) => {
+  fs.writeFileSync(path.resolve(`./${file}`), `Budiase Error\n${error}`)
+}
