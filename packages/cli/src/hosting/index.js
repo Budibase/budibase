@@ -29,7 +29,8 @@ async function init() {
   }
   const promises = []
   for (let url of FILE_URLS) {
-    promises.push(downloadFile(url, __dirname))
+    const fileName = url.split("/").slice(-1)[0]
+    promises.push(downloadFile(url, `./${fileName}`))
   }
   await Promise.all(promises)
   console.log("Files have been downloaded, ready to start.")
