@@ -10,7 +10,7 @@ exports.downloadFile = async (url, filePath) => {
   const response = await axios({
     url,
     method: "GET",
-    responseType: "stream"
+    responseType: "stream",
   })
 
   response.data.pipe(writer)

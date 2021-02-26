@@ -11,7 +11,7 @@ const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
-  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml"
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
 
 async function downloadFiles() {
@@ -24,7 +24,8 @@ async function downloadFiles() {
 }
 
 async function checkDockerConfigured() {
-  const error = "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/self-hosting/hosting-methods/docker-compose#installing-docker"
+  const error =
+    "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/self-hosting/hosting-methods/docker-compose#installing-docker"
   const docker = await lookpath("docker")
   const compose = await lookpath("docker-compose")
   if (!docker || !compose) {
@@ -51,7 +52,9 @@ async function handleError(func) {
 
 async function init() {
   await checkDockerConfigured()
-  const shouldContinue = await confirmation("This will create multiple files in current directory, should continue?")
+  const shouldContinue = await confirmation(
+    "This will create multiple files in current directory, should continue?"
+  )
   if (!shouldContinue) {
     console.log("Stopping.")
     return
@@ -66,9 +69,13 @@ async function start() {
   console.log(info("Starting services, this may take a moment."))
   const port = envFile.get("MAIN_PORT")
   await handleError(async () => {
-    await compose.upAll({cwd: "./", log: false})
+    await compose.upAll({ cwd: "./", log: false })
   })
-  console.log(success(`Services started, please go to http://localhost:${port} for next steps.`))
+  console.log(
+    success(
+      `Services started, please go to http://localhost:${port} for next steps.`
+    )
+  )
 }
 
 async function status() {
@@ -94,7 +101,11 @@ async function stop() {
 async function update() {
   await checkDockerConfigured()
   checkInitComplete()
-  if (await confirmation("Do you wish to update you docker-compose.yaml and envoy.yaml?")) {
+  if (
+    await confirmation(
+      "Do you wish to update you docker-compose.yaml and envoy.yaml?"
+    )
+  ) {
     await downloadFiles()
   }
   await handleError(async () => {
@@ -106,7 +117,7 @@ async function update() {
       await compose.stop()
     }
     console.log(info("Beginning update, this may take a few minutes."))
-    await compose.pullMany(BUDIBASE_SERVICES, {log: true})
+    await compose.pullMany(BUDIBASE_SERVICES, { log: true })
     if (isUp) {
       console.log(success("Update complete, restarting services..."))
       await start()
