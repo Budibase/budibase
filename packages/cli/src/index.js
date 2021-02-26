@@ -1,18 +1,21 @@
-const { getOptions, addHelp, displayHelp } = require("./options")
+const { getCommands } = require("./options")
 const { Command } = require("commander")
+const { getHelpDescription } = require("./utils")
 
 // add hosting config
-function init() {
+async function init() {
   const program = new Command()
-  addHelp(program)
-  for (let option of getOptions()) {
-    option.configure(program)
+    .addHelpCommand("help", getHelpDescription("Help with Budibase commands."))
+    .helpOption(false)
+  program.helpOption()
+  // add commands
+  for (let command of getCommands()) {
+    command.configure(program)
   }
-  program.parse(process.argv)
-  const userInput = program.opts()
-  for (let option of getOptions()) {
-    if (option.isItThisOption(userInput)) {
-      option.execute(userInput)
-    }
-  }
+  // this will stop the program if no command found
+  await program.parseAsync(process.argv)
 }
+
+init().catch(err => {
+  console.error(`Unexpected error - `, err)
+})
