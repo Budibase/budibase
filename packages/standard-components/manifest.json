@@ -294,6 +294,19 @@
       }
     ]
   },
+  "backgroundimage": {
+    "name": "Background Image",
+    "description": "A background image",
+    "icon": "ri-image-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      }
+    ]
+  },
   "icon": {
     "name": "Icon",
     "description": "A basic component for displaying icons",
@@ -394,6 +407,11 @@
         "type": "boolean",
         "label": "New Tab",
         "key": "openInNewTab"
+      },
+      {
+        "type": "boolean",
+        "label": "External",
+        "key": "external"
       }
     ]
   },
