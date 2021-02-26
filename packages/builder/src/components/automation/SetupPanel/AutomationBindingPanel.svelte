@@ -17,7 +17,6 @@
     export let bindingDrawer
     export let valid = true
     export let bindings = []
-    $: console.log('Bindings in Drawer: ', bindings)
   
     let originalValue = value
     let helpers = handlebarsCompletions()
@@ -31,7 +30,6 @@
       $currentAsset,
       $store.selectedComponentId
     )
-    $: console.log(value)
     $: dispatch("update", value)
     $: searchRgx = new RegExp(search, "ig")
   

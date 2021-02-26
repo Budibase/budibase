@@ -7,8 +7,6 @@
   export let value
   export let bindings
 
-  $: console.log('Bindings in Row Selector: ', bindings)
-
   $: table = $backendUiStore.tables.find(table => table._id === value?.tableId)
   $: schemaFields = Object.entries(table?.schema ?? {})
 
@@ -46,7 +44,7 @@
             panel={AutomationBindingPanel}
             extraThin
             value={value[field]}
-            on:update={e => value[field] = e.detail}
+            on:change={e => value[field] = e.detail}
             label={field}
             type="string"
             {bindings} />

@@ -47,8 +47,6 @@
     }
     return bindings
   }
-
-  $: console.log('Bindings in Block Setup: ', bindings)
 </script>
 
 <div class="block-label">{block.name}</div>
@@ -72,7 +70,7 @@
         type={'email'}
         extraThin
         value={block.inputs[key]}
-        on:update={e => block.inputs[key] = e.detail}
+        on:change={e => block.inputs[key] = e.detail}
         {bindings} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
@@ -88,7 +86,7 @@
         type={value.customType}
         extraThin
         value={block.inputs[key]}
-        on:update={e => block.inputs[key] = e.detail}
+        on:change={e => block.inputs[key] = e.detail}
         {bindings} />
     {/if}
   </div>
