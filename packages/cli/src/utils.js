@@ -32,3 +32,7 @@ exports.getSubHelpDescription = string => {
 exports.getError = error => {
   return chalk.red(`Error - ${error}`)
 }
+
+exports.getSuccess = success => {
+  return chalk.green(success)
+}
