@@ -5,6 +5,7 @@ import ExecuteQuery from "./ExecuteQuery.svelte"
 import TriggerAutomation from "./TriggerAutomation.svelte"
 import ValidateForm from "./ValidateForm.svelte"
 import LogIn from "./LogIn.svelte"
+import LogOut from "./LogOut.svelte"
 
 // defines what actions are available, when adding a new one
 // the component is the setup panel for the action
@@ -39,5 +40,9 @@ export default [
   {
     name: "Log In",
     component: LogIn,
+  },
+  {
+    name: "Log Out",
+    component: LogOut,
   },
 ]
