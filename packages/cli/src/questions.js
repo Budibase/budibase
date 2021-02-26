@@ -25,9 +25,9 @@ exports.string = async (question, defaultString = null) => {
 exports.number = async (question, defaultNumber) => {
   const config = {
     type: "input",
-      name: "number",
+    name: "number",
     message: question,
-    validate: (value) => {
+    validate: value => {
       let valid = !isNaN(parseFloat(value))
       return valid || "Please enter a number"
     },

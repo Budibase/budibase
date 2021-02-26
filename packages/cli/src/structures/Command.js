@@ -1,8 +1,4 @@
-const {
-  getSubHelpDescription,
-  getHelpDescription,
-  error,
-} = require("../utils")
+const { getSubHelpDescription, getHelpDescription, error } = require("../utils")
 
 class Command {
   constructor(command, func = null) {

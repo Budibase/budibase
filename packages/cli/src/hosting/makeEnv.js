@@ -32,11 +32,20 @@ BUDIBASE_ENVIRONMENT=PRODUCTION`
 module.exports.filePath = FILE_PATH
 
 module.exports.make = async () => {
-  const hostingKey = await string("Please input the password you'd like to use as your hosting key: ")
-  const hostingPort = await number("Please enter the port on which you want your installation to run: ", 10000)
+  const hostingKey = await string(
+    "Please input the password you'd like to use as your hosting key: "
+  )
+  const hostingPort = await number(
+    "Please enter the port on which you want your installation to run: ",
+    10000
+  )
   const fileContents = getContents(hostingPort, hostingKey)
   fs.writeFileSync(FILE_PATH, fileContents)
-  console.log(success("Configuration has been written successfully - please check .env file for more details."))
+  console.log(
+    success(
+      "Configuration has been written successfully - please check .env file for more details."
+    )
+  )
 }
 
 module.exports.get = property => {
