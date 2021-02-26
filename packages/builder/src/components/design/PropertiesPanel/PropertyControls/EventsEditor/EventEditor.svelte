@@ -9,9 +9,13 @@
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
   export let actions
-  actions = actions.map((action, i) => {
-    return {...action, id: i}
-  })
+
+  // dndzone needs an id on the array items, so this adds some temporary ones.
+  if (actions) {
+    actions = actions.map((action, i) => {
+      return {...action, id: i}
+    })
+  }
 
   let addActionButton
   let addActionDropdown
@@ -37,7 +41,7 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
-      id: actions.length + 1
+      id: actions ? actions.length + 1 : 0
     }
     if (!actions) {
       actions = []

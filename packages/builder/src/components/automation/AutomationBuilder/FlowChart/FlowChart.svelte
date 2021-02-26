@@ -2,6 +2,7 @@
   import FlowItem from "./FlowItem.svelte"
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
+  import {dndzone} from "svelte-dnd-action";
   import { fade, fly } from "svelte/transition"
 
   export let automation
@@ -17,14 +18,22 @@
       blocks = blocks.concat(automation.definition.steps || [])
     }
   }
+
+  const flipDurationMs = 300;
+  function handleDndConsider(e) {
+      blocks = e.detail.items;
+  }
+  function handleDndFinalize(e) {
+      blocks = e.detail.items;
+  }
 </script>
 
 {#if !blocks.length}<i>Add a trigger to your automation to get started</i>{/if}
-<section class="canvas">
+<section class="canvas"  use:dndzone={{items: blocks, flipDurationMs}} on:consider={handleDndConsider} on:finalize={handleDndFinalize}>
   {#each blocks as block, idx (block.id)}
     <div
       class="block"
-      animate:flip={{ duration: 600 }}
+      animate:flip={{ duration: flipDurationMs}}
       in:fade|local
       out:fly|local={{ x: 100 }}>
       <FlowItem {onSelect} {block} />
