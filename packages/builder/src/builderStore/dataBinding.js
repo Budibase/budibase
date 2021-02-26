@@ -120,7 +120,7 @@ const getContextBindings = (asset, componentId) => {
       tableName = info.table?.name
 
       // Add _id and _rev fields for certain types
-      if (datasource.type === "table" || datasource.type === "link") {
+      if (schema && ["table", "link"].includes(datasource.type)) {
         schema["_id"] = { type: "string" }
         schema["_rev"] = { type: "string" }
       }
