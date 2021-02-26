@@ -156,7 +156,7 @@ exports.doesHaveResourcePermission = (
       break
     }
   }
-  return foundMain && foundSub
+  return foundMain || foundSub
 }
 
 exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
