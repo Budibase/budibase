@@ -40,10 +40,7 @@ router
     authorized(BUILDER),
     controller.buildSchema
   )
-  .post(
-    "/api/webhooks/trigger/:instance/:id",
-    authorized(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
-    controller.trigger
-  )
+  // this shouldn't have authorisation, right now its always public
+  .post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
 module.exports = router
