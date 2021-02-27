@@ -2,11 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../controllers/webhook")
 const authorized = require("../../middleware/authorized")
 const joiValidator = require("../../middleware/joi-validator")
-const {
-  BUILDER,
-  PermissionTypes,
-  PermissionLevels,
-} = require("../../utilities/security/permissions")
+const { BUILDER } = require("../../utilities/security/permissions")
 const Joi = require("joi")
 
 const router = Router()
