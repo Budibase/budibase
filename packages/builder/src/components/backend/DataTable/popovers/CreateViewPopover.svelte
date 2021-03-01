@@ -1,5 +1,5 @@
 <script>
-  import { Button, Input, Select } from "@budibase/bbui"
+  import { Button, Input } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"

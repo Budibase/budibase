@@ -246,10 +246,6 @@
     color: var(--ink);
   }
 
-  tbody tr:hover {
-    background: var(--grey-1);
-  }
-
   :global(.ag-filter) {
     background: var(--background);
     padding: var(--spacing-s);

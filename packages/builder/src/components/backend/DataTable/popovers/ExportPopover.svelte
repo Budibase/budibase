@@ -1,5 +1,4 @@
 <script>
-  import api from "builderStore/api"
   import { Button, Select } from "@budibase/bbui"
   import download from "downloadjs"
 
