@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable, transition } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   export let className = ""
@@ -9,7 +9,6 @@
   export let description = ""
   export let height
   export let width
-  export let transitionType = ""
 </script>
 
 <img
@@ -19,4 +18,4 @@
   src={url}
   alt={description}
   use:styleable={$component.styles}
-  in:transition={{type: transitionType}} />
+  in:transition={{type: $component.transition}} />
