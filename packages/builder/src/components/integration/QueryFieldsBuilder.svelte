@@ -7,9 +7,6 @@
   export let schema
   export let editable
 
-  let draftField = {}
-
-  $: fieldKeys = Object.keys(fields)
   $: schemaKeys = Object.keys(schema.fields)
 
   function updateCustomFields({ detail }) {
