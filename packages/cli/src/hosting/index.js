@@ -149,7 +149,7 @@ const command = new Command(`${CommandWords.HOSTING}`)
   )
   .addSubOption(
     "--update",
-    "Updates the Budibase images to the latest version.",
+    "Update the Budibase images to the latest version.",
     update
   )
 
