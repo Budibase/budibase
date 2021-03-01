@@ -4,8 +4,18 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  export let url = ""
-  $: style = url ? `background-image: url("${url}")` : ""
+  export let url
+  export let position
+
+  let style = ""
+  $: {
+    if (url) {
+      style += `background-image: url("${url}");`
+    }
+    if (position) {
+      style += `background-position: ${position};`
+    }
+  }
 </script>
 
 <div class="outer" use:styleable={$component.styles}>
