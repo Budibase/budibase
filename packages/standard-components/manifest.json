@@ -291,6 +291,13 @@
         "type": "text",
         "label": "URL",
         "key": "url"
+      },
+      {
+        "type": "select",
+        "key": "transitionType",
+        "label": "Transition",
+        "options": ["fade", "blur", "slide", "fly"],
+        "defaultValue": ""
       }
     ]
   },
