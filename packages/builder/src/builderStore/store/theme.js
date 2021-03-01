@@ -3,7 +3,7 @@ import { localStorageStore } from "./localStorage"
 export const getThemeStore = () => {
   const themeElement = document.documentElement
   const initialValue = {
-    darkMode: false,
+    darkMode: true,
     hue: 208,
     saturation: 9,
     lightness: 16,
