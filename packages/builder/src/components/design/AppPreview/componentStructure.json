@@ -12,6 +12,7 @@
       "fieldgroup",
       "stringfield",
       "numberfield",
+      "passwordfield",
       "optionsfield",
       "booleanfield",
       "longformfield",
