@@ -135,11 +135,6 @@
     margin: 0 auto;
   }
 
-  h5 {
-    margin: 0 !important;
-    font-size: var(--font-size-l);
-  }
-
   .query-header {
     display: flex;
     flex-direction: row;
