@@ -304,6 +304,50 @@
         "type": "text",
         "label": "URL",
         "key": "url"
+      },
+      {
+        "type": "select",
+        "label": "Position",
+        "key": "position",
+        "defaultValue": "center center",
+        "options": [
+          {
+            "label": "Center Top",
+            "value": "center top"
+          },
+          {
+            "label": "Center",
+            "value": "center center"
+          },
+          {
+            "label": "Center Bottom",
+            "value": "center bottom"
+          },
+          {
+            "label": "Left Top",
+            "value": "left top"
+          },
+          {
+            "label": "Left Center",
+            "value": "left center"
+          },
+          {
+            "label": "Left Bottom",
+            "value": "left bottom"
+          },
+          {
+            "label": "Right Top",
+            "value": "right top"
+          },
+          {
+            "label": "Right Center",
+            "value": "right center"
+          },
+          {
+            "label": "Right Bottom",
+            "value": "right bottom"
+          }
+        ]
       }
     ]
   },
