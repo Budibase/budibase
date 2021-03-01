@@ -259,7 +259,6 @@ export const getBackendUiStore = () => {
           }
 
           state.draftTable.schema[field.name] = cloneDeep(field)
-          console.log(state.draftTable)
           store.actions.tables.save(state.draftTable)
           return state
         })
