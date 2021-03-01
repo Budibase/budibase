@@ -5,6 +5,7 @@
     "icon": "ri-layout-column-line",
     "hasChildren": true,
     "styleable": true,
+    "transitionable": true,
     "settings": [
       {
         "type": "select",
@@ -286,7 +287,6 @@
     "description": "A basic component for displaying images",
     "icon": "ri-image-line",
     "styleable": true,
-    "transitionable": true,
     "settings": [
       {
         "type": "text",
