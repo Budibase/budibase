@@ -286,18 +286,12 @@
     "description": "A basic component for displaying images",
     "icon": "ri-image-line",
     "styleable": true,
+    "transitionable": true,
     "settings": [
       {
         "type": "text",
         "label": "URL",
         "key": "url"
-      },
-      {
-        "type": "select",
-        "key": "transitionType",
-        "label": "Transition",
-        "options": ["fade", "blur", "slide", "fly"],
-        "defaultValue": ""
       }
     ]
   },

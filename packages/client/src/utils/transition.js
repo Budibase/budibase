@@ -5,6 +5,7 @@ const transitions = new Map([
   ["fade", { tn: fade, opt: {} }],
   ["blur", { tn: blur, opt: {} }],
   ["slide", { tn: slide, opt: {} }],
+  ["scale", { tn: slide, opt: {} }],
   ["fly", { tn: fly, opt: { y: 80 } }],
 ])
 	
