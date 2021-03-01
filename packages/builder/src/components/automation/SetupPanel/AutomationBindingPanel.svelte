@@ -3,18 +3,13 @@
     import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
     import { createEventDispatcher } from "svelte"
     import { isValid } from "@budibase/string-templates"
-    import {
-      getBindableProperties,
-      readableToRuntimeBinding,
-    } from "builderStore/dataBinding"
-    import { currentAsset, store } from "../../../builderStore"
     import { handlebarsCompletions } from "constants/completions"
   
     const dispatch = createEventDispatcher()
   
     export let value = ""
     export let bindingDrawer
-    export let bindings = []
+    export let bindableProperties = []
   
     let originalValue = value
     let helpers = handlebarsCompletions()
@@ -22,7 +17,7 @@
     let search = ""
     let validity = true
   
-    $: categories = Object.entries(groupBy("category", bindings))
+    $: categories = Object.entries(groupBy("category", bindableProperties))
     $: value && checkValid()
     $: dispatch("update", value)
     $: searchRgx = new RegExp(search, "ig")
@@ -58,7 +53,7 @@
         {#each categories as [categoryName, bindings]}
         <Heading extraSmall>{categoryName}</Heading>
         <Spacer extraSmall />
-        {#each bindings.filter(binding =>
+        {#each bindableProperties.filter(binding =>
             binding.label.match(searchRgx)
         ) as binding}
             <div class="binding" on:click={() => addToText(binding)}>

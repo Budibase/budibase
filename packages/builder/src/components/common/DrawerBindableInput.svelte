@@ -55,7 +55,7 @@
       value={readableValue}
       close={handleClose}
       on:update={event => (tempValue = event.detail)}
-      {bindings} />
+      bindableProperties={bindings} />
   </div>
 </Drawer>
 
