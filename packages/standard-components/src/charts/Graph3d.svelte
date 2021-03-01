@@ -62,8 +62,8 @@
       if (link === undefined) {
         return
       }
-      const a = data.nodes.filter(node => node.id === link[source])
-      const b = data.nodes.filter(node => node.id === link[target])
+      const a = data.nodes.filter(node => node.id === link[source])[0]
+      const b = data.nodes.filter(node => node.id === link[target])[0]
       !a.neighbors && (a.neighbors = [])
       !b.neighbors && (b.neighbors = [])
       a.neighbors.push(b)
@@ -93,7 +93,7 @@
       .nodeAutoColorBy(nodeGroup)
       .width(width)
       .height(height)
-      .linkAutoColorBy(link => link[linkGroup])
+      .linkAutoColorBy(linkGroup)
       .linkDirectionalParticles(weight)
       .backgroundColor(backgroundColor)
       .linkDirectionalParticleSpeed(d => d[weight] * 0.001)
