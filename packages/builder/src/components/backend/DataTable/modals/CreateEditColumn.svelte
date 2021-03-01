@@ -11,7 +11,11 @@
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import { FIELDS, AUTO_COLUMN_SUB_TYPES, RelationshipTypes } from "constants/backend"
+  import {
+    FIELDS,
+    AUTO_COLUMN_SUB_TYPES,
+    RelationshipTypes,
+  } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
@@ -157,9 +161,18 @@
     const thisName = truncate(table.name, { length: 20 }),
       linkName = truncate(linkTable.name, { length: 20 })
     return [
-      { name: `Many ${thisName} has many ${linkName}`, value: RelationshipTypes.MANY_TO_MANY },
-      { name: `One ${thisName} has many ${linkName}`, value: RelationshipTypes.ONE_TO_MANY },
-      { name: `Many ${thisName} has one ${linkName}`, value: RelationshipTypes.MANY_TO_ONE },
+      {
+        name: `Many ${thisName} has many ${linkName}`,
+        value: RelationshipTypes.MANY_TO_MANY,
+      },
+      {
+        name: `One ${thisName} has many ${linkName}`,
+        value: RelationshipTypes.ONE_TO_MANY,
+      },
+      {
+        name: `Many ${thisName} has one ${linkName}`,
+        value: RelationshipTypes.MANY_TO_ONE,
+      },
     ]
   }
 </script>
@@ -250,16 +263,16 @@
       <div>
         <Label grey extraSmall>Define the relationship</Label>
         <div class="radio-buttons">
-          {#each relationshipOptions as {value, name}}
+          {#each relationshipOptions as { value, name }}
             <Radio
-                disabled={originalName}
-                name="Relationship type"
-                value={value}
-                bind:group={field.relationshipType}>
+              disabled={originalName}
+              name="Relationship type"
+              {value}
+              bind:group={field.relationshipType}>
               <div class="radio-button-labels">
-                <label for={value}>{name.split("has")[0]}</label>
+                <label for={value}>{name.split('has')[0]}</label>
                 <label class="rel-type-center" for={value}>has</label>
-                <label for={value}>{name.split("has")[1]}</label>
+                <label for={value}>{name.split('has')[1]}</label>
               </div>
             </Radio>
           {/each}
