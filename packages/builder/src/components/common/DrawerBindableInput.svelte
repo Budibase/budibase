@@ -8,6 +8,7 @@
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
+  export let panel = BindingPanel
   export let value = ""
   export let bindings = []
   export let thin = true
@@ -49,7 +50,8 @@
     <Button thin blue on:click={handleClose}>Save</Button>
   </heading>
   <div slot="body">
-    <BindingPanel
+    <svelte:component
+      this={panel}
       value={readableValue}
       close={handleClose}
       on:update={event => (tempValue = event.detail)}
