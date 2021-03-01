@@ -6686,6 +6686,11 @@ supports-color@^7.0.0, supports-color@^7.1.0, supports-color@^7.2.0:
   dependencies:
     has-flag "^4.0.0"
 
+svelte-dnd-action@^0.8.9:
+  version "0.8.9"
+  resolved "https://registry.yarnpkg.com/svelte-dnd-action/-/svelte-dnd-action-0.8.9.tgz#90fa211057a5d9e832d5521511f9c1b87242d2ae"
+  integrity sha512-4WaLRvERr2JoX6Lh9GnlEZRzFF5eY3h2q0n5+lS4/+nqqQjTIpCwTrncMf9tJNa+M4AGy43I5aq5F+Ohl/nxLg==
+
 svelte-flatpickr@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-2.4.0.tgz#190871fc3305956c8c8fd3601cd036b8ac71ef49"
