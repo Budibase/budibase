@@ -488,10 +488,10 @@ export const getFrontendStore = () => {
         selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
-      updateTransition: async (transition) => {
+      updateTransition: async transition => {
         const selected = get(selectedComponent)
         if (transition == null || transition === "") {
-          selected = ""
+          selected._transition = ""
         } else {
           selected._transition = transition
         }
