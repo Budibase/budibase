@@ -176,17 +176,6 @@
     padding: var(--spacing-l);
   }
 
-  a {
-    flex: 1;
-    color: var(--grey-5);
-    font-size: var(--font-size-s);
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: var(--blue);
-  }
-
   i:hover {
     color: var(--red);
     cursor: pointer;
