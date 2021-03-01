@@ -12,10 +12,8 @@
   
     const dispatch = createEventDispatcher()
   
-    export let bindableProperties
     export let value = ""
     export let bindingDrawer
-    export let valid = true
     export let bindings = []
   
     let originalValue = value
@@ -26,16 +24,11 @@
   
     $: categories = Object.entries(groupBy("category", bindings))
     $: value && checkValid()
-    $: bindableProperties = getBindableProperties(
-      $currentAsset,
-      $store.selectedComponentId
-    )
     $: dispatch("update", value)
     $: searchRgx = new RegExp(search, "ig")
   
     function checkValid() {
-        const runtimeValue = readableToRuntimeBinding(bindings, value)
-        validity = isValid(runtimeValue)
+        validity = isValid(value)
     }
   
     function addToText(binding) {
