@@ -1295,6 +1295,34 @@
       }
     ]
   },
+  "passwordfield": {
+    "name": "Password Field",
+    "icon": "ri-lock-password-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
   "optionsfield": {
     "name": "Options Picker",
     "icon": "ri-file-list-line",
