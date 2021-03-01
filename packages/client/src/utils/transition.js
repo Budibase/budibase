@@ -4,8 +4,9 @@ import { fade, blur, slide, fly } from "svelte/transition"
 const transitions = new Map([
   ["fade", { tn: fade, opt: {} }],
   ["blur", { tn: blur, opt: {} }],
-  ["slide", { tn: slide, opt: {} }],
-  ["scale", { tn: slide, opt: {} }],
+  // These two seem to not result in any effect
+  // ["slide", { tn: slide, opt: {} }], 
+  // ["scale", { tn: slide, opt: {} }],
   ["fly", { tn: fly, opt: { y: 80 } }],
 ])
 
