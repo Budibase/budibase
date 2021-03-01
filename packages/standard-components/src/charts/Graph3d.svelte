@@ -8,6 +8,15 @@
     // datasource
     export let nodes
     export let links
+    // nodeColumns
+    export let id = "id"
+    export let nodeGroup = "group"
+    export let name = "name"
+    // linkColumns
+    export let source = "source"
+    export let target = "target"
+    export let weight = "weight"
+    export let linkGroup = "group"
     // settings
     export let backgroundColor = "#000011"
     export let width = "100%"
@@ -50,8 +59,9 @@
   
       // data preprocess
       data.links.forEach(link => {
-        const a = data.nodes[link.source]
-        const b = data.nodes[link.target]
+        if (link === undefined) {return};
+        const a = data.nodes.filter(node=>(node.id===link[source]))
+        const b = data.nodes.filter(node=>(node.id===link[target]))
         !a.neighbors && (a.neighbors = [])
         !b.neighbors && (b.neighbors = [])
         a.neighbors.push(b)
@@ -72,15 +82,19 @@
   
       const Graph = ForceGraph3D()(threedGraph)
         .graphData(data)
+        .nodeId(id)
+        .nodeLabel(name)
+        .linkSource(source)
+        .linkTarget(target)
         .showNavInfo(showNavInfo)
         .linkWidth(link => (highlightLinks.has(link) ? 4 : 1))
-        .nodeAutoColorBy("group")
+        .nodeAutoColorBy(nodeGroup)
         .width(width)
         .height(height)
-        .linkAutoColorBy(link => link.group)
-        .linkDirectionalParticles("value")
+        .linkAutoColorBy(link => link[linkGroup])
+        .linkDirectionalParticles(weight)
         .backgroundColor(backgroundColor)
-        .linkDirectionalParticleSpeed(d => d.value * 0.001)
+        .linkDirectionalParticleSpeed(d => d[weight] * 0.001)
         .linkDirectionalParticleWidth(1)
         .linkDirectionalArrowLength(3.5)
         .linkDirectionalArrowRelPos(1)
@@ -94,8 +108,10 @@
           highlightLinks.clear()
           if (node) {
             highlightNodes.add(node)
-            node.neighbors.forEach(neighbor => highlightNodes.add(neighbor))
-            node.links.forEach(link => highlightLinks.add(link))
+            if (node.neighbors && node.links) {
+              node.neighbors.forEach(neighbor => highlightNodes.add(neighbor))
+              node.links.forEach(link => highlightLinks.add(link))
+            }
           }
   
           hoverNode = node || null
@@ -108,8 +124,8 @@
   
           if (link) {
             highlightLinks.add(link)
-            highlightNodes.add(link.source)
-            highlightNodes.add(link.target)
+            highlightNodes.add(link[source])
+            highlightNodes.add(link[target])
           }
   
           updateHighlight()

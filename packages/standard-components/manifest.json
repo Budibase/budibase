@@ -1416,9 +1416,51 @@
         "key": "nodes"
       },
       {
+        "type": "field",
+        "label": "ID",
+        "key": "id",
+        "dependsOn": "nodes"
+      },
+      {
+        "type": "field",
+        "label": "NodeGroup",
+        "key": "nodeGroup",
+        "dependsOn": "nodes"
+      },
+      {
+        "type": "field",
+        "label": "NodeName",
+        "key": "name",
+        "dependsOn": "nodes"
+      },
+      {
         "type": "datasource",
         "label": "Links",
         "key": "links"
+      },
+      {
+        "type": "field",
+        "label": "LinkSource",
+        "key": "source",
+        "dependsOn": "links"
+      },
+      {
+        "type": "field",
+        "label": "LinkTarget",
+        "key": "target",
+        "dependsOn": "links"
+      },
+      {
+        "type": "field",
+        "label": "LinkWeight",
+        "key": "weight",
+        "dependsOn": "links"
+      },
+      {
+        "type": "field",
+        "label": "LinkGroup",
+        "key": "linkGroup",
+        "dependsOn": "links"
       },
       {
         "type": "text",
