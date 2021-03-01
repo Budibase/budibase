@@ -1,0 +1,10 @@
+name: Budi Housekeeping
+on:
+  schedule:
+  - cron: "0 13 * * 1"
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+    - run: ./scripts/clean_git_branches.sh
