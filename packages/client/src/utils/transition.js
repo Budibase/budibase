@@ -1,4 +1,4 @@
-import { fade, blur, slide, fly } from 'svelte/transition'
+import { fade, blur, slide, fly } from "svelte/transition"
 
 // Default options
 const transitions = new Map([
@@ -8,8 +8,8 @@ const transitions = new Map([
   ["scale", { tn: slide, opt: {} }],
   ["fly", { tn: fly, opt: { y: 80 } }],
 ])
-	
-export default function transition(node, {type, options = {}}) {
-	const { tn, opt } = transitions.get(type) || {}
-	return tn ? tn(node, {...opt, ...options}) : fade(node, { duration: 0})
+
+export default function transition(node, { type, options = {} }) {
+  const { tn, opt } = transitions.get(type) || {}
+  return tn ? tn(node, { ...opt, ...options }) : fade(node, { duration: 0 })
 }
