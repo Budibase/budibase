@@ -1,7 +1,6 @@
 <script context="module">
   import iconData from "./icons.js"
 
-  const categories = Object.keys(iconData)
   const icons = Object.keys(iconData).reduce(
     (acc, cat) => [...acc, ...Object.keys(iconData[cat])],
     []
