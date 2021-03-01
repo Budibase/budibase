@@ -31,7 +31,6 @@
 
   const templateChanged = newTemplateIndex => {
     if (newTemplateIndex === undefined) return
-    const template = templates[newTemplateIndex]
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
       name = draftScreen.props._instanceName
