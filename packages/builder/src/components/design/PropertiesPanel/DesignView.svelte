@@ -25,7 +25,7 @@
   ]
 
   const transitions = [
-    'fade', 'blur', 'slide', 'fly', 'scale'
+    'fade', 'blur', 'fly' // slide and scale are hidden because they do not seem to result in any effect
   ]
 
   $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
