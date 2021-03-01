@@ -257,9 +257,9 @@
                 value={value}
                 bind:group={field.relationshipType}>
               <div class="radio-button-labels">
-                <label class="rel-type-label" for={value}>{name.split(" has ")[0]}</label>
+                <label for={value}>{name.split("has")[0]}</label>
                 <label class="rel-type-center" for={value}>has</label>
-                <label class="rel-type-label" for={value}>{name.split(" has ")[1]}</label>
+                <label for={value}>{name.split("has")[1]}</label>
               </div>
             </Radio>
           {/each}
@@ -326,8 +326,9 @@
   .rel-type-center {
     font-weight: 500;
     color: var(--grey-6);
-    margin-right: 10px;
-    margin-left: 10px;
+    margin-right: 8px;
+    margin-left: 8px;
+    padding: 1px 3px 1px 3px;
     background: var(--grey-3);
     border-radius: 2px;
   }
