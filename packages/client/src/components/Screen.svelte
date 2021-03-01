@@ -18,9 +18,7 @@
 <!-- Ensure to fully remount when screen changes -->
 {#key screenDefinition?._id}
   <Provider key="url" data={params}>
-    <div in:fade>
       <Component definition={screenDefinition} />
-    </div>
   </Provider>
 {/key}
 

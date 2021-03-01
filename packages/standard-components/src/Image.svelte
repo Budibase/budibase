@@ -17,5 +17,4 @@
   class={className}
   src={url}
   alt={description}
-  use:styleable={$component.styles}
-  in:transition={{type: $component.transition}} />
+  use:styleable={$component.styles} />
