@@ -1,8 +1,5 @@
 <script>
-  import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
-  import { Roles } from "constants/backend"
-  import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
 
