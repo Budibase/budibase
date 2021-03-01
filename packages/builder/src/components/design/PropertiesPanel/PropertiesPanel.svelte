@@ -73,8 +73,8 @@
   {categories}
   {selectedCategory} />
 
-{#if showDisplayName}
-  <div class="instance-name">{$selectedComponent._instanceName}</div>
+{#if definition && definition.name}
+  <div class="instance-name">{definition.name}</div>
 {/if}
 
 <div class="component-props-container">
