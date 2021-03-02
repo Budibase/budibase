@@ -1,9 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import { Input, Label, TextArea, Spacer } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import ICONS from "../icons"
 
   export let integration = {}

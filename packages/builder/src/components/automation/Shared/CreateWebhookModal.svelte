@@ -92,9 +92,6 @@
     text-align: center;
     color: var(--blue);
   }
-  h5 {
-    margin: 0;
-  }
   code {
     padding: 1px 4px 1px 4px;
     font-size: 14px;

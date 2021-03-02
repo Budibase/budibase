@@ -60,29 +60,4 @@
   div.icon i {
     font-size: 16px;
   }
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: var(--spacing-s) 0;
-  }
-
-  li {
-    display: flex;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
-    margin: auto 0;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  li:hover {
-    background-color: var(--grey-2);
-  }
-
-  li:active {
-    color: var(--blue);
-  }
 </style>

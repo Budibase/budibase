@@ -202,31 +202,4 @@
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
   }
-
-  .binding-drawer-container {
-    height: 50vh;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: var(--background);
-    padding: var(--spacing-xl);
-  }
-
-  .nav-group-header > div:nth-child(1) {
-    padding: 0rem 0.5rem 0rem 0rem;
-    vertical-align: bottom;
-    grid-column-start: icon;
-    margin-right: 5px;
-  }
-
-  .nav-group-header > div:nth-child(3) {
-    vertical-align: bottom;
-    grid-column-start: button;
-    cursor: pointer;
-    color: var(--blue);
-  }
-
-  .nav-group-header > div:nth-child(3):hover {
-    color: var(--blue);
-  }
 </style>

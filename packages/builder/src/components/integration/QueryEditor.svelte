@@ -3,7 +3,6 @@
   import { Label, Spacer } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { themeStore } from "builderStore"
-  import { handlebarsCompletions } from "constants/completions"
 
   const dispatch = createEventDispatcher()
 
@@ -20,13 +19,6 @@
   export let mode
   export let editorHeight = 500
   // export let parameters = []
-
-  let completions = handlebarsCompletions()
-
-  // $: completions = parameters.map(param => ({
-  //   text: `{{ ${param.name} }}`,
-  //   displayText: param.name,
-  // }))
 
   let width
   let height

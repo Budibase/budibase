@@ -61,11 +61,4 @@
   .card-footer {
     margin-top: var(--spacing-m);
   }
-
-  h3 {
-    font-size: var(--font-size-l);
-    font-weight: 600;
-    color: var(--ink);
-    text-transform: capitalize;
-  }
 </style>

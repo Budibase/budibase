@@ -130,11 +130,6 @@
     border-bottom: 1px solid var(--grey-2);
   }
 
-  .content > div {
-    height: 100%;
-    width: 100%;
-  }
-
   .toprightnav {
     display: flex;
     flex-direction: row;

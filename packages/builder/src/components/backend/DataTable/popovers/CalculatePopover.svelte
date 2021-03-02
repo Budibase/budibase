@@ -1,5 +1,5 @@
 <script>
-  import { Button, Input, Select } from "@budibase/bbui"
+  import { Button, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"

@@ -8,13 +8,6 @@
 
   $: valid = !!name
   $: instanceId = $backendUiStore.selectedDatabase._id
-  $: appId = $store.appId
-
-  function sleep(ms) {
-    return new Promise(resolve => {
-      setTimeout(resolve, ms)
-    })
-  }
 
   async function createAutomation() {
     await automationStore.actions.create({
