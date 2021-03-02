@@ -2,6 +2,7 @@ const CouchDB = require("../index")
 const Sentry = require("@sentry/node")
 const { ViewNames, getQueryIndex } = require("../utils")
 const { FieldTypes } = require("../../constants")
+const { createLinkView } = require("../views/staticViews")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
@@ -12,44 +13,7 @@ exports.IncludeDocs = {
   EXCLUDE: false,
 }
 
-/**
- * Creates the link view for the instance, this will overwrite the existing one, but this should only
- * be called if it is found that the view does not exist.
- * @param {string} appId The instance to which the view should be added.
- * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
- * so it may be slow.
- */
-exports.createLinkView = async appId => {
-  const db = new CouchDB(appId)
-  const designDoc = await db.get("_design/database")
-  const view = {
-    map: function(doc) {
-      // everything in this must remain constant as its going to Pouch, no external variables
-      if (doc.type === "link") {
-        let doc1 = doc.doc1
-        let doc2 = doc.doc2
-        emit([doc1.tableId, doc1.rowId], {
-          id: doc2.rowId,
-          thisId: doc1.rowId,
-          fieldName: doc1.fieldName,
-        })
-        // if linking to same table can't emit twice
-        if (doc1.tableId !== doc2.tableId) {
-          emit([doc2.tableId, doc2.rowId], {
-            id: doc1.rowId,
-            thisId: doc2.rowId,
-            fieldName: doc2.fieldName,
-          })
-        }
-      }
-    }.toString(),
-  }
-  designDoc.views = {
-    ...designDoc.views,
-    [ViewNames.LINK]: view,
-  }
-  await db.put(designDoc)
-}
+exports.createLinkView = createLinkView
 
 /**
  * Gets the linking documents, not the linked documents themselves.
