@@ -28,10 +28,6 @@
   title="Confirm Deletion" />
 
 <style>
-  .ri-delete-bin-line:hover {
-    cursor: pointer;
-  }
-
   div {
     display: flex;
     justify-content: center;

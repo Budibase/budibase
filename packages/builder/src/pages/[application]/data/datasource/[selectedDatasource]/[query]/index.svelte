@@ -1,10 +1,7 @@
 <script>
   import { params } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
-  import { Switcher } from "@budibase/bbui"
   import QueryInterface from "components/integration/QueryViewer.svelte"
-
-  let query
 
   async function fetchQueryConfig() {
     try {

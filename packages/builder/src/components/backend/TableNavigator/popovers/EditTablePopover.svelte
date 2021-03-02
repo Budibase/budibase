@@ -16,8 +16,6 @@
   let templateScreens
   let willBeDeleted
 
-  $: fields = Object.keys(table.schema)
-
   function showEditor() {
     editing = true
   }
