@@ -11,6 +11,6 @@ const transitions = new Map([
 ])
 
 export default function transition(node, { type, options = {} }) {
-  const { tn, opt } = transitions.get(type) || {}
-  return tn ? tn(node, { ...opt, ...options }) : fade(node, { duration: 0 })
+  const { tn, opt } = transitions.get(type) || { tn: () => {}, opt: {}}
+  return tn(node, { ...opt, ...options })
 }
