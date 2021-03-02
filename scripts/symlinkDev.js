@@ -20,10 +20,6 @@ fs.mkdirSync(`${devDir}/@budibase`, { recursive: true })
 
 const SYMLINK_PATHS = [
   {
-    symlink: `${devDir}/@budibase/materialdesign-components`,
-    destination: resolve("packages/materialdesign-components"),
-  },
-  {
     symlink: `${devDir}/@budibase/standard-components`,
     destination: resolve("packages/standard-components"),
   },

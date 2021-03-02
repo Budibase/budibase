@@ -2,11 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../controllers/webhook")
 const authorized = require("../../middleware/authorized")
 const joiValidator = require("../../middleware/joi-validator")
-const {
-  BUILDER,
-  PermissionTypes,
-  PermissionLevels,
-} = require("../../utilities/security/permissions")
+const { BUILDER } = require("../../utilities/security/permissions")
 const Joi = require("joi")
 
 const router = Router()
@@ -40,10 +36,7 @@ router
     authorized(BUILDER),
     controller.buildSchema
   )
-  .post(
-    "/api/webhooks/trigger/:instance/:id",
-    authorized(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
-    controller.trigger
-  )
+  // this shouldn't have authorisation, right now its always public
+  .post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
 module.exports = router
