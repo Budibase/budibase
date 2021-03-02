@@ -158,19 +158,19 @@
     if (!linkTable) {
       return null
     }
-    const thisName = truncate(table.name, { length: 20 }),
-      linkName = truncate(linkTable.name, { length: 20 })
+    const thisName = truncate(table.name, { length: 15 }),
+      linkName = truncate(linkTable.name, { length: 15 })
     return [
       {
-        name: `Many ${thisName} has many ${linkName}`,
+        name: `Many ${thisName} rows has many ${linkName} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: `One ${thisName} has many ${linkName}`,
+        name: `One ${thisName} row has many ${linkName} rows`,
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
-        name: `Many ${thisName} has one ${linkName}`,
+        name: `Many ${thisName} rows has one ${linkName} row`,
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -339,15 +339,14 @@
   .rel-type-center {
     font-weight: 500;
     color: var(--grey-6);
-    margin-right: 8px;
-    margin-left: 8px;
+    margin-right: 6px;
+    margin-left: 6px;
     padding: 1px 3px 1px 3px;
     background: var(--grey-3);
     border-radius: 2px;
   }
 
   .radio-button-labels {
-    display: flex;
-    align-items: center;
+    margin-top: 2px;
   }
 </style>
