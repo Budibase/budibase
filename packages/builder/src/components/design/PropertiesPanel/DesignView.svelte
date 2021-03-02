@@ -25,8 +25,10 @@
   ]
 
   const transitions = [
-    'fade', 'blur', 'fly', 'scale' // slide is hidden because it does not seem to result in any effect
+    'none', 'fade', 'blur', 'fly', 'scale' // slide is hidden because it does not seem to result in any effect
   ]
+
+  const capitalize = ([first,...rest]) => first.toUpperCase() + rest.join('');
 
   $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
 </script>
@@ -71,10 +73,9 @@
   </div>
   {#if componentDefinition?.transitionable}
      <div class="transitions">
-       <Select value={componentInstance._transition || ""} on:change={event => onUpdateTransition(event.target.value)} name="transition" label="Transition" secondary thin>
-         <option value="">Choose a transition</option>
+       <Select value={componentInstance._transition} on:change={event => onUpdateTransition(event.target.value)} name="transition" label="Transition" secondary thin>
          {#each transitions as transition}
-           <option value={transition}>{transition}</option>
+           <option value={transition}>{capitalize(transition)}</option>
          {/each}
        </Select>
      </div>
