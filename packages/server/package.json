@@ -34,6 +34,7 @@
   "scripts": {
     "test": "jest --testPathIgnorePatterns=routes && npm run test:integration",
     "test:integration": "jest routes --runInBand",
+    "test:coverage": "jest routes --runInBand --coverage",
     "test:watch": "jest --watch",
     "run:docker": "node src/index",
     "dev:builder": "cross-env PORT=4001 nodemon src/index.js",
@@ -43,6 +44,17 @@
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/",
     "initialise": "node scripts/initialise.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "./scripts/jestSetup.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!**/node_modules/**",
+      "!src/db/views/*.js"
+    ]
   },
   "keywords": [
     "budibase"
@@ -115,12 +127,6 @@
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
     "supertest": "^4.0.2"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ]
   },
   "gitHead": "1a80b09fd093f2599a68f7db72ad639dd50922dd"
 }
