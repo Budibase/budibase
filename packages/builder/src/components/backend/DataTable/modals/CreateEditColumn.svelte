@@ -316,7 +316,7 @@
   }
 
   .radio-buttons :global(> *) {
-    margin-top: var(--spacing-xs);
+    margin-top: var(--spacing-s);
     width: 100%;
   }
 
@@ -339,8 +339,8 @@
   .rel-type-center {
     font-weight: 500;
     color: var(--grey-6);
-    margin-right: 6px;
-    margin-left: 6px;
+    margin-right: 4px;
+    margin-left: 4px;
     padding: 1px 3px 1px 3px;
     background: var(--grey-3);
     border-radius: 2px;
