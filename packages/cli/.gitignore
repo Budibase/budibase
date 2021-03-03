@@ -1,0 +1,6 @@
+node_modules/
+docker-compose.yaml
+envoy.yaml
+hosting.properties
+build/
+docker-error.log
