@@ -1,5 +1,5 @@
 <script>
-  import { TextArea, DetailSummary, Button } from "@budibase/bbui"
+  import { TextArea, DetailSummary, Button, Select } from "@budibase/bbui"
   import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
   import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
   import { allStyles } from "./componentStyles"
@@ -8,6 +8,7 @@
   export let componentInstance = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
+  export let onUpdateTransition = () => {}
   export let onResetStyles = () => {}
 
   let selectedCategory = "normal"
@@ -23,16 +24,22 @@
     { value: "active", text: "Active" },
   ]
 
+  const transitions = [
+    'none', 'fade', 'blur', 'fly', 'scale' // slide is hidden because it does not seem to result in any effect
+  ]
+
+  const capitalize = ([first,...rest]) => first.toUpperCase() + rest.join('');
+
   $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
 </script>
 
-<div class="design-view-container">
-  <div class="design-view-state-categories">
+<div class="container">
+  <div class="state-categories">
     <FlatButtonGroup value={selectedCategory} {buttonProps} {onChange} />
   </div>
 
   <div class="positioned-wrapper">
-    <div class="design-view-property-groups">
+    <div class="property-groups">
       {#if groups.length > 0}
         {#each groups as groupName}
           <PropertyGroup
@@ -64,10 +71,19 @@
       {/if}
     </div>
   </div>
+  {#if componentDefinition?.transitionable}
+     <div class="transitions">
+       <Select value={componentInstance._transition} on:change={event => onUpdateTransition(event.target.value)} name="transition" label="Transition" secondary thin>
+         {#each transitions as transition}
+           <option value={transition}>{capitalize(transition)}</option>
+         {/each}
+       </Select>
+     </div>
+  {/if}
 </div>
 
 <style>
-  .design-view-container {
+  .container {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -81,7 +97,7 @@
     min-height: 0;
   }
 
-  .design-view-property-groups {
+  .property-groups {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
@@ -103,5 +119,9 @@
     font-family: monospace;
     min-height: 120px;
     font-size: var(--font-size-xs);
+  }
+
+  option {
+    text-transform: capitalize;
   }
 </style>
