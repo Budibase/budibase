@@ -25,6 +25,8 @@
   export let pagination
   export let detailUrl
 
+  $: console.log(detailUrl)
+
   // Add setting height as css var to allow grid to use correct height
   $: gridStyles = {
     ...$component.styles,
