@@ -123,3 +123,9 @@ export function isAutoColumnUserRelationship(subtype) {
     subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
   )
 }
+
+export const RelationshipTypes = {
+  MANY_TO_MANY: "many-to-many",
+  ONE_TO_MANY: "one-to-many",
+  MANY_TO_ONE: "many-to-one",
+}
