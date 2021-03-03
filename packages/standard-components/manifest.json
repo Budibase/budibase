@@ -294,6 +294,63 @@
       }
     ]
   },
+  "backgroundimage": {
+    "name": "Background Image",
+    "description": "A background image",
+    "icon": "ri-image-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      },
+      {
+        "type": "select",
+        "label": "Position",
+        "key": "position",
+        "defaultValue": "center center",
+        "options": [
+          {
+            "label": "Center Top",
+            "value": "center top"
+          },
+          {
+            "label": "Center",
+            "value": "center center"
+          },
+          {
+            "label": "Center Bottom",
+            "value": "center bottom"
+          },
+          {
+            "label": "Left Top",
+            "value": "left top"
+          },
+          {
+            "label": "Left Center",
+            "value": "left center"
+          },
+          {
+            "label": "Left Bottom",
+            "value": "left bottom"
+          },
+          {
+            "label": "Right Top",
+            "value": "right top"
+          },
+          {
+            "label": "Right Center",
+            "value": "right center"
+          },
+          {
+            "label": "Right Bottom",
+            "value": "right bottom"
+          }
+        ]
+      }
+    ]
+  },
   "icon": {
     "name": "Icon",
     "description": "A basic component for displaying icons",
@@ -394,6 +451,11 @@
         "type": "boolean",
         "label": "New Tab",
         "key": "openInNewTab"
+      },
+      {
+        "type": "boolean",
+        "label": "External",
+        "key": "external"
       }
     ]
   },
@@ -1212,6 +1274,34 @@
     "settings": [
       {
         "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
+  "passwordfield": {
+    "name": "Password Field",
+    "icon": "ri-lock-password-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "field/string",
         "label": "Field",
         "key": "field"
       },

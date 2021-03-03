@@ -7,11 +7,19 @@
   export let url = ""
   export let text = ""
   export let openInNewTab = false
+  export let external = false
 
   $: target = openInNewTab ? "_blank" : "_self"
 </script>
 
-<a href={url || '/'} use:linkable {target} use:styleable={$component.styles}>
-  {text}
-  <slot />
-</a>
+{#if external}
+  <a href={url || '/'} {target} use:styleable={$component.styles}>
+    {text}
+    <slot />
+  </a>
+{:else}
+  <a href={url || '/'} use:linkable {target} use:styleable={$component.styles}>
+    {text}
+    <slot />
+  </a>
+{/if}
