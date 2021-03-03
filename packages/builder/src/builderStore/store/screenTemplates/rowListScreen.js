@@ -82,7 +82,7 @@ const createScreen = table => {
       theme: "alpine",
       height: "540",
       pagination: true,
-      detailUrl: `${table.name.toLowerCase()}/:id`,
+      detailUrl: `${rowListUrl(table)}/:id`,
     })
     .instanceName("Grid")
 

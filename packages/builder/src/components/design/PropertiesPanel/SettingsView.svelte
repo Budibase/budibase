@@ -162,16 +162,16 @@
 
   {#if componentDefinition?.component?.endsWith('/fieldgroup')}
     <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
-      Reset Fields
+      Update Form Fields 
     </Button>
   {/if}
 </div>
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}
-  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to reset this Field Group?`}
-  okText="Reset"
+  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to update this Field Group?`}
+  okText="Update"
   onOk={resetFormFields}
-  title="Confirm Reset Fields" />
+  title="Confirm Form Field Update" />
 
 <style>
   .settings-view-container {
