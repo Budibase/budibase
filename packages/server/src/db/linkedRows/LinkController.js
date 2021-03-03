@@ -145,6 +145,27 @@ class LinkController {
     return true
   }
 
+  /**
+   * Given two the field of this table, and the field of the linked table, this makes sure
+   * the state of relationship type is accurate on both.
+   */
+  handleRelationshipType(field, linkedField) {
+    if (
+      !field.relationshipType ||
+      field.relationshipType === RelationshipTypes.MANY_TO_MANY
+    ) {
+      linkedField.relationshipType = RelationshipTypes.MANY_TO_MANY
+      // make sure by default all are many to many (if not specified)
+      field.relationshipType = RelationshipTypes.MANY_TO_MANY
+    } else if (field.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      // Ensure that the other side of the relationship is locked to one record
+      linkedField.relationshipType = RelationshipTypes.ONE_TO_MANY
+    } else if (field.relationshipType === RelationshipTypes.ONE_TO_MANY) {
+      linkedField.relationshipType = RelationshipTypes.MANY_TO_ONE
+    }
+    return { field, linkedField }
+  }
+
   // all operations here will assume that the table
   // this operation is related to has linked rows
   /**
@@ -317,34 +338,32 @@ class LinkController {
         } catch (err) {
           continue
         }
-        const linkConfig = {
+        const fields = this.handleRelationshipType(field, {
           name: field.fieldName,
           type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
           tableId: table._id,
           fieldName: fieldName,
-        }
+        })
+
+        // update table schema after checking relationship types
+        schema[fieldName] = fields.field
+        const linkedField = fields.linkedField
 
         if (field.autocolumn) {
-          linkConfig.autocolumn = field.autocolumn
-        }
-
-        if (field.relationshipType) {
-          // Ensure that the other side of the relationship is locked to one record
-          linkConfig.relationshipType = field.relationshipType
-          delete field.relationshipType
+          linkedField.autocolumn = field.autocolumn
         }
 
         // check the linked table to make sure we aren't overwriting an existing column
         const existingSchema = linkedTable.schema[field.fieldName]
         if (
           existingSchema != null &&
-          !this.areSchemasEqual(existingSchema, linkConfig)
+          !this.areSchemasEqual(existingSchema, linkedField)
         ) {
           throw new Error("Cannot overwrite existing column.")
         }
         // create the link field in the other table
-        linkedTable.schema[field.fieldName] = linkConfig
+        linkedTable.schema[field.fieldName] = linkedField
         const response = await this._db.put(linkedTable)
         // special case for when linking back to self, make sure rev updated
         if (linkedTable._id === table._id) {

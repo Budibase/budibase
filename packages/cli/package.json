@@ -1,0 +1,25 @@
+{
+  "name": "cli",
+  "version": "0.7.8",
+  "description": "Budibase CLI, for developers, self hosting and migrations.",
+  "main": "src/index.js",
+  "bin": "src/index.js",
+  "author": "Budibase",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "build": "pkg . --out-path build"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "chalk": "^4.1.0",
+    "commander": "^7.1.0",
+    "docker-compose": "^0.23.6",
+    "inquirer": "^8.0.0",
+    "lookpath": "^1.1.0",
+    "pkg": "^4.4.9",
+    "randomstring": "^1.1.5"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0"
+  }
+}

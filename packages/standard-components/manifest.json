@@ -6,29 +6,7 @@
     "hasChildren": true,
     "styleable": true,
     "transitionable": true,
-    "settings": [
-      {
-        "type": "select",
-        "key": "type",
-        "label": "Type",
-        "defaultValue": "div",
-        "options": [
-          "article",
-          "aside",
-          "details",
-          "div",
-          "figure",
-          "figcaption",
-          "footer",
-          "header",
-          "main",
-          "mark",
-          "nav",
-          "paragraph",
-          "summary"
-        ]
-      }
-    ]
+    "settings": []
   },
   "datagrid": {
     "name": "Grid",
