@@ -8,7 +8,6 @@
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
 
-  let promise = getApps()
   let hasKey
   let template
   let modal

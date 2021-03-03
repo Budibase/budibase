@@ -34,12 +34,14 @@
   $: id = definition._id
   $: updateComponentProps(definition, $context)
   $: styles = definition._styles
+  $: transition = definition._transition
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
     styles: { ...styles, id },
+    transition
   })
 
   // Gets the component constructor for the specified component

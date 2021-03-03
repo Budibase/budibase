@@ -21,6 +21,7 @@ exports.createHomeScreen = () => ({
       active: {},
       selected: {},
     },
+    _transition: "fade",
     type: "div",
     _children: [
       {
@@ -69,6 +70,7 @@ exports.createLoginScreen = app => ({
       active: {},
       selected: {},
     },
+    _transition: "fade",
     type: "div",
     _children: [
       {
