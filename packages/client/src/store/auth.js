@@ -21,7 +21,7 @@ const createAuthStore = () => {
   const logIn = async ({ email, password }) => {
     const user = await API.logIn({ email, password })
     if (!user.error) {
-      store.set(user)
+      await fetchUser()
       await initialise()
       goToDefaultRoute()
     }

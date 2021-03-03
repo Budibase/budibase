@@ -2,7 +2,6 @@
   import { get } from "svelte/store"
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { last } from "lodash/fp"
   import { findComponentParent } from "builderStore/storeUtils"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -17,14 +16,8 @@
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
 
-  const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
-
   const hideDropdown = () => {
     dropdown.hide()
-  }
-
-  const selectComponent = component => {
-    store.actions.components.select(component)
   }
 
   const moveUpComponent = () => {

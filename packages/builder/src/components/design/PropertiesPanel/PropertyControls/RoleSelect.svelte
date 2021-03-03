@@ -3,8 +3,6 @@
   import { backendUiStore } from "builderStore"
 
   export let value
-
-  let roles = []
 </script>
 
 <Select bind:value extraThin secondary on:change>

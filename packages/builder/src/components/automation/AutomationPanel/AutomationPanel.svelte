@@ -2,10 +2,6 @@
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
   import { Modal } from "@budibase/bbui"
-  import { automationStore, backendUiStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
-
-  let selectedTab = "AUTOMATIONS"
   let modal
 </script>
 
@@ -39,13 +35,5 @@
   .title i:hover {
     cursor: pointer;
     color: var(--blue);
-  }
-
-  span:not(.selected) {
-    color: var(--grey-5);
-  }
-
-  span:not(.selected):hover {
-    color: var(--ink);
   }
 </style>

@@ -2,16 +2,10 @@
   import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
-  import { TableNames } from "constants"
-  import CreateDatasourceModal from "./modals/CreateDatasourceModal.svelte"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
-  import { Modal, Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
   import ICONS from "./icons"
-
-  $: selectedView =
-    $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectDatasource(datasource) {
     backendUiStore.actions.datasources.select(datasource._id)

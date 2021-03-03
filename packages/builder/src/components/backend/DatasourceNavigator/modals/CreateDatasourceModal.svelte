@@ -6,13 +6,10 @@
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import analytics from "analytics"
 
-  let modal
   let error = ""
 
   let name
-  let source
   let integration
-  let datasource
 
   function checkValid(evt) {
     const datasourceName = evt.target.value

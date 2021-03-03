@@ -1,11 +1,8 @@
 <script>
-  import { goto } from "@sveltech/routify"
   import { store, backendUiStore, allScreens } from "builderStore"
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"
-  import { onMount } from "svelte"
-  import api from "builderStore/api"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -19,9 +16,6 @@
 
   $: templates = getTemplates($store, $backendUiStore.tables)
   $: route = !route && $allScreens.length === 0 ? "*" : route
-  $: baseComponents = Object.values($store.components)
-    .filter(componentDefinition => componentDefinition.baseComponent)
-    .map(c => c._component)
   $: {
     if (templates && templateIndex === undefined) {
       templateIndex = 0
@@ -31,7 +25,6 @@
 
   const templateChanged = newTemplateIndex => {
     if (newTemplateIndex === undefined) return
-    const template = templates[newTemplateIndex]
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
       name = draftScreen.props._instanceName
@@ -60,6 +53,7 @@
     if (routeError) return false
 
     draftScreen.props._instanceName = name
+    draftScreen.props._transition = "fade"
     draftScreen.props._component = baseComponent
     draftScreen.routing = { route, roleId }
 
