@@ -18,19 +18,6 @@
 <!-- Ensure to fully remount when screen changes -->
 {#key screenDefinition?._id}
   <Provider key="url" data={params}>
-    <div in:fade>
-      <Component definition={screenDefinition} />
-    </div>
+    <Component definition={screenDefinition} />
   </Provider>
 {/key}
-
-<style>
-  div {
-    flex: 1 1 auto;
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-</style>

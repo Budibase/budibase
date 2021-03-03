@@ -14,6 +14,7 @@ export class Component extends BaseStructure {
         active: {},
         selected: {},
       },
+      _transition: "",
       _instanceName: "",
       _children: [],
     }
@@ -36,6 +37,11 @@ export class Component extends BaseStructure {
 
   instanceName(name) {
     this._json._instanceName = name
+    return this
+  }
+
+  transition(transition) {
+    this._json._transition = transition
     return this
   }
 

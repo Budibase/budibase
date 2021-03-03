@@ -24,28 +24,8 @@
 
   const onStyleChanged = store.actions.components.updateStyle
   const onCustomStyleChanged = store.actions.components.updateCustomStyle
+  const onUpdateTransition = store.actions.components.updateTransition
   const onResetStyles = store.actions.components.resetStyles
-
-  function walkProps(component, action) {
-    action(component)
-    if (component.children) {
-      for (let child of component.children) {
-        walkProps(child, action)
-      }
-    }
-  }
-
-  function flattenComponents(props) {
-    const components = []
-    props.forEach(comp =>
-      walkProps(comp, c => {
-        if ("_component" in c) {
-          components.push(c)
-        }
-      })
-    )
-    return components
-  }
 
   function setAssetProps(name, value) {
     const selectedAsset = get(currentAsset)
@@ -61,10 +41,6 @@
       return state
     })
     store.actions.preview.saveSelected()
-  }
-
-  function getProps(obj, keys) {
-    return keys.map((key, i) => [key, obj[key], obj.props._id + i])
   }
 </script>
 
@@ -84,6 +60,7 @@
       componentDefinition={definition}
       {onStyleChanged}
       {onCustomStyleChanged}
+      {onUpdateTransition}
       {onResetStyles} />
   {:else if selectedCategory.value === 'settings'}
     <SettingsView
