@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { createRoutingView } = require("./routingUtils")
+const { createRoutingView } = require("../../db/views/staticViews")
 const { ViewNames, getQueryIndex, UNICODE_MAX } = require("../../db/utils")
 
 exports.getRoutingInfo = async appId => {
