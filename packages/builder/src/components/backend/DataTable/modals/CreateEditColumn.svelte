@@ -11,12 +11,17 @@
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import { FIELDS, AUTO_COLUMN_SUB_TYPES } from "constants/backend"
+  import {
+    FIELDS,
+    AUTO_COLUMN_SUB_TYPES,
+    RelationshipTypes,
+  } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { truncate } from "lodash"
 
   const AUTO_COL = "auto"
   const LINK_TYPE = FIELDS.LINK.type
@@ -36,16 +41,7 @@
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
 
-  let relationshipTypes = [
-    { text: "Many to many (N:N)", value: "many-to-many" },
-    { text: "One to many (1:N)", value: "one-to-many" },
-  ]
-  let types = ["Many to many (N:N)", "One to many (1:N)"]
-
-  let selectedRelationshipType =
-    relationshipTypes.find(type => type.value === field.relationshipType)
-      ?.text || "Many to many (N:N)"
-
+  let table = $backendUiStore.selectedTable
   let indexes = [...($backendUiStore.selectedTable.indexes || [])]
   let confirmDeleteDialog
   let deletion
@@ -57,7 +53,7 @@
   $: uneditable =
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
-  $: invalid = field.type === FIELDS.LINK.type && !field.tableId
+  $: invalid = field.type === LINK_TYPE && !field.tableId
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -67,15 +63,9 @@
   $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_COL
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
+  $: relationshipOptions = getRelationshipOptions(field)
 
   async function saveColumn() {
-    // Set relationship type if it's
-    if (field.type === "link") {
-      field.relationshipType = relationshipTypes.find(
-        type => type.text === selectedRelationshipType
-      ).value
-    }
-
     if (field.type === AUTO_COL) {
       field = buildAutoColumn(
         $backendUiStore.draftTable.name,
@@ -110,12 +100,18 @@
     if (!definition) {
       return
     }
-    field.type = definition.type
-    field.constraints = definition.constraints
     // remove any extra fields that may not be related to this type
     delete field.autocolumn
     delete field.subtype
     delete field.tableId
+    delete field.relationshipType
+    // add in defaults and initial definition
+    field.type = definition.type
+    field.constraints = definition.constraints
+    // default relationships many to many
+    if (field.type === LINK_TYPE) {
+      field.relationshipType = RelationshipTypes.MANY_TO_MANY
+    }
   }
 
   function onChangeRequired(e) {
@@ -152,6 +148,32 @@
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deletion = false
+  }
+
+  function getRelationshipOptions(field) {
+    if (!field || !field.tableId) {
+      return null
+    }
+    const linkTable = tableOptions.find(table => table._id === field.tableId)
+    if (!linkTable) {
+      return null
+    }
+    const thisName = truncate(table.name, { length: 15 }),
+      linkName = truncate(linkTable.name, { length: 15 })
+    return [
+      {
+        name: `Many ${thisName} rows has many ${linkName} rows`,
+        value: RelationshipTypes.MANY_TO_MANY,
+      },
+      {
+        name: `One ${thisName} row has many ${linkName} rows`,
+        value: RelationshipTypes.ONE_TO_MANY,
+      },
+      {
+        name: `Many ${thisName} rows has one ${linkName} row`,
+        value: RelationshipTypes.MANY_TO_ONE,
+      },
+    ]
   }
 </script>
 
@@ -231,26 +253,32 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-    <div>
-      <Label grey extraSmall>Select relationship type</Label>
-      <div class="radio-buttons">
-        {#each types as type}
-          <Radio
-            disabled={originalName}
-            name="Relationship type"
-            value={type}
-            bind:group={selectedRelationshipType}>
-            <label for={type}>{type}</label>
-          </Radio>
-        {/each}
-      </div>
-    </div>
     <Select label="Table" thin secondary bind:value={field.tableId}>
       <option value="">Choose an option</option>
       {#each tableOptions as table}
         <option value={table._id}>{table.name}</option>
       {/each}
     </Select>
+    {#if relationshipOptions && relationshipOptions.length > 0}
+      <div>
+        <Label grey extraSmall>Define the relationship</Label>
+        <div class="radio-buttons">
+          {#each relationshipOptions as { value, name }}
+            <Radio
+              disabled={originalName}
+              name="Relationship type"
+              {value}
+              bind:group={field.relationshipType}>
+              <div class="radio-button-labels">
+                <label for={value}>{name.split('has')[0]}</label>
+                <label class="rel-type-center" for={value}>has</label>
+                <label for={value}>{name.split('has')[1]}</label>
+              </div>
+            </Radio>
+          {/each}
+        </div>
+      </div>
+    {/if}
     <Input
       label={`Column Name in Other Table`}
       thin
@@ -282,15 +310,16 @@
   title="Confirm Deletion" />
 
 <style>
-  label {
-    display: grid;
-    place-items: center;
-  }
   .radio-buttons {
-    display: flex;
     gap: var(--spacing-m);
     font-size: var(--font-size-xs);
   }
+
+  .radio-buttons :global(> *) {
+    margin-top: var(--spacing-s);
+    width: 100%;
+  }
+
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
@@ -307,7 +336,17 @@
     margin-right: auto;
   }
 
-  .hidden {
-    display: none;
+  .rel-type-center {
+    font-weight: 500;
+    color: var(--grey-6);
+    margin-right: 4px;
+    margin-left: 4px;
+    padding: 1px 3px 1px 3px;
+    background: var(--grey-3);
+    border-radius: 2px;
+  }
+
+  .radio-button-labels {
+    margin-top: 2px;
   }
 </style>
