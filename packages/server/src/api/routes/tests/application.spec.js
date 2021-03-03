@@ -39,7 +39,6 @@ describe("/applications", () => {
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
-        request,
         method: "POST",
         url: `/api/applications`,
         body: { name: "My App" }
@@ -65,7 +64,6 @@ describe("/applications", () => {
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
-        request,
         method: "GET",
         url: `/api/applications`,
       })
