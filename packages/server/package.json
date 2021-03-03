@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -66,8 +66,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.8.4",
-    "@budibase/string-templates": "^0.8.4",
+    "@budibase/client": "^0.8.5",
+    "@budibase/string-templates": "^0.8.5",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -132,5 +132,5 @@
     "pouchdb-adapter-memory": "^7.2.1",
     "supertest": "^4.0.2"
   },
-  "gitHead": "1a80b09fd093f2599a68f7db72ad639dd50922dd"
+  "gitHead": "768a9d59da12cfefcd7ccaba05f975e878669504"
 }
