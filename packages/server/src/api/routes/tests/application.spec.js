@@ -1,21 +1,23 @@
 const {
-  createApplication,
-  builderEndpointShouldBlockNormalUsers,
   supertest,
-  clearApplications,
   defaultHeaders,
-} = require("./couchTestUtils")
+} = require("./utilities")
+const TestConfig = require("./utilities/TestConfiguration")
+const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
 describe("/applications", () => {
   let request
   let server
+  let config
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
   });
 
   beforeEach(async () => {
-    await clearApplications(request)
+    await clearAllApps()
+    config = new TestConfig(request)
+    await config.init()
   })
 
   afterAll(() => {
@@ -35,23 +37,20 @@ describe("/applications", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      const otherApplication = await createApplication(request)
-      const appId = otherApplication.instance._id
-      await builderEndpointShouldBlockNormalUsers({
+      await checkBuilderEndpoint({
+        config,
         request,
         method: "POST",
         url: `/api/applications`,
-        appId: appId,
         body: { name: "My App" }
       })
     })
-
   })
 
   describe("fetch", () => {
     it("lists all applications", async () => {
-      await createApplication(request, "app1")
-      await createApplication(request, "app2")
+      await config.createApp(request, "app1")
+      await config.createApp(request, "app2")
 
       const res = await request
         .get("/api/applications")
@@ -59,17 +58,16 @@ describe("/applications", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.body.length).toBe(2)
+      // two created apps + the inited app
+      expect(res.body.length).toBe(3)
     })
 
     it("should apply authorization to endpoint", async () => {
-      const otherApplication = await createApplication(request)
-      const appId = otherApplication.instance._id
-      await builderEndpointShouldBlockNormalUsers({
+      await checkBuilderEndpoint({
+        config,
         request,
         method: "GET",
         url: `/api/applications`,
-        appId: appId,
       })
     })
   })
