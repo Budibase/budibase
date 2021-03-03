@@ -25,6 +25,22 @@ exports.basicTable = () => {
   }
 }
 
+exports.basicAutomation = () => {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        inputs: {},
+      },
+      steps: [],
+    },
+    type: "automation",
+  }
+}
+
 exports.basicRow = tableId => {
   return {
     name: "Test Contact",

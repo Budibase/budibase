@@ -1,5 +1,6 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
+const autoController = require("../../../controllers/automation")
 const CouchDB = require("../../../../db")
 
 function Request(appId, params) {
@@ -7,8 +8,8 @@ function Request(appId, params) {
   this.params = params
 }
 
-exports.getAllTableRows = async (appId, tableId) => {
-  const req = new Request(appId, { tableId })
+exports.getAllTableRows = async config => {
+  const req = new Request(config.appId, { tableId: config.table._id })
   await rowController.fetchTableRows(req)
   return req.body
 }
@@ -26,6 +27,13 @@ exports.clearAllApps = async () => {
   }
 }
 
+exports.clearAllAutomations = async config => {
+  const automations = await config.getAllAutomations()
+  for (let auto of automations) {
+    await config.deleteAutomation(auto)
+  }
+}
+
 exports.createRequest = (request, method, url, body) => {
   let req
 
@@ -38,16 +46,10 @@ exports.createRequest = (request, method, url, body) => {
   return req
 }
 
-exports.checkBuilderEndpoint = async ({
-  config,
-  request,
-  method,
-  url,
-  body,
-}) => {
+exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
   const headers = await config.login()
   await exports
-    .createRequest(request, method, url, body)
+    .createRequest(config.request, method, url, body)
     .set(headers)
     .expect(403)
 }

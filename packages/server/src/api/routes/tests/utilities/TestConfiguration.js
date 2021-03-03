@@ -1,6 +1,11 @@
 const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
 const env = require("../../../../environment")
-const { basicTable, basicRow, basicRole } = require("./structures")
+const {
+  basicTable,
+  basicRow,
+  basicRole,
+  basicAutomation,
+} = require("./structures")
 const tableController = require("../../../controllers/table")
 const rowController = require("../../../controllers/row")
 const roleController = require("../../../controllers/role")
@@ -8,6 +13,7 @@ const permsController = require("../../../controllers/permission")
 const viewController = require("../../../controllers/view")
 const appController = require("../../../controllers/application")
 const userController = require("../../../controllers/user")
+const autoController = require("../../../controllers/automation")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -19,6 +25,7 @@ class TestConfiguration {
     this.appId = null
     this.table = null
     this.linkedTable = null
+    this.automation = null
   }
 
   async _req(config, params, controlFunc) {
@@ -117,6 +124,33 @@ class TestConfiguration {
       tableId: this.table._id,
     }
     return this._req(view, null, viewController.save)
+  }
+
+  async createAutomation(config) {
+    config = config || basicAutomation()
+    if (config._rev) {
+      delete config._rev
+    }
+    this.automation = (
+      await this._req(config, null, autoController.create)
+    ).automation
+    return this.automation
+  }
+
+  async getAllAutomations() {
+    return this._req(null, null, autoController.fetch)
+  }
+
+  async deleteAutomation(automation) {
+    automation = automation || this.automation
+    if (!automation) {
+      return
+    }
+    return this._req(
+      null,
+      { id: automation._id, rev: automation._rev },
+      autoController.destroy
+    )
   }
 
   async createUser(
