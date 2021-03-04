@@ -1,4 +1,5 @@
 const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
+const jwt = require("jsonwebtoken")
 const env = require("../../../../environment")
 const {
   basicTable,
@@ -39,6 +40,32 @@ class TestConfiguration {
 
   async init(appName = "test_application") {
     return this.createApp(appName)
+  }
+
+  defaultHeaders() {
+    const builderUser = {
+      userId: "BUILDER",
+      roleId: BUILTIN_ROLE_IDS.BUILDER,
+    }
+    const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
+    const headers = {
+      Accept: "application/json",
+      Cookie: [`budibase:builder:local=${builderToken}`],
+    }
+    if (this.appId) {
+      headers["x-budibase-app-id"] = this.appId
+    }
+    return headers
+  }
+
+  publicHeaders() {
+    const headers = {
+      Accept: "application/json",
+    }
+    if (this.appId) {
+      headers["x-budibase-app-id"] = this.appId
+    }
+    return headers
   }
 
   async createApp(appName) {
