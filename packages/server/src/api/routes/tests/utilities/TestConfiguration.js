@@ -19,8 +19,8 @@ class TestConfiguration {
   constructor() {
     env.PORT = 4002
     this.server = require("../../../../app")
-    this.request = supertest(this.server)
     // we need the request for logging in, involves cookies, hard to fake
+    this.request = supertest(this.server)
     this.appId = null
   }
 
