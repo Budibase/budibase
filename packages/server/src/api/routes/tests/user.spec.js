@@ -1,11 +1,8 @@
 const {
-  createApplication,
-  supertest,
-  defaultHeaders,
-  createUser,
   testPermissionsForEndpoint,
 } = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
+const TestConfig = require("./utilities/TestConfiguration")
 const { cloneDeep } = require("lodash/fp")
 
 const baseBody = {
@@ -19,28 +16,29 @@ describe("/users", () => {
   let server
   let app
   let appId
+  let config
 
   beforeAll(async () => {
-    ;({ request, server } = await supertest(server))
+    config = new TestConfig()
+    request = config.request
   })
 
   beforeEach(async () => {
-    app = await createApplication(request)
+    app = await config.init()
     appId = app.instance._id
   })
 
   afterAll(() => {
-    server.close()
-    server.destroy()
+    config.end()
   })
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
-      await createUser(request, appId, "pam@pam.com", "pam_password")
+      await config.createUser("brenda@brenda.com", "brendas_password")
+      await config.createUser("pam@pam.com", "pam_password")
       const res = await request
         .get(`/api/users`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -50,7 +48,7 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
+      await config.createUser("brenda@brenda.com", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",

@@ -77,3 +77,11 @@ exports.basicQuery = datasourceId => {
     queryVerb: "read",
   }
 }
+
+exports.basicUser = role => {
+  return {
+    email: "bill@bill.com",
+    password: "yeeooo",
+    roleId: role,
+  }
+}
