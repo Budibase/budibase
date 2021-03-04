@@ -94,16 +94,18 @@ class TestConfiguration {
     return this.updateTable(config)
   }
 
-  async createLinkedTables() {
-    const table = await this.createTable()
-    table.primaryDisplay = "name"
-    table.schema.link = {
+  async createLinkedTable() {
+    if (!this.table) {
+      throw "Must have created a table first."
+    }
+    const tableConfig = basicTable()
+    tableConfig.primaryDisplay = "name"
+    tableConfig.schema.link = {
       type: "link",
       fieldName: "link",
-      tableId: table._id,
+      tableId: this.table._id,
     }
-    const linkedTable = await this.createTable(table)
-    this.table = table
+    const linkedTable = await this.createTable(tableConfig)
     this.linkedTable = linkedTable
     return linkedTable
   }
