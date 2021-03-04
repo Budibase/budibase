@@ -2,7 +2,6 @@ const TestConfig = require("./utilities/TestConfiguration");
 
 describe("/views", () => {
   let request;
-  let server;
   let app;
   let config;
   let appId;
