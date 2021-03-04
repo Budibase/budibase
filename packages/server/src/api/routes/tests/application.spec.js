@@ -1,6 +1,5 @@
 const {
   supertest,
-  defaultHeaders,
 } = require("./utilities")
 const TestConfig = require("./utilities/TestConfiguration")
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
@@ -29,7 +28,7 @@ describe("/applications", () => {
       const res = await request
         .post("/api/applications")
         .send({ name: "My App" })
-        .set(defaultHeaders())
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.res.statusMessage).toEqual("Application My App created successfully")
@@ -53,7 +52,7 @@ describe("/applications", () => {
 
       const res = await request
         .get("/api/applications")
-        .set(defaultHeaders())
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 

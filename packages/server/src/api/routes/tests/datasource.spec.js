@@ -1,6 +1,5 @@
 const { 
   supertest,
-  defaultHeaders,
 } = require("./utilities")
 let TestConfig = require("./utilities/TestConfiguration")
 let { basicDatasource } = require("./utilities/structures")
@@ -9,10 +8,7 @@ let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 describe("/datasources", () => {
   let request
   let server
-  let app
-  let appId
   let config
-  let datasource
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
@@ -24,8 +20,7 @@ describe("/datasources", () => {
   })
 
   beforeEach(async () => {
-    app = await config.init()
-    appId = app.instance._id
+    await config.init()
   });
 
   describe("create", () => {
@@ -33,7 +28,7 @@ describe("/datasources", () => {
       const res = await request
         .post(`/api/datasources`)
         .send(basicDatasource())
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -56,7 +51,7 @@ describe("/datasources", () => {
     it("returns all the datasources from the server", async () => {
       const res = await request
         .get(`/api/datasources`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -95,12 +90,12 @@ describe("/datasources", () => {
 
       await request
         .delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect(200)
 
       const res = await request
         .get(`/api/datasources`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
       

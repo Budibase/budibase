@@ -1,5 +1,4 @@
 const {
-  defaultHeaders,
   supertest,
 } = require("./utilities")
 const TestConfig = require("./utilities/TestConfiguration")
@@ -22,7 +21,6 @@ describe("/automations", () => {
   let request
   let server
   let app
-  let appId
   let config
   let automation
 
@@ -33,7 +31,6 @@ describe("/automations", () => {
   beforeEach(async () => {
     config = new TestConfig(request)
     app = await config.init()
-    appId = app.instance._id
   })
 
   afterAll(() => {
@@ -44,7 +41,7 @@ describe("/automations", () => {
     return await request
       .post(`/api/automations/${automation._id}/trigger`)
       .send({ name: "Test", description: "TEST" })
-      .set(defaultHeaders(appId))
+      .set(config.defaultHeaders())
       .expect('Content-Type', /json/)
       .expect(200)
   }
@@ -53,7 +50,7 @@ describe("/automations", () => {
     it("returns a list of definitions for actions", async () => {
       const res = await request
         .get(`/api/automations/action/list`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -64,7 +61,7 @@ describe("/automations", () => {
     it("returns a list of definitions for triggers", async () => {
       const res = await request
         .get(`/api/automations/trigger/list`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -75,7 +72,7 @@ describe("/automations", () => {
     it("returns a list of definitions for actions", async () => {
       const res = await request
         .get(`/api/automations/logic/list`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -86,7 +83,7 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const res = await request
         .get(`/api/automations/definitions/list`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -115,7 +112,7 @@ describe("/automations", () => {
     it("returns a success message when the automation is successfully created", async () => {
       const res = await request
         .post(`/api/automations`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .send(autoConfig)
         .expect('Content-Type', /json/)
         .expect(200)
@@ -173,7 +170,7 @@ describe("/automations", () => {
 
       const res = await request
         .put(`/api/automations`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .send(automation)
         .expect('Content-Type', /json/)
         .expect(200)
@@ -190,7 +187,7 @@ describe("/automations", () => {
       automation = await config.createAutomation(autoConfig)
       const res = await request
         .get(`/api/automations`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -211,7 +208,7 @@ describe("/automations", () => {
       const automation = await config.createAutomation()
       const res = await request
         .delete(`/api/automations/${automation.id}/${automation.rev}`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
