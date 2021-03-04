@@ -1,6 +1,3 @@
-const {
-  supertest,
-} = require("./utilities")
 const TestConfig = require("./utilities/TestConfiguration")
 const {
   checkBuilderEndpoint,
@@ -19,22 +16,20 @@ let LOGIC_DEFINITIONS = {}
 
 describe("/automations", () => {
   let request
-  let server
-  let app
   let config
   let automation
 
   beforeAll(async () => {
-    ({ request, server } = await supertest())
+    config = new TestConfig()
+    request = config.request
   })
 
   beforeEach(async () => {
-    config = new TestConfig(request)
-    app = await config.init()
+    await config.init()
   })
 
   afterAll(() => {
-    server.close()
+    config.end()
   })
 
   const triggerWorkflow = async automation => {

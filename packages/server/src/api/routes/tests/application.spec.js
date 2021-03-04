@@ -1,26 +1,22 @@
-const {
-  supertest,
-} = require("./utilities")
 const TestConfig = require("./utilities/TestConfiguration")
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
 describe("/applications", () => {
   let request
-  let server
   let config
 
   beforeAll(async () => {
-    ({ request, server } = await supertest())
-  });
+    config = new TestConfig()
+    request = config.request
+  })
 
   beforeEach(async () => {
     await clearAllApps()
-    config = new TestConfig(request)
     await config.init()
   })
 
   afterAll(() => {
-    server.close()
+    config.end()
   })
 
   describe("create", () => {

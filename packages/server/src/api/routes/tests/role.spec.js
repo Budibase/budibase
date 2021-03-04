@@ -1,43 +1,33 @@
-const {
-  createApplication,
-  supertest,
-  defaultHeaders,
-} = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../utilities/security/permissions")
-
-const roleBody = {
-  name: "NewRole",
-  inherits: BUILTIN_ROLE_IDS.BASIC,
-  permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
-}
+const { basicRole } = require("./utilities/structures")
+const TestConfig = require("./utilities/TestConfiguration")
 
 describe("/roles", () => {
-  let server
   let request
-  let appId
+  let config
 
   beforeAll(async () => {
-    ;({ request, server } = await supertest())
+    config = new TestConfig()
+    request = config.request
   })
 
   afterAll(() => {
-    server.close()
+    config.close()
   })
 
   beforeEach(async () => {
-    let app = await createApplication(request)
-    appId = app.instance._id
+    await config.init()
   })
 
   describe("create", () => {
     it("returns a success message when role is successfully created", async () => {
       const res = await request
         .post(`/api/roles`)
-        .send(roleBody)
-        .set(defaultHeaders(appId))
+        .send(basicRole())
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -53,8 +43,8 @@ describe("/roles", () => {
     it("should list custom roles, plus 2 default roles", async () => {
       const createRes = await request
         .post(`/api/roles`)
-        .send(roleBody)
-        .set(defaultHeaders(appId))
+        .send(basicRole())
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -62,7 +52,7 @@ describe("/roles", () => {
 
       const res = await request
         .get(`/api/roles`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -92,7 +82,7 @@ describe("/roles", () => {
       const createRes = await request
         .post(`/api/roles`)
         .send({ name: "user", permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY })
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -100,12 +90,12 @@ describe("/roles", () => {
 
       await request
         .delete(`/api/roles/${customRole._id}/${customRole._rev}`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect(200)
 
       await request
         .get(`/api/roles/${customRole._id}`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect(404)
     })
   })
