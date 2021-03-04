@@ -10,14 +10,17 @@ const {
   basicQuery,
 } = require("./structures")
 const controllers = require("./controllers")
+const supertest = require("supertest")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
 
 class TestConfiguration {
-  constructor(request) {
+  constructor() {
+    env.PORT = 4002
+    this.server = require("../../../../app")
+    this.request = supertest(this.server)
     // we need the request for logging in, involves cookies, hard to fake
-    this.request = request
     this.appId = null
   }
 
@@ -40,6 +43,10 @@ class TestConfiguration {
 
   async init(appName = "test_application") {
     return this.createApp(appName)
+  }
+
+  end() {
+    this.server.close()
   }
 
   defaultHeaders() {

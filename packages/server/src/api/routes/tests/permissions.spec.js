@@ -1,6 +1,3 @@
-const {
-  supertest,
-} = require("./utilities")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const TestConfig = require("./utilities/TestConfiguration")
 const { basicRow } = require("./utilities/structures")
@@ -9,7 +6,6 @@ const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 
 describe("/permission", () => {
-  let server
   let request
   let table
   let perms
@@ -17,12 +13,12 @@ describe("/permission", () => {
   let config
 
   beforeAll(async () => {
-    ;({ request, server } = await supertest())
-    config = new TestConfig(request)
+    config = new TestConfig()
+    request = config.request
   })
 
   afterAll(() => {
-    server.close()
+    config.end()
   })
 
   beforeEach(async () => {
