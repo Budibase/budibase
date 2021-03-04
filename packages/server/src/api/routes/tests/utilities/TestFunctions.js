@@ -54,24 +54,28 @@ exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
     .expect(403)
 }
 
-/**
- * Raw DB insert utility.
- */
-exports.insertDocument = async (databaseId, document) => {
-  const { id, ...documentFields } = document
-  return await new CouchDB(databaseId).put({ _id: id, ...documentFields })
-}
+exports.checkPermissionsEndpoint = async ({
+  config,
+  method,
+  url,
+  body,
+  passRole,
+  failRole,
+}) => {
+  const password = "PASSWORD"
+  await config.createUser("passUser@budibase.com", password, passRole)
+  const passHeader = await config.login("passUser@budibase.com", password)
 
-/**
- * Raw DB delete utility.
- */
-exports.destroyDocument = async (databaseId, documentId) => {
-  return await new CouchDB(databaseId).destroy(documentId)
-}
+  await exports
+    .createRequest(config.request, method, url, body)
+    .set(passHeader)
+    .expect(200)
 
-/**
- * Raw DB get utility.
- */
-exports.getDocument = async (databaseId, documentId) => {
-  return await new CouchDB(databaseId).get(documentId)
+  await config.createUser("failUser@budibase.com", password, failRole)
+  const failHeader = await config.login("failUser@budibase.com", password)
+
+  await exports
+    .createRequest(config.request, method, url, body)
+    .set(failHeader)
+    .expect(403)
 }

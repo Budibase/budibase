@@ -1,8 +1,6 @@
-const {
-  testPermissionsForEndpoint,
-} = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const TestConfig = require("./utilities/TestConfiguration")
+const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const { cloneDeep } = require("lodash/fp")
 
 const baseBody = {
@@ -13,9 +11,6 @@ const baseBody = {
 
 describe("/users", () => {
   let request
-  let server
-  let app
-  let appId
   let config
 
   beforeAll(async () => {
@@ -24,8 +19,7 @@ describe("/users", () => {
   })
 
   beforeEach(async () => {
-    app = await config.init()
-    appId = app.instance._id
+    await config.init()
   })
 
   afterAll(() => {
@@ -49,11 +43,11 @@ describe("/users", () => {
 
     it("should apply authorization to endpoint", async () => {
       await config.createUser("brenda@brenda.com", "brendas_password")
-      await testPermissionsForEndpoint({
+      await checkPermissionsEndpoint({
+        config,
         request,
         method: "GET",
         url: `/api/users`,
-        appId: appId,
         passRole: BUILTIN_ROLE_IDS.ADMIN,
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
@@ -66,7 +60,7 @@ describe("/users", () => {
       body.email = "bill@budibase.com"
       const res = await request
         .post(`/api/users`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .send(body)
         .expect(200)
         .expect("Content-Type", /json/)
@@ -78,12 +72,11 @@ describe("/users", () => {
     it("should apply authorization to endpoint", async () => {
       const body = cloneDeep(baseBody)
       body.email = "brandNewUser@user.com"
-      await testPermissionsForEndpoint({
-        request,
+      await checkPermissionsEndpoint({
+        config,
         method: "POST",
         body,
         url: `/api/users`,
-        appId: appId,
         passRole: BUILTIN_ROLE_IDS.ADMIN,
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
