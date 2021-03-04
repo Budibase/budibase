@@ -1,42 +1,22 @@
 const { 
   supertest,
-  createApplication,
   defaultHeaders,
-  builderEndpointShouldBlockNormalUsers,
-  getDocument,
-  insertDocument
-} = require("./couchTestUtils")
-let { generateDatasourceID, generateQueryID } = require("../../../db/utils")
-
-const DATASOURCE_ID = generateDatasourceID()
-const TEST_DATASOURCE = {
-  _id: DATASOURCE_ID,
-  type: "datasource",
-  name: "Test",
-  source: "POSTGRES",
-  config: {},
-  type: "datasource",
-}
-
-const TEST_QUERY = {
-  _id: generateQueryID(DATASOURCE_ID),
-  datasourceId: DATASOURCE_ID,
-  name:"New Query",
-  parameters:[],
-  fields:{},
-  schema:{},
-  queryVerb:"read",
-}
+} = require("./utilities")
+let TestConfig = require("./utilities/TestConfiguration")
+let { basicDatasource } = require("./utilities/structures")
+let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
 describe("/datasources", () => {
   let request
   let server
   let app
   let appId
+  let config
   let datasource
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
+    config = new TestConfig(request)
   });
 
   afterAll(() => {
@@ -44,23 +24,15 @@ describe("/datasources", () => {
   })
 
   beforeEach(async () => {
-    app = await createApplication(request)
+    app = await config.init()
     appId = app.instance._id
   });
-
-  async function createDatasource() {
-    return await insertDocument(appId, TEST_DATASOURCE)
-  }
-
-  async function createQuery() {
-    return await insertDocument(appId, TEST_QUERY)
-  }
 
   describe("create", () => {
     it("should create a new datasource", async () => {
       const res = await request
         .post(`/api/datasources`)
-        .send(TEST_DATASOURCE)
+        .send(basicDatasource())
         .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -74,7 +46,7 @@ describe("/datasources", () => {
     let datasource
 
     beforeEach(async () => {
-      datasource = await createDatasource()
+      datasource = await config.createDatasource()
     });
 
     afterEach(() => {
@@ -88,30 +60,30 @@ describe("/datasources", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        const datasources = res.body;
+        const datasources = res.body
         expect(datasources).toEqual([
           {
+            "_id": datasources[0]._id,
             "_rev": datasources[0]._rev,
-            ...TEST_DATASOURCE
+            ...basicDatasource()
           }
         ]);            
     })
 
     it("should apply authorization to endpoint", async () => {
-        await builderEndpointShouldBlockNormalUsers({
-          request,
+        await checkBuilderEndpoint({
+          config,
           method: "GET",
           url: `/api/datasources`,
-          appId: appId,
         })
       })
     });
 
   describe("destroy", () => {
-    let datasource;
+    let datasource
 
     beforeEach(async () => {
-      datasource = await createDatasource()
+      datasource = await config.createDatasource()
     });
 
     afterEach(() => {
@@ -119,10 +91,10 @@ describe("/datasources", () => {
     });
 
     it("deletes queries for the datasource after deletion and returns a success message", async () => {
-      await createQuery(datasource.id)
+      await config.createQuery()
 
       await request
-        .delete(`/api/datasources/${datasource.id}/${datasource.rev}`)
+        .delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
         .set(defaultHeaders(appId))
         .expect(200)
 
@@ -136,11 +108,10 @@ describe("/datasources", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await builderEndpointShouldBlockNormalUsers({
-        request,
+      await checkBuilderEndpoint({
+        config,
         method: "DELETE",
         url: `/api/datasources/${datasource._id}/${datasource._rev}`,
-        appId: appId,
       })
     })
 
