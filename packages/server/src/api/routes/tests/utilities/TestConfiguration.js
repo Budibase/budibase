@@ -94,6 +94,11 @@ class TestConfiguration {
     return this.updateTable(config)
   }
 
+  async getTable(tableId = null) {
+    tableId = tableId || this.table._id
+    return this._req(null, { id: tableId }, controllers.table.find)
+  }
+
   async createLinkedTable() {
     if (!this.table) {
       throw "Must have created a table first."
