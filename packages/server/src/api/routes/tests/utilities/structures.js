@@ -57,3 +57,23 @@ exports.basicRole = () => {
     permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
   }
 }
+
+exports.basicDatasource = () => {
+  return {
+    type: "datasource",
+    name: "Test",
+    source: "POSTGRES",
+    config: {},
+  }
+}
+
+exports.basicQuery = datasourceId => {
+  return {
+    datasourceId: datasourceId,
+    name: "New Query",
+    parameters: [],
+    fields: {},
+    schema: {},
+    queryVerb: "read",
+  }
+}

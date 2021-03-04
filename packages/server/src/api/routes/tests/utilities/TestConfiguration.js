@@ -5,15 +5,10 @@ const {
   basicRow,
   basicRole,
   basicAutomation,
+  basicDatasource,
+  basicQuery,
 } = require("./structures")
-const tableController = require("../../../controllers/table")
-const rowController = require("../../../controllers/row")
-const roleController = require("../../../controllers/role")
-const permsController = require("../../../controllers/permission")
-const viewController = require("../../../controllers/view")
-const appController = require("../../../controllers/application")
-const userController = require("../../../controllers/user")
-const autoController = require("../../../controllers/automation")
+const controllers = require("./controllers")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -23,9 +18,6 @@ class TestConfiguration {
     // we need the request for logging in, involves cookies, hard to fake
     this.request = request
     this.appId = null
-    this.table = null
-    this.linkedTable = null
-    this.automation = null
   }
 
   async _req(config, params, controlFunc) {
@@ -50,14 +42,14 @@ class TestConfiguration {
   }
 
   async createApp(appName) {
-    this.app = await this._req({ name: appName }, null, appController.create)
+    this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app._id
     return this.app
   }
 
   async updateTable(config = null) {
     config = config || basicTable()
-    this.table = await this._req(config, null, tableController.save)
+    this.table = await this._req(config, null, controllers.table.save)
     return this.table
   }
 
@@ -95,12 +87,12 @@ class TestConfiguration {
       throw "Test requires table to be configured."
     }
     config = config || basicRow(this.table._id)
-    return this._req(config, { tableId: this.table._id }, rowController.save)
+    return this._req(config, { tableId: this.table._id }, controllers.row.save)
   }
 
   async createRole(config = null) {
     config = config || basicRole()
-    return this._req(config, null, roleController.save)
+    return this._req(config, null, controllers.role.save)
   }
 
   async addPermission(roleId, resourceId, level = "read") {
@@ -111,7 +103,7 @@ class TestConfiguration {
         resourceId,
         level,
       },
-      permsController.addPermission
+      controllers.perms.addPermission
     )
   }
 
@@ -123,7 +115,7 @@ class TestConfiguration {
       map: "function(doc) { emit(doc[doc.key], doc._id); } ",
       tableId: this.table._id,
     }
-    return this._req(view, null, viewController.save)
+    return this._req(view, null, controllers.view.save)
   }
 
   async createAutomation(config) {
@@ -132,16 +124,16 @@ class TestConfiguration {
       delete config._rev
     }
     this.automation = (
-      await this._req(config, null, autoController.create)
+      await this._req(config, null, controllers.automation.create)
     ).automation
     return this.automation
   }
 
   async getAllAutomations() {
-    return this._req(null, null, autoController.fetch)
+    return this._req(null, null, controllers.automation.fetch)
   }
 
-  async deleteAutomation(automation) {
+  async deleteAutomation(automation = null) {
     automation = automation || this.automation
     if (!automation) {
       return
@@ -149,8 +141,22 @@ class TestConfiguration {
     return this._req(
       null,
       { id: automation._id, rev: automation._rev },
-      autoController.destroy
+      controllers.automation.destroy
     )
+  }
+
+  async createDatasource(config = null) {
+    config = config || basicDatasource()
+    this.datasource = await this._req(config, null, controllers.datasource.save)
+    return this.datasource
+  }
+
+  async createQuery(config = null) {
+    if (!this.datasource && !config) {
+      throw "No data source created for query."
+    }
+    config = config || basicQuery(this.datasource._id)
+    return this._req(config, null, controllers.query.save)
   }
 
   async createUser(
@@ -165,7 +171,7 @@ class TestConfiguration {
         roleId,
       },
       null,
-      userController.create
+      controllers.user.create
     )
   }
 
