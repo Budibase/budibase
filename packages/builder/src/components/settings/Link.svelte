@@ -5,7 +5,10 @@
   let modal
 </script>
 
-<div class="topnavitemright settings" on:click={modal.show}>
+<div
+  class="topnavitemright settings"
+  data-cy="settings-icon"
+  on:click={modal.show}>
   <i class="ri-settings-3-line" />
 </div>
 <Modal bind:this={modal} width="600px">
