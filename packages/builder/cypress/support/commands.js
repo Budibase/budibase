@@ -25,7 +25,6 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", name => {
-  cy.deleteApp(name)
   cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
   cy.contains("Create New Web App").click()
   cy.get("body")
@@ -70,6 +69,12 @@ Cypress.Commands.add("deleteApp", name => {
       })
     }
   })
+})
+
+Cypress.Commands.add("createTestApp", () => {
+  const appName = "Cypress Tests"
+  cy.deleteApp(appName)
+  cy.createApp(appName, "This app is used for Cypress testing.")
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {

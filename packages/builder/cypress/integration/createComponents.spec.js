@@ -2,7 +2,7 @@ context("Create Components", () => {
   let headlineId
 
   before(() => {
-    cy.createApp("Cypress Tests", "Cypress test app")
+    cy.createTestApp()
     cy.createTable("dog")
     cy.addColumn("dog", "name", "string")
     cy.addColumn("dog", "age", "number")
