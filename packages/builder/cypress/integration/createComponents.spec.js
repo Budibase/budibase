@@ -1,60 +1,72 @@
-xcontext("Create Components", () => {
+context("Create Components", () => {
+  let headlineId
+
   before(() => {
-    cy.server()
-    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-    // https://on.cypress.io/type
-    cy.createApp("Table App", "Table App Description")
-    cy.createTable("dog", "name", "age")
-    cy.addRow("bob", "15")
-  })
-
-  // https://on.cypress.io/interacting-with-elements
-  it("should add a container", () => {
+    cy.createApp("Cypress Tests", "Cypress test app")
+    cy.createTable("dog")
+    cy.addColumn("dog", "name", "string")
+    cy.addColumn("dog", "age", "number")
+    cy.addColumn("dog", "type", "options")
     cy.navigateToFrontend()
-    cy.get(".switcher > :nth-child(2)").click()
-    cy.contains("Container").click()
   })
-  it("should add a headline", () => {
-    cy.addHeadlineComponent("An Amazing headline!")
 
-    getIframeBody().contains("An Amazing headline!")
+  it("should add a container", () => {
+    cy.addComponent(null, "Container").then(componentId => {
+      cy.getComponent(componentId).should("exist")
+    })
   })
-  it("change the font size of the headline", () => {
+
+  it("should add a headline", () => {
+    cy.addComponent("Elements", "Headline").then(componentId => {
+      headlineId = componentId
+      cy.getComponent(headlineId).should("exist")
+    })
+  })
+
+  it("should change the text of the headline", () => {
+    const text = "Lorem ipsum dolor sit amet."
+    cy.get("[data-cy=Settings]").click()
+    cy.get("[data-cy=setting-text] input")
+      .type(text)
+      .blur()
+    cy.getComponent(headlineId).should("have.text", text)
+  })
+
+  it("should change the size of the headline", () => {
+    cy.get("[data-cy=Design]").click()
     cy.contains("Typography").click()
     cy.get("[data-cy=font-size-prop-control]").click()
     cy.contains("60px").click()
-    cy.contains("Design").click()
+    cy.getComponent(headlineId).should("have.css", "font-size", "60px")
+  })
 
-    getIframeBody()
-      .contains("An Amazing headline!")
-      .should("have.css", "font-size", "60px")
+  it("should create a form and reset to match schema", () => {
+    cy.addComponent("Form", "Form").then(() => {
+      cy.get("[data-cy=Settings]").click()
+      cy.get("[data-cy=setting-datasource]")
+        .contains("Choose option")
+        .click()
+      cy.get(".dropdown")
+        .contains("dog")
+        .click()
+      cy.addComponent("Form", "Field Group").then(fieldGroupId => {
+        cy.get("[data-cy=Settings]").click()
+        cy.contains("Update Form Fields").click()
+        cy.get(".modal")
+          .get("button.primary")
+          .click()
+        cy.getComponent(fieldGroupId).within(() => {
+          cy.contains("name").should("exist")
+          cy.contains("age").should("exist")
+          cy.contains("type").should("exist")
+        })
+        cy.getComponent(fieldGroupId)
+          .find("input")
+          .should("have.length", 2)
+        cy.getComponent(fieldGroupId)
+          .find(".spectrum-Picker")
+          .should("have.length", 1)
+      })
+    })
   })
 })
-
-const getIframeDocument = () => {
-  return (
-    cy
-      .get("iframe")
-      // Cypress yields jQuery element, which has the real
-      // DOM element under property "0".
-      // From the real DOM iframe element we can get
-      // the "document" element, it is stored in "contentDocument" property
-      // Cypress "its" command can access deep properties using dot notation
-      // https://on.cypress.io/its
-      .its("0.contentDocument")
-      .should("exist")
-  )
-}
-
-const getIframeBody = () => {
-  // get the document
-  return (
-    getIframeDocument()
-      // automatically retries until body is loaded
-      .its("body")
-      .should("not.be.undefined")
-      // wraps "body" DOM element to allow
-      // chaining more Cypress commands, like ".find(...)"
-      .then(cy.wrap)
-  )
-}

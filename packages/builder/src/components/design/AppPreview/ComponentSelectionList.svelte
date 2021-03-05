@@ -57,6 +57,7 @@
     <div
       bind:this={anchors[idx]}
       class="category"
+      data-cy={item.isCategory ? `category-${item.name}` : `component-${item.name}`}
       on:click={() => onItemChosen(item, idx)}
       class:active={idx === selectedIndex}>
       {#if item.icon}<i class={item.icon} />{/if}
@@ -74,6 +75,7 @@
     {#each enrichedStructure[selectedIndex].children as item}
       {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
         <DropdownItem
+          data-cy={`component-${item.name}`}
           icon={item.icon}
           title={item.name}
           on:click={() => onItemChosen(item)} />

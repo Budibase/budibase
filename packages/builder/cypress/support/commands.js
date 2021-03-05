@@ -25,8 +25,9 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", name => {
+  cy.deleteApp(name)
+  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
   cy.contains("Create New Web App").click()
-
   cy.get("body")
     .then($body => {
       if ($body.find("input[name=apiKey]").length) {
@@ -41,9 +42,7 @@ Cypress.Commands.add("createApp", name => {
       cy.get("input[name=applicationName]")
         .type(name)
         .should("have.value", name)
-
       cy.contains("Next").click()
-
       cy.get("input[name=email]")
         .click()
         .type("test@test.com")
@@ -55,6 +54,22 @@ Cypress.Commands.add("createApp", name => {
         timeout: 20000,
       }).should("be.visible")
     })
+})
+
+Cypress.Commands.add("deleteApp", name => {
+  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
+  cy.get("body").then($body => {
+    cy.wait(1000)
+    if ($body.find(`[data-cy="app-${name}"]`).length) {
+      cy.get(`[data-cy="app-${name}"] a`).click()
+      cy.get("[data-cy=settings-icon]").click()
+      cy.get(".modal-content").within(() => {
+        cy.contains("Danger Zone").click()
+        cy.get("input").type("DELETE")
+        cy.contains("Delete Entire App").click()
+      })
+    }
+  })
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
@@ -87,6 +102,7 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
     cy.get("input")
       .first()
       .type(columnName)
+
     // Unset table display column
     cy.contains("display column").click()
     cy.get("select").select(type)
@@ -96,15 +112,12 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
 
 Cypress.Commands.add("addRow", values => {
   cy.contains("Create New Row").click()
-
   cy.get(".modal").within(() => {
     for (let i = 0; i < values.length; i++) {
       cy.get("input")
         .eq(i)
         .type(values[i])
     }
-
-    // Save
     cy.get(".buttons")
       .contains("Create")
       .click()
@@ -114,9 +127,7 @@ Cypress.Commands.add("addRow", values => {
 Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
   cy.contains("Users").click()
-
   cy.contains("Create New User").click()
-
   cy.get(".modal").within(() => {
     cy.get("input")
       .first()
@@ -135,20 +146,27 @@ Cypress.Commands.add("createUser", (email, password, role) => {
   })
 })
 
-Cypress.Commands.add("addHeadlineComponent", text => {
-  cy.get(".switcher > :nth-child(2)").click()
-
-  cy.get("[data-cy=Text]").click()
-  cy.get("[data-cy=Headline]").click()
-  cy.get(".tabs > :nth-child(2)").click()
-  cy.contains("Settings").click()
-  cy.get('input[name="text"]').type(text)
-  cy.contains("Design").click()
+Cypress.Commands.add("addComponent", (category, component) => {
+  if (category) {
+    cy.get(`[data-cy="category-${category}"]`).click()
+  }
+  cy.get(`[data-cy="component-${component}"]`).click()
+  cy.wait(500)
+  cy.location().then(loc => {
+    const params = loc.pathname.split("/")
+    return cy.wrap(params[params.length - 1])
+  })
 })
-Cypress.Commands.add("addButtonComponent", () => {
-  cy.get(".switcher > :nth-child(2)").click()
 
-  cy.get("[data-cy=Button]").click()
+Cypress.Commands.add("getComponent", componentId => {
+  return cy
+    .get("iframe")
+    .its("0.contentDocument")
+    .should("exist")
+    .its("body")
+    .should("not.be.null")
+    .then(cy.wrap)
+    .find(`[data-component-id=${componentId}]`)
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {

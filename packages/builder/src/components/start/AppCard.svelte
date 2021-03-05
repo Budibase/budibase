@@ -30,7 +30,7 @@
 <div class="apps-card">
   <Heading small black>{name}</Heading>
   <Spacer medium />
-  <div class="card-footer">
+  <div class="card-footer" data-cy={`app-${name}`}>
     <TextButton text medium blue href="/_builder/{_id}">
       Open
       {name}
