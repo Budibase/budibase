@@ -1,6 +1,6 @@
 context("Create Bindings", () => {
   before(() => {
-    cy.createApp("Cypress Tests", "Cypress test app")
+    cy.createTestApp()
     cy.navigateToFrontend()
   })
 

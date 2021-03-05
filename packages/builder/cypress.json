@@ -1,8 +1,8 @@
 {
-  "baseUrl": "http://localhost:4005/_builder/",
+  "baseUrl": "http://localhost:4001/_builder/",
   "video": true,
   "projectId": "bmbemn",
   "env": {
-    "PORT": "4005"
+    "PORT": "4001"
   }
 }
