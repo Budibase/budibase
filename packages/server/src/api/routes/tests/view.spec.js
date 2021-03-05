@@ -1,30 +1,27 @@
-const TestConfig = require("./utilities/TestConfiguration");
+const TestConfig = require("./utilities/TestConfiguration")
 
 describe("/views", () => {
-  let request;
-  let app;
-  let config;
-  let appId;
-  let table;
+  let request
+  let config
+  let table
 
   beforeAll(async () => {
-    config = new TestConfig();
-    request = config.request;
-  });
+    config = new TestConfig()
+    request = config.request
+  })
 
   beforeEach(async () => {
-    app = await config.init();
-    appId = app.instance._id;
-  });
+    await config.init()
+  })
 
   afterAll(() => {
-    config.end();
-  });
+    config.end()
+  })
 
   describe("create", () => {
     beforeEach(async () => {
-      table = await config.createTable();
-    });
+      table = await config.createTable()
+    })
 
     it("returns a success message when the view is successfully created", async () => {
       const res = await request
@@ -37,12 +34,12 @@ describe("/views", () => {
         })
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200);
+        .expect(200)
 
       expect(res.res.statusMessage).toEqual(
         "View TestView saved successfully."
-      );
-    });
+      )
+    })
 
     it("updates the table row with the new view metadata", async () => {
       const res = await request
@@ -55,12 +52,12 @@ describe("/views", () => {
         })
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200);
+        .expect(200)
 
       expect(res.res.statusMessage).toEqual(
         "View TestView saved successfully."
-      );
-      const updatedTable = await config.getTable(table._id);
+      )
+      const updatedTable = await config.getTable(table._id)
       expect(updatedTable.views).toEqual({
         TestView: {
           field: "Price",
@@ -91,14 +88,14 @@ describe("/views", () => {
             },
           },
         },
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe("fetch", () => {
     beforeEach(async () => {
-      table = await config.createTable();
-    });
+      table = await config.createTable()
+    })
 
     it("returns only custom views", async () => {
       await config.createView({
@@ -106,21 +103,21 @@ describe("/views", () => {
         field: "Price",
         calculation: "stats",
         tableId: table._id,
-      });
+      })
       const res = await request
         .get(`/api/views`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200);
-      expect(res.body.length).toBe(1);
-      expect(res.body.find(({ name }) => name === "TestView")).toBeDefined();
-    });
-  });
+        .expect(200)
+      expect(res.body.length).toBe(1)
+      expect(res.body.find(({ name }) => name === "TestView")).toBeDefined()
+    })
+  })
 
   describe("query", () => {
     beforeEach(async () => {
-      table = await config.createTable();
-    });
+      table = await config.createTable()
+    })
 
     it("returns data for the created view", async () => {
       await config.createView({
@@ -128,27 +125,27 @@ describe("/views", () => {
         field: "Price",
         calculation: "stats",
         tableId: table._id,
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 1000,
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 2000,
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 4000,
-      });
+      })
       const res = await request
         .get(`/api/views/TestView?calculation=stats`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200);
-      expect(res.body.length).toBe(1);
-      expect(res.body).toMatchSnapshot();
-    });
+        .expect(200)
+      expect(res.body.length).toBe(1)
+      expect(res.body).toMatchSnapshot()
+    })
 
     it("returns data for the created view using a group by", async () => {
       await config.createView({
@@ -157,30 +154,30 @@ describe("/views", () => {
         field: "Price",
         groupBy: "Category",
         tableId: table._id,
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 1000,
         Category: "One",
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 2000,
         Category: "One",
-      });
+      })
       await config.createRow({
         tableId: table._id,
         Price: 4000,
         Category: "Two",
-      });
+      })
       const res = await request
         .get(`/api/views/TestView?calculation=stats&group=Category`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200);
+        .expect(200)
 
-      expect(res.body.length).toBe(2);
-      expect(res.body).toMatchSnapshot();
-    });
-  });
-});
+      expect(res.body.length).toBe(2)
+      expect(res.body).toMatchSnapshot()
+    })
+  })
+})

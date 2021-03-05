@@ -8,5 +8,5 @@ module.exports = {
   user: require("../../../controllers/user"),
   automation: require("../../../controllers/automation"),
   datasource: require("../../../controllers/datasource"),
-  query: require("../../../controllers/query")
+  query: require("../../../controllers/query"),
 }

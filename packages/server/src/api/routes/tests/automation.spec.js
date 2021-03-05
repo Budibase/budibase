@@ -5,8 +5,7 @@ const {
   clearAllAutomations,
 } = require("./utilities/TestFunctions")
 const { basicAutomation } = require("./utilities/structures")
-
-const { delay } = require("./testUtils")
+const { delay } = require("./utilities")
 
 const MAX_RETRIES = 4
 
