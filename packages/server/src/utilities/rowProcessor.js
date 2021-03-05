@@ -49,6 +49,12 @@ const TYPE_TRANSFORM_MAP = {
     "": null,
     [undefined]: undefined,
     [null]: null,
+    parse: date => {
+      if (date instanceof Date) {
+        return date.toISOString()
+      }
+      return date
+    },
   },
   [FieldTypes.ATTACHMENT]: {
     "": [],

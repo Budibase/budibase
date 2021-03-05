@@ -1,46 +1,25 @@
-const {
-  createApplication,
-  supertest,
-  defaultHeaders,
-  createUser,
-  testPermissionsForEndpoint,
-} = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
-const { cloneDeep } = require("lodash/fp")
-
-const baseBody = {
-  email: "bill@bill.com",
-  password: "yeeooo",
-  roleId: BUILTIN_ROLE_IDS.POWER,
-}
+const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
+const { basicUser } = require("./utilities/structures")
+const setup = require("./utilities")
 
 describe("/users", () => {
-  let request
-  let server
-  let app
-  let appId
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    ;({ request, server } = await supertest(server))
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
-    app = await createApplication(request)
-    appId = app.instance._id
-  })
-
-  afterAll(() => {
-    server.close()
-    server.destroy()
+    await config.init()
   })
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
-      await createUser(request, appId, "pam@pam.com", "pam_password")
+      await config.createUser("brenda@brenda.com", "brendas_password")
+      await config.createUser("pam@pam.com", "pam_password")
       const res = await request
         .get(`/api/users`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
@@ -50,12 +29,12 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, appId, "brenda@brenda.com", "brendas_password")
-      await testPermissionsForEndpoint({
+      await config.createUser("brenda@brenda.com", "brendas_password")
+      await checkPermissionsEndpoint({
+        config,
         request,
         method: "GET",
         url: `/api/users`,
-        appId: appId,
         passRole: BUILTIN_ROLE_IDS.ADMIN,
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
@@ -64,11 +43,11 @@ describe("/users", () => {
 
   describe("create", () => {
     it("returns a success message when a user is successfully created", async () => {
-      const body = cloneDeep(baseBody)
+      const body = basicUser(BUILTIN_ROLE_IDS.POWER)
       body.email = "bill@budibase.com"
       const res = await request
         .post(`/api/users`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .send(body)
         .expect(200)
         .expect("Content-Type", /json/)
@@ -78,14 +57,13 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      const body = cloneDeep(baseBody)
+      const body = basicUser(BUILTIN_ROLE_IDS.POWER)
       body.email = "brandNewUser@user.com"
-      await testPermissionsForEndpoint({
-        request,
+      await checkPermissionsEndpoint({
+        config,
         method: "POST",
         body,
         url: `/api/users`,
-        appId: appId,
         passRole: BUILTIN_ROLE_IDS.ADMIN,
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
