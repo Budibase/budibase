@@ -1,29 +1,16 @@
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
-const TestConfig = require("./utilities/TestConfiguration")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
-const { cloneDeep } = require("lodash/fp")
-
-const baseBody = {
-  email: "bill@bill.com",
-  password: "yeeooo",
-  roleId: BUILTIN_ROLE_IDS.POWER,
-}
+const { basicUser } = require("./utilities/structures")
+const setup = require("./utilities")
 
 describe("/users", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()
-  })
-
-  afterAll(() => {
-    config.end()
   })
 
   describe("fetch", () => {
@@ -56,7 +43,7 @@ describe("/users", () => {
 
   describe("create", () => {
     it("returns a success message when a user is successfully created", async () => {
-      const body = cloneDeep(baseBody)
+      const body = basicUser(BUILTIN_ROLE_IDS.POWER)
       body.email = "bill@budibase.com"
       const res = await request
         .post(`/api/users`)
@@ -70,7 +57,7 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      const body = cloneDeep(baseBody)
+      const body = basicUser(BUILTIN_ROLE_IDS.POWER)
       body.email = "brandNewUser@user.com"
       await checkPermissionsEndpoint({
         config,

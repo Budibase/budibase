@@ -3,20 +3,13 @@ const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../utilities/security/permissions")
 const { basicRole } = require("./utilities/structures")
-const TestConfig = require("./utilities/TestConfiguration")
+const setup = require("./utilities")
 
 describe("/roles", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
-
-  afterAll(() => {
-    config.close()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()

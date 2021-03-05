@@ -1,28 +1,18 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const env = require("../../../environment")
-const TestConfig = require("./utilities/TestConfiguration")
 const { basicRow } = require("./utilities/structures")
+const setup = require("./utilities")
 
 describe("/rows", () => {
-  let request
-  let appId
+  let request = setup.getRequest()
+  let config = setup.getConfig()
   let table
   let row
-  let app
-  let config
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
-
-  afterAll(() => {
-    config.end()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
-    app = await config.init()
-    appId = app.instance._id
+    await config.init()
     table = await config.createTable()
     row = basicRow(table._id)
   })
@@ -272,7 +262,7 @@ describe("/rows", () => {
         link: [{_id: firstRow._id}],
         tableId: table._id,
       })
-      const enriched = await outputProcessing(appId, table, [secondRow])
+      const enriched = await outputProcessing(config.getAppId(), table, [secondRow])
       expect(enriched[0].link.length).toBe(1)
       expect(enriched[0].link[0]._id).toBe(firstRow._id)
       expect(enriched[0].link[0].primaryDisplay).toBe("Test Contact")
@@ -292,8 +282,8 @@ describe("/rows", () => {
     // the environment needs configured for this
     env.CLOUD = 1
     env.SELF_HOSTED = 1
-    const enriched = await outputProcessing(appId, table, [row])
-    expect(enriched[0].attachment[0].url).toBe(`/app-assets/assets/${appId}/test/thing`)
+    const enriched = await outputProcessing(config.getAppId(), table, [row])
+    expect(enriched[0].attachment[0].url).toBe(`/app-assets/assets/${config.getAppId()}/test/thing`)
     // remove env config
     env.CLOUD = undefined
     env.SELF_HOSTED = undefined

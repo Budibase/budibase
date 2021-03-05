@@ -24,6 +24,14 @@ class TestConfiguration {
     this.appId = null
   }
 
+  getRequest() {
+    return this.request
+  }
+
+  getAppId() {
+    return this.appId
+  }
+
   async _req(config, params, controlFunc) {
     const request = {}
     // fake cookies, we don't need them
