@@ -1,11 +1,10 @@
-const TestConfig = require("./utilities/TestConfiguration")
 const {
   checkBuilderEndpoint,
   getAllTableRows,
   clearAllAutomations,
 } = require("./utilities/TestFunctions")
 const { basicAutomation } = require("./utilities/structures")
-const { delay } = require("./utilities")
+const setup = require("./utilities")
 
 const MAX_RETRIES = 4
 
@@ -14,21 +13,14 @@ let TRIGGER_DEFINITIONS = {}
 let LOGIC_DEFINITIONS = {}
 
 describe("/automations", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
   let automation
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()
-  })
-
-  afterAll(() => {
-    config.end()
   })
 
   const triggerWorkflow = async automation => {
@@ -133,7 +125,7 @@ describe("/automations", () => {
       automation.definition.trigger.inputs.tableId = table._id
       automation.definition.steps[0].inputs.row.tableId = table._id
       automation = await config.createAutomation(automation)
-      await delay(500)
+      await setup.delay(500)
       const res = await triggerWorkflow(automation)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
@@ -142,7 +134,7 @@ describe("/automations", () => {
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
         expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
         expect(res.body.automation.name).toEqual(automation.name)
-        await delay(500)
+        await setup.delay(500)
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
         if (elements.length > 1) {

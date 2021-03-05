@@ -1,25 +1,18 @@
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
-const TestConfig = require("./utilities/TestConfiguration")
+const setup = require("./utilities")
 const { basicRow } = require("./utilities/structures")
 
 const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 
 describe("/permission", () => {
-  let request
+  let request = setup.getRequest()
+  let config = setup.getConfig()
   let table
   let perms
   let row
-  let config
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
-
-  afterAll(() => {
-    config.end()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()

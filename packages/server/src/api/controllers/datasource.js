@@ -8,14 +8,13 @@ const {
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const datasources = (
+  ctx.body = (
     await database.allDocs(
       getDatasourceParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
-  ctx.body = datasources
 }
 
 exports.save = async function(ctx) {

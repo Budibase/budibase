@@ -1,21 +1,14 @@
-const TestConfig = require("./utilities/TestConfiguration")
+const setup = require("./utilities")
 
 describe("/views", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
   let table
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()
-  })
-
-  afterAll(() => {
-    config.end()
   })
 
   describe("create", () => {

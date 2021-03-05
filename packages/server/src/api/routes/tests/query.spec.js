@@ -1,19 +1,12 @@
-const TestConfig = require("./utilities/TestConfiguration")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { basicQuery } = require("./utilities/structures")
+const setup = require("./utilities")
 
 describe("/queries", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
-
-  afterAll(() => {
-    config.end()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()

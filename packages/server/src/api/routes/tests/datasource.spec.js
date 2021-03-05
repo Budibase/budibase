@@ -1,23 +1,16 @@
-let TestConfig = require("./utilities/TestConfiguration")
 let { basicDatasource } = require("./utilities/structures")
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
+let setup = require("./utilities")
 
 describe("/datasources", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
-
-  afterAll(() => {
-    config.end()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await config.init()
-  });
+  })
 
   describe("create", () => {
     it("should create a new datasource", async () => {

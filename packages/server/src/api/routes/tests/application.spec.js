@@ -1,22 +1,15 @@
-const TestConfig = require("./utilities/TestConfiguration")
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const setup = require("./utilities")
 
 describe("/applications", () => {
-  let request
-  let config
+  let request = setup.getRequest()
+  let config = setup.getConfig()
 
-  beforeAll(async () => {
-    config = new TestConfig()
-    request = config.request
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
     await clearAllApps()
     await config.init()
-  })
-
-  afterAll(() => {
-    config.end()
   })
 
   describe("create", () => {
