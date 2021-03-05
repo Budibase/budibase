@@ -1,7 +1,5 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
-const autoController = require("../../../controllers/automation")
-const CouchDB = require("../../../../db")
 
 function Request(appId, params) {
   this.user = { appId }
