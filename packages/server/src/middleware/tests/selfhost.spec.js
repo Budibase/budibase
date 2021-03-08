@@ -1,43 +1,43 @@
-const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
-const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
-const { basicUser } = require("./utilities/structures")
-const setup = require("./utilities")
+const selfHostMiddleware = require("../selfhost");
+const env = require("../../environment")
+const hosting = require("../../utilities/builder/hosting")
+jest.mock("../../environment") 
+jest.mock("../../utilities/builder/hosting") 
 
 describe("Self host middleware", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const next = jest.fn()
+  const throwMock = jest.fn()
 
-  afterAll(setup.afterAll)
-
-  beforeEach(async () => {
-    await config.init()
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
-  describe("fetch", () => {
-    it("returns a list of users from an instance db", async () => {
-      await config.createUser("brenda@brenda.com", "brendas_password")
-      await config.createUser("pam@pam.com", "pam_password")
-      const res = await request
-        .get(`/api/users`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+  it("calls next() when CLOUD and SELF_HOSTED env vars are set", async () => {
+    env.CLOUD = 1 
+    env.SELF_HOSTED = 1 
 
-      expect(res.body.length).toBe(2)
-      expect(res.body.find(u => u.email === "brenda@brenda.com")).toBeDefined()
-      expect(res.body.find(u => u.email === "pam@pam.com")).toBeDefined()
-    })
+    await selfHostMiddleware({}, next)
+    expect(next).toHaveBeenCalled()
+  })
 
-    it("should apply authorization to endpoint", async () => {
-      await config.createUser("brenda@brenda.com", "brendas_password")
-      await checkPermissionsEndpoint({
-        config,
-        request,
-        method: "GET",
-        url: `/api/users`,
-        passRole: BUILTIN_ROLE_IDS.ADMIN,
-        failRole: BUILTIN_ROLE_IDS.PUBLIC,
-      })
-    })
+  it("throws when hostingInfo type is cloud", async () => {
+    env.CLOUD = 0 
+    env.SELF_HOSTED = 0
+
+    hosting.getHostingInfo.mockImplementationOnce(() => ({ type: hosting.HostingTypes.CLOUD }))
+
+    await selfHostMiddleware({ throw: throwMock }, next)
+    expect(throwMock).toHaveBeenCalledWith(400, "Endpoint unavailable in cloud hosting.")
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it("calls the self hosting middleware to pass through to next() when the hostingInfo type is self", async () => {
+    env.CLOUD = 0 
+    env.SELF_HOSTED = 0
+
+    hosting.getHostingInfo.mockImplementationOnce(() => ({ type: hosting.HostingTypes.SELF }))
+
+    await selfHostMiddleware({}, next)
+    expect(next).toHaveBeenCalled()
   })
 })
