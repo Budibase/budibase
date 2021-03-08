@@ -2,6 +2,7 @@ const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../../utilities/security/permissions")
+const { createHomeScreen } = require("../../../../constants/screens")
 
 exports.basicTable = () => {
   return {
@@ -84,4 +85,8 @@ exports.basicUser = role => {
     password: "yeeooo",
     roleId: role,
   }
+}
+
+exports.basicScreen = () => {
+  return createHomeScreen()
 }
