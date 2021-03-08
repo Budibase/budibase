@@ -10,4 +10,5 @@ module.exports = {
   datasource: require("../../../controllers/datasource"),
   query: require("../../../controllers/query"),
   screen: require("../../../controllers/screen"),
+  webhook: require("../../../controllers/webhook"),
 }

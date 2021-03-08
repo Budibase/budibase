@@ -9,6 +9,7 @@ const {
   basicDatasource,
   basicQuery,
   basicScreen,
+  basicWebhook,
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
@@ -221,6 +222,14 @@ class TestConfiguration {
   async createScreen(config = null) {
     config = config || basicScreen()
     return this._req(config, null, controllers.screen.save)
+  }
+
+  async createWebhook(config = null) {
+    if (!this.automation) {
+      throw "Must create an automation before creating webhook."
+    }
+    config = config || basicWebhook(this.automation._id)
+    return (await this._req(config, null, controllers.webhook.save)).webhook
   }
 
   async createUser(
