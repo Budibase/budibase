@@ -69,4 +69,22 @@ context("Create Components", () => {
       })
     })
   })
+
+  it("deletes a component", () => {
+    cy.addComponent("Elements", "Paragraph").then(componentId => {
+      cy.get("[data-cy=setting-_instanceName] input")
+        .type(componentId)
+        .blur()
+      cy.get(".ui-nav ul .nav-item.selected .ri-more-line").click({
+        force: true,
+      })
+      cy.get(".dropdown-container")
+        .contains("Delete")
+        .click()
+      cy.get(".modal")
+        .contains("Delete Component")
+        .click()
+      cy.getComponent(componentId).should("not.exist")
+    })
+  })
 })
