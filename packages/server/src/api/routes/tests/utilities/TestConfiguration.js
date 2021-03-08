@@ -8,6 +8,7 @@ const {
   basicAutomation,
   basicDatasource,
   basicQuery,
+  basicScreen,
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
@@ -81,6 +82,15 @@ class TestConfiguration {
       headers["x-budibase-app-id"] = this.appId
     }
     return headers
+  }
+
+  async roleHeaders(email = EMAIL, roleId) {
+    try {
+      await this.createUser(email, PASSWORD, roleId)
+    } catch (err) {
+      // allow errors here
+    }
+    return this.login(email, PASSWORD)
   }
 
   async createApp(appName) {
@@ -208,6 +218,11 @@ class TestConfiguration {
     return this._req(config, null, controllers.query.save)
   }
 
+  async createScreen(config = null) {
+    config = config || basicScreen()
+    return this._req(config, null, controllers.screen.save)
+  }
+
   async createUser(
     email = EMAIL,
     password = PASSWORD,
@@ -241,6 +256,7 @@ class TestConfiguration {
     return {
       Accept: "application/json",
       Cookie: result.headers["set-cookie"],
+      "x-budibase-app-id": this.appId,
     }
   }
 }
