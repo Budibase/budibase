@@ -85,7 +85,7 @@ class TestConfiguration {
     return headers
   }
 
-  async roleHeaders(email = EMAIL, roleId) {
+  async roleHeaders(email = EMAIL, roleId = BUILTIN_ROLE_IDS.ADMIN) {
     try {
       await this.createUser(email, PASSWORD, roleId)
     } catch (err) {
