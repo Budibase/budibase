@@ -13,7 +13,7 @@ const { AuthTypes } = require("../constants")
 
 const ADMIN_ROLES = [BUILTIN_ROLE_IDS.ADMIN, BUILTIN_ROLE_IDS.BUILDER]
 
-const LOCAL_PASS = new RegExp(["webhooks/trigger", "webhooks/schema"].join("|"))
+const LOCAL_PASS = new RegExp(["webhooks/trigger"].join("|"))
 
 function hasResource(ctx) {
   return ctx.resourceId != null

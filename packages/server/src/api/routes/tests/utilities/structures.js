@@ -90,3 +90,14 @@ exports.basicUser = role => {
 exports.basicScreen = () => {
   return createHomeScreen()
 }
+
+exports.basicWebhook = automationId => {
+  return {
+    live: true,
+    name: "webhook",
+    action: {
+      type: "automation",
+      target: automationId,
+    },
+  }
+}
