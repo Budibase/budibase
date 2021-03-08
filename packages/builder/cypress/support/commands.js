@@ -159,7 +159,9 @@ Cypress.Commands.add("addComponent", (category, component) => {
   cy.wait(500)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
-    return cy.wrap(params[params.length - 1])
+    const componentId = params[params.length - 1]
+    cy.getComponent(componentId).should("exist")
+    return cy.wrap(componentId)
   })
 })
 
