@@ -14,6 +14,16 @@ context("Create Bindings", () => {
     })
   })
 
+  it("should handle an invalid binding", () => {
+    cy.addComponent("Elements", "Paragraph").then(componentId => {
+      // Cypress needs to escape curly brackets
+      cy.get("[data-cy=setting-text] input")
+        .type("{{}{{}{{} Current User._id {}}{}}")
+        .blur()
+      cy.getComponent(componentId).should("have.text", "{{{ user._id }}")
+    })
+  })
+
   it("should add a URL param binding", () => {
     const paramName = "foo"
     cy.createScreen("Test Param", `/test/:${paramName}`)
@@ -25,13 +35,25 @@ context("Create Bindings", () => {
       cy.getComponent(componentId).should("have.text", "")
     })
   })
+
+  it("should add a binding with a handlebars helper", () => {
+    cy.addComponent("Elements", "Paragraph").then(componentId => {
+      // Cypress needs to escape curly brackets
+      addSettingBinding("text", "{{}{{} add 1 2 {}}{}}", false)
+      cy.getComponent(componentId).should("have.text", "3")
+    })
+  })
 })
 
-const addSettingBinding = (setting, bindingText) => {
+const addSettingBinding = (setting, bindingText, clickOption = true) => {
   cy.get(`[data-cy="setting-${setting}"] [data-cy=text-binding-button]`).click()
   cy.get(".drawer").within(() => {
-    cy.contains(bindingText).click()
-    cy.get("textarea").should("have.value", `{{ ${bindingText} }}`)
+    if (clickOption) {
+      cy.contains(bindingText).click()
+      cy.get("textarea").should("have.value", `{{ ${bindingText} }}`)
+    } else {
+      cy.get("textarea").type(bindingText)
+    }
     cy.get("button").click()
   })
 }
