@@ -9,6 +9,7 @@ const {
   basicDatasource,
   basicQuery,
   basicScreen,
+  basicLayout,
   basicWebhook,
 } = require("./structures")
 const controllers = require("./controllers")
@@ -230,6 +231,11 @@ class TestConfiguration {
     }
     config = config || basicWebhook(this.automation._id)
     return (await this._req(config, null, controllers.webhook.save)).webhook
+  }
+
+  async createLayout(config = null) {
+    config = config || basicLayout()
+    return await this._req(config, null, controllers.layout.save)
   }
 
   async createUser(

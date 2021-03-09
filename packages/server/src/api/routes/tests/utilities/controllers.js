@@ -11,4 +11,5 @@ module.exports = {
   query: require("../../../controllers/query"),
   screen: require("../../../controllers/screen"),
   webhook: require("../../../controllers/webhook"),
+  layout: require("../../../controllers/layout"),
 }
