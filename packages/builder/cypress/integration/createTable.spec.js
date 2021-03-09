@@ -1,7 +1,6 @@
 context("Create a Table", () => {
   before(() => {
-    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-    cy.createApp("Table App", "Table App Description")
+    cy.createTestApp()
   })
 
   it("should create a new Table", () => {
@@ -26,7 +25,9 @@ context("Create a Table", () => {
       .trigger("mouseover")
       .find(".ri-pencil-line")
       .click({ force: true })
-    cy.get(".actions input").first().type("updated")
+    cy.get(".actions input")
+      .first()
+      .type("updated")
     // Unset table display column
     cy.contains("display column").click()
     cy.contains("Save Column").click()
@@ -44,7 +45,9 @@ context("Create a Table", () => {
   it("deletes a row", () => {
     cy.get(".ag-checkbox-input").check({ force: true })
     cy.contains("Delete 1 row(s)").click()
-    cy.get(".modal").contains("Delete").click()
+    cy.get(".modal")
+      .contains("Delete")
+      .click()
     cy.contains("RoverUpdated").should("not.exist")
   })
 
@@ -55,12 +58,16 @@ context("Create a Table", () => {
       .click({ force: true })
     cy.contains("Delete").click()
     cy.wait(50)
-    cy.get(".buttons").contains("Delete").click()
+    cy.get(".buttons")
+      .contains("Delete")
+      .click()
     cy.contains("nameupdated").should("not.exist")
   })
 
   it("deletes a table", () => {
-    cy.get(".ri-more-line").first().click({ force: true })
+    cy.get(".ri-more-line")
+      .first()
+      .click({ force: true })
     cy.get("[data-cy=delete-table]").click()
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
