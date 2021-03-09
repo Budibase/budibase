@@ -1,6 +1,6 @@
 const selfHostMiddleware = require("../selfhost");
 const env = require("../../environment")
-const hosting = require("../../utilities/builder/hosting")
+const hosting = require("../../utilities/builder/hosting");
 jest.mock("../../environment") 
 jest.mock("../../utilities/builder/hosting") 
 
