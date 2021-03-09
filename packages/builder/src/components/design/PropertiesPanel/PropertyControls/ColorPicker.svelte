@@ -35,4 +35,4 @@
   }, WAIT, true)
 </script>
 
-<Colorpicker value={value || '#000'} on:change={onChange} />
+<Colorpicker value={value || '#C4C4C4'} on:change={onChange} />
