@@ -31,6 +31,7 @@ module.exports = async (ctx, next) => {
     token = ctx.cookies.get(getCookieName())
     authType = AuthTypes.BUILDER
   }
+
   if (!token && appId) {
     token = ctx.cookies.get(getCookieName(appId))
     authType = AuthTypes.APP
@@ -58,6 +59,7 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, jwtPayload.roleId),
     }
   } catch (err) {
+    console.log(err)
     if (authType === AuthTypes.BUILDER) {
       clearCookie(ctx)
       ctx.status = 200
