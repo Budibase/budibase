@@ -3,6 +3,8 @@ const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../../utilities/security/permissions")
 const { createHomeScreen } = require("../../../../constants/screens")
+const { EMPTY_LAYOUT } = require("../../../../constants/layouts")
+const { cloneDeep } = require("lodash/fp")
 
 exports.basicTable = () => {
   return {
@@ -89,6 +91,10 @@ exports.basicUser = role => {
 
 exports.basicScreen = () => {
   return createHomeScreen()
+}
+
+exports.basicLayout = () => {
+  return cloneDeep(EMPTY_LAYOUT)
 }
 
 exports.basicWebhook = automationId => {

@@ -38,6 +38,6 @@ exports.destroy = async function(ctx) {
   }
 
   await db.remove(layoutId, layoutRev)
-  ctx.message = "Layout deleted successfully"
+  ctx.body = { message: "Layout deleted successfully" }
   ctx.status = 200
 }
