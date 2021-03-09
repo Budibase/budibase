@@ -1,19 +1,19 @@
 <script>
   import { onMount } from "svelte"
-  import { goto, params, url } from "@sveltech/routify"
+  import { goto, params } from "@sveltech/routify"
   import {
     store,
     allScreens,
-    currentAsset,
     backendUiStore,
     selectedAccessRole,
+    screenSearchString,
   } from "builderStore"
   import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Modal, Switcher, Select } from "@budibase/bbui"
+  import { Modal, Switcher, Select, Input } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -85,6 +85,10 @@
             <option value={role._id}>{role.name}</option>
           {/each}
         </Select>
+        <Input
+          extraThin
+          label="Search Screens"
+          bind:value={$screenSearchString} />
       </div>
       <div class="nav-items-container">
         <ComponentNavigationTree />
@@ -127,6 +131,11 @@
   }
 
   .role-select {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
     margin-bottom: var(--spacing-m);
+    gap: var(--spacing-m);
   }
 </style>
