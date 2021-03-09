@@ -87,6 +87,7 @@
         </Select>
         <Input
           extraThin
+          placeholder="Enter a route to search"
           label="Search Screens"
           bind:value={$screenSearchString} />
       </div>
