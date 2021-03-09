@@ -4,7 +4,7 @@ const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const fs = require("fs")
 const path = require("path")
 
-describe("/applications", () => {
+describe("/api/keys", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 

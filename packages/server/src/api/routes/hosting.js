@@ -11,11 +11,7 @@ router
   .get("/api/hosting/urls", authorized(BUILDER), controller.fetchUrls)
   .get("/api/hosting", authorized(BUILDER), controller.fetch)
   .post("/api/hosting", authorized(BUILDER), controller.save)
-  .get(
-    "/api/hosting/apps",
-    authorized(BUILDER),
-    selfhost,
-    controller.getDeployedApps
-  )
+  // this isn't risky, doesn't return anything about apps other than names and URLs
+  .get("/api/hosting/apps", selfhost, controller.getDeployedApps)
 
 module.exports = router
