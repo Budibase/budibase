@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Authenticated middleware sets the correct APP auth type information when the user is not in the builder 1`] = `
+Object {
+  "apiKey": "1234",
+  "appId": "budibase:app:local",
+  "role": Role {
+    "_id": "ADMIN",
+    "inherits": "POWER",
+    "name": "Admin",
+    "permissionId": "admin",
+  },
+  "roleId": "ADMIN",
+}
+`;
+
+exports[`Authenticated middleware sets the correct BUILDER auth type information when the x-budibase-type header is not 'client' 1`] = `
+Object {
+  "apiKey": "1234",
+  "appId": "budibase:builder:local",
+  "role": Role {
+    "_id": "BUILDER",
+    "name": "Builder",
+    "permissionId": "admin",
+  },
+  "roleId": "BUILDER",
+}
+`;
