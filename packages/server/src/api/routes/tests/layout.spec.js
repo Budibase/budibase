@@ -2,7 +2,7 @@ const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicLayout } = require("./utilities/structures")
 
-describe("/queries", () => {
+describe("/layouts", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let layout
