@@ -21,7 +21,7 @@ router
     controller.find
   )
   .put(
-    "/api/users/",
+    "/api/users",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     controller.update
   )
