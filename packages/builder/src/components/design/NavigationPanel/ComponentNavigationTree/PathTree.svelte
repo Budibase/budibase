@@ -30,7 +30,8 @@
   $: filteredScreens = getFilteredScreens(allScreens, $screenSearchString)
   $: hasSearchMatch = $screenSearchString && filteredScreens.length > 0
   $: noSearchMatch = $screenSearchString && !filteredScreens.length
-  $: routeSelected = route.subpaths[selectedScreen.routing.route] !== undefined
+  $: routeSelected =
+    route.subpaths[selectedScreen?.routing?.route] !== undefined
   $: routeOpened = routeManuallyOpened || routeSelected || hasSearchMatch
 
   const changeScreen = screenId => {
