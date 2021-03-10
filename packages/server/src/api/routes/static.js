@@ -8,6 +8,7 @@ const usage = require("../../middleware/usageQuota")
 
 const router = Router()
 
+/* istanbul ignore next */
 router.param("file", async (file, ctx, next) => {
   ctx.file = file && file.includes(".") ? file : "index.html"
 

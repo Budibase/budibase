@@ -9,7 +9,6 @@ class TestConfiguration {
     this.ctx = {
       config: {},
       auth: {},
-      request: {},
       cookies: {
         set: jest.fn(),
         get: jest.fn()
