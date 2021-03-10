@@ -43,7 +43,7 @@
   .topnavitemright:hover i {
     color: var(--ink);
   }
-  
+
   .content {
     padding: var(--spacing-xl);
   }
