@@ -24,6 +24,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   if (!env.CLOUD && LOCAL_PASS.test(ctx.request.url)) {
     return next()
   }
+
   if (env.CLOUD && ctx.headers["x-api-key"] && ctx.headers["x-instanceid"]) {
     // api key header passed by external webhook
     if (await isAPIKeyValid(ctx.headers["x-api-key"])) {
@@ -37,14 +38,14 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
       return next()
     }
 
-    ctx.throw(403, "API key invalid")
+    return ctx.throw(403, "API key invalid")
   }
 
   // don't expose builder endpoints in the cloud
   if (env.CLOUD && permType === PermissionTypes.BUILDER) return
 
   if (!ctx.user) {
-    ctx.throw(403, "No user info found")
+    return ctx.throw(403, "No user info found")
   }
 
   const role = ctx.user.role
@@ -52,7 +53,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.appId,
     role._id
   )
-  const isAdmin = ADMIN_ROLES.indexOf(role._id) !== -1
+  const isAdmin = ADMIN_ROLES.includes(role._id)
   const isAuthed = ctx.auth.authenticated
 
   // this may need to change in the future, right now only admins
@@ -61,7 +62,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   if (isAdmin && isAuthed) {
     return next()
   } else if (permType === PermissionTypes.BUILDER) {
-    ctx.throw(403, "Not Authorized")
+    return ctx.throw(403, "Not Authorized")
   }
 
   if (
