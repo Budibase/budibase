@@ -104,9 +104,10 @@ async function createInstance(template) {
   await createRoutingView(appId)
 
   // replicate the template data to the instance DB
+  // this is currently very hard to test, downloading and importing template files
+  /* istanbul ignore next */
   if (template) {
     let dbDumpReadStream
-
     if (template.fileImportPath) {
       dbDumpReadStream = fs.createReadStream(template.fileImportPath)
     } else {
@@ -181,8 +182,9 @@ exports.create = async function(ctx) {
   const instanceDb = new CouchDB(appId)
   await instanceDb.put(newApplication)
 
+  const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
+  /* istanbul ignore next */
   if (env.NODE_ENV !== "jest") {
-    const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await downloadExtractComponentLibraries(newAppFolder)
   }
 

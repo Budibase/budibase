@@ -21,8 +21,8 @@ describe("/screens", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.length).toEqual(1)
-      expect(res.body[0]._id).toEqual(screen._id)
+      expect(res.body.length).toEqual(3)
+      expect(res.body.some(s => s._id === screen._id)).toEqual(true)
     })
 
     it("should apply authorization to endpoint", async () => {
