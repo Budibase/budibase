@@ -241,7 +241,7 @@ class TestConfiguration {
   async createUser(
     email = EMAIL,
     password = PASSWORD,
-    roleId = BUILTIN_ROLE_IDS.POWER,
+    roleId = BUILTIN_ROLE_IDS.POWER
   ) {
     return this._req(
       {
