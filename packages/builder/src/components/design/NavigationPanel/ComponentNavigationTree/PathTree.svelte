@@ -37,9 +37,6 @@
 
   const changeScreen = screenId => {
     store.actions.screens.select(screenId)
-
-    // Reset manually opened flag every time a new screen is selected
-    routeManuallyOpened = false
   }
 
   const getAllScreens = route => {
