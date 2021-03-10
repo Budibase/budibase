@@ -33,7 +33,7 @@
   },
   "scripts": {
     "test": "jest --testPathIgnorePatterns=routes && npm run test:integration",
-    "test:integration": "jest routes --runInBand --coverage",
+    "test:integration": "jest --runInBand --coverage",
     "test:watch": "jest --watch",
     "run:docker": "node src/index",
     "dev:builder": "cross-env PORT=4001 nodemon src/index.js",

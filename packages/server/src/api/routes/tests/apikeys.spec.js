@@ -35,7 +35,7 @@ describe("/api/keys", () => {
 
   describe("update", () => {
     it("should allow updating a value", async () => {
-      fs.writeFileSync(path.join(budibaseAppsDir(), ".env"), "")
+      fs.writeFileSync(path.join(budibaseAppsDir(), ".env"), "TEST_API_KEY=thing")
       const res = await request
         .put(`/api/keys/TEST`)
         .send({
