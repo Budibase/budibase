@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const bcrypt = require("../../utilities/bcrypt")
 const {
   generateDatasourceID,
   getDatasourceParams,
