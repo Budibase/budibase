@@ -12,7 +12,7 @@ const router = Router()
 router
   .get("/api/datasources", authorized(BUILDER), datasourceController.fetch)
   .get(
-    "/api/datasources/:id",
+    "/api/datasources/:datasourceId",
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     datasourceController.find
   )
