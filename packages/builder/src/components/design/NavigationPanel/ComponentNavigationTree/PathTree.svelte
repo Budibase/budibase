@@ -9,6 +9,7 @@
   import ComponentTree from "./ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
+  import { get } from "svelte/store"
 
   const ROUTE_NAME_MAP = {
     "/": {
@@ -56,13 +57,20 @@
       screen => !searchString || screen.route.includes(searchString)
     )
   }
+
+  const toggleManuallyOpened = () => {
+    if (get(screenSearchString)) {
+      return
+    }
+    routeManuallyOpened = !routeManuallyOpened
+  }
 </script>
 
 {#if !noSearchMatch}
   <NavItem
     icon="ri-folder-line"
     text={path}
-    on:click={() => (routeManuallyOpened = !routeManuallyOpened)}
+    on:click={toggleManuallyOpened}
     opened={routeOpened}
     {border}
     withArrow={route.subpaths} />
