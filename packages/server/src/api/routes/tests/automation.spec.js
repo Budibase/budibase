@@ -109,6 +109,35 @@ describe("/automations", () => {
       automation = res.body.automation
     })
 
+    it("should be able to create an automation with a webhook trigger", async () => {
+      const autoConfig = basicAutomation()
+      autoConfig.definition.trigger = TRIGGER_DEFINITIONS["WEBHOOK"]
+      autoConfig.definition.trigger.id = "webhook_trigger_id"
+      const res = await request
+        .post(`/api/automations`)
+        .set(config.defaultHeaders())
+        .send(autoConfig)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      const originalAuto = res.body.automation
+      expect(originalAuto._id).toBeDefined()
+      expect(originalAuto._rev).toBeDefined()
+      // try removing the webhook trigger
+      const newConfig = originalAuto
+      newConfig.definition.trigger = TRIGGER_DEFINITIONS["ROW_SAVED"]
+      newConfig.definition.trigger.id = "row_saved_id"
+      const newRes = await request
+        .post(`/api/automations`)
+        .set(config.defaultHeaders())
+        .send(newConfig)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      const newAuto = newRes.body.automation
+      expect(newAuto._id).toEqual(originalAuto._id)
+      expect(newAuto._rev).toBeDefined()
+      expect(newAuto._rev).not.toEqual(originalAuto._rev)
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
@@ -116,6 +145,19 @@ describe("/automations", () => {
         url: `/api/automations`,
         body: autoConfig
       })
+    })
+  })
+
+  describe("find", () => {
+    it("should be able to find the automation", async () => {
+      const automation = await config.createAutomation()
+      const res = await request
+        .get(`/api/automations/${automation._id}`)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.body._id).toEqual(automation._id)
+      expect(res.body._rev).toEqual(automation._rev)
     })
   })
 

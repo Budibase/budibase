@@ -205,7 +205,8 @@ class AccessController {
       tryingRoleId == null ||
       tryingRoleId === "" ||
       tryingRoleId === userRoleId ||
-      tryingRoleId === BUILTIN_IDS.BUILDER
+      tryingRoleId === BUILTIN_IDS.BUILDER ||
+      userRoleId === BUILTIN_IDS.BUILDER
     ) {
       return true
     }
