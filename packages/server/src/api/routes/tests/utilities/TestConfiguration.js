@@ -241,7 +241,7 @@ class TestConfiguration {
   async createUser(
     email = EMAIL,
     password = PASSWORD,
-    roleId = BUILTIN_ROLE_IDS.POWER
+    roleId = BUILTIN_ROLE_IDS.POWER,
   ) {
     return this._req(
       {
@@ -251,6 +251,24 @@ class TestConfiguration {
       },
       null,
       controllers.user.create
+    )
+  }
+
+  async makeUserInactive(email) {
+    const user = await this._req(
+      null,
+      {
+        email,
+      },
+      controllers.user.find
+    )
+    return this._req(
+      {
+        ...user,
+        status: "inactive",
+      },
+      null,
+      controllers.user.update
     )
   }
 
