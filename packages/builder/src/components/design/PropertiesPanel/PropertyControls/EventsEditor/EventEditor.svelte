@@ -1,10 +1,10 @@
 <script>
-  import {flip} from "svelte/animate";
-  import {dndzone} from "svelte-dnd-action";
+  import { flip } from "svelte/animate"
+  import { dndzone } from "svelte-dnd-action"
   import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
 
-  const flipDurationMs = 150;
+  const flipDurationMs = 150
 
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
@@ -13,7 +13,7 @@
   // dndzone needs an id on the array items, so this adds some temporary ones.
   if (actions) {
     actions = actions.map((action, i) => {
-      return {...action, id: i}
+      return { ...action, id: i }
     })
   }
 
@@ -41,7 +41,7 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
-      id: actions ? actions.length + 1 : 0
+      id: actions ? actions.length + 1 : 0,
     }
     if (!actions) {
       actions = []
@@ -56,11 +56,11 @@
   }
 
   function handleDndConsider(e) {
-        actions = e.detail.items;
-    }
-    function handleDndFinalize(e) {
-        actions = e.detail.items;
-    }
+    actions = e.detail.items
+  }
+  function handleDndFinalize(e) {
+    actions = e.detail.items
+  }
 </script>
 
 <div class="actions-container">
@@ -87,9 +87,15 @@
     </div>
 
     {#if actions && actions.length > 0}
-      <div class="action-dnd-container" use:dndzone={{items: actions, flipDurationMs, dropTargetStyle: { outline: 'none'}}} on:consider={handleDndConsider} on:finalize={handleDndFinalize}>
+      <div
+        class="action-dnd-container"
+        use:dndzone={{ items: actions, flipDurationMs, dropTargetStyle: { outline: 'none' } }}
+        on:consider={handleDndConsider}
+        on:finalize={handleDndFinalize}>
         {#each actions as action, index (action.id)}
-          <div class="action-container" animate:flip={{duration: flipDurationMs}}>
+          <div
+            class="action-container"
+            animate:flip={{ duration: flipDurationMs }}>
             <div
               class="action-header"
               class:selected={action === selectedAction}
