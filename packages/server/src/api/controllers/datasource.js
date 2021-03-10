@@ -26,35 +26,12 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
 
-  try {
-    const response = await db.post(datasource)
-    datasource._rev = response.rev
-
-    ctx.status = 200
-    ctx.message = "Datasource saved successfully."
-    ctx.body = datasource
-  } catch (err) {
-    ctx.throw(err.status, err)
-  }
-}
-
-exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const user = ctx.request.body
-  const dbUser = await db.get(ctx.request.body._id)
-  if (user.password) {
-    user.password = await bcrypt.hash(user.password)
-  } else {
-    delete user.password
-  }
-  const newData = { ...dbUser, ...user }
-
-  const response = await db.put(newData)
-  user._rev = response.rev
+  const response = await db.post(datasource)
+  datasource._rev = response.rev
 
   ctx.status = 200
-  ctx.message = `User ${ctx.request.body.email} updated successfully.`
-  ctx.body = response
+  ctx.message = "Datasource saved successfully."
+  ctx.body = datasource
 }
 
 exports.destroy = async function(ctx) {
@@ -73,6 +50,5 @@ exports.destroy = async function(ctx) {
 
 exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
-  const datasource = await database.get(ctx.params.datasourceId)
-  ctx.body = datasource
+  ctx.body = await database.get(ctx.params.datasourceId)
 }
