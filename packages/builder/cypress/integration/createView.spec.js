@@ -1,15 +1,6 @@
-function removeSpacing(headers) {
-  let newHeaders = []
-  for (let header of headers) {
-    newHeaders.push(header.replace(/\s\s+/g, " "))
-  }
-  return newHeaders
-}
-
 context("Create a View", () => {
   before(() => {
-    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-    cy.createApp("View App", "View App Description")
+    cy.createTestApp()
     cy.createTable("data")
     cy.addColumn("data", "group", "Text")
     cy.addColumn("data", "age", "Number")
@@ -36,16 +27,28 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(removeSpacing(headers)).to.deep.eq([ "rating Number", "age Number", "group Text" ])
+      expect(removeSpacing(headers)).to.deep.eq([
+        "rating Number",
+        "age Number",
+        "group Text",
+      ])
     })
   })
 
   it("filters the view by age over 10", () => {
     cy.contains("Filter").click()
     cy.contains("Add Filter").click()
-    cy.get(".menu-container").find("select").first().select("age")
-    cy.get(".menu-container").find("select").eq(1).select("More Than")
-    cy.get(".menu-container").find("input").type(18)
+    cy.get(".menu-container")
+      .find("select")
+      .first()
+      .select("age")
+    cy.get(".menu-container")
+      .find("select")
+      .eq(1)
+      .select("More Than")
+    cy.get(".menu-container")
+      .find("input")
+      .type(18)
     cy.contains("Save").click()
     cy.get("[role=rowgroup] .ag-row").get($values => {
       expect($values).to.have.length(5)
@@ -57,9 +60,15 @@ context("Create a View", () => {
     cy.viewport("macbook-15")
 
     cy.contains("Calculate").click()
-    cy.get(".menu-container").find("select").eq(0).select("Statistics")
+    cy.get(".menu-container")
+      .find("select")
+      .eq(0)
+      .select("Statistics")
     cy.wait(50)
-    cy.get(".menu-container").find("select").eq(1).select("age")
+    cy.get(".menu-container")
+      .find("select")
+      .eq(1)
+      .select("age")
     cy.contains("Save").click()
     cy.wait(100)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
@@ -68,19 +77,19 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(removeSpacing(headers)).to.deep.eq([ "avg Number",
+      expect(removeSpacing(headers)).to.deep.eq([
+        "avg Number",
         "sumsqr Number",
         "count Number",
         "max Number",
         "min Number",
         "sum Number",
-        "field Text" ])
+        "field Text",
+      ])
     })
     cy.get(".ag-cell").then($values => {
-      let values = Array.from($values).map(header =>
-        header.textContent.trim()
-      )
-      expect(values).to.deep.eq([ "31", "5347", "5", "49", "20", "155", "age" ])
+      let values = Array.from($values).map(header => header.textContent.trim())
+      expect(values).to.deep.eq(["31", "5347", "5", "49", "20", "155", "age"])
     })
   })
 
@@ -99,7 +108,15 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([ "Students", "23.333333333333332", "1650", "3", "25", "20", "70" ])
+        expect(values).to.deep.eq([
+          "Students",
+          "23.333333333333332",
+          "1650",
+          "3",
+          "25",
+          "20",
+          "70",
+        ])
       })
   })
 
@@ -124,3 +141,11 @@ context("Create a View", () => {
     cy.contains("TestView Updated").should("not.be.visible")
   })
 })
+
+function removeSpacing(headers) {
+  let newHeaders = []
+  for (let header of headers) {
+    newHeaders.push(header.replace(/\s\s+/g, " "))
+  }
+  return newHeaders
+}

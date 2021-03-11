@@ -1,46 +1,30 @@
-const {
-  createApplication,
-  createTable,
-  createRow,
-  supertest,
-  defaultHeaders,
-  addPermission,
-  publicHeaders,
-  makeBasicRow,
-} = require("./couchTestUtils")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
+const setup = require("./utilities")
+const { basicRow } = require("./utilities/structures")
 
 const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 
 describe("/permission", () => {
-  let server
-  let request
-  let appId
+  let request = setup.getRequest()
+  let config = setup.getConfig()
   let table
   let perms
   let row
 
-  beforeAll(async () => {
-    ;({ request, server } = await supertest())
-  })
-
-  afterAll(() => {
-    server.close()
-  })
+  afterAll(setup.afterAll)
 
   beforeEach(async () => {
-    let app = await createApplication(request)
-    appId = app.instance._id
-    table = await createTable(request, appId)
-    perms = await addPermission(request, appId, STD_ROLE_ID, table._id)
-    row = await createRow(request, appId, table._id)
+    await config.init()
+    table = await config.createTable()
+    row = await config.createRow()
+    perms = await config.addPermission(STD_ROLE_ID, table._id)
   })
 
   async function getTablePermissions() {
     return request
       .get(`/api/permission/${table._id}`)
-      .set(defaultHeaders(appId))
+      .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
   }
@@ -49,7 +33,7 @@ describe("/permission", () => {
     it("should be able to get levels", async () => {
       const res = await request
         .get(`/api/permission/levels`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body).toBeDefined()
@@ -68,7 +52,7 @@ describe("/permission", () => {
     it("should get the resource permissions", async () => {
       const res = await request
         .get(`/api/permission/${table._id}`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
@@ -76,13 +60,13 @@ describe("/permission", () => {
     })
 
     it("should get resource permissions with multiple roles", async () => {
-      perms = await addPermission(request, appId, HIGHER_ROLE_ID, table._id, "write")
+      perms = await config.addPermission(HIGHER_ROLE_ID, table._id, "write")
       const res = await getTablePermissions()
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
       expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
       const allRes = await request
         .get(`/api/permission`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
@@ -94,7 +78,7 @@ describe("/permission", () => {
     it("should be able to remove the permission", async () => {
       const res = await request
         .delete(`/api/permission/${STD_ROLE_ID}/${table._id}/read`)
-        .set(defaultHeaders(appId))
+        .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(STD_ROLE_ID)
@@ -107,7 +91,7 @@ describe("/permission", () => {
     it("should be able to read the row", async () => {
       const res = await request
         .get(`/api/${table._id}/rows`)
-        .set(publicHeaders(appId))
+        .set(config.publicHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(row._id)
@@ -116,8 +100,8 @@ describe("/permission", () => {
     it("shouldn't allow writing from a public user", async () => {
       const res = await request
         .post(`/api/${table._id}/rows`)
-        .send(makeBasicRow(table._id))
-        .set(publicHeaders(appId))
+        .send(basicRow(table._id))
+        .set(config.publicHeaders())
         .expect("Content-Type", /json/)
         .expect(403)
       expect(res.status).toEqual(403)

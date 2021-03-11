@@ -69,7 +69,7 @@
   }
 </script>
 
-<div class="property-control" bind:this={anchor}>
+<div class="property-control" bind:this={anchor} data-cy={`setting-${key}`}>
   <div class="label">{label}</div>
   <div data-cy={`${key}-prop-control`} class="control">
     <svelte:component
