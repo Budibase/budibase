@@ -65,7 +65,7 @@
   "dependencies": {
     "@budibase/bbui": "^1.58.13",
     "@budibase/client": "^0.8.5",
-    "@budibase/colorpicker": "1.0.1",
+    "@budibase/colorpicker": "1.1.2",
     "@budibase/string-templates": "^0.8.5",
     "@budibase/svelte-ag-grid": "^1.0.4",
     "@sentry/browser": "5.19.1",

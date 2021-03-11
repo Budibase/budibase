@@ -56,7 +56,7 @@
 </script>
 
 <div class="root">
-  {#each paths as path, idx}
+  {#each paths as path, idx (path)}
     <PathTree border={idx > 0} {path} route={routes[path]} />
   {/each}
 
