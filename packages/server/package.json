@@ -56,7 +56,8 @@
       "!src/api/routes/tests/**/*.js",
       "!src/api/controllers/deploy/**/*.js",
       "!src/*.js",
-      "!src/api/controllers/static/**/*"
+      "!src/api/controllers/static/**/*",
+      "!src/db/dynamoClient.js"
     ],
     "coverageReporters": [
       "lcov",
