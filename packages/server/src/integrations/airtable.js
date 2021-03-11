@@ -40,6 +40,10 @@ const SCHEMA = {
           type: FIELD_TYPES.STRING,
           required: true,
         },
+        numRecords: {
+          type: FIELD_TYPES.NUMBER,
+          default: 10,
+        },
       },
     },
     update: {

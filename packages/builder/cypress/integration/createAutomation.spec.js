@@ -1,12 +1,6 @@
 context("Create a automation", () => {
   before(() => {
-    cy.server()
-    cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-
-    cy.createApp(
-      "Automation Test App",
-      "This app is used to test that automations do in fact work!"
-    )
+    cy.createTestApp()
   })
 
   // https://on.cypress.io/interacting-with-elements
