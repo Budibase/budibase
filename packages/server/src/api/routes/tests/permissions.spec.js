@@ -107,4 +107,19 @@ describe("/permission", () => {
       expect(res.status).toEqual(403)
     })
   })
+
+  describe("fetch builtins", () => {
+    it("should be able to fetch builtin definitions", async () => {
+      const res = await request
+        .get(`/api/permission/builtin`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(Array.isArray(res.body)).toEqual(true)
+      const publicPerm = res.body.find(perm => perm._id === "public")
+      expect(publicPerm).toBeDefined()
+      expect(publicPerm.permissions).toBeDefined()
+      expect(publicPerm.name).toBeDefined()
+    })
+  })
 })

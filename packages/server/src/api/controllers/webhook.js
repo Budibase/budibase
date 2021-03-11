@@ -43,12 +43,10 @@ exports.save = async ctx => {
     webhook._id = generateWebhookID()
   }
   const response = await db.put(webhook)
+  webhook._rev = response.rev
   ctx.body = {
     message: "Webhook created successfully",
-    webhook: {
-      ...webhook,
-      ...response,
-    },
+    webhook,
   }
 }
 
@@ -95,5 +93,7 @@ exports.trigger = async ctx => {
     })
   }
   ctx.status = 200
-  ctx.body = "Webhook trigger fired successfully"
+  ctx.body = {
+    message: "Webhook trigger fired successfully",
+  }
 }

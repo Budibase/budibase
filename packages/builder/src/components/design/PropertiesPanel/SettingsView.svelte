@@ -162,7 +162,7 @@
 
   {#if componentDefinition?.component?.endsWith('/fieldgroup')}
     <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
-      Update Form Fields 
+      Update Form Fields
     </Button>
   {/if}
 </div>

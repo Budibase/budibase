@@ -31,6 +31,8 @@ exports.getLocalTemplates = function() {
   return templateObj
 }
 
+// can't really test this, downloading is just not something we should do in a behavioural test
+/* istanbul ignore next */
 exports.downloadTemplate = async function(type, name) {
   const dirName = join(budibaseAppsDir(), "templates", type, name)
   if (env.LOCAL_TEMPLATES) {
@@ -67,8 +69,7 @@ exports.performDump = performDump
 exports.exportTemplateFromApp = async function({ templateName, appId }) {
   // Copy frontend files
   const templatesDir = join(
-    os.homedir(),
-    ".budibase",
+    budibaseAppsDir(),
     "templates",
     "app",
     templateName,

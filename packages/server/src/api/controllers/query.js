@@ -110,7 +110,6 @@ exports.preview = async function(ctx) {
 
   if (!Integration) {
     ctx.throw(400, "Integration type does not exist.")
-    return
   }
 
   const { fields, parameters, queryVerb } = ctx.request.body
@@ -140,7 +139,6 @@ exports.execute = async function(ctx) {
 
   if (!Integration) {
     ctx.throw(400, "Integration type does not exist.")
-    return
   }
 
   const enrichedQuery = await enrichQueryFields(

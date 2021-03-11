@@ -2,6 +2,9 @@ const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../../utilities/security/permissions")
+const { createHomeScreen } = require("../../../../constants/screens")
+const { EMPTY_LAYOUT } = require("../../../../constants/layouts")
+const { cloneDeep } = require("lodash/fp")
 
 exports.basicTable = () => {
   return {
@@ -83,5 +86,24 @@ exports.basicUser = role => {
     email: "bill@bill.com",
     password: "yeeooo",
     roleId: role,
+  }
+}
+
+exports.basicScreen = () => {
+  return createHomeScreen()
+}
+
+exports.basicLayout = () => {
+  return cloneDeep(EMPTY_LAYOUT)
+}
+
+exports.basicWebhook = automationId => {
+  return {
+    live: true,
+    name: "webhook",
+    action: {
+      type: "automation",
+      target: automationId,
+    },
   }
 }
