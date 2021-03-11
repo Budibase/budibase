@@ -162,15 +162,15 @@
       linkName = truncate(linkTable.name, { length: 15 })
     return [
       {
-        name: `Many ${thisName} rows has many ${linkName} rows`,
+        name: `Many ${thisName} rows → many ${linkName} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: `One ${thisName} row has many ${linkName} rows`,
+        name: `One ${linkName} row → many ${thisName} rows`,
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
-        name: `Many ${thisName} rows has one ${linkName} row`,
+        name: `One ${thisName} row → many ${linkName} rows`,
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -270,9 +270,9 @@
               {value}
               bind:group={field.relationshipType}>
               <div class="radio-button-labels">
-                <label for={value}>{name.split('has')[0]}</label>
-                <label class="rel-type-center" for={value}>has</label>
-                <label for={value}>{name.split('has')[1]}</label>
+                <label for={value}>{name.split('→')[0]}</label>
+                <label class="rel-type-center" for={value}>→</label>
+                <label for={value}>{name.split('→')[1]}</label>
               </div>
             </Radio>
           {/each}

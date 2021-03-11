@@ -56,7 +56,11 @@ if (electron.app && electron.app.isPackaged) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
-server.on("close", () => console.log("Server Closed"))
+server.on("close", () => {
+  if (env.NODE_ENV !== "jest") {
+    console.log("Server Closed")
+  }
+})
 
 module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)

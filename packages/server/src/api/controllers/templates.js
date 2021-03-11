@@ -24,6 +24,8 @@ exports.fetch = async function(ctx) {
   }
 }
 
+// can't currently test this, have to ignore from coverage
+/* istanbul ignore next */
 exports.downloadTemplate = async function(ctx) {
   const { type, name } = ctx.params
 

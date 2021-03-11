@@ -9,4 +9,7 @@ module.exports = {
   automation: require("../../../controllers/automation"),
   datasource: require("../../../controllers/datasource"),
   query: require("../../../controllers/query"),
+  screen: require("../../../controllers/screen"),
+  webhook: require("../../../controllers/webhook"),
+  layout: require("../../../controllers/layout"),
 }

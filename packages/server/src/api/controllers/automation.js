@@ -98,6 +98,11 @@ exports.create = async function(ctx) {
   let automation = ctx.request.body
   automation.appId = ctx.user.appId
 
+  // call through to update if already exists
+  if (automation._id && automation._rev) {
+    return exports.update(ctx)
+  }
+
   automation._id = generateAutomationID()
 
   automation.type = "automation"

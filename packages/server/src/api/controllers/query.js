@@ -61,9 +61,11 @@ async function enrichQueryFields(fields, parameters) {
     if (typeof fields[key] === "object") {
       // enrich nested fields object
       enrichedQuery[key] = await enrichQueryFields(fields[key], parameters)
-    } else {
+    } else if (typeof fields[key] === "string") {
       // enrich string value as normal
       enrichedQuery[key] = await processString(fields[key], parameters)
+    } else {
+      enrichedQuery[key] = fields[key]
     }
   }
 
@@ -108,7 +110,6 @@ exports.preview = async function(ctx) {
 
   if (!Integration) {
     ctx.throw(400, "Integration type does not exist.")
-    return
   }
 
   const { fields, parameters, queryVerb } = ctx.request.body
@@ -138,7 +139,6 @@ exports.execute = async function(ctx) {
 
   if (!Integration) {
     ctx.throw(400, "Integration type does not exist.")
-    return
   }
 
   const enrichedQuery = await enrichQueryFields(

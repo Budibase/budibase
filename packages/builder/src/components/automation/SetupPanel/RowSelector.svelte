@@ -2,7 +2,7 @@
   import { backendUiStore } from "builderStore"
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from './AutomationBindingPanel.svelte'
+  import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
 
   export let value
   export let bindings
@@ -44,7 +44,7 @@
             panel={AutomationBindingPanel}
             extraThin
             value={value[field]}
-            on:change={e => value[field] = e.detail}
+            on:change={e => (value[field] = e.detail)}
             label={field}
             type="string"
             {bindings} />

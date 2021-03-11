@@ -41,13 +41,15 @@ router.use(async (ctx, next) => {
   try {
     await next()
   } catch (err) {
-    ctx.log.error(err)
     ctx.status = err.status || err.statusCode || 500
     ctx.body = {
       message: err.message,
       status: ctx.status,
     }
-    console.trace(err)
+    if (env.NODE_ENV !== "jest") {
+      ctx.log.error(err)
+      console.trace(err)
+    }
   }
 })
 

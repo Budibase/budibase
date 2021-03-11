@@ -41,7 +41,7 @@
     id,
     children: children.length,
     styles: { ...styles, id },
-    transition
+    transition,
   })
 
   // Gets the component constructor for the specified component

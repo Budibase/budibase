@@ -36,6 +36,8 @@ class ResourceIdGetter {
   }
 }
 
+module.exports.ResourceIdGetter = ResourceIdGetter
+
 module.exports.paramResource = main => {
   return new ResourceIdGetter("params").mainResource(main).build()
 }
