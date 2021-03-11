@@ -3,20 +3,13 @@ const { join } = require("../../utilities/centralPath")
 const readline = require("readline")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const env = require("../../environment")
-const selfhost = require("../../selfhost")
 const ENV_FILE_PATH = "/.env"
 
 exports.fetch = async function(ctx) {
   ctx.status = 200
-  if (env.SELF_HOSTED) {
-    ctx.body = {
-      selfhost: await selfhost.getSelfHostAPIKey(),
-    }
-  } else {
-    ctx.body = {
-      budibase: env.BUDIBASE_API_KEY,
-      userId: env.USERID_API_KEY,
-    }
+  ctx.body = {
+    budibase: env.BUDIBASE_API_KEY,
+    userId: env.USERID_API_KEY,
   }
 }
 

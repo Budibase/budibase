@@ -33,7 +33,7 @@
   },
   "scripts": {
     "test": "jest --testPathIgnorePatterns=routes && npm run test:integration",
-    "test:integration": "jest routes --runInBand --coverage",
+    "test:integration": "jest --runInBand --coverage",
     "test:watch": "jest --watch",
     "run:docker": "node src/index",
     "dev:builder": "cross-env PORT=4001 nodemon src/index.js",
@@ -53,7 +53,11 @@
       "src/**/*.js",
       "!**/node_modules/**",
       "!src/db/views/*.js",
-      "!src/api/routes/tests"
+      "!src/api/routes/tests/**/*.js",
+      "!src/api/controllers/deploy/**/*.js",
+      "!src/api/controllers/static/templates/**/*",
+      "!src/api/controllers/static/selfhost/**/*",
+      "!src/*.js"
     ],
     "coverageReporters": [
       "lcov",
@@ -122,6 +126,7 @@
     "zlib": "1.0.5"
   },
   "devDependencies": {
+    "@budibase/standard-components": "^0.8.5",
     "@jest/test-sequencer": "^24.8.0",
     "cross-env": "^7.0.3",
     "electron": "10.1.3",

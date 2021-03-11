@@ -16,7 +16,7 @@ async function activate() {
     // this was an issue as NODE_ENV = 'cypress' on the server,
     // but 'production' on the client
     const response = await api.get("/api/analytics")
-    analyticsEnabled = (await response.json()) === true
+    analyticsEnabled = (await response.json()).enabled === true
   }
   if (!analyticsEnabled) return
   if (sentryConfigured) Sentry.init({ dsn: process.env.SENTRY_DSN })
