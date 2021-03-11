@@ -6,7 +6,7 @@
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from './AutomationBindingPanel.svelte'
+  import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
 
   export let block
   export let webhookModal
@@ -70,7 +70,7 @@
         type={'email'}
         extraThin
         value={block.inputs[key]}
-        on:change={e => block.inputs[key] = e.detail}
+        on:change={e => (block.inputs[key] = e.detail)}
         {bindings} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
@@ -86,7 +86,7 @@
         type={value.customType}
         extraThin
         value={block.inputs[key]}
-        on:change={e => block.inputs[key] = e.detail}
+        on:change={e => (block.inputs[key] = e.detail)}
         {bindings} />
     {/if}
   </div>

@@ -46,6 +46,7 @@ exports.authenticate = async ctx => {
       version: app.version,
     }
     // if in cloud add the user api key, unless self hosted
+    /* istanbul ignore next */
     if (env.CLOUD && !env.SELF_HOSTED) {
       const { apiKey } = await getAPIKey(ctx.user.appId)
       payload.apiKey = apiKey
@@ -70,6 +71,7 @@ exports.authenticate = async ctx => {
 
 exports.fetchSelf = async ctx => {
   const { userId, appId } = ctx.user
+  /* istanbul ignore next */
   if (!userId || !appId) {
     ctx.body = {}
     return

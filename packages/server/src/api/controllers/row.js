@@ -224,6 +224,7 @@ exports.fetchView = async function(ctx) {
     try {
       table = await db.get(viewInfo.meta.tableId)
     } catch (err) {
+      /* istanbul ignore next */
       table = {
         schema: {},
       }
@@ -255,16 +256,24 @@ exports.fetchView = async function(ctx) {
 
 exports.search = async function(ctx) {
   const appId = ctx.user.appId
-
   const db = new CouchDB(appId)
-
   const {
     query,
     pagination: { pageSize = 10, page },
   } = ctx.request.body
 
-  query.tableId = ctx.params.tableId
+  // make all strings a starts with operation rather than pure equality
+  for (const [key, queryVal] of Object.entries(query)) {
+    if (typeof queryVal === "string") {
+      query[key] = {
+        $gt: queryVal,
+        $lt: `${queryVal}\uffff`,
+      }
+    }
+  }
 
+  // pure equality for table
+  query.tableId = ctx.params.tableId
   const response = await db.find({
     selector: query,
     limit: pageSize,
@@ -324,7 +333,6 @@ exports.destroy = async function(ctx) {
   const row = await db.get(ctx.params.rowId)
   if (row.tableId !== ctx.params.tableId) {
     ctx.throw(400, "Supplied tableId doesn't match the row's tableId")
-    return
   }
   await linkRows.updateLinks({
     appId,
@@ -376,15 +384,6 @@ exports.fetchEnrichedRow = async function(ctx) {
   const db = new CouchDB(appId)
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
-  if (appId == null || tableId == null || rowId == null) {
-    ctx.status = 400
-    ctx.body = {
-      status: 400,
-      error:
-        "Cannot handle request, URI params have not been successfully prepared.",
-    }
-    return
-  }
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
     db.get(tableId),

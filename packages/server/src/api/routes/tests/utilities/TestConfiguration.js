@@ -8,9 +8,15 @@ const {
   basicAutomation,
   basicDatasource,
   basicQuery,
+  basicScreen,
+  basicLayout,
+  basicWebhook,
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
+const fs = require("fs")
+const { budibaseAppsDir } = require("../../../../utilities/budibaseDir")
+const { join } = require("path")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -22,6 +28,7 @@ class TestConfiguration {
     // we need the request for logging in, involves cookies, hard to fake
     this.request = supertest(this.server)
     this.appId = null
+    this.allApps = []
   }
 
   getRequest() {
@@ -55,6 +62,13 @@ class TestConfiguration {
 
   end() {
     this.server.close()
+    const appDir = budibaseAppsDir()
+    const files = fs.readdirSync(appDir)
+    for (let file of files) {
+      if (this.allApps.some(app => file.includes(app._id))) {
+        fs.rmdirSync(join(appDir, file), { recursive: true })
+      }
+    }
   }
 
   defaultHeaders() {
@@ -83,9 +97,19 @@ class TestConfiguration {
     return headers
   }
 
+  async roleHeaders(email = EMAIL, roleId = BUILTIN_ROLE_IDS.ADMIN) {
+    try {
+      await this.createUser(email, PASSWORD, roleId)
+    } catch (err) {
+      // allow errors here
+    }
+    return this.login(email, PASSWORD)
+  }
+
   async createApp(appName) {
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app._id
+    this.allApps.push(this.app)
     return this.app
   }
 
@@ -208,6 +232,24 @@ class TestConfiguration {
     return this._req(config, null, controllers.query.save)
   }
 
+  async createScreen(config = null) {
+    config = config || basicScreen()
+    return this._req(config, null, controllers.screen.save)
+  }
+
+  async createWebhook(config = null) {
+    if (!this.automation) {
+      throw "Must create an automation before creating webhook."
+    }
+    config = config || basicWebhook(this.automation._id)
+    return (await this._req(config, null, controllers.webhook.save)).webhook
+  }
+
+  async createLayout(config = null) {
+    config = config || basicLayout()
+    return await this._req(config, null, controllers.layout.save)
+  }
+
   async createUser(
     email = EMAIL,
     password = PASSWORD,
@@ -221,6 +263,24 @@ class TestConfiguration {
       },
       null,
       controllers.user.create
+    )
+  }
+
+  async makeUserInactive(email) {
+    const user = await this._req(
+      null,
+      {
+        email,
+      },
+      controllers.user.find
+    )
+    return this._req(
+      {
+        ...user,
+        status: "inactive",
+      },
+      null,
+      controllers.user.update
     )
   }
 
@@ -241,6 +301,7 @@ class TestConfiguration {
     return {
       Accept: "application/json",
       Cookie: result.headers["set-cookie"],
+      "x-budibase-app-id": this.appId,
     }
   }
 }

@@ -43,6 +43,7 @@ module.exports = async (ctx, next) => {
       return
     }
   }
+
   // if running in builder or a self hosted cloud usage quotas should not be executed
   if (!env.CLOUD || env.SELF_HOSTED) {
     return next()

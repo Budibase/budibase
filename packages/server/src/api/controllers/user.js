@@ -52,7 +52,7 @@ exports.create = async function(ctx) {
     const response = await db.post(user)
     ctx.status = 200
     ctx.message = "User created successfully."
-    ctx.userId = response._id
+    ctx.userId = response.id
     ctx.body = {
       _rev: response.rev,
       email,
@@ -70,6 +70,9 @@ exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const user = ctx.request.body
   let dbUser
+  if (user.email && !user._id) {
+    user._id = generateUserID(user.email)
+  }
   // get user incase password removed
   if (user._id) {
     dbUser = await db.get(user._id)
@@ -87,14 +90,15 @@ exports.update = async function(ctx) {
   user._rev = response.rev
 
   ctx.status = 200
-  ctx.message = `User ${ctx.request.body.email} updated successfully.`
   ctx.body = response
 }
 
 exports.destroy = async function(ctx) {
   const database = new CouchDB(ctx.user.appId)
   await database.destroy(generateUserID(ctx.params.email))
-  ctx.message = `User ${ctx.params.email} deleted.`
+  ctx.body = {
+    message: `User ${ctx.params.email} deleted.`,
+  }
   ctx.status = 200
 }
 
