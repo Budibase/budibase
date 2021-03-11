@@ -14,6 +14,8 @@ exports.afterAll = () => {
   if (config) {
     config.end()
   }
+  // clear app files
+
   request = null
   config = null
 }

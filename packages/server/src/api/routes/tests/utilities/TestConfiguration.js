@@ -14,6 +14,9 @@ const {
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
+const fs = require("fs")
+const { budibaseAppsDir } = require("../../../../utilities/budibaseDir")
+const { join } = require("path")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -25,6 +28,7 @@ class TestConfiguration {
     // we need the request for logging in, involves cookies, hard to fake
     this.request = supertest(this.server)
     this.appId = null
+    this.allApps = []
   }
 
   getRequest() {
@@ -58,6 +62,13 @@ class TestConfiguration {
 
   end() {
     this.server.close()
+    const appDir = budibaseAppsDir()
+    const files = fs.readdirSync(appDir)
+    for (let file of files) {
+      if (this.allApps.some(app => file.includes(app._id))) {
+        fs.rmdirSync(join(appDir, file), { recursive: true })
+      }
+    }
   }
 
   defaultHeaders() {
@@ -98,6 +109,7 @@ class TestConfiguration {
   async createApp(appName) {
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app._id
+    this.allApps.push(this.app)
     return this.app
   }
 
