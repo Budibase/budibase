@@ -85,11 +85,16 @@
             <option value={role._id}>{role.name}</option>
           {/each}
         </Select>
-        <Input
-          extraThin
-          placeholder="Enter a route to search"
-          label="Search Screens"
-          bind:value={$screenSearchString} />
+        <div class="search-screens">
+          <Input
+            extraThin
+            placeholder="Enter a route to search"
+            label="Search Screens"
+            bind:value={$screenSearchString} />
+          <i
+            class="ri-close-line"
+            on:click={() => ($screenSearchString = null)} />
+        </div>
       </div>
       <div class="nav-items-container">
         <ComponentNavigationTree />
@@ -138,5 +143,24 @@
     align-items: stretch;
     margin-bottom: var(--spacing-m);
     gap: var(--spacing-m);
+  }
+
+  .search-screens {
+    position: relative;
+  }
+  .search-screens i {
+    right: 2px;
+    bottom: 2px;
+    position: absolute;
+    box-sizing: border-box;
+    padding: var(--spacing-s);
+    border-left: 1px solid var(--grey-4);
+    background-color: var(--grey-2);
+    border-top-right-radius: var(--border-radius-m);
+    border-bottom-right-radius: var(--border-radius-m);
+    color: var(--grey-7);
+    font-size: 14px;
+    line-height: 15px;
+    top: auto;
   }
 </style>
