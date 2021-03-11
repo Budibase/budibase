@@ -55,9 +55,8 @@
       "!src/db/views/*.js",
       "!src/api/routes/tests/**/*.js",
       "!src/api/controllers/deploy/**/*.js",
-      "!src/api/controllers/static/templates/**/*",
-      "!src/api/controllers/static/selfhost/**/*",
-      "!src/*.js"
+      "!src/*.js",
+      "!src/api/controllers/static/**/*"
     ],
     "coverageReporters": [
       "lcov",

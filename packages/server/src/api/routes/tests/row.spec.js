@@ -1,7 +1,6 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
-const env = require("../../../environment")
-const { basicRow } = require("./utilities/structures")
 const setup = require("./utilities")
+const { basicRow } = setup.structures
 
 describe("/rows", () => {
   let request = setup.getRequest()

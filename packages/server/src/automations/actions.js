@@ -37,10 +37,12 @@ let AUTOMATION_BUCKET = env.AUTOMATION_BUCKET
 let AUTOMATION_DIRECTORY = env.AUTOMATION_DIRECTORY
 let MANIFEST = null
 
+/* instanbul ignore next */
 function buildBundleName(pkgName, version) {
   return `${pkgName}@${version}.min.js`
 }
 
+/* instanbul ignore next */
 async function downloadPackage(name, version, bundleName) {
   await download(
     `${AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
@@ -96,5 +98,6 @@ module.exports.init = async function() {
   return MANIFEST
 }
 
+// definitions will have downloaded ones added to it, while builtin won't
 module.exports.DEFINITIONS = BUILTIN_DEFINITIONS
 module.exports.BUILTIN_DEFINITIONS = BUILTIN_DEFINITIONS
