@@ -1,12 +1,12 @@
+
 const Airtable = require("airtable")
 const { ElectronHttpExecutor } = require("electron-updater/out/electronHttpExecutor")
-const { integration } = require("../airtable")
-
+const AirtableIntegration = require("../airtable")
 jest.mock("airtable")
 
 class TestConfiguration {
   constructor(config = {}) {
-    this.integration = new integration(config) 
+    this.integration = new AirtableIntegration.integration(config) 
   }
 }
 
@@ -22,7 +22,7 @@ describe("Airtable Integration", () => {
       table: "test",
       json: ""
     })
-    expect(Airtable.create).toHaveBeenCalledWith({})
+    expect(config.integration.client.create).toHaveBeenCalledWith({})
   })
 
   it("calls the read method with the correct params", () => {
