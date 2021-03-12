@@ -66,6 +66,7 @@ class AirtableIntegration {
   constructor(config) {
     this.config = config
     this.client = new Airtable(config).base(config.base)
+    console.log(new Airtable().base())
   }
 
   async create(query) {
