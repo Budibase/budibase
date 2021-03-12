@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.js",
@@ -9,13 +9,13 @@
     "dev:builder": "rollup -cw"
   },
   "dependencies": {
-    "@budibase/string-templates": "^0.8.7",
+    "@budibase/string-templates": "^0.8.8",
     "regexparam": "^1.3.0",
     "shortid": "^2.2.15",
     "svelte-spa-router": "^3.0.5"
   },
   "devDependencies": {
-    "@budibase/standard-components": "^0.8.7",
+    "@budibase/standard-components": "^0.8.8",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "fs-extra": "^8.1.0",
@@ -29,5 +29,5 @@
     "svelte": "^3.30.0",
     "svelte-jester": "^1.0.6"
   },
-  "gitHead": "768a9d59da12cfefcd7ccaba05f975e878669504"
+  "gitHead": "1b95326b20d1352d36305910259228b96a683dc7"
 }
