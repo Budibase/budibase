@@ -53,11 +53,14 @@
       "src/**/*.js",
       "!**/node_modules/**",
       "!src/db/views/*.js",
-      "!src/api/routes/tests/**/*.js",
       "!src/api/controllers/deploy/**/*.js",
       "!src/*.js",
       "!src/api/controllers/static/**/*",
-      "!src/db/dynamoClient.js"
+      "!src/db/dynamoClient.js",
+      "!src/utilities/usageQuota.js",
+      "!src/api/routes/tests/**/*",
+      "!src/tests/**/*",
+      "!src/automations/tests/**/*"
     ],
     "coverageReporters": [
       "lcov",
