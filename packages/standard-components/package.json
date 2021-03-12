@@ -35,9 +35,9 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.8.7",
+  "version": "0.8.8",
   "license": "MIT",
-  "gitHead": "768a9d59da12cfefcd7ccaba05f975e878669504",
+  "gitHead": "1b95326b20d1352d36305910259228b96a683dc7",
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "^1.1.0",
     "@budibase/bbui": "^1.58.13",
