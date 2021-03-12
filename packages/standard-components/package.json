@@ -35,7 +35,7 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.8.6",
+  "version": "0.8.7",
   "license": "MIT",
   "gitHead": "768a9d59da12cfefcd7ccaba05f975e878669504",
   "dependencies": {
