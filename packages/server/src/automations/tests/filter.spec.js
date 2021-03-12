@@ -1,7 +1,7 @@
 const setup = require("./utilities")
 const { LogicConditions } = require("../steps/filter")
 
-describe("test the delay action", () => {
+describe("test the filter logic", () => {
   async function checkFilter(field, condition, value, pass = true) {
     let res = await setup.runStep(setup.logic.FILTER.stepId,
       { field, condition, value }

@@ -1,6 +1,6 @@
 const setup = require("./utilities")
 
-describe("test the delay action", () => {
+describe("test the delay logic", () => {
   it("should be able to run the delay", async () => {
     const time = 100
     const before = Date.now()
