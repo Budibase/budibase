@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { Button, Switcher, Modal } from "@budibase/bbui"
+  import { Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
