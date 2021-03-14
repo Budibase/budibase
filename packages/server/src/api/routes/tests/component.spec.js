@@ -17,7 +17,7 @@ describe("/component", () => {
   function mock() {
     const manifestFile = "manifest.json"
     const appId = config.getAppId()
-    const libraries = ["@budibase/standard-components"]
+    const libraries = [join("@budibase", "standard-components")]
     for (let library of libraries) {
       let appDirectory = resolve(budibaseAppsDir(), appId, "node_modules", library, "package")
       fs.mkdirSync(appDirectory, { recursive: true })
