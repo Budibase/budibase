@@ -21,7 +21,8 @@ describe("/component", () => {
     for (let library of libraries) {
       let appDirectory = resolve(budibaseAppsDir(), appId, "node_modules", library, "package")
       fs.mkdirSync(appDirectory, { recursive: true })
-      const file = require.resolve(library).split("dist/index.js")[0] + manifestFile
+
+      const file = require.resolve(library).split(join("dist", "index.js"))[0] + manifestFile
       fs.copyFileSync(file, join(appDirectory, manifestFile))
     }
   }
