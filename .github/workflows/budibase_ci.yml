@@ -7,10 +7,12 @@ on:
     branches:
       - master
       - develop 
+      - next
  pull_request:
     branches:
       - master
       - develop 
+      - next
 
 jobs:
   build:
