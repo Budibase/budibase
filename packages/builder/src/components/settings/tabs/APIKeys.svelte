@@ -19,6 +19,7 @@
     const response = await api.put(`/api/keys/${key}`, { value })
     const res = await response.json()
     keys = { ...keys, ...res }
+    notifier.success("API Key saved.")
   }
 
   // Get Keys
