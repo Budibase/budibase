@@ -66,7 +66,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
-  automations.init()
+  await automations.init()
   // only init the self hosting DB info in the Pouch, not needed in self hosting prod
   if (!env.CLOUD) {
     await selfhost.init()
