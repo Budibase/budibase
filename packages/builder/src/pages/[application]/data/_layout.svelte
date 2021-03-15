@@ -1,5 +1,5 @@
 <script>
-  import { params } from "@sveltech/routify"
+  import { params, isActive } from "@sveltech/routify"
   import { Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
@@ -17,7 +17,7 @@
     },
   ]
 
-  let tab = $params.selectedDatasource ? "datasource" : "table"
+  let tab = $isActive('./datasource') || $params.selectedDatasource ? "datasource" : "table"
 
   let modal
 </script>
