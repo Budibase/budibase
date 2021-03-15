@@ -171,6 +171,13 @@ class TestConfiguration {
     return this._req(null, { tableId, rowId }, controllers.row.find)
   }
 
+  async getRows(tableId) {
+    if (!tableId && this.table) {
+      tableId = this.table._id
+    }
+    return this._req(null, { tableId }, controllers.row.fetchTableRows)
+  }
+
   async createRole(config = null) {
     config = config || basicRole()
     return this._req(config, null, controllers.role.save)
@@ -195,6 +202,7 @@ class TestConfiguration {
     const view = config || {
       map: "function(doc) { emit(doc[doc.key], doc._id); } ",
       tableId: this.table._id,
+      name: "ViewTest",
     }
     return this._req(view, null, controllers.view.save)
   }

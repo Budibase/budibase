@@ -348,7 +348,7 @@ describe("/rows", () => {
       const view = await config.createView()
       const row = await config.createRow()
       const res = await request
-        .get(`/api/views/${view._id}`)
+        .get(`/api/views/${view.name}`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
