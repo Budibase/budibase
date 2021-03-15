@@ -3,7 +3,6 @@
   import { automationStore } from "builderStore"
   import { DropdownMenu, Modal } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
-  import analytics from "analytics"
   import CreateWebhookModal from "../Shared/CreateWebhookModal.svelte"
 
   $: hasTrigger = $automationStore.selectedAutomation.hasTrigger()

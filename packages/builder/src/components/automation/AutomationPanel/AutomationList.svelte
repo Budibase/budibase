@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte"
+  import { goto } from "@sveltech/routify"
   import { automationStore } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
@@ -11,6 +12,7 @@
   })
   function selectAutomation(automation) {
     automationStore.actions.select(automation)
+    $goto(`./${automation._id}`)
   }
 </script>
 
