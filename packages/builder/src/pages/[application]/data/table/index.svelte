@@ -1,11 +1,7 @@
 <script>
-  import { store, backendUiStore } from "builderStore"
+  import { backendUiStore } from "builderStore"
   import { goto, leftover } from "@sveltech/routify"
   import { onMount } from "svelte"
-
-  async function selectTable(table) {
-    backendUiStore.actions.tables.select(table)
-  }
 
   onMount(async () => {
     // navigate to first table in list, if not already selected
