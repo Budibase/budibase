@@ -833,10 +833,10 @@
     svelte-portal "^1.0.0"
     turndown "^7.0.0"
 
-"@budibase/colorpicker@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@budibase/colorpicker/-/colorpicker-1.0.1.tgz#940c180e7ebba0cb0756c4c8ef13f5dfab58e810"
-  integrity sha512-+DTHYhU0sTi5RfCyd7AAvMsLFwyF/wgs0owf7KyQU+ZILRW+YsWa7OQMz+hKQfgVAmvzwrNz8ATiBlG3Ac6Asg==
+"@budibase/colorpicker@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@budibase/colorpicker/-/colorpicker-1.1.2.tgz#f7436924ee746d7be9b2009c2fa193e710c30f89"
+  integrity sha512-2PlZBVkATDqDC4b4Ri8Xi8X3OxhuHOGfmZwtXbZL38lNIeofaQT3Qyc1ECzEY5N+HrdGrWhY9EnliF6QM+LIuA==
 
 "@budibase/svelte-ag-grid@^1.0.4":
   version "1.0.4"
