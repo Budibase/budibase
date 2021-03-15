@@ -3,11 +3,11 @@ const usageQuota = require("../../utilities/usageQuota")
 const thread = require("../thread")
 const triggers = require("../triggers")
 const { basicAutomation, basicTable } = require("../../tests/utilities/structures")
-const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { wait } = require("../../utilities")
 const env = require("../../environment")
 const { makePartial } = require("../../tests/utilities")
 const { cleanInputValues } = require("../automationUtils")
+const setup = require("./utilities")
 
 let workerJob
 
@@ -31,13 +31,14 @@ jest.mock("worker-farm", () => {
 })
 
 describe("Run through some parts of the automations system", () => {
-  let config = new TestConfig(false)
+  let config = setup.getConfig()
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
   })
 
+  afterAll(setup.afterAll)
 
   it("should be able to init in builder", async () => {
     await triggers.externalTrigger(basicAutomation(), { a: 1 })
