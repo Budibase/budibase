@@ -123,13 +123,19 @@
   async function createNewApp() {
     submitting = true
     try {
-      // Create App
-      const appResp = await post("/api/applications", {
-        name: $createAppStore.values.applicationName,
-        template,
-      })
-      const appJson = await appResp.json()
+      // Create form data to create app
+      let data = new FormData()
+      data.append("name", $createAppStore.values.applicationName)
+      data.append("useTemplate", template != null)
+      if (template) {
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
+        data.append("templateFile", template.file)
+      }
 
+      // Create App
+      const appResp = await post("/api/applications", data, {})
+      const appJson = await appResp.json()
       if (!appResp.ok) {
         throw new Error(appJson.message)
       }
