@@ -1,15 +1,15 @@
 <script>
-  // import { params } from "@sveltech/routify"
-  // import { backendUiStore } from "builderStore"
+  import { params } from "@sveltech/routify"
+  import { backendUiStore } from "builderStore"
 
-  // if ($params.selectedDatasource) {
-  //   const datasource = $backendUiStore.datasources.find(
-  //     m => m._id === $params.selectedDatasource
-  //   )
-  //   if (datasource) {
-  //     backendUiStore.actions.datasources.select(datasource._id)
-  //   }
-  // }
+  if ($params.query) {
+    const query = $backendUiStore.queries.find(
+      m => m._id === $params.query
+    )
+    if (query) {
+      backendUiStore.actions.queries.select(query)
+    }
+  }
 </script>
 
 <slot />
