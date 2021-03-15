@@ -37,12 +37,12 @@ let AUTOMATION_BUCKET = env.AUTOMATION_BUCKET
 let AUTOMATION_DIRECTORY = env.AUTOMATION_DIRECTORY
 let MANIFEST = null
 
-/* instanbul ignore next */
+/* istanbul ignore next */
 function buildBundleName(pkgName, version) {
   return `${pkgName}@${version}.min.js`
 }
 
-/* instanbul ignore next */
+/* istanbul ignore next */
 async function downloadPackage(name, version, bundleName) {
   await download(
     `${AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
@@ -51,6 +51,7 @@ async function downloadPackage(name, version, bundleName) {
   return require(join(AUTOMATION_DIRECTORY, bundleName))
 }
 
+/* istanbul ignore next */
 module.exports.getAction = async function(actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
