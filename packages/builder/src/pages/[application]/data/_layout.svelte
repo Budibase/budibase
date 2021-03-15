@@ -1,5 +1,5 @@
 <script>
-  import { params, isActive } from "@sveltech/routify"
+  import { isActive, goto } from "@sveltech/routify"
   import { Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
@@ -17,7 +17,16 @@
     },
   ]
 
-  let tab = $isActive('./datasource') || $params.selectedDatasource ? "datasource" : "table"
+  let tab = $isActive('./datasource') ? "datasource" : "table"
+
+  function selectFirstTableOrSource({ detail }) {
+    const type = detail.heading.key
+    if (type === 'datasource') {
+      $goto("./datasource")
+    } else {
+      $goto("./table")
+    }
+  }
 
   let modal
 </script>
@@ -25,7 +34,7 @@
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <Switcher headings={tabs} bind:value={tab}>
+    <Switcher headings={tabs} bind:value={tab} on:change={selectFirstTableOrSource}>
       <div class="title">
         <i
           data-cy={`new-${tab}`}
