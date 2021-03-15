@@ -55,7 +55,7 @@
     "@spectrum-css/stepper": "^3.0.0-beta.7",
     "@spectrum-css/textfield": "^3.0.0-beta.6",
     "@spectrum-css/vars": "^3.0.0-beta.2",
-    "apexcharts": "^3.22.1",
+    "apexcharts": "^3.24.0",
     "flatpickr": "^4.6.6",
     "loadicons": "^1.0.0",
     "lodash.debounce": "^4.0.8",
