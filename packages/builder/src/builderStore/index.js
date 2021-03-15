@@ -2,7 +2,6 @@ import { getFrontendStore } from "./store/frontend"
 import { getBackendUiStore } from "./store/backend"
 import { getAutomationStore } from "./store/automation"
 import { getHostingStore } from "./store/hosting"
-
 import { getThemeStore } from "./store/theme"
 import { derived, writable } from "svelte/store"
 import analytics from "analytics"
@@ -66,3 +65,5 @@ export const initialise = async () => {
     console.log(err)
   }
 }
+
+export const screenSearchString = writable(null)
