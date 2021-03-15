@@ -1,9 +1,7 @@
 const pg = {}
 
 // constructor
-function Client() {
-  this.query = jest.fn(() => ({ rows: [] }))
-}
+function Client() {}
 
 Client.prototype.query = jest.fn(() => ({
   rows: [

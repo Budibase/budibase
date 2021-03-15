@@ -1,14 +1,14 @@
-const pg = require("pg")
-const PostgresIntegration = require("../postgres")
-jest.mock("pg")
+const pg = require("mysql")
+const MySQLIntegration = require("../mysql")
+jest.mock("mysql")
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new PostgresIntegration.integration(config) 
+  constructor(config = { ssl: {} }) {
+    this.integration = new MySQLIntegration.integration(config) 
   }
 }
 
-describe("Postgres Integration", () => {
+describe("MySQL Integration", () => {
   let config 
 
   beforeEach(() => {
@@ -48,10 +48,6 @@ describe("Postgres Integration", () => {
   })
 
   describe("no rows returned", () => {
-    beforeEach(() => {
-      config.integration.client.query.mockImplementation(() => ({ rows: [] }))
-    })
-
     it("returns the correct response when the create response has no rows", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
       const response = await config.integration.create({ 
