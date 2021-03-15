@@ -60,7 +60,9 @@
       "!src/utilities/usageQuota.js",
       "!src/api/routes/tests/**/*",
       "!src/tests/**/*",
-      "!src/automations/tests/**/*"
+      "!src/automations/tests/**/*",
+      "!src/utilities/fileProcessor.js",
+      "!src/utilities/initialiseBudibase.js"
     ],
     "coverageReporters": [
       "lcov",
