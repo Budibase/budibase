@@ -9,7 +9,6 @@ const env = require("./environment")
 const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
-const selfhost = require("./selfhost")
 
 const app = new Koa()
 
@@ -67,10 +66,6 @@ module.exports = server.listen(env.PORT || 0, async () => {
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
   await automations.init()
-  // only init the self hosting DB info in the Pouch, not needed in self hosting prod
-  if (!env.CLOUD) {
-    await selfhost.init()
-  }
 })
 
 process.on("uncaughtException", err => {
