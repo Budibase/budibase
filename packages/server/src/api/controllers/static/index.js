@@ -74,29 +74,6 @@ exports.uploadFile = async function(ctx) {
     "attachments"
   )
 
-  if (env.CLOUD) {
-    // remote upload
-    const s3 = new AWS.S3({
-      params: {
-        Bucket: "prod-budi-app-assets",
-      },
-    })
-
-    const uploads = files.map(file => {
-      const fileExtension = [...file.name.split(".")].pop()
-      const processedFileName = `${uuid.v4()}.${fileExtension}`
-
-      return prepareUpload({
-        file,
-        s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
-        s3,
-      })
-    })
-
-    ctx.body = await Promise.all(uploads)
-    return
-  }
-
   ctx.body = await processLocalFileUploads({
     files,
     outputPath: attachmentsPath,
@@ -150,26 +127,6 @@ async function processLocalFileUploads({ files, outputPath, appId }) {
   await db.put(pendingFileUploads)
 
   return processedFiles
-}
-
-exports.performLocalFileProcessing = async function(ctx) {
-  const { files } = ctx.request.body
-
-  const processedFileOutputPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "attachments"
-  )
-
-  try {
-    ctx.body = await processLocalFileUploads({
-      files,
-      outputPath: processedFileOutputPath,
-      appId: ctx.user.appId,
-    })
-  } catch (err) {
-    ctx.throw(500, err)
-  }
 }
 
 exports.serveApp = async function(ctx) {
