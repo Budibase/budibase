@@ -1,13 +1,11 @@
 class Airtable {
-  constructor() {}
+  constructor() {
+    this.create = jest.fn()
+  }
 
   base() {
     return () => ({
-      query: jest.fn(),
-      create: jest.fn(),
-      select: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
+      create: this.create,
     })
   }
 }
