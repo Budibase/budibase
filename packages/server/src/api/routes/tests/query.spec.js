@@ -1,9 +1,9 @@
 // mock out postgres for this
 jest.mock("pg")
 
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { basicQuery, basicDatasource } = require("./utilities/structures")
 const setup = require("./utilities")
+const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const { basicQuery, basicDatasource } = setup.structures
 
 describe("/queries", () => {
   let request = setup.getRequest()
