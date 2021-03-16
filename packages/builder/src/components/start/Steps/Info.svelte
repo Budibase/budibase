@@ -1,6 +1,5 @@
 <script>
   import { Label, Heading, Input } from "@budibase/bbui"
-  import Dropzone from "components/common/Dropzone.svelte"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -20,8 +19,8 @@
       )
       return
     }
-    file = fileArray[0]
-    template.fileImportPath = file.path
+    file = evt.target.files[0]
+    template.file = file
   }
 </script>
 
