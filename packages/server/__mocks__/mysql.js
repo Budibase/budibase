@@ -2,7 +2,7 @@ const mysql = {}
 
 const client = {
   connect: jest.fn(),
-  query: jest.fn(console.log),
+  query: jest.fn(),
 }
 
 mysql.createConnection = jest.fn(() => client)
