@@ -53,7 +53,11 @@
   $: uneditable =
     $backendUiStore.selectedTable?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
-  $: invalid = field.type === LINK_TYPE && !field.tableId
+  $: invalid =
+    (field.type === LINK_TYPE && !field.tableId) ||
+    Object.keys($backendUiStore.draftTable.schema).some(
+      key => key === field.name
+    )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =

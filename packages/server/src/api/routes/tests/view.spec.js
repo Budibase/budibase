@@ -29,9 +29,7 @@ describe("/views", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual(
-        "View TestView saved successfully."
-      )
+      expect(res.body.tableId).toBe(table._id)
     })
 
     it("updates the table row with the new view metadata", async () => {
@@ -46,10 +44,8 @@ describe("/views", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+      expect(res.body.tableId).toBe(table._id)
 
-      expect(res.res.statusMessage).toEqual(
-        "View TestView saved successfully."
-      )
       const updatedTable = await config.getTable(table._id)
       expect(updatedTable.views).toEqual({
         TestView: {
@@ -171,6 +167,51 @@ describe("/views", () => {
 
       expect(res.body.length).toBe(2)
       expect(res.body).toMatchSnapshot()
+    })
+  })
+
+  describe("destroy", () => {
+    it("should be able to delete a view", async () => {
+      const table = await config.createTable()
+      const view = await config.createView()
+      const res = await request
+        .delete(`/api/views/${view.name}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.map).toBeDefined()
+      expect(res.body.meta.tableId).toEqual(table._id)
+    })
+  })
+
+  describe("exportView", () => {
+    it("should be able to delete a view", async () => {
+      await config.createTable()
+      await config.createRow()
+      const view = await config.createView()
+      let res = await request
+        .get(`/api/views/export?view=${view.name}&format=json`)
+        .set(config.defaultHeaders())
+        .expect(200)
+      let error
+      try {
+        const obj = JSON.parse(res.text)
+        expect(obj.length).toBe(1)
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeUndefined()
+      res = await request
+        .get(`/api/views/export?view=${view.name}&format=csv`)
+        .set(config.defaultHeaders())
+        .expect(200)
+      // this shouldn't be JSON
+      try {
+        JSON.parse(res.text)
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeDefined()
     })
   })
 })

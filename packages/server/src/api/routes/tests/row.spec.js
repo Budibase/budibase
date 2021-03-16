@@ -1,7 +1,6 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
-const env = require("../../../environment")
-const { basicRow } = require("./utilities/structures")
 const setup = require("./utilities")
+const { basicRow } = setup.structures
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -349,7 +348,7 @@ describe("/rows", () => {
       const view = await config.createView()
       const row = await config.createRow()
       const res = await request
-        .get(`/api/views/${view._id}`)
+        .get(`/api/views/${view.name}`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)

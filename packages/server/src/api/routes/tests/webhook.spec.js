@@ -1,6 +1,6 @@
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { basicWebhook, basicAutomation } = require("./utilities/structures")
+const { basicWebhook, basicAutomation } = setup.structures
 
 describe("/webhooks", () => {
   let request = setup.getRequest()

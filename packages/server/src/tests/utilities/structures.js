@@ -1,9 +1,9 @@
-const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_IDS,
-} = require("../../../../utilities/security/permissions")
-const { createHomeScreen } = require("../../../../constants/screens")
-const { EMPTY_LAYOUT } = require("../../../../constants/layouts")
+} = require("../../utilities/security/permissions")
+const { createHomeScreen } = require("../../constants/screens")
+const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")
 
 exports.basicTable = () => {
