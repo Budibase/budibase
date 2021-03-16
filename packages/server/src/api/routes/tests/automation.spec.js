@@ -3,8 +3,8 @@ const {
   getAllTableRows,
   clearAllAutomations,
 } = require("./utilities/TestFunctions")
-const { basicAutomation } = require("./utilities/structures")
 const setup = require("./utilities")
+const { basicAutomation } = setup.structures
 
 const MAX_RETRIES = 4
 

@@ -30,6 +30,7 @@ const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 allDbs(Pouch)
 
 // replicate your local levelDB pouch to a running HTTP compliant couch or pouchdb server.
+/* istanbul ignore next */
 // eslint-disable-next-line no-unused-vars
 function replicateLocal() {
   Pouch.allDbs().then(dbs => {

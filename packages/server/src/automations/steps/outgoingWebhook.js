@@ -87,6 +87,7 @@ module.exports.run = async function({ inputs }) {
       success: response.status === 200,
     }
   } catch (err) {
+    /* istanbul ignore next */
     return {
       success: false,
       response: err,

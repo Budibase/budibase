@@ -12,6 +12,9 @@ const PrettyLogicConditions = {
   [LogicConditions.LESS_THAN]: "Less than",
 }
 
+module.exports.LogicConditions = LogicConditions
+module.exports.PrettyLogicConditions = PrettyLogicConditions
+
 module.exports.definition = {
   name: "Filter",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
@@ -64,7 +67,7 @@ module.exports.run = async function filter({ inputs }) {
     value = Date.parse(value)
     field = Date.parse(field)
   }
-  let success
+  let success = false
   if (typeof field !== "object" && typeof value !== "object") {
     switch (condition) {
       case LogicConditions.EQUAL:
@@ -79,8 +82,6 @@ module.exports.run = async function filter({ inputs }) {
       case LogicConditions.LESS_THAN:
         success = field < value
         break
-      default:
-        return
     }
   } else {
     success = false
