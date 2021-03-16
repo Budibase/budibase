@@ -5,6 +5,8 @@ const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const fs = require("fs-extra")
 const uuid = require("uuid")
+const AWS = require("aws-sdk")
+const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const {
   budibaseAppsDir,
@@ -71,6 +73,29 @@ exports.uploadFile = async function(ctx) {
     ctx.user.appId,
     "attachments"
   )
+
+  if (env.CLOUD) {
+    // remote upload
+    const s3 = new AWS.S3({
+      params: {
+        Bucket: "prod-budi-app-assets",
+      },
+    })
+
+    const uploads = files.map(file => {
+      const fileExtension = [...file.name.split(".")].pop()
+      const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+      return prepareUpload({
+        file,
+        s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+        s3,
+      })
+    })
+
+    ctx.body = await Promise.all(uploads)
+    return
+  }
 
   ctx.body = await processLocalFileUploads({
     files,
