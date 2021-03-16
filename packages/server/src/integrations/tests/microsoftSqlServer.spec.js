@@ -43,13 +43,5 @@ describe("MS SQL Server Integration", () => {
       })
       expect(response).toEqual([{ created: true }])
     })
-
-    it("returns the correct response when the delete response has no rows", async () => {
-      const sql = "delete from users where name = 'todelete';"
-      const response = await config.integration.delete({ 
-        sql
-      })
-      expect(response).toEqual([{ deleted: true }])
-    })
   })
 })

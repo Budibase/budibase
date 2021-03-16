@@ -8,19 +8,20 @@ class TestConfiguration {
   }
 }
 
-xdescribe("MySQL Integration", () => {
+describe("MySQL Integration", () => {
   let config 
 
   beforeEach(() => {
     config = new TestConfiguration()
   })
 
-  it("calls the create method with the correct params", async () => {
+  fit("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
     const response = await config.integration.create({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    console.log(response)
+    expect(config.integration.client.query).resolves.toHaveBeenCalledWith(sql)
   })
 
   it("calls the read method with the correct params", async () => {
