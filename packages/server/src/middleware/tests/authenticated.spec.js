@@ -2,6 +2,7 @@ const { AuthTypes } = require("../../constants")
 const authenticatedMiddleware  = require("../authenticated")
 const jwt = require("jsonwebtoken")
 jest.mock("jsonwebtoken")
+jest.dontMock("pouchdb")
 
 class TestConfiguration {
   constructor(middleware) {
