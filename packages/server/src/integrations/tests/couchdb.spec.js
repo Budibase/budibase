@@ -1,6 +1,13 @@
 const PouchDB = require("pouchdb")
 const CouchDBIntegration = require("../couchdb")
-jest.mock("pouchdb")
+jest.mock("pouchdb", () => function CouchDBMock() {
+  this.post = jest.fn()
+  this.allDocs = jest.fn(() => ({ rows: [] }))
+  this.put = jest.fn()
+  this.remove = jest.fn()
+  this.plugin = jest.fn()
+})
+
 
 class TestConfiguration {
   constructor(config = {}) {

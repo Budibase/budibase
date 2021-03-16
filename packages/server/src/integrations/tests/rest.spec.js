@@ -1,6 +1,6 @@
 const fetch = require("node-fetch")
 const RestIntegration = require("../rest")
-jest.mock("node-fetch", () => jest.fn(() => ({ json: jest.fn() })))
+jest.mock("node-fetch", () => jest.fn(() => ({ json: jest.fn(), text: jest.fn() })))
 
 class TestConfiguration {
   constructor(config = {}) {
@@ -44,13 +44,13 @@ describe("REST Integration", () => {
       path: "/api",
       queryString: "?test=1",
       headers: {
-        Accept: "application/json"
+        Accept: "text/html"
       }
     }
     const response = await config.integration.read(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       headers: {
-        Accept: "application/json"
+        Accept: "text/html"
       }
     })
   })
