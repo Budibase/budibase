@@ -35,7 +35,7 @@ export const getDataProviderComponents = (asset, componentId) => {
   // Filter by only data provider components
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
-    return def?.dataProvider
+    return def?.dataContext != null
   })
 }
 
@@ -101,15 +101,16 @@ const getContextBindings = (asset, componentId) => {
 
   // Create bindings for each data provider
   dataProviders.forEach(component => {
-    const isForm = component._component.endsWith("/form")
-    const datasource = getDatasourceForProvider(component)
-    let tableName, schema
+    const def = store.actions.components.getDefinition(component._component)
+    const contextDefinition = def.dataContext
+    let schema
 
     // Forms are an edge case which do not need table schemas
-    if (isForm) {
+    if (contextDefinition.type === "form") {
       schema = buildFormSchema(component)
       tableName = "Fields"
     } else {
+      const datasource = getDatasourceForProvider(component)
       if (!datasource) {
         return
       }
