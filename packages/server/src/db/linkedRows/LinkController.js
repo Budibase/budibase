@@ -133,12 +133,12 @@ class LinkController {
   }
 
   /**
-   * Returns whether the two schemas are equal (in the important parts, not a pure equality check)
+   * Returns whether the two link schemas are equal (in the important parts, not a pure equality check)
    */
-  areSchemasEqual(schema1, schema2) {
+  areLinkSchemasEqual(linkSchema1, linkSchema2) {
     const compareFields = ["name", "type", "tableId", "fieldName", "autocolumn"]
     for (let field of compareFields) {
-      if (schema1[field] !== schema2[field]) {
+      if (linkSchema1[field] !== linkSchema2[field]) {
         return false
       }
     }
@@ -146,24 +146,24 @@ class LinkController {
   }
 
   /**
-   * Given two the field of this table, and the field of the linked table, this makes sure
+   * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.
    */
-  handleRelationshipType(field, linkedField) {
+  handleRelationshipType(linkerField, linkedField) {
     if (
-      !field.relationshipType ||
-      field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      !linkerField.relationshipType ||
+      linkerField.relationshipType === RelationshipTypes.MANY_TO_MANY
     ) {
       linkedField.relationshipType = RelationshipTypes.MANY_TO_MANY
       // make sure by default all are many to many (if not specified)
-      field.relationshipType = RelationshipTypes.MANY_TO_MANY
-    } else if (field.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      linkerField.relationshipType = RelationshipTypes.MANY_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipTypes.MANY_TO_ONE) {
       // Ensure that the other side of the relationship is locked to one record
       linkedField.relationshipType = RelationshipTypes.ONE_TO_MANY
-    } else if (field.relationshipType === RelationshipTypes.ONE_TO_MANY) {
+    } else if (linkerField.relationshipType === RelationshipTypes.ONE_TO_MANY) {
       linkedField.relationshipType = RelationshipTypes.MANY_TO_ONE
     }
-    return { field, linkedField }
+    return { linkerField, linkedField }
   }
 
   // all operations here will assume that the table
@@ -347,7 +347,7 @@ class LinkController {
         })
 
         // update table schema after checking relationship types
-        schema[fieldName] = fields.field
+        schema[fieldName] = fields.linkerField
         const linkedField = fields.linkedField
 
         if (field.autocolumn) {
@@ -358,7 +358,7 @@ class LinkController {
         const existingSchema = linkedTable.schema[field.fieldName]
         if (
           existingSchema != null &&
-          !this.areSchemasEqual(existingSchema, linkedField)
+          !this.areLinkSchemasEqual(existingSchema, linkedField)
         ) {
           throw new Error("Cannot overwrite existing column.")
         }
