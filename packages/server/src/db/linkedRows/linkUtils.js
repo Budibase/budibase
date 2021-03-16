@@ -75,6 +75,7 @@ exports.getLinkDocuments = async function({
       await exports.createLinkView(appId)
       return exports.getLinkDocuments(arguments[0])
     } else {
+      /* istanbul ignore next */
       Sentry.captureException(err)
     }
   }

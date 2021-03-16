@@ -135,7 +135,7 @@ class TestConfiguration {
     return this._req(null, { id: tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType, links = ["link"]) {
+  async createLinkedTable(relationshipType = null, links = ["link"]) {
     if (!this.table) {
       throw "Must have created a table first."
     }
