@@ -1,15 +1,21 @@
-const { ElectronHttpExecutor } = require("electron-updater/out/electronHttpExecutor")
-const { integration } = require("../airtable")
 const Airtable = require("airtable")
+const AirtableIntegration = require("../airtable")
 jest.mock("airtable")
 
 class TestConfiguration {
   constructor(config = {}) {
-    this.integration = new integration(config) 
+    this.integration = new AirtableIntegration.integration(config) 
+    this.client = {
+      create: jest.fn(),
+      select: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+    }
+    this.integration.client = () => this.client 
   }
 }
 
-xdescribe("Airtable Integration", () => {
+describe("Airtable Integration", () => {
   let config 
 
   beforeEach(() => {
@@ -21,19 +27,44 @@ xdescribe("Airtable Integration", () => {
       table: "test",
       json: {}
     })
-    console.log(config.integration.client)
-    expect(config.integration.client.create).toHaveBeenCalledWith({})
+    expect(config.client.create).toHaveBeenCalledWith([
+      {
+        fields: {}
+      }
+    ])
   })
 
-  it("calls the read method with the correct params", () => {
-
+  it("calls the read method with the correct params", async () => {
+    const response = await config.integration.read({
+      table: "test",
+      view: "Grid view"
+    })
+    expect(config.client.select).toHaveBeenCalledWith({
+      maxRecords: 10, view: "Grid view"
+    })
   })
 
-  it("calls the update method with the correct params", () => {
-
+  it("calls the update method with the correct params", async () => {
+    const response = await config.integration.update({
+      table: "test",
+      id: "123",
+      json: {
+        name: "test"
+      }
+    })
+    expect(config.client.update).toHaveBeenCalledWith([
+      {
+        id: "123",
+        fields: { name: "test" }
+      }
+    ])
   })
 
-  it("calls the delete method with the correct params", () => {
-
+  it("calls the delete method with the correct params", async () => {
+    const ids = [1,2,3,4]
+    const response = await config.integration.delete({
+      ids
+    })
+    expect(config.client.destroy).toHaveBeenCalledWith(ids)
   })
 })

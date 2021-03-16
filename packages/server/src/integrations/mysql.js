@@ -65,6 +65,7 @@ class MySQLIntegration {
     // Node MySQL is callback based, so we must wrap our call in a promise
     return new Promise((resolve, reject) => {
       this.client.connect()
+      console.log(this.client.query())
       return this.client.query(query.sql, (error, results) => {
         if (error) return reject(error)
         resolve(results)
@@ -73,20 +74,23 @@ class MySQLIntegration {
     })
   }
 
-  create(query) {
-    return this.query(query)
+  async create(query) {
+    const results = await this.query(query)
+    return results.length ? results : { created: true }
   }
 
   read(query) {
     return this.query(query)
   }
 
-  update(query) {
-    return this.query(query)
+  async update(query) {
+    const results = await this.query(query)
+    return results.length ? results : { updated: true }
   }
 
-  delete(query) {
-    return this.query(query)
+  async delete(query) {
+    const results = await this.query(query)
+    return results.length ? results : { deleted: true }
   }
 }
 

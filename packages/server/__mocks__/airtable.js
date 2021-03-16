@@ -1,13 +1,5 @@
-class Airtable {
-  constructor() {
-    this.create = jest.fn()
-  }
-
-  base() {
-    return () => ({
-      create: this.create,
-    })
-  }
+function Airtable() {
+  this.base = jest.fn()
 }
 
 module.exports = Airtable
