@@ -55,14 +55,14 @@ module.exports.definition = {
 
 module.exports.run = async function({ inputs, appId, emitter }) {
   if (inputs.rowId == null || inputs.row == null) {
-    return
+    return {
+      success: false,
+      response: {
+        message: "Invalid inputs",
+      },
+    }
   }
 
-  inputs.row = await automationUtils.cleanUpRowById(
-    appId,
-    inputs.rowId,
-    inputs.row
-  )
   // clear any falsy properties so that they aren't updated
   for (let propKey of Object.keys(inputs.row)) {
     if (!inputs.row[propKey] || inputs.row[propKey] === "") {
@@ -73,7 +73,7 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   // have to clean up the row, remove the table from it
   const ctx = {
     params: {
-      id: inputs.rowId,
+      rowId: inputs.rowId,
     },
     request: {
       body: inputs.row,
@@ -83,6 +83,11 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   }
 
   try {
+    inputs.row = await automationUtils.cleanUpRowById(
+      appId,
+      inputs.rowId,
+      inputs.row
+    )
     await rowController.patch(ctx)
     return {
       row: ctx.body,
