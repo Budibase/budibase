@@ -1,4 +1,4 @@
-import { notificationStore, datasourceStore } from "../store"
+import { notificationStore, dataSourceStore } from "../store"
 import API from "./api"
 
 /**
@@ -20,7 +20,7 @@ export const executeQuery = async ({ queryId, parameters }) => {
     notificationStore.danger("An error has occurred")
   } else if (!query.readable) {
     notificationStore.success("Query executed successfully")
-    datasourceStore.actions.invalidateDatasource(query.datasourceId)
+    dataSourceStore.actions.invalidateDataSource(query.datasourceId)
   }
   return res
 }

@@ -1,5 +1,6 @@
 [
   "container",
+  "dataprovider",
   "datagrid",
   "list",
   "button",

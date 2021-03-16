@@ -13,6 +13,7 @@ import { loadSpectrumIcons } from "./spectrum-icons"
 loadSpectrumIcons()
 
 export { default as container } from "./Container.svelte"
+export { default as dataprovider } from "./DataProvider.svelte"
 export { default as datagrid } from "./grid/Component.svelte"
 export { default as screenslot } from "./ScreenSlot.svelte"
 export { default as button } from "./Button.svelte"
