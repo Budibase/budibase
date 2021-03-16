@@ -21,13 +21,12 @@ module.exports.processors = [
     if (!statement.includes(LITERAL_MARKER)) {
       return statement
     }
-
-    const components = statement.split("-")
-    // pop and shift remove the empty array elements from the first and last dash
-    components.pop()
-    components.shift()
-    const type = components[1]
-    const value = components[2]
+    const splitMarkerIndex = statement.indexOf("-")
+    const type = statement.substring(12, splitMarkerIndex)
+    const value = statement.substring(
+      splitMarkerIndex + 1,
+      statement.length - 2
+    )
     switch (type) {
       case "string":
         return value

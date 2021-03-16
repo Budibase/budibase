@@ -35,7 +35,7 @@ const HELPERS = [
   new Helper(HelperFunctionNames.LITERAL, value => {
     const type = typeof value
     const outputVal = type === "object" ? JSON.stringify(value) : value
-    return `{{-${LITERAL_MARKER}-${type}-${outputVal}-}}`
+    return `{{${LITERAL_MARKER} ${type}-${outputVal}}}`
   }),
 ]
 
