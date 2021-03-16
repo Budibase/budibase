@@ -8,7 +8,7 @@ class TestConfiguration {
   }
 }
 
-describe("MySQL Integration", () => {
+xdescribe("MySQL Integration", () => {
   let config 
 
   beforeEach(() => {
