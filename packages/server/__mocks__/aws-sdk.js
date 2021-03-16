@@ -26,12 +26,13 @@ function DocumentClient() {
 function S3() {
   this.listObjects = jest.fn(
     response({
-      foo: {},
+      Contents: {},
     })
   )
 }
 
 aws.DynamoDB = { DocumentClient }
+aws.S3 = S3
 aws.config = { update: jest.fn() }
 
 module.exports = aws
