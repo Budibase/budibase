@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { backendUiStore, store } from "builderStore"
-import { findComponentPath } from "./storeUtils"
+import { findComponent, findComponentPath } from "./storeUtils"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -69,7 +69,7 @@ export const getDatasourceForProvider = component => {
   }
 
   // Extract datasource from component instance
-  const validSettingTypes = ["datasource", "table", "schema"]
+  const validSettingTypes = ["dataSource", "table", "schema"]
   const datasourceSetting = def.settings.find(setting => {
     return validSettingTypes.includes(setting.type)
   })
@@ -104,21 +104,35 @@ const getContextBindings = (asset, componentId) => {
     const def = store.actions.components.getDefinition(component._component)
     const contextDefinition = def.dataContext
     let schema
+    let readablePrefix
 
     // Forms are an edge case which do not need table schemas
     if (contextDefinition.type === "form") {
       schema = buildFormSchema(component)
-      tableName = "Fields"
-    } else {
-      const datasource = getDatasourceForProvider(component)
+      readablePrefix = "Fields"
+    } else if (contextDefinition.type === "static") {
+      schema = {}
+      const values = contextDefinition.values || []
+      values.forEach(value => {
+        schema[value.key] = { name: value.label, type: "string" }
+      })
+    } else if (contextDefinition.type === "schema") {
+      let datasource
+      const setting = contextDefinition.dataProviderSetting
+      const settingValue = component[setting]
+      if (settingValue) {
+        const providerId = settingValue.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
+        const provider = findComponent(asset.props, providerId)
+        datasource = getDatasourceForProvider(provider)
+      }
       if (!datasource) {
         return
       }
 
       // Get schema and table for the datasource
-      const info = getSchemaForDatasource(datasource, isForm)
+      const info = getSchemaForDatasource(datasource)
       schema = info.schema
-      tableName = info.table?.name
+      readablePrefix = info.table?.name
 
       // Add _id and _rev fields for certain types
       if (schema && ["table", "link"].includes(datasource.type)) {
@@ -126,7 +140,7 @@ const getContextBindings = (asset, componentId) => {
         schema["_rev"] = { type: "string" }
       }
     }
-    if (!schema || !tableName) {
+    if (!schema) {
       return
     }
 
@@ -135,20 +149,31 @@ const getContextBindings = (asset, componentId) => {
     // Create bindable properties for each schema field
     keys.forEach(key => {
       const fieldSchema = schema[key]
-      // Replace certain bindings with a new property to help display components
+
+      // Make safe runtime binding and replace certain bindings with a
+      // new property to help display components
       let runtimeBoundKey = key
       if (fieldSchema.type === "link") {
         runtimeBoundKey = `${key}_text`
       } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
+      runtimeBoundKey = makePropSafe(runtimeBoundKey)
+      const componentId = makePropSafe(component._id)
+      const runtimeBinding = `${componentId}.${runtimeBoundKey}`
 
+      // Optionally use a prefix with readable bindings
+      let readableBinding = component._instanceName
+      if (readablePrefix) {
+        readableBinding += `.${readablePrefix}`
+      }
+      readableBinding += `.${fieldSchema.name || key}`
+
+      // Create the binding object
       bindings.push({
         type: "context",
-        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
-          runtimeBoundKey
-        )}`,
-        readableBinding: `${component._instanceName}.${tableName}.${key}`,
+        runtimeBinding,
+        readableBinding,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -274,7 +299,7 @@ const buildFormSchema = component => {
   if (fieldSetting && component.field) {
     const type = fieldSetting.type.split("field/")[1]
     if (type) {
-      schema[component.field] = { name: component.field, type }
+      schema[component.field] = { type }
     }
   }
   component._children?.forEach(child => {

@@ -88,7 +88,7 @@
       {
         "type": "dataProvider",
         "label": "Data",
-        "key": "dataProviderId"
+        "key": "dataProvider"
       },
       {
         "type": "text",
@@ -104,7 +104,7 @@
     ],
     "dataContext": {
       "type": "schema",
-      "dataProviderSetting": "dataProviderId"
+      "dataProviderSetting": "dataProvider"
     }
   },
   "search": {
@@ -1490,6 +1490,23 @@
         "type": "filter",
         "label": "Filtering",
         "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit"
       }
     ],
     "dataContext": {
