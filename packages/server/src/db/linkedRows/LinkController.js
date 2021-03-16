@@ -136,7 +136,14 @@ class LinkController {
    * Returns whether the two link schemas are equal (in the important parts, not a pure equality check)
    */
   areLinkSchemasEqual(linkSchema1, linkSchema2) {
-    const compareFields = ["name", "type", "tableId", "fieldName", "autocolumn"]
+    const compareFields = [
+      "name",
+      "type",
+      "tableId",
+      "fieldName",
+      "autocolumn",
+      "relationshipType",
+    ]
     for (let field of compareFields) {
       if (linkSchema1[field] !== linkSchema2[field]) {
         return false
@@ -336,6 +343,7 @@ class LinkController {
         try {
           linkedTable = await this._db.get(field.tableId)
         } catch (err) {
+          /* istanbul ignore next */
           continue
         }
         const fields = this.handleRelationshipType(field, {
@@ -416,6 +424,7 @@ class LinkController {
           await this._db.put(linkedTable)
         }
       } catch (err) {
+        /* istanbul ignore next */
         Sentry.captureException(err)
       }
     }
