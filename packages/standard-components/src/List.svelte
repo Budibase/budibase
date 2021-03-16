@@ -1,23 +1,23 @@
 <script>
   import { getContext } from "svelte"
 
-  export let dataProviderId
+  export let dataProvider
   export let noRowsMessage
 
   const { API, styleable, builderStore, Provider } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
 
-  $: data = context[dataProviderId]?.rows ?? []
-  $: loaded = context[dataProviderId]?.loaded ?? false
+  $: rows = dataProvider?.rows ?? []
+  $: loaded = dataProvider?.loaded ?? false
 </script>
 
 <div use:styleable={$component.styles}>
-  {#if data.length > 0}
+  {#if rows.length > 0}
     {#if $component.children === 0 && $builderStore.inBuilder}
       <p><i class="ri-image-line" />Add some components to display.</p>
     {:else}
-      {#each data as row}
+      {#each rows as row}
         <Provider data={row}>
           <slot />
         </Provider>

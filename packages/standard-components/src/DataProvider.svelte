@@ -21,13 +21,6 @@
   $: filteredRows = filterRows(allRows, filter)
   $: sortedRows = sortRows(filteredRows, sortColumn, sortOrder)
   $: rows = limitRows(sortedRows, limit)
-  $: {
-    console.log(allRows)
-    console.log(filteredRows)
-    console.log(sortedRows)
-    console.log(rows)
-  }
-
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -46,7 +39,7 @@
     loading = true
     allRows = await API.fetchDatasource(dataSource)
     loading = false
-    loaded = false
+    loaded = true
   }
 
   const filterRows = (rows, filter) => {
@@ -71,7 +64,7 @@
     return rows.slice().sort((a, b) => {
       const colA = a[sortColumn]
       const colB = b[sortColumn]
-      if (sortOrder === "descending") {
+      if (sortOrder === "Descending") {
         return colA > colB ? -1 : 1
       } else {
         return colA > colB ? 1 : -1
