@@ -5,6 +5,8 @@ jest.mock("mysql")
 class TestConfiguration {
   constructor(config = { ssl: {} }) {
     this.integration = new MySQLIntegration.integration(config) 
+    this.query = jest.fn(() => [{ id: 1 }])
+    this.integration.query = this.query
   }
 }
 
@@ -15,13 +17,12 @@ describe("MySQL Integration", () => {
     config = new TestConfiguration()
   })
 
-  fit("calls the create method with the correct params", async () => {
+  it("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
     const response = await config.integration.create({ 
       sql
     })
-    console.log(response)
-    expect(config.integration.client.query).resolves.toHaveBeenCalledWith(sql)
+    expect(config.query).toHaveBeenCalledWith({ sql })
   })
 
   it("calls the read method with the correct params", async () => {
@@ -29,7 +30,9 @@ describe("MySQL Integration", () => {
     const response = await config.integration.read({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(config.query).toHaveBeenCalledWith({
+      sql
+    })
   })
 
   it("calls the update method with the correct params", async () => {
@@ -37,7 +40,7 @@ describe("MySQL Integration", () => {
     const response = await config.integration.update({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(config.query).toHaveBeenCalledWith({ sql })
   })
 
   it("calls the delete method with the correct params", async () => {
@@ -45,10 +48,14 @@ describe("MySQL Integration", () => {
     const response = await config.integration.delete({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(config.query).toHaveBeenCalledWith({ sql })
   })
 
   describe("no rows returned", () => {
+    beforeEach(() => {
+      config.query.mockImplementation(() => [])
+    })
+
     it("returns the correct response when the create response has no rows", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
       const response = await config.integration.create({ 
