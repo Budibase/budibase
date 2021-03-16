@@ -162,11 +162,14 @@ exports.fetchAppPackage = async function(ctx) {
 
 exports.create = async function(ctx) {
   const { useTemplate, templateKey } = ctx.request.body
-  const instance = await createInstance({
+  const instanceConfig = {
     useTemplate,
     key: templateKey,
-    file: ctx.request.files.templateFile,
-  })
+  }
+  if (ctx.request.files && ctx.request.files.templateFile) {
+    instanceConfig.file = ctx.request.files.templateFile
+  }
+  const instance = await createInstance(instanceConfig)
 
   const url = await getAppUrlIfNotInUse(ctx)
   const appId = instance._id
