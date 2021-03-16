@@ -5,8 +5,6 @@ const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const fs = require("fs-extra")
 const uuid = require("uuid")
-const AWS = require("aws-sdk")
-const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const {
   budibaseAppsDir,
