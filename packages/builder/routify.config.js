@@ -1,4 +1,4 @@
-module.exports = { 
-    routifyDir: '.routify', 
-    dynamicImports: false
+module.exports = {
+  routifyDir: ".routify",
+  dynamicImports: false,
 }
