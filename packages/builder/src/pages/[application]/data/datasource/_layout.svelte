@@ -1,6 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { goto, leftover } from "@sveltech/routify"
+  import { goto, leftover } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {

@@ -1,6 +1,6 @@
 <script>
   import { fade } from "svelte/transition"
-  import { goto, params } from "@sveltech/routify"
+  import { goto, params } from "@roxi/routify"
   import AgGrid from "@budibase/svelte-ag-grid"
 
   import api from "builderStore/api"

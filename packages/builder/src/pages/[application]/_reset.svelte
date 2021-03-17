@@ -5,7 +5,7 @@
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
-  import { isActive, goto, layout } from "@sveltech/routify"
+  import { isActive, goto, layout } from "@roxi/routify"
 
   // Get Package and set store
   export let application

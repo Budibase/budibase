@@ -1,5 +1,5 @@
 <script>
-  import { params } from "@sveltech/routify"
+  import { params } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
   import QueryInterface from "components/integration/QueryViewer.svelte"
 

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
-  import { Router, basepath } from "@sveltech/routify"
-  import { routes } from "../routify/routes"
+  import { Router } from "@roxi/routify"
+  import { routes } from '../.routify/routes'
   import { initialise } from "builderStore"
   import NotificationDisplay from "components/common/Notification/NotificationDisplay.svelte"
 
@@ -9,8 +9,13 @@
     await initialise()
   })
 
-  $basepath = "/_builder"
+  const config = {
+     urlTransform: {
+       apply: url => `/_builder${url}`,
+       remove: url => url.replace('/_builder', '')
+     }
+   }
 </script>
 
 <NotificationDisplay />
-<Router {routes} />
+<Router {routes} {config} />
