@@ -30,7 +30,7 @@
     "rollup-plugin-svg": "^2.0.0",
     "rollup-plugin-terser": "^7.0.2",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.30.0"
+    "svelte": "^3.35.0"
   },
   "keywords": [
     "svelte"
