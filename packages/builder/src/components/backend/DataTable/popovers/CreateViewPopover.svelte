@@ -1,6 +1,6 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"

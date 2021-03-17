@@ -14,7 +14,7 @@
   import { API, Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
   import { Button } from "@budibase/bbui"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"

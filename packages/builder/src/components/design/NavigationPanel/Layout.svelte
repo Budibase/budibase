@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { FrontendTypes } from "constants"
   import ComponentTree from "./ComponentNavigationTree/ComponentTree.svelte"
   import LayoutDropdownMenu from "./ComponentNavigationTree/LayoutDropdownMenu.svelte"

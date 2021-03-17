@@ -1,5 +1,5 @@
 <script>
-  import { params } from "@sveltech/routify"
+  import { params } from "@roxi/routify"
   import { Button, Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"

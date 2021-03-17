@@ -4,11 +4,11 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "build": "routify --routify-dir routify -b && rollup -c",
-    "start": "routify --routify-dir routify -c rollup",
+    "build": "routify -b && rollup -c",
+    "start": "routify -c rollup",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "dev:builder": "routify --routify-dir routify -c rollup",
+    "dev:builder": "routify -c rollup",
     "rollup": "rollup -c -w",
     "cy:setup": "node ./cypress/setup.js",
     "cy:run": "cypress run",
@@ -93,7 +93,7 @@
     "@rollup/plugin-alias": "^3.0.1",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.0.3",
-    "@sveltech/routify": "1.7.11",
+    "@roxi/routify": "2.15.1",
     "@testing-library/jest-dom": "^5.11.0",
     "@testing-library/svelte": "^3.0.0",
     "babel-jest": "^24.8.0",
@@ -117,7 +117,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-url": "^2.2.2",
     "start-server-and-test": "^1.11.0",
-    "svelte": "^3.30.0",
+    "svelte": "^3.35.0",
     "svelte-jester": "^1.0.6"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
