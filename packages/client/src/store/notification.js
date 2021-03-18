@@ -13,8 +13,17 @@ const createNotificationStore = () => {
       _notifications.set([])
     }
   })
+  let block = false
+
+  const blockNotifications = (timeout = 1000) => {
+    block = true
+    setTimeout(() => (block = false), timeout)
+  }
 
   const send = (message, type = "default") => {
+    if (block) {
+      return
+    }
     let _id = id()
     _notifications.update(state => {
       return [...state, { id: _id, type, message }]
@@ -36,6 +45,7 @@ const createNotificationStore = () => {
     warning: msg => send(msg, "warning"),
     info: msg => send(msg, "info"),
     success: msg => send(msg, "success"),
+    blockNotifications,
   }
 }
 

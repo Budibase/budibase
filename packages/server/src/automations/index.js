@@ -30,23 +30,22 @@ async function updateQuota(automation) {
 /**
  * This module is built purely to kick off the worker farm and manage the inputs/outputs
  */
-module.exports.init = function() {
-  actions.init().then(() => {
-    triggers.automationQueue.process(async job => {
-      try {
-        if (env.CLOUD && job.data.automation && !env.SELF_HOSTED) {
-          job.data.automation.apiKey = await updateQuota(job.data.automation)
-        }
-        if (env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
-          await runWorker(job)
-        } else {
-          await singleThread(job)
-        }
-      } catch (err) {
-        console.error(
-          `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
-        )
+module.exports.init = async function() {
+  await actions.init()
+  triggers.automationQueue.process(async job => {
+    try {
+      if (env.CLOUD && job.data.automation && !env.SELF_HOSTED) {
+        job.data.automation.apiKey = await updateQuota(job.data.automation)
       }
-    })
+      if (env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
+        await runWorker(job)
+      } else {
+        await singleThread(job)
+      }
+    } catch (err) {
+      console.error(
+        `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
+      )
+    }
   })
 }

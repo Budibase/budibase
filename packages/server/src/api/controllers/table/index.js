@@ -65,12 +65,14 @@ exports.save = async function(ctx) {
 
   // Don't rename if the name is the same
   let { _rename } = tableToSave
+  /* istanbul ignore next */
   if (_rename && _rename.old === _rename.updated) {
     _rename = null
     delete tableToSave._rename
   }
 
   // rename row fields when table column is renamed
+  /* istanbul ignore next */
   if (_rename && tableToSave.schema[_rename.updated].type === FieldTypes.LINK) {
     ctx.throw(400, "Cannot rename a linked column.")
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
@@ -159,7 +161,7 @@ exports.destroy = async function(ctx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, appId, tableToDelete)
   ctx.status = 200
-  ctx.message = `Table ${ctx.params.tableId} deleted.`
+  ctx.body = { message: `Table ${ctx.params.tableId} deleted.` }
 }
 
 exports.validateCSVSchema = async function(ctx) {
