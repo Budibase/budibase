@@ -73,20 +73,23 @@ class MySQLIntegration {
     })
   }
 
-  create(query) {
-    return this.query(query)
+  async create(query) {
+    const results = await this.query(query)
+    return results.length ? results : [{ created: true }]
   }
 
   read(query) {
     return this.query(query)
   }
 
-  update(query) {
-    return this.query(query)
+  async update(query) {
+    const results = await this.query(query)
+    return results.length ? results : [{ updated: true }]
   }
 
-  delete(query) {
-    return this.query(query)
+  async delete(query) {
+    const results = await this.query(query)
+    return results.length ? results : [{ deleted: true }]
   }
 }
 

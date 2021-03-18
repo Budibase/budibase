@@ -1,6 +1,15 @@
 <script>
-  import { store } from "builderStore"
-  import { params } from "@roxi/routify"
+  import { automationStore } from "builderStore"
+  import { params } from "@sveltech/routify"
 
-  store.actions.layouts.select($params.layout)
+  if ($params.automation) {
+    const automation = $automationStore.automations.find(
+      m => m._id === $params.automation
+    )
+    if (automation) {
+      automationStore.actions.select(automation)
+    }
+  }
 </script>
+
+<slot />
