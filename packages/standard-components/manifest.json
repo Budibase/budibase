@@ -1081,19 +1081,19 @@
         "type": "field",
         "label": "Close Col.",
         "key": "closeColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "High Col.",
         "key": "highColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Low Col.",
         "key": "lowColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -1137,7 +1137,9 @@
     "styleable": true,
     "hasChildren": true,
     "dataProvider": true,
-    "actions": ["ValidateForm"],
+    "actions": [
+      "ValidateForm"
+    ],
     "settings": [
       {
         "type": "schema",
@@ -1190,7 +1192,10 @@
         "key": "disabled",
         "defaultValue": false
       }
-    ]
+    ],
+    "dataContext": {
+      "type": "form"
+    }
   },
   "fieldgroup": {
     "name": "Field Group",
