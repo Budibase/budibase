@@ -1,5 +1,4 @@
 <script>
-  import { store } from "builderStore"
   import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"

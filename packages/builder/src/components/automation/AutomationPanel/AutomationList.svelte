@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
