@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange } from "@sveltech/routify"
+  import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
