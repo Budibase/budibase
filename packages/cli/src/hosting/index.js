@@ -1,5 +1,5 @@
 const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
+const { CommandWords, InitTypes } = require("../constants")
 const { lookpath } = require("lookpath")
 const { downloadFile, logErrorToFile, success, info } = require("../utils")
 const { confirmation } = require("../questions")
@@ -50,17 +50,21 @@ async function handleError(func) {
   }
 }
 
-async function init() {
+async function init(info) {
+  const isQuick = info === InitTypes.QUICK
   await checkDockerConfigured()
-  const shouldContinue = await confirmation(
-    "This will create multiple files in current directory, should continue?"
-  )
-  if (!shouldContinue) {
-    console.log("Stopping.")
-    return
+  if (!isQuick) {
+    const shouldContinue = await confirmation(
+      "This will create multiple files in current directory, should continue?"
+    )
+    if (!shouldContinue) {
+      console.log("Stopping.")
+      return
+    }
   }
   await downloadFiles()
-  await envFile.make()
+  const config = isQuick ? envFile.QUICK_CONFIG : {}
+  await envFile.make(config)
 }
 
 async function start() {
@@ -128,8 +132,8 @@ async function update() {
 const command = new Command(`${CommandWords.HOSTING}`)
   .addHelp("Controls self hosting on the Budibase platform.")
   .addSubOption(
-    "--init",
-    "Configure a self hosted platform in current directory.",
+    "--init [type]",
+    "Configure a self hosted platform in current directory, type can be unspecified or 'quick'.",
     init
   )
   .addSubOption(
