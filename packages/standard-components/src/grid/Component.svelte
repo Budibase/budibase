@@ -18,7 +18,7 @@
   const component = getContext("component")
   const { API, styleable } = SDK
 
-  export let datasource = {}
+  export let dataProvider
   export let editable
   export let theme = "alpine"
   export let height = 500
@@ -33,15 +33,15 @@
       ["--grid-height"]: `${height}px`,
     },
   }
-  $: fetchData(datasource)
+  $: setUpGrid(dataProvider)
+  $: dataLoaded = dataProvider?.loaded
+  $: data = dataProvider?.rows
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
   let canAddDelete = editable && datasource && datasource.type === "table"
 
   let modal
-  let dataLoaded = false
-  let data
   let columnDefs
   let selectedRows = []
   let table
@@ -58,23 +58,12 @@
     pagination,
   }
 
-  async function fetchData(datasource) {
-    if (isEmpty(datasource)) {
+  async function setUpGrid(dataProvider) {
+    if (!dataProvider) {
       return
     }
-    data = await API.fetchDatasource(datasource)
 
-    let schema
-
-    // Get schema for datasource
-    // Views with "Calculate" applied provide their own schema.
-    // For everything else, use the tableId property to pull to table schema
-    if (datasource.schema) {
-      schema = datasource.schema
-    } else {
-      schema = (await API.fetchTableDefinition(datasource.tableId)).schema
-    }
-
+    const { schema } = dataProvider
     columnDefs = Object.keys(schema).map((key, i) => {
       return {
         headerCheckboxSelection: i === 0 && canEdit,
@@ -115,8 +104,6 @@
         },
       ]
     }
-
-    dataLoaded = true
   }
 
   const shouldHideField = name => {

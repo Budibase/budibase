@@ -15,9 +15,9 @@
     "styleable": true,
     "settings": [
       {
-        "type": "datasource",
-        "label": "Source",
-        "key": "datasource"
+        "type": "dataProvider",
+        "label": "Data",
+        "key": "dataProvider"
       },
       {
         "type": "detailScreen",
