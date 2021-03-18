@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { chart } from "svelte-apexcharts"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let options
@@ -10,7 +10,7 @@
 
 {#if options}
   <div use:chart={options} use:styleable={$component.styles} />
-{:else if options === false}
+{:else if builderStore.inBuilder}
   <div use:styleable={$component.styles}>
     Use the settings panel to build your chart -->
   </div>

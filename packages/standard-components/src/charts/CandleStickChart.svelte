@@ -1,13 +1,9 @@
 <script>
-  import { getContext, onMount } from "svelte"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
-  import { isEmpty } from "lodash/fp"
-
-  const { API } = getContext("sdk")
 
   export let title
-  export let datasource
+  export let dataProvider
   export let dateColumn
   export let openColumn
   export let highColumn
@@ -20,28 +16,22 @@
   export let animate
   export let yAxisUnits
 
-  let options
+  $: options = setUpChart(dataProvider)
 
   // Fetch data on mount
-  onMount(async () => {
+  const setUpChart = provider => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (isEmpty(datasource) || allCols.find(x => x == null)) {
-      options = false
-      return
+    if (!provider || allCols.find(x => x == null)) {
+      return null
     }
 
-    // Fetch, filter and sort data
-    const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
-    const result = await API.fetchDatasource(datasource)
+    // Fetch data
+    const { schema, rows } = provider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = result
-      .filter(row => hasAllColumns(row))
-      .slice(0, 100)
-      .sort((a, b) => (a[dateColumn] > b[dateColumn] ? 1 : -1))
+    const data = rows.filter(row => hasAllColumns(row))
     if (!schema || !data.length) {
-      options = false
-      return
+      return null
     }
 
     // Initialise default chart
@@ -66,8 +56,8 @@
     builder = builder.series([{ data: chartData }])
 
     // Build chart options
-    options = builder.getOptions()
-  })
+    return builder.getOptions()
+  }
 </script>
 
 <ApexChart {options} />
