@@ -21,7 +21,10 @@
       const providerComponent = dataProviderComponents.find(
         provider => provider._id === parameters.providerId
       )
-      const datasource = getDatasourceForProvider(providerComponent)
+      const datasource = getDatasourceForProvider(
+        $currentAsset,
+        providerComponent
+      )
       const { table } = getSchemaForDatasource(datasource)
       if (table) {
         parameters.tableId = table._id

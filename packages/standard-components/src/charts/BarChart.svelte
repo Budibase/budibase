@@ -7,7 +7,7 @@
   const { API } = getContext("sdk")
 
   export let title
-  export let datasource
+  export let dataProvider
   export let labelColumn
   export let valueColumns
   export let xAxisLabel
@@ -24,20 +24,20 @@
 
   let options
 
-  // Fetch data on mount
-  onMount(async () => {
+  $: setUpChart()
+
+  const setUpChart = () => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (isEmpty(datasource) || allCols.find(x => x == null)) {
+    if (!dataProvider || allCols.find(x => x == null)) {
       options = false
       return
     }
 
     // Fetch, filter and sort data
-    const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
-    const result = await API.fetchDatasource(datasource)
+    const { schema, rows } = dataProvider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = result
+    const data = rows
       .filter(row => hasAllColumns(row))
       .slice(0, 20)
       .sort((a, b) => (a[labelColumn] > b[labelColumn] ? 1 : -1))
@@ -63,7 +63,8 @@
 
     // Add data
     let useDates = false
-    if (datasource.type !== "view" && schema[labelColumn]) {
+    // datasource.type !== "view" &&
+    if (schema[labelColumn]) {
       const labelFieldType = schema[labelColumn].type
       builder = builder.xType(labelFieldType)
       useDates = labelFieldType === "datetime"
@@ -85,7 +86,7 @@
 
     // Build chart options
     options = builder.getOptions()
-  })
+  }
 </script>
 
 <ApexChart {options} />
