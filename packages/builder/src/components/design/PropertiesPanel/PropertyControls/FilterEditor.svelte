@@ -7,6 +7,7 @@
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import SaveFields from "./EventsEditor/actions/SaveFields.svelte"
+  import { currentAsset } from "builderStore"
 
   const dispatch = createEventDispatcher()
 
@@ -18,7 +19,7 @@
   $: schemaFields = getSchemaFields(componentInstance)
 
   const getSchemaFields = component => {
-    const datasource = getDatasourceForProvider(component)
+    const datasource = getDatasourceForProvider($currentAsset, component)
     const { schema } = getSchemaForDatasource(datasource)
     return Object.values(schema || {})
   }

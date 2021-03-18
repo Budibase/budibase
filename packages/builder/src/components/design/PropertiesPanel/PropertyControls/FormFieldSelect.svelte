@@ -17,7 +17,7 @@
     componentInstance._id,
     component => component._component === "@budibase/standard-components/form"
   )
-  $: datasource = getDatasourceForProvider(form)
+  $: datasource = getDatasourceForProvider($currentAsset, form)
   $: schema = getSchemaForDatasource(datasource, true).schema
   $: options = getOptions(schema, type)
 

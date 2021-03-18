@@ -593,21 +593,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -693,21 +693,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -794,21 +794,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -907,21 +907,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "text",
@@ -984,21 +984,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "text",
@@ -1061,21 +1061,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Date Col.",
         "key": "dateColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Open Col.",
         "key": "openColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
@@ -1519,6 +1519,10 @@
         {
           "label": "Rows Length",
           "key": "rowsLength"
+        },
+        {
+          "label": "Schema",
+          "key": "schema"
         },
         {
           "label": "Loading",

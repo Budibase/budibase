@@ -17,10 +17,10 @@
   $: providerComponent = dataProviderComponents.find(
     provider => provider._id === parameters.providerId
   )
-  $: schemaFields = getSchemaFields(providerComponent)
+  $: schemaFields = getSchemaFields($currentAsset, providerComponent)
 
-  const getSchemaFields = component => {
-    const datasource = getDatasourceForProvider(component)
+  const getSchemaFields = (asset, component) => {
+    const datasource = getDatasourceForProvider(asset, component)
     const { schema } = getSchemaForDatasource(datasource)
     return Object.values(schema || {})
   }

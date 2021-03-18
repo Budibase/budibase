@@ -62,10 +62,25 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
 /**
  * Gets a datasource object for a certain data provider component
  */
-export const getDatasourceForProvider = component => {
+export const getDatasourceForProvider = (asset, component) => {
   const def = store.actions.components.getDefinition(component?._component)
   if (!def) {
     return null
+  }
+
+  // If this component has a dataProvider setting, go up the stack and use it
+  const dataProviderSetting = def.settings.find(setting => {
+    return setting.type === "dataProvider"
+  })
+  if (dataProviderSetting) {
+    const settingValue = component[dataProviderSetting.key]
+    const providerId = settingValue.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
+    if (providerId) {
+      const provider = findComponent(asset.props, providerId)
+      return getDatasourceForProvider(asset, provider)
+    } else {
+      return null
+    }
   }
 
   // Extract datasource from component instance
@@ -123,7 +138,7 @@ const getContextBindings = (asset, componentId) => {
       if (settingValue) {
         const providerId = settingValue.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
         const provider = findComponent(asset.props, providerId)
-        datasource = getDatasourceForProvider(provider)
+        datasource = getDatasourceForProvider(asset, provider)
       }
       if (!datasource) {
         return
