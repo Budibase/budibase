@@ -225,6 +225,7 @@ async function queueRelevantRowAutomations(event, eventType) {
 }
 
 emitter.on("row:save", async function(event) {
+  /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
@@ -232,6 +233,7 @@ emitter.on("row:save", async function(event) {
 })
 
 emitter.on("row:update", async function(event) {
+  /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
@@ -239,6 +241,7 @@ emitter.on("row:update", async function(event) {
 })
 
 emitter.on("row:delete", async function(event) {
+  /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
@@ -272,6 +275,7 @@ async function fillRowOutput(automation, params) {
     }
     params.row = row
   } catch (err) {
+    /* istanbul ignore next */
     throw "Failed to find table for trigger"
   }
   return params
@@ -297,6 +301,7 @@ module.exports.externalTrigger = async function(automation, params) {
   automationQueue.add({ automation, event: params })
 }
 
+module.exports.fillRowOutput = fillRowOutput
 module.exports.automationQueue = automationQueue
 
 module.exports.BUILTIN_DEFINITIONS = BUILTIN_DEFINITIONS

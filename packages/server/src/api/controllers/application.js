@@ -91,7 +91,6 @@ async function getAppUrlIfNotInUse(ctx) {
 
 async function createInstance(template) {
   const appId = generateAppID()
-
   const db = new CouchDB(appId)
   await db.put({
     _id: "_design/database",
@@ -106,10 +105,10 @@ async function createInstance(template) {
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
-  if (template) {
+  if (template && template.useTemplate === "true") {
     let dbDumpReadStream
-    if (template.fileImportPath) {
-      dbDumpReadStream = fs.createReadStream(template.fileImportPath)
+    if (template.file) {
+      dbDumpReadStream = fs.createReadStream(template.file.path)
     } else {
       const templatePath = await downloadTemplate(...template.key.split("/"))
       dbDumpReadStream = fs.createReadStream(
@@ -162,8 +161,17 @@ exports.fetchAppPackage = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
+  const { useTemplate, templateKey } = ctx.request.body
+  const instanceConfig = {
+    useTemplate,
+    key: templateKey,
+  }
+  if (ctx.request.files && ctx.request.files.templateFile) {
+    instanceConfig.file = ctx.request.files.templateFile
+  }
+  const instance = await createInstance(instanceConfig)
+
   const url = await getAppUrlIfNotInUse(ctx)
-  const instance = await createInstance(ctx.request.body.template)
   const appId = instance._id
   const version = packageJson.version
   const newApplication = {
