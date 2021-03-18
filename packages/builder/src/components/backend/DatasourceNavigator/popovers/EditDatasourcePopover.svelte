@@ -1,7 +1,8 @@
 <script>
-  import { backendUiStore, store, allScreens } from "builderStore"
+  import { goto } from "@sveltech/routify"
+  import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu, Button, Input } from "@budibase/bbui"
+  import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -10,9 +11,6 @@
   let anchor
   let dropdown
   let confirmDeleteDialog
-  let error = ""
-  let originalName = datasource.name
-  let willBeDeleted
 
   function hideEditor() {
     dropdown?.hide()
@@ -26,6 +24,7 @@
   async function deleteDatasource() {
     await backendUiStore.actions.datasources.delete(datasource)
     notifier.success("Datasource deleted")
+    $goto('./datasource')
     hideEditor()
   }
 </script>
