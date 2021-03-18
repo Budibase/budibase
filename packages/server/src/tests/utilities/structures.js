@@ -53,6 +53,14 @@ exports.basicRow = tableId => {
   }
 }
 
+exports.basicLinkedRow = (tableId, linkedRowId, linkField = "link") => {
+  // this is based on the basic linked tables you get from the test configuration
+  return {
+    ...exports.basicRow(tableId),
+    [linkField]: [linkedRowId],
+  }
+}
+
 exports.basicRole = () => {
   return {
     name: "NewRole",

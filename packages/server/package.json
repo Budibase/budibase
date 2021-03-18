@@ -59,6 +59,7 @@
       "!src/db/dynamoClient.js",
       "!src/utilities/usageQuota.js",
       "!src/api/routes/tests/**/*",
+      "!src/db/tests/**/*",
       "!src/tests/**/*",
       "!src/automations/tests/**/*",
       "!src/utilities/fileProcessor.js",
