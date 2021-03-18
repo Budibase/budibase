@@ -1,18 +1,11 @@
 <script>
     import { backendUiStore } from "builderStore"
-    import { goto, leftover } from "@sveltech/routify"
+    import { goto } from "@sveltech/routify"
     import { onMount } from "svelte"
 
     onMount(async () => {
       // navigate to first table in list, if not already selected
-      // and this is the final url (i.e. no selectedTable)
-      if (
-        !$leftover &&
-        $backendUiStore.datasources.length > 0 && !$backendUiStore.selectedDatasourceId
-      ) {
-        // this file routes as .../tables/index, so, go up one.
-        $goto(`../${$backendUiStore.datasources[0]._id}`)
-      }
+      $backendUiStore.datasources.length > 0 && $goto(`../${$backendUiStore.datasources[0]._id}`)
     })
   </script>
   
