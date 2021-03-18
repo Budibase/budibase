@@ -17,10 +17,13 @@
   let loaded = false
 
   let allRows = []
+  let schema = {}
+
   $: fetchData(dataSource)
   $: filteredRows = filterRows(allRows, filter)
   $: sortedRows = sortRows(filteredRows, sortColumn, sortOrder)
   $: rows = limitRows(sortedRows, limit)
+  $: getSchema(dataSource)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -30,6 +33,7 @@
   ]
   $: dataContext = {
     rows,
+    schema,
     rowsLength: rows.length,
     loading,
     loaded,
@@ -78,6 +82,17 @@
       return rows
     }
     return rows.slice(0, numLimit)
+  }
+
+  const getSchema = async dataSource => {
+    if (dataSource?.schema) {
+      schema = dataSource.schema
+    } else if (dataSource?.tableId) {
+      const definition = await API.fetchTableDefinition(dataSource.tableId)
+      schema = definition?.schema ?? {}
+    } else {
+      schema = {}
+    }
   }
 </script>
 
