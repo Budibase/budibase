@@ -135,16 +135,22 @@ class TestConfiguration {
     return this._req(null, { id: tableId }, controllers.table.find)
   }
 
-  async createLinkedTable() {
+  async createLinkedTable(relationshipType = null, links = ["link"]) {
     if (!this.table) {
       throw "Must have created a table first."
     }
     const tableConfig = basicTable()
     tableConfig.primaryDisplay = "name"
-    tableConfig.schema.link = {
-      type: "link",
-      fieldName: "link",
-      tableId: this.table._id,
+    for (let link of links) {
+      tableConfig.schema[link] = {
+        type: "link",
+        fieldName: link,
+        tableId: this.table._id,
+        name: link,
+      }
+      if (relationshipType) {
+        tableConfig.schema[link].relationshipType = relationshipType
+      }
     }
     const linkedTable = await this.createTable(tableConfig)
     this.linkedTable = linkedTable
@@ -163,8 +169,9 @@ class TestConfiguration {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
-    config = config || basicRow(this.table._id)
-    return this._req(config, { tableId: this.table._id }, controllers.row.save)
+    const tableId = (config && config.tableId) || this.table._id
+    config = config || basicRow(tableId)
+    return this._req(config, { tableId }, controllers.row.save)
   }
 
   async getRow(tableId, rowId) {
