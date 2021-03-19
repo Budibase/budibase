@@ -4,7 +4,8 @@
   import { onMount } from "svelte"
 
   onMount(async () => {
-    $backendUiStore.tables.length > 0 && $goto(`../${$backendUiStore.tables[0]._id}`)
+    $backendUiStore.tables.length > 0 &&
+      $goto(`../${$backendUiStore.tables[0]._id}`)
   })
 </script>
 
