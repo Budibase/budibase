@@ -14,7 +14,6 @@
     "chalk": "^4.1.0",
     "commander": "^7.1.0",
     "docker-compose": "^0.23.6",
-    "envfile": "^6.14.0",
     "inquirer": "^8.0.0",
     "lookpath": "^1.1.0",
     "pkg": "^4.4.9",
