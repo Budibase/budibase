@@ -20,15 +20,9 @@ router.param("file", async (file, ctx, next) => {
   await next()
 })
 
-if (env.NODE_ENV !== "production") {
-  router.get("/_builder/:file*", controller.serveBuilder)
-}
-
-if (env.SELF_HOSTED) {
-  router.get("/", controller.serveSelfHostPage)
-}
-
 router
+  // TODO: for now this _builder endpoint is not authorized/secured, will need to be
+  .get("/_builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post("/api/attachments/upload", usage, controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)

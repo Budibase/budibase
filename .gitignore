@@ -84,3 +84,6 @@ typings/
 
 # Nova Editor
 .nova
+
+# swap files (linux)
+*.swp
