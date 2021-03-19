@@ -66,6 +66,8 @@
   .root {
     padding: var(--spacing-l);
     min-height: calc(40vh - 2 * var(--spacing-l));
+    max-width: 800px;
+    margin: 0 auto;
   }
 
   .fields {
