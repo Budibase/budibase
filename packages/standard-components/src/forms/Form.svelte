@@ -5,7 +5,7 @@
   import { createValidatorFromConstraints } from "./validation"
   import { generateID } from "../helpers"
 
-  export let datasource
+  export let dataSource
   export let theme
   export let size
   export let disabled = false
@@ -143,15 +143,15 @@
     })
   }
 
-  // Fetches the form schema from this form's datasource, if one exists
+  // Fetches the form schema from this form's dataSource, if one exists
   const fetchSchema = async () => {
-    if (!datasource?.tableId) {
+    if (!dataSource?.tableId) {
       schema = {}
       table = null
     } else {
-      table = await API.fetchTableDefinition(datasource?.tableId)
+      table = await API.fetchTableDefinition(dataSource?.tableId)
       if (table) {
-        if (datasource?.type === "query") {
+        if (dataSource?.type === "query") {
           schema = {}
           const params = table.parameters || []
           params.forEach(param => {
@@ -171,7 +171,7 @@
 
 <Provider
   {actions}
-  data={{ ...$formState.values, tableId: datasource?.tableId }}>
+  data={{ ...$formState.values, tableId: dataSource?.tableId }}>
   <div
     lang="en"
     dir="ltr"
