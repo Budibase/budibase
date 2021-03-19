@@ -101,6 +101,11 @@
 </div>
 
 <style>
+  .root {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
   .fields {
     display: grid;
     column-gap: var(--spacing-l);
