@@ -6,6 +6,8 @@ const { confirmation } = require("../questions")
 const fs = require("fs")
 const compose = require("docker-compose")
 const envFile = require("./makeEnv")
+const { parse } = require("envfile")
+const axios = require("axios")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
@@ -13,6 +15,7 @@ const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
+const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
 async function downloadFiles() {
   const promises = []
@@ -50,8 +53,8 @@ async function handleError(func) {
   }
 }
 
-async function init(info) {
-  const isQuick = info === InitTypes.QUICK
+async function init(type) {
+  const isQuick = type === InitTypes.QUICK || type === InitTypes.DIGITAL_OCEAN
   await checkDockerConfigured()
   if (!isQuick) {
     const shouldContinue = await confirmation(
@@ -64,6 +67,18 @@ async function init(info) {
   }
   await downloadFiles()
   const config = isQuick ? envFile.QUICK_CONFIG : {}
+  if (type === InitTypes.DIGITAL_OCEAN) {
+    try {
+      const response = parse(await axios.get(DO_USER_DATA_URL))
+      for (let [key, value] of Object.entries(envFile.ConfigMap)) {
+        if (response[key]) {
+          config[value] = response[key]
+        }
+      }
+    } catch (err) {
+      // don't need to handle error, just don't do anything
+    }
+  }
   await envFile.make(config)
 }
 

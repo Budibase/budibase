@@ -30,6 +30,10 @@ BUDIBASE_ENVIRONMENT=PRODUCTION`
 }
 
 module.exports.filePath = FILE_PATH
+module.exports.ConfigMap = {
+  HOSTING_KEY: "key",
+  MAIN_PORT: "port",
+}
 module.exports.QUICK_CONFIG = {
   key: "budibase",
   port: 10000,

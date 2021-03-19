@@ -5,4 +5,5 @@ exports.CommandWords = {
 
 exports.InitTypes = {
   QUICK: "quick",
+  DIGITAL_OCEAN: "do",
 }
