@@ -9,7 +9,7 @@ const { join, resolve } = require("../../utilities/centralPath")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
 const { createRoutingView } = require("../../utilities/routing")
-const { downloadTemplate } = require("../../utilities/templates")
+const { getTemplateStream } = require("../../utilities/fileSystem")
 const {
   generateAppID,
   getLayoutParams,
@@ -106,16 +106,7 @@ async function createInstance(template) {
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
   if (template && template.useTemplate === "true") {
-    let dbDumpReadStream
-    if (template.file) {
-      dbDumpReadStream = fs.createReadStream(template.file.path)
-    } else {
-      const templatePath = await downloadTemplate(...template.key.split("/"))
-      dbDumpReadStream = fs.createReadStream(
-        join(templatePath, "db", "dump.txt")
-      )
-    }
-    const { ok } = await db.load(dbDumpReadStream)
+    const { ok } = await db.load(await getTemplateStream(template))
     if (!ok) {
       throw "Error loading database dump from template."
     }
