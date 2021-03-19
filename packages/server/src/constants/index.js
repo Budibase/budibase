@@ -89,3 +89,9 @@ exports.BaseQueryVerbs = {
   UPDATE: "update",
   DELETE: "delete",
 }
+
+exports.ObjectStoreBuckets = {
+  BACKUPS: "backups",
+  APPS: "apps",
+  TEMPLATES: "templates",
+}
