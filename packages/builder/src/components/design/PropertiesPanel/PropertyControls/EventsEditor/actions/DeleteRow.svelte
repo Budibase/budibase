@@ -22,12 +22,14 @@
   <Label small>Row ID</Label>
   <DrawerBindableInput
     {bindings}
+    title="Row ID to delete"
     value={parameters.rowId}
     on:change={value => (parameters.rowId = value.detail)} />
 
   <Label small>Row Rev</Label>
   <DrawerBindableInput
     {bindings}
+    title="Row rev to delete"
     value={parameters.revId}
     on:change={value => (parameters.revId = value.detail)} />
 </div>
