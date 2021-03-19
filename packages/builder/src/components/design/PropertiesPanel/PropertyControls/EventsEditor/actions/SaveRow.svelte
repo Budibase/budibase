@@ -1,9 +1,8 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
+  import { Select, Label, Body } from "@budibase/bbui"
+  import { store, currentAsset, backendUiStore } from "builderStore"
   import {
     getDataProviderComponents,
-    getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
@@ -14,14 +13,11 @@
     $currentAsset,
     $store.selectedComponentId
   )
-  $: providerComponent = dataProviderComponents.find(
-    provider => provider._id === parameters.providerId
-  )
-  $: schemaFields = getSchemaFields($currentAsset, providerComponent)
+  $: schemaFields = getSchemaFields(parameters?.tableId)
+  $: tableOptions = $backendUiStore.tables || []
 
-  const getSchemaFields = (asset, component) => {
-    const datasource = getDatasourceForProvider(asset, component)
-    const { schema } = getSchemaForDatasource(datasource)
+  const getSchemaFields = tableId => {
+    const { schema } = getSchemaForDatasource({ type: "table", tableId })
     return Object.values(schema || {})
   }
 
@@ -31,31 +27,48 @@
 </script>
 
 <div class="root">
-  {#if !dataProviderComponents.length}
-    <div class="cannot-use">
-      Save Row can only be used within a component that provides data, such as a
-      Repeater
-    </div>
-  {:else}
-    <Label small>Datasource</Label>
+  <Body small grey>
+    Choosing a Data Source will automatically use the data it provides, but it's
+    optional.<br />
+    You can always add or override fields manually.
+  </Body>
+  <div class="fields">
+    <Label small>Data Source</Label>
     <Select thin secondary bind:value={parameters.providerId}>
-      <option value="" />
+      <option value="">None</option>
       {#each dataProviderComponents as provider}
         <option value={provider._id}>{provider._instanceName}</option>
       {/each}
     </Select>
 
-    {#if parameters.providerId}
+    <Label small>Table</Label>
+    <Select thin secondary bind:value={parameters.tableId}>
+      <option value="" />
+      {#each tableOptions as table}
+        <option value={table._id}>{table.name}</option>
+      {/each}
+    </Select>
+
+    {#if parameters.tableId}
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
         on:change={onFieldsChanged} />
     {/if}
-  {/if}
+  </div>
 </div>
 
 <style>
   .root {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .root :global(p) {
+    line-height: 1.5;
+  }
+
+  .fields {
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
@@ -63,14 +76,9 @@
     align-items: baseline;
   }
 
-  .root :global(> div:nth-child(2)) {
+  .fields :global(> div:nth-child(2)),
+  .fields :global(> div:nth-child(4)) {
     grid-column-start: 2;
     grid-column-end: 6;
-  }
-
-  .cannot-use {
-    color: var(--red);
-    font-size: var(--font-size-s);
-    margin: auto;
   }
 </style>
