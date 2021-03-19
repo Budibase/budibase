@@ -391,6 +391,11 @@ enquirer@^2.3.5:
   dependencies:
     ansi-colors "^4.1.1"
 
+envfile@^6.14.0:
+  version "6.14.0"
+  resolved "https://registry.yarnpkg.com/envfile/-/envfile-6.14.0.tgz#8dab1ab915a4c6567087a6bb9e732b1f164c2b30"
+  integrity sha512-JxpcaOgJQB/x0XFmNiqFu0BLK22PlI3F0d95of5SOqcLvBlGC0ug7MHYDWnmZqmx9svIue8v0cVcqAygPTyXHQ==
+
 escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
