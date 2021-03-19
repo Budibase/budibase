@@ -1,4 +1,4 @@
-<script>    
+<script>
   import { goto } from "@sveltech/routify"
   import { automationStore, backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -24,7 +24,7 @@
       automation,
     })
     notifier.success("Automation deleted.")
-    $goto('../automate')
+    $goto("../automate")
   }
 </script>
 
