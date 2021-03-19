@@ -74,7 +74,7 @@ export const getDatasourceForProvider = (asset, component) => {
   })
   if (dataProviderSetting) {
     const settingValue = component[dataProviderSetting.key]
-    const providerId = settingValue.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
+    const providerId = settingValue?.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
     if (providerId) {
       const provider = findComponent(asset.props, providerId)
       return getDatasourceForProvider(asset, provider)
@@ -148,12 +148,6 @@ const getContextBindings = (asset, componentId) => {
       const info = getSchemaForDatasource(datasource)
       schema = info.schema
       readablePrefix = info.table?.name
-
-      // Add _id and _rev fields for certain types
-      if (schema && ["table", "link"].includes(datasource.type)) {
-        schema["_id"] = { type: "string" }
-        schema["_rev"] = { type: "string" }
-      }
     }
     if (!schema) {
       return
@@ -205,13 +199,10 @@ const getContextBindings = (asset, componentId) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const tables = get(backendUiStore).tables
-  const userTable = tables.find(table => table._id === TableNames.USERS)
-  const schema = {
-    ...userTable.schema,
-    _id: { type: "string" },
-    _rev: { type: "string" },
-  }
+  const schema = getSchemaForDatasource({
+    type: "table",
+    tableId: TableNames.USERS,
+  })
   const keys = Object.keys(schema).sort()
   keys.forEach(key => {
     const fieldSchema = schema[key]
@@ -273,15 +264,6 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
-
-        // Some calc views don't include a "name" property inside the schema
-        if (schema) {
-          Object.keys(schema).forEach(field => {
-            if (!schema[field].name) {
-              schema[field].name = field
-            }
-          })
-        }
       } else if (type === "query" && isForm) {
         schema = {}
         const params = table.parameters || []
@@ -293,6 +275,21 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       } else {
         schema = cloneDeep(table.schema)
       }
+    }
+
+    // Add _id and _rev fields for certain types
+    if (schema && ["table", "link"].includes(datasource.type)) {
+      schema["_id"] = { type: "string" }
+      schema["_rev"] = { type: "string" }
+    }
+
+    // Ensure there are "name" properties for all fields
+    if (schema) {
+      Object.keys(schema).forEach(field => {
+        if (!schema[field].name) {
+          schema[field].name = field
+        }
+      })
     }
   }
   return { schema, table }
