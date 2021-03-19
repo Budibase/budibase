@@ -22,14 +22,15 @@ export const getBackendUiStore = () => {
     reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     database: {
       select: async db => {
-        const tablesResponse = await api.get(`/api/tables`)
-        const tables = await tablesResponse.json()
-        const datasourcesResponse = await api.get(`/api/datasources`)
-        const datasources = await datasourcesResponse.json()
-        const queriesResponse = await api.get(`/api/queries`)
-        const queries = await queriesResponse.json()
-        const integrationsResponse = await api.get("/api/integrations")
-        const integrations = await integrationsResponse.json()
+        const [tables, datasources, queries, integrations] = await Promise.all([
+          api.get(`/api/tables`).then(r => r.json()),
+          api.get(`/api/datasources`).then(r => r.json()),
+          api.get(`/api/queries`).then(r => r.json()),
+          api.get("/api/integrations").then(r => r.json())
+        ])
+        
+        console.log(tables)
+
         const permissionLevels = await store.actions.permissions.fetchLevels()
 
         store.update(state => {
