@@ -12,6 +12,5 @@ router
     authorized(BUILDER),
     controller.downloadTemplate
   )
-  .post("/api/templates", authorized(BUILDER), controller.exportTemplateFromApp)
 
 module.exports = router

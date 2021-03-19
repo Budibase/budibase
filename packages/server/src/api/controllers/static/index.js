@@ -3,7 +3,6 @@ require("svelte/register")
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
-const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
 const { prepareUpload } = require("../deploy/utils")
@@ -15,7 +14,7 @@ const {
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
-const fileProcessor = require("../../../utilities/fileProcessor")
+const { loadHandlebarsFile } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { OBJ_STORE_DIRECTORY } = require("../../../constants")
 
@@ -57,88 +56,24 @@ exports.uploadFile = async function(ctx) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  const attachmentsPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "attachments"
-  )
-
-  if (env.CLOUD) {
-    // remote upload
-    const s3 = new AWS.S3({
-      params: {
-        Bucket: "prod-budi-app-assets",
-      },
-    })
-
-    const uploads = files.map(file => {
-      const fileExtension = [...file.name.split(".")].pop()
-      const processedFileName = `${uuid.v4()}.${fileExtension}`
-
-      return prepareUpload({
-        file,
-        s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
-        s3,
-      })
-    })
-
-    ctx.body = await Promise.all(uploads)
-    return
-  }
-
-  ctx.body = await processLocalFileUploads({
-    files,
-    outputPath: attachmentsPath,
-    appId: ctx.user.appId,
+  const s3 = new AWS.S3({
+    params: {
+      Bucket: "prod-budi-app-assets",
+    },
   })
-}
 
-async function processLocalFileUploads({ files, outputPath, appId }) {
-  // create attachments dir if it doesnt exist
-  !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
-
-  const filesToProcess = files.map(file => {
+  const uploads = files.map(file => {
     const fileExtension = [...file.name.split(".")].pop()
-    // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-    return {
-      name: file.name,
-      path: file.path,
-      size: file.size,
-      type: file.type,
-      processedFileName,
-      extension: fileExtension,
-      outputPath: join(outputPath, processedFileName),
-      url: join("/attachments", processedFileName),
-    }
+    return prepareUpload({
+      file,
+      s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+      s3,
+    })
   })
 
-  const fileProcessOperations = filesToProcess.map(fileProcessor.process)
-
-  const processedFiles = await Promise.all(fileProcessOperations)
-
-  let pendingFileUploads
-  // local document used to track which files need to be uploaded
-  // db.get throws an error if the document doesn't exist
-  // need to use a promise to default
-  const db = new CouchDB(appId)
-  await db
-    .get("_local/fileuploads")
-    .then(data => {
-      pendingFileUploads = data
-    })
-    .catch(() => {
-      pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
-    })
-
-  pendingFileUploads.uploads = [
-    ...processedFiles,
-    ...pendingFileUploads.uploads,
-  ]
-  await db.put(pendingFileUploads)
-
-  return processedFiles
+  ctx.body = await Promise.all(uploads)
 }
 
 exports.serveApp = async function(ctx) {
@@ -157,7 +92,7 @@ exports.serveApp = async function(ctx) {
     objectStoreUrl: objectStoreUrl(),
   })
 
-  const appHbs = fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
+  const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
   ctx.body = await processString(appHbs, {
     head,
     body: html,
