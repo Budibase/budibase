@@ -105,7 +105,9 @@ export const getBackendUiStore = () => {
           state.datasources = state.datasources.filter(
             existing => existing._id !== datasource._id
           )
-          state.selectedDatasourceId = null
+          if (datasource._id === state.selectedDatasourceId) {
+            state.selectedDatasourceId = null
+          }
           return state
         })
       },
@@ -233,7 +235,9 @@ export const getBackendUiStore = () => {
           state.tables = state.tables.filter(
             existing => existing._id !== table._id
           )
-          state.selectedTable = {}
+          if (table._id === state.selectedTable._id) {
+            state.selectedTable = {}
+          }
           return state
         })
       },
