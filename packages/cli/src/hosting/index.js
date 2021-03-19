@@ -1,12 +1,17 @@
 const Command = require("../structures/Command")
 const { CommandWords, InitTypes } = require("../constants")
 const { lookpath } = require("lookpath")
-const { downloadFile, logErrorToFile, success, info } = require("../utils")
+const {
+  downloadFile,
+  logErrorToFile,
+  success,
+  info,
+  parseEnv,
+} = require("../utils")
 const { confirmation } = require("../questions")
 const fs = require("fs")
 const compose = require("docker-compose")
-const envFile = require("./makeEnv")
-const { parse } = require("envfile")
+const makeEnv = require("./makeEnv")
 const axios = require("axios")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
@@ -37,7 +42,7 @@ async function checkDockerConfigured() {
 }
 
 function checkInitComplete() {
-  if (!fs.existsSync(envFile.filePath)) {
+  if (!fs.existsSync(makeEnv.filePath)) {
     throw "Please run the hosting --init command before any other hosting command."
   }
 }
@@ -66,11 +71,12 @@ async function init(type) {
     }
   }
   await downloadFiles()
-  const config = isQuick ? envFile.QUICK_CONFIG : {}
+  const config = isQuick ? makeEnv.QUICK_CONFIG : {}
   if (type === InitTypes.DIGITAL_OCEAN) {
     try {
-      const response = parse(await axios.get(DO_USER_DATA_URL))
-      for (let [key, value] of Object.entries(envFile.ConfigMap)) {
+      const output = await axios.get(DO_USER_DATA_URL)
+      const response = parseEnv(output.data)
+      for (let [key, value] of Object.entries(makeEnv.ConfigMap)) {
         if (response[key]) {
           config[value] = response[key]
         }
@@ -79,14 +85,14 @@ async function init(type) {
       // don't need to handle error, just don't do anything
     }
   }
-  await envFile.make(config)
+  await makeEnv.make(config)
 }
 
 async function start() {
   await checkDockerConfigured()
   checkInitComplete()
   console.log(info("Starting services, this may take a moment."))
-  const port = envFile.get("MAIN_PORT")
+  const port = makeEnv.get("MAIN_PORT")
   await handleError(async () => {
     await compose.upAll({ cwd: "./", log: false })
   })
