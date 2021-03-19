@@ -28,8 +28,6 @@ export const getBackendUiStore = () => {
           api.get(`/api/queries`).then(r => r.json()),
           api.get("/api/integrations").then(r => r.json())
         ])
-        
-        console.log(tables)
 
         const permissionLevels = await store.actions.permissions.fetchLevels()
 
