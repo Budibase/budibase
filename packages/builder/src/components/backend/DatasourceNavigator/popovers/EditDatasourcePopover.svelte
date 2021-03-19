@@ -26,7 +26,6 @@
     await backendUiStore.actions.datasources.delete(datasource)
     notifier.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
-    console.log('Is the same? ', wasSelectedSource === datasource._id)
     if (wasSelectedSource === datasource._id) {
       $goto('./datasource')
     }
