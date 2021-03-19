@@ -30,15 +30,27 @@ BUDIBASE_ENVIRONMENT=PRODUCTION`
 }
 
 module.exports.filePath = FILE_PATH
+module.exports.ConfigMap = {
+  HOSTING_KEY: "key",
+  MAIN_PORT: "port",
+}
+module.exports.QUICK_CONFIG = {
+  key: "budibase",
+  port: 10000,
+}
 
-module.exports.make = async () => {
-  const hostingKey = await string(
-    "Please input the password you'd like to use as your hosting key: "
-  )
-  const hostingPort = await number(
-    "Please enter the port on which you want your installation to run: ",
-    10000
-  )
+module.exports.make = async (inputs = {}) => {
+  const hostingKey =
+    inputs.key ||
+    (await string(
+      "Please input the password you'd like to use as your hosting key: "
+    ))
+  const hostingPort =
+    inputs.port ||
+    (await number(
+      "Please enter the port on which you want your installation to run: ",
+      10000
+    ))
   const fileContents = getContents(hostingPort, hostingKey)
   fs.writeFileSync(FILE_PATH, fileContents)
   console.log(

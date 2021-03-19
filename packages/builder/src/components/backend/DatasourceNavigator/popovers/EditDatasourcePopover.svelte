@@ -24,7 +24,7 @@
   async function deleteDatasource() {
     await backendUiStore.actions.datasources.delete(datasource)
     notifier.success("Datasource deleted")
-    $goto('./datasource')
+    $goto("./datasource")
     hideEditor()
   }
 </script>

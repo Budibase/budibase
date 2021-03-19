@@ -44,3 +44,15 @@ exports.info = info => {
 exports.logErrorToFile = (file, error) => {
   fs.writeFileSync(path.resolve(`./${file}`), `Budiase Error\n${error}`)
 }
+
+exports.parseEnv = env => {
+  const lines = env.toString().split("\n")
+  let result = {}
+  for (const line of lines) {
+    const match = line.match(/^([^=:#]+?)[=:](.*)/)
+    if (match) {
+      result[match[1].trim()] = match[2].trim()
+    }
+  }
+  return result
+}
