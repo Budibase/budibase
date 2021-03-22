@@ -275,7 +275,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
     }
 
     // Add _id and _rev fields for certain types
-    if (schema && ["table", "link"].includes(datasource.type)) {
+    if (schema && !isForm && ["table", "link"].includes(datasource.type)) {
       schema["_id"] = { type: "string" }
       schema["_rev"] = { type: "string" }
     }
