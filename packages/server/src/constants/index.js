@@ -80,8 +80,6 @@ exports.AutoFieldSubTypes = {
   AUTO_ID: "autoID",
 }
 
-exports.BUILDER_CONFIG_DB = "builder-config-db"
-exports.HOSTING_DOC = "hosting-doc"
 exports.OBJ_STORE_DIRECTORY = "/app-assets/assets"
 exports.BaseQueryVerbs = {
   CREATE: "create",

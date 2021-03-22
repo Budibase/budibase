@@ -1,8 +1,5 @@
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
-const fs = require("fs")
-const path = require("path")
 
 describe("/api/keys", () => {
   let request = setup.getRequest()
@@ -16,12 +13,14 @@ describe("/api/keys", () => {
 
   describe("fetch", () => {
     it("should allow fetching", async () => {
-      const res = await request
-        .get(`/api/keys`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body).toBeDefined()
+      await setup.switchToCloudForFunction(async () => {
+        const res = await request
+          .get(`/api/keys`)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+        expect(res.body).toBeDefined()
+      })
     })
 
     it("should check authorization for builder", async () => {
@@ -35,17 +34,18 @@ describe("/api/keys", () => {
 
   describe("update", () => {
     it("should allow updating a value", async () => {
-      fs.writeFileSync(path.join(budibaseAppsDir(), ".env"), "TEST_API_KEY=thing")
-      const res = await request
-        .put(`/api/keys/TEST`)
-        .send({
-          value: "test"
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body["TEST"]).toEqual("test")
-      expect(process.env.TEST_API_KEY).toEqual("test")
+      await setup.switchToCloudForFunction(async () => {
+        const res = await request
+          .put(`/api/keys/TEST`)
+          .send({
+            value: "test"
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+        expect(res.body._id).toBeDefined()
+        expect(res.body._rev).toBeDefined()
+      })
     })
 
     it("should check authorization for builder", async () => {

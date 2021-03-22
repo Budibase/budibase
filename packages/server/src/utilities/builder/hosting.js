@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
+const { StaticDatabases } = require("../../db/utils")
 const fetch = require("node-fetch")
 const env = require("../../environment")
 
@@ -23,16 +23,16 @@ exports.HostingTypes = {
 }
 
 exports.getHostingInfo = async () => {
-  const db = new CouchDB(BUILDER_CONFIG_DB)
+  const db = new CouchDB(StaticDatabases.BUILDER_HOSTING.name)
   let doc
   try {
-    doc = await db.get(HOSTING_DOC)
+    doc = await db.get(StaticDatabases.BUILDER_HOSTING.baseDoc)
   } catch (err) {
     // don't write this doc, want to be able to update these default props
     // for our servers with a new release without needing to worry about state of
     // PouchDB in peoples installations
     doc = {
-      _id: HOSTING_DOC,
+      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
       type: exports.HostingTypes.CLOUD,
       hostingUrl: PROD_HOSTING_URL,
       selfHostKey: "",
