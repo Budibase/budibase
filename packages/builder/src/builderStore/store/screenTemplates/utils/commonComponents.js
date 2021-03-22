@@ -119,6 +119,7 @@ export function makeSaveButton(table, formId) {
         {
           parameters: {
             providerId: formId,
+            tableId: table._id,
           },
           "##eventHandlerType": "Save Row",
         },
