@@ -156,6 +156,7 @@ const getContextBindings = (asset, componentId) => {
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
+    const safeComponentId = makePropSafe(component._id)
     keys.forEach(key => {
       const fieldSchema = schema[key]
 
@@ -167,9 +168,9 @@ const getContextBindings = (asset, componentId) => {
       } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
-      runtimeBoundKey = makePropSafe(runtimeBoundKey)
-      const componentId = makePropSafe(component._id)
-      const runtimeBinding = `${componentId}.${runtimeBoundKey}`
+      const runtimeBinding = `${safeComponentId}.${makePropSafe(
+        runtimeBoundKey
+      )}`
 
       // Optionally use a prefix with readable bindings
       let readableBinding = component._instanceName
@@ -204,6 +205,7 @@ const getUserBindings = () => {
     tableId: TableNames.USERS,
   })
   const keys = Object.keys(schema).sort()
+  const safeUser = makePropSafe("user")
   keys.forEach(key => {
     const fieldSchema = schema[key]
     // Replace certain bindings with a new property to help display components
@@ -216,7 +218,7 @@ const getUserBindings = () => {
 
     bindings.push({
       type: "context",
-      runtimeBinding: `user.${runtimeBoundKey}`,
+      runtimeBinding: `${safeUser}.${makePropSafe(runtimeBoundKey)}`,
       readableBinding: `Current User.${key}`,
       // Field schema and provider are required to construct relationship
       // datasource options, based on bindable properties
@@ -240,9 +242,10 @@ const getUrlBindings = asset => {
       params.push(part.replace(/:/g, "").replace(/\?/g, ""))
     }
   })
+  const safeURL = makePropSafe("url")
   return params.map(param => ({
     type: "context",
-    runtimeBinding: `url.${param}`,
+    runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
 }
