@@ -96,3 +96,11 @@ exports.downloadTemplate = async (type, name) => {
   const templateUrl = `https://${DEFAULT_TEMPLATES_BUCKET}/templates/${type}/${name}.tar.gz`
   return downloadTarball(templateUrl, ObjectStoreBuckets.TEMPLATES, type)
 }
+
+/**
+ * All file reads come through here just to make sure all of them make sense
+ * allows a centralised location to check logic is all good.
+ */
+exports.readFileSync = (filepath, options = "utf8") => {
+  return fs.readFileSync(filepath, options)
+}
