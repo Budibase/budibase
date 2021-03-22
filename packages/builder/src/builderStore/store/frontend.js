@@ -9,6 +9,9 @@ import {
   selectedComponent,
   selectedAccessRole,
 } from "builderStore"
+// Backendstores
+import {datasources} from 'builderStore/store/backend/'
+
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
@@ -57,6 +60,13 @@ export const getFrontendStore = () => {
         appInstance: application.instance,
       }))
       await hostingStore.actions.fetch()
+
+      // Initialise backend stores
+      const [sources] = await Promise.all([
+        api.get(`/api/datasources`).then(r => r.json()),
+      ])
+      datasources.set({sources, selected: null})
+
       await backendUiStore.actions.database.select(application.instance)
     },
     routing: {

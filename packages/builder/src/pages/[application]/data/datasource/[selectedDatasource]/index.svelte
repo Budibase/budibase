@@ -2,20 +2,21 @@
   import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
 
   let unsaved = false
 
-  $: datasource = $backendUiStore.datasources.find(
-    ds => ds._id === $backendUiStore.selectedDatasourceId
+  $: datasource = $datasources.sources.find(
+    ds => ds._id === $datasources.selected
   )
   $: integration = datasource && $backendUiStore.integrations[datasource.source]
 
   async function saveDatasource() {
     // Create datasource
-    await backendUiStore.actions.datasources.save(datasource)
+    await datasources.save(datasource)
     notifier.success(`Datasource ${name} saved successfully.`)
     unsaved = false
   }

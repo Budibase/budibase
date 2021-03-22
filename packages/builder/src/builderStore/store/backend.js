@@ -20,9 +20,8 @@ export const getBackendUiStore = () => {
     reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     database: {
       select: async db => {
-        const [tables, datasources, queries, integrations] = await Promise.all([
+        const [tables, queries, integrations] = await Promise.all([
           api.get(`/api/tables`).then(r => r.json()),
-          api.get(`/api/datasources`).then(r => r.json()),
           api.get(`/api/queries`).then(r => r.json()),
           api.get("/api/integrations").then(r => r.json()),
         ])
@@ -30,7 +29,6 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedDatabase = db
           state.tables = tables
-          state.datasources = datasources
           state.queries = queries
           state.integrations = integrations
           return state
@@ -48,56 +46,6 @@ export const getBackendUiStore = () => {
           state.selectedView = state.selectedView
           return state
         }),
-    },
-    datasources: {
-      fetch: async () => {
-        const response = await api.get(`/api/datasources`)
-        const json = await response.json()
-        store.update(state => {
-          state.datasources = json
-          return state
-        })
-        return json
-      },
-      select: async datasourceId => {
-        store.update(state => {
-          state.selectedDatasourceId = datasourceId
-          state.selectedQueryId = null
-          return state
-        })
-      },
-      save: async datasource => {
-        const response = await api.post("/api/datasources", datasource)
-        const json = await response.json()
-        store.update(state => {
-          const currentIdx = state.datasources.findIndex(
-            ds => ds._id === json._id
-          )
-
-          if (currentIdx >= 0) {
-            state.datasources.splice(currentIdx, 1, json)
-          } else {
-            state.datasources.push(json)
-          }
-
-          state.datasources = state.datasources
-          state.selectedDatasourceId = json._id
-          return state
-        })
-        return json
-      },
-      delete: async datasource => {
-        await api.delete(
-          `/api/datasources/${datasource._id}/${datasource._rev}`
-        )
-        store.update(state => {
-          state.datasources = state.datasources.filter(
-            existing => existing._id !== datasource._id
-          )
-          state.selectedDatasourceId = null
-          return state
-        })
-      },
     },
     queries: {
       fetch: async () => {
