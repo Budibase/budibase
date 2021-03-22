@@ -74,13 +74,9 @@ export const getDatasourceForProvider = (asset, component) => {
   })
   if (dataProviderSetting) {
     const settingValue = component[dataProviderSetting.key]
-    const providerId = settingValue?.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
-    if (providerId) {
-      const provider = findComponent(asset.props, providerId)
-      return getDatasourceForProvider(asset, provider)
-    } else {
-      return null
-    }
+    const providerId = extractLiteralHandlebarsID(settingValue)
+    const provider = findComponent(asset.props, providerId)
+    return getDatasourceForProvider(asset, provider)
   }
 
   // Extract datasource from component instance
@@ -135,11 +131,9 @@ const getContextBindings = (asset, componentId) => {
       let datasource
       const setting = contextDefinition.dataProviderSetting
       const settingValue = component[setting]
-      if (settingValue) {
-        const providerId = settingValue.match(/{{\s*literal\s+(\S+)\s*}}/)[1]
-        const provider = findComponent(asset.props, providerId)
-        datasource = getDatasourceForProvider(asset, provider)
-      }
+      const providerId = extractLiteralHandlebarsID(settingValue)
+      const provider = findComponent(asset.props, providerId)
+      datasource = getDatasourceForProvider(asset, provider)
       if (!datasource) {
         return
       }
@@ -365,6 +359,17 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     result = result.replace(boundValue, newBoundValue)
   }
   return result
+}
+
+/**
+ * Extracts a component ID from a handlebars expression setting of
+ * {{ literal [componentId] }}
+ */
+function extractLiteralHandlebarsID(value) {
+  if (!value) {
+    return null
+  }
+  return value.match(/{{\s*literal[\s\[]+([a-fA-F0-9]+)[\s\]]*}}/)[1]
 }
 
 /**
