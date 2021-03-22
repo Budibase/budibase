@@ -6,7 +6,6 @@ import { permissions } from './backend/permissions'
 const INITIAL_BACKEND_UI_STATE = {
   tables: [],
   views: [],
-  users: [],
   roles: [],
   datasources: [],
   queries: [],
@@ -301,14 +300,6 @@ export const getBackendUiStore = () => {
           return state
         })
       },
-    },
-    users: {
-      create: user =>
-        store.update(state => {
-          state.users.push(user)
-          state.users = state.users
-          return state
-        }),
     },
     roles: {
       fetch: async () => {
