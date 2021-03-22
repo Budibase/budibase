@@ -2,14 +2,14 @@
   import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
-  import { datasources, integrations } from 'builderStore/store/backend/'
+  import { datasources, integrations, queries } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
 
   let unsaved = false
 
-  $: datasource = $datasources.sources.find(
+  $: datasource = $datasources.list.find(
     ds => ds._id === $datasources.selected
   )
   $: integration = datasource && $integrations[datasource.source]
@@ -25,7 +25,7 @@
     if ($backendUiStore.selectedQueryId === query._id) {
       return
     }
-    backendUiStore.actions.queries.select(query)
+    queries.select(query)
     $goto(`../${query._id}`)
   }
 
@@ -88,7 +88,7 @@
       </div>
       <Spacer extraLarge />
       <div class="query-list">
-        {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
+        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
             <p>{query.queryVerb}</p>

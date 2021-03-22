@@ -40,7 +40,7 @@
   let parameters
   let data = []
 
-  $: datasource = $datasources.sources.find(
+  $: datasource = $datasources.list.find(
     ds => ds._id === query.datasourceId
   )
 
@@ -114,7 +114,7 @@
 
   async function saveQuery() {
     try {
-      const { _id } = await backendUiStore.actions.queries.save(
+      const { _id } = await queries.save(
         query.datasourceId,
         query
       )

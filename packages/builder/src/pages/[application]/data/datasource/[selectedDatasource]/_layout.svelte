@@ -3,7 +3,7 @@
   import { datasources } from 'builderStore/store/backend/'
 
   if ($params.selectedDatasource) {
-    const datasource = $datasources.sources.find(
+    const datasource = $datasources.list.find(
       m => m._id === $params.selectedDatasource
     )
     if (datasource) {

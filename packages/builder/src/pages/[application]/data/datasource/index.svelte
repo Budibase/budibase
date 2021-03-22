@@ -6,7 +6,7 @@
 
     onMount(async () => {
       // navigate to first table in list, if not already selected
-      $datasources.sources.length > 0 && $goto(`../${$datasources.sources[0]._id}`)
+      $datasources.list.length > 0 && $goto(`../${$datasources.list[0]._id}`)
     })
   </script>
   

@@ -37,7 +37,7 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-  $: queries = $backendUiStore.queries
+  $: queries = $queries.list
     .filter(
       query => showAllQueries || query.queryVerb === "read" || query.readable
     )
@@ -82,7 +82,7 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.sources.find(
+    const source = $datasources.list.find(
       ds => ds._id === query.datasourceId
     ).source
     return $integrations[source].query[query.queryVerb]
@@ -124,7 +124,7 @@
           height={200}
           query={value}
           schema={fetchQueryDefinition(value)}
-          datasource={$datasources.sources.find(ds => ds._id === value.datasourceId)}
+          datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
           editable={false} />
         <Spacer large />
       </div>
