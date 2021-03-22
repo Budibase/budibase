@@ -7,10 +7,10 @@
     // navigate to first datasource in list, if not already selected
     if (
       !$leftover &&
-      $datasources.sources.length > 0 &&
+      $datasources.list.length > 0 &&
       !$datasources.selected
     ) {
-      $goto(`./${$datasources.sources[0]._id}`)
+      $goto(`./${$datasources.list[0]._id}`)
     }
   })
 </script>

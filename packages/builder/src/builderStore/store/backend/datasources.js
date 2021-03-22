@@ -3,7 +3,7 @@ import api from "../../api"
 
 function createDatasourcesStore() {
   const { subscribe, update, set } = writable({
-    sources: [],
+    list: [],
     selected: null,
   })
 
@@ -14,7 +14,7 @@ function createDatasourcesStore() {
     fetch: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()
-      update(state => ({ ...state, sources: json }))
+      update(state => ({ ...state, list: json }))
       return json
     },
     select: async datasourceId => {
@@ -25,9 +25,9 @@ function createDatasourcesStore() {
       const json = await response.json()
 
       update(state => {
-        const currentIdx = state.sources.findIndex(ds => ds._id === json._id)
+        const currentIdx = state.list.findIndex(ds => ds._id === json._id)
 
-        const sources = state.sources
+        const sources = state.list
 
         if (currentIdx >= 0) {
           sources.splice(currentIdx, 1, json)
@@ -42,7 +42,7 @@ function createDatasourcesStore() {
     delete: async datasource => {
       await api.delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
       update(state => {
-        const sources = state.sources.filter(
+        const sources = state.list.filter(
           existing => existing._id !== datasource._id
         )
         return { sources, selected: null }

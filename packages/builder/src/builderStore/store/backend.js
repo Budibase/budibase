@@ -21,13 +21,11 @@ export const getBackendUiStore = () => {
       select: async db => {
         const [tables, queries] = await Promise.all([
           api.get(`/api/tables`).then(r => r.json()),
-          api.get(`/api/queries`).then(r => r.json()),
         ])
 
         store.update(state => {
           state.selectedDatabase = db
           state.tables = tables
-          state.queries = queries
           return state
         })
       },

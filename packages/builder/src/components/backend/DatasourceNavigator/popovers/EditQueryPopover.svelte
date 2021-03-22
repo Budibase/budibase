@@ -23,7 +23,7 @@
   }
 
   async function deleteQuery() {
-    await backendUiStore.actions.queries.delete(query)
+    await queries.delete(query)
     notifier.success("Query deleted")
     hideEditor()
   }
