@@ -15,17 +15,6 @@ const Commands = {
   Nuke: "nuke",
 }
 
-const managementCommand = process.argv.slice(2)[0]
-
-if (
-  !managementCommand ||
-  !Object.values(Commands).some(command => managementCommand === command)
-) {
-  throw new Error(
-    "You must supply either an 'up' or 'down' commmand to manage the budibase dev env."
-  )
-}
-
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   try {
@@ -53,6 +42,17 @@ async function nuke() {
   } catch (err) {
     console.log("Something went wrong:", err.message)
   }
+}
+
+const managementCommand = process.argv.slice(2)[0]
+
+if (
+  !managementCommand ||
+  !Object.values(Commands).some(command => managementCommand === command)
+) {
+  throw new Error(
+    "You must supply either an 'up', 'down' or 'nuke' commmand to manage the budibase development environment."
+  )
 }
 
 let command
