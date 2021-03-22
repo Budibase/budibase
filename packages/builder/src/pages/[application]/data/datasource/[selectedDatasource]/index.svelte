@@ -2,7 +2,7 @@
   import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources, integrations } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -12,7 +12,7 @@
   $: datasource = $datasources.sources.find(
     ds => ds._id === $datasources.selected
   )
-  $: integration = datasource && $backendUiStore.integrations[datasource.source]
+  $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {
     // Create datasource
