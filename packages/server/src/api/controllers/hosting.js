@@ -1,11 +1,11 @@
 const CouchDB = require("../../db")
-const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
 const {
   getHostingInfo,
   getDeployedApps,
   HostingTypes,
   getAppUrl,
 } = require("../../utilities/builder/hosting")
+const { StaticDatabases } = require("../../db/utils")
 
 exports.fetchInfo = async ctx => {
   ctx.body = {
@@ -14,17 +14,17 @@ exports.fetchInfo = async ctx => {
 }
 
 exports.save = async ctx => {
-  const db = new CouchDB(BUILDER_CONFIG_DB)
+  const db = new CouchDB(StaticDatabases.BUILDER_HOSTING.name)
   const { type } = ctx.request.body
   if (type === HostingTypes.CLOUD && ctx.request.body._rev) {
     ctx.body = await db.remove({
       ...ctx.request.body,
-      _id: HOSTING_DOC,
+      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
     })
   } else {
     ctx.body = await db.put({
       ...ctx.request.body,
-      _id: HOSTING_DOC,
+      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
     })
   }
 }
