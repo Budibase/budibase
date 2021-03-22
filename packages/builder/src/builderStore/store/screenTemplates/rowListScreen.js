@@ -2,6 +2,7 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { newRowUrl } from "./newRowScreen"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
+import { makePropSafe } from "@budibase/string-templates"
 
 export default function(tables) {
   return tables.map(table => {
@@ -83,7 +84,7 @@ const createScreen = table => {
 
   const grid = new Component("@budibase/standard-components/datagrid")
     .customProps({
-      dataProvider: `{{ literal ${provider._json._id} }}`,
+      dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
       editable: false,
       theme: "alpine",
       height: "540",
@@ -117,10 +118,8 @@ const createScreen = table => {
 
   return new Screen()
     .component("@budibase/standard-components/container")
-    .mainType("div")
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)
-    .name("")
     .addChild(mainContainer)
     .json()
 }
