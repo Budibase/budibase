@@ -22,9 +22,13 @@
   }
 
   async function deleteDatasource() {
+    const wasSelectedSource = $backendUiStore.selectedDatasourceId
     await backendUiStore.actions.datasources.delete(datasource)
     notifier.success("Datasource deleted")
-    $goto('./datasource')
+    // navigate to first index page if the source you are deleting is selected
+    if (wasSelectedSource === datasource._id) {
+      $goto('./datasource')
+    }
     hideEditor()
   }
 </script>
