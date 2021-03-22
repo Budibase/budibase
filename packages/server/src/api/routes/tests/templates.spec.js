@@ -1,7 +1,4 @@
 const setup = require("./utilities")
-const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
-const fs = require("fs")
-const { join } = require("path")
 
 describe("/templates", () => {
   let request = setup.getRequest()
