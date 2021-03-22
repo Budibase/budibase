@@ -70,14 +70,20 @@ function generateTitleContainer(table) {
 }
 
 const createScreen = table => {
-  const datagrid = new Component("@budibase/standard-components/datagrid")
+  const provider = new Component("@budibase/standard-components/dataprovider")
+    .instanceName(`Data Provider`)
     .customProps({
-      datasource: {
+      dataSource: {
         label: table.name,
         name: `all_${table._id}`,
         tableId: table._id,
         type: "table",
       },
+    })
+
+  const grid = new Component("@budibase/standard-components/datagrid")
+    .customProps({
+      dataProvider: `{{ literal ${provider._json._id} }}`,
       editable: false,
       theme: "alpine",
       height: "540",
@@ -85,6 +91,8 @@ const createScreen = table => {
       detailUrl: `${rowListUrl(table)}/:id`,
     })
     .instanceName("Grid")
+
+  provider.addChild(grid)
 
   const mainContainer = new Component("@budibase/standard-components/container")
     .normalStyle({
@@ -105,7 +113,7 @@ const createScreen = table => {
     .type("div")
     .instanceName("Container")
     .addChild(generateTitleContainer(table))
-    .addChild(datagrid)
+    .addChild(provider)
 
   return new Screen()
     .component("@budibase/standard-components/container")
