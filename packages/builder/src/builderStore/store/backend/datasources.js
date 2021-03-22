@@ -1,4 +1,5 @@
 import { writable } from "svelte/store"
+import { queries } from "./"
 import api from "../../api"
 
 function createDatasourcesStore() {
@@ -19,6 +20,7 @@ function createDatasourcesStore() {
     },
     select: async datasourceId => {
       update(state => ({ ...state, selected: datasourceId }))
+      queries.update(state => ({...state, selected: null}))
     },
     save: async datasource => {
       const response = await api.post("/api/datasources", datasource)
@@ -35,7 +37,7 @@ function createDatasourcesStore() {
           sources.push(json)
         }
 
-        return { sources, selected: json._id }
+        return { list: sources, selected: json._id }
       })
       return json
     },

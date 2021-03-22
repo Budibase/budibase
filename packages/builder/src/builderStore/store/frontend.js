@@ -10,7 +10,7 @@ import {
   selectedAccessRole,
 } from "builderStore"
 // Backendstores
-import { datasources, integrations, queries } from 'builderStore/store/backend/'
+import { datasources, integrations, queries, database } from 'builderStore/store/backend/'
 
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -70,8 +70,8 @@ export const getFrontendStore = () => {
       datasources.set({ list: _datasources, selected: null })
       integrations.set(_integrations)
       queries.set({ list: _queries, selected: null })
-
-      await backendUiStore.actions.database.select(application.instance)
+      database.set(application.instance)
+      
     },
     routing: {
       fetch: async () => {

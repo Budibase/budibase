@@ -1,8 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
-  import { datasources, queries } from 'builderStore/store/backend/'
+  import { database, datasources, queries } from 'builderStore/store/backend/'
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -14,7 +13,7 @@
   }
 
   function onClickQuery(query) {
-    if ($backendUiStore.selectedQueryId === query._id) {
+    if ($queries.selected === query._id) {
       return
     }
     queries.select(query)
@@ -27,7 +26,7 @@
   })
 </script>
 
-{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+{#if $database?._id}
   <div class="hierarchy-items-container">
     {#each $datasources.list as datasource, idx}
       <NavItem

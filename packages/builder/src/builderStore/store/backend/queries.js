@@ -8,6 +8,7 @@ function createQueriesStore() {
   return {
     subscribe,
     set,
+    update,
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
