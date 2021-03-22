@@ -7,7 +7,6 @@ const {
 const {
   getWorkerUrl,
   getCouchUrl,
-  getMinioUrl,
   getSelfHostKey,
 } = require("../../../utilities/builder/hosting")
 
@@ -45,17 +44,9 @@ exports.postDeployment = async function() {
 exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
   const verification = deployment.getVerification()
-  const objClient = new AWS.S3({
-    endpoint: await getMinioUrl(),
-    s3ForcePathStyle: true, // needed with minio?
-    signatureVersion: "v4",
-    params: {
-      Bucket: verification.bucket,
-    },
-  })
   // no metadata, aws has account ID in metadata
   const metadata = {}
-  await deployToObjectStore(appId, objClient, metadata)
+  await deployToObjectStore(appId, verification.bucket, metadata)
 }
 
 exports.replicateDb = async function(deployment) {
