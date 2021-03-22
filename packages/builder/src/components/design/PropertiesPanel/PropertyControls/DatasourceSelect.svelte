@@ -10,6 +10,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
@@ -81,7 +82,7 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $backendUiStore.datasources.find(
+    const source = $datasources.sources.find(
       ds => ds._id === query.datasourceId
     ).source
     return $backendUiStore.integrations[source].query[query.queryVerb]
@@ -123,7 +124,7 @@
           height={200}
           query={value}
           schema={fetchQueryDefinition(value)}
-          datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
+          datasource={$datasources.sources.find(ds => ds._id === value.datasourceId)}
           editable={false} />
         <Spacer large />
       </div>

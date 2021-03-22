@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -22,7 +22,7 @@
   }
 
   async function deleteDatasource() {
-    await backendUiStore.actions.datasources.delete(datasource)
+    await datasources.delete(datasource)
     notifier.success("Datasource deleted")
     $goto('./datasource')
     hideEditor()

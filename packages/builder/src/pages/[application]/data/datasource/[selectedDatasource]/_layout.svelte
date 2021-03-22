@@ -1,13 +1,13 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
 
   if ($params.selectedDatasource) {
-    const datasource = $backendUiStore.datasources.find(
+    const datasource = $datasources.sources.find(
       m => m._id === $params.selectedDatasource
     )
     if (datasource) {
-      backendUiStore.actions.datasources.select(datasource._id)
+      datasources.select(datasource._id)
     }
   }
 </script>

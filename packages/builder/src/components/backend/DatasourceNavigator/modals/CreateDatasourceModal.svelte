@@ -1,8 +1,8 @@
 <script>
   import { goto, params } from "@sveltech/routify"
-  import { backendUiStore, store } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
-  import { Input, Label, ModalContent, Button, Spacer } from "@budibase/bbui"
+  import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import analytics from "analytics"
 
@@ -14,7 +14,7 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if (
-      $backendUiStore.datasources?.some(
+      $datasources?.sources.some(
         datasource => datasource.name === datasourceName
       )
     ) {
@@ -28,7 +28,7 @@
     const { type, ...config } = integration
 
     // Create datasource
-    const response = await backendUiStore.actions.datasources.save({
+    const response = await datasources.save({
       name,
       source: type,
       config,

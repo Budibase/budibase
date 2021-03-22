@@ -16,6 +16,7 @@
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { backendUiStore } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
 
   const PREVIEW_HEADINGS = [
     {
@@ -35,13 +36,11 @@
   export let query
   export let fields = []
 
-  let config
   let tab = "JSON"
   let parameters
   let data = []
-  let popover
 
-  $: datasource = $backendUiStore.datasources.find(
+  $: datasource = $datasources.sources.find(
     ds => ds._id === query.datasourceId
   )
 

@@ -2,13 +2,14 @@
   import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import ICONS from "./icons"
 
   function selectDatasource(datasource) {
-    backendUiStore.actions.datasources.select(datasource._id)
+    datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }
 
@@ -21,18 +22,18 @@
   }
 
   onMount(() => {
-    backendUiStore.actions.datasources.fetch()
+    datasources.fetch()
     backendUiStore.actions.queries.fetch()
   })
 </script>
 
 {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
   <div class="hierarchy-items-container">
-    {#each $backendUiStore.datasources as datasource, idx}
+    {#each $datasources.sources as datasource, idx}
       <NavItem
         border={idx > 0}
         text={datasource.name}
-        selected={$backendUiStore.selectedDatasourceId === datasource._id}
+        selected={$datasources.selected === datasource._id}
         on:click={() => selectDatasource(datasource)}>
         <div class="datasource-icon" slot="icon">
           <svelte:component

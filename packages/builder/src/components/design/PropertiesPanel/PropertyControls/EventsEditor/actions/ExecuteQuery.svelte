@@ -1,6 +1,7 @@
 <script>
   import { Select, Label, Spacer } from "@budibase/bbui"
   import { store, backendUiStore, currentAsset } from "builderStore"
+  import { datasources } from 'builderStore/store/backend/'
   import { getBindableProperties } from "builderStore/dataBinding"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
@@ -8,7 +9,7 @@
   export let parameters
 
   $: query = $backendUiStore.queries.find(q => q._id === parameters.queryId)
-  $: datasource = $backendUiStore.datasources.find(
+  $: datasource = $datasources.sources.find(
     ds => ds._id === parameters.datasourceId
   )
   $: bindableProperties = getBindableProperties(
@@ -17,7 +18,7 @@
   )
 
   function fetchQueryDefinition(query) {
-    const source = $backendUiStore.datasources.find(
+    const source = $datasources.sources.find(
       ds => ds._id === query.datasourceId
     ).source
     return $backendUiStore.integrations[source].query[query.queryVerb]
@@ -27,7 +28,7 @@
 <Label small>Datasource</Label>
 <Select thin secondary bind:value={parameters.datasourceId}>
   <option value="" />
-  {#each $backendUiStore.datasources as datasource}
+  {#each $datasources as datasource}
     <option value={datasource._id}>{datasource.name}</option>
   {/each}
 </Select>
