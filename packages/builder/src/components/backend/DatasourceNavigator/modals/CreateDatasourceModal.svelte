@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@sveltech/routify"
+  import { goto } from "@sveltech/routify"
   import { datasources } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent } from "@budibase/bbui"
@@ -14,7 +14,7 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if (
-      $datasources?.sources.some(
+      $datasources?.list.some(
         datasource => datasource.name === datasourceName
       )
     ) {

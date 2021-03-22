@@ -6,7 +6,6 @@ const INITIAL_BACKEND_UI_STATE = {
   tables: [],
   views: [],
   datasources: [],
-  queries: [],
   selectedDatabase: {},
   selectedTable: {},
   draftTable: {},
@@ -19,12 +18,11 @@ export const getBackendUiStore = () => {
     reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     database: {
       select: async db => {
-        const [tables, queries] = await Promise.all([
+        const [tables] = await Promise.all([
           api.get(`/api/tables`).then(r => r.json()),
         ])
 
         store.update(state => {
-          state.selectedDatabase = db
           state.tables = tables
           return state
         })
@@ -41,72 +39,6 @@ export const getBackendUiStore = () => {
           state.selectedView = state.selectedView
           return state
         }),
-    },
-    queries: {
-      fetch: async () => {
-        const response = await api.get(`/api/queries`)
-        const json = await response.json()
-        store.update(state => {
-          state.queries = json
-          return state
-        })
-        return json
-      },
-      save: async (datasourceId, query) => {
-        const integrations = get(store).integrations
-        const dataSource = get(store).datasources.filter(
-          ds => ds._id === datasourceId
-        )
-        // check if readable attribute is found
-        if (dataSource.length !== 0) {
-          const integration = integrations[dataSource[0].source]
-          const readable = integration.query[query.queryVerb].readable
-          if (readable) {
-            query.readable = readable
-          }
-        }
-        query.datasourceId = datasourceId
-        const response = await api.post(`/api/queries`, query)
-        if (response.status !== 200) {
-          throw new Error("Failed saving query.")
-        }
-        const json = await response.json()
-        store.update(state => {
-          const currentIdx = state.queries.findIndex(
-            query => query._id === json._id
-          )
-
-          if (currentIdx >= 0) {
-            state.queries.splice(currentIdx, 1, json)
-          } else {
-            state.queries.push(json)
-          }
-
-          state.queries = state.queries
-          state.selectedQueryId = json._id
-          return state
-        })
-        return json
-      },
-      select: query =>
-        store.update(state => {
-          state.selectedDatasourceId = query.datasourceId
-          state.selectedQueryId = query._id
-          return state
-        }),
-      delete: async query => {
-        await api.delete(`/api/queries/${query._id}/${query._rev}`)
-        store.update(state => {
-          state.queries = state.queries.filter(
-            existing => existing._id !== query._id
-          )
-          if (state.selectedQueryId === query._id) {
-            state.selectedQueryId = null
-          }
-
-          return state
-        })
-      },
     },
     tables: {
       fetch: async () => {
