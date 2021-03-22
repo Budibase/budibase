@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const compose = require("docker-compose")
 const path = require("path")
-const readline = require("readline")
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -32,7 +31,7 @@ async function up() {
   try {
     await compose.upAll(CONFIG)
   } catch (err) {
-    console.log("something went wrong:", err.message)
+    console.log("Something went wrong:", err.message)
   }
 }
 
@@ -41,7 +40,7 @@ async function down() {
   try {
     await compose.stop(CONFIG)
   } catch (err) {
-    console.log("something went wrong:", err.message)
+    console.log("Something went wrong:", err.message)
   }
 }
 
@@ -52,7 +51,7 @@ async function nuke() {
   try {
     await compose.down(CONFIG)
   } catch (err) {
-    console.log("something went wrong:", err.message)
+    console.log("Something went wrong:", err.message)
   }
 }
 
