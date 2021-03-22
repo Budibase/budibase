@@ -1,12 +1,10 @@
 import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
-import { permissions } from './backend/permissions'
 
 const INITIAL_BACKEND_UI_STATE = {
   tables: [],
   views: [],
-  roles: [],
   datasources: [],
   queries: [],
   integrations: {},
@@ -48,11 +46,6 @@ export const getBackendUiStore = () => {
       delete: () =>
         store.update(state => {
           state.selectedView = state.selectedView
-          return state
-        }),
-      select: row =>
-        store.update(state => {
-          state.selectedRow = row
           return state
         }),
     },
@@ -299,26 +292,6 @@ export const getBackendUiStore = () => {
           state.selectedView = viewMeta
           return state
         })
-      },
-    },
-    roles: {
-      fetch: async () => {
-        const response = await api.get("/api/roles")
-        const roles = await response.json()
-        store.update(state => {
-          state.roles = roles
-          return state
-        })
-      },
-      delete: async role => {
-        const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
-        await store.actions.roles.fetch()
-        return response
-      },
-      save: async role => {
-        const response = await api.post("/api/roles", role)
-        await store.actions.roles.fetch()
-        return response
       },
     },
     permissions: {

@@ -1,5 +1,6 @@
 <script>
   import { store, backendUiStore, allScreens } from "builderStore"
+  import { roles } from 'builderStore/store/backend/'
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"
@@ -105,7 +106,7 @@
     bind:value={route}
     on:change={routeChanged} />
   <Select label="Access" bind:value={roleId} secondary>
-    {#each $backendUiStore.roles as role}
+    {#each $roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>
