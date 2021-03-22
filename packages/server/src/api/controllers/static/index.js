@@ -17,6 +17,7 @@ const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const { loadHandlebarsFile } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { OBJ_STORE_DIRECTORY } = require("../../../constants")
+const fileProcessor = require("../../../utilities/fileSystem/processor")
 
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
@@ -50,8 +51,7 @@ exports.serveBuilder = async function(ctx) {
 }
 
 exports.uploadFile = async function(ctx) {
-  let files
-  files =
+  let files =
     ctx.request.files.file.length > 1
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
@@ -62,9 +62,16 @@ exports.uploadFile = async function(ctx) {
     },
   })
 
-  const uploads = files.map(file => {
+  const uploads = files.map(async file => {
     const fileExtension = [...file.name.split(".")].pop()
+    // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+    // need to handle image processing
+    await fileProcessor.process({
+      ...file,
+      extension: fileExtension,
+    })
 
     return prepareUpload({
       file,
