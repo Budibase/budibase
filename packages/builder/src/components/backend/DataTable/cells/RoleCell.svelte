@@ -1,9 +1,9 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { roles } from 'builderStore/store/backend/'
 
   export let roleId
 
-  $: role = $backendUiStore.roles.find(role => role._id === roleId)
+  $: role = $roles.find(role => role._id === roleId)
   $: roleName = role?.name ?? "Unknown role"
 </script>
 

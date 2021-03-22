@@ -1,5 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
+  import { roles } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as backendApi from "../api"
@@ -91,7 +92,7 @@
     data-cy="roleId-select"
     bind:value={row.roleId}>
     <option value="">Choose an option</option>
-    {#each $backendUiStore.roles as role}
+    {#each $roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>

@@ -1,5 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
+  import { roles } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
 
@@ -42,7 +43,7 @@
         thin
         value={permissions[level]}
         on:change={e => changePermission(level, e.target.value)}>
-        {#each $backendUiStore.roles as role}
+        {#each $roles as role}
           <option value={role._id}>{role.name}</option>
         {/each}
       </Select>
