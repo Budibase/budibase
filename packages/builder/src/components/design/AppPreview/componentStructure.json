@@ -63,8 +63,7 @@
     "children": [
       "screenslot",
       "navigation",
-      "login",
-      "rowdetail"
+      "login"
     ]
   }
 ]
