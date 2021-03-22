@@ -1,0 +1,79 @@
+version: "3"
+
+# optional ports are specified throughout for more advanced use cases.
+
+services:
+  minio-service:
+    container_name: budi-minio-dev
+    restart: always
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_PORT}:9000"
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BROWSER: "off"
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  proxy-service:
+    container_name: budi-envoy-dev
+    restart: always
+    image: envoyproxy/envoy:v1.16-latest
+    volumes:
+      - ./envoy.dev.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "${MAIN_PORT}:10000"
+      #- "9901:9901"
+    depends_on:
+      - minio-service
+      - couchdb-service
+
+  couchdb-service:
+    container_name: budi-couchdb-dev
+    restart: always
+    image: apache/couchdb:3.0
+    environment:
+      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
+      - COUCHDB_USER=${COUCH_DB_USER}
+    ports:
+      - "${COUCH_DB_PORT}:5984"
+      #- "4369:4369"
+      #- "9100:9100"
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+  
+  couch-init:
+    image: curlimages/curl
+    environment:
+      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
+    depends_on:
+      - couchdb-service
+    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+
+  redis-service:
+    container_name: budi-redis-dev
+    restart: always
+    image: redis
+    environment:
+      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
+      - COUCHDB_USER=${COUCH_DB_USER}
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+
+
+volumes:
+  couchdb_data:
+    driver: local
+  minio_data:
+    driver: local
+  redis_data:
+    driver: local

@@ -17,11 +17,11 @@
     },
   ]
 
-  let tab = $isActive('./datasource') ? "datasource" : "table"
+  let tab = $isActive("./datasource") ? "datasource" : "table"
 
   function selectFirstTableOrSource({ detail }) {
     const type = detail.heading.key
-    if (type === 'datasource') {
+    if (type === "datasource") {
       $goto("./datasource")
     } else {
       $goto("./table")
@@ -34,7 +34,10 @@
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <Switcher headings={tabs} bind:value={tab} on:change={selectFirstTableOrSource}>
+    <Switcher
+      headings={tabs}
+      bind:value={tab}
+      on:change={selectFirstTableOrSource}>
       <div class="title">
         <i
           data-cy={`new-${tab}`}

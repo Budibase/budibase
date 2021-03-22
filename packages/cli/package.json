@@ -1,9 +1,11 @@
 {
-  "name": "cli",
-  "version": "0.8.7",
+  "name": "@budibase/cli",
+  "version": "0.8.10",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
-  "bin": "src/index.js",
+  "bin": {
+    "budi": "src/index.js"
+  },
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "scripts": {

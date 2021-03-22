@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { backendUiStore, store, allScreens } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
@@ -36,10 +37,14 @@
   }
 
   async function deleteTable() {
+    const wasSelectedTable = $backendUiStore.selectedTable 
     await backendUiStore.actions.tables.delete(table)
     store.actions.screens.delete(templateScreens)
     await backendUiStore.actions.tables.fetch()
     notifier.success("Table deleted")
+    if (wasSelectedTable._id === table._id) {
+      $goto('./table')
+    }
     hideEditor()
   }
 
