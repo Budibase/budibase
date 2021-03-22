@@ -1,17 +1,10 @@
-const fs = require("fs")
-const sanitize = require("sanitize-s3-objectkey")
 const { walkDir } = require("../../../utilities")
 const { join } = require("../../../utilities/centralPath")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const fetch = require("node-fetch")
 const PouchDB = require("../../../db")
 const CouchDB = require("pouchdb")
-
-const CONTENT_TYPE_MAP = {
-  html: "text/html",
-  css: "text/css",
-  js: "application/javascript",
-}
+const { upload } = require("../../../utilities/fileSystem")
 
 exports.fetchCredentials = async function(url, body) {
   const response = await fetch(url, {
@@ -34,30 +27,25 @@ exports.fetchCredentials = async function(url, body) {
   return json
 }
 
-exports.prepareUpload = async function({ s3Key, metadata, client, file }) {
-  const extension = [...file.name.split(".")].pop()
-  const fileBytes = fs.readFileSync(file.path)
-
-  const upload = await client
-    .upload({
-      // windows file paths need to be converted to forward slashes for s3
-      Key: sanitize(s3Key).replace(/\\/g, "/"),
-      Body: fileBytes,
-      ContentType: file.type || CONTENT_TYPE_MAP[extension.toLowerCase()],
-      Metadata: metadata,
-    })
-    .promise()
+exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
+  const response = await upload({
+    bucket,
+    metadata,
+    filename: s3Key,
+    path: file.path,
+    type: file.type,
+  })
 
   return {
     size: file.size,
     name: file.name,
-    extension,
-    url: upload.Location,
-    key: upload.Key,
+    extension: [...file.name.split(".")].pop(),
+    url: response.Location,
+    key: response.Key,
   }
 }
 
-exports.deployToObjectStore = async function(appId, objectClient, metadata) {
+exports.deployToObjectStore = async function(appId, bucket, metadata) {
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
   let uploads = []
@@ -66,12 +54,12 @@ exports.deployToObjectStore = async function(appId, objectClient, metadata) {
   walkDir(appAssetsPath, function(filePath) {
     const filePathParts = filePath.split("/")
     const appAssetUpload = exports.prepareUpload({
+      bucket,
       file: {
         path: filePath,
         name: filePathParts.pop(),
       },
       s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-      client: objectClient,
       metadata,
     })
     uploads.push(appAssetUpload)
@@ -92,7 +80,7 @@ exports.deployToObjectStore = async function(appId, objectClient, metadata) {
     const attachmentUpload = exports.prepareUpload({
       file,
       s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
-      client: objectClient,
+      bucket,
       metadata,
     })
 

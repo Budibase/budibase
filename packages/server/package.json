@@ -137,6 +137,7 @@
   "devDependencies": {
     "@budibase/standard-components": "^0.8.9",
     "@jest/test-sequencer": "^24.8.0",
+    "docker-compose": "^0.23.6",
     "electron": "10.1.3",
     "electron-builder": "^22.9.1",
     "electron-builder-notarize": "^1.1.2",

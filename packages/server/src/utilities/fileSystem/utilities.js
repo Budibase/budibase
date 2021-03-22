@@ -9,8 +9,15 @@ const { join } = require("path")
 const { streamUpload } = require("./utilities")
 const fs = require("fs")
 const { budibaseTempDir } = require("../budibaseDir")
+const env = require("../../environment")
 
 const streamPipeline = promisify(stream.pipeline)
+
+const CONTENT_TYPE_MAP = {
+  html: "text/html",
+  css: "text/css",
+  js: "application/javascript",
+}
 
 /**
  * Gets a connection to the object store using the S3 SDK.
@@ -20,6 +27,10 @@ const streamPipeline = promisify(stream.pipeline)
  */
 exports.ObjectStore = bucket => {
   return new AWS.S3({
+    // TODO: need to deal with endpoint properly
+    endpoint: env.MINIO_URL,
+    s3ForcePathStyle: true, // needed with minio?
+    signatureVersion: "v4",
     params: {
       Bucket: bucket,
     },
@@ -45,6 +56,34 @@ exports.makeSureBucketExists = async (client, bucketName) => {
       throw err
     }
   }
+}
+
+/**
+ * Uploads the contents of a file given the required parameters, useful when
+ * temp files in use (for example file uploaded as an attachment).
+ * @param {string} bucket The name of the bucket to be uploaded to.
+ * @param {string} filename The name/path of the file in the object store.
+ * @param {string} path The path to the file (ideally a temporary file).
+ * @param {string} type If the content type is known can be specified.
+ * @param {object} metadata If there is metadata for the object it can be passed as well.
+ * @return {Promise<ManagedUpload.SendData>} The file has been uploaded to the object store successfully when
+ * promise completes.
+ */
+exports.upload = async ({ bucket, filename, path, type, metadata }) => {
+  const extension = [...filename.split(".")].pop()
+  const fileBytes = fs.readFileSync(path)
+
+  const objectStore = exports.ObjectStore(bucket)
+  const config = {
+    // windows file paths need to be converted to forward slashes for s3
+    Key: sanitize(filename).replace(/\\/g, "/"),
+    Body: fileBytes,
+    ContentType: type || CONTENT_TYPE_MAP[extension.toLowerCase()],
+  }
+  if (metadata) {
+    config.Metadata = metadata
+  }
+  return objectStore.upload(config).promise()
 }
 
 exports.streamUpload = async (bucket, filename, stream) => {

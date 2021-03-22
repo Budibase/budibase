@@ -5,7 +5,7 @@ const { join } = require("path")
 const uuid = require("uuid/v4")
 const CouchDB = require("../../db")
 const { ObjectStoreBuckets } = require("../../constants")
-const { streamUpload, deleteFolder, downloadTarball } = require("./utilities")
+const { upload, streamUpload, deleteFolder, downloadTarball } = require("./utilities")
 const { downloadLibraries, newAppPublicPath } = require("./newApp")
 
 /**
@@ -104,3 +104,8 @@ exports.downloadTemplate = async (type, name) => {
 exports.readFileSync = (filepath, options = "utf8") => {
   return fs.readFileSync(filepath, options)
 }
+
+/**
+ * Full function definition provided in the utilities.
+ */
+exports.upload = upload

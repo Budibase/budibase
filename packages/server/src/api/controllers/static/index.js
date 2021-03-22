@@ -4,7 +4,6 @@ const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
-const AWS = require("aws-sdk")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const {
@@ -56,12 +55,6 @@ exports.uploadFile = async function(ctx) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  const s3 = new AWS.S3({
-    params: {
-      Bucket: "prod-budi-app-assets",
-    },
-  })
-
   const uploads = files.map(async file => {
     const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
@@ -76,7 +69,7 @@ exports.uploadFile = async function(ctx) {
     return prepareUpload({
       file,
       s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
-      s3,
+      bucket: "prod-budi-app-assets",
     })
   })
 
