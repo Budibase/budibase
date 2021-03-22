@@ -16,29 +16,14 @@ static_resources:
             - name: local_services
               domains: ["*"]
               routes:
-              # - match: { prefix: "/app/" }
-              #   route:
-              #     cluster: app-service
-              #     prefix_rewrite: "/"
-
-              # # special case for presenting our static self hosting page
-              # - match: { path: "/" }
-              #   route:
-              #     cluster: app-service
-              
-              # special case for when API requests are made, can just forward, not to minio    
-              # - match: { prefix: "/api/" }
-              #   route:
-              #     cluster: app-service
-
-              # - match: { prefix: "/worker/" }
-              #   route: 
-              #     cluster: worker-service
-              #     prefix_rewrite: "/"
-
               - match: { prefix: "/db/" }
                 route:
                   cluster: couchdb-service
+                  prefix_rewrite: "/"
+
+              - match: { prefix: "/cache/" }
+                route:
+                  cluster: redis-service
                   prefix_rewrite: "/"
 
               # minio is on the default route because this works
@@ -51,20 +36,6 @@ static_resources:
           - name: envoy.filters.http.router
 
   clusters:
-  # - name: app-service
-  #   connect_timeout: 0.25s
-  #   type: strict_dns
-  #   lb_policy: round_robin
-  #   load_assignment:
-  #     cluster_name: app-service
-  #     endpoints:
-  #     - lb_endpoints:
-  #       - endpoint:
-  #           address:
-  #             socket_address: 
-  #               address: app-service
-  #               port_value: 4002
-
   - name: minio-service
     connect_timeout: 0.25s
     type: strict_dns
@@ -78,20 +49,6 @@ static_resources:
               socket_address:
                 address: minio-service
                 port_value: 9000
-
-  # - name: worker-service
-  #   connect_timeout: 0.25s
-  #   type: strict_dns
-  #   lb_policy: round_robin
-  #   load_assignment:
-  #     cluster_name: worker-service
-  #     endpoints:
-  #     - lb_endpoints:
-  #       - endpoint:
-  #           address:
-  #             socket_address: 
-  #               address: worker-service
-  #               port_value: 4003
 
   - name: couchdb-service
     connect_timeout: 0.25s
@@ -107,3 +64,16 @@ static_resources:
                 address: couchdb-service
                 port_value: 5984
 
+  - name: redis-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: redis-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: redis-service
+                port_value: 6379
