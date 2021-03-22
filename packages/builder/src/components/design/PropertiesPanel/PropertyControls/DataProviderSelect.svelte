@@ -1,5 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
+  import { makePropSafe } from "@budibase/string-templates"
   import { currentAsset, store } from "builderStore"
   import { findComponentPath } from "builderStore/storeUtils"
 
@@ -16,7 +17,7 @@
   <option value="">Choose option</option>
   {#if providers}
     {#each providers as component}
-      <option value={`{{ literal ${component._id} }}`}>
+      <option value={`{{ literal ${makePropSafe(component._id)} }}`}>
         {component._instanceName}
       </option>
     {/each}
