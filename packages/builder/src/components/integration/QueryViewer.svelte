@@ -16,7 +16,7 @@
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { backendUiStore } from "builderStore"
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources, integrations } from 'builderStore/store/backend/'
 
   const PREVIEW_HEADINGS = [
     {
@@ -57,7 +57,7 @@
 
   $: datasourceType = datasource?.source
 
-  $: integrationInfo = $backendUiStore.integrations[datasourceType]
+  $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
 
   $: shouldShowQueryConfig = queryConfig && query.queryVerb

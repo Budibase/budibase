@@ -7,7 +7,6 @@ const INITIAL_BACKEND_UI_STATE = {
   views: [],
   datasources: [],
   queries: [],
-  integrations: {},
   selectedDatabase: {},
   selectedTable: {},
   draftTable: {},
@@ -20,17 +19,15 @@ export const getBackendUiStore = () => {
     reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     database: {
       select: async db => {
-        const [tables, queries, integrations] = await Promise.all([
+        const [tables, queries] = await Promise.all([
           api.get(`/api/tables`).then(r => r.json()),
           api.get(`/api/queries`).then(r => r.json()),
-          api.get("/api/integrations").then(r => r.json()),
         ])
 
         store.update(state => {
           state.selectedDatabase = db
           state.tables = tables
           state.queries = queries
-          state.integrations = integrations
           return state
         })
       },
@@ -240,25 +237,6 @@ export const getBackendUiStore = () => {
           state.selectedView = viewMeta
           return state
         })
-      },
-    },
-    permissions: {
-      fetchLevels: async () => {
-        const response = await api.get("/api/permission/levels")
-        const json = await response.json()
-        return json
-      },
-      forResource: async resourceId => {
-        const response = await api.get(`/api/permission/${resourceId}`)
-        const json = await response.json()
-        return json
-      },
-      save: async ({ role, resource, level }) => {
-        const response = await api.post(
-          `/api/permission/${role}/${resource}/${level}`
-        )
-        const json = await response.json()
-        return json
       },
     },
   }

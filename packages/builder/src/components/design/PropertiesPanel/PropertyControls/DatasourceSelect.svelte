@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, backendUiStore, currentAsset } from "builderStore"
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources, integrations } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
@@ -85,7 +85,7 @@
     const source = $datasources.sources.find(
       ds => ds._id === query.datasourceId
     ).source
-    return $backendUiStore.integrations[source].query[query.queryVerb]
+    return $integrations[source].query[query.queryVerb]
   }
 </script>
 
