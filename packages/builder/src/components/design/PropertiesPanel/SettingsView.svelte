@@ -110,8 +110,8 @@
       componentInstance._id,
       component => component._component.endsWith("/form")
     )
-    const datasource = form?.datasource
-    const fields = makeDatasourceFormComponents(datasource)
+    const dataSource = form?.dataSource
+    const fields = makeDatasourceFormComponents(dataSource)
     onChange(
       "_children",
       fields.map(field => field.json())
