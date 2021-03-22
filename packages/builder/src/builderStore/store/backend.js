@@ -1,6 +1,7 @@
 import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
+import { permissions } from './backend/permissions'
 
 const INITIAL_BACKEND_UI_STATE = {
   tables: [],
@@ -26,10 +27,8 @@ export const getBackendUiStore = () => {
           api.get(`/api/tables`).then(r => r.json()),
           api.get(`/api/datasources`).then(r => r.json()),
           api.get(`/api/queries`).then(r => r.json()),
-          api.get("/api/integrations").then(r => r.json())
+          api.get("/api/integrations").then(r => r.json()),
         ])
-
-        const permissionLevels = await store.actions.permissions.fetchLevels()
 
         store.update(state => {
           state.selectedDatabase = db
@@ -37,7 +36,6 @@ export const getBackendUiStore = () => {
           state.datasources = datasources
           state.queries = queries
           state.integrations = integrations
-          state.permissionLevels = permissionLevels
           return state
         })
       },
