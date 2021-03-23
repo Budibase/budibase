@@ -1,4 +1,5 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
+import { views } from './'
 import { cloneDeep } from "lodash/fp"
 import api from "../../api"
 
@@ -7,33 +8,38 @@ function createTablesStore() {
       list: [],
       selected: {},
       draft: {},
-      view: {}
   })
   const { subscribe, update, set } = store 
 
-  return {
-    subscribe,
-    set,
-    fetch: async () => {
+    async function fetch() {
         const tablesResponse = await api.get(`/api/tables`)
         const tables = await tablesResponse.json()
         update(state => ({...state, list: tables}))
-    },
-    select: table => {
+    }
+
+    async function select(table) {
         if (!table) {
+            console.log('Setting selected to null')
             update(state => ({
                 ...state,
                 selected: {}
             }))
         } else {
+            console.log('Setting selected to null')
             update(state => ({
                 ...state,
                 selected: table,
                 draft: cloneDeep(table),
-                view: { name: `all_${table._id}` }
             }))
+            views.select({ name: `all_${table._id}` })
         }
-    },
+    }
+
+  return {
+    subscribe,
+    set,
+    fetch,
+    select,
     save: async table => {
         const updatedTable = cloneDeep(table)
         const oldTable = get(store).list.filter(t => t._id === table._id)[0]
@@ -64,8 +70,8 @@ function createTablesStore() {
 
         const response = await api.post(`/api/tables`, updatedTable)
         const savedTable = await response.json()
-        await store.fetch()
-        await store.select(savedTable)
+        await fetch()
+        await select(savedTable)
         return savedTable
     },
     delete: async table => {
