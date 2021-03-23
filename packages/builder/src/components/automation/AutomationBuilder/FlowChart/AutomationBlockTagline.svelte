@@ -1,7 +1,7 @@
 <script>
   import { processStringSync } from "@budibase/string-templates"
   import { get } from "lodash/fp"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
 
   export let block
 
@@ -15,7 +15,7 @@
     let enrichedInputs = { ...inputs, enriched: {} }
     const tableId = inputs.tableId || inputs.row?.tableId
     if (tableId) {
-      enrichedInputs.enriched.table = $backendUiStore.tables.find(
+      enrichedInputs.enriched.table = $tables.list.find(
         table => table._id === tableId
       )
     }

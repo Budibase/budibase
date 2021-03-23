@@ -1,4 +1,5 @@
 export { database } from "./database"
+export { tables } from "./tables"
 export { permissions } from "./permissions"
 export { roles } from "./roles"
 export { datasources } from "./datasources"

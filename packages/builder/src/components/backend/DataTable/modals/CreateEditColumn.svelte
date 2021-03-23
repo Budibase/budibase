@@ -9,7 +9,8 @@
     Radio,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
+
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -33,29 +34,29 @@
     constraints: fieldDefinitions.STRING.constraints,
 
     // Initial value for column name in other table for linked records
-    fieldName: $backendUiStore.selectedTable.name,
+    fieldName: $tables.selected.name,
   }
 
   let originalName = field.name
   let primaryDisplay =
-    $backendUiStore.selectedTable.primaryDisplay == null ||
-    $backendUiStore.selectedTable.primaryDisplay === field.name
+    $tables.selected.primaryDisplay == null ||
+    $tables.selected.primaryDisplay === field.name
 
-  let table = $backendUiStore.selectedTable
-  let indexes = [...($backendUiStore.selectedTable.indexes || [])]
+  let table = $tables.selected
+  let indexes = [...($tables.selected.indexes || [])]
   let confirmDeleteDialog
   let deletion
 
-  $: tableOptions = $backendUiStore.tables.filter(
-    table => table._id !== $backendUiStore.draftTable._id
+  $: tableOptions = $tables.list.filter(
+    table => table._id !== $tables.draft._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
-    $backendUiStore.selectedTable?._id === TableNames.USERS &&
+    $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
   $: invalid =
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($backendUiStore.draftTable.schema).some(
+    Object.keys($tables.draft.schema).some(
       key => key === field.name
     )
 
@@ -72,28 +73,25 @@
   async function saveColumn() {
     if (field.type === AUTO_COL) {
       field = buildAutoColumn(
-        $backendUiStore.draftTable.name,
+        $tables.draft.name,
         field.name,
         field.subtype
       )
     }
-    backendUiStore.update(state => {
-      backendUiStore.actions.tables.saveField({
+    tables.saveField({
         originalName,
         field,
         primaryDisplay,
         indexes,
       })
-      return state
-    })
     onClosed()
   }
 
   function deleteColumn() {
-    if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
+    if (field.name === $tables.selected.primaryDisplay) {
       notifier.danger("You cannot delete the display column")
     } else {
-      backendUiStore.actions.tables.deleteField(field)
+      tables.deleteField(field)
       notifier.success(`Column ${field.name} deleted.`)
       onClosed()
     }

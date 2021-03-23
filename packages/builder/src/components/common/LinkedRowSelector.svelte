@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import api from "builderStore/api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
@@ -13,7 +13,7 @@
   $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
-  $: linkedTable = $backendUiStore.tables.find(
+  $: linkedTable = $tables.list.find(
     table => table._id === linkedTableId
   )
   $: fetchRows(linkedTableId)

@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { backendUiStore, store } from "builderStore"
+  import { store } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
@@ -17,7 +18,7 @@
     ROW_LIST_TEMPLATE,
   ]
 
-  $: tableNames = $backendUiStore.tables.map(table => table.name)
+  $: tableNames = $tables.list.map(table => table.name)
 
   let modal
   let name
@@ -58,7 +59,7 @@
     }
 
     // Create table
-    const table = await backendUiStore.actions.tables.save(newTable)
+    const table = await tables.save(newTable)
     notifier.success(`Table ${name} created successfully.`)
     analytics.captureEvent("Table Created", { name })
 

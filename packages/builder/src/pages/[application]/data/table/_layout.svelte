@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import { goto, leftover } from "@sveltech/routify"
   import { onMount } from "svelte"
 
@@ -8,10 +8,10 @@
     // and this is the final url (i.e. no selectedTable)
     if (
       !$leftover &&
-      $backendUiStore.tables.length > 0 &&
-      (!$backendUiStore.selectedTable || !$backendUiStore.selectedTable._id)
+      $tables.list.length > 0 &&
+      (!$tables.selected || !$tables.selected._id)
     ) {
-      $goto(`./${$backendUiStore.tables[0]._id}`)
+      $goto(`./${$tables.list[0]._id}`)
     }
   })
 </script>
