@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const compose = require("docker-compose")
 const path = require("path")
+const fs = require("fs")
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -26,8 +27,34 @@ if (
   )
 }
 
+async function init() {
+  const envFilePath = path.join(process.cwd(), ".env")
+  if (fs.existsSync(envFilePath)) {
+    return
+  }
+  const envFileJson = {
+    PORT: 4001,
+    MINIO_URL: "http://localhost:10000/",
+    COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+    WORKER_URL: "http://localhost:4002",
+    JWT_SECRET: "testsecret",
+    MINIO_ACCESS_KEY: "budibase",
+    MINIO_SECRET_KEY: "budibase",
+    COUCH_DB_PASSWORD: "budibase",
+    COUCH_DB_USER: "budibase",
+    SELF_HOSTED: 1,
+    CLOUD: 1,
+  }
+  let envFile = ""
+  Object.keys(envFileJson).forEach(key => {
+    envFile += `${key}=${envFileJson[key]}\n`
+  })
+  fs.writeFileSync(envFilePath, envFile)
+}
+
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
+  await init()
   try {
     await compose.upAll(CONFIG)
   } catch (err) {
