@@ -1,5 +1,4 @@
 <script>
-  import { backendUiStore } from "builderStore"
   import { roles, permissions as permissionsStore } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"

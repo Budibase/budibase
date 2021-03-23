@@ -15,7 +15,6 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
-  import { backendUiStore } from "builderStore"
   import { datasources, integrations } from 'builderStore/store/backend/'
 
   const PREVIEW_HEADINGS = [

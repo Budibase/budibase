@@ -1,5 +1,6 @@
 <script>
   import { backendUiStore, store, allScreens } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -36,15 +37,15 @@
   }
 
   async function deleteTable() {
-    await backendUiStore.actions.tables.delete(table)
+    await tables.delete(table)
     store.actions.screens.delete(templateScreens)
-    await backendUiStore.actions.tables.fetch()
+    await tables.fetch()
     notifier.success("Table deleted")
     hideEditor()
   }
 
   async function save() {
-    await backendUiStore.actions.tables.save(table)
+    await tables.save(table)
     notifier.success("Table renamed successfully")
     hideEditor()
   }
