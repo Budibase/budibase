@@ -19,13 +19,11 @@ function createTablesStore() {
 
   async function select(table) {
     if (!table) {
-      console.log("Setting selected to null")
       update(state => ({
         ...state,
         selected: {},
       }))
     } else {
-      console.log("Setting selected to null")
       update(state => ({
         ...state,
         selected: table,
