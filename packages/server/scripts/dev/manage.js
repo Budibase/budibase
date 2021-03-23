@@ -17,31 +17,19 @@ const Commands = {
 
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
-  try {
-    await compose.upAll(CONFIG)
-  } catch (err) {
-    console.log("Something went wrong:", err.message)
-  }
+  await compose.upAll(CONFIG)
 }
 
 async function down() {
   console.log("Spinning down your budibase dev environment... 🌇")
-  try {
-    await compose.stop(CONFIG)
-  } catch (err) {
-    console.log("Something went wrong:", err.message)
-  }
+  await compose.stop(CONFIG)
 }
 
 async function nuke() {
   console.log(
     "Clearing down your budibase dev environment, including all containers and volumes... 💥"
   )
-  try {
-    await compose.down(CONFIG)
-  } catch (err) {
-    console.log("Something went wrong:", err.message)
-  }
+  await compose.down(CONFIG)
 }
 
 const managementCommand = process.argv.slice(2)[0]
@@ -74,6 +62,9 @@ command()
   .then(() => {
     console.log("Done! 🎉")
   })
-  .catch(() => {
-    console.log("Error while managing budibase dev environment.")
+  .catch(err => {
+    console.error(
+      "Something went wrong while managing budibase dev environment:",
+      err.message
+    )
   })
