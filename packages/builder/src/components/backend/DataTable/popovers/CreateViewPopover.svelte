@@ -1,7 +1,7 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { views as viewsStore } from 'builderStore/store/backend/'
   import { tables } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
@@ -20,7 +20,7 @@
       notifier.danger(`View exists with name ${name}.`)
       return
     }
-    backendUiStore.actions.views.save({
+    viewsStore.save({
       name,
       tableId: $tables.selected._id,
       field,

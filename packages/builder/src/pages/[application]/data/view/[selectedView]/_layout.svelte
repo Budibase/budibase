@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables, views } from 'builderStore/store/backend/'
 
   if ($params.selectedView) {
     let view
@@ -11,7 +11,7 @@
       }
     }
     if (view) {
-      backendUiStore.actions.views.select({
+      views.select({
         name: viewName,
         ...view,
       })

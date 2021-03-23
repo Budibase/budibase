@@ -22,7 +22,7 @@
   $: schema = $tables.selected.schema
   $: tableView = {
     schema,
-    name: $views.selected.name,
+    name: $views.selected?.name,
   }
 
   // Fetch rows for specified table
