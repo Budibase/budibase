@@ -227,7 +227,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       const queries = get(queriesStores).queries
       table = queries.find(query => query._id === datasource._id)
     } else {
-      const tables = get(tablesStore).tables
+      const tables = get(tablesStore).list
       table = tables.find(table => table._id === datasource.tableId)
     }
     if (table) {
