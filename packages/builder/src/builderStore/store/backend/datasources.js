@@ -20,7 +20,7 @@ function createDatasourcesStore() {
     },
     select: async datasourceId => {
       update(state => ({ ...state, selected: datasourceId }))
-      queries.update(state => ({...state, selected: null}))
+      queries.update(state => ({ ...state, selected: null }))
     },
     save: async datasource => {
       const response = await api.post("/api/datasources", datasource)

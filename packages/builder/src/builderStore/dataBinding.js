@@ -1,7 +1,10 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { store } from "builderStore"
-import { tables as tablesStore, queries as queriesStores } from 'builderStore/store/backend/'
+import {
+  tables as tablesStore,
+  queries as queriesStores,
+} from "builderStore/store/backend/"
 import { findComponentPath } from "./storeUtils"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
