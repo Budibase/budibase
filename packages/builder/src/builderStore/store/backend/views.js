@@ -3,7 +3,7 @@ import { tables } from "./"
 import api from "../../api"
 
 function createViewsStore() {
-  const { subscribe, set, update } = writable({
+  const { subscribe, update } = writable({
       list: [],
       selected: null
   })
@@ -15,7 +15,6 @@ function createViewsStore() {
             ...state,
             selected: view,
         }))
-        tables.select()
     },
     delete: async view => {
         await api.delete(`/api/views/${view}`)

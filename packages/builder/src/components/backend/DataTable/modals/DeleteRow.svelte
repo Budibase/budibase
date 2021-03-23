@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { rows } from 'builderStore/store/backend/'
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -15,7 +15,7 @@
   async function deleteRow() {
     await api.deleteRow(row)
     notifier.success("Row deleted")
-    backendUiStore.actions.rows.delete(row)
+    rows.delete(row)
   }
 </script>
 
