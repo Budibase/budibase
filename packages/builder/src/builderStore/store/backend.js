@@ -1,7 +1,6 @@
 import { writable } from "svelte/store"
 
-const INITIAL_BACKEND_UI_STATE = {
-}
+const INITIAL_BACKEND_UI_STATE = {}
 
 export const getBackendUiStore = () => {
   const store = writable({ ...INITIAL_BACKEND_UI_STATE })

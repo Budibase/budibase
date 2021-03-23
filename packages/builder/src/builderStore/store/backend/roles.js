@@ -23,8 +23,8 @@ function createRolesStore() {
 }
 
 async function getRoles() {
-    const response = await api.get("/api/roles")
-    return await response.json()
+  const response = await api.get("/api/roles")
+  return await response.json()
 }
 
 export const roles = createRolesStore()

@@ -1,9 +1,9 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { datasources, integrations } from "./"
 import api from "../../api"
 
 function createQueriesStore() {
-  const { subscribe, set, update } = writable({list: [], selected: null})
+  const { subscribe, set, update } = writable({ list: [], selected: null })
 
   return {
     subscribe,
@@ -12,7 +12,7 @@ function createQueriesStore() {
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
-      update(state => ({...state, list: json}))
+      update(state => ({ ...state, list: json }))
       return json
     },
     save: async (datasourceId, query) => {
@@ -44,7 +44,7 @@ function createQueriesStore() {
         } else {
           queries.push(json)
         }
-        return { list: queries, selected: json._id}
+        return { list: queries, selected: json._id }
       })
       return json
     },
@@ -55,9 +55,7 @@ function createQueriesStore() {
     delete: async query => {
       await api.delete(`/api/queries/${query._id}/${query._rev}`)
       update(state => {
-        state.list = state.list.filter(
-          existing => existing._id !== query._id
-        )
+        state.list = state.list.filter(existing => existing._id !== query._id)
         if (state.selected === query._id) {
           state.selected = null
         }

@@ -9,7 +9,13 @@ import {
   selectedAccessRole,
 } from "builderStore"
 // Backendstores
-import { datasources, integrations, queries, database, tables } from 'builderStore/store/backend/'
+import {
+  datasources,
+  integrations,
+  queries,
+  database,
+  tables,
+} from "builderStore/store/backend/"
 
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -61,7 +67,12 @@ export const getFrontendStore = () => {
       await hostingStore.actions.fetch()
 
       // Initialise backend stores
-      const [_datasources, _integrations, _queries, _tables] = await Promise.all([
+      const [
+        _datasources,
+        _integrations,
+        _queries,
+        _tables,
+      ] = await Promise.all([
         api.get(`/api/datasources`).then(r => r.json()),
         api.get("/api/integrations").then(r => r.json()),
         api.get(`/api/queries`).then(r => r.json()),
@@ -74,9 +85,8 @@ export const getFrontendStore = () => {
       tables.set({
         list: _tables,
         selected: {},
-        draft: {}
+        draft: {},
       })
-      
     },
     routing: {
       fetch: async () => {

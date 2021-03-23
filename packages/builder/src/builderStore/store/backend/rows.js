@@ -1,5 +1,5 @@
-import { writable,get  } from "svelte/store"
-import { views } from './'
+import { writable, get } from "svelte/store"
+import { views } from "./"
 
 function createRowsStore() {
   const { subscribe } = writable([])
@@ -12,4 +12,3 @@ function createRowsStore() {
 }
 
 export const rows = createRowsStore()
-
