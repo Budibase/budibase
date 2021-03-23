@@ -2,7 +2,6 @@ import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
   allScreens,
-  backendUiStore,
   hostingStore,
   currentAsset,
   mainLayout,

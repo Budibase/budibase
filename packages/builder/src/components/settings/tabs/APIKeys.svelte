@@ -2,7 +2,7 @@
   import { Input, Label, TextButton } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
-  import { backendUiStore } from "builderStore"
+  import { database } from 'builderStore/store/backend/'
   import analytics from "analytics"
 
   let keys = { budibase: "" }
@@ -46,7 +46,7 @@
   </TextButton>
   <div>
     <Label extraSmall grey>Instance ID (Webhooks)</Label>
-    <span>{$backendUiStore.selectedDatabase._id}</span>
+    <span>{$database._id}</span>
   </div>
 </div>
 

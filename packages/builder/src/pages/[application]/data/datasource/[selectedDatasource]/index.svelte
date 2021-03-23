@@ -1,7 +1,6 @@
 <script>
   import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
-  import { backendUiStore } from "builderStore"
   import { datasources, integrations, queries } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -22,7 +21,7 @@
   }
 
   function onClickQuery(query) {
-    if ($backendUiStore.selectedQueryId === query._id) {
+    if ($queries.selected === query._id) {
       return
     }
     queries.select(query)
