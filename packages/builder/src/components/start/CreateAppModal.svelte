@@ -10,7 +10,7 @@
   import api, { get } from "builderStore/api"
   import Form from "@svelteschool/svelte-forms"
   import Spinner from "components/common/Spinner.svelte"
-  import { API, Info, User } from "./Steps"
+  import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
   import { Button } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
@@ -24,8 +24,6 @@
 
   export let template
 
-  let lastApiKey
-  let fetchApiKeyPromise
 
   const infoValidation = {
     applicationName: string().required("Your application must have a name."),
