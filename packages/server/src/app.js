@@ -9,6 +9,7 @@ const env = require("./environment")
 const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
+const fileSystem = require("./utilities/fileSystem")
 
 const app = new Koa()
 
@@ -65,6 +66,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
+  fileSystem.init()
   await automations.init()
 })
 
