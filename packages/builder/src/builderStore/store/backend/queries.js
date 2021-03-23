@@ -49,6 +49,7 @@ function createQueriesStore() {
       return json
     },
     select: query => {
+      update(state => ({ ...state, selected: query._id }))
       datasources.update(state => ({ ...state, selected: query.datasourceId }))
     },
     delete: async query => {
