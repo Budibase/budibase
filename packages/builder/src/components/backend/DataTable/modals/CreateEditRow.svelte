@@ -1,5 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
@@ -12,8 +13,8 @@
 
   $: creating = row?._id == null
   $: table = row.tableId
-    ? $backendUiStore.tables.find(table => table._id === row?.tableId)
-    : $backendUiStore.selectedTable
+    ? $tables.list.find(table => table._id === row?.tableId)
+    : $tables.selected
   $: tableSchema = Object.entries(table?.schema ?? {})
 
   async function saveRow() {

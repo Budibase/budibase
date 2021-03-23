@@ -1,6 +1,5 @@
 <script>
-    import { backendUiStore } from "builderStore"
-    import { datasources } from 'builderStore/store/backend/'
+    import { datasources, tables } from 'builderStore/store/backend/'
     import { goto } from "@sveltech/routify"
     import { onMount } from "svelte"
 
@@ -10,7 +9,7 @@
     })
   </script>
   
-  {#if $backendUiStore.tables.length === 0}
+  {#if $tables.list.length === 0}
     <i>Connect your first datasource to start building.</i>
   {:else}<i>Select a datasource to edit</i>{/if}
   

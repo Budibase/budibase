@@ -1,5 +1,6 @@
 <script>
-  import { store, backendUiStore, allScreens } from "builderStore"
+  import { store, allScreens } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
   import { roles } from 'builderStore/store/backend/'
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
@@ -15,7 +16,7 @@
   let createLink = true
   let roleId = "BASIC"
 
-  $: templates = getTemplates($store, $backendUiStore.tables)
+  $: templates = getTemplates($store, $tables)
   $: route = !route && $allScreens.length === 0 ? "*" : route
   $: {
     if (templates && templateIndex === undefined) {

@@ -9,7 +9,8 @@
     Drawer,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, backendUiStore, currentAsset } from "builderStore"
+  import { store, currentAsset } from "builderStore"
+  import { tables as tablesStore } from 'builderStore/store/backend/'
   import { datasources, integrations } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
@@ -23,12 +24,12 @@
   export let otherSources
   export let showAllQueries
 
-  $: tables = $backendUiStore.tables.map(m => ({
+  $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
     type: "table",
   }))
-  $: views = $backendUiStore.tables.reduce((acc, cur) => {
+  $: views = $tablesStore.list.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,

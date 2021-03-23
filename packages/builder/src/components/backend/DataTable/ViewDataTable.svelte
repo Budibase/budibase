@@ -1,6 +1,7 @@
 <script>
   import api from "builderStore/api"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
+
   import Table from "./Table.svelte"
   import CalculateButton from "./buttons/CalculateButton.svelte"
   import GroupByButton from "./buttons/GroupByButton.svelte"
@@ -26,8 +27,8 @@
   }
 
   async function fetchViewData(name, field, groupBy, calculation) {
-    const tables = $backendUiStore.tables
-    const allTableViews = tables.map(table => table.views)
+    const _tables = $tables.list
+    const allTableViews = _tables.map(table => table.views)
     const thisView = allTableViews.filter(
       views => views != null && views[name] != null
     )[0]

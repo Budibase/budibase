@@ -1,13 +1,13 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'builderStore/store/backend/'
 
   if ($params.selectedTable) {
-    const table = $backendUiStore.tables.find(
+    const table = $tables.list.find(
       m => m._id === $params.selectedTable
     )
     if (table) {
-      backendUiStore.actions.tables.select(table)
+      tables.select(table)
     }
   }
 </script>

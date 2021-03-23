@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
+  import { tables, database } from 'builderStore/store/backend/'
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
@@ -10,7 +11,7 @@
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectTable(table) {
-    backendUiStore.actions.tables.select(table)
+    tables.select(table)
     $goto(`./table/${table._id}`)
   }
 
@@ -30,9 +31,9 @@
   }
 </script>
 
-{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+{#if $database?.selected?._id}
   <div class="hierarchy-items-container">
-    {#each $backendUiStore.tables as table, idx}
+    {#each $tables.list as table, idx}
       <NavItem
         border={idx > 0}
         icon={`ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
