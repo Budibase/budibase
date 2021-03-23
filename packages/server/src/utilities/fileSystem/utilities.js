@@ -10,6 +10,7 @@ const { streamUpload } = require("./utilities")
 const fs = require("fs")
 const { budibaseTempDir } = require("../budibaseDir")
 const env = require("../../environment")
+const { ObjectStoreBuckets } = require("../../constants")
 
 const streamPipeline = promisify(stream.pipeline)
 
@@ -18,6 +19,29 @@ const CONTENT_TYPE_MAP = {
   css: "text/css",
   js: "application/javascript",
 }
+const STRING_CONTENT_TYPES = [
+  CONTENT_TYPE_MAP.html,
+  CONTENT_TYPE_MAP.css,
+  CONTENT_TYPE_MAP.js,
+]
+
+function publicPolicy(bucketName) {
+  return {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: {
+          AWS: ["*"],
+        },
+        Action: "s3:GetObject",
+        Resource: [`arn:aws:s3:::${bucketName}/*`],
+      },
+    ],
+  }
+}
+
+const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
 
 /**
  * Gets a connection to the object store using the S3 SDK.
@@ -26,17 +50,23 @@ const CONTENT_TYPE_MAP = {
  * @constructor
  */
 exports.ObjectStore = bucket => {
-  return new AWS.S3({
-    // TODO: need to deal with endpoint properly
-    endpoint: env.MINIO_URL,
+  const config = {
     s3ForcePathStyle: true, // needed with minio?
     signatureVersion: "v4",
     params: {
       Bucket: bucket,
     },
-  })
+  }
+  if (env.MINIO_URL) {
+    config.endpoint = env.MINIO_URL
+  }
+  return new AWS.S3(config)
 }
 
+/**
+ * Given an object store and a bucket name this will make sure the bucket exists,
+ * if it does not exist then it will create it.
+ */
 exports.makeSureBucketExists = async (client, bucketName) => {
   try {
     await client
@@ -52,6 +82,16 @@ exports.makeSureBucketExists = async (client, bucketName) => {
           Bucket: bucketName,
         })
         .promise()
+      // public buckets are quite hidden in the system, make sure
+      // no bucket is set accidentally
+      if (PUBLIC_BUCKETS.includes(bucketName)) {
+        await client
+          .putBucketPolicy({
+            Bucket: bucketName,
+            Policy: JSON.stringify(publicPolicy(bucketName)),
+          })
+          .promise()
+      }
     } else {
       throw err
     }
@@ -61,13 +101,6 @@ exports.makeSureBucketExists = async (client, bucketName) => {
 /**
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).
- * @param {string} bucket The name of the bucket to be uploaded to.
- * @param {string} filename The name/path of the file in the object store.
- * @param {string} path The path to the file (ideally a temporary file).
- * @param {string} type If the content type is known can be specified.
- * @param {object} metadata If there is metadata for the object it can be passed as well.
- * @return {Promise<ManagedUpload.SendData>} The file has been uploaded to the object store successfully when
- * promise completes.
  */
 exports.upload = async ({ bucket, filename, path, type, metadata }) => {
   const extension = [...filename.split(".")].pop()
@@ -86,6 +119,10 @@ exports.upload = async ({ bucket, filename, path, type, metadata }) => {
   return objectStore.upload(config).promise()
 }
 
+/**
+ * Similar to the upload function but can be used to send a file stream
+ * through to the object store.
+ */
 exports.streamUpload = async (bucket, filename, stream) => {
   const objectStore = exports.ObjectStore(bucket)
   await exports.makeSureBucketExists(objectStore, bucket)
@@ -96,6 +133,25 @@ exports.streamUpload = async (bucket, filename, stream) => {
     Body: stream,
   }
   return objectStore.upload(params).promise()
+}
+
+/**
+ * retrieves the contents of a file from the object store, if it is a known content type it
+ * will be converted, otherwise it will be returned as a buffer stream.
+ */
+exports.retrieve = async (bucket, filename) => {
+  const objectStore = exports.ObjectStore(bucket)
+  const params = {
+    Bucket: bucket,
+    Key: sanitize(filename).replace(/\\/g, "/"),
+  }
+  const response = await objectStore.getObject(params).promise()
+  // currently these are all strings
+  if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
+    return response.Body.toString("utf8")
+  } else {
+    return response.Body
+  }
 }
 
 exports.deleteFolder = async (bucket, folder) => {

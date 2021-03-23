@@ -1,10 +1,25 @@
-const { walkDir } = require("../../../utilities")
 const { join } = require("../../../utilities/centralPath")
+const fs = require("fs")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const fetch = require("node-fetch")
 const PouchDB = require("../../../db")
 const CouchDB = require("pouchdb")
 const { upload } = require("../../../utilities/fileSystem")
+
+// TODO: everything in this file is to be removed
+
+function walkDir(dirPath, callback) {
+  for (let filename of fs.readdirSync(dirPath)) {
+    const filePath = `${dirPath}/${filename}`
+    const stat = fs.lstatSync(filePath)
+
+    if (stat.isFile()) {
+      callback(filePath)
+    } else {
+      walkDir(filePath, callback)
+    }
+  }
+}
 
 exports.fetchCredentials = async function(url, body) {
   const response = await fetch(url, {

@@ -210,7 +210,9 @@ exports.delete = async function(ctx) {
   const app = await db.get(ctx.params.appId)
   const result = await db.destroy()
 
-  await deleteApp(ctx.params.appId)
+  if (env.NODE_ENV !== "jest") {
+    await deleteApp(ctx.params.appId)
+  }
 
   ctx.status = 200
   ctx.message = `Application ${app.name} deleted successfully.`
