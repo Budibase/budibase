@@ -1,7 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/static")
 const { budibaseTempDir } = require("../../utilities/budibaseDir")
-const env = require("../../environment")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/security/permissions")
 const usage = require("../../middleware/usageQuota")
