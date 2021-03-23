@@ -18,12 +18,6 @@ async function startApp() {
   }
   // evict environment from cache, so it reloads when next asked
   delete require.cache[require.resolve("./environment")]
-  // store the port incase its going to get overridden
-  const port = process.env.PORT
-  require("dotenv").config({ path: envFile })
-  // overwrite the port - don't want to use dotenv for the port
-  require("./environment")._set("PORT", port)
-
   unhandled({
     showDialog: true,
     reportButton: error => {

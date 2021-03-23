@@ -13,14 +13,7 @@ function confirmAppId(possibleAppId) {
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-exports.isDev = () => {
-  return (
-    !env.CLOUD &&
-    env.NODE_ENV !== "production" &&
-    env.NODE_ENV !== "jest" &&
-    env.NODE_ENV !== "cypress"
-  )
-}
+exports.isDev = env.isDev
 
 /**
  * Given a request tries to find the appId, which can be located in various places
