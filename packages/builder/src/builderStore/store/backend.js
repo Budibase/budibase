@@ -1,20 +1,9 @@
 import { writable } from "svelte/store"
-import api from "../api"
-
-const INITIAL_BACKEND_UI_STATE = {
-  tables: [],
-  views: [],
-  datasources: [],
-  selectedDatabase: {},
-  selectedTable: {},
-  draftTable: {},
-}
 
 export const getBackendUiStore = () => {
-  const store = writable({ ...INITIAL_BACKEND_UI_STATE })
+  const store = writable({})
 
   store.actions = {
-    reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     rows: {
       save: () =>
         store.update(state => {
