@@ -28,9 +28,10 @@
       ...table.views[viewName],
     })
   }
+  
 </script>
 
-{#if $database?.selected?._id}
+{#if $database?._id}
   <div class="hierarchy-items-container">
     {#each $tables.list as table, idx}
       <NavItem
