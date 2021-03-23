@@ -16,6 +16,7 @@ const { downloadLibraries, newAppPublicPath } = require("./newApp")
 const download = require("download")
 const env = require("../../environment")
 const { homedir } = require("os")
+const fetch = require("node-fetch")
 
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
@@ -28,6 +29,16 @@ const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
  * downloading a package or opening a temporary file) in can be done in way that we can confirm it shouldn't
  * be done through an object store instead.
  */
+
+/**
+ * Upon first startup of instance there may not be everything we need in tmp directory, set it up.
+ */
+exports.init = () => {
+  const tempDir = budibaseTempDir()
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir)
+  }
+}
 
 /**
  * Checks if the system is currently in development mode and if it is makes sure
@@ -167,15 +178,13 @@ exports.automationInit = async () => {
 }
 
 exports.getExternalAutomationStep = async (name, version, bundleName) => {
-  const directory = env.AUTOMATION_DIRECTORY || join(homedir(), DEFAULT_AUTOMATION_DIRECTORY)
+  const directory =
+    env.AUTOMATION_DIRECTORY || join(homedir(), DEFAULT_AUTOMATION_DIRECTORY)
   const bucket = env.AUTOMATION_BUCKET || DEFAULT_AUTOMATION_BUCKET
   try {
     return require(join(directory, bundleName))
   } catch (err) {
-    await download(
-      `${bucket}/${name}/${version}/${bundleName}`,
-      directory
-    )
+    await download(`${bucket}/${name}/${version}/${bundleName}`, directory)
     return require(join(directory, bundleName))
   }
 }

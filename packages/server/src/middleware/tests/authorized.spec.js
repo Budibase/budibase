@@ -71,12 +71,6 @@ describe("Authorization middleware", () => {
 
   beforeEach(() => {
     config = new TestConfiguration()
-  }) 
-
-  it("passes the middleware for local webhooks", async () => {
-    config.setRequestUrl("https://something/webhooks/trigger")
-    await config.executeMiddleware()
-    expect(config.next).toHaveBeenCalled()
   })
 
   describe("external web hook call", () => {
