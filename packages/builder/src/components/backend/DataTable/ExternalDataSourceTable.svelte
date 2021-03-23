@@ -1,8 +1,4 @@
 <script>
-  import { params } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
-  import * as api from "./api"
   import Table from "./Table.svelte"
 
   export let query = {}

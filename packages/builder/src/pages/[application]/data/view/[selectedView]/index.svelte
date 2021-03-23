@@ -1,11 +1,11 @@
 <script>
   import ViewDataTable from "components/backend/DataTable/ViewDataTable"
-  import { backendUiStore } from "builderStore"
+  import { views, database } from 'builderStore/store/backend/'
 
-  $: selectedView = $backendUiStore.selectedView
+  $: selectedView = $views.selected
 </script>
 
-{#if $backendUiStore.selectedDatabase._id && selectedView}
+{#if $database._id && selectedView}
   <ViewDataTable view={selectedView} />
 {:else}<i>Create your first table to start building</i>{/if}
 

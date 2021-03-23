@@ -1,6 +1,7 @@
 <script>    
   import { goto } from "@sveltech/routify"
-  import { automationStore, backendUiStore } from "builderStore"
+  import { automationStore } from "builderStore"
+  import { database } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -11,7 +12,7 @@
   let anchor
   let dropdown
   let confirmDeleteDialog
-  $: instanceId = $backendUiStore.selectedDatabase._id
+  $: instanceId = $database._id
 
   function showModal() {
     dropdown.hide()

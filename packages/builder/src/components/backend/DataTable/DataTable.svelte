@@ -1,5 +1,6 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { tables, views } from 'builderStore/store/backend/'
+
   import CreateRowButton from "./buttons/CreateRowButton.svelte"
   import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
   import CreateViewButton from "./buttons/CreateViewButton.svelte"
@@ -16,19 +17,19 @@
   let hideAutocolumns = true
   let data = []
   let loading = false
-  $: isUsersTable = $backendUiStore.selectedTable?._id === TableNames.USERS
-  $: title = $backendUiStore.selectedTable.name
-  $: schema = $backendUiStore.selectedTable.schema
+  $: isUsersTable = $tables.selected?._id === TableNames.USERS
+  $: title = $tables.selected.name
+  $: schema = $tables.selected.schema
   $: tableView = {
     schema,
-    name: $backendUiStore.selectedView.name,
+    name: $views.selected.name,
   }
 
   // Fetch rows for specified table
   $: {
-    if ($backendUiStore.selectedView?.name?.startsWith("all_")) {
+    if ($views.selected?.name?.startsWith("all_")) {
       loading = true
-      api.fetchDataForView($backendUiStore.selectedView).then(rows => {
+      api.fetchDataForView($views.selected).then(rows => {
         data = rows || []
         loading = false
       })
@@ -39,7 +40,7 @@
 <Table
   {title}
   {schema}
-  tableId={$backendUiStore.selectedTable?._id}
+  tableId={$tables.selected?._id}
   {data}
   allowEditing={true}
   bind:hideAutocolumns
@@ -50,7 +51,7 @@
       title={isUsersTable ? 'Create New User' : 'Create New Row'}
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
-    <ManageAccessButton resourceId={$backendUiStore.selectedTable?._id} />
+    <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}
       <EditRolesButton />
     {/if}

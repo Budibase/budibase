@@ -1,14 +1,13 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
-  import { tables, database } from 'builderStore/store/backend/'
+  import { tables, views, database } from 'builderStore/store/backend/'
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
   $: selectedView =
-    $backendUiStore.selectedView && $backendUiStore.selectedView.name
+    $views.selected && $views.selected.name
 
   function selectTable(table) {
     tables.select(table)
@@ -16,7 +15,7 @@
   }
 
   function selectView(view) {
-    backendUiStore.actions.views.select(view)
+    views.select(view)
     $goto(`./view/${view.name}`)
   }
 
