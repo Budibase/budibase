@@ -4,7 +4,6 @@
   import {
     store,
     automationStore,
-    backendUiStore,
     hostingStore,
   } from "builderStore"
   import { string, object } from "yup"
@@ -152,7 +151,7 @@
       )
       const pkg = await applicationPkg.json()
       if (applicationPkg.ok) {
-        backendUiStore.actions.reset()
+        // backendUiStore.actions.reset()
         await store.actions.initialise(pkg)
         await automationStore.actions.fetch()
       } else {
