@@ -1,44 +1,41 @@
 const CouchDB = require("../../db")
-const { resolve, join } = require("../../utilities/centralPath")
-const {
-  budibaseTempDir,
-  budibaseAppsDir,
-} = require("../../utilities/budibaseDir")
+const { join } = require("../../utilities/centralPath")
+const { budibaseTempDir } = require("../../utilities/budibaseDir")
+const fileSystem = require("../../utilities/fileSystem")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
   const appId = ctx.params.appId || ctx.appId
   const db = new CouchDB(appId)
   const app = await db.get(appId)
 
-  ctx.body = app.componentLibraries.reduce((acc, componentLibrary) => {
-    let appDirectory = resolve(budibaseAppsDir(), appId, "node_modules")
-
-    if (ctx.isDev) {
-      appDirectory = budibaseTempDir()
-    }
-
-    const componentJson = require(join(
-      appDirectory,
-      componentLibrary,
-      ctx.isDev ? "" : "package",
-      "manifest.json"
-    ))
-
-    const result = {}
-
-    // map over the components.json and add the library identifier as a key
-    // button -> @budibase/standard-components/button
-    for (let key of Object.keys(componentJson)) {
-      const fullComponentName = `${componentLibrary}/${key}`.toLowerCase()
-      result[fullComponentName] = {
+  let componentManifests = await Promise.all(
+    app.componentLibraries.map(async library => {
+      let manifest
+      if (ctx.isDev) {
+        manifest = require(join(
+          budibaseTempDir(),
+          library,
+          ctx.isDev ? "" : "package",
+          "manifest.json"
+        ))
+      } else {
+        manifest = await fileSystem.getComponentLibraryManifest(appId, library)
+      }
+      return {
+        manifest,
+        library,
+      }
+    })
+  )
+  const definitions = {}
+  for (let { manifest, library } of componentManifests) {
+    for (let key of Object.keys(manifest)) {
+      const fullComponentName = `${library}/${key}`.toLowerCase()
+      definitions[fullComponentName] = {
         component: fullComponentName,
-        ...componentJson[key],
+        ...manifest[key],
       }
     }
-
-    return {
-      ...acc,
-      ...result,
-    }
-  }, {})
+  }
+  ctx.body = definitions
 }

@@ -1,6 +1,5 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const fs = require("fs")
 const CouchDB = require("../db")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -80,24 +79,6 @@ exports.clearCookie = (ctx, name) => {
 
 exports.isClient = ctx => {
   return ctx.headers["x-budibase-type"] === "client"
-}
-
-/**
- * Recursively walk a directory tree and execute a callback on all files.
- * @param {String} dirPath - Directory to traverse
- * @param {Function} callback - callback to execute on files
- */
-exports.walkDir = (dirPath, callback) => {
-  for (let filename of fs.readdirSync(dirPath)) {
-    const filePath = `${dirPath}/${filename}`
-    const stat = fs.lstatSync(filePath)
-
-    if (stat.isFile()) {
-      callback(filePath)
-    } else {
-      exports.walkDir(filePath, callback)
-    }
-  }
 }
 
 exports.getLogoUrl = () => {

@@ -14,9 +14,6 @@ const {
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
-const fs = require("fs")
-const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const { join } = require("path")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -65,13 +62,6 @@ class TestConfiguration {
   end() {
     if (this.server) {
       this.server.close()
-    }
-    const appDir = budibaseAppsDir()
-    const files = fs.readdirSync(appDir)
-    for (let file of files) {
-      if (this.allApps.some(app => file.includes(app._id))) {
-        fs.rmdirSync(join(appDir, file), { recursive: true })
-      }
     }
   }
 
