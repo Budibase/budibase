@@ -35,12 +35,7 @@ function createTablesStore() {
         }
     }
 
-  return {
-    subscribe,
-    set,
-    fetch,
-    select,
-    save: async table => {
+    async function save(table) {
         const updatedTable = cloneDeep(table)
         const oldTable = get(store).list.filter(t => t._id === table._id)[0]
 
@@ -73,7 +68,14 @@ function createTablesStore() {
         await fetch()
         await select(savedTable)
         return savedTable
-    },
+    }
+
+  return {
+    subscribe,
+    set,
+    fetch,
+    select,
+    save, 
     delete: async table => {
         await api.delete(`/api/tables/${table._id}/${table._rev}`)
         update(state => ({
@@ -104,14 +106,14 @@ function createTablesStore() {
         }
 
         state.draft.schema[field.name] = cloneDeep(field)
-        store.save(state.draft)
+        save(state.draft)
         return state
         })
     },
     deleteField: field => {
         update(state => {
             delete state.draft.schema[field.name]
-            store.save(state.draft)
+            save(state.draft)
             return state
         })
     },
