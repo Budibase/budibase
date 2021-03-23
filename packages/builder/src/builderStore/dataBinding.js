@@ -194,7 +194,7 @@ const getContextBindings = (asset, componentId) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const schema = getSchemaForDatasource({
+  const { schema } = getSchemaForDatasource({
     type: "table",
     tableId: TableNames.USERS,
   })
