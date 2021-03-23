@@ -1,6 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables, rows } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
@@ -35,7 +34,7 @@
     }
 
     notifier.success("Row saved successfully.")
-    backendUiStore.actions.rows.save(rowResponse)
+    rows.save(rowResponse)
   }
 </script>
 

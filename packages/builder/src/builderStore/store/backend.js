@@ -1,21 +1,13 @@
 import { writable } from "svelte/store"
 
+const INITIAL_BACKEND_UI_STATE = {
+}
+
 export const getBackendUiStore = () => {
-  const store = writable({})
+  const store = writable({ ...INITIAL_BACKEND_UI_STATE })
 
   store.actions = {
-    rows: {
-      save: () =>
-        store.update(state => {
-          state.selectedView = state.selectedView
-          return state
-        }),
-      delete: () =>
-        store.update(state => {
-          state.selectedView = state.selectedView
-          return state
-        }),
-    },
+    reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
   }
 
   return store
