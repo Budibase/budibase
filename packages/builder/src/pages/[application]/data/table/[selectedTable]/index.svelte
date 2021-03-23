@@ -1,8 +1,6 @@
 <script>
   import TableDataTable from "components/backend/DataTable/DataTable.svelte"
   import { tables, database } from 'builderStore/store/backend/'
-
-  $: console.log('Tables: ', $tables)
 </script>
 
 {#if $database?._id && $tables?.selected?.name}
