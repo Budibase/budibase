@@ -24,8 +24,6 @@
     datasources.fetch()
     queries.fetch()
   })
-
-  $: console.log($queries)
 </script>
 
 {#if $database?._id}
