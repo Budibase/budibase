@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
-  import { tables as tablesStore } from 'builderStore/store/backend/'
+  import { tables as tablesStore, queries as queriesStore } from 'builderStore/store/backend/'
   import { datasources, integrations } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
@@ -38,7 +38,7 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-  $: queries = $queries.list
+  $: queries = $queriesStore.list
     .filter(
       query => showAllQueries || query.queryVerb === "read" || query.readable
     )
