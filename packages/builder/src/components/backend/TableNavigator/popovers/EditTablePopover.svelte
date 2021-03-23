@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore, store, allScreens } from "builderStore"
+  import { store, allScreens } from "builderStore"
   import { tables } from 'builderStore/store/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
@@ -52,14 +52,9 @@
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if (
-      originalName !== tableName &&
-      $backendUiStore.models?.some(model => model.name === tableName)
-    ) {
-      error = `Table with name ${tableName} already exists. Please choose another name.`
-      return
-    }
-    error = ""
+    error = originalName !== tableName
+      ? `Table with name ${tableName} already exists. Please choose another name.`
+      : ""
   }
 </script>
 

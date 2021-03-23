@@ -18,7 +18,7 @@
     const pkg = await res.json()
 
     if (res.ok) {
-      backendUiStore.actions.reset()
+      // backendUiStore.actions.reset()
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
       await roles.fetch()
