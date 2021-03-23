@@ -19,13 +19,21 @@ function createTablesStore() {
         const tables = await tablesResponse.json()
         update(state => ({...state, list: tables}))
     },
-    select: table =>
-        update(state => ({
-            ...state,
-            selected: table,
-            draft: cloneDeep(table),
-            view: { name: `all_${table._id}` }
-        })),
+    select: table => {
+        if (!table) {
+            update(state => ({
+                ...state,
+                selected: {}
+            }))
+        } else {
+            update(state => ({
+                ...state,
+                selected: table,
+                draft: cloneDeep(table),
+                view: { name: `all_${table._id}` }
+            }))
+        }
+    },
     save: async table => {
         const updatedTable = cloneDeep(table)
         const oldTable = get(store).list.filter(t => t._id === table._id)[0]
