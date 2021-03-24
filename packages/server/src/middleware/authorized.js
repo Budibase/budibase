@@ -18,7 +18,7 @@ function hasResource(ctx) {
 }
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
-  if (env.CLOUD && ctx.headers["x-api-key"] && ctx.headers["x-instanceid"]) {
+  if (env.isProd() && ctx.headers["x-api-key"] && ctx.headers["x-instanceid"]) {
     // api key header passed by external webhook
     if (await isAPIKeyValid(ctx.headers["x-api-key"])) {
       ctx.auth = {

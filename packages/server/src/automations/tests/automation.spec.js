@@ -47,27 +47,23 @@ describe("Run through some parts of the automations system", () => {
     expect(thread).toHaveBeenCalled()
   })
 
-  it("should be able to init in cloud", async () => {
-    env.CLOUD = true
-    env.BUDIBASE_ENVIRONMENT = "PRODUCTION"
-    await triggers.externalTrigger(basicAutomation(), { a: 1 })
-    await wait(100)
-    // haven't added a mock implementation so getAPIKey of usageQuota just returns undefined
-    expect(usageQuota.update).toHaveBeenCalledWith("test", "automationRuns", 1)
-    expect(workerJob).toBeDefined()
-    env.BUDIBASE_ENVIRONMENT = "JEST"
-    env.CLOUD = false
+  it("should be able to init in prod", async () => {
+    await setup.runInProd(async () => {
+      await triggers.externalTrigger(basicAutomation(), { a: 1 })
+      await wait(100)
+      // haven't added a mock implementation so getAPIKey of usageQuota just returns undefined
+      expect(usageQuota.update).toHaveBeenCalledWith("test", "automationRuns", 1)
+      expect(workerJob).toBeDefined()
+    })
   })
 
   it("try error scenario", async () => {
-    env.CLOUD = true
-    env.BUDIBASE_ENVIRONMENT = "PRODUCTION"
-    // the second call will throw an error
-    await triggers.externalTrigger(basicAutomation(), { a: 1 })
-    await wait(100)
-    expect(console.error).toHaveBeenCalled()
-    env.BUDIBASE_ENVIRONMENT = "JEST"
-    env.CLOUD = false
+    await setup.runInProd(async () => {
+      // the second call will throw an error
+      await triggers.externalTrigger(basicAutomation(), { a: 1 })
+      await wait(100)
+      expect(console.error).toHaveBeenCalled()
+    })
   })
 
   it("should be able to check triggering row filling", async () => {

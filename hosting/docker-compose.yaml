@@ -11,7 +11,6 @@ services:
       - "${APP_PORT}:4002"
     environment:
       SELF_HOSTED: 1
-      CLOUD: 1
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       WORKER_URL: http://worker-service:4003
       MINIO_URL: http://minio-service:9000

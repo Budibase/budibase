@@ -20,10 +20,18 @@ exports.isDev = env.isDev
  * @returns {string|undefined} If an appId was found it will be returned.
  */
 exports.getAppId = ctx => {
-  let appId = confirmAppId(ctx.headers["x-budibase-app-id"])
-  if (!appId) {
-    appId = confirmAppId(env.CLOUD ? ctx.subdomains[1] : ctx.params.appId)
+  const options = [ctx.headers["x-budibase-app-id"], ctx.params.appId]
+  if (ctx.subdomains) {
+    options.push(ctx.subdomains[1])
   }
+  let appId
+  for (let option of options) {
+    appId = confirmAppId(option)
+    if (appId) {
+      break
+    }
+  }
+
   // look in body if can't find it in subdomain
   if (!appId && ctx.request.body && ctx.request.body.appId) {
     appId = confirmAppId(ctx.request.body.appId)
@@ -43,7 +51,7 @@ exports.getAppId = ctx => {
  * @returns {string} The name of the token trying to find
  */
 exports.getCookieName = (name = "builder") => {
-  let environment = env.CLOUD ? "cloud" : "local"
+  let environment = env.isProd() ? "cloud" : "local"
   return `budibase:${name}:${environment}`
 }
 

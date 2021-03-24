@@ -3,8 +3,15 @@ const env = require("../../environment")
 const apiKey = require("../../utilities/security/apikey")
 const { AuthTypes } = require("../../constants")
 const { PermissionTypes, PermissionLevels } = require("../../utilities/security/permissions")
-const { Test } = require("supertest")
-jest.mock("../../environment")
+jest.mock("../../environment", () => ({
+    prod: false,
+    isTest: () => true,
+    isProd: () => this.prod,
+    _set: (key, value) => {
+      this.prod = value === "production"
+    }
+  })
+)
 jest.mock("../../utilities/security/apikey")
 
 class TestConfiguration {
@@ -47,8 +54,8 @@ class TestConfiguration {
     this.ctx.request.url = url
   }
 
-  setCloudEnv(isCloud) {
-    env.CLOUD = isCloud
+  setEnvironment(isProd) {
+    env._set("NODE_ENV", isProd ? "production" : "jest")
   }
 
   setRequestHeaders(headers) {
@@ -79,7 +86,7 @@ describe("Authorization middleware", () => {
 
     beforeEach(() => {
       config = new TestConfiguration()
-      config.setCloudEnv(true)
+      config.setEnvironment(true)
       config.setRequestHeaders({
         "x-api-key": "abc123",
         "x-instanceid": "instance123",
@@ -115,7 +122,7 @@ describe("Authorization middleware", () => {
 
     beforeEach(() => {
       config = new TestConfiguration()
-      config.setCloudEnv(true)
+      config.setEnvironment(true)
       config.setAuthenticated(true)
     })
 
@@ -138,7 +145,7 @@ describe("Authorization middleware", () => {
     })
 
     it("throws if the user has only builder permissions", async () => {
-      config.setCloudEnv(false)
+      config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)
       config.setUser({
         role: {

@@ -71,7 +71,8 @@ class TestConfiguration {
       roleId: BUILTIN_ROLE_IDS.BUILDER,
     }
     const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
-    const type = env.CLOUD ? "cloud" : "local"
+    // can be "production" for test case
+    const type = env.isProd() ? "cloud" : "local"
     const headers = {
       Accept: "application/json",
       Cookie: [`budibase:builder:${type}=${builderToken}`],
