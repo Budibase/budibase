@@ -9,6 +9,12 @@ process.env.ENABLE_ANALYTICS = "false"
 process.env.PORT = cypressConfig.env.PORT
 process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
 process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
+process.env.SELF_HOSTED = 1
+process.env.MINIO_URL = "http://localhost:10000/"
+process.env.MINIO_ACCESS_KEY = "budibase"
+process.env.MINIO_SECRET_KEY = "budibase"
+process.env.COUCH_DB_USER = "budibase"
+process.env.COUCH_DB_PASSWORD = "budibase"
 
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
