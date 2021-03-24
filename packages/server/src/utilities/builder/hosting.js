@@ -85,15 +85,11 @@ exports.getTemplatesUrl = async (appId, type, name) => {
 }
 
 exports.getDeployedApps = async () => {
-  const hostingInfo = await exports.getHostingInfo()
-  if (
-    (!env.CLOUD && hostingInfo.type === exports.HostingTypes.CLOUD) ||
-    (env.CLOUD && !env.SELF_HOSTED)
-  ) {
+  if (!env.SELF_HOSTED) {
     throw "Can only check apps for self hosted environments"
   }
-  const workerUrl = !env.CLOUD ? await exports.getWorkerUrl() : env.WORKER_URL
-  const hostingKey = !env.CLOUD ? hostingInfo.selfHostKey : env.HOSTING_KEY
+  const workerUrl = env.WORKER_URL
+  const hostingKey = env.HOSTING_KEY
   try {
     const response = await fetch(`${workerUrl}/api/apps`, {
       method: "GET",

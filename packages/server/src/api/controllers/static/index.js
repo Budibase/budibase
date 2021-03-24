@@ -87,7 +87,7 @@ exports.serveApp = async function(ctx) {
 
   const { head, html, css } = App.render({
     title: appInfo.name,
-    production: env.CLOUD,
+    production: env.isProd(),
     appId,
     objectStoreUrl: objectStoreUrl(),
   })
@@ -106,7 +106,7 @@ exports.serveAttachment = async function(ctx) {
   const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
 
   // Serve from object store
-  if (env.CLOUD) {
+  if (env.isProd()) {
     const S3_URL = join(objectStoreUrl(), appId, "attachments", ctx.file)
     const response = await fetch(S3_URL)
     const body = await response.text()
@@ -137,15 +137,13 @@ exports.serveComponentLibrary = async function(ctx) {
     "dist"
   )
 
-  if (ctx.isDev) {
+  if (env.isDev()) {
     componentLibraryPath = join(
       budibaseTempDir(),
       decodeURI(ctx.query.library),
       "dist"
     )
-  }
-
-  if (env.CLOUD) {
+  } else {
     let componentLib = "componentlibrary"
     if (ctx.user.version) {
       componentLib += `-${ctx.user.version}`

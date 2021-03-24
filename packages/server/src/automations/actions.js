@@ -41,7 +41,7 @@ module.exports.getAction = async function(actionName) {
     return BUILTIN_ACTIONS[actionName]
   }
   // worker pools means that a worker may not have manifest
-  if (env.CLOUD && MANIFEST == null) {
+  if (env.isProd() && MANIFEST == null) {
     MANIFEST = await module.exports.init()
   }
   // env setup to get async packages

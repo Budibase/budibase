@@ -30,8 +30,6 @@ const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
   getDeployedApps,
-  getHostingInfo,
-  HostingTypes,
 } = require("../../utilities/builder/hosting")
 
 const URL_REGEX_SLASH = /\/|\\/g
@@ -71,8 +69,7 @@ async function getAppUrlIfNotInUse(ctx) {
     url = encodeURI(`${ctx.request.body.name}`)
   }
   url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
-  const hostingInfo = await getHostingInfo()
-  if (hostingInfo.type === HostingTypes.CLOUD) {
+  if (!env.SELF_HOSTED) {
     return url
   }
   const deployedApps = await getDeployedApps()

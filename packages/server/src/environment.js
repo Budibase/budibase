@@ -1,15 +1,20 @@
+function isTest() {
+  return (
+    process.env.NODE_ENV === "jest" ||
+    process.env.NODE_ENV === "cypress" ||
+    process.env.JEST_WORKER_ID != null
+  )
+}
+
 function isDev() {
   return (
-    !process.env.CLOUD &&
     process.env.NODE_ENV !== "production" &&
-    process.env.NODE_ENV !== "jest" &&
-    process.env.NODE_ENV !== "cypress" &&
-    process.env.JEST_WORKER_ID == null
+    process.env.BUDIBASE_ENVIRONMENT !== "production"
   )
 }
 
 let LOADED = false
-if (!LOADED && isDev()) {
+if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
   LOADED = true
 }
@@ -21,12 +26,12 @@ module.exports = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
-  CLOUD: process.env.CLOUD,
   SELF_HOSTED: process.env.SELF_HOSTED,
   AWS_REGION: process.env.AWS_REGION,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  USE_QUOTAS: process.env.USE_QUOTAS,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
@@ -51,5 +56,9 @@ module.exports = {
     process.env[key] = value
     module.exports[key] = value
   },
+  isTest,
   isDev,
+  isProd: () => {
+    return !isDev()
+  },
 }

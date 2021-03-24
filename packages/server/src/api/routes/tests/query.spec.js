@@ -89,7 +89,7 @@ describe("/queries", () => {
     })
 
     it("should find a query in cloud", async () => {
-      await setup.switchToCloudForFunction(async () => {
+      await setup.switchToSelfHosted(async () => {
         const query = await config.createQuery()
         const res = await request
           .get(`/api/queries/${query._id}`)
