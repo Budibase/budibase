@@ -2,7 +2,8 @@
   "container",
   "dataprovider",
   "datagrid",
-  "list",
+  "table",
+  "repeater",
   "button",
   "search",
   {

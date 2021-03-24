@@ -98,7 +98,7 @@ const createScreen = table => {
       limit: 1,
     })
 
-  const repeater = new Component("@budibase/standard-components/list")
+  const repeater = new Component("@budibase/standard-components/repeater")
     .instanceName("Repeater")
     .customProps({
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,

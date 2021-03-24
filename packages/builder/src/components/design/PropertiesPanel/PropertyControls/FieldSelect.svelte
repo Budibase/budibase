@@ -11,6 +11,7 @@
   export let value = ""
   export let onChange = () => {}
   export let multiselect = false
+  export let placeholder
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchemaForDatasource(datasource).schema
@@ -18,7 +19,7 @@
 </script>
 
 {#if multiselect}
-  <MultiOptionSelect {value} {onChange} {options} />
+  <MultiOptionSelect {value} {onChange} {options} {placeholder} />
 {:else}
-  <OptionSelect {value} {onChange} {options} />
+  <OptionSelect {value} {onChange} {options} {placeholder} />
 {/if}
