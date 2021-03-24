@@ -7,6 +7,7 @@
   export let value = ""
   export let styleBindingProperty
   export let onChange = () => {}
+  export let placeholder
 
   let open = null
   let rotate = ""
@@ -108,7 +109,7 @@
   $: displayLabel =
     selectedOption && selectedOption.label
       ? selectedOption.label
-      : value || "Choose option"
+      : value || placeholder || "Choose option"
 </script>
 
 <div

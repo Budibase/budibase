@@ -78,7 +78,7 @@
       }
     ]
   },
-  "list": {
+  "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "ri-list-check-2",
@@ -1509,5 +1509,70 @@
         }
       ]
     }
+  },
+  "table": {
+    "name": "Table",
+    "icon": "ri-table-line",
+    "styleable": true,
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Data Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "dataProvider",
+        "placeholder": "All columns"
+      },
+      {
+        "type": "boolean",
+        "label": "Show Auto Cols.",
+        "key": "showAutoColumns",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "defaultValue": "spectrum--light",
+        "options": [
+          {
+            "label": "Lightest",
+            "value": "spectrum--lightest"
+          },
+          {
+            "label": "Light",
+            "value": "spectrum--light"
+          },
+          {
+            "label": "Dark",
+            "value": "spectrum--dark"
+          },
+          {
+            "label": "Darkest",
+            "value": "spectrum--darkest"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      }
+    ]
   }
 }
