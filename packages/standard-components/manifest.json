@@ -1534,6 +1534,12 @@
         "defaultValue": false
       },
       {
+        "type": "number",
+        "label": "Row Count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
         "type": "select",
         "label": "Theme",
         "key": "theme",
