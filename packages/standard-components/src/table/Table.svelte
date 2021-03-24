@@ -8,6 +8,7 @@
   export let dataProvider
   export let columns
   export let showAutoColumns
+  export let rowCount = 8
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
@@ -60,51 +61,71 @@
   }
 </script>
 
-<div
-  lang="en"
-  dir="ltr"
-  use:styleable={$component.styles}
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
-  <table class="spectrum-Table">
-    <thead class="spectrum-Table-head">
-      <tr>
-        {#each fields as field}
-          <th
-            class="spectrum-Table-headCell is-sortable"
-            class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
-            class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-            on:click={() => sortBy(field)}>
-            <div class="spectrum-Table-headCell-content">
-              {schema[field]?.name}
-              <svg
-                class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                class:visible={sortColumn === field}
-                focusable="false"
-                aria-hidden="true">
-                <use xlink:href="#spectrum-css-icon-Arrow100" />
-              </svg>
-            </div>
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody class="spectrum-Table-body">
-      {#each sortedRows as row}
-        <tr class="spectrum-Table-row">
+<div use:styleable={$component.styles}>
+  <div
+    lang="en"
+    dir="ltr"
+    class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}
+    style={`height: ${rowCount * 55}px;`}>
+    <table class="spectrum-Table">
+      <thead class="spectrum-Table-head">
+        <tr>
           {#each fields as field}
-            <td class="spectrum-Table-cell" tabindex="0">
-              <div class="spectrum-Table-cell-content">
-                <CellRenderer schema={schema[field]} value={row[field]} />
+            <th
+              class="spectrum-Table-headCell is-sortable"
+              class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
+              class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
+              on:click={() => sortBy(field)}>
+              <div class="spectrum-Table-headCell-content">
+                {schema[field]?.name}
+                <svg
+                  class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                  class:visible={sortColumn === field}
+                  focusable="false"
+                  aria-hidden="true">
+                  <use xlink:href="#spectrum-css-icon-Arrow100" />
+                </svg>
               </div>
-            </td>
+            </th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="spectrum-Table-body">
+        {#each sortedRows as row}
+          <tr class="spectrum-Table-row">
+            {#each fields as field}
+              <td class="spectrum-Table-cell" tabindex="0">
+                <div class="spectrum-Table-cell-content">
+                  <CellRenderer schema={schema[field]} value={row[field]} />
+                </div>
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <style>
+  .spectrum {
+    position: relative;
+    overflow: auto;
+  }
+  table {
+    width: 100%;
+  }
+  tbody {
+    z-index: 1;
+  }
+  th {
+    position: sticky;
+    top: 0;
+    background-color: var(--spectrum-global-color-gray-100);
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    z-index: 2;
+  }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
     display: flex;
@@ -116,6 +137,9 @@
   .spectrum-Table-cell {
     padding-top: 0;
     padding-bottom: 0;
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    border-top: none !important;
   }
   .spectrum-Table-cell-content {
     height: 55px;
