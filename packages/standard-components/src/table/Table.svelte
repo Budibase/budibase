@@ -65,12 +65,15 @@
       return customColumns
     }
     let columns = []
+    let autoColumns = []
     Object.entries(schema).forEach(([field, fieldSchema]) => {
-      if (showAutoColumns || !fieldSchema?.autocolumn) {
+      if (!fieldSchema?.autocolumn) {
         columns.push(field)
+      } else if (showAutoColumns) {
+        autoColumns.push(field)
       }
     })
-    return columns
+    return columns.concat(autoColumns)
   }
 </script>
 
