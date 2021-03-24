@@ -1,16 +1,14 @@
-// What this script does:
-// 1. Removes the old test folder if it exists (.budibase)
-// 2. Initialises using `.budibase`
-// 3. Runs the server using said folder
-
-const { join, resolve } = require("path")
-const initialiseBudibase = require("../../server/src/utilities/initialiseBudibase")
 const cypressConfig = require("../cypress.json")
+const path = require("path")
+
+const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
 process.env.NODE_ENV = "cypress"
 process.env.ENABLE_ANALYTICS = "false"
 process.env.PORT = cypressConfig.env.PORT
+process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
+process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
 
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
