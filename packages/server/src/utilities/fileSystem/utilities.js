@@ -112,6 +112,8 @@ exports.upload = async ({ bucket, filename, path, type, metadata }) => {
   const fileBytes = fs.readFileSync(path)
 
   const objectStore = exports.ObjectStore(bucket)
+  await exports.makeSureBucketExists(objectStore, bucket)
+
   const config = {
     // windows file paths need to be converted to forward slashes for s3
     Key: sanitize(filename).replace(/\\/g, "/"),

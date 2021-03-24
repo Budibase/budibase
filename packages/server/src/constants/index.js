@@ -90,6 +90,6 @@ exports.BaseQueryVerbs = {
 
 exports.ObjectStoreBuckets = {
   BACKUPS: "backups",
-  APPS: "apps",
+  APPS: "prod-budi-app-assets",
   TEMPLATES: "templates",
 }
