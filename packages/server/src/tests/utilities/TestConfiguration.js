@@ -14,9 +14,6 @@ const {
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
-const fs = require("fs")
-const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const { join } = require("path")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -66,13 +63,6 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     }
-    const appDir = budibaseAppsDir()
-    const files = fs.readdirSync(appDir)
-    for (let file of files) {
-      if (this.allApps.some(app => file.includes(app._id))) {
-        fs.rmdirSync(join(appDir, file), { recursive: true })
-      }
-    }
   }
 
   defaultHeaders() {
@@ -81,9 +71,11 @@ class TestConfiguration {
       roleId: BUILTIN_ROLE_IDS.BUILDER,
     }
     const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
+    // can be "production" for test case
+    const type = env.isProd() ? "cloud" : "local"
     const headers = {
       Accept: "application/json",
-      Cookie: [`budibase:builder:local=${builderToken}`],
+      Cookie: [`budibase:builder:${type}=${builderToken}`],
     }
     if (this.appId) {
       headers["x-budibase-app-id"] = this.appId

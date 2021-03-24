@@ -1,7 +1,6 @@
 node_modules/
 myapps/
 .env
-dev.env
 /builder/*
 !/builder/assets/
 !/builder/pickr.min.js

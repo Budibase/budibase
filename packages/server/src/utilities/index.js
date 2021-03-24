@@ -1,6 +1,5 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const fs = require("fs")
 const CouchDB = require("../db")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -13,14 +12,7 @@ function confirmAppId(possibleAppId) {
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-exports.isDev = () => {
-  return (
-    !env.CLOUD &&
-    env.NODE_ENV !== "production" &&
-    env.NODE_ENV !== "jest" &&
-    env.NODE_ENV !== "cypress"
-  )
-}
+exports.isDev = env.isDev
 
 /**
  * Given a request tries to find the appId, which can be located in various places
@@ -28,10 +20,18 @@ exports.isDev = () => {
  * @returns {string|undefined} If an appId was found it will be returned.
  */
 exports.getAppId = ctx => {
-  let appId = confirmAppId(ctx.headers["x-budibase-app-id"])
-  if (!appId) {
-    appId = confirmAppId(env.CLOUD ? ctx.subdomains[1] : ctx.params.appId)
+  const options = [ctx.headers["x-budibase-app-id"], ctx.params.appId]
+  if (ctx.subdomains) {
+    options.push(ctx.subdomains[1])
   }
+  let appId
+  for (let option of options) {
+    appId = confirmAppId(option)
+    if (appId) {
+      break
+    }
+  }
+
   // look in body if can't find it in subdomain
   if (!appId && ctx.request.body && ctx.request.body.appId) {
     appId = confirmAppId(ctx.request.body.appId)
@@ -51,7 +51,7 @@ exports.getAppId = ctx => {
  * @returns {string} The name of the token trying to find
  */
 exports.getCookieName = (name = "builder") => {
-  let environment = env.CLOUD ? "cloud" : "local"
+  let environment = env.isProd() ? "cloud" : "local"
   return `budibase:${name}:${environment}`
 }
 
@@ -87,24 +87,6 @@ exports.clearCookie = (ctx, name) => {
 
 exports.isClient = ctx => {
   return ctx.headers["x-budibase-type"] === "client"
-}
-
-/**
- * Recursively walk a directory tree and execute a callback on all files.
- * @param {String} dirPath - Directory to traverse
- * @param {Function} callback - callback to execute on files
- */
-exports.walkDir = (dirPath, callback) => {
-  for (let filename of fs.readdirSync(dirPath)) {
-    const filePath = `${dirPath}/${filename}`
-    const stat = fs.lstatSync(filePath)
-
-    if (stat.isFile()) {
-      callback(filePath)
-    } else {
-      exports.walkDir(filePath, callback)
-    }
-  }
 }
 
 exports.getLogoUrl = () => {

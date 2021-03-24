@@ -35,18 +35,18 @@ exports.getConfig = () => {
   return config
 }
 
-exports.switchToCloudForFunction = async func => {
+exports.switchToSelfHosted = async func => {
   // self hosted stops any attempts to Dynamo
-  env.CLOUD = true
-  env.SELF_HOSTED = true
+  env._set("NODE_ENV", "production")
+  env._set("SELF_HOSTED", true)
   let error
   try {
     await func()
   } catch (err) {
     error = err
   }
-  env.CLOUD = false
-  env.SELF_HOSTED = false
+  env._set("NODE_ENV", "jest")
+  env._set("SELF_HOSTED", false)
   // don't throw error until after reset
   if (error) {
     throw error

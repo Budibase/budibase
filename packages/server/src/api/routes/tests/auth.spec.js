@@ -1,4 +1,3 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 
 describe("/authenticate", () => {

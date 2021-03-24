@@ -1,15 +1,14 @@
 const CouchDB = require("../../db")
-const compileStaticAssets = require("../../utilities/builder/compileStaticAssets")
 const env = require("../../environment")
-const { existsSync } = require("fs-extra")
-const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
-const fs = require("fs-extra")
-const { join, resolve } = require("../../utilities/centralPath")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
 const { createRoutingView } = require("../../utilities/routing")
-const { getTemplateStream } = require("../../utilities/fileSystem")
+const {
+  getTemplateStream,
+  createApp,
+  deleteApp,
+} = require("../../utilities/fileSystem")
 const {
   generateAppID,
   getLayoutParams,
@@ -20,9 +19,6 @@ const {
   BUILTIN_ROLE_IDS,
   AccessController,
 } = require("../../utilities/security/roles")
-const {
-  downloadExtractComponentLibraries,
-} = require("../../utilities/createAppPackage")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const {
   createHomeScreen,
@@ -32,11 +28,7 @@ const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const {
-  getDeployedApps,
-  getHostingInfo,
-  HostingTypes,
-} = require("../../utilities/builder/hosting")
+const { getDeployedApps } = require("../../utilities/builder/hosting")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -75,8 +67,7 @@ async function getAppUrlIfNotInUse(ctx) {
     url = encodeURI(`${ctx.request.body.name}`)
   }
   url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
-  const hostingInfo = await getHostingInfo()
-  if (hostingInfo.type === HostingTypes.CLOUD) {
+  if (!env.SELF_HOSTED) {
     return url
   }
   const deployedApps = await getDeployedApps()
@@ -181,10 +172,10 @@ exports.create = async function(ctx) {
   const instanceDb = new CouchDB(appId)
   await instanceDb.put(newApplication)
 
-  const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
+  await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
   if (env.NODE_ENV !== "jest") {
-    await downloadExtractComponentLibraries(newAppFolder)
+    await createApp(appId)
   }
 
   await setBuilderToken(ctx, appId, version)
@@ -214,10 +205,9 @@ exports.delete = async function(ctx) {
   const app = await db.get(ctx.params.appId)
   const result = await db.destroy()
 
-  // remove top level directory
-  await fs.rmdir(join(budibaseAppsDir(), ctx.params.appId), {
-    recursive: true,
-  })
+  if (env.NODE_ENV !== "jest") {
+    await deleteApp(ctx.params.appId)
+  }
 
   ctx.status = 200
   ctx.message = `Application ${app.name} deleted successfully.`
@@ -225,16 +215,7 @@ exports.delete = async function(ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const appsFolder = budibaseAppsDir()
-  const newAppFolder = resolve(appsFolder, app._id)
-
   const db = new CouchDB(app._id)
-
-  if (existsSync(newAppFolder)) {
-    ctx.throw(400, "App folder already exists for this application")
-  }
-
-  fs.mkdirpSync(newAppFolder)
 
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
@@ -251,6 +232,4 @@ const createEmptyAppPackage = async (ctx, app) => {
   screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)
-  await compileStaticAssets(app._id)
-  return newAppFolder
 }
