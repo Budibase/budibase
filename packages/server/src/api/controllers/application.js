@@ -28,9 +28,7 @@ const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const {
-  getDeployedApps,
-} = require("../../utilities/builder/hosting")
+const { getDeployedApps } = require("../../utilities/builder/hosting")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
