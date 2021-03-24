@@ -11,13 +11,18 @@ services:
       - "${APP_PORT}:4002"
     environment:
       SELF_HOSTED: 1
-      CLOUD: 1
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
       WORKER_URL: http://worker-service:4003
+      MINIO_URL: http://minio-service:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       HOSTING_KEY: ${HOSTING_KEY}
       BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
       PORT: 4002
       JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: info
+      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
+      ENABLE_ANALYTICS: true
     depends_on:
       - worker-service
 
@@ -28,7 +33,7 @@ services:
     ports:
       - "${WORKER_PORT}:4003"
     environment:
-      SELF_HOSTED: 1,
+      SELF_HOSTED: 1
       PORT: 4003
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}

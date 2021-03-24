@@ -4,6 +4,7 @@ const { budibaseTempDir } = require("../../utilities/budibaseDir")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/security/permissions")
 const usage = require("../../middleware/usageQuota")
+const env = require("../../environment")
 
 const router = Router()
 
@@ -12,7 +13,7 @@ router.param("file", async (file, ctx, next) => {
   ctx.file = file && file.includes(".") ? file : "index.html"
 
   // Serving the client library from your local dir in dev
-  if (ctx.isDev && ctx.file.startsWith("budibase-client")) {
+  if (env.isDev() && ctx.file.startsWith("budibase-client")) {
     ctx.devPath = budibaseTempDir()
   }
 

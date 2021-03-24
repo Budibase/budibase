@@ -44,8 +44,8 @@ module.exports = async (ctx, next) => {
     }
   }
 
-  // if running in builder or a self hosted cloud usage quotas should not be executed
-  if (!env.CLOUD || env.SELF_HOSTED) {
+  // if in development or a self hosted cloud usage quotas should not be executed
+  if (env.isDev() || env.SELF_HOSTED) {
     return next()
   }
   // update usage for uploads to be the total size
