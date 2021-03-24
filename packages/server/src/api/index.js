@@ -68,8 +68,6 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-if (!env.SELF_HOSTED && !env.CLOUD) {
-  router.redirect("/", "/_builder")
-}
+router.redirect("/", "/_builder")
 
 module.exports = router

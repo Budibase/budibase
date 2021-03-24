@@ -25,6 +25,8 @@ module.exports = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   AWS_REGION: process.env.AWS_REGION,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
+  MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
+  MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
