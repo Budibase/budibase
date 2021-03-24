@@ -109,7 +109,7 @@
       {#each sortedRows as row}
         <tr class="spectrum-Table-row">
           {#each fields as field}
-            <td class="spectrum-Table-cell" tabindex="0">
+            <td class="spectrum-Table-cell">
               <div class="spectrum-Table-cell-content">
                 <CellRenderer schema={schema[field]} value={row[field]} />
               </div>
