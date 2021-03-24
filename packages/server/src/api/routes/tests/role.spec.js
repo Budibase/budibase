@@ -2,8 +2,8 @@ const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const {
   BUILTIN_PERMISSION_IDS,
 } = require("../../../utilities/security/permissions")
-const { basicRole } = require("./utilities/structures")
 const setup = require("./utilities")
+const { basicRole } = setup.structures
 
 describe("/roles", () => {
   let request = setup.getRequest()

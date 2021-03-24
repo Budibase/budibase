@@ -51,9 +51,13 @@ module.exports.definition = {
 }
 
 module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
-  // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.id == null || inputs.revision == null) {
-    return
+    return {
+      success: false,
+      response: {
+        message: "Invalid inputs",
+      },
+    }
   }
   let ctx = {
     params: {

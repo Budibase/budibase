@@ -1,5 +1,6 @@
 <script>
-  import { store, backendUiStore, automationStore } from "builderStore"
+  import { backendUiStore, automationStore } from "builderStore"
+  import { goto } from "@sveltech/routify"
   import { notifier } from "builderStore/store/notifications"
   import { Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
@@ -15,6 +16,7 @@
       instanceId,
     })
     notifier.success(`Automation ${name} created.`)
+    $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     analytics.captureEvent("Automation Created", { name })
   }
 </script>

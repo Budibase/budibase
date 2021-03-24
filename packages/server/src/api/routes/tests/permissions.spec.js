@@ -1,6 +1,6 @@
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const setup = require("./utilities")
-const { basicRow } = require("./utilities/structures")
+const { basicRow } = setup.structures
 
 const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC

@@ -65,7 +65,7 @@ class SqlServerIntegration {
     try {
       await this.connect()
       const response = await this.client.query(query.sql)
-      return response.recordset
+      return response.recordset || [{ created: true }]
     } catch (err) {
       console.error("Error querying MS SQL Server", err)
       throw err

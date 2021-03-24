@@ -1,11 +1,18 @@
 const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
+const { CommandWords, InitTypes } = require("../constants")
 const { lookpath } = require("lookpath")
-const { downloadFile, logErrorToFile, success, info } = require("../utils")
+const {
+  downloadFile,
+  logErrorToFile,
+  success,
+  info,
+  parseEnv,
+} = require("../utils")
 const { confirmation } = require("../questions")
 const fs = require("fs")
 const compose = require("docker-compose")
-const envFile = require("./makeEnv")
+const makeEnv = require("./makeEnv")
+const axios = require("axios")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
@@ -13,6 +20,7 @@ const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
+const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
 async function downloadFiles() {
   const promises = []
@@ -34,7 +42,7 @@ async function checkDockerConfigured() {
 }
 
 function checkInitComplete() {
-  if (!fs.existsSync(envFile.filePath)) {
+  if (!fs.existsSync(makeEnv.filePath)) {
     throw "Please run the hosting --init command before any other hosting command."
   }
 }
@@ -50,24 +58,41 @@ async function handleError(func) {
   }
 }
 
-async function init() {
+async function init(type) {
+  const isQuick = type === InitTypes.QUICK || type === InitTypes.DIGITAL_OCEAN
   await checkDockerConfigured()
-  const shouldContinue = await confirmation(
-    "This will create multiple files in current directory, should continue?"
-  )
-  if (!shouldContinue) {
-    console.log("Stopping.")
-    return
+  if (!isQuick) {
+    const shouldContinue = await confirmation(
+      "This will create multiple files in current directory, should continue?"
+    )
+    if (!shouldContinue) {
+      console.log("Stopping.")
+      return
+    }
   }
   await downloadFiles()
-  await envFile.make()
+  const config = isQuick ? makeEnv.QUICK_CONFIG : {}
+  if (type === InitTypes.DIGITAL_OCEAN) {
+    try {
+      const output = await axios.get(DO_USER_DATA_URL)
+      const response = parseEnv(output.data)
+      for (let [key, value] of Object.entries(makeEnv.ConfigMap)) {
+        if (response[key]) {
+          config[value] = response[key]
+        }
+      }
+    } catch (err) {
+      // don't need to handle error, just don't do anything
+    }
+  }
+  await makeEnv.make(config)
 }
 
 async function start() {
   await checkDockerConfigured()
   checkInitComplete()
   console.log(info("Starting services, this may take a moment."))
-  const port = envFile.get("MAIN_PORT")
+  const port = makeEnv.get("MAIN_PORT")
   await handleError(async () => {
     await compose.upAll({ cwd: "./", log: false })
   })
@@ -128,8 +153,8 @@ async function update() {
 const command = new Command(`${CommandWords.HOSTING}`)
   .addHelp("Controls self hosting on the Budibase platform.")
   .addSubOption(
-    "--init",
-    "Configure a self hosted platform in current directory.",
+    "--init [type]",
+    "Configure a self hosted platform in current directory, type can be unspecified or 'quick'.",
     init
   )
   .addSubOption(

@@ -1,5 +1,6 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
+const CouchDB = require("../../../../db")
 
 function Request(appId, params) {
   this.user = { appId }
@@ -76,4 +77,8 @@ exports.checkPermissionsEndpoint = async ({
     .createRequest(config.request, method, url, body)
     .set(failHeader)
     .expect(403)
+}
+
+exports.getDB = config => {
+  return new CouchDB(config.getAppId())
 }

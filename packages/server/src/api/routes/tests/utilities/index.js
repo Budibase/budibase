@@ -1,4 +1,5 @@
-const TestConfig = require("./TestConfiguration")
+const TestConfig = require("../../../../tests/utilities/TestConfiguration")
+const structures = require("../../../../tests/utilities/structures")
 const env = require("../../../../environment")
 
 exports.delay = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -51,3 +52,5 @@ exports.switchToCloudForFunction = async func => {
     throw error
   }
 }
+
+exports.structures = structures

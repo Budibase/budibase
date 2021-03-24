@@ -29,10 +29,12 @@ const controller = {
   save: async ctx => {
     const db = new CouchDB(ctx.user.appId)
     const { originalName, ...viewToSave } = ctx.request.body
-
     const designDoc = await db.get("_design/database")
-
     const view = viewTemplate(viewToSave)
+
+    if (!viewToSave.name) {
+      ctx.throw(400, "Cannot create view without a name")
+    }
 
     designDoc.views = {
       ...designDoc.views,
@@ -60,17 +62,16 @@ const controller = {
 
     await db.put(table)
 
-    ctx.body = table.views[viewToSave.name]
-    ctx.message = `View ${viewToSave.name} saved successfully.`
+    ctx.body = {
+      ...table.views[viewToSave.name],
+      name: viewToSave.name,
+    }
   },
   destroy: async ctx => {
     const db = new CouchDB(ctx.user.appId)
     const designDoc = await db.get("_design/database")
-
     const viewName = decodeURI(ctx.params.viewName)
-
     const view = designDoc.views[viewName]
-
     delete designDoc.views[viewName]
 
     await db.put(designDoc)
@@ -80,16 +81,17 @@ const controller = {
     await db.put(table)
 
     ctx.body = view
-    ctx.message = `View ${ctx.params.viewName} saved successfully.`
   },
   exportView: async ctx => {
     const db = new CouchDB(ctx.user.appId)
     const designDoc = await db.get("_design/database")
-
     const viewName = decodeURI(ctx.query.view)
 
     const view = designDoc.views[viewName]
     const format = ctx.query.format
+    if (!format) {
+      ctx.throw(400, "Format must be specified, either csv or json")
+    }
 
     if (view) {
       ctx.params.viewName = viewName
@@ -102,6 +104,7 @@ const controller = {
       }
     } else {
       // table all_ view
+      /* istanbul ignore next */
       ctx.params.viewName = viewName
     }
 

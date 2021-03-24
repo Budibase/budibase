@@ -59,15 +59,14 @@ module.exports.definition = {
 }
 
 module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
-  // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.row == null || inputs.row.tableId == null) {
-    return
+    return {
+      success: false,
+      response: {
+        message: "Invalid inputs",
+      },
+    }
   }
-  inputs.row = await automationUtils.cleanUpRow(
-    appId,
-    inputs.row.tableId,
-    inputs.row
-  )
   // have to clean up the row, remove the table from it
   const ctx = {
     params: {
@@ -81,6 +80,11 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   }
 
   try {
+    inputs.row = await automationUtils.cleanUpRow(
+      appId,
+      inputs.row.tableId,
+      inputs.row
+    )
     if (env.CLOUD) {
       await usage.update(apiKey, usage.Properties.ROW, 1)
     }

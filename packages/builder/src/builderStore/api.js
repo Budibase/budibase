@@ -7,9 +7,10 @@ const apiCall = method => async (
   headers = { "Content-Type": "application/json" }
 ) => {
   headers["x-budibase-app-id"] = svelteGet(store).appId
+  const json = headers["Content-Type"] === "application/json"
   return await fetch(url, {
     method: method,
-    body: body && JSON.stringify(body),
+    body: json ? JSON.stringify(body) : body,
     headers,
   })
 }

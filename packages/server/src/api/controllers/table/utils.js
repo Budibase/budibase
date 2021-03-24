@@ -90,7 +90,8 @@ exports.handleDataImport = async (user, table, dataImport) => {
   return table
 }
 
-exports.handleSearchIndexes = async (db, table) => {
+exports.handleSearchIndexes = async (appId, table) => {
+  const db = new CouchDB(appId)
   // create relevant search indexes
   if (table.indexes && table.indexes.length > 0) {
     const currentIndexes = await db.getIndexes()
@@ -150,6 +151,9 @@ class TableSaveFunctions {
   constructor({ db, ctx, oldTable, dataImport }) {
     this.db = db
     this.ctx = ctx
+    if (this.ctx && this.ctx.user) {
+      this.appId = this.ctx.user.appId
+    }
     this.oldTable = oldTable
     this.dataImport = dataImport
     // any rows that need updated
@@ -178,7 +182,7 @@ class TableSaveFunctions {
 
   // after saving
   async after(table) {
-    table = await exports.handleSearchIndexes(this.db, table)
+    table = await exports.handleSearchIndexes(this.appId, table)
     table = await exports.handleDataImport(
       this.ctx.user,
       table,

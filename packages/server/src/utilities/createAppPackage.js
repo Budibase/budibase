@@ -7,6 +7,8 @@ const packageJson = require("../../package.json")
 
 const streamPipeline = promisify(stream.pipeline)
 
+// can't really test this due to the downloading nature of it, wouldn't be a great test case
+/* istanbul ignore next */
 exports.downloadExtractComponentLibraries = async appFolder => {
   const LIBRARIES = ["standard-components"]
 

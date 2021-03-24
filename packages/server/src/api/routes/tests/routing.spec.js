@@ -1,5 +1,5 @@
 const setup = require("./utilities")
-const { basicScreen } = require("./utilities/structures")
+const { basicScreen } = setup.structures
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 

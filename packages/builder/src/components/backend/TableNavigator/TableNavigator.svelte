@@ -4,7 +4,6 @@
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
-  import { Switcher } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
 
   $: selectedView =

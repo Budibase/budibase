@@ -38,7 +38,7 @@
   </a>
   <img src="https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg" alt="Code of conduct" />
   <a href="https://codecov.io/gh/Budibase/budibase">
-    <img src="https://codecov.io/gh/Budibase/budibase/branch/master/graph/badge.svg?token=E8W2ZFXQOH"/>
+    <img src="https://codecov.io/gh/Budibase/budibase/branch/next/graph/badge.svg?token=E8W2ZFXQOH"/>
   </a>
 </p>
 

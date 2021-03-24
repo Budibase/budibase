@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { automationStore, backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
@@ -23,6 +24,7 @@
       automation,
     })
     notifier.success("Automation deleted.")
+    $goto("../automate")
   }
 </script>
 
