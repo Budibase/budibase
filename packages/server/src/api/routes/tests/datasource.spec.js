@@ -1,6 +1,6 @@
-let {basicDatasource} = require("./utilities/structures")
-let {checkBuilderEndpoint} = require("./utilities/TestFunctions")
 let setup = require("./utilities")
+let { basicDatasource } = setup.structures
+let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
 describe("/datasources", () => {
   let request = setup.getRequest()

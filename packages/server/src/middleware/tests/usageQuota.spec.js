@@ -3,7 +3,7 @@ const usageQuota = require("../../utilities/usageQuota")
 const CouchDB = require("../../db")
 const env = require("../../environment")
 
-jest.mock("../../db");
+jest.mock("../../db")
 jest.mock("../../utilities/usageQuota")
 jest.mock("../../environment")
 

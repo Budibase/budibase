@@ -12,6 +12,7 @@ exports.getRoutingInfo = async appId => {
     return allRouting.rows.map(row => row.value)
   } catch (err) {
     // check if the view doesn't exist, it should for all new instances
+    /* istanbul ignore next */
     if (err != null && err.name === "not_found") {
       await createRoutingView(appId)
       return exports.getRoutingInfo(appId)

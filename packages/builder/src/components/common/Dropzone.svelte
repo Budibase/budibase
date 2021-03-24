@@ -15,18 +15,11 @@
   }
 
   async function processFiles(fileList) {
-    const fileArray = Array.from(fileList)
-
-    const filesToProcess = fileArray.map(({ name, path, size, type }) => ({
-      name,
-      path,
-      size,
-      type,
-    }))
-
-    const response = await api.post(`/api/attachments/process`, {
-      files: filesToProcess,
-    })
+    let data = new FormData()
+    for (let i = 0; i < fileList.length; i++) {
+      data.append("file", fileList[i])
+    }
+    const response = await api.post(`/api/attachments/process`, data, {})
     return await response.json()
   }
 </script>

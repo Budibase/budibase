@@ -13,8 +13,8 @@ class Command {
     return this
   }
 
-  addSubOption(command, help, func) {
-    this.opts.push({ command, help, func })
+  addSubOption(command, help, func, extras = []) {
+    this.opts.push({ command, help, func, extras })
     return this
   }
 
@@ -37,13 +37,10 @@ class Command {
     command.action(async options => {
       try {
         let executed = false
-        if (thisCmd.func) {
-          await thisCmd.func(options)
-          executed = true
-        }
         for (let opt of thisCmd.opts) {
-          if (options[opt.command.replace("--", "")]) {
-            await opt.func(options)
+          const lookup = opt.command.split(" ")[0].replace("--", "")
+          if (options[lookup]) {
+            await opt.func(options[lookup])
             executed = true
           }
         }

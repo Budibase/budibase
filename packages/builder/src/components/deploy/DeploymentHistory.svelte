@@ -80,6 +80,7 @@
   }
 
   function showErrorReasonModal(err) {
+    if (!err) return
     errorReason = err
     errorReasonModal.show()
   }
@@ -118,13 +119,13 @@
             {#if deployment.status.toLowerCase() === 'pending'}
               <Spinner size="10" />
             {/if}
-            <div class={`deployment-status ${deployment.status}`}>
+            <div
+              on:click={() => showErrorReasonModal(deployment.err)}
+              class={`deployment-status ${deployment.status}`}>
               <span>
                 {deployment.status}
                 {#if deployment.status === DeploymentStatus.FAILURE}
-                  <i
-                    class="ri-information-line"
-                    on:click={() => showErrorReasonModal(deployment.err)} />
+                  <i class="ri-information-line" />
                 {/if}
               </span>
             </div>

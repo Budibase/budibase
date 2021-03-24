@@ -37,10 +37,12 @@ let AUTOMATION_BUCKET = env.AUTOMATION_BUCKET
 let AUTOMATION_DIRECTORY = env.AUTOMATION_DIRECTORY
 let MANIFEST = null
 
+/* istanbul ignore next */
 function buildBundleName(pkgName, version) {
   return `${pkgName}@${version}.min.js`
 }
 
+/* istanbul ignore next */
 async function downloadPackage(name, version, bundleName) {
   await download(
     `${AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
@@ -49,6 +51,7 @@ async function downloadPackage(name, version, bundleName) {
   return require(join(AUTOMATION_DIRECTORY, bundleName))
 }
 
+/* istanbul ignore next */
 module.exports.getAction = async function(actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
@@ -96,5 +99,6 @@ module.exports.init = async function() {
   return MANIFEST
 }
 
+// definitions will have downloaded ones added to it, while builtin won't
 module.exports.DEFINITIONS = BUILTIN_DEFINITIONS
 module.exports.BUILTIN_DEFINITIONS = BUILTIN_DEFINITIONS

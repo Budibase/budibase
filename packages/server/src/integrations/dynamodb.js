@@ -166,7 +166,7 @@ class DynamoDBIntegration {
 
   async update(query) {
     const params = {
-      TableName: query.Table,
+      TableName: query.table,
       ...query.json,
     }
     return this.client.update(params).promise()

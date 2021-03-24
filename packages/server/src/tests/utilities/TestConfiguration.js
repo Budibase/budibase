@@ -1,6 +1,6 @@
-const { BUILTIN_ROLE_IDS } = require("../../../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
 const jwt = require("jsonwebtoken")
-const env = require("../../../../environment")
+const env = require("../../environment")
 const {
   basicTable,
   basicRow,
@@ -15,18 +15,20 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const fs = require("fs")
-const { budibaseAppsDir } = require("../../../../utilities/budibaseDir")
+const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { join } = require("path")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
 
 class TestConfiguration {
-  constructor() {
-    env.PORT = 4002
-    this.server = require("../../../../app")
-    // we need the request for logging in, involves cookies, hard to fake
-    this.request = supertest(this.server)
+  constructor(openServer = true) {
+    if (openServer) {
+      env.PORT = 4002
+      this.server = require("../../app")
+      // we need the request for logging in, involves cookies, hard to fake
+      this.request = supertest(this.server)
+    }
     this.appId = null
     this.allApps = []
   }
@@ -61,7 +63,9 @@ class TestConfiguration {
   }
 
   end() {
-    this.server.close()
+    if (this.server) {
+      this.server.close()
+    }
     const appDir = budibaseAppsDir()
     const files = fs.readdirSync(appDir)
     for (let file of files) {
@@ -131,16 +135,22 @@ class TestConfiguration {
     return this._req(null, { id: tableId }, controllers.table.find)
   }
 
-  async createLinkedTable() {
+  async createLinkedTable(relationshipType = null, links = ["link"]) {
     if (!this.table) {
       throw "Must have created a table first."
     }
     const tableConfig = basicTable()
     tableConfig.primaryDisplay = "name"
-    tableConfig.schema.link = {
-      type: "link",
-      fieldName: "link",
-      tableId: this.table._id,
+    for (let link of links) {
+      tableConfig.schema[link] = {
+        type: "link",
+        fieldName: link,
+        tableId: this.table._id,
+        name: link,
+      }
+      if (relationshipType) {
+        tableConfig.schema[link].relationshipType = relationshipType
+      }
     }
     const linkedTable = await this.createTable(tableConfig)
     this.linkedTable = linkedTable
@@ -159,8 +169,20 @@ class TestConfiguration {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
-    config = config || basicRow(this.table._id)
-    return this._req(config, { tableId: this.table._id }, controllers.row.save)
+    const tableId = (config && config.tableId) || this.table._id
+    config = config || basicRow(tableId)
+    return this._req(config, { tableId }, controllers.row.save)
+  }
+
+  async getRow(tableId, rowId) {
+    return this._req(null, { tableId, rowId }, controllers.row.find)
+  }
+
+  async getRows(tableId) {
+    if (!tableId && this.table) {
+      tableId = this.table._id
+    }
+    return this._req(null, { tableId }, controllers.row.fetchTableRows)
   }
 
   async createRole(config = null) {
@@ -187,6 +209,7 @@ class TestConfiguration {
     const view = config || {
       map: "function(doc) { emit(doc[doc.key], doc._id); } ",
       tableId: this.table._id,
+      name: "ViewTest",
     }
     return this._req(view, null, controllers.view.save)
   }
@@ -285,6 +308,9 @@ class TestConfiguration {
   }
 
   async login(email, password) {
+    if (!this.request) {
+      throw "Server has not been opened, cannot login."
+    }
     if (!email || !password) {
       await this.createUser()
       email = EMAIL

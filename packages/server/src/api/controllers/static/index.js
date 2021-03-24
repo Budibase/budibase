@@ -152,26 +152,6 @@ async function processLocalFileUploads({ files, outputPath, appId }) {
   return processedFiles
 }
 
-exports.performLocalFileProcessing = async function(ctx) {
-  const { files } = ctx.request.body
-
-  const processedFileOutputPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "attachments"
-  )
-
-  try {
-    ctx.body = await processLocalFileUploads({
-      files,
-      outputPath: processedFileOutputPath,
-      appId: ctx.user.appId,
-    })
-  } catch (err) {
-    ctx.throw(500, err)
-  }
-}
-
 exports.serveApp = async function(ctx) {
   let appId = ctx.params.appId
   if (env.SELF_HOSTED) {
