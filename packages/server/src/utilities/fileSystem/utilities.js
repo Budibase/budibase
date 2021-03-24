@@ -6,7 +6,6 @@ const tar = require("tar-fs")
 const zlib = require("zlib")
 const { promisify } = require("util")
 const { join } = require("path")
-const { streamUpload } = require("./utilities")
 const fs = require("fs")
 const { budibaseTempDir } = require("../budibaseDir")
 const env = require("../../environment")
@@ -50,8 +49,12 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
  * @constructor
  */
 exports.ObjectStore = bucket => {
+  AWS.config.update({
+    accessKeyId: env.MINIO_ACCESS_KEY,
+    secretAccessKey: env.MINIO_SECRET_KEY,
+  })
   const config = {
-    s3ForcePathStyle: true, // needed with minio?
+    s3ForcePathStyle: true,
     signatureVersion: "v4",
     params: {
       Bucket: bucket,
@@ -161,24 +164,25 @@ exports.deleteFolder = async (bucket, folder) => {
     Prefix: folder,
   }
 
-  const data = await client.listObjects(listParams).promise()
-  if (data.Contents.length > 0) {
-    const deleteParams = {
-      Bucket: bucket,
-      Delete: {
-        Objects: [],
-      },
-    }
+  let response = await client.listObjects(listParams).promise()
+  if (response.Contents.length === 0) {
+    return
+  }
+  const deleteParams = {
+    Bucket: bucket,
+    Delete: {
+      Objects: [],
+    },
+  }
 
-    data.Contents.forEach(content => {
-      deleteParams.Delete.Objects.push({ Key: content.Key })
-    })
+  response.Contents.forEach(content => {
+    deleteParams.Delete.Objects.push({ Key: content.Key })
+  })
 
-    const data = await client.deleteObjects(deleteParams).promise()
-    // can only empty 1000 items at once
-    if (data.Contents.length === 1000) {
-      return exports.deleteFolder(bucket, folder)
-    }
+  response = await client.deleteObjects(deleteParams).promise()
+  // can only empty 1000 items at once
+  if (response.Deleted.length === 1000) {
+    return exports.deleteFolder(bucket, folder)
   }
 }
 
@@ -191,7 +195,9 @@ exports.uploadDirectory = async (bucket, localPath, bucketPath) => {
     if (file.isDirectory()) {
       uploads.push(exports.uploadDirectory(bucket, local, path))
     } else {
-      uploads.push(streamUpload(bucket, path, fs.createReadStream(local)))
+      uploads.push(
+        exports.streamUpload(bucket, path, fs.createReadStream(local))
+      )
     }
   }
   await Promise.all(uploads)
