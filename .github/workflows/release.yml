@@ -1,6 +1,13 @@
 name: Budibase Release
 
 on: 
+ workflow_dispatch:
+  inputs:
+      name:
+        description: 'Version'
+        required: false
+        default: '0.8'
+        
  # Trigger the workflow on push with tags,
  # but only for the master branch
  push:
