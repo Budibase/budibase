@@ -82,18 +82,45 @@ const createScreen = table => {
       },
     })
 
-  const grid = new Component("@budibase/standard-components/datagrid")
+  const spectrumTable = new Component("@budibase/standard-components/table")
     .customProps({
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
-      editable: false,
-      theme: "alpine",
-      height: "540",
-      pagination: true,
-      detailUrl: `${rowListUrl(table)}/:id`,
+      theme: "spectrum--lightest",
+      showAutoColumns: false,
+      quiet: false,
+      size: "spectrum--medium",
+      rowCount: 8,
     })
-    .instanceName("Grid")
+    .instanceName(`${table.name} Table`)
 
-  provider.addChild(grid)
+  const safeTableId = makePropSafe(spectrumTable._json._id)
+  const safeRowId = makePropSafe("_id")
+  const viewButton = new Component("@budibase/standard-components/button")
+    .customProps({
+      text: "View",
+      onClick: [
+        {
+          "##eventHandlerType": "Navigate To",
+          parameters: {
+            url: `${rowListUrl(table)}/{{ ${safeTableId}.${safeRowId} }}`,
+          },
+        },
+      ],
+    })
+    .instanceName("View Button")
+    .normalStyle({
+      background: "transparent",
+      "font-family": "Inter, sans-serif",
+      "font-weight": "500",
+      color: "#888",
+      "border-width": "0",
+    })
+    .hoverStyle({
+      color: "#4285f4",
+    })
+
+  spectrumTable.addChild(viewButton)
+  provider.addChild(spectrumTable)
 
   const mainContainer = new Component("@budibase/standard-components/container")
     .normalStyle({

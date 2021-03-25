@@ -8,6 +8,6 @@
   div {
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 320px;
+    width: 150px;
   }
 </style>
