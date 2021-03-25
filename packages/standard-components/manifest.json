@@ -1579,6 +1579,11 @@
             "value": "spectrum--large"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet"
       }
     ],
     "dataContext": {
