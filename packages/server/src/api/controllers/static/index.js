@@ -6,10 +6,7 @@ const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
-const {
-  budibaseAppsDir,
-  budibaseTempDir,
-} = require("../../../utilities/budibaseDir")
+const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
@@ -18,13 +15,34 @@ const env = require("../../../environment")
 const { OBJ_STORE_DIRECTORY } = require("../../../constants")
 const fileProcessor = require("../../../utilities/fileSystem/processor")
 
+const BB_CDN = "https://cdn.app.budi.live/assets"
+
 function objectStoreUrl() {
   if (env.SELF_HOSTED) {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
     return OBJ_STORE_DIRECTORY
   } else {
-    return "https://cdn.app.budi.live/assets"
+    return BB_CDN
   }
+}
+
+function internalObjectStoreUrl() {
+  if (env.SELF_HOSTED) {
+    return (env.MINIO_URL + OBJ_STORE_DIRECTORY).replace(
+      /(https?:\/\/)|(\/)+/g,
+      "$1$2"
+    )
+  } else {
+    return BB_CDN
+  }
+}
+
+async function returnObjectStoreFile(ctx, path) {
+  const S3_URL = `${internalObjectStoreUrl()}/${path}`
+  const response = await fetch(S3_URL)
+  const body = await response.text()
+  ctx.set("Content-Type", response.headers.get("Content-Type"))
+  ctx.body = body
 }
 
 async function checkForSelfHostedURL(ctx) {
@@ -102,69 +120,47 @@ exports.serveApp = async function(ctx) {
 }
 
 exports.serveAttachment = async function(ctx) {
-  const appId = ctx.user.appId
-  const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
-
-  // Serve from object store
-  if (env.isProd()) {
-    const S3_URL = join(objectStoreUrl(), appId, "attachments", ctx.file)
-    const response = await fetch(S3_URL)
-    const body = await response.text()
-    ctx.set("Content-Type", response.headers.get("Content-Type"))
-    ctx.body = body
-    return
-  }
-
-  await send(ctx, ctx.file, { root: attachmentsPath })
+  await returnObjectStoreFile(
+    ctx,
+    join(ctx.user.appId, "attachments", ctx.file)
+  )
 }
 
 exports.serveAppAsset = async function(ctx) {
-  // default to homedir
-  const appPath = resolve(budibaseAppsDir(), ctx.user.appId, "public")
-
-  await send(ctx, ctx.file, { root: ctx.devPath || appPath })
+  if (env.isDev() || env.isTest()) {
+    return send(ctx, ctx.file, { root: budibaseTempDir() })
+  }
+  await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
 }
 
 exports.serveComponentLibrary = async function(ctx) {
   const appId = ctx.query.appId || ctx.appId
-  // default to homedir
-  let componentLibraryPath = resolve(
-    budibaseAppsDir(),
-    appId,
-    "node_modules",
-    decodeURI(ctx.query.library),
-    "package",
-    "dist"
-  )
 
-  if (env.isDev()) {
-    componentLibraryPath = join(
+  if (env.isDev() || env.isTest()) {
+    const componentLibraryPath = join(
       budibaseTempDir(),
       decodeURI(ctx.query.library),
       "dist"
     )
-  } else {
-    let componentLib = "componentlibrary"
-    if (ctx.user.version) {
-      componentLib += `-${ctx.user.version}`
-    } else {
-      componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
-    }
-    const S3_URL = encodeURI(
-      join(
-        objectStoreUrl(appId),
-        componentLib,
-        ctx.query.library,
-        "dist",
-        "index.js"
-      )
-    )
-    const response = await fetch(S3_URL)
-    const body = await response.text()
-    ctx.type = "application/javascript"
-    ctx.body = body
-    return
+    return send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
   }
-
-  await send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
+  let componentLib = "componentlibrary"
+  if (ctx.user.version) {
+    componentLib += `-${ctx.user.version}`
+  } else {
+    componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
+  }
+  const S3_URL = encodeURI(
+    join(
+      objectStoreUrl(appId),
+      componentLib,
+      ctx.query.library,
+      "dist",
+      "index.js"
+    )
+  )
+  const response = await fetch(S3_URL)
+  const body = await response.text()
+  ctx.type = "application/javascript"
+  ctx.body = body
 }

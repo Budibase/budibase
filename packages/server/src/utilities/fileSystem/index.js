@@ -8,6 +8,7 @@ const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
   retrieve,
+  retrieveToTmp,
   streamUpload,
   deleteFolder,
   downloadTarball,
@@ -37,6 +38,10 @@ exports.init = () => {
   const tempDir = budibaseTempDir()
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir)
+  }
+  const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
+  if (env.isTest() && !fs.existsSync(clientLibPath)) {
+    fs.copyFileSync(require.resolve("@budibase/client"), clientLibPath)
   }
 }
 
@@ -224,3 +229,4 @@ exports.cleanup = appIds => {
  */
 exports.upload = upload
 exports.retrieve = retrieve
+exports.retrieveToTmp = retrieveToTmp
