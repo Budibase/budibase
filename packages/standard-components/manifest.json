@@ -330,6 +330,11 @@
         "label": "Color",
         "key": "color",
         "defaultValue": "#000"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },
