@@ -12,7 +12,7 @@ exports.fetchAppComponentDefinitions = async function(ctx) {
   let componentManifests = await Promise.all(
     app.componentLibraries.map(async library => {
       let manifest
-      if (env.isDev()) {
+      if (env.isDev() && !env.isTest()) {
         manifest = require(join(budibaseTempDir(), library, "manifest.json"))
       } else {
         manifest = await fileSystem.getComponentLibraryManifest(appId, library)
