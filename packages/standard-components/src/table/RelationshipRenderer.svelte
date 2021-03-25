@@ -16,5 +16,5 @@
   {/if}
 {/each}
 {#if leftover}
-  <div>+{leftover} others</div>
+  <div>+{leftover} more</div>
 {/if}
