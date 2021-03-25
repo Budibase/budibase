@@ -1,15 +1,20 @@
 <script>
   export let value
+
+  const displayLimit = 5
+  $: attachments = value?.slice(0, displayLimit) ?? []
+  $: leftover = (value?.length ?? 0) - attachments.length
 </script>
 
-{#if value && value.length}
-  {#each value as attachment}
-    {#if attachment.type.startsWith('image')}
-      <img src={attachment.url} alt={attachment.extension} />
-    {:else}
-      <div class="file">{attachment.extension}</div>
-    {/if}
-  {/each}
+{#each attachments as attachment}
+  {#if attachment.type.startsWith('image')}
+    <img src={attachment.url} alt={attachment.extension} />
+  {:else}
+    <div class="file">{attachment.extension}</div>
+  {/if}
+{/each}
+{#if leftover}
+  <div>+{leftover} others</div>
 {/if}
 
 <style>

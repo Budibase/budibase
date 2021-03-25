@@ -2,14 +2,19 @@
   import "@spectrum-css/label/dist/index-vars.css"
 
   export let value
+
+  const displayLimit = 5
+  $: relationships = value?.slice(0, displayLimit) ?? []
+  $: leftover = (value?.length ?? 0) - relationships.length
 </script>
 
-{#if value && value.length}
-  {#each value as item}
-    {#if item && item.primaryDisplay}
-      <span class="spectrum-Label spectrum-Label--grey">
-        {item.primaryDisplay}
-      </span>
-    {/if}
-  {/each}
+{#each relationships as relationship}
+  {#if relationship?.primaryDisplay}
+    <span class="spectrum-Label spectrum-Label--grey">
+      {relationship.primaryDisplay}
+    </span>
+  {/if}
+{/each}
+{#if leftover}
+  <div>+{leftover} others</div>
 {/if}
