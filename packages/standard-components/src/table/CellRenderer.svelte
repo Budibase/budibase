@@ -1,4 +1,5 @@
 <script>
+  import StringRenderer from "./StringRenderer.svelte"
   import BooleanRenderer from "./BooleanRenderer.svelte"
   import DateTimeRenderer from "./DateTimeRenderer.svelte"
   import RelationshipRenderer from "./RelationshipRenderer.svelte"
@@ -13,7 +14,7 @@
 
 {#if value != null && value !== ''}
   {#if plainTypes.includes(type)}
-    {value}
+    <StringRenderer {value} />
   {:else if type === 'boolean'}
     <BooleanRenderer {value} />
   {:else if type === 'datetime'}
