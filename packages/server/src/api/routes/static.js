@@ -11,13 +11,17 @@ const router = Router()
 /* istanbul ignore next */
 router.param("file", async (file, ctx, next) => {
   ctx.file = file && file.includes(".") ? file : "index.html"
-
-  // Serving the client library from your local dir in dev
-  if (env.isDev() && ctx.file.startsWith("budibase-client")) {
+  if (!ctx.file.startsWith("budibase-client")) {
+    return next()
+  }
+  // test serves from require
+  if (env.isTest()) {
+    ctx.devPath = require.resolve("@budibase/client").split(ctx.file)[0]
+  } else if (env.isDev()) {
+    // Serving the client library from your local dir in dev
     ctx.devPath = budibaseTempDir()
   }
-
-  await next()
+  return next()
 })
 
 router
