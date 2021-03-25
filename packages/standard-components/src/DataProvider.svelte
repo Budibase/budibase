@@ -93,6 +93,13 @@
     } else {
       schema = {}
     }
+
+    // Ensure all schema fields have a name property
+    Object.entries(schema).forEach(([key, value]) => {
+      if (!value.name) {
+        value.name = key
+      }
+    })
   }
 </script>
 
