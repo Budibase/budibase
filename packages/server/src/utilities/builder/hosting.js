@@ -98,12 +98,14 @@ exports.getDeployedApps = async () => {
       },
     })
     const json = await response.json()
-    for (let value of Object.values(json)) {
+    const apps = {}
+    for (let [key, value] of Object.entries(json)) {
       if (value.url) {
         value.url = value.url.toLowerCase()
+        apps[key] = value
       }
     }
-    return json
+    return apps
   } catch (err) {
     // error, cannot determine deployed apps, don't stop app creation - sort this later
     return {}
