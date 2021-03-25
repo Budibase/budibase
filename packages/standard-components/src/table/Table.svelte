@@ -9,6 +9,7 @@
   export let columns
   export let showAutoColumns
   export let rowCount
+  export let quiet
 
   const component = getContext("component")
   const { styleable, Provider } = getContext("sdk")
@@ -28,7 +29,7 @@
       return ""
     }
     const actualCount = Math.min(rowCount, dataCount)
-    return `height: ${36 + actualCount * 56}px;`
+    return `height: ${35 + actualCount * 56}px;`
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
@@ -72,63 +73,65 @@
   }
 </script>
 
-<div
-  lang="en"
-  dir="ltr"
-  use:styleable={$component.styles}
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
-  <div style={contentStyle}>
-    <table class="spectrum-Table">
-      <thead class="spectrum-Table-head">
-        <tr>
-          {#if $component.children}
-            <th class="spectrum-Table-headCell">
-              <div class="spectrum-Table-headCell-content" />
-            </th>
-          {/if}
-          {#each fields as field}
-            <th
-              class="spectrum-Table-headCell is-sortable"
-              class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
-              class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-              on:click={() => sortBy(field)}>
-              <div class="spectrum-Table-headCell-content">
-                {schema[field]?.name}
-                <svg
-                  class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                  class:visible={sortColumn === field}
-                  focusable="false"
-                  aria-hidden="true">
-                  <use xlink:href="#spectrum-css-icon-Arrow100" />
-                </svg>
-              </div>
-            </th>
-          {/each}
-        </tr>
-      </thead>
-      <tbody class="spectrum-Table-body">
-        {#each sortedRows as row}
-          <tr class="spectrum-Table-row">
+<div use:styleable={$component.styles}>
+  <div
+    lang="en"
+    dir="ltr"
+    class:quiet
+    class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+    <div class="content" style={contentStyle}>
+      <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
+        <thead class="spectrum-Table-head">
+          <tr>
             {#if $component.children}
-              <td class="spectrum-Table-cell">
-                <div class="spectrum-Table-cell-content">
-                  <Provider data={row}>
-                    <slot />
-                  </Provider>
-                </div>
-              </td>
+              <th class="spectrum-Table-headCell">
+                <div class="spectrum-Table-headCell-content" />
+              </th>
             {/if}
             {#each fields as field}
-              <td class="spectrum-Table-cell">
-                <div class="spectrum-Table-cell-content">
-                  <CellRenderer schema={schema[field]} value={row[field]} />
+              <th
+                class="spectrum-Table-headCell is-sortable"
+                class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
+                class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
+                on:click={() => sortBy(field)}>
+                <div class="spectrum-Table-headCell-content">
+                  {schema[field]?.name}
+                  <svg
+                    class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                    class:visible={sortColumn === field}
+                    focusable="false"
+                    aria-hidden="true">
+                    <use xlink:href="#spectrum-css-icon-Arrow100" />
+                  </svg>
                 </div>
-              </td>
+              </th>
             {/each}
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="spectrum-Table-body">
+          {#each sortedRows as row}
+            <tr class="spectrum-Table-row">
+              {#if $component.children}
+                <td class="spectrum-Table-cell spectrum-Table-cell--divider">
+                  <div class="spectrum-Table-cell-content">
+                    <Provider data={row}>
+                      <slot />
+                    </Provider>
+                  </div>
+                </td>
+              {/if}
+              {#each fields as field}
+                <td class="spectrum-Table-cell">
+                  <div class="spectrum-Table-cell-content">
+                    <CellRenderer schema={schema[field]} value={row[field]} />
+                  </div>
+                </td>
+              {/each}
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -136,6 +139,11 @@
   .spectrum {
     position: relative;
     overflow: auto;
+    border: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+  }
+  .spectrum.quiet {
+    border: none !important;
   }
   table {
     width: 100%;
@@ -149,8 +157,6 @@
     position: sticky;
     top: 0;
     background-color: var(--spectrum-global-color-gray-100);
-    border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
     z-index: 2;
   }
   .spectrum-Table-headCell-content {
@@ -161,12 +167,22 @@
     align-items: center;
     user-select: none;
   }
-  .spectrum-Table-cell {
+  td {
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+  }
+  tr:first-child td {
     border-top: none !important;
+  }
+  .spectrum:not(.quiet) td.spectrum-Table-cell--divider {
+    width: 1px;
+    border-right: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   .spectrum-Table-cell-content {
     height: 55px;
@@ -183,5 +199,10 @@
   }
   .spectrum-Table-sortedIcon.visible {
     opacity: 1;
+  }
+  .spectrum,
+  th {
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
 </style>
