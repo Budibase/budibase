@@ -76,33 +76,25 @@ exports.createRoutingView = async appId => {
 exports.createFulltextSearchIndex = async appId => {
   const db = new CouchDB(appId)
   const designDoc = await db.get("_design/database")
-  designDoc.fulltext = {
-    everything: {
+  designDoc.indexes = {
+    rows: {
       index: function(doc) {
-        let ret = new Document()
-
-        function idx(obj) {
+        // eslint-disable-next-line no-undef
+        index("id", doc._id)
+        function idx(obj, prev = "") {
           for (let key of Object.keys(obj)) {
-            switch (typeof obj[key]) {
-              case "object":
-                idx(obj[key])
-                break
-              case "function":
-                break
-              default:
-                ret.add(obj[key])
-                break
+            let prevKey = prev !== "" ? `${prev}.${key}` : key
+            if (typeof obj[key] !== "object") {
+              // eslint-disable-next-line no-undef
+              index(prevKey, obj[key], { store: true })
+            } else {
+              idx(obj[key], prevKey)
             }
           }
         }
-
-        idx(doc)
-        if (doc._attachments) {
-          for (let i in Object.keys(doc._attachments)) {
-            ret.attachment("default", i)
-          }
+        if (doc._id.startsWith("ro_")) {
+          idx(doc)
         }
-        return ret
       }.toString(),
     },
   }
