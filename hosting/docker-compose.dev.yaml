@@ -34,37 +34,17 @@ services:
       - minio-service
       - couchdb-service
 
-  couchdb-lucene:
-    container_name: budi-couchdb-lucene-dev
-    build: 
-      context: lucene
-      dockerfile: Dockerfile
-    ports:
-      - "${COUCH_LUCENE_PORT}:5985"
-    volumes:
-      - couchdb_lucene:/opt/couchdb-lucene
-    networks:
-      dbs:
-        aliases:
-          - couchdb-lucene
-
   couchdb-service:
     container_name: budi-couchdb-dev
     restart: always
-    build: 
-      context: couch
-      dockerfile: Dockerfile
+    image: ibmcom/couchdb3
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
     volumes:
-      - couchdb_data:/opt/couchdb/data
-#    networks:
-#      dbs:
-#        aliases:
-#          - couchdb
+      - couchdb3_data:/opt/couchdb/data
   
   couch-init:
     container_name: budi-couchdb-init-dev
@@ -84,16 +64,10 @@ services:
     volumes:
       - redis_data:/data
 
-networks:
-  dbs:
-    driver: bridge
-
 volumes:
-  couchdb_data:
+  couchdb3_data:
     driver: local
   minio_data:
     driver: local
   redis_data:
-    driver: local
-  couchdb_lucene:
     driver: local
