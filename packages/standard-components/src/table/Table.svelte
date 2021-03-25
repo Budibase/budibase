@@ -11,7 +11,7 @@
   export let rowCount
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, Provider } = getContext("sdk")
 
   let sortColumn
   let sortOrder
@@ -85,6 +85,11 @@
   <table class="spectrum-Table">
     <thead class="spectrum-Table-head">
       <tr>
+        {#if $component.children}
+          <th class="spectrum-Table-headCell">
+            <div class="spectrum-Table-headCell-content" />
+          </th>
+        {/if}
         {#each fields as field}
           <th
             class="spectrum-Table-headCell is-sortable"
@@ -108,6 +113,15 @@
     <tbody class="spectrum-Table-body">
       {#each sortedRows as row}
         <tr class="spectrum-Table-row">
+          {#if $component.children}
+            <td class="spectrum-Table-cell">
+              <div class="spectrum-Table-cell-content">
+                <Provider data={row}>
+                  <slot />
+                </Provider>
+              </div>
+            </td>
+          {/if}
           {#each fields as field}
             <td class="spectrum-Table-cell">
               <div class="spectrum-Table-cell-content">
