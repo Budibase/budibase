@@ -49,8 +49,6 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
  * @constructor
  */
 exports.ObjectStore = bucket => {
-  console.log("CREATED OBJECT STORE")
-  console.trace()
   if (env.SELF_HOSTED) {
     AWS.config.update({
       accessKeyId: env.MINIO_ACCESS_KEY,
@@ -217,7 +215,9 @@ exports.downloadTarball = async (url, bucket, path) => {
 
   const tmpPath = join(budibaseTempDir(), path)
   await streamPipeline(response.body, zlib.Unzip(), tar.extract(tmpPath))
-  await exports.uploadDirectory(bucket, tmpPath, path)
+  if (!env.isTest()) {
+    await exports.uploadDirectory(bucket, tmpPath, path)
+  }
   // return the temporary path incase there is a use for it
   return tmpPath
 }

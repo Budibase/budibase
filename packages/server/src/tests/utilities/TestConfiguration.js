@@ -14,6 +14,7 @@ const {
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
+const { cleanup } = require("../../utilities/fileSystem")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -63,6 +64,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     }
+    cleanup(this.allApps.map(app => app._id))
   }
 
   defaultHeaders() {

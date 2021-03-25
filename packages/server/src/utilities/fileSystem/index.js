@@ -157,11 +157,19 @@ exports.downloadTemplate = async (type, name) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 exports.getComponentLibraryManifest = async (appId, library) => {
-  const devPath = join(budibaseTempDir(), library, "manifest.json")
+  const filename = "manifest.json"
+  /* istanbul ignore next */
+  // when testing in cypress and so on we need to get the package
+  // as the environment may not be fully fleshed out for dev or prod
+  if (env.isTest()) {
+    const paths = await downloadLibraries(appId)
+    return require(join(paths[library], "package", filename))
+  }
+  const devPath = join(budibaseTempDir(), library, filename)
   if (env.isDev() && fs.existsSync(devPath)) {
     return require(devPath)
   }
-  const path = join(appId, "node_modules", library, "package", "manifest.json")
+  const path = join(appId, "node_modules", library, "package", filename)
   let resp = await retrieve(ObjectStoreBuckets.APPS, path)
   if (typeof resp !== "string") {
     resp = resp.toString("utf8")
@@ -199,6 +207,15 @@ exports.getExternalAutomationStep = async (name, version, bundleName) => {
  */
 exports.readFileSync = (filepath, options = "utf8") => {
   return fs.readFileSync(filepath, options)
+}
+
+/**
+ * Given a set of app IDs makes sure file system is cleared of any of their temp info.
+ */
+exports.cleanup = appIds => {
+  for (let appId of appIds) {
+    fs.rmdirSync(join(budibaseTempDir(), appId), { recursive: true })
+  }
 }
 
 /**

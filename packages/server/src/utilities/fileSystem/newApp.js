@@ -11,13 +11,19 @@ const BUCKET_NAME = ObjectStoreBuckets.APPS
 exports.downloadLibraries = async appId => {
   const LIBRARIES = ["standard-components"]
 
+  const paths = {}
   // Need to download tarballs directly from NPM as our users may not have node on their machine
   for (let lib of LIBRARIES) {
     // download tarball
     const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-${packageJson.version}.tgz`
     const path = join(appId, "node_modules", "@budibase", lib)
-    await downloadTarball(registryUrl, BUCKET_NAME, path)
+    paths[`@budibase/${lib}`] = await downloadTarball(
+      registryUrl,
+      BUCKET_NAME,
+      path
+    )
   }
+  return paths
 }
 
 exports.newAppPublicPath = async appId => {
