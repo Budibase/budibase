@@ -77,9 +77,20 @@
   }
 
   const getFields = (schema, customColumns, showAutoColumns) => {
-    if (customColumns?.length) {
+    // Check for an invalid column selection
+    let invalid = false
+    customColumns?.forEach(column => {
+      if (schema[column] == null) {
+        invalid = true
+      }
+    })
+
+    // Use column selection if it exists
+    if (!invalid && customColumns?.length) {
       return customColumns
     }
+
+    // Otherwise generate columns
     let columns = []
     let autoColumns = []
     Object.entries(schema).forEach(([field, fieldSchema]) => {
