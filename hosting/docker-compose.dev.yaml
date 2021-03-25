@@ -30,26 +30,44 @@ services:
       - ./envoy.dev.yaml:/etc/envoy/envoy.yaml
     ports:
       - "${MAIN_PORT}:10000"
-      #- "9901:9901"
     depends_on:
       - minio-service
       - couchdb-service
 
+  couchdb-lucene:
+    container_name: budi-couchdb-lucene-dev
+    build: 
+      context: lucene
+      dockerfile: Dockerfile
+    ports:
+      - "${COUCH_LUCENE_PORT}:5985"
+    volumes:
+      - couchdb_lucene:/opt/couchdb-lucene
+    networks:
+      dbs:
+        aliases:
+          - couchdb-lucene
+
   couchdb-service:
     container_name: budi-couchdb-dev
     restart: always
-    image: apache/couchdb:3.0
+    build: 
+      context: couch
+      dockerfile: Dockerfile
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
-      #- "4369:4369"
-      #- "9100:9100"
     volumes:
       - couchdb_data:/opt/couchdb/data
+#    networks:
+#      dbs:
+#        aliases:
+#          - couchdb
   
   couch-init:
+    container_name: budi-couchdb-init-dev
     image: curlimages/curl
     environment:
       PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
@@ -66,6 +84,9 @@ services:
     volumes:
       - redis_data:/data
 
+networks:
+  dbs:
+    driver: bridge
 
 volumes:
   couchdb_data:
@@ -73,4 +94,6 @@ volumes:
   minio_data:
     driver: local
   redis_data:
+    driver: local
+  couchdb_lucene:
     driver: local
