@@ -157,6 +157,10 @@ exports.downloadTemplate = async (type, name) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 exports.getComponentLibraryManifest = async (appId, library) => {
+  const devPath = join(budibaseTempDir(), library, "manifest.json")
+  if (env.isDev() && fs.existsSync(devPath)) {
+    return require(devPath)
+  }
   const path = join(appId, "node_modules", library, "package", "manifest.json")
   let resp = await retrieve(ObjectStoreBuckets.APPS, path)
   if (typeof resp !== "string") {

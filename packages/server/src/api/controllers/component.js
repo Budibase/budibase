@@ -1,8 +1,5 @@
 const CouchDB = require("../../db")
-const { join } = require("../../utilities/centralPath")
-const { budibaseTempDir } = require("../../utilities/budibaseDir")
-const fileSystem = require("../../utilities/fileSystem")
-const env = require("../../environment")
+const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
   const appId = ctx.params.appId || ctx.appId
@@ -11,12 +8,8 @@ exports.fetchAppComponentDefinitions = async function(ctx) {
 
   let componentManifests = await Promise.all(
     app.componentLibraries.map(async library => {
-      let manifest
-      if (env.isDev() && !env.isTest()) {
-        manifest = require(join(budibaseTempDir(), library, "manifest.json"))
-      } else {
-        manifest = await fileSystem.getComponentLibraryManifest(appId, library)
-      }
+      let manifest = await getComponentLibraryManifest(appId, library)
+
       return {
         manifest,
         library,

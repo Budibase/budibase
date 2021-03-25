@@ -49,6 +49,8 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
  * @constructor
  */
 exports.ObjectStore = bucket => {
+  console.log("CREATED OBJECT STORE")
+  console.trace()
   if (env.SELF_HOSTED) {
     AWS.config.update({
       accessKeyId: env.MINIO_ACCESS_KEY,

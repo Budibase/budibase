@@ -174,7 +174,7 @@ exports.create = async function(ctx) {
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
-  if (env.NODE_ENV !== "jest") {
+  if (!env.isTest()) {
     await createApp(appId)
   }
 
@@ -204,8 +204,8 @@ exports.delete = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const app = await db.get(ctx.params.appId)
   const result = await db.destroy()
-
-  if (env.NODE_ENV !== "jest") {
+  /* istanbul ignore next */
+  if (!env.isTest()) {
     await deleteApp(ctx.params.appId)
   }
 
