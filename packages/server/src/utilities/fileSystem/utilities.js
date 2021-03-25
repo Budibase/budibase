@@ -13,6 +13,10 @@ const { ObjectStoreBuckets } = require("../../constants")
 const uuid = require("uuid/v4")
 
 const streamPipeline = promisify(stream.pipeline)
+// use this as a temporary store of buckets that are being created
+const STATE = {
+  bucketCreationPromises: {},
+}
 
 const CONTENT_TYPE_MAP = {
   html: "text/html",
@@ -81,13 +85,18 @@ exports.makeSureBucketExists = async (client, bucketName) => {
       })
       .promise()
   } catch (err) {
-    // bucket doesn't exist create it
-    if (err.statusCode === 404) {
-      await client
+    const promises = STATE.bucketCreationPromises
+    if (promises[bucketName]) {
+      await promises[bucketName]
+    } else if (err.statusCode === 404) {
+      // bucket doesn't exist create it
+      promises[bucketName] = client
         .createBucket({
           Bucket: bucketName,
         })
         .promise()
+      await promises[bucketName]
+      delete promises[bucketName]
       // public buckets are quite hidden in the system, make sure
       // no bucket is set accidentally
       if (PUBLIC_BUCKETS.includes(bucketName)) {
