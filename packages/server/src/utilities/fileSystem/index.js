@@ -162,8 +162,9 @@ exports.getComponentLibraryManifest = async (appId, library) => {
   // when testing in cypress and so on we need to get the package
   // as the environment may not be fully fleshed out for dev or prod
   if (env.isTest()) {
-    const paths = await downloadLibraries(appId)
-    return require(join(paths[library], "package", filename))
+    const lib = library.split("/")[1]
+    const path = require.resolve(library).split(lib)[0]
+    return require(join(path, lib, filename))
   }
   const devPath = join(budibaseTempDir(), library, filename)
   if (env.isDev() && fs.existsSync(devPath)) {
