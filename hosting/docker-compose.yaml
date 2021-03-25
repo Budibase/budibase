@@ -98,9 +98,19 @@ services:
     depends_on:
       - couchdb-service
     command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+  
+  redis-service:
+    restart: always
+    image: redis
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
 
 volumes:
   couchdb_data:
     driver: local
   minio_data:
+    driver: local
+  redis_data:
     driver: local

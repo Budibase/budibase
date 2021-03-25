@@ -65,6 +65,7 @@
       "!src/db/tests/**/*",
       "!src/tests/**/*",
       "!src/automations/tests/**/*",
+      "!src/utilities/fileProcessor.js",
       "!src/utilities/fileSystem/**/*"
     ],
     "coverageReporters": [

@@ -61,9 +61,6 @@ services:
     container_name: budi-redis-dev
     restart: always
     image: redis
-    environment:
-      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
-      - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
