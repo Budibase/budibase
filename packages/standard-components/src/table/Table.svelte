@@ -192,8 +192,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: 4px;
-    max-width: 320px;
-    overflow: hidden;
   }
   .spectrum-Table-sortedIcon {
     opacity: 0;
