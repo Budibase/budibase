@@ -5,7 +5,7 @@ const packageJson = require("../../../package.json")
 const {
   createLinkView,
   createRoutingView,
-  createFulltextSearchIndex,
+  createAllSearchIndex,
 } = require("../../db/views/staticViews")
 const {
   getTemplateStream,
@@ -95,7 +95,7 @@ async function createInstance(template) {
   // add view for linked rows
   await createLinkView(appId)
   await createRoutingView(appId)
-  await createFulltextSearchIndex(appId)
+  await createAllSearchIndex(appId)
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files

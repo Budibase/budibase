@@ -1,5 +1,10 @@
 const CouchDB = require("../index")
-const { DocumentTypes, SEPARATOR, ViewNames } = require("../utils")
+const {
+  DocumentTypes,
+  SEPARATOR,
+  ViewNames,
+  SearchIndexes,
+} = require("../utils")
 const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
 
 /**************************************************
@@ -73,30 +78,41 @@ exports.createRoutingView = async appId => {
   await db.put(designDoc)
 }
 
-exports.createFulltextSearchIndex = async appId => {
+async function searchIndex(appId, indexName, fnString) {
   const db = new CouchDB(appId)
   const designDoc = await db.get("_design/database")
   designDoc.indexes = {
-    rows: {
-      index: function(doc) {
-        // eslint-disable-next-line no-undef
-        index("id", doc._id)
-        function idx(obj, prev = "") {
-          for (let key of Object.keys(obj)) {
-            let prevKey = prev !== "" ? `${prev}.${key}` : key
-            if (typeof obj[key] !== "object") {
-              // eslint-disable-next-line no-undef
-              index(prevKey, obj[key], { store: true })
-            } else {
-              idx(obj[key], prevKey)
-            }
-          }
-        }
-        if (doc._id.startsWith("ro_")) {
-          idx(doc)
-        }
-      }.toString(),
+    [indexName]: {
+      index: fnString,
     },
   }
   await db.put(designDoc)
+}
+
+exports.createAllSearchIndex = async appId => {
+  await searchIndex(
+    appId,
+    SearchIndexes.ROWS,
+    function(doc) {
+      function idx(input, prev) {
+        for (let key of Object.keys(input)) {
+          const idxKey = prev != null ? `${prev}.${key}` : key
+          if (key === "_id" || key === "_rev") {
+            continue
+          }
+          if (typeof input[key] !== "object") {
+            // eslint-disable-next-line no-undef
+            index(idxKey, input[key], { store: true })
+          } else {
+            idx(input[key], idxKey)
+          }
+        }
+      }
+      if (doc._id.startsWith("ro_")) {
+        // eslint-disable-next-line no-undef
+        index("default", doc._id)
+        idx(doc)
+      }
+    }.toString()
+  )
 }
