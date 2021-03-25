@@ -16,24 +16,19 @@
   let sortColumn
   let sortOrder
 
-  $: styles = makeStyles($component.styles, rowCount)
   $: rows = dataProvider?.rows ?? []
+  $: contentStyle = getContentStyle(rowCount, rows.length)
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: loaded = dataProvider?.loaded ?? false
   $: schema = dataProvider?.schema ?? {}
   $: fields = getFields(schema, columns, showAutoColumns)
 
-  const makeStyles = (styles, rowCount) => {
+  const getContentStyle = (rowCount, dataCount) => {
     if (!rowCount) {
-      return styles
+      return ""
     }
-    return {
-      ...styles,
-      normal: {
-        ...styles.normal,
-        height: `${37 + rowCount * 56}px`,
-      },
-    }
+    const actualCount = Math.min(rowCount, dataCount)
+    return `height: ${36 + actualCount * 56}px;`
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
@@ -80,59 +75,61 @@
 <div
   lang="en"
   dir="ltr"
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}
-  use:styleable={styles}>
-  <table class="spectrum-Table">
-    <thead class="spectrum-Table-head">
-      <tr>
-        {#if $component.children}
-          <th class="spectrum-Table-headCell">
-            <div class="spectrum-Table-headCell-content" />
-          </th>
-        {/if}
-        {#each fields as field}
-          <th
-            class="spectrum-Table-headCell is-sortable"
-            class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
-            class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-            on:click={() => sortBy(field)}>
-            <div class="spectrum-Table-headCell-content">
-              {schema[field]?.name}
-              <svg
-                class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                class:visible={sortColumn === field}
-                focusable="false"
-                aria-hidden="true">
-                <use xlink:href="#spectrum-css-icon-Arrow100" />
-              </svg>
-            </div>
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody class="spectrum-Table-body">
-      {#each sortedRows as row}
-        <tr class="spectrum-Table-row">
+  use:styleable={$component.styles}
+  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+  <div style={contentStyle}>
+    <table class="spectrum-Table">
+      <thead class="spectrum-Table-head">
+        <tr>
           {#if $component.children}
-            <td class="spectrum-Table-cell">
-              <div class="spectrum-Table-cell-content">
-                <Provider data={row}>
-                  <slot />
-                </Provider>
-              </div>
-            </td>
+            <th class="spectrum-Table-headCell">
+              <div class="spectrum-Table-headCell-content" />
+            </th>
           {/if}
           {#each fields as field}
-            <td class="spectrum-Table-cell">
-              <div class="spectrum-Table-cell-content">
-                <CellRenderer schema={schema[field]} value={row[field]} />
+            <th
+              class="spectrum-Table-headCell is-sortable"
+              class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
+              class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
+              on:click={() => sortBy(field)}>
+              <div class="spectrum-Table-headCell-content">
+                {schema[field]?.name}
+                <svg
+                  class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                  class:visible={sortColumn === field}
+                  focusable="false"
+                  aria-hidden="true">
+                  <use xlink:href="#spectrum-css-icon-Arrow100" />
+                </svg>
               </div>
-            </td>
+            </th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="spectrum-Table-body">
+        {#each sortedRows as row}
+          <tr class="spectrum-Table-row">
+            {#if $component.children}
+              <td class="spectrum-Table-cell">
+                <div class="spectrum-Table-cell-content">
+                  <Provider data={row}>
+                    <slot />
+                  </Provider>
+                </div>
+              </td>
+            {/if}
+            {#each fields as field}
+              <td class="spectrum-Table-cell">
+                <div class="spectrum-Table-cell-content">
+                  <CellRenderer schema={schema[field]} value={row[field]} />
+                </div>
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <style>
