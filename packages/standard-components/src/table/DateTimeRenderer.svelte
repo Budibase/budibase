@@ -4,4 +4,10 @@
   export let value
 </script>
 
-{dayjs(value).format('MMMM D YYYY, HH:mm')}
+<div>{dayjs(value).format('MMMM D YYYY, HH:mm')}</div>
+
+<style>
+  div {
+    width: 200px;
+  }
+</style>

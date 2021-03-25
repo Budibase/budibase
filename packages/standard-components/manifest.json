@@ -8,47 +8,6 @@
     "transitionable": true,
     "settings": []
   },
-  "datagrid": {
-    "name": "Grid",
-    "description": "A datagrid component with functionality to add, remove and edit rows.",
-    "icon": "ri-grid-line",
-    "styleable": true,
-    "settings": [
-      {
-        "type": "dataProvider",
-        "label": "Data",
-        "key": "dataProvider"
-      },
-      {
-        "type": "detailScreen",
-        "label": "Detail URL",
-        "key": "detailUrl"
-      },
-      {
-        "type": "boolean",
-        "label": "Editable",
-        "key": "editable"
-      },
-      {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "options": ["alpine", "alpine-dark", "balham", "balham-dark", "material"],
-        "defaultValue": "alpine"
-      },
-      {
-        "type": "number",
-        "label": "Height",
-        "key": "height",
-        "defaultValue": "500"
-      },
-      {
-        "type": "boolean",
-        "label": "Pagination",
-        "key": "pagination"
-      }
-    ]
-  },
   "screenslot": {
     "name": "Screenslot",
     "icon": "ri-artboard-2-line",
