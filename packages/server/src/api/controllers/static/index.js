@@ -2,6 +2,7 @@ require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
+const { checkSlashesInUrl } = require("../../../utilities")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { prepareUpload } = require("../deploy/utils")
@@ -28,10 +29,7 @@ function objectStoreUrl() {
 
 function internalObjectStoreUrl() {
   if (env.SELF_HOSTED) {
-    return (env.MINIO_URL + OBJ_STORE_DIRECTORY).replace(
-      /(https?:\/\/)|(\/)+/g,
-      "$1$2"
-    )
+    return checkSlashesInUrl(env.MINIO_URL + OBJ_STORE_DIRECTORY)
   } else {
     return BB_CDN
   }

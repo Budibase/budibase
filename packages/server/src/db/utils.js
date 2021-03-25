@@ -37,11 +37,16 @@ const ViewNames = {
   USERS: "ta_users",
 }
 
+const SearchIndexes = {
+  ROWS: "rows",
+}
+
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
+exports.SearchIndexes = SearchIndexes
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`

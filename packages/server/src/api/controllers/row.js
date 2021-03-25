@@ -17,6 +17,7 @@ const {
 const { FieldTypes } = require("../../constants")
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
+const searchController = require("./search")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -259,39 +260,40 @@ exports.search = async function(ctx) {
   const db = new CouchDB(appId)
   const {
     query,
-    pagination: { pageSize = 10, page },
+    pagination: { pageSize = 10, bookmark },
   } = ctx.request.body
+  const tableId = ctx.params.tableId
+
+  const queryBuilder = new searchController.QueryBuilder(appId)
+    .setLimit(pageSize)
+    .addTable(tableId)
+  if (bookmark) {
+    queryBuilder.setBookmark(bookmark)
+  }
 
   // make all strings a starts with operation rather than pure equality
   for (const [key, queryVal] of Object.entries(query)) {
     if (typeof queryVal === "string") {
-      query[key] = {
-        $gt: queryVal,
-        $lt: `${queryVal}\uffff`,
-      }
+      queryBuilder.addString(key, queryVal)
+    } else {
+      queryBuilder.addEqual(key, queryVal)
     }
   }
 
-  // pure equality for table
-  query.tableId = ctx.params.tableId
-  const response = await db.find({
-    selector: query,
-    limit: pageSize,
-    skip: pageSize * page,
-  })
-
-  const rows = response.docs
+  const response = await searchController.search(queryBuilder.complete())
 
   // delete passwords from users
-  if (query.tableId === ViewNames.USERS) {
-    for (let row of rows) {
+  if (tableId === ViewNames.USERS) {
+    for (let row of response.rows) {
       delete row.password
     }
   }
 
-  const table = await db.get(ctx.params.tableId)
-
-  ctx.body = await outputProcessing(appId, table, rows)
+  const table = await db.get(tableId)
+  ctx.body = {
+    rows: await outputProcessing(appId, table, response.rows),
+    bookmark: response.bookmark,
+  }
 }
 
 exports.fetchTableRows = async function(ctx) {

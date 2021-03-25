@@ -25,10 +25,11 @@
   let tableDefinition
   let schema
 
-  // pagination
-  let page = 0
+  let nextBookmark = null
+  let bookmark = null
+  let lastBookmark = null
 
-  $: fetchData(table, page)
+  $: fetchData(table, bookmark)
   // omit empty strings
   $: parsedSearch = Object.keys(search).reduce(
     (acc, next) =>
@@ -38,33 +39,38 @@
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
-      callback: () => fetchData(table, page),
+      callback: () => fetchData(table, bookmark),
       metadata: { datasource: { type: "table", tableId: table } },
     },
   ]
 
-  async function fetchData(table, page) {
+  async function fetchData(table, mark) {
     if (table) {
       const tableDef = await API.fetchTableDefinition(table)
       schema = tableDef.schema
-      rows = await API.searchTableData({
+      lastBookmark = mark
+      const output = await API.searchTableData({
         tableId: table,
         search: parsedSearch,
         pagination: {
           pageSize,
-          page,
+          bookmark: mark,
         },
       })
+      rows = output.rows
+      nextBookmark = output.bookmark
     }
     loaded = true
   }
 
   function nextPage() {
-    page += 1
+    lastBookmark = bookmark
+    bookmark = nextBookmark
   }
 
   function previousPage() {
-    page -= 1
+    nextBookmark = bookmark
+    bookmark = lastBookmark
   }
 </script>
 
@@ -99,15 +105,15 @@
           secondary
           on:click={() => {
             search = {}
-            page = 0
+            bookmark = null
           }}>
           Reset
         </Button>
         <Button
           primary
           on:click={() => {
-            page = 0
-            fetchData(table, page)
+            bookmark = null
+            fetchData(table, bookmark)
           }}>
           Search
         </Button>
@@ -129,7 +135,7 @@
       {/if}
     {/if}
     <div class="pagination">
-      {#if page > 0}
+      {#if bookmark != null}
         <Button primary on:click={previousPage}>Back</Button>
       {/if}
       {#if rows.length === pageSize}
