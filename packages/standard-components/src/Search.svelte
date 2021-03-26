@@ -143,7 +143,7 @@
       {#if lastBookmark != null || bookmark != null}
         <Button primary on:click={previousPage}>Back</Button>
       {/if}
-      {#if nextBookmark != null}
+      {#if nextBookmark != null && rows.length !== 0}
         <Button primary on:click={nextPage}>Next</Button>
       {/if}
     </div>
