@@ -3,6 +3,7 @@
   "video": true,
   "projectId": "bmbemn",
   "env": {
-    "PORT": "4001"
+    "PORT": "4001",
+    "JWT_SECRET": "test"
   }
 }

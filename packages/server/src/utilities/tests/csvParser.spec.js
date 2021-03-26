@@ -1,4 +1,4 @@
-const fs = require("fs")
+const { readFileSync } = require("../fileSystem")
 const csvParser = require("../csvParser")
 
 const CSV_PATH = __dirname + "/test.csv"
@@ -33,7 +33,7 @@ const SCHEMAS = {
 }
 
 describe("CSV Parser", () => {
-  const csvString = fs.readFileSync(CSV_PATH, "utf8")
+  const csvString = readFileSync(CSV_PATH, "utf8")
 
   describe("parsing", () => {
     it("returns status and types for a valid CSV transformation", async () => {

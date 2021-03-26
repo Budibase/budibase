@@ -1,8 +1,6 @@
 const CouchDB = require("../../../db")
 const viewTemplate = require("./viewBuilder")
-const fs = require("fs")
-const { join } = require("../../../utilities/centralPath")
-const os = require("os")
+const { apiFileReturn } = require("../../../utilities/fileSystem")
 const exporters = require("./exporters")
 const { fetchView } = require("../row")
 const { ViewNames } = require("../../../db/utils")
@@ -120,12 +118,10 @@ const controller = {
     // Export part
     let headers = Object.keys(schema)
     const exporter = exporters[format]
-    const exportedFile = exporter(headers, ctx.body)
     const filename = `${viewName}.${format}`
-    fs.writeFileSync(join(os.tmpdir(), filename), exportedFile)
-
+    // send down the file
     ctx.attachment(filename)
-    ctx.body = fs.createReadStream(join(os.tmpdir(), filename))
+    ctx.body = apiFileReturn(exporter(headers, ctx.body))
   },
 }
 
