@@ -34,7 +34,6 @@ class QueryBuilder {
       fuzzy: {},
       range: {},
       equal: {},
-      meta: {},
       ...base,
     }
     this.limit = 50
@@ -93,15 +92,17 @@ class QueryBuilder {
     if (this.query.string) {
       build(this.query.string, (key, value) => `${key}:${value}*`)
     }
-    if (this.query.number) {
-      build(this.query.number, (key, value) =>
-        value.length == null
-          ? `${key}:${value}`
-          : `${key}:[${value[0]} TO ${value[1]}]`
+    if (this.query.range) {
+      build(
+        this.query.range,
+        (key, value) => `${key}:[${value[0]} TO ${value[1]}]`
       )
     }
     if (this.query.fuzzy) {
       build(this.query.fuzzy, (key, value) => `${key}:${value}~`)
+    }
+    if (this.query.equal) {
+      build(this.query.equal, (key, value) => `${key}:${value}`)
     }
     if (rawQuery) {
       output = output.length === 0 ? rawQuery : `&${rawQuery}`
