@@ -1,17 +1,20 @@
 import { writable } from "svelte/store"
 import { queries } from "./"
-import api from "builderStore/api"
+import api from "../../builderStore/api"
 
-export function createDatasourcesStore(_api = api) {
-  const { subscribe, update, set } = writable({
+export const INITIAL_DATASOURCE_VALUES = {
     list: [],
     selected: null,
-  })
+  }
+
+export function createDatasourcesStore(_api = api) {
+  const { subscribe, update, set } = writable(INITIAL_DATASOURCE_VALUES)
 
   return {
     subscribe,
     set,
     update,
+    init: () => set(INITIAL_DATASOURCE_VALUES),
     fetch: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()

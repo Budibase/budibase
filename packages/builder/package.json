@@ -29,18 +29,15 @@
       "\\.(css|less|sass|scss)$": "identity-obj-proxy",
       "components(.*)$": "<rootDir>/src/components$1",
       "builderStore(.*)$": "<rootDir>/src/builderStore$1",
-      "stores(.*)$": "<rootDir>/src/stores$1"
+      "stores(.*)$": "<rootDir>/src/stores$1",
+      "analytics(.*)$": "<rootDir>/src/analytics$1"
     },
     "moduleFileExtensions": [
       "js",
       "svelte"
     ],
     "moduleDirectories": [
-      "node_modules",
-      "builderStore",
-      "stores",
-      "constants",
-      "analytics"
+      "node_modules"
     ],
     "transform": {
       "^.+js$": "babel-jest",
