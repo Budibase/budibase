@@ -42,12 +42,12 @@ describe("test the create row action", () => {
   })
 
   it("check usage quota attempts", async () => {
-    env.CLOUD = true
-    await setup.runStep(setup.actions.CREATE_ROW.stepId, {
-      row
+    await setup.runInProd(async () => {
+      await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+        row
+      })
+      expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "rows", 1)
     })
-    expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "rows", 1)
-    env.CLOUD = false
   })
 
   it("should check invalid inputs return an error", async () => {

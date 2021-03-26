@@ -66,12 +66,7 @@ exports.deploy = async function(deployment) {
   const appId = deployment.getAppId()
   const { bucket, accountId } = deployment.getVerification()
   const metadata = { accountId }
-  const s3Client = new AWS.S3({
-    params: {
-      Bucket: bucket,
-    },
-  })
-  await deployToObjectStore(appId, s3Client, metadata)
+  await deployToObjectStore(appId, bucket, metadata)
 }
 
 exports.replicateDb = async function(deployment) {

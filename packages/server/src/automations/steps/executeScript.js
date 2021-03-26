@@ -1,6 +1,4 @@
 const scriptController = require("../../api/controllers/script")
-const automationUtils = require("../automationUtils")
-const env = require("../../environment")
 
 module.exports.definition = {
   name: "Scripting",
@@ -14,7 +12,8 @@ module.exports.definition = {
     inputs: {
       properties: {
         code: {
-          type: "code",
+          type: "string",
+          customType: "code",
           title: "Code",
         },
       },
@@ -22,34 +21,17 @@ module.exports.definition = {
     },
     outputs: {
       properties: {
-        row: {
-          type: "object",
-          customType: "row",
-          description: "The new row",
-        },
-        response: {
-          type: "object",
-          description: "The response from the table",
-        },
         success: {
           type: "boolean",
           description: "Whether the action was successful",
         },
-        id: {
-          type: "string",
-          description: "The identifier of the new row",
-        },
-        revision: {
-          type: "string",
-          description: "The revision of the new row",
-        },
       },
-      required: ["success", "id", "revision"],
     },
+    required: ["success"],
   },
 }
 
-module.exports.run = async function({ inputs, appId, emitter }) {
+module.exports.run = async function({ inputs, appId, context, emitter }) {
   if (inputs.code == null) {
     return {
       success: false,
@@ -60,12 +42,10 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   }
 
   const ctx = {
-    params: {
-      tableId: inputs.row.tableId,
-    },
     request: {
       body: {
-        script: inputs.script,
+        script: inputs.code,
+        context,
       },
     },
     user: { appId },
@@ -73,13 +53,8 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   }
 
   try {
-    // inputs.row = await automationUtils.cleanUpRow(appId, inputs.script)
     await scriptController.execute(ctx)
     return {
-      // row: inputs.row,
-      response: ctx.body,
-      // id: ctx.body._id,
-      // revision: ctx.body._rev,
       success: ctx.status === 200,
     }
   } catch (err) {

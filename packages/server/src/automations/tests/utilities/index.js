@@ -2,6 +2,7 @@ const TestConfig = require("../../../tests/utilities/TestConfiguration")
 const actions = require("../../actions")
 const logic = require("../../logic")
 const emitter = require("../../../events/index")
+const env = require("../../../environment")
 
 let config
 
@@ -14,6 +15,22 @@ exports.getConfig = () => {
 
 exports.afterAll = () => {
   config.end()
+}
+
+exports.runInProd = async fn => {
+  env._set("NODE_ENV", "production")
+  env._set("USE_QUOTAS", 1)
+  let error
+  try {
+    await fn()
+  } catch (err) {
+    error = err
+  }
+  env._set("NODE_ENV", "jest")
+  env._set("USE_QUOTAS", null)
+  if (error) {
+    throw error
+  }
 }
 
 exports.runStep = async function runStep(stepId, inputs) {

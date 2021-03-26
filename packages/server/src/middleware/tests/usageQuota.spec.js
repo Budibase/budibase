@@ -5,7 +5,12 @@ const env = require("../../environment")
 
 jest.mock("../../db")
 jest.mock("../../utilities/usageQuota")
-jest.mock("../../environment")
+jest.mock("../../environment", () => ({
+  isTest: () => true,
+  isProd: () => false,
+  isDev: () => true,
+  _set: () => {},
+}))
 
 class TestConfiguration {
   constructor() {
@@ -32,12 +37,14 @@ class TestConfiguration {
     return this.middleware(this.ctx, this.next)
   }
 
-  cloudHosted(bool) {
+  setProd(bool) {
     if (bool) {
-      env.CLOUD = 1
+      env.isDev = () => false
+      env.isProd = () => true
       this.ctx.auth = { apiKey: "test" }
     } else {
-      env.CLOUD = 0
+      env.isDev = () => true
+      env.isProd = () => false
     }
   }
 
@@ -102,7 +109,7 @@ describe("usageQuota middleware", () => {
 
   it("calculates and persists the correct usage quota for the relevant action", async () => {
     config.setUrl("/rows")
-    config.cloudHosted(true)
+    config.setProd(true)
 
     await config.executeMiddleware()
 
@@ -112,7 +119,7 @@ describe("usageQuota middleware", () => {
 
   it("calculates the correct file size from a file upload call and adds it to quota", async () => {
     config.setUrl("/upload")
-    config.cloudHosted(true)
+    config.setProd(true)
     config.setFiles([
       {
         size: 100
