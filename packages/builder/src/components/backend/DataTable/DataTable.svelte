@@ -1,5 +1,5 @@
 <script>
-  import { tables, views } from 'builderStore/store/backend/'
+  import { tables, views } from 'stores/backend/'
 
   import CreateRowButton from "./buttons/CreateRowButton.svelte"
   import CreateColumnButton from "./buttons/CreateColumnButton.svelte"

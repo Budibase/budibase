@@ -1,6 +1,6 @@
 <script>
   import { store, automationStore } from "builderStore"
-  import { roles } from 'builderStore/store/backend/'
+  import { roles } from 'stores/backend/'
   import { Button } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"

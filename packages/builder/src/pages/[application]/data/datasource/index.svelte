@@ -1,5 +1,5 @@
 <script>
-    import { datasources, tables } from 'builderStore/store/backend/'
+    import { datasources, tables } from 'stores/backend/'
     import { goto } from "@sveltech/routify"
     import { onMount } from "svelte"
 

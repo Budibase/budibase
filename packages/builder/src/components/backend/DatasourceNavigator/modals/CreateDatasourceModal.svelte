@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"

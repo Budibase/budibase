@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { tables, views, database } from 'builderStore/store/backend/'
+  import { tables, views, database } from 'stores/backend/'
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"

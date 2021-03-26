@@ -1,5 +1,5 @@
 <script>
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "./AutomationBindingPanel.svelte"

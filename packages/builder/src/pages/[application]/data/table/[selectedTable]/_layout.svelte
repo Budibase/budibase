@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
 
   if ($params.selectedTable) {
     const table = $tables.list.find(

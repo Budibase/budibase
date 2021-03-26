@@ -1,6 +1,6 @@
 <script>
   import { automationStore } from "builderStore"
-  import { database } from 'builderStore/store/backend/'
+  import { database } from 'stores/backend/'
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"

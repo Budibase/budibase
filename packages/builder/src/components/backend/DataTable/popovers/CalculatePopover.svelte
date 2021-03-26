@@ -1,7 +1,7 @@
 <script>
   import { Button, Select } from "@budibase/bbui"
   
-  import { tables, views } from 'builderStore/store/backend/'
+  import { tables, views } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 

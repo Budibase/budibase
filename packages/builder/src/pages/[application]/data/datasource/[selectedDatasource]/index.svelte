@@ -1,7 +1,7 @@
 <script>
   import { goto, beforeUrlChange } from "@sveltech/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
-  import { datasources, integrations, queries } from 'builderStore/store/backend/'
+  import { datasources, integrations, queries } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"

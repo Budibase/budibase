@@ -1,6 +1,6 @@
 <script>
   import { automationStore } from "builderStore"
-  import { database } from 'builderStore/store/backend/'
+  import { database } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import { Button, Modal } from "@budibase/bbui"

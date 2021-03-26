@@ -1,5 +1,5 @@
 <script>
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources } from 'stores/backend/'
   import { goto, leftover } from "@sveltech/routify"
   import { onMount } from "svelte"
 

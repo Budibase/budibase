@@ -1,6 +1,6 @@
 <script>
   import ViewDataTable from "components/backend/DataTable/ViewDataTable"
-  import { views, database } from 'builderStore/store/backend/'
+  import { views, database } from 'stores/backend/'
 
   $: selectedView = $views.selected
 </script>

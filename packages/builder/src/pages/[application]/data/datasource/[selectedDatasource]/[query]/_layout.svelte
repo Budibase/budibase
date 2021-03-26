@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { queries } from "builderStore/store/backend/"
+  import { queries } from "stores/backend/"
 
   if ($params.query) {
     const query = $queries.list.find(

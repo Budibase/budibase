@@ -15,7 +15,7 @@ import {
   queries,
   database,
   tables,
-} from "builderStore/store/backend/"
+} from "stores/backend/"
 
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
