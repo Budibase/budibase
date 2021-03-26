@@ -272,7 +272,7 @@ exports.search = async function(ctx) {
   }
 
   let searchString
-  if (ctx.query.raw && ctx.query.raw !== "") {
+  if (ctx.query && ctx.query.raw && ctx.query.raw !== "") {
     searchString = queryBuilder.complete(query["RAW"])
   } else {
     // make all strings a starts with operation rather than pure equality
