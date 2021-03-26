@@ -1,7 +1,7 @@
 <script>
   import { store, allScreens } from "builderStore"
-  import { tables } from 'builderStore/store/backend/'
-  import { roles } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
+  import { roles } from 'stores/backend/'
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"

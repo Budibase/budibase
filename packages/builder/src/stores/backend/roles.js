@@ -1,7 +1,8 @@
 import { writable } from "svelte/store"
-import api from "../../api"
+import api from "builderStore/api"
 
-function createRolesStore() {
+
+export function createRolesStore() {
   const { subscribe, set } = writable([])
 
   return {

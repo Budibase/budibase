@@ -1,6 +1,6 @@
 <script>
   import { store, allScreens } from "builderStore"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

@@ -4,7 +4,7 @@ import { store } from "builderStore"
 import {
   tables as tablesStore,
   queries as queriesStores,
-} from "builderStore/store/backend/"
+} from "stores/backend/"
 import { findComponentPath } from "./storeUtils"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"

@@ -4,7 +4,7 @@
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { roles } from 'builderStore/store/backend/'
+  import { roles } from 'stores/backend/'
 
   let basePermissions = []
   let selectedRole = {}

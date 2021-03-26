@@ -7,7 +7,7 @@
     selectedAccessRole,
     screenSearchString,
   } from "builderStore"
-  import { roles } from 'builderStore/store/backend/'
+  import { roles } from 'stores/backend/'
   import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"

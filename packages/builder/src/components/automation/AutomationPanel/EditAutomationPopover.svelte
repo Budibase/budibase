@@ -1,7 +1,7 @@
 <script>    
   import { goto } from "@sveltech/routify"
   import { automationStore } from "builderStore"
-  import { database } from 'builderStore/store/backend/'
+  import { database } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"

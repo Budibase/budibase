@@ -1,8 +1,8 @@
 import { writable, get } from "svelte/store"
 import { tables } from "./"
-import api from "../../api"
+import api from "builderStore/api"
 
-function createViewsStore() {
+export function createViewsStore() {
   const { subscribe, update } = writable({
     list: [],
     selected: null,

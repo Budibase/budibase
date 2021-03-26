@@ -1,8 +1,8 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
-  import { views as viewsStore } from 'builderStore/store/backend/'
-  import { tables } from 'builderStore/store/backend/'
+  import { views as viewsStore } from 'stores/backend/'
+  import { tables } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 

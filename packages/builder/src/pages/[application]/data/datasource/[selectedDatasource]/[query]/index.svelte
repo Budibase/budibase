@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { database, queries } from 'builderStore/store/backend/'
+  import { database, queries } from 'stores/backend/'
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
   async function fetchQueryConfig() {

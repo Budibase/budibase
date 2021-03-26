@@ -1,5 +1,5 @@
 <script>
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
   import api from "builderStore/api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"

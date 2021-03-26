@@ -1,5 +1,5 @@
 <script>
-  import { roles } from 'builderStore/store/backend/'
+  import { roles } from 'stores/backend/'
 
   export let roleId
 

@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store"
 import { views } from "./"
 
-function createRowsStore() {
+export function createRowsStore() {
   const { subscribe } = writable([])
 
   return {

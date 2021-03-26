@@ -1,9 +1,10 @@
 import { writable, get } from "svelte/store"
 import { views } from "./"
 import { cloneDeep } from "lodash/fp"
-import api from "../../api"
+import api from "builderStore/api"
 
-function createTablesStore() {
+
+export function createTablesStore() {
   const store = writable({
     list: [],
     selected: {},

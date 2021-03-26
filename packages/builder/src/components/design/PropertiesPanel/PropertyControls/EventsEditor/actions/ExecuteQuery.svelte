@@ -1,7 +1,7 @@
 <script>
   import { Select, Label, Spacer } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
-  import { datasources, integrations, queries } from 'builderStore/store/backend/'
+  import { datasources, integrations, queries } from 'stores/backend/'
   import { getBindableProperties } from "builderStore/dataBinding"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"

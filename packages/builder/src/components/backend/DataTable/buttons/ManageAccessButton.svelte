@@ -1,6 +1,6 @@
 <script>
   import { TextButton, Popover } from "@budibase/bbui"
-  import { permissions } from 'builderStore/store/backend/'
+  import { permissions } from 'stores/backend/'
   import ManageAccessPopover from "../popovers/ManageAccessPopover.svelte"
 
   export let resourceId

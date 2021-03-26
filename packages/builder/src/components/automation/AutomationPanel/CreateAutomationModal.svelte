@@ -1,6 +1,6 @@
 <script>
   import { automationStore } from "builderStore"
-  import { database } from 'builderStore/store/backend/'
+  import { database } from 'stores/backend/'
   import { goto } from "@sveltech/routify"
   import { notifier } from "builderStore/store/notifications"
   import { Input, ModalContent } from "@budibase/bbui"

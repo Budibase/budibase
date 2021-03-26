@@ -9,7 +9,7 @@
     Radio,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
 
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {

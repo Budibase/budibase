@@ -1,7 +1,7 @@
 <script>
   import api from "builderStore/api"
   import Table from "./Table.svelte"
-  import { tables } from 'builderStore/store/backend/'
+  import { tables } from 'stores/backend/'
 
   export let tableId
   export let rowId

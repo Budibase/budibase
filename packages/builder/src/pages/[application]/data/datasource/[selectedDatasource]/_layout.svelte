@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { datasources } from 'builderStore/store/backend/'
+  import { datasources } from 'stores/backend/'
 
   if ($params.selectedDatasource) {
     const datasource = $datasources.list.find(
