@@ -132,6 +132,10 @@
 
     if (destroyed) return
 
+    CodeMirror.commands.autocomplete = function(cm) {
+      CodeMirror.showHint(cm, CodeMirror.hint.javascript)
+    }
+
     editor = CodeMirror.fromTextArea(refs.editor, opts)
 
     editor.on("change", instance => {

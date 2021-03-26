@@ -27,7 +27,7 @@
     notifier.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
-      $goto('./datasource')
+      $goto("./datasource")
     }
     hideEditor()
   }

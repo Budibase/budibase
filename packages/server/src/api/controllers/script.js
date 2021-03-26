@@ -1,23 +1,21 @@
-const CouchDB = require("../../db")
+const fetch = require("node-fetch")
 const vm = require("vm")
 
 class ScriptExecutor {
-  constructor(script) {
-    this.script = script
+  constructor(body) {
+    this.script = new vm.Script(body.script)
+    this.context = vm.createContext(body.context)
+    this.context.fetch = fetch
   }
 
   execute() {
-    vm.runInNewContext(this.script, {
-      require: require,
-      console: console,
-    })
+    this.script.runInContext(this.context)
+    return this.context
   }
 }
 
 exports.execute = async function(ctx) {
-  const appId = ctx.user.appId
-
-  const executor = new ScriptExecutor(ctx.request.body.script)
+  const executor = new ScriptExecutor(ctx.request.body)
 
   const result = executor.execute()
 

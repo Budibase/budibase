@@ -59,7 +59,6 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, jwtPayload.roleId),
     }
   } catch (err) {
-    console.log(err)
     if (authType === AuthTypes.BUILDER) {
       clearCookie(ctx)
       ctx.status = 200

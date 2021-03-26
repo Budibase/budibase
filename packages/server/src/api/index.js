@@ -3,9 +3,12 @@ const authenticated = require("../middleware/authenticated")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
-const { isDev } = require("../utilities")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
+const bullboard = require("bull-board")
+const expressApp = require("express")()
+
+expressApp.use("/bulladmin", bullboard.router)
 
 const router = new Router()
 const env = require("../environment")
@@ -29,8 +32,12 @@ router
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
-    ctx.isDev = isDev()
     await next()
+  })
+  .use("/bulladmin", ctx => {
+    ctx.status = 200
+    ctx.respond = false
+    expressApp(ctx.req, ctx.res)
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
@@ -68,8 +75,6 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-if (!env.SELF_HOSTED && !env.CLOUD) {
-  router.redirect("/", "/_builder")
-}
+router.redirect("/", "/_builder")
 
 module.exports = router

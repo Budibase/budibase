@@ -35,5 +35,6 @@
     "test:e2e:ci": "lerna run cy:ci",
     "build:docker": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
     "build:docker:staging": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh staging && cd -"
-  }
+  },
+  "dependencies": {}
 }

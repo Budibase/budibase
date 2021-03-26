@@ -7,6 +7,8 @@
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
+  import Editor from "components/integration/QueryEditor.svelte"
+  import CodeEditorModal from "./CodeEditorModal.svelte"
 
   export let block
   export let webhookModal
@@ -80,6 +82,17 @@
       <WebhookDisplay value={block.inputs[key]} />
     {:else if value.customType === 'triggerSchema'}
       <SchemaSetup bind:value={block.inputs[key]} />
+    {:else if value.customType === 'code'}
+      <CodeEditorModal>
+        <pre>{JSON.stringify(bindings, null, 2)}</pre>
+        <Editor
+          mode="javascript"
+          on:change={e => { 
+            block.inputs[key] = e.detail.value
+          }}
+          value={block.inputs[key]}
+        />
+      </CodeEditorModal>
     {:else if value.type === 'string' || value.type === 'number'}
       <DrawerBindableInput
         panel={AutomationBindingPanel}

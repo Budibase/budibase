@@ -1,8 +1,15 @@
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-const fs = require("fs")
-const { resolve, join } = require("path")
-const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
+
+jest.mock("../../../utilities/fileSystem/utilities", () => ({
+  ...jest.requireActual("../../../utilities/fileSystem/utilities"),
+  retrieve: () => {
+    const { join } = require("path")
+    const library = join("@budibase", "standard-components")
+    const path = require.resolve(library).split(join("dist", "index.js"))[0] + "manifest.json"
+    return JSON.stringify(require(path))
+  }
+}))
 
 describe("/component", () => {
   let request = setup.getRequest()
@@ -14,23 +21,8 @@ describe("/component", () => {
     await config.init()
   })
 
-  function mock() {
-    const manifestFile = "manifest.json"
-    const appId = config.getAppId()
-    const libraries = [join("@budibase", "standard-components")]
-    for (let library of libraries) {
-      let appDirectory = resolve(budibaseAppsDir(), appId, "node_modules", library, "package")
-      fs.mkdirSync(appDirectory, { recursive: true })
-
-      const file = require.resolve(library).split(join("dist", "index.js"))[0] + manifestFile
-      fs.copyFileSync(file, join(appDirectory, manifestFile))
-    }
-  }
-
   describe("fetch definitions", () => {
     it("should be able to fetch definitions", async () => {
-      // have to "mock" the files required
-      mock()
       const res = await request
         .get(`/${config.getAppId()}/components/definitions`)
         .set(config.defaultHeaders())
