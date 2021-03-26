@@ -2,8 +2,6 @@ const Router = require("@koa/router")
 const authenticated = require("../middleware/authenticated")
 const compress = require("koa-compress")
 const zlib = require("zlib")
-const { budibaseAppsDir } = require("../utilities/budibaseDir")
-const { isDev } = require("../utilities")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 
@@ -25,11 +23,9 @@ router
   )
   .use(async (ctx, next) => {
     ctx.config = {
-      latestPackagesFolder: budibaseAppsDir(),
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
-    ctx.isDev = isDev()
     await next()
   })
   .use("/health", ctx => (ctx.status = 200))
@@ -68,8 +64,6 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-if (!env.SELF_HOSTED && !env.CLOUD) {
-  router.redirect("/", "/_builder")
-}
+router.redirect("/", "/_builder")
 
 module.exports = router
