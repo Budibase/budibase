@@ -17,7 +17,7 @@ const {
 const { FieldTypes } = require("../../constants")
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
-const searchController = require("./search")
+const { QueryBuilder, search } = require("./search/utils")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -264,23 +264,29 @@ exports.search = async function(ctx) {
   } = ctx.request.body
   const tableId = ctx.params.tableId
 
-  const queryBuilder = new searchController.QueryBuilder(appId)
+  const queryBuilder = new QueryBuilder(appId)
     .setLimit(pageSize)
     .addTable(tableId)
   if (bookmark) {
     queryBuilder.setBookmark(bookmark)
   }
 
-  // make all strings a starts with operation rather than pure equality
-  for (const [key, queryVal] of Object.entries(query)) {
-    if (typeof queryVal === "string") {
-      queryBuilder.addString(key, queryVal)
-    } else {
-      queryBuilder.addEqual(key, queryVal)
+  let searchString
+  if (ctx.query.raw && ctx.query.raw !== "") {
+    searchString = queryBuilder.complete(query["RAW"])
+  } else {
+    // make all strings a starts with operation rather than pure equality
+    for (const [key, queryVal] of Object.entries(query)) {
+      if (typeof queryVal === "string") {
+        queryBuilder.addString(key, queryVal)
+      } else {
+        queryBuilder.addEqual(key, queryVal)
+      }
     }
+    searchString = queryBuilder.complete()
   }
 
-  const response = await searchController.search(queryBuilder.complete())
+  const response = await search(searchString)
 
   // delete passwords from users
   if (tableId === ViewNames.USERS) {
