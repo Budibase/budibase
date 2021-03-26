@@ -95,7 +95,7 @@ class QueryBuilder {
     if (this.query.range) {
       build(
         this.query.range,
-        (key, value) => `${key}:[${value[0]} TO ${value[1]}]`
+        (key, value) => `${key}:[${value.low} TO ${value.high}]`
       )
     }
     if (this.query.fuzzy) {
