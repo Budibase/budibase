@@ -2,8 +2,11 @@ const CouchDB = require("../../db")
 const env = require("../../environment")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const packageJson = require("../../../package.json")
-const { createLinkView } = require("../../db/linkedRows")
-const { createRoutingView } = require("../../utilities/routing")
+const {
+  createLinkView,
+  createRoutingView,
+  createAllSearchIndex,
+} = require("../../db/views/staticViews")
 const {
   getTemplateStream,
   createApp,
@@ -92,6 +95,7 @@ async function createInstance(template) {
   // add view for linked rows
   await createLinkView(appId)
   await createRoutingView(appId)
+  await createAllSearchIndex(appId)
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files

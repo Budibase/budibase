@@ -30,7 +30,6 @@ services:
       - ./envoy.dev.yaml:/etc/envoy/envoy.yaml
     ports:
       - "${MAIN_PORT}:10000"
-      #- "9901:9901"
     depends_on:
       - minio-service
       - couchdb-service
@@ -38,18 +37,17 @@ services:
   couchdb-service:
     container_name: budi-couchdb-dev
     restart: always
-    image: apache/couchdb:3.0
+    image: ibmcom/couchdb3
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
-      #- "4369:4369"
-      #- "9100:9100"
     volumes:
-      - couchdb_data:/opt/couchdb/data
+      - couchdb3_data:/opt/couchdb/data
   
   couch-init:
+    container_name: budi-couchdb-init-dev
     image: curlimages/curl
     environment:
       PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
@@ -66,9 +64,8 @@ services:
     volumes:
       - redis_data:/data
 
-
 volumes:
-  couchdb_data:
+  couchdb3_data:
     driver: local
   minio_data:
     driver: local

@@ -106,3 +106,7 @@ exports.getAllApps = async () => {
       .map(({ value }) => value)
   }
 }
+
+exports.checkSlashesInUrl = url => {
+  return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
+}
