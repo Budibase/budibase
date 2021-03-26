@@ -1,22 +1,24 @@
+const { SearchIndexes } = require("../../../db/utils")
+const { checkSlashesInUrl } = require("../../../utilities")
+const env = require("../../../environment")
 const fetch = require("node-fetch")
-const { SearchIndexes } = require("../../db/utils")
-const { checkSlashesInUrl } = require("../../utilities")
-const env = require("../../environment")
 
-function buildSearchUrl(
-  appId,
-  query,
-  bookmark = null,
-  limit = 50,
-  includeDocs = true
-) {
+/**
+ * Given a set of inputs this will generate the URL which is to be sent to the search proxy in CouchDB.
+ * @param {string} appId The ID of the app which we will be searching within.
+ * @param {string} query The lucene query string which is to be used for searching.
+ * @param {string|null} bookmark If there were more than the limit specified can send the bookmark that was
+ * returned with query for next set of search results.
+ * @param {number} limit The number of entries to return per query.
+ * @param {boolean} excludeDocs By default full rows are returned, if required this can be disabled.
+ * @return {string} The URL which a GET can be performed on to receive results.
+ */
+function buildSearchUrl({ appId, query, bookmark, excludeDocs, limit = 50 }) {
   let url = `${env.COUCH_DB_URL}/${appId}/_design/database/_search`
   url += `/${SearchIndexes.ROWS}?q=${query}`
-  if (includeDocs) {
+  url += `&limit=${limit}`
+  if (!excludeDocs) {
     url += "&include_docs=true"
-  }
-  if (limit) {
-    url += `&limit=${limit}`
   }
   if (bookmark) {
     url += `&bookmark=${bookmark}`
@@ -77,7 +79,7 @@ class QueryBuilder {
     return this
   }
 
-  complete() {
+  complete(rawQuery = null) {
     let output = ""
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
@@ -101,11 +103,17 @@ class QueryBuilder {
     if (this.query.fuzzy) {
       build(this.query.fuzzy, (key, value) => `${key}:${value}~`)
     }
-    return buildSearchUrl(this.appId, output, this.bookmark, this.limit)
+    if (rawQuery) {
+      output = output.length === 0 ? rawQuery : `&${rawQuery}`
+    }
+    return buildSearchUrl({
+      appId: this.appId,
+      query: output,
+      bookmark: this.bookmark,
+      limit: this.limit,
+    })
   }
 }
-
-exports.QueryBuilder = QueryBuilder
 
 exports.search = async query => {
   const response = await fetch(query, {
@@ -124,15 +132,5 @@ exports.search = async query => {
   return output
 }
 
-exports.rowSearch = async ctx => {
-  // this can't be done through pouch, have to reach for trusty node-fetch
-  const appId = ctx.user.appId
-  const bookmark = ctx.params.bookmark
-  let url
-  if (ctx.params.query) {
-    url = new QueryBuilder(appId, ctx.params.query, bookmark).complete()
-  } else if (ctx.params.raw) {
-    url = buildSearchUrl(appId, ctx.params.raw, bookmark)
-  }
-  ctx.body = await exports.search(url)
-}
+exports.QueryBuilder = QueryBuilder
+exports.buildSearchUrl = buildSearchUrl

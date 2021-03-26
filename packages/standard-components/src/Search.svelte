@@ -48,7 +48,6 @@
     if (table) {
       const tableDef = await API.fetchTableDefinition(table)
       schema = tableDef.schema
-      lastBookmark = mark
       const output = await API.searchTableData({
         tableId: table,
         search: parsedSearch,
@@ -70,7 +69,13 @@
 
   function previousPage() {
     nextBookmark = bookmark
-    bookmark = lastBookmark
+    if (lastBookmark !== bookmark) {
+      bookmark = lastBookmark
+    } else {
+      // special case for going back to beginning
+      bookmark = null
+      lastBookmark = null
+    }
   }
 </script>
 
@@ -135,10 +140,10 @@
       {/if}
     {/if}
     <div class="pagination">
-      {#if bookmark != null}
+      {#if lastBookmark != null || bookmark != null}
         <Button primary on:click={previousPage}>Back</Button>
       {/if}
-      {#if rows.length === pageSize}
+      {#if nextBookmark != null}
         <Button primary on:click={nextPage}>Next</Button>
       {/if}
     </div>
