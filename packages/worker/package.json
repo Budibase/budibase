@@ -1,5 +1,5 @@
 {
-  "name": "@budibase/deployment",
+  "name": "@budibase/worker",
   "email": "hi@budibase.com",
   "version": "0.8.9",
   "description": "Budibase Deployment Server",
@@ -12,13 +12,16 @@
     "budibase"
   ],
   "scripts": {
-    "run:docker": "node src/index.js"
+    "run:docker": "node src/index.js",
+    "dev:stack:init": "node ./scripts/dev/manage.js init",
+    "dev:builder": "npm run dev:stack:init && nodemon src/index.js"
   },
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
+    "dotenv": "^8.2.0",
     "got": "^11.8.1",
     "joi": "^17.2.1",
     "koa": "^2.7.0",
@@ -33,5 +36,8 @@
     "pouchdb": "^7.2.2",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }
