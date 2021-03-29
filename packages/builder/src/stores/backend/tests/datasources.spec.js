@@ -32,12 +32,11 @@ const SAVE_DATASOURCE = {
 import { createDatasourcesStore } from "../datasources"
 import { queries } from '../queries'
 
-describe("Automation Data Object", () => {
+describe("Datasources Store", () => {
   let store = createDatasourcesStore()
 
   beforeEach(() => {
     api.get.mockReturnValueOnce({ json: () => SOME_DATASOURCE})
-    api.delete.mockReturnValueOnce({status: 200, message: 'Datasource deleted.'})    
     store.init()
   })
 
@@ -81,6 +80,8 @@ describe("Automation Data Object", () => {
     expect(value.list).toEqual(expect.arrayContaining([SAVE_DATASOURCE]))
   })
   it("deletes a datasource, updates the store and returns status message", async () => {
+    api.delete.mockReturnValueOnce({status: 200, message: 'Datasource deleted.'})    
+
     await store.fetch()
     await store.delete(SOME_DATASOURCE[0])
     const value = await get(store)
