@@ -1,26 +1,57 @@
-// import api from 'builderStore/api'
+import { get } from 'svelte/store'
+import api from 'builderStore/api'
 
-// jest.mock('builderStore/api');
+jest.mock('builderStore/api');
 
-// const PERMISSIONS_FOR_RESOURCE = {
-//     "write": "BASIC",
-//     "read": "BASIC"
-// }
+import { SOME_QUERY, SAVE_QUERY_RESPONSE } from './fixtures/queries'
 
-// import { createQueriesStore } from "../queries"
+import { createQueriesStore } from "../queries"
+import { datasources } from '../datasources'
 
-// describe("Queries Store", () => {
-//   const store = createQueriesStore()
+describe("Queries Store", () => {
+  let store = createQueriesStore()
 
-//   it("fetches permissions for specific resource", async () => {
-//     api.get.mockReturnValueOnce({ json: () => PERMISSIONS_FOR_RESOURCE})
+  beforeEach(async () => {
+    api.get.mockReturnValue({ json: () => [SOME_QUERY]})
+    await store.init()
+  })
 
-//     const resourceId = "ta_013657543b4043b89dbb17e9d3a4723a"
+  it("Initialises correctly", async () => {
+    api.get.mockReturnValue({ json: () => [SOME_QUERY]})
+  
+    await store.init()
+    expect(get(store)).toEqual({ list: [SOME_QUERY], selected: null})
+  })
 
-//     const permissions = await store.forResource(resourceId)
+  it("fetches all the queries", async () => {
+    api.get.mockReturnValue({ json: () => [SOME_QUERY]})
 
-//     expect(api.get).toBeCalledWith(`/api/permission/${resourceId}`)
-//     expect(permissions).toEqual(PERMISSIONS_FOR_RESOURCE)
-    
-//   })
-// })
+    await store.fetch()
+    expect(get(store)).toEqual({ list: [SOME_QUERY], selected: null})  
+  })
+
+  it("selects a query and updates selected datasource", async () => {
+    await store.select(SOME_QUERY)
+  
+    expect(get(store).selected).toEqual(SOME_QUERY._id) 
+    expect(get(datasources).selected).toEqual(SOME_QUERY.datasourceId)
+  })
+
+  it("saves the datasource, updates the store and returns status message", async () => {
+    api.post.mockReturnValue({ json: () => SAVE_QUERY_RESPONSE})    
+
+    await store.select(SOME_QUERY.datasourceId, SOME_QUERY)
+
+    expect(get(store).list).toEqual(expect.arrayContaining([SOME_QUERY]))
+  })
+  it("deletes a datasource, updates the store and returns status message", async () => {
+    api.get.mockReturnValue({ json: () => SOME_QUERY})
+
+    await store.fetch()
+
+    api.delete.mockReturnValue({status: 200, message: 'Datasource deleted.'})  
+
+    await store.delete(SOME_QUERY)
+    expect(get(store)).toEqual({ list: [], selected: null})  
+  })
+})
