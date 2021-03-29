@@ -1486,19 +1486,6 @@
         "key": "dataProvider"
       },
       {
-        "type": "multifield",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": "dataProvider",
-        "placeholder": "All columns"
-      },
-      {
-        "type": "boolean",
-        "label": "Auto Cols.",
-        "key": "showAutoColumns",
-        "defaultValue": false
-      },
-      {
         "type": "number",
         "label": "Row Count",
         "key": "rowCount",
@@ -1548,6 +1535,19 @@
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "dataProvider",
+        "placeholder": "All columns"
+      },
+      {
+        "type": "boolean",
+        "label": "Auto Cols.",
+        "key": "showAutoColumns",
+        "defaultValue": false
       }
     ],
     "dataContext": {
