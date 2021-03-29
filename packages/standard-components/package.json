@@ -50,7 +50,7 @@
     "@spectrum-css/label": "^2.0.9",
     "@spectrum-css/menu": "^3.0.1",
     "@spectrum-css/page": "^3.0.1",
-    "@spectrum-css/picker": "^1.0.1",
+    "@spectrum-css/picker": "^1.0.0",
     "@spectrum-css/popover": "^3.0.1",
     "@spectrum-css/stepper": "^3.0.1",
     "@spectrum-css/table": "^3.0.1",
