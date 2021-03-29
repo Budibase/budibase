@@ -1,5 +1,6 @@
 exports.CommandWords = {
   HOSTING: "hosting",
+  ANALYTICS: "analytics",
   HELP: "help",
 }
 
