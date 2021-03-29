@@ -21,6 +21,7 @@
   "dependencies": {
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "got": "^11.8.1",
     "joi": "^17.2.1",
@@ -33,7 +34,7 @@
     "koa-static": "^5.0.0",
     "node-fetch": "^2.6.1",
     "pino-pretty": "^4.0.0",
-    "pouchdb": "^7.2.2",
+    "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
   },

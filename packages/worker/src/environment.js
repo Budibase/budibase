@@ -16,6 +16,8 @@ module.exports = {
   MINIO_URL: process.env.MINIO_URL,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   LOG_LEVEL: process.env.LOG_LEVEL,
+  JWT_SECRET: process.env.JWT_SECRET,
+  SALT_ROUNDS: process.env.SALT_ROUNDS,
   /* TODO: to remove - once deployment removed */
   SELF_HOST_KEY: process.env.SELF_HOST_KEY,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USERNAME,
