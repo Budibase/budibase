@@ -10,6 +10,7 @@
     type="checkbox"
     class="spectrum-Checkbox-input"
     id="checkbox-1"
+    disabled
     checked={!!value} />
   <span class="spectrum-Checkbox-box">
     <svg
