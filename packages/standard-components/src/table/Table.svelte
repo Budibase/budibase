@@ -1,4 +1,5 @@
 <script>
+  import { fade } from "svelte/transition"
   import "@spectrum-css/table/dist/index-vars.css"
   import { getContext } from "svelte"
   import CellRenderer from "./CellRenderer.svelte"
@@ -27,9 +28,11 @@
   // Table state
   $: loaded = dataProvider?.loaded ?? false
   $: rows = dataProvider?.rows ?? []
-  $: visibleRowCount = Math.min(rows.length, rowCount || maxRows, maxRows)
+  $: visibleRowCount = loaded
+    ? Math.min(rows.length, rowCount || maxRows, maxRows)
+    : Math.min(8, rowCount || maxRows)
   $: scroll = rows.length > visibleRowCount
-  $: contentStyle = getContentStyle(visibleRowCount, scroll)
+  $: contentStyle = getContentStyle(visibleRowCount, scroll || !loaded)
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: schema = dataProvider?.schema ?? {}
   $: fields = getFields(schema, columns, showAutoColumns)
@@ -45,8 +48,8 @@
     rows.length
   )
 
-  const getContentStyle = (visibleRows, scroll) => {
-    if (!scroll) {
+  const getContentStyle = (visibleRows, useFixedHeight) => {
+    if (!useFixedHeight) {
       return ""
     }
     return `height: ${headerHeight - 1 + visibleRows * (rowHeight + 1)}px;`
@@ -123,7 +126,9 @@
   }
 </script>
 
-{#if loaded}
+{#if !loaded}
+  <div class="content" style={contentStyle} />
+{:else}
   <div use:styleable={$component.styles}>
     <div
       on:scroll={onScroll}
@@ -166,9 +171,7 @@
               <tr
                 class="spectrum-Table-row"
                 class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
-                {#if idx < firstVisibleRow || idx > lastVisibleRow}
-
-                {:else}
+                {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
                   {#if $component.children}
                     <td
                       class="spectrum-Table-cell spectrum-Table-cell--divider">
