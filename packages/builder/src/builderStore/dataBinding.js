@@ -362,7 +362,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * {{ literal [componentId] }}
  */
 function extractLiteralHandlebarsID(value) {
-  return value?.match(/{{\s*literal[\s\[]+([a-fA-F0-9]+)[\s\]]*}}/)?.[1]
+  return value?.match(/{{\s*literal[\s[]+([a-fA-F0-9]+)[\s\]]*}}/)?.[1]
 }
 
 /**
