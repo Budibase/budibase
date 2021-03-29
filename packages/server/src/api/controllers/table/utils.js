@@ -57,8 +57,8 @@ exports.makeSureTableUpToDate = (table, tableToSave) => {
   return tableToSave
 }
 
-exports.handleDataImport = async (user, table, dataImport) => {
-  const db = new CouchDB(user.appId)
+exports.handleDataImport = async (appId, user, table, dataImport) => {
+  const db = new CouchDB(appId)
   if (dataImport && dataImport.csvString) {
     // Populate the table with rows imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
@@ -152,7 +152,7 @@ class TableSaveFunctions {
     this.db = db
     this.ctx = ctx
     if (this.ctx && this.ctx.user) {
-      this.appId = this.ctx.user.appId
+      this.appId = this.ctx.appId
     }
     this.oldTable = oldTable
     this.dataImport = dataImport
@@ -184,6 +184,7 @@ class TableSaveFunctions {
   async after(table) {
     table = await exports.handleSearchIndexes(this.appId, table)
     table = await exports.handleDataImport(
+      this.appId,
       this.ctx.user,
       table,
       this.dataImport

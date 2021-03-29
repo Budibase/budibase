@@ -60,7 +60,7 @@ async function findRow(db, appId, tableId, rowId) {
 }
 
 exports.patch = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   let dbRow = await db.get(ctx.params.rowId)
   let dbTable = await db.get(dbRow.tableId)
@@ -121,7 +121,7 @@ exports.patch = async function(ctx) {
 }
 
 exports.save = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
@@ -197,7 +197,7 @@ exports.save = async function(ctx) {
 }
 
 exports.fetchView = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
@@ -256,7 +256,7 @@ exports.fetchView = async function(ctx) {
 }
 
 exports.search = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   const {
     query,
@@ -303,7 +303,7 @@ exports.search = async function(ctx) {
 }
 
 exports.fetchTableRows = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
 
   // special case for users, fetch through the user controller
@@ -324,7 +324,7 @@ exports.fetchTableRows = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   try {
     const table = await db.get(ctx.params.tableId)
@@ -336,7 +336,7 @@ exports.find = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   const row = await db.get(ctx.params.rowId)
   if (row.tableId !== ctx.params.tableId) {
@@ -358,7 +358,7 @@ exports.destroy = async function(ctx) {
 
 exports.validate = async function(ctx) {
   const errors = await validate({
-    appId: ctx.user.appId,
+    appId: ctx.appId,
     tableId: ctx.params.tableId,
     row: ctx.request.body,
   })
@@ -388,7 +388,7 @@ async function validate({ appId, tableId, row, table }) {
 }
 
 exports.fetchEnrichedRow = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
@@ -433,7 +433,7 @@ exports.fetchEnrichedRow = async function(ctx) {
 }
 
 async function bulkDelete(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const { rows } = ctx.request.body
   const db = new CouchDB(appId)
 

@@ -5,7 +5,7 @@ const { getRole } = require("../../utilities/security/roles")
 const { UserStatus } = require("../../constants")
 
 exports.fetch = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
+  const database = new CouchDB(ctx.appId)
   const users = (
     await database.allDocs(
       getUserParams(null, {
@@ -20,15 +20,16 @@ exports.fetch = async function(ctx) {
   ctx.body = users
 }
 
+// TODO: need to replace this with something that purely manages metadata
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const { email, password, roleId } = ctx.request.body
 
   if (!email || !password) {
     ctx.throw(400, "email and Password Required.")
   }
 
-  const role = await getRole(ctx.user.appId, roleId)
+  const role = await getRole(ctx.appId, roleId)
 
   if (!role) ctx.throw(400, "Invalid Role")
 
@@ -67,7 +68,7 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const user = ctx.request.body
   let dbUser
   if (user.email && !user._id) {
@@ -94,7 +95,7 @@ exports.update = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
+  const database = new CouchDB(ctx.appId)
   await database.destroy(generateUserID(ctx.params.email))
   ctx.body = {
     message: `User ${ctx.params.email} deleted.`,
@@ -103,7 +104,7 @@ exports.destroy = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
+  const database = new CouchDB(ctx.appId)
   let lookup = ctx.params.email
     ? generateUserID(ctx.params.email)
     : ctx.params.userId

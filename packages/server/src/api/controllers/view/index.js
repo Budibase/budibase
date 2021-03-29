@@ -7,7 +7,7 @@ const { ViewNames } = require("../../../db/utils")
 
 const controller = {
   fetch: async ctx => {
-    const db = new CouchDB(ctx.user.appId)
+    const db = new CouchDB(ctx.appId)
     const designDoc = await db.get("_design/database")
     const response = []
 
@@ -25,7 +25,7 @@ const controller = {
     ctx.body = response
   },
   save: async ctx => {
-    const db = new CouchDB(ctx.user.appId)
+    const db = new CouchDB(ctx.appId)
     const { originalName, ...viewToSave } = ctx.request.body
     const designDoc = await db.get("_design/database")
     const view = viewTemplate(viewToSave)
@@ -66,7 +66,7 @@ const controller = {
     }
   },
   destroy: async ctx => {
-    const db = new CouchDB(ctx.user.appId)
+    const db = new CouchDB(ctx.appId)
     const designDoc = await db.get("_design/database")
     const viewName = decodeURI(ctx.params.viewName)
     const view = designDoc.views[viewName]
@@ -81,7 +81,7 @@ const controller = {
     ctx.body = view
   },
   exportView: async ctx => {
-    const db = new CouchDB(ctx.user.appId)
+    const db = new CouchDB(ctx.appId)
     const designDoc = await db.get("_design/database")
     const viewName = decodeURI(ctx.query.view)
 

@@ -84,7 +84,7 @@ exports.uploadFile = async function(ctx) {
 
     return prepareUpload({
       file,
-      s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+      s3Key: `assets/${ctx.appId}/attachments/${processedFileName}`,
       bucket: "prod-budi-app-assets",
     })
   })
@@ -120,7 +120,7 @@ exports.serveApp = async function(ctx) {
 exports.serveAttachment = async function(ctx) {
   await returnObjectStoreFile(
     ctx,
-    join(ctx.user.appId, "attachments", ctx.file)
+    join(ctx.appId, "attachments", ctx.file)
   )
 }
 
@@ -128,7 +128,7 @@ exports.serveAppAsset = async function(ctx) {
   if (env.isDev() || env.isTest()) {
     return send(ctx, ctx.file, { root: budibaseTempDir() })
   }
-  await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
+  await returnObjectStoreFile(ctx, join(ctx.appId, "public", ctx.file))
 }
 
 exports.serveComponentLibrary = async function(ctx) {
