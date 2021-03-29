@@ -35,7 +35,7 @@ export const getDataProviderComponents = (asset, componentId) => {
   // Filter by only data provider components
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
-    return def?.dataContext != null
+    return def?.context != null
   })
 }
 
@@ -113,32 +113,28 @@ const getContextBindings = (asset, componentId) => {
   // Create bindings for each data provider
   dataProviders.forEach(component => {
     const def = store.actions.components.getDefinition(component._component)
-    const contextDefinition = def.dataContext
+    const contextDefinition = def.context
     let schema
     let readablePrefix
 
-    // Forms are an edge case which do not need table schemas
     if (contextDefinition.type === "form") {
+      // Forms do not need table schemas
+      // Their schemas are built from their component field names
       schema = buildFormSchema(component)
       readablePrefix = "Fields"
     } else if (contextDefinition.type === "static") {
+      // Static contexts are fully defined by the components
       schema = {}
       const values = contextDefinition.values || []
       values.forEach(value => {
         schema[value.key] = { name: value.label, type: "string" }
       })
     } else if (contextDefinition.type === "schema") {
-      let datasource
-      const setting = contextDefinition.dataProviderSetting
-      const settingValue = component[setting]
-      const providerId = extractLiteralHandlebarsID(settingValue)
-      const provider = findComponent(asset.props, providerId)
-      datasource = getDatasourceForProvider(asset, provider)
+      // Schema contexts are generated dynamically depending on their data
+      const datasource = getDatasourceForProvider(asset, component)
       if (!datasource) {
         return
       }
-
-      // Get schema and table for the datasource
       const info = getSchemaForDatasource(datasource)
       schema = info.schema
       readablePrefix = info.table?.name

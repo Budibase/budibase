@@ -61,9 +61,8 @@
         "key": "filter"
       }
     ],
-    "dataContext": {
-      "type": "schema",
-      "dataProviderSetting": "dataProvider"
+    "context": {
+      "type": "schema"
     }
   },
   "search": {
@@ -96,7 +95,10 @@
         "key": "noRowsMessage",
         "defaultValue": "No rows found."
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "stackedlist": {
     "name": "Stacked List",
@@ -1125,7 +1127,7 @@
         "defaultValue": false
       }
     ],
-    "dataContext": {
+    "context": {
       "type": "form"
     }
   },
@@ -1446,7 +1448,7 @@
         "key": "limit"
       }
     ],
-    "dataContext": {
+    "context": {
       "type": "static",
       "values":  [
         {
@@ -1548,9 +1550,8 @@
         "defaultValue": false
       }
     ],
-    "dataContext": {
-      "type": "schema",
-      "dataProviderSetting": "dataProvider"
+    "context": {
+      "type": "schema"
     }
   }
 }
