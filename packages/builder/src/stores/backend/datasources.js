@@ -45,13 +45,16 @@ export function createDatasourcesStore(_api = api) {
       return json
     },
     delete: async datasource => {
-      await api.delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
+      const response = await api.delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
+      const json = await response.json()
       update(state => {
         const sources = state.list.filter(
           existing => existing._id !== datasource._id
         )
-        return { sources, selected: null }
+        return { list: sources, selected: null }
       })
+
+      return json
     },
   }
 }
