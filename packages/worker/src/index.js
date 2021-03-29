@@ -32,7 +32,7 @@ destroyable(server)
 
 server.on("close", () => console.log("Server Closed"))
 
-module.exports = server.listen(env.PORT || 4002, async () => {
+module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
 })
 

@@ -43,7 +43,7 @@ async function getMinioSession() {
 
   // make sure the bucket exists
   const objClient = new AWS.S3({
-    endpoint: env.RAW_MINIO_URL,
+    endpoint: env.MINIO_URL,
     region: REGION,
     s3ForcePathStyle: true, // needed with minio?
     params: {
