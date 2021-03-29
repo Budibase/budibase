@@ -3,7 +3,7 @@ import api from "builderStore/api"
 
 
 export function createRolesStore() {
-  const { subscribe, set } = writable([])
+  const { subscribe, update, set } = writable([])
 
   return {
     subscribe,
@@ -12,7 +12,10 @@ export function createRolesStore() {
     },
     delete: async role => {
       const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
-      set(await getRoles())
+      update(state => {
+        state = state.filter(existing => existing._id !== role._id)
+        return state
+      })
       return response
     },
     save: async role => {
