@@ -10,6 +10,11 @@ export function createQueriesStore() {
     subscribe,
     set,
     update,
+    init: async () => {
+      const response = await api.get(`/api/queries`)
+      const json = await response.json()
+      set({ list: json, selected: null })
+    },
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
@@ -54,7 +59,7 @@ export function createQueriesStore() {
       datasources.update(state => ({ ...state, selected: query.datasourceId }))
     },
     delete: async query => {
-      await api.delete(`/api/queries/${query._id}/${query._rev}`)
+      const response = await api.delete(`/api/queries/${query._id}/${query._rev}`)
       update(state => {
         state.list = state.list.filter(existing => existing._id !== query._id)
         if (state.selected === query._id) {
@@ -63,6 +68,7 @@ export function createQueriesStore() {
 
         return state
       })
+      console.log(response)
     },
   }
 }

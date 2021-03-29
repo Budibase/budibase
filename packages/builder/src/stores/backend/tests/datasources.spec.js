@@ -11,8 +11,9 @@ import { queries } from '../queries'
 describe("Datasources Store", () => {
   let store = createDatasourcesStore()
 
-  beforeEach(() => {
-    store.init()
+  beforeEach(async () => {
+    api.get.mockReturnValue({ json: () => [SOME_DATASOURCE]})
+    await store.init()
   })
 
   it("Initialises correctly", async () => {
@@ -35,9 +36,9 @@ describe("Datasources Store", () => {
     expect(get(store).select).toEqual(SOME_DATASOURCE._id)  
   })
 
-  it("resets the queries store when it a new datasource is selected", async () => {
+  it("resets the queries store when new datasource is selected", async () => {
     
-    store.select(SOME_DATASOURCE._id)
+    await store.select(SOME_DATASOURCE._id)
     const queriesValue = get(queries)
     expect(queriesValue.selected).toEqual(null)  
   })

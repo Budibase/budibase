@@ -21,6 +21,5 @@ describe("Permissions Store", () => {
 
     expect(api.get).toBeCalledWith(`/api/permission/${resourceId}`)
     expect(permissions).toEqual(PERMISSIONS_FOR_RESOURCE)
-    
   })
 })
