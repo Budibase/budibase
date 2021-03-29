@@ -80,12 +80,16 @@ exports.AutoFieldSubTypes = {
   AUTO_ID: "autoID",
 }
 
-exports.BUILDER_CONFIG_DB = "builder-config-db"
-exports.HOSTING_DOC = "hosting-doc"
 exports.OBJ_STORE_DIRECTORY = "/app-assets/assets"
 exports.BaseQueryVerbs = {
   CREATE: "create",
   READ: "read",
   UPDATE: "update",
   DELETE: "delete",
+}
+
+exports.ObjectStoreBuckets = {
+  BACKUPS: "backups",
+  APPS: "prod-budi-app-assets",
+  TEMPLATES: "templates",
 }

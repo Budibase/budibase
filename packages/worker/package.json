@@ -33,6 +33,5 @@
     "pouchdb": "^7.2.2",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
-  },
-  "gitHead": "1b95326b20d1352d36305910259228b96a683dc7"
+  }
 }

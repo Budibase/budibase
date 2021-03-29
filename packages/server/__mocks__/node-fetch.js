@@ -30,6 +30,17 @@ module.exports = async (url, opts) => {
       },
       404
     )
+  } else if (url.includes("_search")) {
+    return json({
+      rows: [
+        {
+          doc: {
+            _id: "test",
+          },
+        },
+      ],
+      bookmark: "test",
+    })
   }
   return fetch(url, opts)
 }
