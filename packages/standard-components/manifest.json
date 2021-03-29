@@ -72,7 +72,6 @@
     "icon": "ri-search-line",
     "styleable": true,
     "hasChildren": true,
-    "dataProvider": true,
     "settings": [
       {
         "type": "table",
@@ -1070,7 +1069,6 @@
     "icon": "ri-file-text-line",
     "styleable": true,
     "hasChildren": true,
-    "dataProvider": true,
     "actions": [
       "ValidateForm"
     ],
