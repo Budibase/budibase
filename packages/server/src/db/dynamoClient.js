@@ -1,4 +1,4 @@
-let _ = require("lodash")
+let { merge } = require("lodash")
 let env = require("../environment")
 
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
@@ -38,7 +38,7 @@ class Table {
       params.Key[this._sort] = sort
     }
     if (otherProps) {
-      params = _.merge(params, otherProps)
+      params = merge(params, otherProps)
     }
     let response = await docClient.get(params).promise()
     return response.Item
@@ -77,7 +77,7 @@ class Table {
       params.ConditionExpression += "attribute_exists(#PRIMARY)"
     }
     if (otherProps) {
-      params = _.merge(params, otherProps)
+      params = merge(params, otherProps)
     }
     return docClient.update(params).promise()
   }
@@ -94,7 +94,7 @@ class Table {
       Item: item,
     }
     if (otherProps) {
-      params = _.merge(params, otherProps)
+      params = merge(params, otherProps)
     }
     return docClient.put(params).promise()
   }
@@ -119,7 +119,7 @@ exports.init = endpoint => {
 exports.apiKeyTable = new Table(TableInfo.API_KEYS)
 exports.userTable = new Table(TableInfo.USERS)
 
-if (env.CLOUD) {
+if (env.isProd()) {
   exports.init(`https://dynamodb.${AWS_REGION}.amazonaws.com`)
 } else {
   env._set("AWS_ACCESS_KEY_ID", "KEY_ID")

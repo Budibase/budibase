@@ -1,56 +1,32 @@
-const fs = require("fs")
-const { join } = require("../../utilities/centralPath")
-const readline = require("readline")
-const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const env = require("../../environment")
-const ENV_FILE_PATH = "/.env"
+const builderDB = require("../../db/builder")
 
 exports.fetch = async function(ctx) {
-  ctx.status = 200
-  ctx.body = {
-    budibase: env.BUDIBASE_API_KEY,
-    userId: env.USERID_API_KEY,
+  try {
+    const mainDoc = await builderDB.getBuilderMainDoc()
+    ctx.body = mainDoc.apiKeys ? mainDoc.apiKeys : {}
+  } catch (err) {
+    /* istanbul ignore next */
+    ctx.throw(400, err)
   }
 }
 
 exports.update = async function(ctx) {
-  const key = `${ctx.params.key.toUpperCase()}_API_KEY`
+  const key = ctx.params.key
   const value = ctx.request.body.value
 
-  // set environment variables
-  env._set(key, value)
-
-  // Write to file
-  await updateValues([key, value])
-
-  ctx.status = 200
-  ctx.message = `Updated ${ctx.params.key} API key succesfully.`
-  ctx.body = { [ctx.params.key]: ctx.request.body.value }
-}
-
-async function updateValues([key, value]) {
-  let newContent = ""
-  let keyExists = false
-  let envPath = join(budibaseAppsDir(), ENV_FILE_PATH)
-  const readInterface = readline.createInterface({
-    input: fs.createReadStream(envPath),
-    output: process.stdout,
-    console: false,
-  })
-  readInterface.on("line", function(line) {
-    // Mutate lines and change API Key
-    if (line.startsWith(key)) {
-      line = `${key}=${value}`
-      keyExists = true
+  try {
+    const mainDoc = await builderDB.getBuilderMainDoc()
+    if (mainDoc.apiKeys == null) {
+      mainDoc.apiKeys = {}
     }
-    newContent = `${newContent}\n${line}`
-  })
-  readInterface.on("close", function() {
-    // Write file here
-    if (!keyExists) {
-      // Add API Key if it doesn't exist in the file at all
-      newContent = `${newContent}\n${key}=${value}`
+    mainDoc.apiKeys[key] = value
+    const resp = await builderDB.setBuilderMainDoc(mainDoc)
+    ctx.body = {
+      _id: resp.id,
+      _rev: resp.rev,
     }
-    fs.writeFileSync(envPath, newContent)
-  })
+  } catch (err) {
+    /* istanbul ignore next */
+    ctx.throw(400, err)
+  }
 }

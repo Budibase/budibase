@@ -35,9 +35,9 @@ describe("test the create user action", () => {
   })
 
   it("check usage quota attempts", async () => {
-    env.CLOUD = true
-    await setup.runStep(setup.actions.CREATE_USER.stepId, user)
-    expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "users", 1)
-    env.CLOUD = false
+    await setup.runInProd(async () => {
+      await setup.runStep(setup.actions.CREATE_USER.stepId, user)
+      expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "users", 1)
+    })
   })
 })

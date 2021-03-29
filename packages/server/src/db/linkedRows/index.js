@@ -27,7 +27,7 @@ const EventType = {
 }
 
 exports.EventType = EventType
-// re-export utils here for ease of use
+// re-export search here for ease of use
 exports.IncludeDocs = IncludeDocs
 exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
