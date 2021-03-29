@@ -41,7 +41,6 @@ module.exports = async (ctx, next) => {
     ctx.auth.authenticated = false
     ctx.appId = appId
     ctx.user = {
-      appId,
       role: builtinRoles.PUBLIC,
     }
     await next()
@@ -55,9 +54,10 @@ module.exports = async (ctx, next) => {
     ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
-      appId: appId,
       role: await getRole(appId, jwtPayload.roleId),
     }
+    // appId no longer carried in user, make sure
+    delete ctx.user.appId
   } catch (err) {
     console.log(err)
     if (authType === AuthTypes.BUILDER) {

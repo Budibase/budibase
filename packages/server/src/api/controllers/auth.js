@@ -48,7 +48,7 @@ exports.authenticate = async ctx => {
     // if in prod add the user api key, unless self hosted
     /* istanbul ignore next */
     if (env.isProd() && !env.SELF_HOSTED) {
-      const { apiKey } = await getAPIKey(ctx.user.appId)
+      const { apiKey } = await getAPIKey(ctx.appId)
       payload.apiKey = apiKey
     }
 

@@ -2,7 +2,7 @@ const { QueryBuilder, buildSearchUrl, search } = require("./utils")
 
 exports.rowSearch = async ctx => {
   // this can't be done through pouch, have to reach for trusty node-fetch
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const bookmark = ctx.params.bookmark
   let url
   if (ctx.params.query) {

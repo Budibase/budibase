@@ -34,13 +34,14 @@ function cleanAutomationInputs(automation) {
 
 /**
  * This function handles checking if any webhooks need to be created or deleted for automations.
+ * @param {string} appId The ID of the app in which we are checking for webhooks
  * @param {object} user The user object, including all auth info
  * @param {object|undefined} oldAuto The old automation object if updating/deleting
  * @param {object|undefined} newAuto The new automation object if creating/updating
  * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
-async function checkForWebhooks({ user, oldAuto, newAuto }) {
+async function checkForWebhooks({ appId, user, oldAuto, newAuto }) {
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
   const newTrigger = newAuto ? newAuto.definition.trigger : null
   function isWebhookTrigger(auto) {
@@ -56,7 +57,7 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
     !isWebhookTrigger(newAuto) &&
     oldTrigger.webhookId
   ) {
-    let db = new CouchDB(user.appId)
+    let db = new CouchDB(appId)
     // need to get the webhook to get the rev
     const webhook = await db.get(oldTrigger.webhookId)
     const ctx = {
@@ -86,17 +87,17 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
     const id = ctx.body.webhook._id
     newTrigger.webhookId = id
     newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${user.appId}/${id}`,
-      triggerUrl: `api/webhooks/trigger/${user.appId}/${id}`,
+      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
+      triggerUrl: `api/webhooks/trigger/${appId}/${id}`,
     }
   }
   return newAuto
 }
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   let automation = ctx.request.body
-  automation.appId = ctx.user.appId
+  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
@@ -107,7 +108,11 @@ exports.create = async function(ctx) {
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
-  automation = await checkForWebhooks({ user: ctx.user, newAuto: automation })
+  automation = await checkForWebhooks({
+    appId: ctx.appId,
+    user: ctx.user,
+    newAuto: automation,
+  })
   const response = await db.put(automation)
   automation._rev = response.rev
 
@@ -122,12 +127,13 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   let automation = ctx.request.body
-  automation.appId = ctx.user.appId
+  automation.appId = ctx.appId
   const oldAutomation = await db.get(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
+    appId: ctx.appId,
     user: ctx.user,
     oldAuto: oldAutomation,
     newAuto: automation,
@@ -147,7 +153,7 @@ exports.update = async function(ctx) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const response = await db.allDocs(
     getAutomationParams(null, {
       include_docs: true,
@@ -157,14 +163,18 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const oldAutomation = await db.get(ctx.params.id)
-  await checkForWebhooks({ user: ctx.user, oldAuto: oldAutomation })
+  await checkForWebhooks({
+    appId: ctx.appId,
+    user: ctx.user,
+    oldAuto: oldAutomation,
+  })
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 
@@ -195,11 +205,11 @@ module.exports.getDefinitionList = async function(ctx) {
  *********************/
 
 exports.trigger = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {
     ...ctx.request.body,
-    appId: ctx.user.appId,
+    appId: ctx.appId,
   })
   ctx.status = 200
   ctx.body = {
