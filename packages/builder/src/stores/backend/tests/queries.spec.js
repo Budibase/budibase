@@ -45,12 +45,10 @@ describe("Queries Store", () => {
     expect(get(store).list).toEqual(expect.arrayContaining([SOME_QUERY]))
   })
   it("deletes a datasource, updates the store and returns status message", async () => {
-    api.get.mockReturnValue({ json: () => SOME_QUERY})
-
-    await store.fetch()
-
-    api.delete.mockReturnValue({status: 200, message: 'Datasource deleted.'})  
-
+    console.log('After Fetch: ', get(store))
+    
+    api.delete.mockReturnValue({status: 200, message: `Query deleted.`})  
+    
     await store.delete(SOME_QUERY)
     expect(get(store)).toEqual({ list: [], selected: null})  
   })

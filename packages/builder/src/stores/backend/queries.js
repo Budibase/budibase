@@ -68,7 +68,6 @@ export function createQueriesStore() {
 
         return state
       })
-      console.log(response)
     },
   }
 }
