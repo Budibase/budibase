@@ -12,9 +12,12 @@ export function createDatasourcesStore(_api = api) {
 
   return {
     subscribe,
-    set,
     update,
-    init: () => set(INITIAL_DATASOURCE_VALUES),
+    init: async () => {
+      const response = await api.get(`/api/datasources`)
+      const json = await response.json()
+      set({ list: json, selected: null })
+    },
     fetch: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()
