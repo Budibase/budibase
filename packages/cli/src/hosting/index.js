@@ -77,8 +77,8 @@ async function init(type) {
     distinctId: "cli",
     event: AnalyticsEvents.SelfHostInit,
     properties: {
-      type
-    }
+      type,
+    },
   })
   await downloadFiles()
   const config = isQuick ? makeEnv.QUICK_CONFIG : {}

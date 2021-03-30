@@ -6,16 +6,21 @@ const { error } = require("../utils")
 class ConfigManager {
   constructor() {
     this.path = path.join(os.homedir(), ".budibase.json")
-    if (!fs.existsSync(this.path)) { 
+    if (!fs.existsSync(this.path)) {
       fs.writeFileSync(this.path, "{}")
-    }  
+    }
   }
 
   get config() {
     try {
       return JSON.parse(fs.readFileSync(this.path, "utf8"))
     } catch (err) {
-      console.log(error(("Error parsing configuration file. Please check your .budibase.json is valid.")))
+      console.log(
+        error(
+          "Error parsing configuration file. Please check your .budibase.json is valid."
+        )
+      )
+      return {}
     }
   }
 
@@ -30,7 +35,7 @@ class ConfigManager {
   setValue(key, value) {
     const updated = {
       ...this.config,
-      [key]: value
+      [key]: value,
     }
     this.config = updated
   }
