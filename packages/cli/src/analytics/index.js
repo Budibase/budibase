@@ -1,71 +1,26 @@
-const PostHog = require("posthog-node")
 const Command = require("../structures/Command")
-const { CommandWords, InitTypes } = require("../constants")
+const { CommandWords, InitTypes, BUDIBASE_POSTHOG_URL } = require("../constants")
 const { lookpath } = require("lookpath")
 const {
-  downloadFile,
-  logErrorToFile,
   success,
+  error,
   info,
   parseEnv,
 } = require("../utils")
 const { confirmation } = require("../questions")
 const fs = require("fs")
-// const makeEnv = require("./makeEnv")
 const axios = require("axios")
-
-const Events = {
-  OptOut: "opt_out",
-  OptIn: "opt_in",
-}
-
-class AnalyticsClient {
-  constructor() {
-    this.client = new PostHog("Oeq9KzIpZYaNsXIvHw5QTZWNpfiG_EOjAOpjTyAiitY", { host: "https://posthog.budi.live" })
-  }
-
-  capture() {
-    if (!enabled) return
-
-    this.client.capture({
-      event: Events.OptOut
-    })
-  }
-
-  enable() {
-    this.disabled = false
-  }
-
-  disable() {
-    this.disabled = true
-  }
-
-  status() {
-    return this.disabled ? "disabled" : "enabled"
-  }
-}
-
-class BudibaseConfig {
-  constructor(config) {
-    this.config = config
-  }
-
-  write() {
-    // fs.wri
-  }
-}
+const AnalyticsClient = require("./Client")
 
 const client = new AnalyticsClient()
 
-
 async function optOut() {
-  client.capture({ event: Events.OptOut })
-  client.disable()
   try {
     // opt them out
+    client.disable()
     console.log(success("Successfully opted out of budibase analytics. You can opt in at any time by running 'budi analytics opt-in'"))
   } catch (err) { 
-    console.log(error("Error opting out of budibase analytics. Please try again later."))
+    console.log(error("Error opting out of budibase analytics. Please try again later.", err))
   }
 }
 
@@ -73,8 +28,7 @@ async function optIn() {
   try {
     // opt them in
     client.enable()
-    client.capture({ event: Events.OptIn })
-    console.log(success("Successfully opted in of budibase analytics. Thank you for helping us make budibase better!"))
+    console.log(success("Successfully opted in to budibase analytics. Thank you for helping us make budibase better!"))
   } catch (err) { 
     console.log(error("Error opting in to budibase analytics. Please try again later."))
   }

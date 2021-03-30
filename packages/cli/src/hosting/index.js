@@ -1,5 +1,5 @@
 const Command = require("../structures/Command")
-const { CommandWords, InitTypes } = require("../constants")
+const { CommandWords, InitTypes, AnalyticsEvents } = require("../constants")
 const { lookpath } = require("lookpath")
 const {
   downloadFile,
@@ -13,6 +13,7 @@ const fs = require("fs")
 const compose = require("docker-compose")
 const makeEnv = require("./makeEnv")
 const axios = require("axios")
+const AnalyticsClient = require("../analytics/Client")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
@@ -21,6 +22,8 @@ const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
+
+const client = new AnalyticsClient()
 
 async function downloadFiles() {
   const promises = []
@@ -70,6 +73,12 @@ async function init(type) {
       return
     }
   }
+  client.capture({
+    event: AnalyticsEvents.SelfHostInit,
+    properties: {
+      type
+    }
+  })
   await downloadFiles()
   const config = isQuick ? makeEnv.QUICK_CONFIG : {}
   if (type === InitTypes.DIGITAL_OCEAN) {
