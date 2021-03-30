@@ -11,6 +11,7 @@ export function createViewsStore() {
   return {
     subscribe,
     select: view => {
+      console.log(view)
       update(state => ({
         ...state,
         selected: view,
@@ -28,6 +29,7 @@ export function createViewsStore() {
         name: view.name,
         ...json,
       }
+      console.log('JSON: ', json)
 
       update(state => {
         const viewTable = get(tables).list.find(
