@@ -69,20 +69,14 @@ export const getFrontendStore = () => {
       // Initialise backend stores
       const [
         _integrations,
-        _tables,
       ] = await Promise.all([
-        api.get("/api/integrations").then(r => r.json()),
-        api.get(`/api/tables`).then(r => r.json()),
+        api.get("/api/integrations").then(r => r.json())
       ])
       datasources.init()
       integrations.set(_integrations)
       queries.init()
       database.set(application.instance)
-      tables.set({
-        list: _tables,
-        selected: {},
-        draft: {},
-      })
+      tables.init()
     },
     routing: {
       fetch: async () => {

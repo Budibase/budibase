@@ -71,10 +71,18 @@ export function createTablesStore() {
 
   return {
     subscribe,
-    set,
     fetch,
     select,
     save,
+    init: async () => {
+      const response = await api.get("/api/tables")
+      const json = await response.json()
+      set({
+        list: json,
+        selected: {},
+        draft: {},
+      })
+    },
     delete: async table => {
       await api.delete(`/api/tables/${table._id}/${table._rev}`)
       update(state => ({
