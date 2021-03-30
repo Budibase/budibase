@@ -74,6 +74,7 @@ async function init(type) {
     }
   }
   client.capture({
+    distinctId: "cli",
     event: AnalyticsEvents.SelfHostInit,
     properties: {
       type
