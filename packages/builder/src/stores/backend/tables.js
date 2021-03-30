@@ -5,11 +5,7 @@ import api from "builderStore/api"
 
 
 export function createTablesStore() {
-  const store = writable({
-    list: [],
-    selected: {},
-    draft: {},
-  })
+  const store = writable({})
   const { subscribe, update, set } = store
 
   async function fetch() {
