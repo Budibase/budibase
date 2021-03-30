@@ -12,10 +12,7 @@ export function createRolesStore() {
     },
     delete: async role => {
       const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
-      update(state => {
-        state = state.filter(existing => existing._id !== role._id)
-        return state
-      })
+      update(state => state.filter(existing => existing._id !== role._id))
       return response
     },
     save: async role => {

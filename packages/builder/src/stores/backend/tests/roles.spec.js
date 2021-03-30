@@ -22,13 +22,14 @@ describe("Roles Store", () => {
   })
 
   it("deletes a role", async () => {
-    api.get.mockReturnValue({ json: () => ROLES})
+    api.get.mockReturnValueOnce({ json: () => ROLES})
     await store.fetch()
-
-    const {_id, _rev} = ROLES[0]
+    
     api.delete.mockReturnValue({status: 200, message: `Role deleted.`})
-    await store.delete(`/api/roles/${_id}/${_rev}`)
+    
+    const updatedRoles = [...ROLES.slice(1)]
+    await store.delete(ROLES[0])
 
-    expect(get(store)).toEqual(ROLES)
+    expect(get(store)).toEqual(updatedRoles)
   })
 })
