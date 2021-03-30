@@ -56,3 +56,11 @@ exports.parseEnv = env => {
   }
   return result
 }
+
+exports.getConfigValue = (key, value) => {
+
+}
+
+exports.setConfigValue = (key, value) => {
+
+}
