@@ -16,7 +16,7 @@
   let createLink = true
   let roleId = "BASIC"
 
-  $: templates = getTemplates($store, $tables)
+  $: templates = getTemplates($store, $tables.list)
   $: route = !route && $allScreens.length === 0 ? "*" : route
   $: {
     if (templates && templateIndex === undefined) {

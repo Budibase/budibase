@@ -24,7 +24,7 @@ export default (frontendState, tables) => {
   })
 
   const fromScratch = enrichTemplate(createFromScratchScreen)
-  const tableTemplates = allTemplates(tables.list).map(enrichTemplate)
+  const tableTemplates = allTemplates(tables).map(enrichTemplate)
   return [
     fromScratch,
     ...tableTemplates.sort((templateA, templateB) => {
