@@ -25,8 +25,8 @@ router.param("file", async (file, ctx, next) => {
 })
 
 router
-  // TODO: for now this _builder endpoint is not authorized/secured, will need to be
-  .get("/_builder/:file*", controller.serveBuilder)
+  // TODO: for now this builder endpoint is not authorized/secured, will need to be
+  .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post("/api/attachments/upload", usage, controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
