@@ -93,7 +93,7 @@ exports.find = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
-  if (env.CLOUD) {
+  if (env.isProd()) {
     delete query.fields
     delete query.parameters
     delete query.schema

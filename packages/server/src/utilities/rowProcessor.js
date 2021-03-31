@@ -180,7 +180,7 @@ exports.outputProcessing = async (appId, table, rows) => {
     rows
   )
   // update the attachments URL depending on hosting
-  if (env.CLOUD && env.SELF_HOSTED) {
+  if (env.isProd() && env.SELF_HOSTED) {
     for (let [property, column] of Object.entries(table.schema)) {
       if (column.type === FieldTypes.ATTACHMENT) {
         for (let row of outputRows) {

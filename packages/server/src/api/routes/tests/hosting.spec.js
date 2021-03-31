@@ -107,17 +107,16 @@ describe("/hosting", () => {
   })
 
   describe("getDeployedApps", () => {
-    it("should get apps when in builder", async () => {
-      const res = await request
+    it("should fail when not self hosted", async () => {
+      await request
         .get(`/api/hosting/apps`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.app1).toEqual({url: "/app1"})
+        .expect(400)
     })
 
     it("should get apps when in cloud", async () => {
-      await setup.switchToCloudForFunction(async () => {
+      await setup.switchToSelfHosted(async () => {
         const res = await request
           .get(`/api/hosting/apps`)
           .set(config.defaultHeaders())

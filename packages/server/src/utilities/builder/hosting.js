@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { BUILDER_CONFIG_DB, HOSTING_DOC } = require("../../constants")
+const { StaticDatabases } = require("../../db/utils")
 const fetch = require("node-fetch")
 const env = require("../../environment")
 
@@ -23,16 +23,16 @@ exports.HostingTypes = {
 }
 
 exports.getHostingInfo = async () => {
-  const db = new CouchDB(BUILDER_CONFIG_DB)
+  const db = new CouchDB(StaticDatabases.BUILDER_HOSTING.name)
   let doc
   try {
-    doc = await db.get(HOSTING_DOC)
+    doc = await db.get(StaticDatabases.BUILDER_HOSTING.baseDoc)
   } catch (err) {
     // don't write this doc, want to be able to update these default props
     // for our servers with a new release without needing to worry about state of
     // PouchDB in peoples installations
     doc = {
-      _id: HOSTING_DOC,
+      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
       type: exports.HostingTypes.CLOUD,
       hostingUrl: PROD_HOSTING_URL,
       selfHostKey: "",
@@ -85,15 +85,11 @@ exports.getTemplatesUrl = async (appId, type, name) => {
 }
 
 exports.getDeployedApps = async () => {
-  const hostingInfo = await exports.getHostingInfo()
-  if (
-    (!env.CLOUD && hostingInfo.type === exports.HostingTypes.CLOUD) ||
-    (env.CLOUD && !env.SELF_HOSTED)
-  ) {
+  if (!env.SELF_HOSTED) {
     throw "Can only check apps for self hosted environments"
   }
-  const workerUrl = !env.CLOUD ? await exports.getWorkerUrl() : env.WORKER_URL
-  const hostingKey = !env.CLOUD ? hostingInfo.selfHostKey : env.HOSTING_KEY
+  const workerUrl = env.WORKER_URL
+  const hostingKey = env.HOSTING_KEY
   try {
     const response = await fetch(`${workerUrl}/api/apps`, {
       method: "GET",
@@ -102,12 +98,14 @@ exports.getDeployedApps = async () => {
       },
     })
     const json = await response.json()
-    for (let value of Object.values(json)) {
+    const apps = {}
+    for (let [key, value] of Object.entries(json)) {
       if (value.url) {
         value.url = value.url.toLowerCase()
+        apps[key] = value
       }
     }
-    return json
+    return apps
   } catch (err) {
     // error, cannot determine deployed apps, don't stop app creation - sort this later
     return {}
