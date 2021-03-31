@@ -17,7 +17,7 @@
     "svelte": "^3.30.0"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "lerna link && lerna bootstrap",
     "build": "lerna run build",
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
