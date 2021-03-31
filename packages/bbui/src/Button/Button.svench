@@ -1,0 +1,138 @@
+<script>
+  import { View } from "svench";
+  import Button from "./Button.svelte";
+  import Icon from "../Icons/Icon.svelte";
+</script>
+
+<View name="Primary">
+  <Button primary small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button primary on:click={() => alert('Clicked!')}>Default</Button>
+  <Button primary medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button primary large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button primary wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Secondary">
+  <Button secondary small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button secondary on:click={() => alert('Clicked!')}>Default</Button>
+  <Button secondary medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button secondary large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button secondary wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Translucent">
+  <div class="translucent">
+    <div class="light">
+      <Button translucent small on:click={() => alert('Clicked!')}>Small</Button>
+      <Button translucent on:click={() => alert('Clicked!')}>Default</Button>
+      <Button translucent medium on:click={() => alert('Clicked!')}>Medium</Button>
+      <Button translucent large on:click={() => alert('Clicked!')}>Large</Button>
+      <Button translucent wide on:click={() => alert('Clicked!')}>Wide</Button>
+    </div>
+    <div class="dark">
+      <Button translucent small on:click={() => alert('Clicked!')}>Small</Button>
+      <Button translucent on:click={() => alert('Clicked!')}>Default</Button>
+      <Button translucent medium on:click={() => alert('Clicked!')}>Medium</Button>
+      <Button translucent large on:click={() => alert('Clicked!')}>Large</Button>
+      <Button translucent wide on:click={() => alert('Clicked!')}>Wide</Button>
+    </div>
+  </div>
+</View>
+<View name="Blue">
+  <Button blue small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button blue on:click={() => alert('Clicked!')}>Default</Button>
+  <Button blue medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button blue large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button blue wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Red">
+  <Button red small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button red on:click={() => alert('Clicked!')}>Default</Button>
+  <Button red medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button red large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button red wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Yellow">
+  <Button yellow small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button yellow on:click={() => alert('Clicked!')}>Default</Button>
+  <Button yellow medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button yellow large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button yellow wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Orange">
+  <Button orange small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button orange on:click={() => alert('Clicked!')}>Default</Button>
+  <Button orange medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button orange large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button orange wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Green">
+  <Button green small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button green on:click={() => alert('Clicked!')}>Default</Button>
+  <Button green medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button green large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button green wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Purple">
+  <Button purple small on:click={() => alert('Clicked!')}>Small</Button>
+  <Button purple on:click={() => alert('Clicked!')}>Default</Button>
+  <Button purple medium on:click={() => alert('Clicked!')}>Medium</Button>
+  <Button purple large on:click={() => alert('Clicked!')}>Large</Button>
+  <Button purple wide on:click={() => alert('Clicked!')}>Wide</Button>
+</View>
+<View name="Disabled">
+  <Button primary disabled on:click={() => alert('Clicked!')}>Disabled</Button>
+</View>
+<View name="Button With Icon">
+  <Button primary small on:click={() => alert('Clicked!')}>
+    <Icon name="addrow" direction="n" />
+    Small
+  </Button>
+  <Button primary on:click={() => alert('Clicked!')}>
+    <Icon name="add" direction="n" />
+    Default
+  </Button>
+  <Button primary medium on:click={() => alert('Clicked!')}>
+    <Icon name="addcolumn" direction="n" />
+    Medium
+  </Button>
+  <Button primary large on:click={() => alert('Clicked!')}>
+    <Icon name="copy" direction="n" />
+    Large
+  </Button>
+  <Button primary wide on:click={() => alert('Clicked!')}>
+    <Icon name="view" direction="n" />
+    Wide
+  </Button>
+</View>
+<View name="Button with symbols">
+  <Button primary small on:click={() => alert('Clicked!')}>⊗ Small</Button>
+  <Button primary on:click={() => alert('Clicked!')}>↓ Default</Button>
+  <Button primary medium on:click={() => alert('Clicked!')}>+ Medium</Button>
+  <Button primary large on:click={() => alert('Clicked!')}>⋯ Large</Button>
+  <Button primary wide on:click={() => alert('Clicked!')}>⊕ Wide</Button>
+</View>
+<View
+  name="use Knobs"
+  knobs={{ primary: true, secondary: false, blue: false, red: false, yellow: false, orange: false, green: false, purple: false, disabled: false, small: false, medium: false, large: false, wide: false, text: false }}
+  let:knobs>
+  <Button {...knobs} on:click={() => alert('Clicked!')}>Knooby</Button>
+</View>
+<View name="a link that looks like a button">
+  <Button primary href="https://google.com">Linkbutton</Button>
+</View>
+
+
+<style>
+  .translucent {
+    display: flex;
+    gap: 20px;
+  }
+  .translucent > div {
+    padding: 10px;
+  }
+  .light {
+    background-color: white;
+  }
+  .dark {
+    background-color: #2a2a2a;
+  }
+</style>
