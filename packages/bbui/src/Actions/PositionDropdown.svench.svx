@@ -1,0 +1,81 @@
+<script>
+  import { View } from "svench";
+  import Multiselect from "../Form/Multiselect.svelte";
+  import DropdownMenu from "../DropdownMenu/DropdownMenu.svelte";
+  import Button from "../Button/Button.svelte";
+  import Icon from "../Icons/Icon.svelte";
+
+   const options = ["Red", "Blue", "Yellow", "Green", "Pink", "Very long color name to show text wrapping"];
+
+  let anchorLeft;
+  let dropdownLeft;
+</script>
+
+### Position Dropdown Action
+
+This action positions an element close to it's anchor, either above or below it, depending on the amount of space that exists. There's also an option to align the dropdown to the right instead of the left of the anchor. An example of how to use it follows:
+
+```html
+<script>
+  let visible = false;
+  let anchor;
+  let align = 'right';
+</script>
+
+<button on:click={() => visible = !visible} class="multiselect" bind:this={anchor}>
+  Clicking this opens the
+</button>
+
+{#if visible}
+  <Portal>
+    <div use:positionDropdown={{anchor, align}}>
+        Some content here.
+    </div>
+  </Portal>
+{/if}
+```
+
+Here are some components that currently use this action:
+
+<View name="Multiselect Example">
+  <Multiselect name="Test" label="Colours" placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<View name="Dropdown on close event example">
+  <div bind:this={anchorLeft}>
+    <Button primary on:click={dropdownLeft.show}>
+      Field Name
+      <Icon name="arrowdown" />
+    </Button>
+  </div>
+  <DropdownMenu
+    on:close={() => alert('Closed!')}
+    bind:this={dropdownLeft}
+    width="175px"
+    borderColor="#d1d1d1ff"
+    anchor={anchorLeft}
+    align="left">
+    <ul>
+      <li>
+        <Icon name="edit" />
+        Edit
+      </li>
+      <li>
+        <Icon name="delete" />
+        Delete
+      </li>
+      <li>
+        <Icon name="sortascending" />
+        Sort A - Z
+      </li>
+      <li>
+        <Icon name="sortdescending" />
+        Sort Z - A
+      </li>
+    </ul>
+  </DropdownMenu>
+</View>

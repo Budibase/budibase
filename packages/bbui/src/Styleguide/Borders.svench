@@ -1,0 +1,175 @@
+<script>
+  import { View } from "svench";
+</script>
+
+<h1>Borders</h1>
+<p>Budibase has 2 border variables, light and dark.</p>
+<p><strong>Light</strong> is for layouts.</p>
+<p><strong>Dark</strong> is for components.</p>
+<code>border: var(--border-light);</code>
+<div class="border-light"></div>
+<code>border: var(--border-dark);</code>
+<div class="border-dark"></div>
+
+<hr>
+
+<h2>Border Radius</h2>
+<p>Budibase has 5 border-radius variables:</p>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Var</th>
+    <th>rem</th>
+    <th>px</th>
+    <th>Visual</th>
+  </tr>
+  <tr>
+    <td>Extra Small</td>
+    <td>var(--border-radius-xs)</td>
+    <td>0.125</td>
+    <td>2</td>
+    <td><div class="border-radius-xs">Extra small</div></td>
+  </tr>
+  <tr>
+    <td>Small</td>
+    <td>var(--border-radius-s)</td>
+    <td>0.35</td>
+    <td>5.6px</td>
+    <td><div class="border-radius-s">Small</div></td>
+  </tr>
+  <tr>
+    <td>Medium</td>
+    <td>var(--border-radius-m)</td>
+    <td>0.5</td>
+    <td>8</td>
+    <td><div class="border-radius-m">Medium</div></td>
+  </tr>
+  <tr>
+    <td>Large</td>
+    <td>var(--border-radius-l)</td>
+    <td>1</td>
+    <td>16</td>
+    <td><div class="border-radius-l">Large</div></td>
+  </tr>
+  <tr>
+    <td>Extra Large</td>
+    <td>var(--border-radius-xl)</td>
+    <td>100</td>
+    <td>1600</td>
+    <td><div class="border-radius-xl">Extra large</div></td>
+  </tr>
+</table>
+
+<style>
+
+table {
+  font-family: var(--font-sans);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+code {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: var(--spacing-s) var(--spacing-l);
+    margin: var(--spacing-xl) 0 var(--spacing-s) 0;
+    background-color: var(--grey-2);
+    color: var(--red-dark);
+    border-radius: var(--spacing-xs);
+}
+
+td, th {
+  border: 1px solid var(--grey-4);
+  text-align: left;
+  padding: var(--spacing-m);
+  width: 20%;
+}
+
+tr:nth-child(even) {
+  background-color: var(--grey-3);
+}
+
+hr {
+    margin: var(--layout-xl) 0px;
+}
+
+.border-light {
+    width: 40rem;
+    height: 10rem;
+    background-color: white;
+    border: var(--border-light);
+}
+
+.border-dark {
+    width: 40rem;
+    height: 10rem;
+    background-color: white;
+    border: var(--border-dark);
+}
+
+.border-radius-xs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-sans);
+    width: 8rem;
+    height: 3rem;
+    background-color: black;
+    border-radius: var(--border-radius-xs);
+    margin-right: var(--spacing-l);
+}
+
+.border-radius-s {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-sans);
+    width: 8rem;
+    height: 3rem;
+    background-color: black;
+    border-radius: var(--border-radius-s);
+    margin-right: var(--spacing-l);
+}
+
+.border-radius-m {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-sans);
+    width: 8rem;
+    height: 3rem;
+    background-color: black;
+    border-radius: var(--border-radius-m);
+    margin-right: var(--spacing-l);
+}
+
+.border-radius-l {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-sans);
+    width: 8rem;
+    height: 3rem;
+    background-color: black;
+    border-radius: var(--border-radius-l);
+    margin-right: var(--spacing-l);
+}
+
+.border-radius-xl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-sans);
+    width: 8rem;
+    height: 3rem;
+    background-color: black;
+    border-radius: var(--border-radius-xl);
+    margin-right: var(--spacing-l);
+}
+</style>

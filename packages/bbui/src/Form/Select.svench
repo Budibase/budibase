@@ -1,0 +1,62 @@
+<script>
+  import { View } from "svench";
+  import Select from "./Select.svelte";
+  import Spacer from "../Spacer/Spacer.svelte"
+
+  const options = ["Chocolate", "Vanilla", "Strawberry Cheesecake"];
+</script>
+
+<View name="default">
+  <Select name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+
+<View name="secondary">
+  <Select secondary name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+
+<View name="outline">
+  <Select outline name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+
+<View name="disabled">
+  <Select disabled name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+
+<View name="thin">
+  <Select thin name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+
+<View name="extraThin">
+  <Select extraThin name="Test" label="Flavour">
+    <option value="">Choose an option</option>
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Select>
+</View>
+

@@ -1,0 +1,8 @@
+<script>
+  import { View } from "svench";
+  import Logo from "./Logo.svelte";
+</script>
+
+<View name="default">
+  <Logo />
+</View>
