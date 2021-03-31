@@ -1,4 +1,5 @@
 <script>
+  import { goto } from '@sveltech/routify'
   import { store, allScreens } from "builderStore"
   import { tables } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
@@ -37,10 +38,14 @@
   }
 
   async function deleteTable() {
+    const wasSelectedTable = $tables.selected
     await tables.delete(table)
     store.actions.screens.delete(templateScreens)
     await tables.fetch()
     notifier.success("Table deleted")
+    if (wasSelectedTable._id === table._id) {
+      $goto("./table")
+    }
     hideEditor()
   }
 

@@ -3,6 +3,18 @@ const newid = require("./newid")
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
 
+const StaticDatabases = {
+  BUILDER: {
+    name: "builder-db",
+    baseDoc: "builder-doc",
+  },
+  // TODO: needs removed
+  BUILDER_HOSTING: {
+    name: "builder-config-db",
+    baseDoc: "hosting-doc",
+  },
+}
+
 const DocumentTypes = {
   TABLE: "ta",
   ROW: "ro",
@@ -25,10 +37,16 @@ const ViewNames = {
   USERS: "ta_users",
 }
 
+const SearchIndexes = {
+  ROWS: "rows",
+}
+
+exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
+exports.SearchIndexes = SearchIndexes
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`

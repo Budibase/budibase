@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { getCommands } = require("./options")
 const { Command } = require("commander")
 const { getHelpDescription } = require("./utils")

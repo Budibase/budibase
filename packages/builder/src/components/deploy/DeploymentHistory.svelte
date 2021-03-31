@@ -119,11 +119,13 @@
             {#if deployment.status.toLowerCase() === 'pending'}
               <Spinner size="10" />
             {/if}
-            <div on:click={() => showErrorReasonModal(deployment.err)} class={`deployment-status ${deployment.status}`}>
+            <div
+              on:click={() => showErrorReasonModal(deployment.err)}
+              class={`deployment-status ${deployment.status}`}>
               <span>
                 {deployment.status}
                 {#if deployment.status === DeploymentStatus.FAILURE}
-                  <i class="ri-information-line"/>
+                  <i class="ri-information-line" />
                 {/if}
               </span>
             </div>

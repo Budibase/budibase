@@ -15,7 +15,8 @@ describe("Tables Store", () => {
     await store.init()
   })
 
-  it("Initialises correctly", async () => {
+  it("Selects the correct view", async () => {
+      
     expect(get(store)).toEqual({ list: SOME_TABLES, selected: {}, draft: {}})
   })
 })

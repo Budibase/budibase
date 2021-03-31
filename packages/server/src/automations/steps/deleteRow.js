@@ -70,7 +70,7 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   }
 
   try {
-    if (env.CLOUD) {
+    if (env.isProd()) {
       await usage.update(apiKey, usage.Properties.ROW, -1)
     }
     await rowController.destroy(ctx)
