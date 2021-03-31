@@ -1,5 +1,4 @@
 import svelte from "@sveltejs/vite-plugin-svelte"
-import html from "rollup-plugin-html"
 import replace from "@rollup/plugin-replace"
 
 import path from "path"
@@ -11,7 +10,10 @@ export default ({ mode }) => {
       minify: isProduction,
     },
     plugins: [
-      svelte(),
+      svelte({
+        hot: !isProduction,
+        emitCss: true,
+      }),
       replace({
         preventAssignment: true,
         "process.env.NODE_ENV": JSON.stringify(
@@ -21,7 +23,6 @@ export default ({ mode }) => {
         "process.env.POSTHOG_URL": JSON.stringify(process.env.POSTHOG_URL),
         "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
       }),
-      html(),
     ],
     optimizeDeps: {
       exclude: ["@roxi/routify"],
