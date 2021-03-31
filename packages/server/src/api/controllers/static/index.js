@@ -58,11 +58,15 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
+  // TODO: proxy to vite in dev mode
+  //if (env.isDev()) {
+  //  Proxy to vite dev server
+  //}
   let builderPath = resolve(__dirname, "../../../../builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
   }
-  await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
+  await send(ctx, ctx.file, { root: builderPath })
 }
 
 exports.uploadFile = async function(ctx) {
@@ -125,8 +129,10 @@ exports.serveAttachment = async function(ctx) {
 }
 
 exports.serveAppAsset = async function(ctx) {
+  // TODO: can we just always serve this locally? is anything in S3?
   if (env.isDev() || env.isTest()) {
-    return send(ctx, ctx.file, { root: budibaseTempDir() })
+    const builderPath = resolve(__dirname, "../../../../builder/assets")
+    return send(ctx, ctx.file, { root: builderPath })
   }
   await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
 }
