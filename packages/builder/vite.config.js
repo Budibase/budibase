@@ -6,6 +6,7 @@ import path from "path"
 export default ({ mode }) => {
   const isProduction = mode === "production"
   return {
+    base: "/builder/",
     build: {
       minify: isProduction,
     },

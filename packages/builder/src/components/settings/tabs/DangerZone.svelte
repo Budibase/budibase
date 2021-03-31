@@ -11,7 +11,7 @@
     const id = $params.application
     await del(`/api/applications/${id}`)
     loading = false
-    $goto("/")
+    $goto("/builder/")
   }
 </script>
 

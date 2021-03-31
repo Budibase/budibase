@@ -56,7 +56,7 @@
 
 <div class="container">
   <div class="header">
-    <Heading medium black>Welcome to the Budibase Beta 123</Heading>
+    <Heading medium black>Welcome to the Budibase Beta</Heading>
     <div class="button-group">
       <Button secondary on:click={initiateAppImport}>Import Web App</Button>
       <Spacer medium />

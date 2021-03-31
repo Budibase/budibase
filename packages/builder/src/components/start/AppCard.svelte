@@ -31,7 +31,11 @@
   <Heading small black>{name}</Heading>
   <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
-    <TextButton text medium blue href="/{_id}">Open {name} →</TextButton>
+    <TextButton text medium blue href="/builder/{_id}">
+      Open
+      {name}
+      →
+    </TextButton>
     {#if appExportLoading}
       <Spinner size="10" />
     {:else}<i class="ri-folder-download-line" on:click={exportApp} />{/if}

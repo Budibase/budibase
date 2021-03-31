@@ -167,7 +167,7 @@
       }
       const userResp = await api.post(`/api/users`, user)
       const json = await userResp.json()
-      $goto(`/${appJson._id}`)
+      $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)
       notifier.danger(error)
