@@ -6,6 +6,7 @@
   import { Button, Heading, Modal, Spacer } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
+  import Banner from "/assets/orange-landscape.png"
 
   let hasKey
   let template
@@ -65,7 +66,7 @@
   </div>
 
   <div class="banner">
-    <img src="/assets/orange-landscape.png" alt="rocket" />
+    <img src={Banner} alt="rocket" />
     <div class="banner-content">
       Every accomplishment starts with a decision to try.
     </div>

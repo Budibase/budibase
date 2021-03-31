@@ -1,13 +1,12 @@
 <script>
-  import { onMount } from "svelte"
-  import { Button, Spacer, Modal } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
-  import Spinner from "components/common/Spinner.svelte"
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
   import FeedbackIframe from "components/feedback/FeedbackIframe.svelte"
+  import Rocket from "/assets/deploy-rocket.jpg"
 
   let loading = false
   let deployments = []
@@ -63,7 +62,7 @@
     <h4>It's time to shine!</h4>
     <Button secondary medium on:click={deployApp}>Deploy App</Button>
   </div>
-  <img src="/assets/deploy-rocket.jpg" alt="Rocket flying through sky" />
+  <img src={Rocket} alt="Rocket flying through sky" />
 </section>
 <Modal bind:this={feedbackModal}>
   <FeedbackIframe on:finished={() => feedbackModal.hide()} />

@@ -6,6 +6,7 @@
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@roxi/routify"
+  import Logo from "/assets/bb-logo.svg"
 
   // Get Package and set store
   export let application
@@ -49,7 +50,7 @@
     <div class="topleftnav">
       <button class="home-logo">
         <img
-          src="/assets/bb-logo.svg"
+          src={Logo}
           alt="budibase icon"
           on:click={() => $goto(`/builder/`)} />
       </button>

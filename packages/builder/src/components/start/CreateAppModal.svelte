@@ -19,6 +19,7 @@
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
+  import Logo from "/assets/bb-logo.svg"
 
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
@@ -242,7 +243,7 @@
       {/if}
     </div>
   </div>
-  <img src="/assets/bb-logo.svg" alt="budibase icon" />
+  <img src={Logo} alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />
