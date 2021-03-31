@@ -35,6 +35,10 @@ const SYMLINK_PATHS = [
     symlink: `${devDir}/@budibase/string-templates`,
     destination: resolve("packages/string-templates"),
   },
+  {
+    symlink: `${devDir}/@budibase/bbui`,
+    destination: resolve("packages/bbui"),
+  },
 ]
 
 SYMLINK_PATHS.forEach(sym => {
