@@ -35,7 +35,6 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-polyfill-node": "^0.6.2",
     "rollup-plugin-terser": "^7.0.2",
     "typescript": "^4.1.3"
   },
