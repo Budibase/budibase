@@ -9,8 +9,9 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    }
+      "require": "./src/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsc && rollup -c",
