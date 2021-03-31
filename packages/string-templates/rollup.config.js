@@ -2,7 +2,8 @@ import commonjs from "@rollup/plugin-commonjs"
 import resolve from "rollup-plugin-node-resolve"
 import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
-import nodePolyfills from "rollup-plugin-polyfill-node"
+import builtins from "rollup-plugin-node-builtins"
+import globals from "rollup-plugin-node-globals"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -12,7 +13,8 @@ const plugins = [
     preferBuiltins: true,
   }),
   commonjs(),
-  nodePolyfills(),
+  builtins(),
+  globals(),
   production && terser(),
   json(),
 ]
