@@ -8,16 +8,14 @@
     BugIcon,
   } from "components/common/Icons"
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
+  import Logo from "/assets/budibase-logo.svg"
 
   let modal
 </script>
 
 <div class="root">
   <div class="ui-nav">
-    <div class="home-logo">
-      <img src="/assets/budibase-logo.svg" alt="Budibase icon" />
-    </div>
-
+    <div class="home-logo"><img src={Logo} alt="Budibase icon" /></div>
     <div class="nav-section">
       <div class="nav-top">
         <Link icon={AppsIcon} title="Apps" href="/" active />

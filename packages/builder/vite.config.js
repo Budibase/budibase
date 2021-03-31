@@ -9,6 +9,7 @@ export default ({ mode }) => {
     base: "/builder/",
     build: {
       minify: isProduction,
+      outDir: "../server/builder",
     },
     plugins: [
       svelte({
