@@ -11,7 +11,6 @@ export function createViewsStore() {
   return {
     subscribe,
     select: view => {
-      console.log(view)
       update(state => ({
         ...state,
         selected: view,

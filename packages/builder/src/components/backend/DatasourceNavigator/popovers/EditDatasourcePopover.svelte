@@ -23,6 +23,8 @@
 
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
+    console.log(wasSelectedSource)
+    console.log(datasource)
     await datasources.delete(datasource)
     notifier.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
