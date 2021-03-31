@@ -30,7 +30,9 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: auto 1fr auto 1fr;
+    grid-template-columns: auto 1fr;
     align-items: baseline;
+    max-width: 800px;
+    margin: 0 auto;
   }
 </style>
