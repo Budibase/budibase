@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"

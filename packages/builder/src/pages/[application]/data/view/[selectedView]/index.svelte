@@ -1,5 +1,5 @@
 <script>
-  import ViewDataTable from "components/backend/DataTable/ViewDataTable"
+  import ViewDataTable from "components/backend/DataTable/ViewDataTable.svelte"
   import { backendUiStore } from "builderStore"
 
   $: selectedView = $backendUiStore.selectedView

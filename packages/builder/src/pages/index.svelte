@@ -1,5 +1,4 @@
 <script>
-  import { store } from "builderStore"
   import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
@@ -57,7 +56,7 @@
 
 <div class="container">
   <div class="header">
-    <Heading medium black>Welcome to the Budibase Beta</Heading>
+    <Heading medium black>Welcome to the Budibase Beta 123</Heading>
     <div class="button-group">
       <Button secondary on:click={initiateAppImport}>Import Web App</Button>
       <Spacer medium />
@@ -66,7 +65,7 @@
   </div>
 
   <div class="banner">
-    <img src="/_builder/assets/orange-landscape.png" alt="rocket" />
+    <img src="/assets/orange-landscape.png" alt="rocket" />
     <div class="banner-content">
       Every accomplishment starts with a decision to try.
     </div>

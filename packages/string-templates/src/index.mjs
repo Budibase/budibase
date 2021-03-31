@@ -1,4 +1,4 @@
-import templates from "./index"
+import templates from "./index.cjs"
 
 /**
  * This file is simply an entrypoint for rollup - makes a lot of cjs problems go away

@@ -1,6 +1,6 @@
 <script>
   import { automationStore } from "builderStore"
-  import { params } from "@sveltech/routify"
+  import { params } from "@roxi/routify"
 
   if ($params.automation) {
     const automation = $automationStore.automations.find(

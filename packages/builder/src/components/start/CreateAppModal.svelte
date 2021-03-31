@@ -14,7 +14,7 @@
   import { API, Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
   import { Button } from "@budibase/bbui"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
@@ -242,7 +242,7 @@
       {/if}
     </div>
   </div>
-  <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
+  <img src="/assets/bb-logo.svg" alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />

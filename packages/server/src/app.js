@@ -1,4 +1,5 @@
 const Koa = require("koa")
+const cors = require("@koa/cors")
 const destroyable = require("server-destroy")
 const electron = require("electron")
 const koaBody = require("koa-body")
@@ -12,6 +13,7 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 
 const app = new Koa()
+app.use(cors())
 
 // set up top level koa middleware
 app.use(

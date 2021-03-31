@@ -2,7 +2,7 @@
   import { get } from "svelte/store"
   import { store, allScreens, selectedAccessRole } from "builderStore"
   import { FrontendTypes } from "constants"
-  import { params } from "@sveltech/routify"
+  import { params } from "@roxi/routify"
 
   $: selectValidAsset($params.assetType)
 

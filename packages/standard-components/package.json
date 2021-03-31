@@ -1,14 +1,17 @@
 {
   "name": "@budibase/standard-components",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "module": "dist/standard-components.es.js",
+  "svelte": "src/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/standard-components.es.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "build": "rollup -c",
-    "prepublishOnly": "npm run build",
-    "postpublish": "node scripts/deploy.js",
-    "dev": "run-p start:dev testbuild",
-    "start:dev": "sirv public --single --dev",
-    "dev:builder": "rollup -cw"
+    "build": "vite build",
+    "prepublishOnly": "yarn run build",
+    "postpublish": "node scripts/deploy.js"
   },
   "files": [
     "manifest.json",
@@ -16,21 +19,11 @@
     "dist"
   ],
   "devDependencies": {
-    "@rollup/plugin-alias": "^3.1.1",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
-    "@rollup/plugin-replace": "^2.3.4",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",
     "lodash": "^4.17.15",
-    "rollup": "^2.11.2",
-    "rollup-plugin-livereload": "^1.0.1",
-    "rollup-plugin-node-builtins": "^2.1.2",
-    "rollup-plugin-postcss": "^3.1.5",
-    "rollup-plugin-svelte": "^6.1.1",
-    "rollup-plugin-svg": "^2.0.0",
-    "rollup-plugin-terser": "^7.0.2",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.30.0"
+    "svelte": "^3.35.0",
+    "vite": "^2.1.5"
   },
   "keywords": [
     "svelte"

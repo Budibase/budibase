@@ -1,5 +1,5 @@
 <script>
-  import { params } from "@sveltech/routify"
+  import { params } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import * as api from "./api"

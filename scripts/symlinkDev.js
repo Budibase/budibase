@@ -25,11 +25,7 @@ const SYMLINK_PATHS = [
   },
   {
     symlink: `${devDir}/budibase-client.js`,
-    destination: resolve("packages/client/dist/budibase-client.js"),
-  },
-  {
-    symlink: `${devDir}/budibase-client.js.map`,
-    destination: resolve("packages/client/dist/budibase-client.js.map"),
+    destination: resolve("packages/client/dist/client.es.js"),
   },
   {
     symlink: `${devDir}/@budibase/string-templates`,
