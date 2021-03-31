@@ -1,12 +1,12 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {
     // navigate to first table in list, if not already selected
     $backendUiStore.datasources.length > 0 &&
-      $goto(`../${$backendUiStore.datasources[0]._id}`)
+      $goto(`./${$backendUiStore.datasources[0]._id}`)
   })
 </script>
 

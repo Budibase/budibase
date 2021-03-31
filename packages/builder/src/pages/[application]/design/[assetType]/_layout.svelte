@@ -9,7 +9,7 @@
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
   import ComponentSelectionList from "components/design/AppPreview/ComponentSelectionList.svelte"
   import FrontendNavigatePane from "components/design/NavigationPanel/FrontendNavigatePane.svelte"
-  import { goto, leftover, params } from "@sveltech/routify"
+  import { goto, leftover, params } from "@roxi/routify"
   import { FrontendTypes } from "constants"
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
   import { get } from "svelte/store"

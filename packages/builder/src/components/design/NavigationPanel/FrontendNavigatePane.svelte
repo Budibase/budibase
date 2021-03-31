@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { goto, params } from "@sveltech/routify"
+  import { goto, params } from "@roxi/routify"
   import {
     store,
     allScreens,

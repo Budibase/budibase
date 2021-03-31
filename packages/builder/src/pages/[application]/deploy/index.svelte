@@ -63,9 +63,7 @@
     <h4>It's time to shine!</h4>
     <Button secondary medium on:click={deployApp}>Deploy App</Button>
   </div>
-  <img
-    src="/_builder/assets/deploy-rocket.jpg"
-    alt="Rocket flying through sky" />
+  <img src="/assets/deploy-rocket.jpg" alt="Rocket flying through sky" />
 </section>
 <Modal bind:this={feedbackModal}>
   <FeedbackIframe on:finished={() => feedbackModal.hide()} />

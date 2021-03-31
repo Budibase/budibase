@@ -1,6 +1,6 @@
 <script>
-  import Quill from "quill"
-  import MarkdownIt from "markdown-it"
+  import * as Quill from "quill"
+  import * as MarkdownIt from "markdown-it"
   import TurndownService from "turndown"
   import { onMount } from "svelte"
   import "quill/dist/quill.snow.css"

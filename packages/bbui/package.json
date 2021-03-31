@@ -43,7 +43,7 @@
     "dist"
   ],
   "dependencies": {
-    "markdown-it": "^12.0.2",
+    "markdown-it": "^12.0.4",
     "quill": "^1.3.7",
     "sirv-cli": "^0.4.6",
     "svelte-flatpickr": "^2.4.0",

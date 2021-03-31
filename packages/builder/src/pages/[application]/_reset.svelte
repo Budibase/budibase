@@ -5,7 +5,7 @@
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
-  import { isActive, goto, layout } from "@sveltech/routify"
+  import { isActive, goto, layout } from "@roxi/routify"
 
   // Get Package and set store
   export let application
@@ -37,9 +37,7 @@
     if (!activeTopNav) return
     store.update(state => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
-      state.previousTopNavPath[
-        activeTopNav.path
-      ] = window.location.pathname.replace("/_builder", "")
+      state.previousTopNavPath[activeTopNav.path] = window.location.pathname
       $goto(state.previousTopNavPath[path] || path)
       return state
     })
@@ -51,7 +49,7 @@
     <div class="topleftnav">
       <button class="home-logo">
         <img
-          src="/_builder/assets/bb-logo.svg"
+          src="/assets/bb-logo.svg"
           alt="budibase icon"
           on:click={() => $goto(`/`)} />
       </button>

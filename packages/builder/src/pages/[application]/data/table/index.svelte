@@ -1,11 +1,11 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {
     $backendUiStore.tables.length > 0 &&
-      $goto(`../${$backendUiStore.tables[0]._id}`)
+      $goto(`./${$backendUiStore.tables[0]._id}`)
   })
 </script>
 

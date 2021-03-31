@@ -77,7 +77,7 @@ export default {
         { src: "src/favicon.png", dest: outputpath },
         { src: "assets", dest: outputpath },
         {
-          src: "node_modules/@budibase/bbui/dist/bbui.css",
+          src: "../bbui/dist/bbui.css",
           dest: outputpath,
         },
         {
@@ -96,24 +96,13 @@ export default {
       "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
     }),
 
-    svelte({
-      // enable run-time checks when not in production
-      dev: !production,
-      include: [
-        "src/**/*.svelte",
-        "node_modules/**/*.svelte",
-        "../../../bbui/src/**/*.svelte",
-      ],
-      // we'll extract any component CSS out into
-      // a separate file — better for performance
-      css: css => {
-        css.write("bundle.css")
-      },
-    }),
+    svelte(),
 
-    // export all CSS imported in the JS to it's own bundle
+    // Export all CSS imported in the JS to it's own bundle.
+    // This is exclusively external stylesheets and vendor stylesheets.
+    // Svelte CSS is handled by the svelte plugin
     css({
-      output: `${outputpath}/external.css`,
+      output: `external.css`,
     }),
 
     resolve({

@@ -43,7 +43,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   const isAdmin = ADMIN_ROLES.includes(role._id)
   const isAuthed = ctx.auth.authenticated
 
-  if (permType === PermissionTypes.BUILDER && isBuilder) {
+  if (permType === PermissionTypes.BUILDER) {
     return next()
   }
 

@@ -1,5 +1,5 @@
 <script>
-  import { isActive, goto } from "@sveltech/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { Switcher, Modal } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
