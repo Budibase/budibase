@@ -2,8 +2,7 @@ import commonjs from "@rollup/plugin-commonjs"
 import resolve from "rollup-plugin-node-resolve"
 import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
+import polyfillNode from "rollup-plugin-polyfill-node"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -13,8 +12,7 @@ const plugins = [
     preferBuiltins: true,
   }),
   commonjs(),
-  builtins(),
-  globals(),
+  polyfillNode(),
   production && terser(),
   json(),
 ]
@@ -29,14 +27,16 @@ export default [
     },
     plugins,
   },
-  {
-    input: "src/index.cjs",
-    output: {
-      sourcemap: !production,
-      format: "cjs",
-      file: "./dist/bundle.cjs",
-      exports: "named",
-    },
-    plugins,
-  },
+  // This is the valid configuration for a CommonJS bundle, but since we have
+  // no use for this, it's better to leave it out.
+  // {
+  //   input: "src/index.cjs",
+  //   output: {
+  //     sourcemap: !production,
+  //     format: "cjs",
+  //     file: "./dist/bundle.cjs",
+  //     exports: "named",
+  //   },
+  //   plugins,
+  // },
 ]
