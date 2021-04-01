@@ -1,7 +1,9 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const CouchDB = require("../db")
+const { OBJ_STORE_DIRECTORY } = require("../constants")
 
+const BB_CDN = "https://cdn.app.budi.live/assets"
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 function confirmAppId(possibleAppId) {
@@ -109,4 +111,21 @@ exports.getAllApps = async () => {
 
 exports.checkSlashesInUrl = url => {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
+}
+
+exports.objectStoreUrl = () => {
+  if (env.SELF_HOSTED) {
+    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
+    return OBJ_STORE_DIRECTORY
+  } else {
+    return BB_CDN
+  }
+}
+
+exports.clientLibraryPath = appId => {
+  if (env.isProd()) {
+    return `${exports.objectStoreUrl()}/${appId}/budibase-client.js`
+  } else {
+    return `/assets/client`
+  }
 }

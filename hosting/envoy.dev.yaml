@@ -26,6 +26,14 @@ static_resources:
                   cluster: redis-service
                   prefix_rewrite: "/"
 
+              - match: { prefix: "/api/" }
+                route:
+                  cluster: server-dev
+
+              - match: { prefix: "/builder/" }
+                route:
+                  cluster: builder-dev
+ 
               # minio is on the default route because this works
               # best, minio + AWS SDK doesn't handle path proxy
               - match: { prefix: "/" }
@@ -77,3 +85,32 @@ static_resources:
               socket_address:
                 address: redis-service
                 port_value: 6379
+
+  - name: server-dev
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: server-dev
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.17.0.1
+                port_value: 4001
+
+  - name: builder-dev
+    connect_timeout: 15s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: builder-dev
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.17.0.1
+                port_value: 3000
+
