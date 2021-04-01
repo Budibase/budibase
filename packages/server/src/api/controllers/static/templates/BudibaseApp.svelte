@@ -4,15 +4,7 @@
 
   export let appId
   export let production
-  export let objectStoreUrl
-
-  function publicPath(path) {
-    if (production) {
-      return `${objectStoreUrl}/${appId}/${path}`
-    } else {
-      return `/builder/assets/${path}`
-    }
-  }
+  export let clientLibPath
 </script>
 
 <svelte:head>
@@ -44,7 +36,7 @@
 </svelte:head>
 
 <body id="app">
-  <script src={publicPath('budibase-client.js')}>
+  <script src={clientLibPath}>
   </script>
   <script>
     loadBudibase()

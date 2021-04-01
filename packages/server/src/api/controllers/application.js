@@ -32,6 +32,7 @@ const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const { getDeployedApps } = require("../../utilities/builder/hosting")
+const { clientLibraryPath } = require("../../utilities")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -142,6 +143,7 @@ exports.fetchAppPackage = async function(ctx) {
     application,
     screens,
     layouts,
+    clientLibPath: clientLibraryPath(ctx.params.appId),
   }
   await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
