@@ -2,7 +2,6 @@ require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
-const { checkSlashesInUrl } = require("../../../utilities")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { prepareUpload } = require("../deploy/utils")
@@ -13,35 +12,10 @@ const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const { loadHandlebarsFile } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const { OBJ_STORE_DIRECTORY } = require("../../../constants")
 const fileProcessor = require("../../../utilities/fileSystem/processor")
+const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 
-const BB_CDN = "https://cdn.app.budi.live/assets"
-
-function objectStoreUrl() {
-  if (env.SELF_HOSTED) {
-    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
-    return OBJ_STORE_DIRECTORY
-  } else {
-    return BB_CDN
-  }
-}
-
-function internalObjectStoreUrl() {
-  if (env.SELF_HOSTED) {
-    return checkSlashesInUrl(env.MINIO_URL + OBJ_STORE_DIRECTORY)
-  } else {
-    return BB_CDN
-  }
-}
-
-async function returnObjectStoreFile(ctx, path) {
-  const S3_URL = `${internalObjectStoreUrl()}/${path}`
-  const response = await fetch(S3_URL)
-  const body = await response.text()
-  ctx.set("Content-Type", response.headers.get("Content-Type"))
-  ctx.body = body
-}
+const TOP_LEVEL = join(__dirname, "..", "..", "..", "..")
 
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
@@ -58,11 +32,7 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  // TODO: proxy to vite in dev mode
-  //if (env.isDev()) {
-  //  Proxy to vite dev server
-  //}
-  let builderPath = resolve(__dirname, "../../../../builder")
+  let builderPath = resolve(TOP_LEVEL, "builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
   }
@@ -109,7 +79,7 @@ exports.serveApp = async function(ctx) {
     title: appInfo.name,
     production: env.isProd(),
     appId,
-    objectStoreUrl: objectStoreUrl(),
+    clientLibPath: clientLibraryPath(appId),
   })
 
   const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
@@ -121,20 +91,10 @@ exports.serveApp = async function(ctx) {
   })
 }
 
-exports.serveAttachment = async function(ctx) {
-  await returnObjectStoreFile(
-    ctx,
-    join(ctx.user.appId, "attachments", ctx.file)
-  )
-}
-
-exports.serveAppAsset = async function(ctx) {
-  // TODO: can we just always serve this locally? is anything in S3?
-  // if (env.isDev() || env.isTest()) {
-  const builderPath = resolve(__dirname, "../../../../builder/assets")
-  return send(ctx, ctx.file, { root: builderPath })
-  // }
-  // await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
+exports.serveClientLibrary = async function(ctx) {
+  return send(ctx, "budibase-client.js", {
+    root: join(TOP_LEVEL, "node_modules", "@budibase", "client", "dist"),
+  })
 }
 
 exports.serveComponentLibrary = async function(ctx) {

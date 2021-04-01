@@ -24,14 +24,16 @@ router.param("file", async (file, ctx, next) => {
   return next()
 })
 
+if (env.isDev()) {
+  router.get("/assets/client", controller.serveClientLibrary)
+}
+
 router
   // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post("/api/attachments/upload", usage, controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
-  .get("/assets/:file*", controller.serveAppAsset)
-  .get("/attachments/:file*", controller.serveAttachment)
   .get("/:appId/:path*", controller.serveApp)
 
 module.exports = router
