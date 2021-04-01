@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { datasources } from 'stores/backend/'
   import { goto, leftover } from "@sveltech/routify"
   import { onMount } from "svelte"
 
@@ -7,10 +7,10 @@
     // navigate to first datasource in list, if not already selected
     if (
       !$leftover &&
-      $backendUiStore.datasources.length > 0 &&
-      !$backendUiStore.selectedDatasourceId
+      $datasources.list.length > 0 &&
+      !$datasources.selected
     ) {
-      $goto(`./${$backendUiStore.datasources[0]._id}`)
+      $goto(`./${$datasources.list[0]._id}`)
     }
   })
 </script>

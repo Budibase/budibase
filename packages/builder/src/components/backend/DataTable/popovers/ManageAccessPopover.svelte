@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { roles, permissions as permissionsStore } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
 
@@ -8,14 +8,14 @@
   export let onClosed
 
   async function changePermission(level, role) {
-    await backendUiStore.actions.permissions.save({
+    await permissionsStore.save({
       level,
       role,
       resource: resourceId,
     })
 
     // Show updated permissions in UI: REMOVE
-    permissions = await backendUiStore.actions.permissions.forResource(
+    permissions = await permissionsStore.forResource(
       resourceId
     )
     notifier.success("Updated permissions.")
@@ -42,7 +42,7 @@
         thin
         value={permissions[level]}
         on:change={e => changePermission(level, e.target.value)}>
-        {#each $backendUiStore.roles as role}
+        {#each $roles as role}
           <option value={role._id}>{role.name}</option>
         {/each}
       </Select>
@@ -65,10 +65,6 @@
   h5 {
     margin: 0;
     font-weight: 500;
-  }
-
-  hr {
-    margin: var(--spacing-s) 0 var(--spacing-m) 0;
   }
 
   .footer {

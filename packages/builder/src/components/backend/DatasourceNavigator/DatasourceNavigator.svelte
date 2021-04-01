@@ -1,38 +1,38 @@
 <script>
   import { onMount } from "svelte"
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { database, datasources, queries } from 'stores/backend/'
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import ICONS from "./icons"
 
   function selectDatasource(datasource) {
-    backendUiStore.actions.datasources.select(datasource._id)
+    datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }
 
   function onClickQuery(query) {
-    if ($backendUiStore.selectedQueryId === query._id) {
+    if ($queries.selected === query._id) {
       return
     }
-    backendUiStore.actions.queries.select(query)
+    queries.select(query)
     $goto(`./datasource/${query.datasourceId}/${query._id}`)
   }
 
   onMount(() => {
-    backendUiStore.actions.datasources.fetch()
-    backendUiStore.actions.queries.fetch()
+    datasources.fetch()
+    queries.fetch()
   })
 </script>
 
-{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+{#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each $backendUiStore.datasources as datasource, idx}
+    {#each $datasources.list as datasource, idx}
       <NavItem
         border={idx > 0}
         text={datasource.name}
-        selected={$backendUiStore.selectedDatasourceId === datasource._id}
+        selected={$datasources.selected === datasource._id}
         on:click={() => selectDatasource(datasource)}>
         <div class="datasource-icon" slot="icon">
           <svelte:component
@@ -42,12 +42,12 @@
         </div>
         <EditDatasourcePopover {datasource} />
       </NavItem>
-      {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
+      {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}
           icon="ri-eye-line"
           text={query.name}
-          selected={$backendUiStore.selectedQueryId === query._id}
+          selected={$queries.selected === query._id}
           on:click={() => onClickQuery(query)}>
           <EditQueryPopover {query} />
         </NavItem>

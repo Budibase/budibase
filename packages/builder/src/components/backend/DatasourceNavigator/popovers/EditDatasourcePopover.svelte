@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { datasources } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -22,8 +22,10 @@
   }
 
   async function deleteDatasource() {
-    const wasSelectedSource = $backendUiStore.selectedDatasourceId
-    await backendUiStore.actions.datasources.delete(datasource)
+    const wasSelectedSource = $datasources.selected
+    console.log(wasSelectedSource)
+    console.log(datasource)
+    await datasources.delete(datasource)
     notifier.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
