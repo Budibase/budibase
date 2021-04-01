@@ -53,9 +53,6 @@
     ],
     "setupFilesAfterEnv": [
       "@testing-library/jest-dom/extend-expect"
-    ],
-    "setupFiles": [
-      "./scripts/jestSetup.js"
     ]
   },
   "eslintConfig": {
