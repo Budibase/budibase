@@ -1,15 +1,14 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'stores/backend/'
   import { goto } from "@sveltech/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {
-    $backendUiStore.tables.length > 0 &&
-      $goto(`../${$backendUiStore.tables[0]._id}`)
+    $tables.list.length > 0 && $goto(`../${$tables.list[0]._id}`)
   })
 </script>
 
-{#if $backendUiStore.tables.length === 0}
+{#if $tables.list.length === 0}
   <i>Create your first table to start building</i>
 {:else}<i>Select a table to edit</i>{/if}
 

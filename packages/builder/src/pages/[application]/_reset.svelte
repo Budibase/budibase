@@ -1,5 +1,6 @@
 <script>
-  import { store, automationStore, backendUiStore } from "builderStore"
+  import { store, automationStore } from "builderStore"
+  import { roles } from 'stores/backend/'
   import { Button } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
@@ -17,10 +18,10 @@
     const pkg = await res.json()
 
     if (res.ok) {
-      backendUiStore.actions.reset()
+      // backendUiStore.actions.reset()
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
-      await backendUiStore.actions.roles.fetch()
+      await roles.fetch()
       return pkg
     } else {
       throw new Error(pkg)

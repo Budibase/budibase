@@ -1,7 +1,7 @@
 <script>
   import api from "builderStore/api"
   import Table from "./Table.svelte"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'stores/backend/'
 
   export let tableId
   export let rowId
@@ -12,11 +12,11 @@
 
   $: data = row?.[fieldName] ?? []
   $: linkedTableId = data?.length ? data[0].tableId : null
-  $: linkedTable = $backendUiStore.tables.find(
+  $: linkedTable = $tables.list.find(
     table => table._id === linkedTableId
   )
   $: schema = linkedTable?.schema
-  $: table = $backendUiStore.tables.find(table => table._id === tableId)
+  $: table = $tables.list.find(table => table._id === tableId)
   $: fetchData(tableId, rowId)
   $: {
     let rowLabel = row?.[table?.primaryDisplay]

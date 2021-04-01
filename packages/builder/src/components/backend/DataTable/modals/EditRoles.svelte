@@ -4,14 +4,14 @@
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { backendUiStore } from "builderStore"
+  import { roles } from 'stores/backend/'
 
   let basePermissions = []
   let selectedRole = {}
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $backendUiStore.roles.filter(
+  $: otherRoles = $roles.filter(
     role => role._id !== selectedRoleId
   )
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
@@ -24,7 +24,7 @@
   // Changes the selected role
   const changeRole = event => {
     const id = event?.target?.value
-    const role = $backendUiStore.roles.find(role => role._id === id)
+    const role = $roles.find(role => role._id === id)
     if (role) {
       selectedRole = {
         ...role,
@@ -61,7 +61,7 @@
     }
 
     // Save/create the role
-    const response = await backendUiStore.actions.roles.save(selectedRole)
+    const response = await roles.save(selectedRole)
     if (response.status === 200) {
       notifier.success("Role saved successfully.")
     } else {
@@ -72,7 +72,7 @@
 
   // Deletes the selected role
   const deleteRole = async () => {
-    const response = await backendUiStore.actions.roles.delete(selectedRole)
+    const response = await roles.delete(selectedRole)
     if (response.status === 200) {
       changeRole()
       notifier.success("Role deleted successfully.")
@@ -98,7 +98,7 @@
     value={selectedRoleId}
     on:change={changeRole}>
     <option value="">Create new role</option>
-    {#each $backendUiStore.roles as role}
+    {#each $roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>

@@ -1,21 +1,21 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { tables, views, database } from 'stores/backend/'
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
   $: selectedView =
-    $backendUiStore.selectedView && $backendUiStore.selectedView.name
+    $views.selected && $views.selected.name
 
   function selectTable(table) {
-    backendUiStore.actions.tables.select(table)
+    tables.select(table)
     $goto(`./table/${table._id}`)
   }
 
   function selectView(view) {
-    backendUiStore.actions.views.select(view)
+    views.select(view)
     $goto(`./view/${view.name}`)
   }
 
@@ -28,11 +28,12 @@
       ...table.views[viewName],
     })
   }
+  
 </script>
 
-{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+{#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each $backendUiStore.tables as table, idx}
+    {#each $tables.list as table, idx}
       <NavItem
         border={idx > 0}
         icon={`ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
@@ -43,7 +44,7 @@
           <EditTablePopover {table} />
         {/if}
       </NavItem>
-      {#each Object.keys(table.views || {}) as viewName}
+      {#each Object.keys(table.views || {}) as viewName, idx (idx)}
         <NavItem
           indentLevel={1}
           icon="ri-eye-line"
