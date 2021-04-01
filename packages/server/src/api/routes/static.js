@@ -24,6 +24,10 @@ router.param("file", async (file, ctx, next) => {
   return next()
 })
 
+if (env.isDev()) {
+  router.get("/assets/client", controller.serveClientLibrary)
+}
+
 router
   // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
