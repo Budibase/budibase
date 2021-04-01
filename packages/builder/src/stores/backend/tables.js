@@ -106,8 +106,8 @@ export function createTablesStore() {
         if (indexes) {
           state.draft.indexes = indexes
         }
-
-        state.draft.schema[field.name] = cloneDeep(field)
+        
+        state.draft.schema = {...state.draft.schema, [field.name]: cloneDeep(field)}
         save(state.draft)
         return state
       })
