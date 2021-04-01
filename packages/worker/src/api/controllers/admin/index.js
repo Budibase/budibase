@@ -1,6 +1,10 @@
 const CouchDB = require("../../../db")
-const { StaticDatabases, generateUserID, getUserParams } = require("../../../db/utils")
-const { hash } = require("./utils")
+const {
+  StaticDatabases,
+  generateUserID,
+  getUserParams,
+} = require("../../../db/utils")
+const { hash } = require("../../../utils")
 const { UserStatus } = require("../../../constants")
 
 const USER_DB = StaticDatabases.USER.name
@@ -10,10 +14,11 @@ exports.userSave = async ctx => {
   const { email, password, _id } = ctx.request.body
   const hashedPassword = password ? await hash(password) : null
   let user = {
-    ...ctx.request.body,
-    _id: generateUserID(email),
-    password: hashedPassword,
-  }, dbUser
+      ...ctx.request.body,
+      _id: generateUserID(email),
+      password: hashedPassword,
+    },
+    dbUser
   // in-case user existed already
   if (_id) {
     dbUser = await db.get(_id)

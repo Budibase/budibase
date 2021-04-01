@@ -1,6 +1,7 @@
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
+const passport = require("koa-passport")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
@@ -23,6 +24,11 @@ app.use(
     level: env.LOG_LEVEL || "error",
   })
 )
+
+// authentication
+require("./middleware/auth")
+app.use(passport.initialize())
+app.use(passport.session())
 
 // api routes
 app.use(api.routes())
