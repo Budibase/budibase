@@ -42,8 +42,6 @@ export default `
       window.dispatchEvent(new Event("bb-ready"))
     </script>
   </head>
-  <body>
-  asdasd
-  </body>
+  <body/>
 </html>
 `
