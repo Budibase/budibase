@@ -29,7 +29,9 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
       "\\.(css|less|sass|scss)$": "identity-obj-proxy",
       "components(.*)$": "<rootDir>/src/components$1",
-      "builderStore(.*)$": "<rootDir>/src/builderStore$1"
+      "builderStore(.*)$": "<rootDir>/src/builderStore$1",
+      "stores(.*)$": "<rootDir>/src/stores$1",
+      "analytics(.*)$": "<rootDir>/src/analytics$1"
     },
     "moduleFileExtensions": [
       "js",
@@ -90,7 +92,8 @@
     "@rollup/plugin-replace": "^2.4.2",
     "@roxi/routify": "2.15.1",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",
-    "@testing-library/jest-dom": "^5.11.0",
+    "@babel/runtime": "^7.5.5",
+    "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/svelte": "^3.0.0",
     "babel-jest": "^26.6.3",
     "cypress": "^5.1.0",
@@ -98,7 +101,7 @@
     "eslint": "^7.23.0",
     "eslint-plugin-cypress": "^2.11.2",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^24.8.0",
+    "jest": "^26.6.3",
     "ncp": "^2.0.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.44.0",

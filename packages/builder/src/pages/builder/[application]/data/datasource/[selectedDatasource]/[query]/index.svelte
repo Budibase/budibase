@@ -1,6 +1,11 @@
 <script>
+<<<<<<< HEAD:packages/builder/src/pages/builder/[application]/data/datasource/[selectedDatasource]/[query]/index.svelte
   import { params } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
+=======
+  import { params } from "@sveltech/routify"
+  import { database, queries } from 'stores/backend/'
+>>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d:packages/builder/src/pages/[application]/data/datasource/[selectedDatasource]/[query]/index.svelte
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
   async function fetchQueryConfig() {
@@ -14,8 +19,8 @@
     }
   }
 
-  $: selectedQuery = $backendUiStore.queries.find(
-    query => query._id === $backendUiStore.selectedQueryId
+  $: selectedQuery = $queries.list.find(
+    query => query._id === $queries.selected
   ) || {
     datasourceId: $params.selectedDatasource,
     parameters: [],
@@ -26,7 +31,7 @@
 
 <section>
   <div class="inner">
-    {#if $backendUiStore.selectedDatabase._id && selectedQuery}
+    {#if $database._id && selectedQuery}
       <QueryInterface query={selectedQuery} />
     {/if}
   </div>

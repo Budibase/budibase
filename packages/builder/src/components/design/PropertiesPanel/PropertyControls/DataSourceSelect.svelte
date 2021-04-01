@@ -9,7 +9,9 @@
     Drawer,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, backendUiStore, currentAsset } from "builderStore"
+  import { store, currentAsset } from "builderStore"
+  import { tables as tablesStore, queries as queriesStore } from 'stores/backend/'
+  import { datasources, integrations } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
@@ -22,12 +24,12 @@
   export let otherSources
   export let showAllQueries
 
-  $: tables = $backendUiStore.tables.map(m => ({
+  $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
     type: "table",
   }))
-  $: views = $backendUiStore.tables.reduce((acc, cur) => {
+  $: views = $tablesStore.list.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,
@@ -36,7 +38,7 @@
     }))
     return [...acc, ...viewsArr]
   }, [])
-  $: queries = $backendUiStore.queries
+  $: queries = $queriesStore.list
     .filter(
       query => showAllQueries || query.queryVerb === "read" || query.readable
     )
@@ -81,10 +83,10 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $backendUiStore.datasources.find(
+    const source = $datasources.list.find(
       ds => ds._id === query.datasourceId
     ).source
-    return $backendUiStore.integrations[source].query[query.queryVerb]
+    return $integrations[source].query[query.queryVerb]
   }
 </script>
 
@@ -123,7 +125,7 @@
           height={200}
           query={value}
           schema={fetchQueryDefinition(value)}
-          datasource={$backendUiStore.datasources.find(ds => ds._id === value.datasourceId)}
+          datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
           editable={false} />
         <Spacer large />
       </div>
