@@ -120,6 +120,7 @@ const configs = {
         extensions: [".svelte"],
         emitCss: true,
       }),
+      postcss(),
       copy({
         targets: [
           {
