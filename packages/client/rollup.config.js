@@ -42,6 +42,7 @@ export default {
     resolve({
       preferBuiltins: true,
       browser: true,
+      dedupe: ["svelte", "svelte/internal"],
     }),
     svg(),
     json(),
