@@ -6,6 +6,7 @@ import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
 import json from "rollup-plugin-json"
 import builtins from "rollup-plugin-node-builtins"
+import globals from "rollup-plugin-node-globals"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -18,20 +19,18 @@ export default {
       file: `./dist/budibase-client.js`,
     },
   ],
-  external: ["svelte", "svelte/internal"],
   plugins: [
-    builtins(),
     svelte({
-      dev: !production,
       emitCss: true,
     }),
     postcss(),
+    commonjs(),
+    globals(),
+    builtins(),
     resolve({
       preferBuiltins: true,
       browser: true,
-      dedupe: ["svelte", "svelte/internal"],
     }),
-    commonjs(),
     svg(),
     json(),
     production && terser(),
