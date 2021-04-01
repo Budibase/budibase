@@ -4,7 +4,7 @@
   import { tables } from "stores/backend"
 
   onMount(async () => {
-    $tables.list.length > 0 && $goto(`../${$tables.list[0]._id}`)
+    $tables.list.length > 0 && $goto(`./${$tables.list[0]._id}`)
   })
 </script>
 
