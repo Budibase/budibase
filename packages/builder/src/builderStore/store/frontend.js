@@ -67,10 +67,8 @@ export const getFrontendStore = () => {
       await hostingStore.actions.fetch()
 
       // Initialise backend stores
-      const [
-        _integrations,
-      ] = await Promise.all([
-        api.get("/api/integrations").then(r => r.json())
+      const [_integrations] = await Promise.all([
+        api.get("/api/integrations").then(r => r.json()),
       ])
       datasources.init()
       integrations.set(_integrations)

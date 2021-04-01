@@ -3,11 +3,11 @@ import { queries } from "./"
 import api from "../../builderStore/api"
 
 export const INITIAL_DATASOURCE_VALUES = {
-    list: [],
-    selected: null,
-  }
+  list: [],
+  selected: null,
+}
 
-export function createDatasourcesStore(_api = api) {
+export function createDatasourcesStore() {
   const { subscribe, update, set } = writable(INITIAL_DATASOURCE_VALUES)
 
   return {
@@ -48,7 +48,9 @@ export function createDatasourcesStore(_api = api) {
       return json
     },
     delete: async datasource => {
-      const response = await api.delete(`/api/datasources/${datasource._id}/${datasource._rev}`)
+      const response = await api.delete(
+        `/api/datasources/${datasource._id}/${datasource._rev}`
+      )
       update(state => {
         const sources = state.list.filter(
           existing => existing._id !== datasource._id

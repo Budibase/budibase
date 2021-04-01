@@ -2,7 +2,6 @@ import { writable, get } from "svelte/store"
 import { datasources, integrations } from "./"
 import api from "builderStore/api"
 
-
 export function createQueriesStore() {
   const { subscribe, set, update } = writable({ list: [], selected: null })
 
@@ -59,7 +58,9 @@ export function createQueriesStore() {
       datasources.update(state => ({ ...state, selected: query.datasourceId }))
     },
     delete: async query => {
-      const response = await api.delete(`/api/queries/${query._id}/${query._rev}`)
+      const response = await api.delete(
+        `/api/queries/${query._id}/${query._rev}`
+      )
       update(state => {
         state.list = state.list.filter(existing => existing._id !== query._id)
         if (state.selected === query._id) {
@@ -68,7 +69,7 @@ export function createQueriesStore() {
 
         return state
       })
-      return response;
+      return response
     },
   }
 }

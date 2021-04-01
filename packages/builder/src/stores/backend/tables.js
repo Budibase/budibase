@@ -3,7 +3,6 @@ import { views } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
 
-
 export function createTablesStore() {
   const store = writable({})
   const { subscribe, update, set } = store
