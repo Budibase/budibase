@@ -7,18 +7,6 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.0.tgz#cda8bbe873ba9317160458858ae979e5393e5550"
   integrity sha512-STSQQHvoBM0kf1JrNL3KEt88RklIctaGyGOzwUTnhtTkT1jHLaF4FgxrPDCvr1AT8VOq1nGplKUCeyZ9vdUUmA==
 
-"@budibase/bbui@^1.58.13":
-  version "1.58.13"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.58.13.tgz#59df9c73def2d81c75dcbd2266c52c19db88dbd7"
-  integrity sha512-Zk6CKXdBfKsTVzA1Xs5++shdSSZLfphVpZuKVbjfzkgtuhyH7ruucexuSHEpFsxjW5rEKgKIBoRFzCK5vPvN0w==
-  dependencies:
-    markdown-it "^12.0.2"
-    quill "^1.3.7"
-    sirv-cli "^0.4.6"
-    svelte-flatpickr "^2.4.0"
-    svelte-portal "^1.0.0"
-    turndown "^7.0.0"
-
 "@polka/url@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-0.5.0.tgz#b21510597fd601e5d7c95008b76bf0d254ebfd31"
@@ -500,7 +488,7 @@ sade@^1.4.0:
   dependencies:
     mri "^1.1.0"
 
-sirv-cli@^0.4.4, sirv-cli@^0.4.6:
+sirv-cli@^0.4.4:
   version "0.4.6"
   resolved "https://registry.yarnpkg.com/sirv-cli/-/sirv-cli-0.4.6.tgz#c28ab20deb3b34637f5a60863dc350f055abca04"
   integrity sha512-/Vj85/kBvPL+n9ibgX6FicLE8VjidC1BhlX67PYPBfbBAphzR6i0k0HtU5c2arejfU3uzq8l3SYPCwl1x7z6Ww==
@@ -550,13 +538,6 @@ svelte-apexcharts@^1.0.2:
   dependencies:
     apexcharts "^3.19.2"
 
-svelte-flatpickr@^2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-2.4.0.tgz#190871fc3305956c8c8fd3601cd036b8ac71ef49"
-  integrity sha512-UUC5Te+b0qi4POg7VDwfGh0m5W3Hf64OwkfOTj6FEe/dYZN4cBzpQ82EuuQl0CTbbBAsMkcjJcixV1d2V6EHCQ==
-  dependencies:
-    flatpickr "^4.5.2"
-
 svelte-flatpickr@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.1.0.tgz#ad83588430dbd55196a1a258b8ba27e7f9c1ee37"
@@ -568,11 +549,6 @@ svelte-hmr@^0.13.3:
   version "0.13.3"
   resolved "https://registry.yarnpkg.com/svelte-hmr/-/svelte-hmr-0.13.3.tgz#fba5739b477ea44caf70e542a24a4352bee2b897"
   integrity sha512-gagW62pLQ2lULmvNA3pIZu9pBCYOaGu3rQikUOv6Nokz5VxUgT9/mQLfMxj9phDEKHCg/lgr3i6PkqZDbO9P2Q==
-
-svelte-portal@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-1.0.0.tgz#36a47c5578b1a4d9b4dc60fa32a904640ec4cdd3"
-  integrity sha512-nHf+DS/jZ6jjnZSleBMSaZua9JlG5rZv9lOGKgJuaZStfevtjIlUJrkLc3vbV8QdBvPPVmvcjTlazAzfKu0v3Q==
 
 svelte@^3.35.0:
   version "3.37.0"
