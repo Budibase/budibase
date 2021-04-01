@@ -2,13 +2,13 @@
   "name": "@budibase/string-templates",
   "version": "0.8.9",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "src/index.cjs",
+  "main": "./src/index.cjs",
   "module": "dist/bundle.mjs",
   "license": "AGPL-3.0",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/bundle.mjs",
       "require": "./src/index.cjs"
     },
     "./package.json": "./package.json"
