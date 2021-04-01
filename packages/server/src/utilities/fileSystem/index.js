@@ -22,7 +22,13 @@ const fetch = require("node-fetch")
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
 const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
-const NODE_MODULES_PATH = join(__dirname, "..", "..", "..", "..", "node_modules")
+const NODE_MODULES_PATH = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "node_modules"
+)
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
