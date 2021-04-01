@@ -1,11 +1,4 @@
 <script>
-<<<<<<< HEAD
-  import { params } from "@roxi/routify"
-  import { backendUiStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
-  import * as api from "./api"
-=======
->>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
   import Table from "./Table.svelte"
 
   export let query = {}

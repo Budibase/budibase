@@ -1,6 +1,6 @@
 <script>
-  import { tables } from 'stores/backend/'
-  import { goto, leftover } from "@sveltech/routify"
+  import { tables } from "stores/backend"
+  import { goto, leftover } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {

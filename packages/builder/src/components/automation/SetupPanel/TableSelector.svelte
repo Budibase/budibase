@@ -1,5 +1,5 @@
 <script>
-  import { tables } from 'stores/backend/'
+  import { tables } from "stores/backend"
   import { Select } from "@budibase/bbui"
 
   export let value

@@ -15,7 +15,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
-  import { datasources, integrations, queries } from 'stores/backend/'
+  import { datasources, integrations, queries } from "stores/backend"
 
   const PREVIEW_HEADINGS = [
     {
@@ -39,9 +39,7 @@
   let parameters
   let data = []
 
-  $: datasource = $datasources.list.find(
-    ds => ds._id === query.datasourceId
-  )
+  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
 
   $: query.schema = fields.reduce(
     (acc, next) => ({
@@ -113,10 +111,7 @@
 
   async function saveQuery() {
     try {
-      const { _id } = await queries.save(
-        query.datasourceId,
-        query
-      )
+      const { _id } = await queries.save(query.datasourceId, query)
       notifier.success(`Query saved successfully.`)
       $goto(`../../${_id}`)
     } catch (err) {

@@ -41,6 +41,10 @@ export default ({ mode }) => {
           replacement: path.resolve("./src/builderStore"),
         },
         {
+          find: "stores",
+          replacement: path.resolve("./src/stores"),
+        },
+        {
           find: "constants",
           replacement: path.resolve("./src/constants"),
         },

@@ -15,7 +15,7 @@ import {
   queries,
   database,
   tables,
-} from "stores/backend/"
+} from "stores/backend"
 
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
