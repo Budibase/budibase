@@ -10,7 +10,7 @@ export function createViewsStore() {
 
   return {
     subscribe,
-    select: view => {
+    select: async view => {
       update(state => ({
         ...state,
         selected: view,
@@ -29,18 +29,15 @@ export function createViewsStore() {
         ...json,
       }
 
-      update(state => {
-        const viewTable = get(tables).list.find(
-          table => table._id === view.tableId
-        )
+      const viewTable = get(tables).list.find(
+        table => table._id === view.tableId
+      )
 
-        if (view.originalName) delete viewTable.views[view.originalName]
-        viewTable.views[view.name] = viewMeta
-
-        state.tables = state.tables
-        state.selectedView = viewMeta
-        return state
-      })
+      if (view.originalName) delete viewTable.views[view.originalName]
+      viewTable.views[view.name] = viewMeta
+      await tables.save(viewTable)
+      
+      update(state => ({...state, selected: viewMeta}))
     },
   }
 }
