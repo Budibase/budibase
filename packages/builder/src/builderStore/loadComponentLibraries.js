@@ -6,7 +6,7 @@ import { get } from "builderStore/api"
  * @param {string} appId - ID of the currently running app
  */
 export const fetchComponentLibDefinitions = async appId => {
-  const LIB_DEFINITION_URL = `/${appId}/components/definitions`
+  const LIB_DEFINITION_URL = `/api/${appId}/components/definitions`
   try {
     const libDefinitionResponse = await get(LIB_DEFINITION_URL)
     return await libDefinitionResponse.json()
@@ -22,7 +22,7 @@ export const fetchComponentLibDefinitions = async appId => {
 export const fetchComponentLibModules = async application => {
   const allLibraries = {}
   for (let libraryName of application.componentLibraries) {
-    const LIBRARY_URL = `/${application._id}/componentlibrary?library=${libraryName}`
+    const LIBRARY_URL = `/api/${application._id}/componentlibrary?library=${libraryName}`
     allLibraries[libraryName] = await import(LIBRARY_URL)
   }
   return allLibraries
