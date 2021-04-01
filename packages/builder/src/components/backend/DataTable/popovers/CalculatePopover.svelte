@@ -1,6 +1,7 @@
 <script>
   import { Button, Select } from "@budibase/bbui"
-  import { backendUiStore } from "builderStore"
+  
+  import { tables, views } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 
@@ -22,8 +23,8 @@
   export let view = {}
   export let onClosed
 
-  $: viewTable = $backendUiStore.tables.find(
-    ({ _id }) => _id === $backendUiStore.selectedView.tableId
+  $: viewTable = $tables.list.find(
+    ({ _id }) => _id === $views.selected.tableId
   )
   $: fields =
     viewTable &&
@@ -36,7 +37,7 @@
     )
 
   function saveView() {
-    backendUiStore.actions.views.save(view)
+    views.save(view)
     notifier.success(`View ${view.name} saved.`)
     onClosed()
     analytics.captureEvent("Added View Calculate", { field: view.field })

@@ -1,6 +1,6 @@
 <script>
   import { params } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
+  import { database, queries } from 'stores/backend/'
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
   async function fetchQueryConfig() {
@@ -14,8 +14,8 @@
     }
   }
 
-  $: selectedQuery = $backendUiStore.queries.find(
-    query => query._id === $backendUiStore.selectedQueryId
+  $: selectedQuery = $queries.list.find(
+    query => query._id === $queries.selected
   ) || {
     datasourceId: $params.selectedDatasource,
     parameters: [],
@@ -26,7 +26,7 @@
 
 <section>
   <div class="inner">
-    {#if $backendUiStore.selectedDatabase._id && selectedQuery}
+    {#if $database._id && selectedQuery}
       <QueryInterface query={selectedQuery} />
     {/if}
   </div>
