@@ -13,6 +13,7 @@ const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
+  TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const fileProcessor = require("../../../utilities/fileSystem/processor")
@@ -33,7 +34,7 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(NODE_MODULES_PATH, "builder")
+  let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
   }
@@ -94,13 +95,7 @@ exports.serveApp = async function(ctx) {
 
 exports.serveClientLibrary = async function(ctx) {
   return send(ctx, "budibase-client.js", {
-    root: join(
-      NODE_MODULES_PATH,
-      "node_modules",
-      "@budibase",
-      "client",
-      "dist"
-    ),
+    root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
 }
 
