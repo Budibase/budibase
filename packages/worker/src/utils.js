@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs")
-const env = require("../environment")
+const env = require("./environment")
 
 const SALT_ROUNDS = env.SALT_ROUNDS || 10
 

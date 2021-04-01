@@ -1,11 +1,11 @@
 exports.StaticDatabases = {
   USER: {
     name: "user-db",
-  }
+  },
 }
 
 const DocumentTypes = {
-  USER: "us"
+  USER: "us",
 }
 
 const UNICODE_MAX = "\ufff0"
