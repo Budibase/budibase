@@ -44,16 +44,14 @@
       "^.+.svelte$": "svelte-jester"
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!svelte).+\\.js$"
+      "/node_modules/(?!svelte).+\\.js$",
+      ".*string-templates.*"
     ],
     "modulePathIgnorePatterns": [
       "<rootDir>/cypress/"
     ],
     "setupFilesAfterEnv": [
       "@testing-library/jest-dom/extend-expect"
-    ],
-    "setupFiles": [
-      "./scripts/jestSetup.js"
     ]
   },
   "eslintConfig": {
@@ -88,17 +86,10 @@
     "yup": "0.29.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.14",
-    "@babel/plugin-transform-runtime": "^7.13.10",
-    "@babel/preset-env": "^7.13.12",
-    "@babel/runtime": "^7.13.10",
     "@rollup/plugin-alias": "^3.0.1",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.0.3",
     "@sveltech/routify": "1.7.11",
-    "@testing-library/jest-dom": "^5.11.10",
-    "@testing-library/svelte": "^3.0.0",
-    "babel-jest": "^26.6.3",
     "cypress": "^5.1.0",
     "cypress-terminal-report": "^1.4.1",
     "eslint-plugin-cypress": "^2.11.1",
