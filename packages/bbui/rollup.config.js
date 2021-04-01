@@ -6,16 +6,9 @@ import json from "@rollup/plugin-json"
 import copy from "rollup-plugin-copy"
 import hmr from "rollup-plugin-hot"
 import del from "rollup-plugin-delete"
-import postcss from "rollup-plugin-postcss-hot"
+import postcss from "rollup-plugin-postcss"
 import { plugin as Svench } from "svench/rollup"
 import builtins from "rollup-plugin-node-builtins"
-
-import pkg from "./package.json"
-
-const name = pkg.name
-  .replace(/^(@\S+\/)?(svelte-)?(\S+)/, "$3")
-  .replace(/^\w/, m => m.toUpperCase())
-  .replace(/-\w/g, m => m[1].toUpperCase())
 
 const WATCH = !!process.env.ROLLUP_WATCH
 const SVENCH = !!process.env.SVENCH
@@ -120,28 +113,12 @@ const configs = {
 
   lib: () => ({
     input: "src/index.js",
-    output: [
-      { file: pkg.module, format: "es" },
-      { file: pkg.main, format: "umd", name },
-    ],
+    output: [{ file: "dist/bundle.mjs", format: "es" }],
     plugins: [
-      postcss(),
-
       svelte({
         dev: !PRODUCTION,
-        css: css => {
-          css.write("dist/bundle.css")
-        },
         extensions: [".svelte"],
-      }),
-      copy({
-        targets: [
-          {
-            src: ".svench/svench.css",
-            dest: "dist",
-            rename: "bbui.css",
-          },
-        ],
+        emitCss: true,
       }),
       copy({
         targets: [
@@ -152,9 +129,7 @@ const configs = {
           },
         ],
       }),
-
       resolve(),
-
       commonjs(),
       json(),
     ],

@@ -1,3 +1,5 @@
+import "../.svench/svench.css"
+
 // Single default export
 
 // export { default as default } from './Component.svelte';
