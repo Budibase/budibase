@@ -100,6 +100,7 @@ context("Create a View", () => {
     cy.contains("Group By").click()
     cy.get("select").select("group")
     cy.contains("Save").click()
+    cy.wait(1000)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.contains("Students").should("be.visible")
     cy.contains("Teachers").should("be.visible")
@@ -129,6 +130,7 @@ context("Create a View", () => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
     })
+    cy.wait(1000)
     cy.contains("Test View Updated").should("be.visible")
   })
 
@@ -138,6 +140,7 @@ context("Create a View", () => {
       .click({ force: true })
     cy.get("[data-cy=delete-view]").click()
     cy.contains("Delete View").click()
+    cy.wait(1000)
     cy.contains("TestView Updated").should("not.be.visible")
   })
 })
