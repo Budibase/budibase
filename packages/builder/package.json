@@ -3,7 +3,6 @@
   "version": "0.8.9",
   "license": "AGPL-3.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "routify -b && vite build",
     "start": "routify -c rollup",
@@ -16,8 +15,8 @@
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --browser electron --record --key f308590b-6070-41af-b970-794a3823d451",
-    "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
+    "cy:test": "start-server-and-test cy:setup http://localhost:4001/builder cy:run",
+    "cy:ci": "start-server-and-test cy:setup http://localhost:4001/builder cy:run:ci"
   },
   "jest": {
     "globals": {

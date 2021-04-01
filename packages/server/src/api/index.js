@@ -64,6 +64,6 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-router.redirect("/", "/_builder")
+router.redirect("/", "/builder")
 
 module.exports = router
