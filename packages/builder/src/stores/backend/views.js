@@ -36,8 +36,8 @@ export function createViewsStore() {
       if (view.originalName) delete viewTable.views[view.originalName]
       viewTable.views[view.name] = viewMeta
       await tables.save(viewTable)
-      
-      update(state => ({...state, selected: viewMeta}))
+
+      update(state => ({ ...state, selected: viewMeta }))
     },
   }
 }
