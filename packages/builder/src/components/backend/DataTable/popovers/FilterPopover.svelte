@@ -1,6 +1,6 @@
 <script>
   import { Button, Input, Select, DatePicker } from "@budibase/bbui"
-  import { tables, views } from 'stores/backend/'
+  import { tables, views } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 
@@ -49,9 +49,7 @@
   export let view = {}
   export let onClosed
 
-  $: viewTable = $tables.list.find(
-    ({ _id }) => _id === $views.selected.tableId
-  )
+  $: viewTable = $tables.list.find(({ _id }) => _id === $views.selected.tableId)
   $: fields = viewTable && Object.keys(viewTable.schema)
 
   function saveView() {

@@ -1,12 +1,7 @@
 <script>
   import { onMount } from "svelte"
-<<<<<<< HEAD
   import { goto } from "@roxi/routify"
-  import { backendUiStore } from "builderStore"
-=======
-  import { goto } from "@sveltech/routify"
-  import { database, datasources, queries } from 'stores/backend/'
->>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
+  import { database, datasources, queries } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"

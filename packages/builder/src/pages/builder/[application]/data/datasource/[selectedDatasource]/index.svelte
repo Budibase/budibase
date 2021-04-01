@@ -1,16 +1,14 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
-  import { datasources, integrations, queries } from 'stores/backend/'
+  import { datasources, integrations, queries } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
 
   let unsaved = false
 
-  $: datasource = $datasources.list.find(
-    ds => ds._id === $datasources.selected
-  )
+  $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {

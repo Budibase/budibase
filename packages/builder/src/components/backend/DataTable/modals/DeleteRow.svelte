@@ -1,5 +1,5 @@
 <script>
-  import { rows } from 'stores/backend/'
+  import { rows } from "stores/backend"
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

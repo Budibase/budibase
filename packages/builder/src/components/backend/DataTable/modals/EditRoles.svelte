@@ -4,16 +4,14 @@
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { roles } from 'stores/backend/'
+  import { roles } from "stores/backend"
 
   let basePermissions = []
   let selectedRole = {}
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $roles.filter(
-    role => role._id !== selectedRoleId
-  )
+  $: otherRoles = $roles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
   const fetchBasePermissions = async () => {

@@ -1,18 +1,12 @@
 <script>
-<<<<<<< HEAD
   import { goto } from "@roxi/routify"
-  import { backendUiStore } from "builderStore"
-=======
-  import { goto } from "@sveltech/routify"
-  import { tables, views, database } from 'stores/backend/'
->>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
+  import { tables, views, database } from "stores/backend"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
-  $: selectedView =
-    $views.selected && $views.selected.name
+  $: selectedView = $views.selected && $views.selected.name
 
   function selectTable(table) {
     tables.select(table)
@@ -33,7 +27,6 @@
       ...table.views[viewName],
     })
   }
-  
 </script>
 
 {#if $database?._id}

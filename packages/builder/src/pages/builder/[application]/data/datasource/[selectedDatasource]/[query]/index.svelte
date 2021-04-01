@@ -1,11 +1,6 @@
 <script>
-<<<<<<< HEAD:packages/builder/src/pages/builder/[application]/data/datasource/[selectedDatasource]/[query]/index.svelte
   import { params } from "@roxi/routify"
-  import { backendUiStore } from "builderStore"
-=======
-  import { params } from "@sveltech/routify"
-  import { database, queries } from 'stores/backend/'
->>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d:packages/builder/src/pages/[application]/data/datasource/[selectedDatasource]/[query]/index.svelte
+  import { database, queries } from "stores/backend"
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
   async function fetchQueryConfig() {

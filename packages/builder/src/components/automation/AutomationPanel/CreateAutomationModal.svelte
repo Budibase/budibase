@@ -1,12 +1,6 @@
 <script>
-<<<<<<< HEAD
-  import { backendUiStore, automationStore } from "builderStore"
   import { goto } from "@roxi/routify"
-=======
-  import { automationStore } from "builderStore"
-  import { database } from 'stores/backend/'
-  import { goto } from "@sveltech/routify"
->>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
+  import { database } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
