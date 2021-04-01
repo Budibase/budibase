@@ -1,7 +1,13 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
+<<<<<<< HEAD
   import { goto } from "@roxi/routify"
   import { backendUiStore } from "builderStore"
+=======
+  import { goto } from "@sveltech/routify"
+  import { views as viewsStore } from 'stores/backend/'
+  import { tables } from 'stores/backend/'
+>>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 
@@ -10,10 +16,7 @@
   let name
   let field
 
-  $: fields = Object.keys($backendUiStore.selectedTable.schema).filter(key => {
-    return $backendUiStore.selectedTable.schema[key].type === "number"
-  })
-  $: views = $backendUiStore.tables.flatMap(table =>
+  $: views = $tables.list.flatMap(table =>
     Object.keys(table.views || {})
   )
 
@@ -22,9 +25,9 @@
       notifier.danger(`View exists with name ${name}.`)
       return
     }
-    backendUiStore.actions.views.save({
+    viewsStore.save({
       name,
-      tableId: $backendUiStore.selectedTable._id,
+      tableId: $tables.selected._id,
       field,
     })
     notifier.success(`View ${name} created`)

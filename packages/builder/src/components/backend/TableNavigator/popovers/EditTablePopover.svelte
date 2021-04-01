@@ -1,6 +1,12 @@
 <script>
+<<<<<<< HEAD
   import { goto } from "@roxi/routify"
   import { backendUiStore, store, allScreens } from "builderStore"
+=======
+  import { goto } from '@sveltech/routify'
+  import { store, allScreens } from "builderStore"
+  import { tables } from 'stores/backend/'
+>>>>>>> d803aa0bd7a74220e432f4a1b338abdd7fbe9b7d
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -37,10 +43,10 @@
   }
 
   async function deleteTable() {
-    const wasSelectedTable = $backendUiStore.selectedTable
-    await backendUiStore.actions.tables.delete(table)
+    const wasSelectedTable = $tables.selected
+    await tables.delete(table)
     store.actions.screens.delete(templateScreens)
-    await backendUiStore.actions.tables.fetch()
+    await tables.fetch()
     notifier.success("Table deleted")
     if (wasSelectedTable._id === table._id) {
       $goto("./table")
@@ -49,21 +55,16 @@
   }
 
   async function save() {
-    await backendUiStore.actions.tables.save(table)
+    await tables.save(table)
     notifier.success("Table renamed successfully")
     hideEditor()
   }
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if (
-      originalName !== tableName &&
-      $backendUiStore.models?.some(model => model.name === tableName)
-    ) {
-      error = `Table with name ${tableName} already exists. Please choose another name.`
-      return
-    }
-    error = ""
+    error = originalName !== tableName
+      ? `Table with name ${tableName} already exists. Please choose another name.`
+      : ""
   }
 </script>
 
