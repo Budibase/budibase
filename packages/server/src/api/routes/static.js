@@ -24,8 +24,10 @@ router.param("file", async (file, ctx, next) => {
   return next()
 })
 
+// only used in development for retrieving the client library,
+// in production the client lib is always stored in the object store.
 if (env.isDev()) {
-  router.get("/assets/client", controller.serveClientLibrary)
+  router.get("/api/assets/client", controller.serveClientLibrary)
 }
 
 router
