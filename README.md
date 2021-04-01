@@ -31,7 +31,7 @@
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Budibase/budibase">
   </a>
   <a href="https://discord.gg/rCYayfe">
-    <img alt="Discord" src="https://img.shields.io/discord/733030666647765003">  
+    <img alt="Discord" src="https://img.shields.io/discord/733030666647765003">
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=budibase">
     <img src="https://img.shields.io/twitter/follow/budibase?style=social" alt="Follow @budibase" />
@@ -58,9 +58,9 @@
 
 
 ## ✨ Features
-When other platforms chose the closed source route, we decided to go open source. When other platforms chose cloud builders, we decided a local builder offered the better developer experience. We like to do things differently at Budibase. 
+When other platforms chose the closed source route, we decided to go open source. When other platforms chose cloud builders, we decided a local builder offered the better developer experience. We like to do things differently at Budibase.
 
-- **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience. 
+- **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
 
 - **Open source and extensable.** Budibase is open-source. The builder is licensed AGPL v3, the server is GPL v3, and the client is MPL. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
 
@@ -83,7 +83,7 @@ When other platforms chose the closed source route, we decided to go open source
 - [x] Public Beta: Anyone can [sign-up and use Budibase](https://portal.budi.live/signup).
 - [ ] Official Launch
 
-Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there. 
+Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
 
 <p align="center">
   <img src="https://i.imgur.com/cJpgqm8.png">
@@ -93,7 +93,7 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/next/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ## 🏁 Getting Started with Budibase
@@ -131,14 +131,14 @@ Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10).
 
 ## ❗ Code of Conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/master/.github/CODE_OF_CONDUCT.md). Please read it. 
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/master/.github/CODE_OF_CONDUCT.md). Please read it.
 
 ## 🙌 Contributing to Budibase
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
 
 ### Not Sure Where to Start?
-A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22). 
+A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### How the repository is organized
 Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
