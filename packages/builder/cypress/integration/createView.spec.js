@@ -70,7 +70,7 @@ context("Create a View", () => {
       .eq(1)
       .select("age")
     cy.contains("Save").click()
-    cy.wait(100)
+    cy.wait(1000)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
