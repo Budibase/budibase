@@ -8,8 +8,7 @@ const apiCall = method => async (
 ) => {
   headers["x-budibase-app-id"] = svelteGet(store).appId
   const json = headers["Content-Type"] === "application/json"
-  const fullUrl = `http://192.168.1.175:4001${url}`
-  return await fetch(fullUrl, {
+  return await fetch(url, {
     method: method,
     body: json ? JSON.stringify(body) : body,
     headers,

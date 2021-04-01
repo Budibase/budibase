@@ -130,11 +130,11 @@ exports.serveAttachment = async function(ctx) {
 
 exports.serveAppAsset = async function(ctx) {
   // TODO: can we just always serve this locally? is anything in S3?
-  if (env.isDev() || env.isTest()) {
-    const builderPath = resolve(__dirname, "../../../../builder/assets")
-    return send(ctx, ctx.file, { root: builderPath })
-  }
-  await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
+  // if (env.isDev() || env.isTest()) {
+  const builderPath = resolve(__dirname, "../../../../builder/assets")
+  return send(ctx, ctx.file, { root: builderPath })
+  // }
+  // await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
 }
 
 exports.serveComponentLibrary = async function(ctx) {
