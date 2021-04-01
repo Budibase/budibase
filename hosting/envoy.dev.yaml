@@ -34,11 +34,12 @@ static_resources:
                 route:
                   cluster: server-dev
 
-              - match: { prefix: "/builder/" }
+              - match: { prefix: "/builder" }
                 route:
                   cluster: builder-dev
+                  prefix_rewrite: "/builder/"
 
-              - match: { prefix: "/builder" }
+              - match: { prefix: "/builder/" }
                 route:
                   cluster: builder-dev
  
