@@ -1,7 +1,6 @@
 import { writable } from "svelte/store"
 import api from "builderStore/api"
 
-
 export function createPermissionStore() {
   const { subscribe } = writable([])
 
