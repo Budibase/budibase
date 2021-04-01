@@ -2,7 +2,11 @@ const Router = require("@koa/router")
 const controller = require("../controllers/static")
 const { budibaseTempDir } = require("../../utilities/budibaseDir")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/security/permissions")
+const {
+  BUILDER,
+  PermissionTypes,
+  PermissionLevels,
+} = require("../../utilities/security/permissions")
 const usage = require("../../middleware/usageQuota")
 const env = require("../../environment")
 
@@ -34,8 +38,14 @@ router
   // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
-  .post("/api/attachments/upload", usage, controller.uploadFile)
+  .post(
+    "/api/attachments/upload",
+    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    usage,
+    controller.uploadFile
+  )
   .get("/componentlibrary", controller.serveComponentLibrary)
+  // TODO: this likely needs to be secured in some way
   .get("/:appId/:path*", controller.serveApp)
 
 module.exports = router
