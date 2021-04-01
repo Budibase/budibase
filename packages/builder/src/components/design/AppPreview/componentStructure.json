@@ -1,7 +1,8 @@
 [
   "container",
-  "datagrid",
-  "list",
+  "dataprovider",
+  "table",
+  "repeater",
   "button",
   "search",
   {
@@ -62,8 +63,7 @@
     "children": [
       "screenslot",
       "navigation",
-      "login",
-      "rowdetail"
+      "login"
     ]
   }
 ]

@@ -33,7 +33,7 @@
     {
       type: ActionTypes.RefreshDatasource,
       callback: () => authStore.actions.fetchUser(),
-      metadata: { datasource: { type: "table", tableId: TableNames.USERS } },
+      metadata: { dataSource: { type: "table", tableId: TableNames.USERS } },
     },
   ]
 </script>

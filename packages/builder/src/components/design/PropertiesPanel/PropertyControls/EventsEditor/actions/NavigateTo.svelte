@@ -27,6 +27,8 @@
     display: flex;
     flex-direction: row;
     align-items: baseline;
+    max-width: 800px;
+    margin: 0 auto;
   }
 
   .root :global(> div) {

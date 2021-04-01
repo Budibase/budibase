@@ -7,6 +7,7 @@
   export let icon = ""
   export let size = "fa-lg"
   export let color = "#f00"
+  export let onClick
 
   $: styles = {
     ...$component.styles,
@@ -17,4 +18,4 @@
   }
 </script>
 
-<i use:styleable={styles} class="{icon} {size}" />
+<i use:styleable={styles} class="{icon} {size}" on:click={onClick} />

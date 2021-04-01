@@ -20,7 +20,7 @@ context("Create Bindings", () => {
       cy.get("[data-cy=setting-text] input")
         .type("{{}{{}{{} Current User._id {}}{}}")
         .blur()
-      cy.getComponent(componentId).should("have.text", "{{{ user._id }}")
+      cy.getComponent(componentId).should("have.text", "{{{ [user].[_id] }}")
     })
   })
 
