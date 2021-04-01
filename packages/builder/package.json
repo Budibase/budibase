@@ -88,10 +88,10 @@
     "yup": "0.29.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "@babel/runtime": "^7.5.5",
+    "@babel/core": "^7.12.14",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/runtime": "^7.13.10",
     "@rollup/plugin-alias": "^3.0.1",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.0.3",
