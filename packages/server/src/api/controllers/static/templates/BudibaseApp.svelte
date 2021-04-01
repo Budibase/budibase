@@ -9,9 +9,9 @@
   function publicPath(path) {
     if (production) {
       return `${objectStoreUrl}/${appId}/${path}`
+    } else {
+      return `/builder/assets/${path}`
     }
-
-    return `/assets/${path}`
   }
 </script>
 
