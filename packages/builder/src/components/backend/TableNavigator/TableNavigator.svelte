@@ -42,7 +42,7 @@
           <EditTablePopover {table} />
         {/if}
       </NavItem>
-      {#each Object.keys(table.views || {}) as viewName}
+      {#each Object.keys(table.views || {}) as viewName, idx (idx)}
         <NavItem
           indentLevel={1}
           icon="ri-eye-line"

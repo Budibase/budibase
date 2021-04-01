@@ -42,6 +42,7 @@ const INITIAL_FRONTEND_STATE = {
   libraries: null,
   appId: "",
   routes: {},
+  clientLibPath: "",
 }
 
 export const getFrontendStore = () => {
@@ -49,7 +50,7 @@ export const getFrontendStore = () => {
 
   store.actions = {
     initialise: async pkg => {
-      const { layouts, screens, application } = pkg
+      const { layouts, screens, application, clientLibPath } = pkg
       const components = await fetchComponentLibDefinitions(application._id)
       store.update(state => ({
         ...state,
@@ -63,6 +64,7 @@ export const getFrontendStore = () => {
         screens,
         hasAppPackage: true,
         appInstance: application.instance,
+        clientLibPath,
       }))
       await hostingStore.actions.fetch()
 
