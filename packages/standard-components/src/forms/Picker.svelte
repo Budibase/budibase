@@ -19,7 +19,7 @@
 {#if fieldState}
   <button
     id={$fieldState.fieldId}
-    class="spectrum-Picker"
+    class="spectrum-Picker spectrum-Picker--sizeM"
     disabled={$fieldState.disabled}
     class:is-invalid={!$fieldState.valid}
     class:is-open={open}
