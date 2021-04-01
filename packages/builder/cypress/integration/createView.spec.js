@@ -21,7 +21,6 @@ context("Create a View", () => {
       cy.get("input").type("Test View")
       cy.contains("Save View").click()
     })
-    cy.wait(1000)
     cy.get(".table-title h1").contains("Test View")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(3)
