@@ -22,6 +22,7 @@ const fetch = require("node-fetch")
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
 const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
+const NODE_MODULES_PATH = join(__dirname, "..", "..", "..", "..", "node_modules")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -170,10 +171,13 @@ exports.getComponentLibraryManifest = async (appId, library) => {
     const lib = library.split("/")[1]
     const path = require.resolve(library).split(lib)[0]
     return require(join(path, lib, filename))
-  }
-  const devPath = join(budibaseTempDir(), library, filename)
-  if (env.isDev() && fs.existsSync(devPath)) {
-    return require(devPath)
+  } else if (env.isDev()) {
+    return require(join(
+      NODE_MODULES_PATH,
+      "@budibase",
+      "standard-components",
+      filename
+    ))
   }
   const path = join(appId, "node_modules", library, "package", filename)
   let resp = await retrieve(ObjectStoreBuckets.APPS, path)
@@ -230,3 +234,4 @@ exports.cleanup = appIds => {
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.NODE_MODULES_PATH = NODE_MODULES_PATH

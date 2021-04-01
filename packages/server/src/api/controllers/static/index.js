@@ -10,12 +10,13 @@ const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
-const { loadHandlebarsFile } = require("../../../utilities/fileSystem")
+const {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+} = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const fileProcessor = require("../../../utilities/fileSystem/processor")
 const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
-
-const TOP_LEVEL = join(__dirname, "..", "..", "..", "..")
 
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
@@ -32,7 +33,7 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(TOP_LEVEL, "builder")
+  let builderPath = resolve(NODE_MODULES_PATH, "builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
   }
@@ -93,7 +94,13 @@ exports.serveApp = async function(ctx) {
 
 exports.serveClientLibrary = async function(ctx) {
   return send(ctx, "budibase-client.js", {
-    root: join(TOP_LEVEL, "node_modules", "@budibase", "client", "dist"),
+    root: join(
+      NODE_MODULES_PATH,
+      "node_modules",
+      "@budibase",
+      "client",
+      "dist"
+    ),
   })
 }
 
