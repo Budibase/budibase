@@ -1,8 +1,11 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
+import { findComponent, findComponentPath } from "./storeUtils"
 import { store } from "builderStore"
-import { tables as tablesStore, queries as queriesStores } from "stores/backend"
-import { findComponentPath } from "./storeUtils"
+import {
+  tables as tablesStore,
+  queries as queriesStores,
+} from "stores/backend/"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -191,13 +194,10 @@ const getContextBindings = (asset, componentId) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const tables = get(tablesStore).list
-  const userTable = tables.find(table => table._id === TableNames.USERS)
-  const schema = {
-    ...userTable.schema,
-    _id: { type: "string" },
-    _rev: { type: "string" },
-  }
+  const { schema } = getSchemaForDatasource({
+    type: "table",
+    tableId: TableNames.USERS,
+  })
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
   keys.forEach(key => {
