@@ -19,6 +19,7 @@
     "inquirer": "^8.0.0",
     "lookpath": "^1.1.0",
     "pkg": "^4.4.9",
+    "posthog-node": "^1.0.7",
     "randomstring": "^1.1.5"
   },
   "devDependencies": {

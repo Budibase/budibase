@@ -1,7 +1,11 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
-import { backendUiStore, store } from "builderStore"
 import { findComponent, findComponentPath } from "./storeUtils"
+import { store } from "builderStore"
+import {
+  tables as tablesStore,
+  queries as queriesStores,
+} from "stores/backend/"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -248,10 +252,10 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
   if (datasource) {
     const { type } = datasource
     if (type === "query") {
-      const queries = get(backendUiStore).queries
+      const queries = get(queriesStores).queries
       table = queries.find(query => query._id === datasource._id)
     } else {
-      const tables = get(backendUiStore).tables
+      const tables = get(tablesStore).list
       table = tables.find(table => table._id === datasource.tableId)
     }
     if (table) {

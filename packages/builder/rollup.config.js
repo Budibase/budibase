@@ -61,6 +61,10 @@ export default {
           replacement: path.resolve(projectRootDir, "src/builderStore"),
         },
         {
+          find: "stores",
+          replacement: path.resolve(projectRootDir, "src/stores"),
+        },
+        {
           find: "constants",
           replacement: path.resolve(projectRootDir, "src/constants"),
         },
