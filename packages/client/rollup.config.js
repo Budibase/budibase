@@ -9,6 +9,12 @@ import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
 
 const production = !process.env.ROLLUP_WATCH
+const ignoredWarnings = [
+  "unused-export-let",
+  "css-unused-selector",
+  "module-script-reactive-declaration",
+  "a11y-no-onchange",
+]
 
 export default {
   input: "src/index.js",
@@ -22,6 +28,12 @@ export default {
   plugins: [
     svelte({
       emitCss: true,
+      onwarn: (warning, handler) => {
+        // Ignore some warnings
+        if (!ignoredWarnings.includes(warning.code)) {
+          handler(warning)
+        }
+      },
     }),
     postcss(),
     commonjs(),
