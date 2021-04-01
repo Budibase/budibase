@@ -26,7 +26,7 @@
     "nuke": "rimraf ~/.budibase && npm run restore",
     "clean": "lerna clean",
     "kill-port": "kill-port 4001",
-    "dev": "yarn run kill-port && node ./scripts/symlinkDev.js && lerna run --parallel dev:builder --concurrency 1",
+    "dev": "yarn run kill-port && lerna link && lerna run --parallel dev:builder --concurrency 1",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
