@@ -18,13 +18,11 @@
   )
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(
-      ds => ds._id === query.datasourceId
-    ).source
+    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
+      .source
     return $integrations[source].query[query.queryVerb]
   }
 </script>
-
 
 <Label small>Datasource</Label>
 <Select thin secondary bind:value={parameters.datasourceId}>
@@ -44,37 +42,18 @@
       <option value={query._id}>{query.name}</option>
     {/each}
   </Select>
+{/if}
 
-  <Spacer medium />
+<Spacer medium />
 
-  {#if parameters.datasourceId}
-    <Label small>Query</Label>
-    <Select thin secondary bind:value={parameters.queryId}>
-      <option value="" />
-      {#each $backendUiStore.queries.filter(query => query.datasourceId === datasource._id) as query}
-        <option value={query._id}>{query.name}</option>
-      {/each}
-    </Select>
-  {/if}
-
-  <Spacer medium />
-
-  {#if query?.parameters?.length > 0}
-    <ParameterBuilder
-      bind:customParams={parameters.queryParams}
-      parameters={query.parameters}
-      bindings={bindableProperties} />
-    <IntegrationQueryEditor
-      height={200}
-      {query}
-      schema={fetchQueryDefinition(query)}
-      editable={false} />
-  {/if}
-</div>
-
-<style>
-  .root {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-</style>
+{#if query?.parameters?.length > 0}
+  <ParameterBuilder
+    bind:customParams={parameters.queryParams}
+    parameters={query.parameters}
+    bindings={bindableProperties} />
+  <IntegrationQueryEditor
+    height={200}
+    {query}
+    schema={fetchQueryDefinition(query)}
+    editable={false} />
+{/if}
