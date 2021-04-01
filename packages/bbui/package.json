@@ -13,7 +13,7 @@
     "svench:nollup:dev:help": "echo 'this script is used to dev Svench itself'",
     "svench:nollup:dev": "yarn svench:nollup  --watch ../svench/src --watch ../svench/themes --watch ../svench/*.js",
     "svench": "npm run --silent svench:nollup",
-    "build:svench": "cross-env SVENCH=1 rollup -c",
+    "build:svench": "cross-env SVENCH=1 rollup -c"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
