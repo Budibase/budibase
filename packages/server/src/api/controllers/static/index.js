@@ -35,14 +35,6 @@ function internalObjectStoreUrl() {
   }
 }
 
-async function returnObjectStoreFile(ctx, path) {
-  const S3_URL = `${internalObjectStoreUrl()}/${path}`
-  const response = await fetch(S3_URL)
-  const body = await response.text()
-  ctx.set("Content-Type", response.headers.get("Content-Type"))
-  ctx.body = body
-}
-
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
@@ -58,10 +50,6 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  // TODO: proxy to vite in dev mode
-  //if (env.isDev()) {
-  //  Proxy to vite dev server
-  //}
   let builderPath = resolve(__dirname, "../../../../builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
@@ -119,22 +107,6 @@ exports.serveApp = async function(ctx) {
     style: css.code,
     appId,
   })
-}
-
-exports.serveAttachment = async function(ctx) {
-  await returnObjectStoreFile(
-    ctx,
-    join(ctx.user.appId, "attachments", ctx.file)
-  )
-}
-
-exports.serveAppAsset = async function(ctx) {
-  // TODO: can we just always serve this locally? is anything in S3?
-  // if (env.isDev() || env.isTest()) {
-  const builderPath = resolve(__dirname, "../../../../builder/assets")
-  return send(ctx, ctx.file, { root: builderPath })
-  // }
-  // await returnObjectStoreFile(ctx, join(ctx.user.appId, "public", ctx.file))
 }
 
 exports.serveComponentLibrary = async function(ctx) {

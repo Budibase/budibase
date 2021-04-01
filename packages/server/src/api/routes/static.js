@@ -30,8 +30,6 @@ router
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post("/api/attachments/upload", usage, controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
-  .get("/assets/:file*", controller.serveAppAsset)
-  .get("/attachments/:file*", controller.serveAttachment)
   .get("/:appId/:path*", controller.serveApp)
 
 module.exports = router

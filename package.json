@@ -27,6 +27,7 @@
     "clean": "lerna clean",
     "kill-port": "kill-port 4001",
     "dev": "yarn run kill-port && lerna link && lerna run --parallel dev:builder --concurrency 1",
+    "dev:nuke": "lerna run --parallel dev:stack:nuke",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
