@@ -34,14 +34,14 @@ static_resources:
                 route:
                   cluster: server-dev
 
+              - match: { prefix: "/builder/" }
+                route:
+                  cluster: builder-dev
+
               - match: { prefix: "/builder" }
                 route:
                   cluster: builder-dev
                   prefix_rewrite: "/builder/"
-
-              - match: { prefix: "/builder/" }
-                route:
-                  cluster: builder-dev
  
               # minio is on the default route because this works
               # best, minio + AWS SDK doesn't handle path proxy
