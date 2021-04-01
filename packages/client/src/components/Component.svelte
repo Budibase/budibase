@@ -6,6 +6,7 @@
   import { enrichProps, propsAreSame } from "../utils/componentProps"
   import { builderStore } from "../store"
   import { hashString } from "../utils/hash"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let definition = {}
 
@@ -96,12 +97,14 @@
 
 {#if constructor && componentProps}
   {#key propsHash}
-    <svelte:component this={constructor} {...componentProps}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self definition={child} />
-        {/each}
-      {/if}
-    </svelte:component>
+    <div>I am a {definition._component}</div>
+    <div>{processStringSync('foo: {{ bar }}', { bar: 'bar' })}</div>
+    <!--    <svelte:component this={constructor} {...componentProps}>-->
+    <!--      {#if children.length}-->
+    <!--        {#each children as child (child._id)}-->
+    <!--          <svelte:self definition={child} />-->
+    <!--        {/each}-->
+    <!--      {/if}-->
+    <!--    </svelte:component>-->
   {/key}
 {/if}
