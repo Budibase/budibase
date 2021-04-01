@@ -109,7 +109,7 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([
+        expect(values.sort()).to.deep.eq([
           "Students",
           "23.333333333333332",
           "1650",
@@ -117,7 +117,7 @@ context("Create a View", () => {
           "25",
           "20",
           "70",
-        ])
+        ].sort())
       })
   })
 
