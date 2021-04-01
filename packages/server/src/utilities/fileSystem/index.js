@@ -22,7 +22,8 @@ const fetch = require("node-fetch")
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
 const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
-const NODE_MODULES_PATH = join(__dirname, "..", "..", "..", "node_modules")
+const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
+const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -54,11 +55,10 @@ exports.checkDevelopmentEnvironment = () => {
   if (!isDev()) {
     return
   }
-  let error
   if (!fs.existsSync(budibaseTempDir())) {
-    error =
-      "Please run a build before attempting to run server independently to fill 'tmp' directory."
+    fs.mkdirSync(budibaseTempDir())
   }
+  let error
   if (!fs.existsSync(join(process.cwd(), ".env"))) {
     error = "Must run via yarn once to generate environment."
   }
@@ -237,4 +237,5 @@ exports.cleanup = appIds => {
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH
