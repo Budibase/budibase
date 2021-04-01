@@ -7,7 +7,6 @@
   "scripts": {
     "start": "sirv public",
     "build": "rollup --config",
-    "dev:builder": "rollup --config --watch",
     "prepublishOnly": "npm run build",
     "svench:rollup": "cross-env SVENCH=1 rollup -cw",
     "svench:nollup": "cross-env SVENCH=1 nollup",
@@ -15,7 +14,6 @@
     "svench:nollup:dev": "yarn svench:nollup  --watch ../svench/src --watch ../svench/themes --watch ../svench/*.js",
     "svench": "npm run --silent svench:nollup",
     "build:svench": "cross-env SVENCH=1 rollup -c",
-    "test": "echo TODO"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
