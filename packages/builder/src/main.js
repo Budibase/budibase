@@ -3,6 +3,7 @@ import "./global.css"
 import "./fonts.css"
 import "./budibase.css"
 import "./fonts.css"
+import "@budibase/bbui/dist/style.css"
 
 import App from "./App.svelte"
 
