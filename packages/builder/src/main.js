@@ -1,4 +1,3 @@
-import "@budibase/bbui/dist/bbui.css"
 import "remixicon/fonts/remixicon.css"
 import "./global.css"
 import "./fonts.css"

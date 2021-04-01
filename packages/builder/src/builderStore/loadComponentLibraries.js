@@ -14,16 +14,3 @@ export const fetchComponentLibDefinitions = async appId => {
     console.error(`Error fetching component definitions for ${appId}`, err)
   }
 }
-
-/**
- * Loads the JavaScript files for app component libraries and returns a map of their modules.
- * @param {object} application - package definition
- */
-export const fetchComponentLibModules = async application => {
-  const allLibraries = {}
-  for (let libraryName of application.componentLibraries) {
-    const LIBRARY_URL = `/api/${application._id}/componentlibrary?library=${libraryName}`
-    allLibraries[libraryName] = await import(LIBRARY_URL)
-  }
-  return allLibraries
-}
