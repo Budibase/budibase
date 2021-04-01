@@ -111,7 +111,7 @@
             <i class="ri-arrow-left-circle-fill" />
           </div>
         {/if}
-        <img src={selectedImage.url} />
+        <img alt="preview" src={selectedImage.url} />
         {#if selectedImageIdx !== files.length - 1}
           <div class="nav right" on:click={navigateRight}>
             <i class="ri-arrow-right-circle-fill" />
