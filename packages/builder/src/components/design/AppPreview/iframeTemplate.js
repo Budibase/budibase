@@ -13,7 +13,7 @@ export default `
         box-sizing: border-box;
       }
     </style>
-    <script src='/assets/budibase-client.js'></script>
+    <script src='{{ CLIENT_LIB_PATH }}'></script>
     <script>
       function receiveMessage(event) { 
         if (!event.data) {
