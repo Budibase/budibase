@@ -1,6 +1,7 @@
 <script>
   import { Select, Label, Body } from "@budibase/bbui"
-  import { store, currentAsset, backendUiStore } from "builderStore"
+  import { store, currentAsset } from "builderStore"
+  import { tables } from "stores/backend"
   import {
     getDataProviderComponents,
     getSchemaForDatasource,
@@ -14,7 +15,7 @@
     $store.selectedComponentId
   )
   $: schemaFields = getSchemaFields(parameters?.tableId)
-  $: tableOptions = $backendUiStore.tables || []
+  $: tableOptions = $tables || []
 
   const getSchemaFields = tableId => {
     const { schema } = getSchemaForDatasource({ type: "table", tableId })

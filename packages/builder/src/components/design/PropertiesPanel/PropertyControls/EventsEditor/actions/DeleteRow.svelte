@@ -1,12 +1,13 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { store, currentAsset, backendUiStore } from "builderStore"
+  import { store, currentAsset } from "builderStore"
+  import { tables } from "stores/backend"
   import { getBindableProperties } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
 
   export let parameters
 
-  $: tableOptions = $backendUiStore.tables || []
+  $: tableOptions = $tables || []
   $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 

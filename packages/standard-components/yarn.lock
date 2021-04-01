@@ -56,13 +56,6 @@
     svelte-portal "^1.0.0"
     turndown "^7.0.0"
 
-"@budibase/svelte-ag-grid@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-1.0.4.tgz#41cceec4bde2c4aea8b9da8f610fe36055c7709f"
-  integrity sha512-JZm6qujxnZpqw7Twbegr6se4sHhyWzN0Cibrk5bVBH32hBgzD6dd33fxwrjHKkWFxjys9wRT+cqYgYVlSt9E3w==
-  dependencies:
-    ag-grid-community "^24.0.0"
-
 "@polka/url@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-0.5.0.tgz#b21510597fd601e5d7c95008b76bf0d254ebfd31"
@@ -179,7 +172,7 @@
   dependencies:
     "@spectrum-css/vars" "^3.0.1"
 
-"@spectrum-css/picker@^1.0.1":
+"@spectrum-css/picker@^1.0.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.0.1.tgz#98991198576d26bd14160824e7b6f3c278ff930b"
   integrity sha512-Rv4/UBOdNW1gs7WVBCJnPD5VFly8MqP++psDX6kcugUIcfJy0GC3acvElotmKRlCDk8Qxks2W2A0jKeSgphTmA==
@@ -247,11 +240,6 @@ abstract-leveldown@~0.12.0, abstract-leveldown@~0.12.1:
   integrity sha1-KeGOYy5g5OIh1YECR4UqY9ey5BA=
   dependencies:
     xtend "~3.0.0"
-
-ag-grid-community@^24.0.0:
-  version "24.0.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-24.0.0.tgz#793a3c4a28e5148c5c8c8c6ff68e8f3c4ee6ca3d"
-  integrity sha512-TNNqTp918PCRicH/vE8fs1pu/hbWMc9Iem7gCjGsjlabBrGhMxCq7tYiBtguERuxdszbSImznjampnc0NvOoFg==
 
 alphanum-sort@^1.0.0:
   version "1.0.2"
