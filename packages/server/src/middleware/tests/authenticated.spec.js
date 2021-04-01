@@ -1,5 +1,5 @@
 const { AuthTypes } = require("../../constants")
-const authenticatedMiddleware  = require("../authenticated")
+const authenticatedMiddleware = require("../authenticated")
 const jwt = require("jsonwebtoken")
 jest.mock("jsonwebtoken")
 
@@ -11,15 +11,15 @@ class TestConfiguration {
       auth: {},
       cookies: {
         set: jest.fn(),
-        get: jest.fn()
+        get: jest.fn(),
       },
       headers: {},
       params: {},
       path: "",
       request: {
-        headers: {}
+        headers: {},
       },
-      throw: jest.fn()
+      throw: jest.fn(),
     }
     this.next = jest.fn()
   }
@@ -49,7 +49,7 @@ describe("Authenticated middleware", () => {
   })
 
   it("calls next() when on the builder path", async () => {
-    config.ctx.path = "/_builder"
+    config.ctx.path = "/builder"
 
     await config.executeMiddleware()
 
@@ -59,25 +59,24 @@ describe("Authenticated middleware", () => {
   it("sets a new cookie when the current cookie does not match the app id from context", async () => {
     const appId = "app_123"
     config.setHeaders({
-      "x-budibase-app-id": appId 
+      "x-budibase-app-id": appId,
     })
     config.ctx.cookies.get.mockImplementation(() => "cookieAppId")
 
     await config.executeMiddleware()
 
     expect(config.ctx.cookies.set).toHaveBeenCalledWith(
-      "budibase:currentapp:local", 
+      "budibase:currentapp:local",
       appId,
       expect.any(Object)
     )
-
   })
 
   it("sets the correct BUILDER auth type information when the x-budibase-type header is not 'client'", async () => {
     config.ctx.cookies.get.mockImplementation(() => "budibase:builder:local")
     jwt.verify.mockImplementationOnce(() => ({
       apiKey: "1234",
-      roleId: "BUILDER"
+      roleId: "BUILDER",
     }))
 
     await config.executeMiddleware()
@@ -88,12 +87,12 @@ describe("Authenticated middleware", () => {
 
   it("sets the correct APP auth type information when the user is not in the builder", async () => {
     config.setHeaders({
-      "x-budibase-type": "client"
+      "x-budibase-type": "client",
     })
     config.ctx.cookies.get.mockImplementation(() => `budibase:app:local`)
     jwt.verify.mockImplementationOnce(() => ({
       apiKey: "1234",
-      roleId: "ADMIN"
+      roleId: "ADMIN",
     }))
 
     await config.executeMiddleware()
@@ -108,7 +107,7 @@ describe("Authenticated middleware", () => {
     expect(config.ctx.user.role).toEqual({
       _id: "PUBLIC",
       name: "Public",
-      permissionId: "public"
+      permissionId: "public",
     })
   })
 
