@@ -118,10 +118,7 @@ exports.serveApp = async function(ctx) {
 }
 
 exports.serveAttachment = async function(ctx) {
-  await returnObjectStoreFile(
-    ctx,
-    join(ctx.appId, "attachments", ctx.file)
-  )
+  await returnObjectStoreFile(ctx, join(ctx.appId, "attachments", ctx.file))
 }
 
 exports.serveAppAsset = async function(ctx) {
