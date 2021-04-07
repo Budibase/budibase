@@ -27,7 +27,7 @@ services:
     restart: always
     image: envoyproxy/envoy:v1.16-latest
     volumes:
-      - ./generated-envoy.dev.yaml:/etc/envoy/envoy.yaml
+      - ./.generated-envoy.dev.yaml:/etc/envoy/envoy.yaml
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
