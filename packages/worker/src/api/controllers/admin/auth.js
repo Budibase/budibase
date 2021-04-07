@@ -1,20 +1,21 @@
-const jwt = require("jsonwebtoken")
-const CouchDB = require("../../../db")
 const passport = require("@budibase/auth")
 
 exports.authenticate = async (ctx, next) => {
-  return passport.authenticate("local", async (err, user, info, status) => {
-    // TODO: better
+  return passport.authenticate("local", async (err, user) => {
     if (err) {
-      ctx.throw(err)
+      return ctx.throw(err)
     }
 
-    // await ctx.login(user)
-    ctx.body = {
-      err,
-      user,
-      info,
-      status,
-    }
+    const expires = new Date()
+    expires.setDate(expires.getDate() + 1)
+
+    ctx.cookies.set("budibase:auth", user.token, {
+      expires,
+      path: "/",
+      httpOnly: false,
+      overwrite: true,
+    })
+
+    ctx.body = { success: true }
   })(ctx, next)
 }
