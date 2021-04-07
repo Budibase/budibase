@@ -6,7 +6,8 @@
     ".": {
       "import": "./dist/standard-components.es.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./manifest.json": "./manifest.json"
   },
   "scripts": {
     "build": "vite build",
