@@ -63,6 +63,7 @@ typings/
 # dotenv environment variables file
 .env
 !hosting/.env
+hosting/generated-envoy.dev.yaml
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
