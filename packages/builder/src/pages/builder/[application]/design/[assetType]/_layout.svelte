@@ -18,6 +18,7 @@
   let previousType
   let previousAsset
   let previousComponentId
+  let hydrationComplete = false
 
   // Hydrate state from URL params
   $: hydrateStateFromURL($params, $leftover)
@@ -30,6 +31,12 @@
   )
 
   const hydrateStateFromURL = (params, leftover) => {
+    if (hydrationComplete) {
+      return
+    } else {
+      hydrationComplete = true
+    }
+
     // Do nothing if no asset type, as that means we've left the page
     if (!params.assetType) {
       return
