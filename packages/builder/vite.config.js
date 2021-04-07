@@ -27,7 +27,7 @@ export default ({ mode }) => {
       }),
     ],
     optimizeDeps: {
-      include: ['ag-grid-community'],
+      include: ["ag-grid-community"],
       exclude: ["@roxi/routify"],
     },
     resolve: {
