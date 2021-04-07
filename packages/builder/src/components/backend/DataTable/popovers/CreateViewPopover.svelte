@@ -26,7 +26,7 @@
     notifier.success(`View ${name} created`)
     onClosed()
     analytics.captureEvent("View Created", { name })
-    $goto(`../../../view/${name}`)
+    $goto(`../../view/${name}`)
   }
 </script>
 
