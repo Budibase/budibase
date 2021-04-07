@@ -6,6 +6,7 @@ import { derived, writable } from "svelte/store"
 import analytics from "analytics"
 import { FrontendTypes, LAYOUT_NAMES } from "../constants"
 import { findComponent } from "./storeUtils"
+import { getBuilderCookie } from "./api"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
@@ -57,6 +58,8 @@ export const selectedAccessRole = writable("BASIC")
 
 export const initialise = async () => {
   try {
+    // TODO this needs to be replaced by a real login
+    await getBuilderCookie()
     await analytics.activate()
     analytics.captureEvent("Builder Started")
   } catch (err) {
