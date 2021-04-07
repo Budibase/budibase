@@ -48,11 +48,11 @@ export default function positionDropdown(element, { anchor, align }) {
   element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
 
   const resizeObserver = new ResizeObserver(entries => {
-    for (let entry of entries) {
+    entries.forEach(() => {
       dimensions = getDimensions()
       element.style[positionSide] = `${dimensions[positionSide]}px`
       element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
-    }
+    })
   })
 
   resizeObserver.observe(anchor)

@@ -11,8 +11,6 @@ const createNotificationStore = () => {
     })
   }
 
-  let timers = []
-
   const notifications = derived(_notifications, ($_notifications, set) => {
     set($_notifications)
     if ($_notifications.length > 0) {
