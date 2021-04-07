@@ -38,7 +38,7 @@
   </a>
   <img src="https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg" alt="Code of conduct" />
   <a href="https://codecov.io/gh/Budibase/budibase">
-    <img src="https://codecov.io/gh/Budibase/budibase/branch/next/graph/badge.svg?token=E8W2ZFXQOH"/>
+    <img src="https://codecov.io/gh/Budibase/budibase/branch/HEAD/graph/badge.svg?token=E8W2ZFXQOH"/>
   </a>
 </p>
 
@@ -93,7 +93,7 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/next/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ## 🏁 Getting Started with Budibase
@@ -131,7 +131,7 @@ Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10).
 
 ## ❗ Code of Conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/next/.github/CODE_OF_CONDUCT.md). Please read it.
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
 
 ## 🙌 Contributing to Budibase
 
@@ -143,13 +143,13 @@ A good place to start contributing, is the [First time issues project](https://g
 ### How the repository is organized
 Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
 
-- [packages/builder](https://github.com/Budibase/budibase/tree/next/packages/builder) - contains code for the budibase builder client side svelte application.
+- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client side svelte application.
 
-- [packages/client](https://github.com/Budibase/budibase/tree/next/packages/client) - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
+- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
 
-- [packages/server](https://github.com/Budibase/budibase/tree/next/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
+- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/next/.github/CONTRIBUTING.md)
+For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
 ## 📝 License
 
