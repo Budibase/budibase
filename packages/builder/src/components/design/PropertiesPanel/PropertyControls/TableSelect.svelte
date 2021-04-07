@@ -1,6 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { backendUiStore } from "builderStore"
+  import { tables } from 'stores/backend/'
 
   export let value
 </script>
@@ -8,7 +8,7 @@
 <div>
   <Select extraThin secondary wide on:change {value}>
     <option value="">Choose a table</option>
-    {#each $backendUiStore.tables as table}
+    {#each $tables.list as table}
       <option value={table._id}>{table.name}</option>
     {/each}
   </Select>

@@ -1,6 +1,6 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
-  import { datasourceStore, createContextStore } from "../store"
+  import { dataSourceStore, createContextStore } from "../store"
   import { ActionTypes } from "../constants"
   import { generate } from "shortid"
 
@@ -31,9 +31,9 @@
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource
         if (type === ActionTypes.RefreshDatasource) {
-          const { datasource } = metadata || {}
-          datasourceStore.actions.registerDatasource(
-            datasource,
+          const { dataSource } = metadata || {}
+          dataSourceStore.actions.registerDataSource(
+            dataSource,
             instanceId,
             callback
           )
@@ -48,7 +48,7 @@
     instanceId = generate()
 
     // Unregister all datasource instances when unmounting this provider
-    return () => datasourceStore.actions.unregisterInstance(instanceId)
+    return () => dataSourceStore.actions.unregisterInstance(instanceId)
   })
 </script>
 

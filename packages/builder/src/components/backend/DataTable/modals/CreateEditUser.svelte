@@ -1,5 +1,6 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { tables, rows } from 'stores/backend/'
+  import { roles } from 'stores/backend/'
   import { notifier } from "builderStore/store/notifications"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as backendApi from "../api"
@@ -12,8 +13,8 @@
 
   $: creating = row?._id == null
   $: table = row.tableId
-    ? $backendUiStore.tables.find(table => table._id === row?.tableId)
-    : $backendUiStore.selectedTable
+    ? $tables.list.find(table => table._id === row?.tableId)
+    : $tables.selected
   $: tableSchema = getUserSchema(table)
   $: customSchemaKeys = getCustomSchemaKeys(tableSchema)
 
@@ -66,7 +67,7 @@
     }
 
     notifier.success("User saved successfully.")
-    backendUiStore.actions.rows.save(rowResponse)
+    rows.save(rowResponse)
   }
 </script>
 
@@ -91,7 +92,7 @@
     data-cy="roleId-select"
     bind:value={row.roleId}>
     <option value="">Choose an option</option>
-    {#each $backendUiStore.roles as role}
+    {#each $roles as role}
       <option value={role._id}>{role.name}</option>
     {/each}
   </Select>

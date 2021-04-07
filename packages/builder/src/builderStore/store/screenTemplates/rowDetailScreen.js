@@ -25,7 +25,7 @@ export default function(tables) {
 export const ROW_DETAIL_TEMPLATE = "ROW_DETAIL_TEMPLATE"
 export const rowDetailUrl = table => sanitizeUrl(`/${table.name}/:id`)
 
-function generateTitleContainer(table, title, formId) {
+function generateTitleContainer(table, title, formId, repeaterId) {
   // have to override style for this, its missing margin
   const saveButton = makeSaveButton(table, formId).normalStyle({
     background: "#000000",
@@ -61,10 +61,9 @@ function generateTitleContainer(table, title, formId) {
       onClick: [
         {
           parameters: {
-            providerId: formId,
-            rowId: `{{ ${makePropSafe(formId)}._id }}`,
-            revId: `{{ ${makePropSafe(formId)}._rev }}`,
             tableId: table._id,
+            rowId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_id")} }}`,
+            revId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_rev")} }}`,
           },
           "##eventHandlerType": "Delete Row",
         },
@@ -84,18 +83,33 @@ function generateTitleContainer(table, title, formId) {
 }
 
 const createScreen = table => {
-  const screen = new Screen()
-    .component("@budibase/standard-components/rowdetail")
-    .table(table._id)
-    .instanceName(`${table.name} - Detail`)
-    .route(rowDetailUrl(table))
+  const provider = new Component("@budibase/standard-components/dataprovider")
+    .instanceName(`Data Provider`)
+    .customProps({
+      dataSource: {
+        label: table.name,
+        name: `all_${table._id}`,
+        tableId: table._id,
+        type: "table",
+      },
+      filter: {
+        _id: `{{ ${makePropSafe("url")}.${makePropSafe("id")} }}`,
+      },
+      limit: 1,
+    })
+
+  const repeater = new Component("@budibase/standard-components/repeater")
+    .instanceName("Repeater")
+    .customProps({
+      dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
+    })
 
   const form = makeMainForm()
     .instanceName("Form")
     .customProps({
       theme: "spectrum--lightest",
       size: "spectrum--medium",
-      datasource: {
+      dataSource: {
         label: table.name,
         tableId: table._id,
         type: "table",
@@ -116,14 +130,24 @@ const createScreen = table => {
 
   // Add all children to the form
   const formId = form._json._id
-  const rowDetailId = screen._json.props._id
+  const repeaterId = repeater._json._id
   const heading = table.primaryDisplay
-    ? `{{ ${makePropSafe(rowDetailId)}.${makePropSafe(table.primaryDisplay)} }}`
+    ? `{{ ${makePropSafe(repeaterId)}.${makePropSafe(table.primaryDisplay)} }}`
     : null
   form
     .addChild(makeBreadcrumbContainer(table.name, heading || "Edit"))
-    .addChild(generateTitleContainer(table, heading || "Edit Row", formId))
+    .addChild(
+      generateTitleContainer(table, heading || "Edit Row", formId, repeaterId)
+    )
     .addChild(fieldGroup)
 
-  return screen.addChild(form).json()
+  repeater.addChild(form)
+  provider.addChild(repeater)
+
+  return new Screen()
+    .component("@budibase/standard-components/container")
+    .instanceName(`${table.name} - Detail`)
+    .route(rowDetailUrl(table))
+    .addChild(provider)
+    .json()
 }
