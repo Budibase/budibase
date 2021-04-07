@@ -57,9 +57,9 @@ Cypress.Commands.add("createApp", name => {
 
 Cypress.Commands.add("deleteApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.get("body").then($body => {
+  cy.get(".apps").then($apps => {
     cy.wait(1000)
-    if ($body.find(`[data-cy="app-${name}"]`).length) {
+    if ($apps.find(`[data-cy="app-${name}"]`).length) {
       cy.get(`[data-cy="app-${name}"] a`).click()
       cy.get("[data-cy=settings-icon]").click()
       cy.get(".modal-content").within(() => {
