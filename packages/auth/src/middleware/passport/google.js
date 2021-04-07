@@ -1,4 +1,4 @@
-const CouchDB = require("../db")
+// const CouchDB = require("../db")
 
 exports.options = {
   clientId: process.env.GOOGLE_CLIENT_ID,

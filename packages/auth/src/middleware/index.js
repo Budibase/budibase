@@ -1,6 +1,6 @@
-const jwt = require("./jwt")
-const local = require("./local")
-const google = require("./google")
+const jwt = require("./passport/jwt")
+const local = require("./passport/local")
+const google = require("./passport/google")
 
 module.exports = {
   google,
