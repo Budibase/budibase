@@ -32,9 +32,4 @@ exports.newAppPublicPath = async appId => {
   const destPath = join(path, "budibase-client.js")
 
   await streamUpload(BUCKET_NAME, destPath, fs.createReadStream(sourcepath))
-  await streamUpload(
-    BUCKET_NAME,
-    destPath + ".map",
-    fs.createReadStream(sourcepath + ".map")
-  )
 }
