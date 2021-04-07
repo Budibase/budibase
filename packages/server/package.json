@@ -43,7 +43,6 @@
     "electron": "electron src/electron.js",
     "build:electron": "electron-builder --dir",
     "publish:electron": "electron-builder -mwl --publish always",
-    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/",
     "initialise": "node scripts/initialise.js"
   },
