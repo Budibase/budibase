@@ -106,7 +106,7 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: 172.17.0.1
+                address: {{ address }}
                 port_value: 4001
 
   - name: builder-dev
@@ -120,6 +120,6 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: 172.17.0.1
+                address: {{ address }}
                 port_value: 3000
 
