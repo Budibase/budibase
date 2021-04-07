@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
-  // import AgGrid from "@budibase/svelte-ag-grid"
+  import AgGrid from "@budibase/svelte-ag-grid"
 
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
@@ -165,13 +165,13 @@
 </div>
 <div class="grid-wrapper">
   {#key columnDefs.length}
-    <!--    <AgGrid-->
-    <!--      {theme}-->
-    <!--      {options}-->
-    <!--      {data}-->
-    <!--      {columnDefs}-->
-    <!--      {loading}-->
-    <!--      on:select={({ detail }) => (selectedRows = detail)} />-->
+    <AgGrid
+      {theme}
+      {options}
+      {data}
+      {columnDefs}
+      {loading}
+      on:select={({ detail }) => (selectedRows = detail)} />
   {/key}
 </div>
 
