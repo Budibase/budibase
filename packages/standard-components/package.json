@@ -5,7 +5,7 @@
   "svelte": "src/index.js",
   "exports": {
     ".": {
-      "import": "./dist/standard-components.es.js"
+      "import": "./dist/standard-components.es.js",
       "require": "./dist/standard-components.es.js"
     },
     "./package.json": "./package.json",
