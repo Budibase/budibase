@@ -1,0 +1,42 @@
+<script>
+  import { View } from "svench";
+  import Button from "../Button/Button.svelte";
+  import Drawer from "./Drawer.svelte";
+
+  let drawer1;
+  let drawer2;
+</script>
+
+<style>
+  .drawer {
+    height: 40vh;
+  }
+</style>
+
+<View name="Basic Bottom Drawer">
+  <Button primary on:click={drawer1.show}>Open Drawer</Button>
+  <Drawer
+    bind:this={drawer1}
+    title="A basic Drawer with some text"
+    on:close={() => alert('You closed the drawer!')}>
+    <p slot="body">
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat,
+      architecto assumenda! Quia harum hic numquam, soluta maiores facere
+      explicabo vero obcaecati voluptas, qui placeat ad, dolorem recusandae
+      labore quos? Nisi!
+    </p>
+  </Drawer>
+</View>
+<View name="Basic Bottom Drawer">
+  <Button blue on:click={drawer2.show}>Open Drawer</Button>
+  <Drawer
+    bind:this={drawer2}
+    title={'Actions'}
+    on:close={() => alert('You closed the drawer!')}>
+    <heading slot="buttons">
+      <Button thin blue on:click={drawer2.hide}>Save</Button>
+    </heading>
+    <div slot="description">This describes the drawer!</div>
+    <div class="drawer" slot="body">Some content here</div>
+  </Drawer>
+</View>
