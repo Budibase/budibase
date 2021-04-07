@@ -216,7 +216,7 @@ exports.fetchView = async function(ctx) {
   }
   const response = await db.query(`database/${viewName}`, {
     include_docs: !calculation,
-    group,
+    group: !!group,
   })
 
   if (!calculation) {
