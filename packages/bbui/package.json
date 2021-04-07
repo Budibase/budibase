@@ -12,6 +12,7 @@
     "./dist/style.css": "./dist/style.css"
   },
   "scripts": {
+    "dev:builder": "vite build",
     "build": "vite build"
   },
   "devDependencies": {
