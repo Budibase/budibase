@@ -3,5 +3,5 @@
  * a global user record.
  */
 module.exports = async (ctx, next) => {
-  next()
+  return next()
 }

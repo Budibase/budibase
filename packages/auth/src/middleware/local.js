@@ -1,9 +1,8 @@
 const jwt = require("jsonwebtoken")
-const { UserStatus } = require("../../constants")
-const CouchDB = require("../../db")
-const { StaticDatabases, generateUserID } = require("../../db/utils")
-const { compare } = require("../../utils")
-const env = require("../../environment")
+const { UserStatus } = require("../constants")
+const CouchDB = require("../db")
+const { StaticDatabases, generateUserID } = require("../db/utils")
+const { compare } = require("../hashing")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -26,8 +25,8 @@ exports.authenticate = async function(username, password, done) {
   let dbUser
   try {
     dbUser = await db.get(generateUserID(username))
-  } catch {
-    console.error("User not found")
+  } catch (err) {
+    console.error("User not found", err)
     return done(null, false, { message: "User not found" })
   }
 
@@ -39,18 +38,17 @@ exports.authenticate = async function(username, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const payload = {
-      userId: dbUser._id,
+      _id: dbUser._id,
     }
 
-    const token = jwt.sign(payload, env.JWT_SECRET, {
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1 day",
     })
 
-    // TODO: remove and use cookie
     dbUser.token = token
-    // setCookie(ctx, token, appId)
-
+    // Remove users password in payload
     delete dbUser.password
+
     return done(null, dbUser)
   } else {
     done(new Error(INVALID_ERR), false)

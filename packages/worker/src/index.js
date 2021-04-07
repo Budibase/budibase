@@ -1,7 +1,7 @@
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
-const passport = require("koa-passport")
+const passport = require("@budibase/auth")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
@@ -26,7 +26,6 @@ app.use(
 )
 
 // authentication
-require("./middleware/auth")
 app.use(passport.initialize())
 app.use(passport.session())
 
