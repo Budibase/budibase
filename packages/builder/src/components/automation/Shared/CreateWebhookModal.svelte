@@ -1,5 +1,6 @@
 <script>
-  import { store, backendUiStore, automationStore } from "builderStore"
+  import { automationStore } from "builderStore"
+  import { database } from 'stores/backend/'
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"
@@ -10,8 +11,7 @@
   let schemaURL
   let propCount = 0
 
-  $: instanceId = $backendUiStore.selectedDatabase._id
-  $: appId = $store.appId
+  $: instanceId = $database._id
   $: automation = $automationStore.selectedAutomation?.automation
 
   onMount(async () => {

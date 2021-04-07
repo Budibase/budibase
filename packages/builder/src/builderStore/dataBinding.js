@@ -1,7 +1,11 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
-import { backendUiStore, store } from "builderStore"
-import { findComponentPath } from "./storeUtils"
+import { findComponent, findComponentPath } from "./storeUtils"
+import { store } from "builderStore"
+import {
+  tables as tablesStore,
+  queries as queriesStores,
+} from "stores/backend/"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -35,7 +39,7 @@ export const getDataProviderComponents = (asset, componentId) => {
   // Filter by only data provider components
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
-    return def?.dataProvider
+    return def?.context != null
   })
 }
 
@@ -62,14 +66,25 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
 /**
  * Gets a datasource object for a certain data provider component
  */
-export const getDatasourceForProvider = component => {
+export const getDatasourceForProvider = (asset, component) => {
   const def = store.actions.components.getDefinition(component?._component)
   if (!def) {
     return null
   }
 
+  // If this component has a dataProvider setting, go up the stack and use it
+  const dataProviderSetting = def.settings.find(setting => {
+    return setting.type === "dataProvider"
+  })
+  if (dataProviderSetting) {
+    const settingValue = component[dataProviderSetting.key]
+    const providerId = extractLiteralHandlebarsID(settingValue)
+    const provider = findComponent(asset.props, providerId)
+    return getDatasourceForProvider(asset, provider)
+  }
+
   // Extract datasource from component instance
-  const validSettingTypes = ["datasource", "table", "schema"]
+  const validSettingTypes = ["dataSource", "table", "schema"]
   const datasourceSetting = def.settings.find(setting => {
     return validSettingTypes.includes(setting.type)
   })
@@ -101,53 +116,68 @@ const getContextBindings = (asset, componentId) => {
 
   // Create bindings for each data provider
   dataProviders.forEach(component => {
-    const isForm = component._component.endsWith("/form")
-    const datasource = getDatasourceForProvider(component)
-    let tableName, schema
+    const def = store.actions.components.getDefinition(component._component)
+    const contextDefinition = def.context
+    let schema
+    let readablePrefix
 
-    // Forms are an edge case which do not need table schemas
-    if (isForm) {
+    if (contextDefinition.type === "form") {
+      // Forms do not need table schemas
+      // Their schemas are built from their component field names
       schema = buildFormSchema(component)
-      tableName = "Fields"
-    } else {
+      readablePrefix = "Fields"
+    } else if (contextDefinition.type === "static") {
+      // Static contexts are fully defined by the components
+      schema = {}
+      const values = contextDefinition.values || []
+      values.forEach(value => {
+        schema[value.key] = { name: value.label, type: "string" }
+      })
+    } else if (contextDefinition.type === "schema") {
+      // Schema contexts are generated dynamically depending on their data
+      const datasource = getDatasourceForProvider(asset, component)
       if (!datasource) {
         return
       }
-
-      // Get schema and table for the datasource
-      const info = getSchemaForDatasource(datasource, isForm)
+      const info = getSchemaForDatasource(datasource)
       schema = info.schema
-      tableName = info.table?.name
-
-      // Add _id and _rev fields for certain types
-      if (schema && ["table", "link"].includes(datasource.type)) {
-        schema["_id"] = { type: "string" }
-        schema["_rev"] = { type: "string" }
-      }
+      readablePrefix = info.table?.name
     }
-    if (!schema || !tableName) {
+    if (!schema) {
       return
     }
 
     const keys = Object.keys(schema).sort()
 
     // Create bindable properties for each schema field
+    const safeComponentId = makePropSafe(component._id)
     keys.forEach(key => {
       const fieldSchema = schema[key]
-      // Replace certain bindings with a new property to help display components
+
+      // Make safe runtime binding and replace certain bindings with a
+      // new property to help display components
       let runtimeBoundKey = key
       if (fieldSchema.type === "link") {
         runtimeBoundKey = `${key}_text`
       } else if (fieldSchema.type === "attachment") {
         runtimeBoundKey = `${key}_first`
       }
+      const runtimeBinding = `${safeComponentId}.${makePropSafe(
+        runtimeBoundKey
+      )}`
 
+      // Optionally use a prefix with readable bindings
+      let readableBinding = component._instanceName
+      if (readablePrefix) {
+        readableBinding += `.${readablePrefix}`
+      }
+      readableBinding += `.${fieldSchema.name || key}`
+
+      // Create the binding object
       bindings.push({
         type: "context",
-        runtimeBinding: `${makePropSafe(component._id)}.${makePropSafe(
-          runtimeBoundKey
-        )}`,
-        readableBinding: `${component._instanceName}.${tableName}.${key}`,
+        runtimeBinding,
+        readableBinding,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -164,14 +194,12 @@ const getContextBindings = (asset, componentId) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const tables = get(backendUiStore).tables
-  const userTable = tables.find(table => table._id === TableNames.USERS)
-  const schema = {
-    ...userTable.schema,
-    _id: { type: "string" },
-    _rev: { type: "string" },
-  }
+  const { schema } = getSchemaForDatasource({
+    type: "table",
+    tableId: TableNames.USERS,
+  })
   const keys = Object.keys(schema).sort()
+  const safeUser = makePropSafe("user")
   keys.forEach(key => {
     const fieldSchema = schema[key]
     // Replace certain bindings with a new property to help display components
@@ -184,7 +212,7 @@ const getUserBindings = () => {
 
     bindings.push({
       type: "context",
-      runtimeBinding: `user.${runtimeBoundKey}`,
+      runtimeBinding: `${safeUser}.${makePropSafe(runtimeBoundKey)}`,
       readableBinding: `Current User.${key}`,
       // Field schema and provider are required to construct relationship
       // datasource options, based on bindable properties
@@ -208,9 +236,10 @@ const getUrlBindings = asset => {
       params.push(part.replace(/:/g, "").replace(/\?/g, ""))
     }
   })
+  const safeURL = makePropSafe("url")
   return params.map(param => ({
     type: "context",
-    runtimeBinding: `url.${param}`,
+    runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
 }
@@ -223,24 +252,15 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
   if (datasource) {
     const { type } = datasource
     if (type === "query") {
-      const queries = get(backendUiStore).queries
+      const queries = get(queriesStores).queries
       table = queries.find(query => query._id === datasource._id)
     } else {
-      const tables = get(backendUiStore).tables
+      const tables = get(tablesStore).list
       table = tables.find(table => table._id === datasource.tableId)
     }
     if (table) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
-
-        // Some calc views don't include a "name" property inside the schema
-        if (schema) {
-          Object.keys(schema).forEach(field => {
-            if (!schema[field].name) {
-              schema[field].name = field
-            }
-          })
-        }
       } else if (type === "query" && isForm) {
         schema = {}
         const params = table.parameters || []
@@ -252,6 +272,21 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       } else {
         schema = cloneDeep(table.schema)
       }
+    }
+
+    // Add _id and _rev fields for certain types
+    if (schema && !isForm && ["table", "link"].includes(datasource.type)) {
+      schema["_id"] = { type: "string" }
+      schema["_rev"] = { type: "string" }
+    }
+
+    // Ensure there are "name" properties for all fields
+    if (schema) {
+      Object.keys(schema).forEach(field => {
+        if (!schema[field].name) {
+          schema[field].name = field
+        }
+      })
     }
   }
   return { schema, table }
@@ -273,7 +308,7 @@ const buildFormSchema = component => {
   if (fieldSetting && component.field) {
     const type = fieldSetting.type.split("field/")[1]
     if (type) {
-      schema[component.field] = { name: component.field, type }
+      schema[component.field] = { type }
     }
   }
   component._children?.forEach(child => {
@@ -324,6 +359,14 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     result = result.replace(boundValue, newBoundValue)
   }
   return result
+}
+
+/**
+ * Extracts a component ID from a handlebars expression setting of
+ * {{ literal [componentId] }}
+ */
+function extractLiteralHandlebarsID(value) {
+  return value?.match(/{{\s*literal[\s[]+([a-fA-F0-9]+)[\s\]]*}}/)?.[1]
 }
 
 /**

@@ -1,5 +1,6 @@
 <script>
-  import { backendUiStore, automationStore } from "builderStore"
+  import { automationStore } from "builderStore"
+  import { database } from 'stores/backend/'
   import { goto } from "@sveltech/routify"
   import { notifier } from "builderStore/store/notifications"
   import { Input, ModalContent } from "@budibase/bbui"
@@ -8,7 +9,7 @@
   let name
 
   $: valid = !!name
-  $: instanceId = $backendUiStore.selectedDatabase._id
+  $: instanceId = $database._id
 
   async function createAutomation() {
     await automationStore.actions.create({

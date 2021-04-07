@@ -1,15 +1,11 @@
-const {
-  processString,
-  processObject,
-  isValid,
-} = require("../src/index")
+const { processString, processObject, isValid } = require("../src/index")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
     const output = await processString("object is {{ object obj }}", {
       obj: { a: 1 },
     })
-    expect(output).toBe("object is {\"a\":1}")
+    expect(output).toBe('object is {"a":1}')
   })
 })
 
@@ -64,9 +60,12 @@ describe("test the array helpers", () => {
   })
 
   it("should allow use of the filter helper", async () => {
-    const output = await processString("{{#filter array \"person\"}}THING{{else}}OTHER{{/filter}}", {
-      array,
-    })
+    const output = await processString(
+      '{{#filter array "person"}}THING{{else}}OTHER{{/filter}}',
+      {
+        array,
+      }
+    )
     expect(output).toBe("THING")
   })
 
@@ -78,7 +77,7 @@ describe("test the array helpers", () => {
   })
 
   it("should allow use of the join helper", async () => {
-    const output = await processString("{{join array \"-\"}}", {
+    const output = await processString('{{join array "-"}}', {
       array,
     })
     expect(output).toBe("hi-person-how-are-you")
@@ -86,14 +85,14 @@ describe("test the array helpers", () => {
 
   it("should allow use of the sort helper", async () => {
     const output = await processString("{{sort array}}", {
-      array: ["d", "a", "c", "e"]
+      array: ["d", "a", "c", "e"],
     })
     expect(output).toBe("a,c,d,e")
   })
 
   it("should allow use of the unique helper", async () => {
     const output = await processString("{{unique array}}", {
-      array: ["a", "a", "b"]
+      array: ["a", "a", "b"],
     })
     expect(output).toBe("a,b")
   })
@@ -102,7 +101,7 @@ describe("test the array helpers", () => {
 describe("test the number helpers", () => {
   it("should allow use of the addCommas helper", async () => {
     const output = await processString("{{ addCommas number }}", {
-      number: 10000000
+      number: 10000000,
     })
     expect(output).toBe("10,000,000")
   })
@@ -132,7 +131,7 @@ describe("test the number helpers", () => {
 describe("test the url helpers", () => {
   const url = "http://example.com?query=1"
   it("should allow use of the stripQueryString helper", async () => {
-    const output = await processString('{{stripQuerystring url }}', {
+    const output = await processString("{{stripQuerystring url }}", {
       url,
     })
     expect(output).toBe("http://example.com")
@@ -149,10 +148,12 @@ describe("test the url helpers", () => {
     const output = await processString("{{ object ( urlParse url ) }}", {
       url,
     })
-    expect(output).toBe("{\"protocol\":\"http:\",\"slashes\":true,\"auth\":null,\"host\":\"example.com\"," +
-      "\"port\":null,\"hostname\":\"example.com\",\"hash\":null,\"search\":\"?query=1\"," +
-      "\"query\":\"query=1\",\"pathname\":\"/\",\"path\":\"/?query=1\"," +
-      "\"href\":\"http://example.com/?query=1\"}")
+    expect(output).toBe(
+      '{"protocol":"http:","slashes":true,"auth":null,"host":"example.com",' +
+        '"port":null,"hostname":"example.com","hash":null,"search":"?query=1",' +
+        '"query":"query=1","pathname":"/","path":"/?query=1",' +
+        '"href":"http://example.com/?query=1"}'
+    )
   })
 })
 
@@ -224,19 +225,25 @@ describe("test the string helpers", () => {
   })
 
   it("should allow use of the startsWith helper", async () => {
-    const output = await processString("{{ #startsWith 'Hello' string }}Hi!{{ else }}Goodbye!{{ /startsWith }}", {
-      string: "Hello my name is Mike",
-    })
+    const output = await processString(
+      "{{ #startsWith 'Hello' string }}Hi!{{ else }}Goodbye!{{ /startsWith }}",
+      {
+        string: "Hello my name is Mike",
+      }
+    )
     expect(output).toBe("Hi!")
   })
 })
 
 describe("test the comparison helpers", () => {
   async function compare(func, a, b) {
-    const output = await processString(`{{ #${func} a b }}Success{{ else }}Fail{{ /${func} }}`, {
-      a,
-      b,
-    })
+    const output = await processString(
+      `{{ #${func} a b }}Success{{ else }}Fail{{ /${func} }}`,
+      {
+        a,
+        b,
+      }
+    )
     expect(output).toBe("Success")
   }
   it("should allow use of the lt helper", async () => {
@@ -256,9 +263,12 @@ describe("test the comparison helpers", () => {
   })
 
   it("should allow use of gte with a literal value", async () => {
-    const output = await processString(`{{ #gte a "50" }}s{{ else }}f{{ /gte }}`, {
-      a: 51,
-    })
+    const output = await processString(
+      `{{ #gte a "50" }}s{{ else }}f{{ /gte }}`,
+      {
+        a: 51,
+      }
+    )
     expect(output).toBe("s")
   })
 })
@@ -273,21 +283,31 @@ describe("Test the literal helper", () => {
 
   it("should allow use of the literal specifier for an object", async () => {
     const output = await processString(`{{literal a}}`, {
-      a: {b: 1},
+      a: { b: 1 },
     })
     expect(output.b).toBe(1)
+  })
+
+  it("should allow use of the literal specifier for an object with dashes", async () => {
+    const output = await processString(`{{literal a}}`, {
+      a: { b: "i-have-dashes" },
+    })
+    expect(output.b).toBe("i-have-dashes")
   })
 })
 
 describe("Cover a few complex use cases", () => {
   it("should allow use of three different collection helpers", async () => {
-    const output = await processString(`{{ join ( after ( split "My name is: Joe Smith" " " ) 3 ) " " }}`, {})
+    const output = await processString(
+      `{{ join ( after ( split "My name is: Joe Smith" " " ) 3 ) " " }}`,
+      {}
+    )
     expect(output).toBe("Joe Smith")
   })
 
   it("should allow a complex array case", async () => {
     const output = await processString("{{ last ( sort ( unique array ) ) }}", {
-      array: ["a", "a", "d", "c", "e"]
+      array: ["a", "a", "d", "c", "e"],
     })
     expect(output).toBe("e")
   })
@@ -299,7 +319,9 @@ describe("Cover a few complex use cases", () => {
   })
 
   it("should make sure case is valid", () => {
-    const validity = isValid("{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}")
+    const validity = isValid(
+      "{{ avg [c355ec2b422e54f988ae553c8acd811ea].[a] [c355ec2b422e54f988ae553c8acd811ea].[b] }}"
+    )
     expect(validity).toBe(true)
   })
 
@@ -314,7 +336,9 @@ describe("Cover a few complex use cases", () => {
   })
 
   it("should confirm a subtraction validity", () => {
-    const validity = isValid("{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}")
+    const validity = isValid(
+      "{{ subtract [c390c23a7f1b6441c98d2fe2a51248ef3].[total profit] [c390c23a7f1b6441c98d2fe2a51248ef3].[total revenue]  }}"
+    )
     expect(validity).toBe(true)
   })
 
@@ -344,8 +368,10 @@ describe("Cover a few complex use cases", () => {
   })
 
   it("getting a nice date from the user", async () => {
-    const input = {text: `{{ date user.subscriptionDue "DD-MM" }}`}
-    const context = JSON.parse(`{"user":{"email":"test@test.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@test.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`)
+    const input = { text: `{{ date user.subscriptionDue "DD-MM" }}` }
+    const context = JSON.parse(
+      `{"user":{"email":"test@test.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@test.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`
+    )
     const output = await processObject(input, context)
     expect(output.text).toBe("12-01")
   })

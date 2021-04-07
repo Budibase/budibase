@@ -70,7 +70,7 @@ context("Create a View", () => {
       .eq(1)
       .select("age")
     cy.contains("Save").click()
-    cy.wait(100)
+    cy.wait(1000)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
@@ -100,6 +100,7 @@ context("Create a View", () => {
     cy.contains("Group By").click()
     cy.get("select").select("group")
     cy.contains("Save").click()
+    cy.wait(1000)
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.contains("Students").should("be.visible")
     cy.contains("Teachers").should("be.visible")
@@ -108,7 +109,7 @@ context("Create a View", () => {
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
-        expect(values).to.deep.eq([
+        expect(values.sort()).to.deep.eq([
           "Students",
           "23.333333333333332",
           "1650",
@@ -116,7 +117,7 @@ context("Create a View", () => {
           "25",
           "20",
           "70",
-        ])
+        ].sort())
       })
   })
 
@@ -129,6 +130,7 @@ context("Create a View", () => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
     })
+    cy.wait(1000)
     cy.contains("Test View Updated").should("be.visible")
   })
 
@@ -138,6 +140,7 @@ context("Create a View", () => {
       .click({ force: true })
     cy.get("[data-cy=delete-view]").click()
     cy.contains("Delete View").click()
+    cy.wait(1000)
     cy.contains("TestView Updated").should("not.be.visible")
   })
 })
