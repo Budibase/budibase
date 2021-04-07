@@ -22,7 +22,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: info
       SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
-      ENABLE_ANALYTICS: true
+      ENABLE_ANALYTICS: "true"
     depends_on:
       - worker-service
 

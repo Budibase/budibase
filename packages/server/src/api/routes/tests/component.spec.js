@@ -14,7 +14,7 @@ describe("/component", () => {
   describe("fetch definitions", () => {
     it("should be able to fetch definitions", async () => {
       const res = await request
-        .get(`/${config.getAppId()}/components/definitions`)
+        .get(`/api/${config.getAppId()}/components/definitions`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -25,7 +25,7 @@ describe("/component", () => {
       await checkBuilderEndpoint({
         config,
         method: "GET",
-        url: `/${config.getAppId()}/components/definitions`,
+        url: `/api/${config.getAppId()}/components/definitions`,
       })
     })
   })

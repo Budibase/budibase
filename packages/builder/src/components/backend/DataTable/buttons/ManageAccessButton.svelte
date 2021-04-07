@@ -1,6 +1,6 @@
 <script>
   import { TextButton, Popover } from "@budibase/bbui"
-  import { permissions } from 'stores/backend/'
+  import { permissions } from "stores/backend"
   import ManageAccessPopover from "../popovers/ManageAccessPopover.svelte"
 
   export let resourceId
@@ -10,9 +10,7 @@
   let resourcePermissions
 
   async function openDropdown() {
-    resourcePermissions = await permissions.forResource(
-      resourceId
-    )
+    resourcePermissions = await permissions.forResource(resourceId)
     dropdown.show()
   }
 </script>

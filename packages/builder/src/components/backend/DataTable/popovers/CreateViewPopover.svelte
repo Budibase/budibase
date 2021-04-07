@@ -1,8 +1,8 @@
 <script>
   import { Button, Input } from "@budibase/bbui"
-  import { goto } from "@sveltech/routify"
-  import { views as viewsStore } from 'stores/backend/'
-  import { tables } from 'stores/backend/'
+  import { goto } from "@roxi/routify"
+  import { views as viewsStore } from "stores/backend"
+  import { tables } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import analytics from "analytics"
 
@@ -11,9 +11,7 @@
   let name
   let field
 
-  $: views = $tables.list.flatMap(table =>
-    Object.keys(table.views || {})
-  )
+  $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
 
   function saveView() {
     if (views.includes(name)) {

@@ -11,7 +11,7 @@ const {
 } = require("../utilities")
 
 module.exports = async (ctx, next) => {
-  if (ctx.path === "/_builder") {
+  if (ctx.path === "/builder") {
     await next()
     return
   }

@@ -1,4 +1,4 @@
-const { processString, processObject, isValid } = require("../src/index")
+const { processString, processObject, isValid } = require("../src/index.cjs")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {

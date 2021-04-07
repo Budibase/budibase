@@ -9,11 +9,12 @@
   import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
   import { Button } from "@budibase/bbui"
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
+  import Logo from "/assets/bb-logo.svg"
 
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
@@ -158,7 +159,7 @@
       }
       const userResp = await api.post(`/api/users`, user)
       const json = await userResp.json()
-      $goto(`/${appJson._id}`)
+      $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)
       notifier.danger(error)
@@ -233,7 +234,7 @@
       {/if}
     </div>
   </div>
-  <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
+  <img src={Logo} alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />

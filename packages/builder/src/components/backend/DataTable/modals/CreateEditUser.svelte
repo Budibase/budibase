@@ -1,6 +1,6 @@
 <script>
-  import { tables, rows } from 'stores/backend/'
-  import { roles } from 'stores/backend/'
+  import { tables, rows } from "stores/backend"
+  import { roles } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as backendApi from "../api"

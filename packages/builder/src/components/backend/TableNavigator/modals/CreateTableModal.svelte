@@ -1,7 +1,7 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import { store } from "builderStore"
-  import { tables } from 'stores/backend/'
+  import { tables } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"

@@ -4,19 +4,19 @@ const {
   isValid,
   makePropSafe,
   getManifest,
-} = require("../src/index")
+} = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
   it("should process a basic template string", async () => {
     const output = await processString("templating is {{ adjective }}", {
-      adjective: "easy"
+      adjective: "easy",
     })
     expect(output).toBe("templating is easy")
   })
 
   it("should process a literal template", async () => {
     const output = await processString("derp is {{{ adjective }}}", {
-      adjective: "derp"
+      adjective: "derp",
     })
     expect(output).toBe("derp is derp")
   })
@@ -42,23 +42,29 @@ describe("Test that the string processing works correctly", () => {
 
 describe("Test that the object processing works correctly", () => {
   it("should be able to process an object with some template strings", async () => {
-    const output = await processObject({
-      first: "thing is {{ adjective }}",
-      second: "thing is bad",
-      third: "we are {{ adjective }} {{ noun }}",
-    }, {
-      adjective: "easy",
-      noun: "people",
-    })
+    const output = await processObject(
+      {
+        first: "thing is {{ adjective }}",
+        second: "thing is bad",
+        third: "we are {{ adjective }} {{ noun }}",
+      },
+      {
+        adjective: "easy",
+        noun: "people",
+      }
+    )
     expect(output.first).toBe("thing is easy")
     expect(output.second).toBe("thing is bad")
     expect(output.third).toBe("we are easy people")
   })
 
   it("should be able to handle arrays of string templates", async () => {
-    const output = await processObject(["first {{ noun }}", "second {{ noun }}"], {
-      noun: "person"
-    })
+    const output = await processObject(
+      ["first {{ noun }}", "second {{ noun }}"],
+      {
+        noun: "person",
+      }
+    )
     expect(output[0]).toBe("first person")
     expect(output[1]).toBe("second person")
   })
@@ -107,6 +113,8 @@ describe("check manifest", () => {
   it("should be able to retrieve the manifest", () => {
     const manifest = getManifest()
     expect(manifest.math).not.toBeNull()
-    expect(manifest.math.abs.description).toBe("<p>Return the magnitude of <code>a</code>.</p>\n")
+    expect(manifest.math.abs.description).toBe(
+      "<p>Return the magnitude of <code>a</code>.</p>\n"
+    )
   })
 })

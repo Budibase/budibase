@@ -1,15 +1,13 @@
 <script>
   import { Button, Select } from "@budibase/bbui"
-  import { tables, views } from 'stores/backend/'
+  import { tables, views } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { FIELDS } from "constants/backend"
 
   export let view = {}
   export let onClosed
 
-  $: viewTable = $tables.list.find(
-    ({ _id }) => _id === $views.selected.tableId
-  )
+  $: viewTable = $tables.list.find(({ _id }) => _id === $views.selected.tableId)
   $: fields =
     viewTable &&
     Object.entries(viewTable.schema)

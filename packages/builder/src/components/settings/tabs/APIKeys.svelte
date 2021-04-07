@@ -2,7 +2,7 @@
   import { Input, Label, TextButton } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
-  import { database } from 'stores/backend/'
+  import { database } from "stores/backend"
   import analytics from "analytics"
 
   let keys = { budibase: "" }

@@ -1,0 +1,117 @@
+<script>
+  import { View } from "svench";
+  import Modal from "./Modal.svelte";
+  import ModalContent from "./ModalContent.svelte";
+  import Button from "../Button/Button.svelte";
+  import Content from "./Content.svelte";
+  import QuizModal from "./QuizModal.svelte";
+  import CustomContent from "./CustomContent.svelte";
+
+  let modal1
+  let modal2
+  let modal3
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+  async function longTask() {
+    await sleep(3000)
+  }
+</script>
+
+<style>
+  p, span {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-s);
+  }
+
+  code {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: var(--spacing-xs) var(--spacing-s);
+    background-color: var(--grey-2);
+    color: var(--red-dark);
+    border-radius: var(--spacing-xs);
+  }
+</style>
+
+<h3>Modals</h3>
+<p>
+  Modals provide a means to render content in front of everything else on a page.
+</p>
+<p>
+  The modal module in BBUI exposes two
+  separate components to provide this functionality; a <code>Modal</code> component to control visibility of content,
+  and a <code>ModalContent</code> component to quickly construct the typical content - although this is optional.
+</p>
+<p>
+  One of the common problems with modals and popups is stale state reappearing after hiding and showing the content
+  again, since the state hasn't been garbage collected if a component controls its own visibility. This is handled for
+  you when using the <code>Modal</code> component as it will fully unmount child components, properly resetting state
+  every time it appears.
+</p>
+
+<br/>
+<p>Use ModalContent to render typical modal content.</p>
+<View name="Simple Confirmation Modal">
+  <Button primary on:click={modal1.show}>Delete Record</Button>
+  <Modal bind:this={modal1}>
+    <ModalContent title="Confirm Deletion" confirmText="Delete">
+      <span>Are you sure you want to delete this record?</span>
+    </ModalContent>
+  </Modal>
+</View>
+
+<br/>
+<p>
+  Width can be specified as a prop to a <code>Modal</code>. Any additional <code>ModalContent</code> props provided
+  will be passed to the confirmation button.
+</p>
+<View name="Different Buttons and Width">
+  <Button primary on:click={modal3.show}>Open Modal</Button>
+  <Modal bind:this={modal3} width="250px">
+    <ModalContent
+      title="Confirmation Required"
+      showCancelButton={false}
+      showCloseIcon={false}
+      confirmText="I'm sure!"
+      green
+      large
+      wide
+    >
+      <span>Are you sure you want to do that?</span>
+    </ModalContent>
+  </Modal>
+</View>
+
+<br/>
+<p>Any content can be rendered inside a <code>Modal</code>. Use context to close the modal from your own components.</p>
+<View name="Custom Content">
+  <Button primary on:click={modal1.show}>Open Modal</Button>
+  <Modal bind:this={modal1} padding={false} border={false}>
+    <CustomContent/>
+  </Modal>
+</View>
+
+<br/>
+<p>Async functions passed in as the onConfirm prop will make the modal wait until the callback is completed.</p>
+<View name="Async Callbacks">
+  <Button primary on:click={modal2.show}>Long Task</Button>
+  <Modal bind:this={modal2}>
+    <ModalContent
+      title="Perform Long Task"
+      confirmText="Submit"
+      onConfirm={longTask}
+    >
+      <span>Pressing submit will wait 3 seconds before finishing and disable the confirm button until it's done.</span>
+    </ModalContent>
+  </Modal>
+</View>
+
+<br/>
+<p>Returning false from a onConfirm callback will prevent the modal being closed.</p>
+<View name="Callback Failure Handling">
+  <Button primary on:click={modal3.show}>Open Quiz</Button>
+  <Modal bind:this={modal3}>
+    <QuizModal />
+  </Modal>
+</View>
+

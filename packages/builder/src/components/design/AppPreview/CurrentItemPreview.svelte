@@ -18,6 +18,12 @@
     .instanceName("Content Placeholder")
     .json()
 
+  // Construct iframe template
+  $: template = iframeTemplate.replace(
+    /\{\{ CLIENT_LIB_PATH }}/,
+    $store.clientLibPath
+  )
+
   // Extract data to pass to the iframe
   $: {
     if ($store.currentFrontEndType === FrontendTypes.LAYOUT) {
@@ -76,7 +82,7 @@
     style="height: 100%; width: 100%"
     title="componentPreview"
     bind:this={iframe}
-    srcdoc={iframeTemplate} />
+    srcdoc={template} />
 </div>
 
 <style>

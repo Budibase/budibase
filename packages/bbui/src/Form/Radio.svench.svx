@@ -1,0 +1,64 @@
+<script>
+    import { View } from "svench";
+    import Radio from "./Radio.svelte";
+  
+    let selected = 'Cookies and cream'
+    let selected2 = 'Mint choc chip'
+  
+    let menu = [
+		'Cookies and cream',
+		'Mint choc chip',
+		'Raspberry ripple'
+	];
+  </script>
+  
+  ## Multiple checkboxes
+  Use an array and an each block to use the radio button.
+```svelte
+<script>
+    let selected = 'Cookies and cream'
+    let selected2 = 'Cookies and cream'
+
+    let menu = [
+        'Cookies and cream',
+        'Mint choc chip',
+        'Raspberry ripple'
+    ];
+</script>
+
+{#each menu as flavour}
+    <Radio name="Ice Cream Flavour" value={flavour} bind:group={selected} label={flavour} showLabel/>
+{/each}
+```
+  
+  
+  <View name="Multiple radio buttons">
+    <div class="container">
+        {#each menu as flavour}
+            <Radio name="Ice Cream Flavour"  value={flavour} bind:group={selected}>
+              <label for={flavour}>{flavour}</label>
+            </Radio>
+        {/each}
+    </div>
+  </View>
+
+  <View name="Disabled Radio inputs">
+    <div class="container">
+        {#each menu as flavour}
+            <Radio disabled name="Ice Cream Flavour"  value={flavour} bind:group={selected2}>
+              <label for={flavour}>{flavour}</label>
+            </Radio>
+        {/each}
+    </div>
+  </View>
+  
+  <style>
+    label {
+      display: grid;
+      place-items: center;
+    }
+    .container {
+      display: grid;
+      grid-gap: 10px;
+    }
+  </style>

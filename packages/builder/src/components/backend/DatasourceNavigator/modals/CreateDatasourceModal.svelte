@@ -1,6 +1,6 @@
 <script>
-  import { goto } from "@sveltech/routify"
-  import { datasources } from 'stores/backend/'
+  import { goto } from "@roxi/routify"
+  import { datasources } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
@@ -14,9 +14,7 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if (
-      $datasources?.list.some(
-        datasource => datasource.name === datasourceName
-      )
+      $datasources?.list.some(datasource => datasource.name === datasourceName)
     ) {
       error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
       return
