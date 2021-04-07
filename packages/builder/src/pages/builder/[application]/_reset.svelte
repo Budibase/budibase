@@ -45,65 +45,71 @@
   }
 </script>
 
-<div class="root">
-  <div class="top-nav">
-    <div class="topleftnav">
-      <button class="home-logo">
-        <img
-          src={Logo}
-          alt="budibase icon"
-          on:click={() => $goto(`/builder/`)} />
-      </button>
+{#await promise}
+  <!-- This should probably be some kind of loading state? -->
+  <div class="loading" />
+{:then _}
+  <div class="root">
+    <div class="top-nav">
+      <div class="topleftnav">
+        <button class="home-logo">
+          <img
+            src={Logo}
+            alt="budibase icon"
+            on:click={() => $goto(`/builder/`)} />
+        </button>
 
-      <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-      {#each $layout.children as { path, title }}
-        <span
-          class:active={$isActive(path)}
-          class="topnavitem"
-          on:click={topItemNavigate(path)}>
-          {title}
-        </span>
-      {/each}
-    </div>
-    <div class="toprightnav">
-      <ThemeEditorDropdown />
-      <FeedbackNavLink />
-      <div class="topnavitemright">
-        <a
-          target="_blank"
-          href="https://github.com/Budibase/budibase/discussions">
-          <i class="ri-github-fill" />
-        </a>
+        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
+        {#each $layout.children as { path, title }}
+          <span
+            class:active={$isActive(path)}
+            class="topnavitem"
+            on:click={topItemNavigate(path)}>
+            {title}
+          </span>
+        {/each}
       </div>
-      <SettingsLink />
+      <div class="toprightnav">
+        <ThemeEditorDropdown />
+        <FeedbackNavLink />
+        <div class="topnavitemright">
+          <a
+            target="_blank"
+            href="https://github.com/Budibase/budibase/discussions">
+            <i class="ri-github-fill" />
+          </a>
+        </div>
+        <SettingsLink />
+        <Button
+          secondary
+          on:click={() => {
+            window.open(`/${application}`)
+          }}>
+          Preview
+        </Button>
+      </div>
+    </div>
+    <div class="beta">
       <Button
         secondary
-        on:click={() => {
-          window.open(`/${application}`)
-        }}>
-        Preview
+        href="https://github.com/Budibase/budibase/discussions/categories/ideas">
+        Request feature
       </Button>
     </div>
-  </div>
-  <div class="beta">
-    <Button
-      secondary
-      href="https://github.com/Budibase/budibase/discussions/categories/ideas">
-      Request feature
-    </Button>
-  </div>
-
-  {#await promise}
-    <!-- This should probably be some kind of loading state? -->
-    <div />
-  {:then _}
     <slot />
-  {:catch error}
-    <p>Something went wrong: {error.message}</p>
-  {/await}
-</div>
+  </div>
+{:catch error}
+  <p>Something went wrong: {error.message}</p>
+{/await}
 
 <style>
+  .loading {
+    min-height: 100%;
+    height: 100%;
+    width: 100%;
+    background: var(--background);
+  }
+
   .root {
     min-height: 100%;
     height: 100%;
