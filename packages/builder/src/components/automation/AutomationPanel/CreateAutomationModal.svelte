@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { database } from "stores/backend"
+  import { automationStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
