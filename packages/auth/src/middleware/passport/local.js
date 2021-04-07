@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken")
-const { UserStatus } = require("../constants")
-const CouchDB = require("../db")
-const { StaticDatabases, generateUserID } = require("../db/utils")
-const { compare } = require("../hashing")
+const { UserStatus } = require("../../constants")
+const CouchDB = require("../../db")
+const { StaticDatabases, generateUserID } = require("../../db/utils")
+const { compare } = require("../../hashing")
 
 const INVALID_ERR = "Invalid Credentials"
 

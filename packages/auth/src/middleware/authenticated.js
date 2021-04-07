@@ -22,7 +22,7 @@ module.exports = async (ctx, next) => {
   const cookieAppId = ctx.cookies.get(Cookies.CurrentApp)
   // const builtinRoles = getBuiltinRoles()
   if (appId && cookieAppId !== appId) {
-    setCookie(ctx, appId, "currentapp")
+    setCookie(ctx, appId, Cookies.CurrentApp)
   } else if (cookieAppId) {
     appId = cookieAppId
   }

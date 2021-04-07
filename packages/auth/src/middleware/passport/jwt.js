@@ -1,7 +1,4 @@
-// const jwt = require("passport-jwt")
-const { Cookies } = require("../constants")
-
-// const ExtractJWT = jwt.ExtractJwt
+const { Cookies } = require("../../constants")
 
 exports.options = {
   jwtFromRequest: function(ctx) {
