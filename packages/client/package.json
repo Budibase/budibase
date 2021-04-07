@@ -3,11 +3,13 @@
   "version": "0.8.9",
   "license": "MPL-2.0",
   "module": "dist/budibase-client.js",
+  "main": "dist/budibase-client.js",
   "type": "module",
   "svelte": "src/index.js",
   "exports": {
     ".": {
-      "import": "./dist/budibase-client.js"
+      "import": "./dist/budibase-client.js",
+      "require": "./dist/budibase-client.js"
     },
     "./package.json": "./package.json"
   },
