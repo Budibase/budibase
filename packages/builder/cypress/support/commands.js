@@ -26,6 +26,8 @@
 
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  // wait for init API calls on visit
+  cy.wait(100)
   cy.contains("Create New Web App").click()
   cy.get("body")
     .then($body => {
