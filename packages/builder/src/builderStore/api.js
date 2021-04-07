@@ -20,6 +20,9 @@ export const get = apiCall("GET")
 export const patch = apiCall("PATCH")
 export const del = apiCall("DELETE")
 export const put = apiCall("PUT")
+export const getBuilderCookie = async () => {
+  await post("/api/builder/login", {})
+}
 
 export default {
   post: apiCall("POST"),
@@ -27,4 +30,5 @@ export default {
   patch: apiCall("PATCH"),
   delete: apiCall("DELETE"),
   put: apiCall("PUT"),
+  getBuilderCookie,
 }
