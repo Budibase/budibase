@@ -7,6 +7,7 @@
   import Context from "../context"
 
   export let title = undefined
+  export let size
   export let cancelText = "Cancel"
   export let confirmText = "Confirm"
   export let showCancelButton = true
@@ -28,7 +29,7 @@
   }
 </script>
 
-<div class="spectrum-Dialog spectrum-Dialog--medium" role="dialog" tabindex="-1" aria-modal="true">
+<div class="spectrum-Dialog spectrum-Dialog--{size}" role="dialog" tabindex="-1" aria-modal="true">
   <div class="spectrum-Dialog-grid">
     <h1 class="spectrum-Dialog-heading">{title}</h1>
     <hr class="spectrum-Divider spectrum-Divider--sizeS spectrum-Divider--horizontal spectrum-Dialog-divider">
