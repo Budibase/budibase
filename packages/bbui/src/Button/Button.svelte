@@ -10,6 +10,8 @@
   export let size = "M";
   /** @type {('cta','primary','secondary','warning', 'overBackground')} Type of button */
   export let type = "primary"
+
+  export let quiet = false
   
   export let icon = undefined;
 </script>
@@ -21,7 +23,7 @@
     {href}
     {disabled}>
     {#if icon}
-      <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="{icon}">
+      <svg class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}" focusable="false" aria-hidden="true" aria-label="{icon}">
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     {/if}
@@ -29,11 +31,11 @@
   </a>
 {:else}
   <button
-    class="spectrum-Button spectrum-Button--{type} spectrum-Button--size{size.toUpperCase()}"
+    class="spectrum-Button spectrum-Button--{type} spectrum-Button--size{size.toUpperCase()} {quiet && 'spectrum-Button--quiet'}"
     {disabled}
     on:click|preventDefault>
     {#if icon}
-      <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="{icon}">
+      <svg class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}" focusable="false" aria-hidden="true" aria-label="{icon}">
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     {/if}
