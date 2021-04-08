@@ -8,11 +8,6 @@
   import Context from "../context"
   const dispatch = createEventDispatcher()
 
-  export let padding = true
-  export let width = ''
-  export let border = true
-  export let dismissable = true
-
   let visible = false
   $: dispatch(visible ? "show" : "hide")
 
