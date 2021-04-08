@@ -79,6 +79,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/auth": "^0.0.1",
     "@budibase/client": "^0.8.9",
     "@budibase/string-templates": "^0.8.9",
     "@elastic/elasticsearch": "7.10.0",

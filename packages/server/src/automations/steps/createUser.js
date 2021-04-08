@@ -75,7 +75,7 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
     if (env.isProd()) {
       await usage.update(apiKey, usage.Properties.USER, 1)
     }
-    await userController.create(ctx)
+    await userController.createMetadata(ctx)
     return {
       response: ctx.body,
       // internal property not returned through the API

@@ -34,7 +34,10 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
-  USERS: "ta_users",
+}
+
+const InternalTables = {
+  USER_METADATA: "ta_users",
 }
 
 const SearchIndexes = {
@@ -43,6 +46,7 @@ const SearchIndexes = {
 
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
+exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX

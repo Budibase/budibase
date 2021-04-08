@@ -7,7 +7,7 @@ const { generateUserID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
-const { UserStatus } = require("../../constants")
+const { UserStatus } = require("@budibase/auth")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 
 const INVALID_ERR = "Invalid Credentials"

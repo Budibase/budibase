@@ -32,3 +32,7 @@ exports.getUserParams = (email = "", otherProps = {}) => {
     endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
   }
 }
+
+exports.getEmailFromUserID = id => {
+  return id.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
+}
