@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@adobe/spectrum-css-workflow-icons@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.0.tgz#cda8bbe873ba9317160458858ae979e5393e5550"
+  integrity sha512-STSQQHvoBM0kf1JrNL3KEt88RklIctaGyGOzwUTnhtTkT1jHLaF4FgxrPDCvr1AT8VOq1nGplKUCeyZ9vdUUmA==
+
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.11.tgz#f4ad435aa263db935b8f10f2c552d23fb716a63f"
@@ -1387,6 +1392,11 @@
   integrity sha512-MZPUxrmFubI36XS1DI3qmI0YdN1gks62JtFZvxR67ljjSNCeK6U08Zx4msEWOXuofgqUt6zPHSi1H9fbjR/NRA==
   dependencies:
     "@sinonjs/commons" "^1.7.0"
+
+"@spectrum-css/icon@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.1.tgz#e300a6fc353c85c6b5d6e7a364408a940c31b177"
+  integrity sha512-cGFtIrcQ/7tthdkHK1npuEFiCdYVHLqwmLxghUYQw8Tb8KgJaw3OBO1tpjgsUizexNgu26BjVRIbGxNWuBXIHQ==
 
 "@spectrum-css/page@^3.0.1":
   version "3.0.1"

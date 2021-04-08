@@ -9,6 +9,9 @@ import "@spectrum-css/vars/dist/spectrum-medium.css"
 import "@spectrum-css/vars/dist/spectrum-darkest.css"
 import "@spectrum-css/page/dist/index-vars.css"
 
+import { loadSpectrumIcons } from "./spectrum-icons"
+loadSpectrumIcons()
+
 import App from "./App.svelte"
 
 export default new App({
