@@ -1,3 +1,5 @@
+// need to load environment first
+const env = require("./environment")
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
@@ -5,7 +7,6 @@ const { passport } = require("@budibase/auth")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
-const env = require("./environment")
 
 const app = new Koa()
 
