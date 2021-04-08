@@ -28,11 +28,13 @@
   }
 </script>
 
-<div class="spectrum-Dialog spectrum-Dialog--small" role="dialog" tabindex="-1" aria-modal="true">
+<div class="spectrum-Dialog spectrum-Dialog--medium" role="dialog" tabindex="-1" aria-modal="true">
   <div class="spectrum-Dialog-grid">
     <h1 class="spectrum-Dialog-heading">{title}</h1>
-    <hr class="spectrum-Divider spectrum-Divider--sizeM spectrum-Divider--horizontal spectrum-Dialog-divider">
-    <section class="spectrum-Dialog-content">
+    <hr class="spectrum-Divider spectrum-Divider--sizeS spectrum-Divider--horizontal spectrum-Dialog-divider">
+    
+    <!-- TODO: Remove content-grid class once Layout components are in bbui -->
+    <section class="spectrum-Dialog-content content-grid">
       <slot />
     </section>
     {#if showCancelButton || showConfirmButton}
@@ -66,6 +68,16 @@
 
 
 <style>
+  .content-grid {
+    display: grid;
+    position: relative;
+    gap: var(--spacing-xl);
+    color: var(--ink);
+  }
+
+  h1 {
+    font-weight: normal;
+  }
   .close-icon {
     position: absolute;
     top: 15px;

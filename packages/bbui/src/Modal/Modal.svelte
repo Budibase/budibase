@@ -37,7 +37,7 @@
 <svelte:window on:keydown={handleKey} />
 
 {#if visible}
-  <Portal target="modal-container">
+  <Portal target=".modal-container">
     <div class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }} on:click|self={hide}>
       <div class="spectrum-Modal-wrapper">
         <div class="spectrum-Modal is-open" transition:fly={{ y: 30, duration: 200 }}>
