@@ -8,6 +8,7 @@ const { jwt, local, google } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
 const { hash, compare } = require("./hashing")
 const { getAppId, setCookie } = require("./utils")
+const { generateUserID, getUserParams } = require("./db/utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -32,6 +33,9 @@ module.exports = {
   passport,
   Cookies,
   UserStatus,
+  StaticDatabases,
+  generateUserID,
+  getUserParams,
   hash,
   compare,
   getAppId,

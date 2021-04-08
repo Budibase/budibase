@@ -1,10 +1,10 @@
 const CouchDB = require("../../../db")
 const {
-  StaticDatabases,
+  hash,
   generateUserID,
   getUserParams,
-} = require("../../../db/utils")
-const { hash } = require("../../../utils")
+  StaticDatabases,
+} = require("@budibase/auth")
 const { UserStatus } = require("../../../constants")
 
 const USER_DB = StaticDatabases.USER.name
