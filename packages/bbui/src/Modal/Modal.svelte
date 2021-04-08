@@ -96,7 +96,7 @@
   }
 
   .modal {
-    background-color: var(--background);
+    background-color: var(--spectrum-global-color-gray-900);
     display: grid;
     align-items: stretch;
     position: relative;
