@@ -11,29 +11,15 @@ module.exports = async (ctx, next) => {
     appId = cookieAppId
   }
 
-  let token
-  if (appId) {
-    token = ctx.cookies.get(Cookies.Auth)
-  }
-
-  if (!token) {
-    ctx.auth = {
-      authenticated: false,
-    }
-    ctx.appId = appId
-    // ctx.user = {
-    //   // TODO: introduce roles again
-    //   // role: builtinRoles.PUBLIC,
-    // }
-    return await next()
-  }
-
   return passport.authenticate("jwt", async (err, user) => {
     if (err) {
-      return ctx.throw(err)
+      return ctx.throw(err.status || 403, err)
     }
 
     try {
+      ctx.appId = appId
+      ctx.isAuthenticated = true
+      // TODO: introduce roles again
       ctx.user = user
       await next()
     } catch (err) {
