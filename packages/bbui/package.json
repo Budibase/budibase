@@ -45,6 +45,7 @@
   "dependencies": {
     "@spectrum-css/button": "^3.0.1",
     "@spectrum-css/dialog": "^3.0.1",
+    "@spectrum-css/divider": "^1.0.1",
     "@spectrum-css/modal": "^3.0.1",
     "@spectrum-css/underlay": "^2.0.9",
     "markdown-it": "^12.0.4",
