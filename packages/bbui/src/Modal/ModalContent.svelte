@@ -7,7 +7,7 @@
   import Context from "../context"
 
   export let title = undefined
-  export let size
+  export let size = "small"
   export let cancelText = "Cancel"
   export let confirmText = "Confirm"
   export let showCancelButton = true
@@ -40,15 +40,17 @@
     </section>
     {#if showCancelButton || showConfirmButton}
       <div class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter">
-        <footer class="footer-content">
+        <!-- <footer class="footer-content">
           <slot name="footer" />
-        </footer>
-        <div class="buttons">
+        </footer> -->
+        <div class="spectrum-ButtonGroup-item">
+          <slot name="footer" />
           {#if showCancelButton}
-            <Button secondary on:click={hide}>{cancelText}</Button>
+            <Button type="secondary" on:click={hide}>{cancelText}</Button>
           {/if}
           {#if showConfirmButton}
             <Button
+            type="cta"
               primary
               {...$$restProps}
               disabled={confirmDisabled}
