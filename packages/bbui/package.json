@@ -43,6 +43,10 @@
     "dist"
   ],
   "dependencies": {
+    "@spectrum-css/button": "^3.0.1",
+    "@spectrum-css/dialog": "^3.0.1",
+    "@spectrum-css/modal": "^3.0.1",
+    "@spectrum-css/underlay": "^2.0.9",
     "markdown-it": "^12.0.4",
     "quill": "^1.3.7",
     "sirv-cli": "^0.4.6",
