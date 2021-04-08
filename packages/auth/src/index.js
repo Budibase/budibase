@@ -5,6 +5,9 @@ const JwtStrategy = require("passport-jwt").Strategy
 const CouchDB = require("./db")
 const { StaticDatabases } = require("./db/utils")
 const { jwt, local, google } = require("./middleware")
+const { Cookies, UserStatus } = require("./constants")
+const { hash, compare } = require("./hashing")
+const { getAppId, setCookie } = require("./utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -25,6 +28,12 @@ passport.deserializeUser(async (user, done) => {
   }
 })
 
-// exports.Cookies = Cookies
-
-module.exports = passport
+module.exports = {
+  passport,
+  Cookies,
+  UserStatus,
+  hash,
+  compare,
+  getAppId,
+  setCookie,
+}
