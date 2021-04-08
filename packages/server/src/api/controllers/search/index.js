@@ -1,7 +1,7 @@
 const { QueryBuilder, buildSearchUrl, search } = require("./utils")
 
 exports.rowSearch = async ctx => {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const { tableId } = ctx.params
   const { bookmark, query, raw } = ctx.request.body
   let url

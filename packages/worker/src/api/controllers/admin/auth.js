@@ -1,4 +1,4 @@
-const passport = require("@budibase/auth")
+const { passport } = require("@budibase/auth")
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {

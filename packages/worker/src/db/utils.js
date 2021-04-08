@@ -6,7 +6,10 @@ exports.StaticDatabases = {
 
 const DocumentTypes = {
   USER: "us",
+  APP: "app",
 }
+
+exports.DocumentTypes = DocumentTypes
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"

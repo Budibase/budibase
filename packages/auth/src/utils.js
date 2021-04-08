@@ -1,4 +1,3 @@
-const env = require("./environment")
 const { DocumentTypes, SEPARATOR } = require("./db/utils")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
