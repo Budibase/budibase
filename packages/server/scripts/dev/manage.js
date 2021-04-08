@@ -33,9 +33,6 @@ async function init() {
   fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
 
   const envFilePath = path.join(process.cwd(), ".env")
-  if (fs.existsSync(envFilePath)) {
-    return
-  }
   const envFileJson = {
     PORT: 4001,
     MINIO_URL: "http://localhost:10000/",

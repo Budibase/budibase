@@ -35,6 +35,7 @@ services:
     environment:
       SELF_HOSTED: 1
       PORT: 4003
+      JWT_SECRET: ${JWT_SECRET}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_URL: http://minio-service:9000

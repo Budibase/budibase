@@ -46,6 +46,10 @@ static_resources:
                 route:
                   cluster: builder-dev
                   prefix_rewrite: "/builder/"
+
+              # special case in dev to redirect no path to builder
+              - match: { path: "/" } 
+                redirect: { path_redirect: "/builder/" }
  
               # minio is on the default route because this works
               # best, minio + AWS SDK doesn't handle path proxy

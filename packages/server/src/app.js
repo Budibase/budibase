@@ -1,3 +1,5 @@
+// need to load environment first
+const env = require("./environment")
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const electron = require("electron")
@@ -5,7 +7,6 @@ const koaBody = require("koa-body")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
-const env = require("./environment")
 const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
