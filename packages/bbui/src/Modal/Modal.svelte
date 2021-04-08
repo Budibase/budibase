@@ -38,25 +38,24 @@
 <svelte:window on:keydown={handleKey} />
 
 {#if visible}
-  <Portal target="body">
-    <div
-      class="overlay"
-      on:click|self={hide}
-      transition:fade={{ duration: 200 }}>
-      <div
-        class="scroll-wrapper"
-        on:click|self={hide}
-        transition:fly={{ y: 30, duration: 200 }}>
-        <div class="content-wrapper" on:click|self={hide}>
-          <div
-            class="modal"
-            class:padding
-            class:border
-            style={width ? `flex: 0 0 ${width}` : ''}>
-            <slot />
+  <Portal target="modal-container">
+    <div class="overlay spectrum-Modal" transition:fade={{ duration: 200 }} on:click|self={hide}>
+      <section
+        class="spectrum-Dialog spectrum-Dialog--large spectrum-Dialog--dismissable" role="dialog" tabindex="-1" aria-modal="true">
+        <div
+          class="scroll-wrapper"
+          on:click|self={hide}
+          transition:fly={{ y: 30, duration: 200 }}>
+          <div class="content-wrapper" on:click|self={hide}>
+            <div
+              class="modal {width ? width : ''}"
+              class:padding
+              class:border>
+              <slot />
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </Portal>
 {/if}
@@ -100,7 +99,6 @@
     background-color: var(--background);
     display: grid;
     align-items: stretch;
-    box-shadow: 0 0 4rem 1.5rem rgba(0, 0, 0, 0.15);
     position: relative;
     flex: 0 0 400px;
     margin: 2rem 0;
@@ -109,8 +107,5 @@
   }
   .modal.padding {
     padding: var(--spacing-xl);
-  }
-  .modal.border {
-    border: var(--border-dark);
   }
 </style>
