@@ -1,6 +1,6 @@
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 const { BASE_LAYOUT_PROP_IDS } = require("./layouts")
-const { getLogoUrl } = require("../utilities")
+const { LOGO_URL } = require("../constants")
 
 exports.createHomeScreen = () => ({
   description: "",
@@ -92,7 +92,7 @@ exports.createLoginScreen = app => ({
           active: {},
           selected: {},
         },
-        logo: getLogoUrl(),
+        logo: LOGO_URL,
         title: `Log in to ${app.name}`,
         buttonText: "Log In",
         _children: [],

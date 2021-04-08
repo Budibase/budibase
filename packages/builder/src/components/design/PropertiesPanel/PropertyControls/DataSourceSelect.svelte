@@ -10,8 +10,11 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
-  import { tables as tablesStore, queries as queriesStore } from 'stores/backend/'
-  import { datasources, integrations } from 'stores/backend/'
+  import {
+    tables as tablesStore,
+    queries as queriesStore,
+  } from "stores/backend"
+  import { datasources, integrations } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
@@ -83,9 +86,8 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(
-      ds => ds._id === query.datasourceId
-    ).source
+    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
+      .source
     return $integrations[source].query[query.queryVerb]
   }
 </script>

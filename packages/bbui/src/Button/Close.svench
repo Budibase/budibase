@@ -1,0 +1,36 @@
+<script>
+  import { View } from "svench";
+  import Close from "./Close.svelte";
+</script>
+
+<style>
+  div {
+    display: block;
+    position: relative;
+    min-width: 400px;
+    height: 200px;
+    border: var(--border-dark);
+    border-radius: var(--border-radius-l);
+  }
+</style>
+
+<View name="default">
+  <div>
+    <Close />
+  </div>
+</View>
+<View name="dark color">
+  <div>
+    <Close dark />
+  </div>
+</View>
+<View name="small">
+  <div>
+    <Close small />
+  </div>
+</View>
+<View name="small dark">
+  <div>
+    <Close small dark />
+  </div>
+</View>

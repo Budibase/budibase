@@ -1,0 +1,51 @@
+<script>
+  import { View } from "svench";
+  import Spacer from "./Spacer.svelte";
+</script>
+
+<style>
+  .block {
+    background: black;
+    height: 100px;
+    width: 100px;
+    border-radius: var(--border-radius-s);
+  }
+
+ .horizontal {
+    display: flex;
+  }
+</style>
+
+<View name="extraSmall">
+        <div class="block"></div>
+    <Spacer extraSmall />
+        <div class="block"></div>
+</View>
+
+<View name="Small">
+        <div class="block"></div>
+    <Spacer small />
+        <div class="block"></div>
+</View>
+
+<View name="Medium">
+        <div class="block"></div>
+    <Spacer medium />
+        <div class="block"></div>
+</View>
+
+<View name="Large">
+    <div class="horizontal">
+        <div class="block"></div>
+            <Spacer large />
+        <div class="block"></div>
+    </div>
+</View>
+
+<View name="extraLarge">
+    <div class="horizontal">
+        <div class="block"></div>
+            <Spacer extraLarge />
+        <div class="block"></div>
+    </div>
+</View>

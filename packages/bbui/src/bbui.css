@@ -1,0 +1,193 @@
+.svench-content {
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, "Roboto",
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+h1.svench-content {
+  font-size: 2em;
+}
+h2.svench-content {
+  font-size: 1.66em;
+}
+h3.svench-content {
+  font-size: 1.33em;
+}
+h4.svench-content {
+  font-size: 1.33em;
+  font-weight: normal;
+}
+h5.svench-content {
+  font-size: 1em;
+  font-weight: bold;
+}
+h6.svench-content {
+  font-size: 1em;
+  font-weight: normal;
+  font-style: italic;
+}
+
+:root {
+  --background: #ffffff;
+  --ink: #000000;
+
+  --grey-1: #fafafa;
+  --grey-2: #f5f5f5;
+  --grey-3: #eeeeee;
+  --grey-4: #e0e0e0;
+  --grey-5: #bdbdbd;
+  --grey-6: #9e9e9e;
+  --grey-7: #757575;
+  --grey-8: #616161;
+  --grey-9: #424242;
+
+  --blue-light: #f1f4fc;
+  --blue: #4285f4;
+  --blue-dark: #2f4c9b;
+
+  --red-light: #ffe6e6;
+  --red: #e26d69;
+  --red-dark: #800400;
+
+  --yellow-light: #fff7e6;
+  --yellow: #ffd26a;
+  --yellow-dark: #805900;
+
+  --orange-light: #fff0e6;
+  --orange: #f0955a;
+  --orange-dark: #803300;
+
+  --green-light: #e6ffeb;
+  --green: #84c991;
+  --green-dark: #008017;
+
+  --purple-light: #e9e6ff;
+  --purple: #806fde;
+  --purple-dark: #130080;
+
+  --rounded-small: 4px;
+  --rounded-medium: 8px;
+  --rounded-large: 16px;
+
+  --font-normal: "Inter";
+  --font-black: "Inter Black";
+  --font-bold: "Inter Bold";
+  --font-medium: "Inter Medium";
+  --font-light: "Inter Light";
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
+  --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
+  font-size: 16px;
+  --font-size-xs: 0.75rem;
+  --font-size-s: 0.875rem;
+  --font-size-m: 1rem;
+  --font-size-l: 1.15rem;
+  --font-size-xl: 1.3rem;
+
+  --heading-font-size-xs: 0.875rem;
+  --heading-font-size-s: 1.12rem;
+  --heading-font-size-m: 1.5rem;
+  --heading-font-size-l: 2.6rem;
+  --heading-font-size-xl: 3rem;
+
+  --font-render: optimizeLegibility;
+  --font-smooth: antialiased;
+
+  --spacing-xs: 0.25rem;
+  --spacing-s: 0.5rem;
+  --spacing-m: 0.75rem;
+  --spacing-l: 1rem;
+  --spacing-xl: 1.25rem;
+
+  --layout-xs: 1.25rem;
+  --layout-s: 1.5rem;
+  --layout-m: 2rem;
+  --layout-l: 3rem;
+  --layout-xl: 4rem;
+
+  --border-radius-xs: 0.125rem;
+  --border-radius-s: 0.35rem;
+  --border-radius-m: 0.5rem;
+  --border-radius-l: 1rem;
+  --border-radius-xl: 100rem;
+
+  --border-black: 2px var(--ink) solid;
+  --border-dark: 2px var(--grey-7) solid;
+  --border-grey: 1px var(--grey-4) solid;
+  --border-grey-2: 2px var(--grey-4) solid;
+  --border-light: 1px var(--grey-3) solid;
+  --border-light-2: 2px var(--grey-3) solid;
+  --border-blue: 2px var(--blue) solid;
+  --border-transparent: 2px transparent solid;
+}
+
+h1 {
+  font-size: 3rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+h2 {
+  font-size: 2.25rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+h3 {
+  font-size: 1.7rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+h5 {
+  font-size: var(--font-size-l);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+h6 {
+  font-size: var(--font-size-m);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+p {
+  font-size: var(--font-size);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  text-rendering: var(--text-render);
+  -webkit-font-smoothing: var(--text-smooth);
+  color: var(--ink);
+}
+
+a {
+  text-decoration: none;
+}
