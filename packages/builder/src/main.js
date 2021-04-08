@@ -4,6 +4,10 @@ import "./fonts.css"
 import "./budibase.css"
 import "./fonts.css"
 import "@budibase/bbui/dist/style.css"
+import "@spectrum-css/vars/dist/spectrum-global.css"
+import "@spectrum-css/vars/dist/spectrum-medium.css"
+import "@spectrum-css/vars/dist/spectrum-darkest.css"
+import "@spectrum-css/page/dist/index-vars.css"
 
 import App from "./App.svelte"
 
