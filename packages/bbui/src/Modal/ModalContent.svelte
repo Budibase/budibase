@@ -1,9 +1,10 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte"
+  import "@spectrum-css/divider/dist/index-vars.css"
+
+  import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
   import Icon from "../Icons/Icon.svelte"
   import Context from "../context"
-  const dispatch = createEventDispatcher()
 
   export let title = undefined
   export let cancelText = "Cancel"
@@ -27,75 +28,48 @@
   }
 </script>
 
-<div class="modal-content">
-  {#if title}
-    <header>
-      <h5>{title}</h5>
-      <div class="header-content">
-        <slot name="header" />
+<div class="spectrum-Dialog spectrum-Dialog--small" role="dialog" tabindex="-1" aria-modal="true">
+  <div class="spectrum-Dialog-grid">
+    <h1 class="spectrum-Dialog-heading">{title}</h1>
+    <hr class="spectrum-Divider spectrum-Divider--sizeM spectrum-Divider--horizontal spectrum-Dialog-divider">
+    <section class="spectrum-Dialog-content">
+      <slot />
+    </section>
+    {#if showCancelButton || showConfirmButton}
+      <div class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter">
+        <footer class="footer-content">
+          <slot name="footer" />
+        </footer>
+        <div class="buttons">
+          {#if showCancelButton}
+            <Button secondary on:click={hide}>{cancelText}</Button>
+          {/if}
+          {#if showConfirmButton}
+            <Button
+              primary
+              {...$$restProps}
+              disabled={confirmDisabled}
+              on:click={confirm}>
+              {confirmText}
+            </Button>
+          {/if}
+        </div>
       </div>
-    </header>
-  {/if}
-  <slot />
-  {#if showCancelButton || showConfirmButton}
-    <footer>
-      <div class="footer-content">
-        <slot name="footer" />
+    {/if}
+    {#if showCloseIcon}
+      <div class="close-icon" on:click={hide}>
+        <Icon name="closeline" />
       </div>
-      <div class="buttons">
-        {#if showCancelButton}
-          <Button secondary on:click={hide}>{cancelText}</Button>
-        {/if}
-        {#if showConfirmButton}
-          <Button
-            primary
-            {...$$restProps}
-            disabled={confirmDisabled}
-            on:click={confirm}>
-            {confirmText}
-          </Button>
-        {/if}
-      </div>
-    </footer>
-  {/if}
-  {#if showCloseIcon}
-    <div class="close-icon" on:click={hide}>
-      <Icon name="closeline" />
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>
 
+
 <style>
-  .modal-content {
-    display: grid;
-    position: relative;
-    gap: var(--spacing-xl);
-    color: var(--ink);
-  }
-
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-right: 40px;
-  }
-  header h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  .header-content {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
   .close-icon {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 15px;
+    right: 15px;
     color: var(--ink);
     font-size: var(--font-size-m);
   }
