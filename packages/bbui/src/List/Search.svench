@@ -1,0 +1,8 @@
+<script>
+  import Search from "./Search.svelte";
+  import { View } from "svench";
+</script>
+
+<View name="Name">
+  <Search />
+</View>

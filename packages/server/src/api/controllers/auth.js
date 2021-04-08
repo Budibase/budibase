@@ -8,6 +8,7 @@ const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
 const { UserStatus } = require("../../constants")
+const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -67,6 +68,11 @@ exports.authenticate = async ctx => {
   } else {
     ctx.throw(401, INVALID_ERR)
   }
+}
+
+exports.builderLogin = async ctx => {
+  await setBuilderToken(ctx)
+  ctx.status = 200
 }
 
 exports.fetchSelf = async ctx => {

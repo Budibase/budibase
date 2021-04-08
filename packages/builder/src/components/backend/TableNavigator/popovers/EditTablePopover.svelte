@@ -1,7 +1,7 @@
 <script>
-  import { goto } from '@sveltech/routify'
+  import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
-  import { tables } from 'stores/backend/'
+  import { tables } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -57,9 +57,10 @@
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    error = originalName !== tableName
-      ? `Table with name ${tableName} already exists. Please choose another name.`
-      : ""
+    error =
+      originalName !== tableName
+        ? `Table with name ${tableName} already exists. Please choose another name.`
+        : ""
   }
 </script>
 

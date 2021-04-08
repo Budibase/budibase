@@ -1,18 +1,16 @@
-const {
-  processString,
-} = require("../src/index")
+const { processString } = require("../src/index.cjs")
 
 describe("Handling context properties with spaces in their name", () => {
   it("should allow through literal specifiers", async () => {
     const output = await processString("test {{ [one thing] }}", {
-      "one thing": 1
+      "one thing": 1,
     })
     expect(output).toBe("test 1")
   })
 
   it("should convert to dot notation where required", async () => {
     const output = await processString("test {{ one[0] }}", {
-      one: [2]
+      one: [2],
     })
     expect(output).toBe("test 2")
   })
@@ -27,8 +25,8 @@ describe("Handling context properties with spaces in their name", () => {
   it("should be able to handle an object with layers that requires escaping", async () => {
     const output = await processString("testcase {{ thing.[one case] }}", {
       thing: {
-        "one case": 1
-      }
+        "one case": 1,
+      },
     })
     expect(output).toBe("testcase 1")
   })
@@ -39,21 +37,22 @@ describe("attempt some complex problems", () => {
     const context = {
       "New Repeater": {
         "Get Actors": {
-          "first_name": "Bob",
-          "last_name": "Bobert"
+          first_name: "Bob",
+          last_name: "Bobert",
         },
       },
     }
-    const hbs = "{{ [New Repeater].[Get Actors].[first_name] }} {{ [New Repeater].[Get Actors].[last_name] }}"
+    const hbs =
+      "{{ [New Repeater].[Get Actors].[first_name] }} {{ [New Repeater].[Get Actors].[last_name] }}"
     const output = await processString(hbs, context)
     expect(output).toBe("Bob Bobert")
   })
 
   it("should be able to process an odd string produced by builder", async () => {
     const context = {
-      "c306d140d7e854f388bae056db380a0eb": {
+      c306d140d7e854f388bae056db380a0eb: {
         "one prop": "test",
-      }
+      },
     }
     const hbs = "null{{ [c306d140d7e854f388bae056db380a0eb].[one prop] }}"
     const output = await processString(hbs, context)

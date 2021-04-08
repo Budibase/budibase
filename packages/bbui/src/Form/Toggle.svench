@@ -1,0 +1,21 @@
+<script>
+  import { View } from "svench";
+  import Toggle from "./Toggle.svelte";
+</script>
+
+<View name="default">
+  <Toggle />
+</View>
+
+<View name="checked with text">
+  <Toggle text="Display on mobile?" />
+</View>
+
+<View name="thin">
+  <Toggle text="Display on mobile?" thin />
+</View>
+
+<View name="disabled">
+  <Toggle disabled={true} />
+</View>
+

@@ -1,5 +1,5 @@
 <script>
-  import { tables } from 'stores/backend/'
+  import { tables } from "stores/backend"
   import api from "builderStore/api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
@@ -13,9 +13,7 @@
   $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
-  $: linkedTable = $tables.list.find(
-    table => table._id === linkedTableId
-  )
+  $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
   $: fetchRows(linkedTableId)
 
   async function fetchRows(linkedTableId) {

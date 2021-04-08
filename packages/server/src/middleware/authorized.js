@@ -39,13 +39,8 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   }
 
   const role = ctx.user.role
-  const isBuilder = role._id === BUILTIN_ROLE_IDS.BUILDER
   const isAdmin = ADMIN_ROLES.includes(role._id)
   const isAuthed = ctx.auth.authenticated
-
-  if (permType === PermissionTypes.BUILDER && isBuilder) {
-    return next()
-  }
 
   const { basePermissions, permissions } = await getUserPermissions(
     ctx.appId,

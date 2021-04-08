@@ -1,6 +1,6 @@
 <script>
-  import { goto } from "@sveltech/routify"
-  import { datasources } from 'stores/backend/'
+  import { goto } from "@roxi/routify"
+  import { datasources } from "stores/backend"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

@@ -9,7 +9,7 @@
     Radio,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
-  import { tables } from 'stores/backend/'
+  import { tables } from "stores/backend"
 
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
@@ -56,9 +56,7 @@
     UNEDITABLE_USER_FIELDS.includes(field.name)
   $: invalid =
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft.schema).some(
-      key => key === field.name
-    )
+    Object.keys($tables.draft.schema).some(key => key === field.name)
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -72,18 +70,14 @@
 
   async function saveColumn() {
     if (field.type === AUTO_COL) {
-      field = buildAutoColumn(
-        $tables.draft.name,
-        field.name,
-        field.subtype
-      )
+      field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
     tables.saveField({
-        originalName,
-        field,
-        primaryDisplay,
-        indexes,
-      })
+      originalName,
+      field,
+      primaryDisplay,
+      indexes,
+    })
     onClosed()
   }
 

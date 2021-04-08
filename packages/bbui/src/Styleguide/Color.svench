@@ -1,0 +1,201 @@
+<script>
+  import { View } from "svench";
+</script>
+
+<View name="Base">
+  <div class="white">white</div>
+  <div class="grey1">var(--grey-1)</div>
+  <div class="grey2">var(--grey-2)</div>
+  <div class="grey3">var(--grey-3)</div>
+  <div class="grey4">var(--grey-4)</div>
+  <div class="grey5">var(--grey-5)</div>
+  <div class="grey6">var(--grey-6)</div>
+  <div class="grey7">var(--grey-7)</div>
+  <div class="grey8">var(--grey-8)</div>
+  <div class="grey9">var(--grey-9)</div>
+  <div class="ink">var(--ink)</div>
+</View>
+
+<View name="Blue">
+  <div class="blue-light">var(--blue-light)</div>
+  <div class="blue">var(--blue)</div>
+  <div class="blue-dark">var(--blue-dark)</div>
+</View>
+
+<View name="Yellow">
+  <div class="yellow-light">var(--yellow-light)</div>
+  <div class="yellow">var(--yellow)</div>
+  <div class="yellow-dark">var(--yellow-dark)</div>
+</View>
+
+<View name="Red">
+  <div class="red-light">var(--red-light)</div>
+  <div class="red">var(--red)</div>
+  <div class="red-dark">var(--red-dark)</div>
+</View>
+
+<View name="Orange">
+  <div class="orange-light">var(--orange-light)</div>
+  <div class="orange">var(--orange)</div>
+  <div class="orange-dark">var(--orange-dark)</div>
+</View>
+
+<View name="Green">
+  <div class="green-light">var(--green-light)</div>
+  <div class="green">var(--green)</div>
+  <div class="green-dark">var(--green-dark)</div>
+</View>
+
+<View name="Purple">
+  <div class="purple-light">var(--purple-light)</div>
+  <div class="purple">var(--purple)</div>
+  <div class="purple-dark">var(--purple-dark)</div>
+</View>
+
+<style>
+div {
+  height: 100px;
+  width: 800px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+}
+
+.white {
+ background-color: white;
+}
+
+.grey1 {
+  background-color: var(--grey-1);
+}
+
+.grey1 {
+  background-color: var(--grey-1);
+}
+
+.grey2 {
+  background-color: var(--grey-2);
+}
+
+.grey3 {
+  background-color: var(--grey-3);
+}
+
+.grey4 {
+  background-color: var(--grey-4);
+}
+
+.grey5 {
+  background-color: var(--grey-5);
+}
+
+.grey6 {
+  background-color: var(--grey-6);
+}
+
+.grey7 {
+  background-color: var(--grey-7);
+  color: white;
+}
+
+.grey8 {
+  background-color: var(--grey-8);
+  color: white;
+}
+
+.grey9 {
+  background-color: var(--grey-9);
+  color: white;
+}
+
+.ink {
+  background-color: var(--ink);
+  color: white;
+}
+
+.blue {
+  background-color: var(--blue);
+  color: white;
+}
+
+.blue-light {
+  background-color: var(--blue-light);
+}
+
+.blue-dark {
+  background-color: var(--blue-dark);
+  color: white;
+}
+
+.yellow {
+  background-color: var(--yellow);
+  color: white;
+}
+
+.yellow-light {
+  background-color: var(--yellow-light);
+}
+
+.yellow-dark {
+  background-color: var(--yellow-dark);
+  color: white;
+}
+
+.red {
+  background-color: var(--red);
+  color: white;
+}
+
+.red-light {
+  background-color: var(--red-light);
+}
+
+.red-dark {
+  background-color: var(--red-dark);
+  color: white;
+}
+
+.orange {
+  background-color: var(--orange);
+  color: white;
+}
+
+.orange-light {
+  background-color: var(--orange-light);
+}
+
+.orange-dark {
+  background-color: var(--orange-dark);
+  color: white;
+}
+
+.green {
+  background-color: var(--green);
+  color: white;
+}
+
+.green-light {
+  background-color: var(--green-light);
+}
+
+.green-dark {
+  background-color: var(--green-dark);
+  color: white;
+}
+
+.purple {
+  background-color: var(--purple);
+  color: white;
+}
+
+.purple-light {
+  background-color: var(--purple-light);
+}
+
+.purple-dark {
+  background-color: var(--purple-dark);
+  color: white;
+}
+
+</style>

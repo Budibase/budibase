@@ -1,0 +1,161 @@
+<script>
+  import { View } from "svench";
+  import DropdownMenu from "./DropdownMenu.svelte";
+  import Button from "../Button/Button.svelte";
+  import Icon from "../Icons/Icon.svelte";
+
+  let anchorRight;
+  let anchorLeft;
+  let dropdownRight;
+  let dropdownLeft;
+</script>
+
+<style>
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    padding: var(--spacing-s) 0;
+  }
+
+  li {
+    display: flex;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--ink);
+    padding: var(--spacing-s) var(--spacing-m);
+    margin: auto 0px;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  li:hover {
+    background-color: var(--grey-2);
+  }
+
+  li:active {
+    color: var(--blue);
+  }
+</style>
+
+<View name="Right Align (default)">
+  <div bind:this={anchorRight}>
+    <Button primary on:click={dropdownRight.show}>Right Align</Button>
+  </div>
+  <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
+    <ul>
+      <li>Item 1</li>
+      <li>Item 2</li>
+      <li>Item 3</li>
+    </ul>
+  </DropdownMenu>
+</View>
+
+<View name="Left Align">
+  <div bind:this={anchorLeft}>
+    <Button primary on:click={dropdownLeft.show}>Left Align</Button>
+  </div>
+  <DropdownMenu bind:this={dropdownLeft} anchor={anchorLeft} align="left">
+    <ul>
+      <li>Item 1</li>
+      <li>Item 2</li>
+      <li>Item 3</li>
+    </ul>
+  </DropdownMenu>
+</View>
+
+<View name="Left Align, TextButton, Small, Icons">
+  <div bind:this={anchorLeft}>
+    <Button text on:click={dropdownLeft.show}>
+      Field Name
+      <Icon name="arrowdown" />
+    </Button>
+  </div>
+  <DropdownMenu bind:this={dropdownLeft} anchor={anchorLeft} align="left">
+    <ul>
+      <li>
+        <Icon name="edit" />
+        Edit
+      </li>
+      <li>
+        <Icon name="delete" />
+        Delete
+      </li>
+      <li>
+        <Icon name="sortascending" />
+        Sort A - Z
+      </li>
+      <li>
+        <Icon name="sortdescending" />
+        Sort Z - A
+      </li>
+    </ul>
+  </DropdownMenu>
+</View>
+<View name="Dropdown menu with slim menu and border color">
+  <div bind:this={anchorLeft}>
+    <Button primary on:click={dropdownLeft.show}>
+      Field Name
+      <Icon name="arrowdown" />
+    </Button>
+  </div>
+  <DropdownMenu
+    bind:this={dropdownLeft}
+    width="175px"
+    borderColor="#d1d1d1ff"
+    anchor={anchorLeft}
+    align="left">
+    <ul>
+      <li>
+        <Icon name="edit" />
+        Edit
+      </li>
+      <li>
+        <Icon name="delete" />
+        Delete
+      </li>
+      <li>
+        <Icon name="sortascending" />
+        Sort A - Z
+      </li>
+      <li>
+        <Icon name="sortdescending" />
+        Sort Z - A
+      </li>
+    </ul>
+  </DropdownMenu>
+</View>
+<View name="Dropdown on close event example">
+  <div bind:this={anchorLeft}>
+    <Button primary on:click={dropdownLeft.show}>
+      Field Name
+      <Icon name="arrowdown" />
+    </Button>
+  </div>
+  <DropdownMenu
+    on:close={() => alert('Closed!')}
+    bind:this={dropdownLeft}
+    width="175px"
+    borderColor="#d1d1d1ff"
+    anchor={anchorLeft}
+    align="left">
+    <ul>
+      <li>
+        <Icon name="edit" />
+        Edit
+      </li>
+      <li>
+        <Icon name="delete" />
+        Delete
+      </li>
+      <li>
+        <Icon name="sortascending" />
+        Sort A - Z
+      </li>
+      <li>
+        <Icon name="sortdescending" />
+        Sort Z - A
+      </li>
+    </ul>
+  </DropdownMenu>
+</View>
