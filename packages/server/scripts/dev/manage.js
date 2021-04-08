@@ -25,7 +25,7 @@ async function init() {
   // generate envoy file, always do this incase it has changed
   const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
   const envoyHbsPath = path.join(hostingPath, "envoy.dev.yaml.hbs")
-  const envoyOutputPath = path.join(hostingPath, "generated-envoy.dev.yaml")
+  const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
   const contents = fs.readFileSync(envoyHbsPath, "utf8")
   const config = {
     address: isLinux() ? "172.17.0.1" : "host.docker.internal",
