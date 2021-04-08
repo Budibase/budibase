@@ -92,7 +92,7 @@
   </div>
 {/each}
 {#if stepId === 'WEBHOOK'}
-  <Button wide secondary on:click={() => webhookModal.show()}>
+  <Button type="secondary" on:click={() => webhookModal.show()}>
     Set Up Webhook
   </Button>
 {/if}

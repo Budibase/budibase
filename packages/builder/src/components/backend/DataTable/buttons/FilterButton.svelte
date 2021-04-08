@@ -1,5 +1,5 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
+  import { Popover, Button, Icon } from "@budibase/bbui"
   import FilterPopover from "../popovers/FilterPopover.svelte"
 
   export let view = {}
@@ -9,14 +9,11 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton
-    text
-    small
+  <Button icon="Filter" type="overBackground" size="S" quiet
     on:click={dropdown.show}
     active={view.filters && view.filters.length}>
-    <Icon name="filter" />
     Filter
-  </TextButton>
+  </Button>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <FilterPopover {view} onClosed={dropdown.hide} />

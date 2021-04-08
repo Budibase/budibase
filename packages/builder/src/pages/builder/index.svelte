@@ -76,7 +76,6 @@
 
   <AppList />
 </div>
-<div id="modal-container" />
 
 <Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>
   <CreateAppModal {hasKey} {template} />
@@ -121,9 +120,5 @@
   .button-group {
     display: flex;
     flex-direction: row;
-  }
-
-  #modal-container {
-    position: absolute;
   }
 </style>

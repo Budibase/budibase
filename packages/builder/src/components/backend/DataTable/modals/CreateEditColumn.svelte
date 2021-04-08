@@ -291,8 +291,8 @@
     {#if !uneditable && originalName != null}
       <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
-    <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveColumn} bind:disabled={invalid}>
+    <Button on:click={onClosed}>Cancel</Button>
+    <Button type="cta" on:click={saveColumn} bind:disabled={invalid}>
       Save Column
     </Button>
   </footer>
@@ -319,7 +319,6 @@
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
-    min-width: 400px;
   }
 
   footer {

@@ -1,5 +1,5 @@
 <script>
-  import { TextButton } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
 
   export let hideAutocolumns
 
@@ -12,12 +12,13 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton text small on:click={hideOrUnhide}>
+  <Button icon="MagicWand" type="overBackground" size="S" quiet on:click={hideOrUnhide}>
     {#if hideAutocolumns}
-      <i class="ri-magic-line" />
       Show Auto Columns
-    {:else}<i class="ri-magic-fill" /> Hide Auto Columns{/if}
-  </TextButton>
+    {:else}
+      Hide Auto Columns
+    {/if}
+  </Button>
 </div>
 
 <style>

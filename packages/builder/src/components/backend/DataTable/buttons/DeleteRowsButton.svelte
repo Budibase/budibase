@@ -1,5 +1,5 @@
 <script>
-  import { TextButton, Icon } from "@budibase/bbui"
+  import { Button, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let selectedRows
@@ -13,14 +13,11 @@
   }
 </script>
 
-<div>
-  <TextButton small text on:click={modal.show}>
-    <Icon name="delete" />
-    Delete
-    {selectedRows.length}
-    row(s)
-  </TextButton>
-</div>
+<Button icon="Delete" size="s" type="overBackground" quiet on:click={modal.show}>
+  Delete
+  {selectedRows.length}
+  row(s)
+</Button>
 <ConfirmDialog
   bind:this={modal}
   okText="Delete"

@@ -1,5 +1,5 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
+  import { Popover, Button } from "@budibase/bbui"
   import CreateViewPopover from "../popovers/CreateViewPopover.svelte"
 
   let anchor
@@ -7,10 +7,9 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton text small on:click={dropdown.show}>
-    <Icon name="view" />
+  <Button icon="CollectionAdd" type="overBackground" size="S" quiet on:click={dropdown.show}>
     Create New View
-  </TextButton>
+  </Button>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <CreateViewPopover onClosed={dropdown.hide} />

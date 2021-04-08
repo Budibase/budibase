@@ -65,7 +65,7 @@
     {webhookModal} />
 {:else if $automationStore.selectedAutomation}
   <div class="block-label">{automation.name}</div>
-  <Button secondary wide on:click={testAutomation}>Test Automation</Button>
+  <Button type="secondary" on:click={testAutomation}>Test Automation</Button>
 {/if}
 <Button
   secondary
