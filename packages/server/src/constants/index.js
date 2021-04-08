@@ -1,4 +1,5 @@
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
+const { UserStatus } = require("@budibase/auth")
 
 exports.LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
@@ -25,11 +26,6 @@ exports.AuthTypes = {
   APP: "app",
   BUILDER: "builder",
   EXTERNAL: "external",
-}
-
-exports.UserStatus = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
 }
 
 exports.USERS_TABLE_SCHEMA = {
@@ -68,7 +64,7 @@ exports.USERS_TABLE_SCHEMA = {
       constraints: {
         type: exports.FieldTypes.STRING,
         presence: false,
-        inclusion: Object.values(exports.UserStatus),
+        inclusion: Object.values(UserStatus),
       },
     },
   },

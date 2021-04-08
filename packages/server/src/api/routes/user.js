@@ -11,31 +11,31 @@ const router = Router()
 
 router
   .get(
-    "/api/users",
+    "/api/users/metadata",
     authorized(PermissionTypes.USER, PermissionLevels.READ),
-    controller.fetch
+    controller.fetchMetadata
   )
   .get(
-    "/api/users/:email",
+    "/api/users/metadata/:email",
     authorized(PermissionTypes.USER, PermissionLevels.READ),
-    controller.find
+    controller.findMetadata
   )
   .put(
-    "/api/users",
+    "/api/users/metadata",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
-    controller.update
+    controller.updateMetadata
   )
   .post(
-    "/api/users",
+    "/api/users/metadata",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     usage,
-    controller.create
+    controller.createMetadata
   )
   .delete(
-    "/api/users/:email",
+    "/api/users/metadata/:email",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     usage,
-    controller.destroy
+    controller.destroyMetadata
   )
 
 module.exports = router

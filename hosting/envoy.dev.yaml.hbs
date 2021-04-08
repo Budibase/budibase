@@ -26,6 +26,10 @@ static_resources:
                   cluster: redis-service
                   prefix_rewrite: "/"
 
+              - match: { prefix: "/api/admin" }
+                route:
+                  cluster: worker-dev
+
               - match: { prefix: "/api/" }
                 route:
                   cluster: server-dev
@@ -122,4 +126,18 @@ static_resources:
               socket_address:
                 address: {{ address }}
                 port_value: 3000
+
+  - name: worker-dev
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: worker-dev
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: {{ address }}
+                port_value: 4002
 

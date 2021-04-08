@@ -279,7 +279,7 @@ class TestConfiguration {
         roleId,
       },
       null,
-      controllers.user.create
+      controllers.user.createMetadata
     )
   }
 
@@ -289,7 +289,7 @@ class TestConfiguration {
       {
         email,
       },
-      controllers.user.find
+      controllers.user.findMetadata
     )
     return this._req(
       {
@@ -297,7 +297,7 @@ class TestConfiguration {
         status: "inactive",
       },
       null,
-      controllers.user.update
+      controllers.user.updateMetadata
     )
   }
 

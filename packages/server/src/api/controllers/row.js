@@ -48,7 +48,7 @@ async function findRow(db, appId, tableId, rowId) {
         appId,
       },
     }
-    await usersController.find(ctx)
+    await usersController.findMetadata(ctx)
     row = ctx.body
   } else {
     row = await db.get(rowId)
@@ -103,7 +103,7 @@ exports.patch = async function(ctx) {
       ...row,
       password: ctx.request.body.password,
     }
-    await usersController.update(ctx)
+    await usersController.updateMetadata(ctx)
     return
   }
 
@@ -179,7 +179,7 @@ exports.save = async function(ctx) {
   if (row.tableId === ViewNames.USERS) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
-    await usersController.create(ctx)
+    await usersController.createMetadata(ctx)
     return
   }
 
@@ -310,7 +310,7 @@ exports.fetchTableRows = async function(ctx) {
   let rows,
     table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === ViewNames.USERS) {
-    await usersController.fetch(ctx)
+    await usersController.fetchMetadata(ctx)
     rows = ctx.body
   } else {
     const response = await db.allDocs(
