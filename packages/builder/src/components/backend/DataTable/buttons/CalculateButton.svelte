@@ -1,5 +1,5 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
+  import { Popover, Button } from "@budibase/bbui"
   import CalculatePopover from "../popovers/CalculatePopover.svelte"
 
   export let view = {}
@@ -9,14 +9,11 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton
-    text
-    small
+  <Button icon="Calculator" type="overBackground" size="S" quiet
     on:click={dropdown.show}
     active={view.field && view.calculation}>
-    <Icon name="calculate" />
     Calculate
-  </TextButton>
+  </Button>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <CalculatePopover {view} onClosed={dropdown.hide} />

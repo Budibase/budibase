@@ -14,3 +14,10 @@
 
 <NotificationDisplay />
 <Router {routes} {config} />
+<div class="modal-container" />
+
+<style>
+  .modal-container {
+    position: absolute;
+  }
+</style>

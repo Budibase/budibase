@@ -1,5 +1,5 @@
 <script>
-  import { TextButton, Popover } from "@budibase/bbui"
+  import { Button, Popover } from "@budibase/bbui"
   import { permissions } from "stores/backend"
   import ManageAccessPopover from "../popovers/ManageAccessPopover.svelte"
 
@@ -16,10 +16,9 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton text small on:click={openDropdown}>
-    <i class="ri-lock-line" />
+  <Button icon="LockClosed" type="overBackground" size="S" quiet on:click={openDropdown}>
     Manage Access
-  </TextButton>
+  </Button>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <ManageAccessPopover
@@ -28,10 +27,3 @@
     permissions={resourcePermissions}
     onClosed={dropdown.hide} />
 </Popover>
-
-<style>
-  i {
-    margin-right: var(--spacing-xs);
-    font-size: var(--font-size-s);
-  }
-</style>

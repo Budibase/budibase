@@ -56,7 +56,7 @@
 
   .integration-list {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat( auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spacing-m);
   }
 
@@ -68,7 +68,6 @@
     transition: 0.3s all;
     border-radius: var(--border-radius-s);
     height: 75px;
-    width: 200px;
   }
 
   span {

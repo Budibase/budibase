@@ -41,6 +41,7 @@
 
 <ModalContent
   title="Create Datasource"
+  size="large"
   confirmText="Create"
   onConfirm={saveDatasource}
   disabled={error || !name}>

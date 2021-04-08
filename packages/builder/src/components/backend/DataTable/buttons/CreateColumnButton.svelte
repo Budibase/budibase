@@ -1,7 +1,6 @@
 <script>
   import {
-    DropdownMenu,
-    TextButton as Button,
+    Button,
     Icon,
     Modal,
     ModalContent,
@@ -9,15 +8,11 @@
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let modal
-  let fieldName
 </script>
 
-<div>
-  <Button text small on:click={modal.show}>
-    <Icon name="addcolumn" />
-    Create New Column
-  </Button>
-</div>
+<Button icon="AddCircle" type="overBackground" size="S" quiet on:click={modal.show}>
+  Create New Column
+</Button>
 <Modal bind:this={modal}>
   <ModalContent
     showCancelButton={false}

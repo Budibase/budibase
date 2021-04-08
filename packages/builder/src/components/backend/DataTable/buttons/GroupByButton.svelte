@@ -9,8 +9,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton text small active={!!view.groupBy} on:click={dropdown.show}>
-    <Icon name="group" />
+  <TextButton icon="Group" type="overBackground" size="S" quiet active={!!view.groupBy} on:click={dropdown.show}>
     Group By
   </TextButton>
 </div>
