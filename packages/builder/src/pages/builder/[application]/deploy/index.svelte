@@ -1,7 +1,7 @@
 <script>
   import { Button, Modal } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import api from "builderStore/api"
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
@@ -21,7 +21,7 @@
       const response = await api.get(`/api/keys/`)
       const userKeys = await response.json()
       if (!userKeys.budibase) {
-        notifier.danger(
+        notifications.error(
           "No budibase API Keys configured. You must set either a self hosted or cloud API key to deploy your budibase app."
         )
         return
@@ -31,7 +31,7 @@
     const DEPLOY_URL = `/api/deploy`
 
     try {
-      notifier.info(`Deployment started. Please wait.`)
+      notifications.info(`Deployment started. Please wait.`)
       const response = await api.post(DEPLOY_URL)
       const json = await response.json()
       if (response.status !== 200) {
@@ -52,7 +52,7 @@
         hostingType: $hostingStore.hostingInfo?.type,
       })
       analytics.captureException(err)
-      notifier.danger("Deployment unsuccessful. Please try again later.")
+      notifications.error("Deployment unsuccessful. Please try again later.")
     }
   }
 </script>

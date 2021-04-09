@@ -10,7 +10,7 @@
     Spacer,
     Switcher,
   } from "@budibase/bbui"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import api from "builderStore/api"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
@@ -89,13 +89,13 @@
       data = json.rows || []
 
       if (data.length === 0) {
-        notifier.info(
+        notifications.info(
           "Query results empty. Please execute a query with results to create your schema."
         )
         return
       }
 
-      notifier.success("Query executed successfully.")
+      notifications.success("Query executed successfully.")
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
@@ -104,7 +104,7 @@
         type: "STRING",
       }))
     } catch (err) {
-      notifier.danger(`Query Error: ${err.message}`)
+      notifications.error(`Query Error: ${err.message}`)
       console.error(err)
     }
   }
@@ -112,11 +112,11 @@
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
-      notifier.success(`Query saved successfully.`)
+      notifications.success(`Query saved successfully.`)
       $goto(`../../${_id}`)
     } catch (err) {
       console.error(err)
-      notifier.danger(`Error creating query. ${err.message}`)
+      notifications.error(`Error creating query. ${err.message}`)
     }
   }
 </script>

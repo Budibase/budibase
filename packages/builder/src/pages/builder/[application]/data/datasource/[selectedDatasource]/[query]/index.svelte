@@ -9,7 +9,7 @@
       const json = await response.json()
       config = json.query
     } catch (err) {
-      notifier.danger("Error fetching datasource configuration options.")
+      notifications.error("Error fetching datasource configuration options.")
       console.error(err)
     }
   }

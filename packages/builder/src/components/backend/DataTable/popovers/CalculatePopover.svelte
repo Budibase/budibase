@@ -2,7 +2,7 @@
   import { Button, Select } from "@budibase/bbui"
 
   import { tables, views } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   const CALCULATIONS = [
@@ -36,7 +36,7 @@
 
   function saveView() {
     views.save(view)
-    notifier.success(`View ${view.name} saved.`)
+    notifications.success(`View ${view.name} saved.`)
     onClosed()
     analytics.captureEvent("Added View Calculate", { field: view.field })
   }

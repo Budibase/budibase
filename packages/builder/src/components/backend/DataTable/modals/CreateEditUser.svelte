@@ -1,7 +1,7 @@
 <script>
   import { tables, rows } from "stores/backend"
   import { roles } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as backendApi from "../api"
   import { ModalContent, Select } from "@budibase/bbui"
@@ -66,7 +66,7 @@
       return false
     }
 
-    notifier.success("User saved successfully.")
+    notifications.success("User saved successfully.")
     rows.save(rowResponse)
   }
 </script>

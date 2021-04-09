@@ -1,5 +1,5 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { hostingStore } from "builderStore"
   import { HostingTypes } from "constants/backend"
   import { Input, ModalContent, Toggle } from "@budibase/bbui"
@@ -23,9 +23,9 @@
     }
     try {
       await hostingStore.actions.save(hostingInfo)
-      notifier.success(`Settings saved.`)
+      notifications.success(`Settings saved.`)
     } catch (err) {
-      notifier.danger(`Failed to update builder settings.`)
+      notifications.error(`Failed to update builder settings.`)
     }
   }
 

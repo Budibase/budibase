@@ -3,7 +3,7 @@
   import { goto } from "@roxi/routify"
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   export let onClosed
@@ -15,7 +15,7 @@
 
   function saveView() {
     if (views.includes(name)) {
-      notifier.danger(`View exists with name ${name}.`)
+      notifications.error(`View exists with name ${name}.`)
       return
     }
     viewsStore.save({
@@ -23,7 +23,7 @@
       tableId: $tables.selected._id,
       field,
     })
-    notifier.success(`View ${name} created`)
+    notifications.success(`View ${name} created`)
     onClosed()
     analytics.captureEvent("View Created", { name })
     $goto(`../../view/${name}`)

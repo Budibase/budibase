@@ -1,6 +1,6 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
@@ -162,7 +162,7 @@
       $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)
-      notifier.danger(error)
+      notifications.error(error)
       submitting = false
     }
   }

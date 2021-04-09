@@ -824,6 +824,11 @@
     estree-walker "^1.0.1"
     micromatch "^4.0.2"
 
+"@spectrum-css/toast@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/toast/-/toast-3.0.1.tgz#36f62ea05302761e59b9d53e05f6c04423861796"
+  integrity sha512-jov++S358BrN2tmMfaoYk1N6u9HojgeuQk61keXrK2m3VE5/n94x7Lg3kIPeSWO0odyDfBlMqT9jacbRey3QTg==
+
 "@types/estree@0.0.39":
   version "0.0.39"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"

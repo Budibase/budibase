@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
 
@@ -16,7 +16,7 @@
       name,
       instanceId,
     })
-    notifier.success(`Automation ${name} created.`)
+    notifications.success(`Automation ${name} created.`)
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     analytics.captureEvent("Automation Created", { name })
   }

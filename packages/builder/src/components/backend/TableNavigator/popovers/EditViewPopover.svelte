@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { views } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -33,7 +33,7 @@
       originalName,
       ...view,
     })
-    notifier.success("View renamed successfully")
+    notifications.success("View renamed successfully")
     hideEditor()
   }
 
@@ -41,7 +41,7 @@
     const name = view.name
     const id = view.tableId
     await views.delete(name)
-    notifier.success("View deleted")
+    notifications.success("View deleted")
     $goto(`./table/${id}`)
   }
 </script>

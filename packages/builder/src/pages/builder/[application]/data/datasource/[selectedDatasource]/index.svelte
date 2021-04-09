@@ -2,7 +2,7 @@
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Spacer } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
 
@@ -14,7 +14,7 @@
   async function saveDatasource() {
     // Create datasource
     await datasources.save(datasource)
-    notifier.success(`Datasource ${name} saved successfully.`)
+    notifications.success(`Datasource ${name} saved successfully.`)
     unsaved = false
   }
 
@@ -32,7 +32,7 @@
 
   $beforeUrlChange((event, store) => {
     if (unsaved) {
-      notifier.danger(
+      notifications.error(
         "Unsaved changes. Please save your datasource configuration before leaving."
       )
       return false

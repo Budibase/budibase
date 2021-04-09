@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { datasources } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -26,7 +26,7 @@
     console.log(wasSelectedSource)
     console.log(datasource)
     await datasources.delete(datasource)
-    notifier.success("Datasource deleted")
+    notifications.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
       $goto("./datasource")

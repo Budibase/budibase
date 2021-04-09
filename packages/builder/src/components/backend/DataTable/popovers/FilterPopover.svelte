@@ -1,7 +1,7 @@
 <script>
   import { Button, Input, Select, DatePicker } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   const CONDITIONS = [
@@ -54,7 +54,7 @@
 
   function saveView() {
     views.save(view)
-    notifier.success(`View ${view.name} saved.`)
+    notifications.success(`View ${view.name} saved.`)
     onClosed()
     analytics.captureEvent("Added View Filter", {
       filters: JSON.stringify(view.filters),

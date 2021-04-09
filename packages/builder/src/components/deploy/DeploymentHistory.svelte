@@ -4,7 +4,7 @@
   import { slide } from "svelte/transition"
   import { Heading, Body, Button, Modal, ModalContent } from "@budibase/bbui"
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
   import { store, hostingStore } from "builderStore"
 
@@ -75,7 +75,7 @@
     } catch (err) {
       console.error(err)
       clearInterval(poll)
-      notifier.danger("Error fetching deployment history. Please try again.")
+      notifications.error("Error fetching deployment history. Please try again.")
     }
   }
 

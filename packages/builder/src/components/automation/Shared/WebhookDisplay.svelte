@@ -1,5 +1,5 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Input } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
 
@@ -24,7 +24,7 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifier.success(`URL copied to clipboard`)
+    notifications.success(`URL copied to clipboard`)
   }
 </script>
 
