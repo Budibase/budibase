@@ -7,7 +7,7 @@
 </script>
 
 {#each attachments as attachment}
-  {#if attachment.type.startsWith('image')}
+  {#if attachment.type?.startsWith('image')}
     <img src={attachment.url} alt={attachment.extension} />
   {:else}
     <div class="file">{attachment.extension}</div>
