@@ -1,6 +1,6 @@
 <script>
   import Flatpickr from "svelte-flatpickr"
-  import { Label, Input } from "../"
+  import { Label } from "../"
   import "flatpickr/dist/flatpickr.css"
 
   const PICKER_OPTIONS = {
