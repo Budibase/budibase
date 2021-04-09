@@ -8,7 +8,11 @@ const { jwt, local, google } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
 const { hash, compare } = require("./hashing")
 const { getAppId, setCookie } = require("./utils")
-const { generateUserID, getUserParams, getEmailFromUserID } = require("./db/utils")
+const {
+  generateUserID,
+  getUserParams,
+  getEmailFromUserID,
+} = require("./db/utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
