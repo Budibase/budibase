@@ -15,7 +15,7 @@
   export let allowEditColumns = true
   export let selectedRows = []
   export let customColumnRenderer = SelectEditRenderer
-  export let customColumnTitle
+  export let customColumnTitle = null
   export let customRenderers = []
 
   const dispatch = createEventDispatcher()
@@ -87,7 +87,8 @@
   const getFields = (schema, showAutoColumns) => {
     let columns = []
     let autoColumns = []
-    Object.entries(schema).forEach(([field, fieldSchema]) => {
+    Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
+      schema[field].name = field
       if (!fieldSchema?.autocolumn) {
         columns.push(field)
       } else if (showAutoColumns) {
@@ -200,39 +201,51 @@
           </tr>
         </thead>
         <tbody class="spectrum-Table-body">
-          {#each sortedRows as row, idx}
-            <tr
-              on:click={() => toggleSelectRow(row)}
-              class="spectrum-Table-row"
-              class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
-              {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
-                {#if customColumnRenderer}
-                  <td class="spectrum-Table-cell spectrum-Table-cell--divider">
-                    <div class="spectrum-Table-cell-content">
-                      <svelte:component
-                        this={customColumnRenderer}
-                        data={row}
-                        selected={selectedRows.includes(row)}
-                        onToggleSelection={() => toggleSelectRow(row)}
-                        onEdit={e => editRow(e, row)}
-                        {allowSelectRows}
-                        {allowEditRows} />
-                    </div>
-                  </td>
+          {#if sortedRows?.length}
+            {#each sortedRows as row, idx}
+              <tr
+                on:click={() => toggleSelectRow(row)}
+                class="spectrum-Table-row"
+                class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
+                {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
+                  {#if customColumnRenderer}
+                    <td
+                      class="spectrum-Table-cell spectrum-Table-cell--divider">
+                      <div class="spectrum-Table-cell-content">
+                        <svelte:component
+                          this={customColumnRenderer}
+                          data={row}
+                          selected={selectedRows.includes(row)}
+                          onToggleSelection={() => toggleSelectRow(row)}
+                          onEdit={e => editRow(e, row)}
+                          {allowSelectRows}
+                          {allowEditRows} />
+                      </div>
+                    </td>
+                  {/if}
+                  {#each fields as field}
+                    <td class="spectrum-Table-cell">
+                      <div class="spectrum-Table-cell-content">
+                        <CellRenderer
+                          {customRenderers}
+                          schema={schema[field]}
+                          value={row[field]} />
+                      </div>
+                    </td>
+                  {/each}
                 {/if}
-                {#each fields as field}
-                  <td class="spectrum-Table-cell">
-                    <div class="spectrum-Table-cell-content">
-                      <CellRenderer
-                        {customRenderers}
-                        schema={schema[field]}
-                        value={row[field]} />
-                    </div>
-                  </td>
-                {/each}
-              {/if}
-            </tr>
-          {/each}
+              </tr>
+            {/each}
+          {:else}
+            <div class="placeholder">
+              <svg
+                class="spectrum-Icon spectrum-Icon--sizeXXL"
+                focusable="false">
+                <use xlink:href="#spectrum-icon-18-Table" />
+              </svg>
+              <div>No rows found.</div>
+            </div>
+          {/if}
         </tbody>
       </table>
     </div>
@@ -320,6 +333,25 @@
   .spectrum-Table-headCell-content .title {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .placeholder {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(
+      --spectrum-table-cell-text-color,
+      var(--spectrum-alias-text-color)
+    );
+  }
+  .placeholder div {
+    margin-top: 10px;
+    font-size: var(
+      --spectrum-table-cell-text-size,
+      var(--spectrum-alias-font-size-default)
+    );
   }
 
   tbody {
