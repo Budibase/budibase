@@ -9,7 +9,7 @@ const {
   InternalTables,
   generateUserMetadataID,
 } = require("../../db/utils")
-const usersController = require("./user")
+const userController = require("./user")
 const {
   inputProcessing,
   outputProcessing,
@@ -37,18 +37,14 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
-async function findRow(db, appId, tableId, rowId) {
+async function findRow(ctx, db, tableId, rowId) {
   let row
+  // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
-    let ctx = {
-      params: {
-        userId: rowId,
-      },
-      user: {
-        appId,
-      },
+    ctx.params = {
+      userId: rowId,
     }
-    await usersController.findMetadata(ctx)
+    await userController.findMetadata(ctx)
     row = ctx.body
   } else {
     row = await db.get(rowId)
@@ -96,14 +92,14 @@ exports.patch = async function(ctx) {
     table,
   })
 
-  // Creation of a new user goes to the user controller
+  // TODO remove special user case in future
   if (row.tableId === InternalTables.USER_METADATA) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = {
       ...row,
       password: ctx.request.body.password,
     }
-    await usersController.updateMetadata(ctx)
+    await userController.updateMetadata(ctx)
     return
   }
 
@@ -142,6 +138,7 @@ exports.save = async function(ctx) {
   }
 
   if (!inputs._rev && !inputs._id) {
+    // TODO remove special user case in future
     if (inputs.tableId === InternalTables.USER_METADATA) {
       inputs._id = generateUserMetadataID(inputs.email)
     } else {
@@ -175,11 +172,11 @@ exports.save = async function(ctx) {
     table,
   })
 
-  // Creation of a new user goes to the user controller
+  // TODO remove special user case in future
   if (row.tableId === InternalTables.USER_METADATA) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
-    await usersController.createMetadata(ctx)
+    await userController.createMetadata(ctx)
     return
   }
 
@@ -287,14 +284,6 @@ exports.search = async function(ctx) {
   }
 
   const response = await search(searchString)
-
-  // delete passwords from users
-  if (tableId === InternalTables.USER_METADATA) {
-    for (let row of response.rows) {
-      delete row.password
-    }
-  }
-
   const table = await db.get(tableId)
   ctx.body = {
     rows: await outputProcessing(appId, table, response.rows),
@@ -306,11 +295,11 @@ exports.fetchTableRows = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
-  // special case for users, fetch through the user controller
+  // TODO remove special user case in future
   let rows,
     table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
-    await usersController.fetchMetadata(ctx)
+    await userController.fetchMetadata(ctx)
     rows = ctx.body
   } else {
     const response = await db.allDocs(
@@ -328,7 +317,7 @@ exports.find = async function(ctx) {
   const db = new CouchDB(appId)
   try {
     const table = await db.get(ctx.params.tableId)
-    const row = await findRow(db, appId, ctx.params.tableId, ctx.params.rowId)
+    const row = await findRow(ctx, db, ctx.params.tableId, ctx.params.rowId)
     ctx.body = await outputProcessing(appId, table, row)
   } catch (err) {
     ctx.throw(400, err)
@@ -348,8 +337,15 @@ exports.destroy = async function(ctx) {
     row,
     tableId: row.tableId,
   })
-  ctx.body = await db.remove(ctx.params.rowId, ctx.params.revId)
-  ctx.status = 200
+  // TODO remove special user case in future
+  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+    ctx.params = {
+      userId: ctx.params.rowId,
+    }
+    await userController.destroyMetadata(ctx)
+  } else {
+    ctx.body = await db.remove(ctx.params.rowId, ctx.params.revId)
+  }
 
   // for automations include the row that was deleted
   ctx.row = row
@@ -395,7 +391,7 @@ exports.fetchEnrichedRow = async function(ctx) {
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
     db.get(tableId),
-    findRow(db, appId, tableId, rowId),
+    findRow(ctx, db, tableId, rowId),
   ])
   // get the link docs
   const linkVals = await linkRows.getLinkDocuments({
@@ -437,7 +433,7 @@ async function bulkDelete(ctx) {
   const { rows } = ctx.request.body
   const db = new CouchDB(appId)
 
-  const linkUpdates = rows.map(row =>
+  let updates = rows.map(row =>
     linkRows.updateLinks({
       appId,
       eventType: linkRows.EventType.ROW_DELETE,
@@ -445,9 +441,20 @@ async function bulkDelete(ctx) {
       tableId: row.tableId,
     })
   )
-
-  await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
-  await Promise.all(linkUpdates)
+  // TODO remove special user case in future
+  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+    updates = updates.concat(
+      rows.map(row => {
+        ctx.params = {
+          userId: row._id,
+        }
+        return userController.destroyMetadata(ctx)
+      })
+    )
+  } else {
+    await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
+  }
+  await Promise.all(updates)
 
   rows.forEach(row => {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)

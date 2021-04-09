@@ -48,7 +48,8 @@ exports.userSave = async ctx => {
 
 exports.userDelete = async ctx => {
   const db = new CouchDB(USER_DB)
-  await db.destroy(generateUserID(ctx.params.email))
+  const dbUser = await db.get(generateUserID(ctx.params.email))
+  await db.remove(dbUser._id, dbUser._rev)
   ctx.body = {
     message: `User ${ctx.params.email} deleted.`,
   }
