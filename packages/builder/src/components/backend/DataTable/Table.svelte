@@ -12,6 +12,7 @@
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
   import "@budibase/svelte-ag-grid/dist/index.css"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+  import RoleCell from "./cells/RoleCell.svelte"
 
   export let schema = {}
   export let data = []
@@ -28,12 +29,23 @@
   let editableRow
   let editRowModal
   let editColumnModal
+  let customRenderers = []
 
   $: isUsersTable = tableId === TableNames.USERS
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     if (isUsersTable) {
-      console.log(schema)
+      customRenderers = [
+        {
+          column: "roleId",
+          component: RoleCell,
+        },
+      ]
+      UNEDITABLE_USER_FIELDS.forEach(field => {
+        if (schema[field]) {
+          schema[field].editable = false
+        }
+      })
       schema.email.displayName = "Email"
       schema.roleId.displayName = "Role"
       if (schema.status) {
@@ -97,6 +109,7 @@
     {data}
     {schema}
     {loading}
+    {customRenderers}
     customColumnTitle="Edit"
     bind:selectedRows
     showAutoColumns={!hideAutocolumns}
