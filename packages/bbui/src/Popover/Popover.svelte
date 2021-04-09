@@ -34,7 +34,7 @@
       use:positionDropdown={{ anchor, align }}
       use:clickOutside={hide}
       on:keydown={handleEscape}
-      class="menu-container">
+      class="spectrum-Popover is-open">
       <slot />
     </div>
   </Portal>

@@ -437,6 +437,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/modal/-/modal-3.0.1.tgz#613a6b83d0330a4d38db41a98090800751c56d8d"
   integrity sha512-F7D99F3cjDGT9DM9sogx/p49jrNYT7a1J6TUoqV73wUf+0gP+dTsskBOo9jB8VbUE+POQPjiDLB+SWLp6iBB+w==
 
+"@spectrum-css/popover@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/popover/-/popover-3.0.1.tgz#5863c1efc53f98f9aba2de9186666780041303fc"
+  integrity sha512-LmOSj/yCwQQ9iGmCYnHiJsJR/HfPiGqI1Jl7pkKxBOCxYBMS/5+ans9vfCN2Qnd0eK7WSbfPg72S6mjye7db2Q==
+
 "@spectrum-css/underlay@^2.0.9":
   version "2.0.9"
   resolved "https://registry.yarnpkg.com/@spectrum-css/underlay/-/underlay-2.0.9.tgz#fc10f971d1325cc844b727e6260f7217844060e8"
