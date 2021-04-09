@@ -51,11 +51,11 @@ exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
     type: file.type,
   })
 
+  // don't store a URL, work this out on the way out as the URL could change
   return {
     size: file.size,
     name: file.name,
     extension: [...file.name.split(".")].pop(),
-    url: response.Location,
     key: response.Key,
   }
 }
