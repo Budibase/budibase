@@ -6,8 +6,8 @@ const {
   generateRowID,
   DocumentTypes,
   SEPARATOR,
-  ViewNames,
-  generateUserID,
+  InternalTables,
+  generateUserMetadataID,
 } = require("../../db/utils")
 const usersController = require("./user")
 const {
@@ -39,7 +39,7 @@ validateJs.extend(validateJs.validators.datetime, {
 
 async function findRow(db, appId, tableId, rowId) {
   let row
-  if (tableId === ViewNames.USERS) {
+  if (tableId === InternalTables.USER_METADATA) {
     let ctx = {
       params: {
         userId: rowId,
@@ -97,7 +97,7 @@ exports.patch = async function(ctx) {
   })
 
   // Creation of a new user goes to the user controller
-  if (row.tableId === ViewNames.USERS) {
+  if (row.tableId === InternalTables.USER_METADATA) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = {
       ...row,
@@ -142,8 +142,8 @@ exports.save = async function(ctx) {
   }
 
   if (!inputs._rev && !inputs._id) {
-    if (inputs.tableId === ViewNames.USERS) {
-      inputs._id = generateUserID(inputs.email)
+    if (inputs.tableId === InternalTables.USER_METADATA) {
+      inputs._id = generateUserMetadataID(inputs.email)
     } else {
       inputs._id = generateRowID(inputs.tableId)
     }
@@ -176,7 +176,7 @@ exports.save = async function(ctx) {
   })
 
   // Creation of a new user goes to the user controller
-  if (row.tableId === ViewNames.USERS) {
+  if (row.tableId === InternalTables.USER_METADATA) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
     await usersController.createMetadata(ctx)
@@ -289,7 +289,7 @@ exports.search = async function(ctx) {
   const response = await search(searchString)
 
   // delete passwords from users
-  if (tableId === ViewNames.USERS) {
+  if (tableId === InternalTables.USER_METADATA) {
     for (let row of response.rows) {
       delete row.password
     }
@@ -309,7 +309,7 @@ exports.fetchTableRows = async function(ctx) {
   // special case for users, fetch through the user controller
   let rows,
     table = await db.get(ctx.params.tableId)
-  if (ctx.params.tableId === ViewNames.USERS) {
+  if (ctx.params.tableId === InternalTables.USER_METADATA) {
     await usersController.fetchMetadata(ctx)
     rows = ctx.body
   } else {

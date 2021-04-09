@@ -1,71 +1,23 @@
 const CouchDB = require("../../db")
 const {
-  generateUserID,
-  getUserParams,
-  getEmailFromUserID,
-} = require("@budibase/auth")
+  generateUserMetadataID,
+  getUserMetadataParams,
+  getEmailFromUserMetadataID,
+} = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { getRole } = require("../../utilities/security/roles")
-const { checkSlashesInUrl } = require("../../utilities")
-const env = require("../../environment")
-const fetch = require("node-fetch")
-
-async function deleteGlobalUser(email) {
-  const endpoint = `/api/admin/users/${email}`
-  const reqCfg = { method: "DELETE" }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    reqCfg
-  )
-  return response.json()
-}
-
-async function getGlobalUsers(email = null) {
-  const endpoint = email ? `/api/admin/users/${email}` : `/api/admin/users`
-  const reqCfg = { method: "GET" }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    reqCfg
-  )
-  return response.json()
-}
-
-async function saveGlobalUser(appId, email, body) {
-  const globalUser = await getGlobalUsers(email)
-  const roles = globalUser.roles || {}
-  if (body.roleId) {
-    roles.appId = body.roleId
-  }
-  const endpoint = `/api/admin/users`
-  const reqCfg = {
-    method: "POST",
-    body: {
-      ...globalUser,
-      email,
-      password: body.password,
-      status: body.status,
-      roles,
-    },
-  }
-
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    reqCfg
-  )
-  await response.json()
-  delete body.email
-  delete body.password
-  delete body.roleId
-  delete body.status
-  return body
-}
+const {
+  getGlobalUsers,
+  saveGlobalUser,
+  deleteGlobalUser,
+} = require("../../utilities/workerRequests")
 
 exports.fetchMetadata = async function(ctx) {
   const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers()
+  const global = await getGlobalUsers(ctx, ctx.appId)
   const metadata = (
     await database.allDocs(
-      getUserParams(null, {
+      getUserMetadataParams(null, {
         include_docs: true,
       })
     )
@@ -90,11 +42,11 @@ exports.createMetadata = async function(ctx) {
   const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
 
-  const metadata = await saveGlobalUser(appId, email, ctx.request.body)
+  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
 
   const user = {
     ...metadata,
-    _id: generateUserID(email),
+    _id: generateUserMetadataID(email),
     type: "user",
     tableId: InternalTables.USER_METADATA,
   }
@@ -110,11 +62,11 @@ exports.updateMetadata = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = ctx.request.body
-  let email = user.email || getEmailFromUserID(user._id)
-  const metadata = await saveGlobalUser(appId, email, ctx.request.body)
+  let email = user.email || getEmailFromUserMetadataID(user._id)
+  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
 
   if (!metadata._id) {
-    user._id = generateUserID(email)
+    user._id = generateUserMetadataID(email)
   }
   ctx.body = await db.put({
     ...metadata,
@@ -124,8 +76,8 @@ exports.updateMetadata = async function(ctx) {
 exports.destroyMetadata = async function(ctx) {
   const db = new CouchDB(ctx.appId)
   const email = ctx.params.email
-  await deleteGlobalUser(email)
-  await db.destroy(generateUserID(email))
+  await deleteGlobalUser(ctx, email)
+  await db.destroy(generateUserMetadataID(email))
   ctx.body = {
     message: `User ${ctx.params.email} deleted.`,
   }
@@ -133,12 +85,12 @@ exports.destroyMetadata = async function(ctx) {
 
 exports.findMetadata = async function(ctx) {
   const database = new CouchDB(ctx.appId)
-  let lookup = ctx.params.email
-    ? generateUserID(ctx.params.email)
-    : ctx.params.userId
-  const user = await database.get(lookup)
-  if (user) {
-    delete user.password
+  const email =
+    ctx.params.email || getEmailFromUserMetadataID(ctx.params.userId)
+  const global = await getGlobalUsers(ctx, ctx.appId, email)
+  const user = await database.get(generateUserMetadataID(email))
+  ctx.body = {
+    ...global,
+    ...user,
   }
-  ctx.body = user
 }

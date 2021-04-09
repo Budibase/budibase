@@ -14,11 +14,11 @@ exports.userSave = async ctx => {
   const { email, password, _id } = ctx.request.body
   const hashedPassword = password ? await hash(password) : null
   let user = {
-      ...ctx.request.body,
-      _id: generateUserID(email),
-      password: hashedPassword,
-    },
-    dbUser
+    ...ctx.request.body,
+    _id: generateUserID(email),
+    password: hashedPassword,
+  }
+  let dbUser
   // in-case user existed already
   if (_id) {
     dbUser = await db.get(_id)
@@ -57,13 +57,12 @@ exports.userDelete = async ctx => {
 // called internally by app server user fetch
 exports.userFetch = async ctx => {
   const db = new CouchDB(USER_DB)
-  const users = (
-    await db.allDocs(
-      getUserParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc)
+  const response = await db.allDocs(
+    getUserParams(null, {
+      include_docs: true,
+    })
+  )
+  const users = response.rows.map(row => row.doc)
   // user hashed password shouldn't ever be returned
   for (let user of users) {
     if (user) {
@@ -76,7 +75,13 @@ exports.userFetch = async ctx => {
 // called internally by app server user find
 exports.userFind = async ctx => {
   const db = new CouchDB(USER_DB)
-  const user = await db.get(generateUserID(ctx.params.email))
+  let user
+  try {
+    user = await db.get(generateUserID(ctx.params.email))
+  } catch (err) {
+    // no user found, just return nothing
+    user = {}
+  }
   if (user) {
     delete user.password
   }

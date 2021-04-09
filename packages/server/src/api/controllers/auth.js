@@ -3,7 +3,7 @@ const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
-const { generateUserID } = require("../../db/utils")
+const { generateUserMetadataID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { ViewNames } = require("../../db/utils")
@@ -27,7 +27,7 @@ exports.authenticate = async ctx => {
 
   let dbUser
   try {
-    dbUser = await db.get(generateUserID(email))
+    dbUser = await db.get(generateUserMetadataID(email))
   } catch (_) {
     // do not want to throw a 404 - as this could be
     // used to determine valid emails
