@@ -1,8 +1,7 @@
 <script>
-  import { Label, TextButton, Spacer, Select, Input } from "@budibase/bbui"
+  import { Label, Button, Spacer, Select, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
-  import { CloseCircleIcon, AddIcon } from "components/common/Icons"
   import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
 
@@ -77,20 +76,15 @@
       bindings={bindableProperties}
       on:change={event => updateFieldValue(idx, event.detail)} />
     <div class="remove-field-container">
-      <TextButton text small on:click={() => removeField(field[0])}>
-        <CloseCircleIcon />
-      </TextButton>
+      <Button icon="Close" size="S" quiet on:click={() => removeField(field[0])} />
     </div>
   {/each}
   <div>
     <Spacer small />
-    <TextButton text small blue on:click={addField}>
+    <Button icon="AddCircle" size="S" type="cta" on:click={addField}>
       Add
       {fieldLabel}
-      <div style="height: 20px; width: 20px;">
-        <AddIcon />
-      </div>
-    </TextButton>
+    </Button>
   </div>
 {/if}
 
