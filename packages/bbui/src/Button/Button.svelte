@@ -39,7 +39,9 @@
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     {/if}
-    <span class="spectrum-Button-label"><slot /></span>
+    {#if $$slots} 
+      <span class="spectrum-Button-label"><slot /></span>
+    {/if}
   </button>
 {/if}
 
