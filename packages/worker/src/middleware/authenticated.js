@@ -11,20 +11,22 @@ module.exports = async (ctx, next) => {
     appId = cookieAppId
   }
 
-  return passport.authenticate("jwt", async (err, user) => {
-    if (err) {
-      return ctx.throw(err.status || 403, err)
-    }
+  return next()
 
-    try {
-      ctx.appId = appId
-      ctx.isAuthenticated = true
-      // TODO: introduce roles again
-      ctx.user = user
-      await next()
-    } catch (err) {
-      console.log(err)
-      ctx.throw(err.status || 403, err.text)
-    }
-  })(ctx, next)
+  // return passport.authenticate("jwt", async (err, user) => {
+  //   if (err) {
+  //     return ctx.throw(err.status || 403, err)
+  //   }
+  //
+  //   try {
+  //     ctx.appId = appId
+  //     ctx.isAuthenticated = true
+  //     // TODO: introduce roles again
+  //     ctx.user = user
+  //     await next()
+  //   } catch (err) {
+  //     console.log(err)
+  //     ctx.throw(err.status || 403, err.text)
+  //   }
+  // })(ctx, next)
 }

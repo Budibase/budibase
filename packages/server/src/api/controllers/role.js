@@ -10,7 +10,7 @@ const {
 const {
   generateRoleID,
   getRoleParams,
-  getUserParams,
+  getUserMetadataParams,
   ViewNames,
 } = require("../../db/utils")
 
@@ -112,7 +112,7 @@ exports.destroy = async function(ctx) {
   // first check no users actively attached to role
   const users = (
     await db.allDocs(
-      getUserParams(null, {
+      getUserMetadataParams(null, {
         include_docs: true,
       })
     )

@@ -26,13 +26,12 @@ exports.generateUserID = email => {
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserParams = (email = "", otherProps = {}) => {
+  if (!email) {
+    email = ""
+  }
   return {
     ...otherProps,
     startkey: `${DocumentTypes.USER}${SEPARATOR}${email}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
   }
-}
-
-exports.getEmailFromUserID = id => {
-  return id.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
 }

@@ -22,7 +22,7 @@ const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-  const apps = await getDeployedApps()
+  const apps = await getDeployedApps(ctx)
   if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
     return apps[possibleAppUrl].appId
   } else {
