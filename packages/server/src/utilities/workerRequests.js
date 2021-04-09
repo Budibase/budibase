@@ -26,7 +26,9 @@ function prepRequest(ctx, request) {
         ? JSON.stringify(request.body)
         : request.body
   }
-  request.headers.cookie = ctx.headers.cookie
+  if (ctx.headers) {
+    request.headers.cookie = ctx.headers.cookie
+  }
   return request
 }
 

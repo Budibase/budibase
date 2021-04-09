@@ -349,6 +349,7 @@ exports.destroy = async function(ctx) {
 
   // for automations include the row that was deleted
   ctx.row = row
+  ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
 }
 

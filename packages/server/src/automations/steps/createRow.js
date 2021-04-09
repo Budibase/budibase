@@ -75,7 +75,7 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
     request: {
       body: inputs.row,
     },
-    user: { appId },
+    appId,
     eventEmitter: emitter,
   }
 

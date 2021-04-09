@@ -6,7 +6,7 @@ const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserMetadataID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
-const { ViewNames } = require("../../db/utils")
+const { InternalTables } = require("../../db/utils")
 const { UserStatus } = require("@budibase/auth")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 
@@ -84,7 +84,7 @@ exports.fetchSelf = async ctx => {
   }
   const db = new CouchDB(appId)
   const user = await db.get(userId)
-  const userTable = await db.get(ViewNames.USERS)
+  const userTable = await db.get(InternalTables.USER_METADATA)
   if (user) {
     delete user.password
   }
