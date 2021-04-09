@@ -1,7 +1,7 @@
 <script>
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
-  import clickOutside from "../Actions/click_outside"
+  import ActionButton from '../Button/ActionButton.svelte'
 
   export let title
 
@@ -40,7 +40,7 @@
         </div>
         <div class="controls">
           <slot name="buttons" />
-          <i class="ri-close-fill close" on:click={hide} />
+          <ActionButton quiet icon="Close" on:click={hide} />
         </div>
       </header>
       <slot name="body" />

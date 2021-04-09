@@ -1,8 +1,6 @@
 <script>
   import "@spectrum-css/button/dist/index-vars.css"
 
-
-
   export let href = false
   export let disabled = false
 
