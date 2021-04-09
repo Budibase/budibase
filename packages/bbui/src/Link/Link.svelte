@@ -9,9 +9,9 @@
     export let overBackground = false
 </script>
 
-<a {href} class="spectrum-Link 
-    spectrum-Link--size{size}
-    {primary && 'spectrum-Link--primary'}
-    {secondary && 'spectrum-Link--secondary'}
-    {overBackground && 'spectrum-Link--overBackground'}
-    {quiet && 'spectrum-Link--quiet'}"><slot /></a>
+<a {href}
+    class:spectrum-Link--primary={primary}
+    class:spectrum-Link--secondary={secondary}
+    class:spectrum-Link--overBackground={overBackground}
+    class:spectrum-Link--quiet={quiet}
+class="spectrum-Link spectrum-Link--size{size}"><slot /></a>

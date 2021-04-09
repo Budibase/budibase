@@ -14,10 +14,11 @@
     }
 </script>
 
-<div use:group class="spectrum-ActionGroup 
-    {vertical && 'spectrum-ActionGroup--vertical'} 
-    {justified && 'spectrum-ActionGroup--justified'} 
-    {quiet && 'spectrum-ActionGroup--quiet'} 
-    {compact && 'spectrum-ActionGroup--compact'}">
+<div use:group
+    class:spectrum-ActionGroup--vertical={vertical}
+    class:spectrum-ActionGroup--justified={justified}
+    class:spectrum-ActionGroup--quiet={quiet}
+    class:spectrum-ActionGroup--compact={compact}
+    class="spectrum-ActionGroup">
     <slot />
 </div>
