@@ -2,7 +2,7 @@ const { ObjectStoreBuckets } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../constants")
-const { checkSlashesInUrl } = require("./index")
+const { attachmentsRelativeURL } = require("./index")
 
 const BASE_AUTO_ID = 1
 
@@ -187,9 +187,7 @@ exports.outputProcessing = async (appId, table, rows) => {
           continue
         }
         row[property].forEach(attachment => {
-          attachment.url = checkSlashesInUrl(
-            `${ObjectStoreBuckets.APPS}/${attachment.key}`
-          )
+          attachment.url = attachmentsRelativeURL(attachment.key)
         })
       }
     }

@@ -5,6 +5,7 @@ const fetch = require("node-fetch")
 const PouchDB = require("../../../db")
 const CouchDB = require("pouchdb")
 const { upload } = require("../../../utilities/fileSystem")
+const { attachmentsRelativeURL } = require("../../../utilities")
 
 // TODO: everything in this file is to be removed
 
@@ -55,6 +56,7 @@ exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
   return {
     size: file.size,
     name: file.name,
+    url: attachmentsRelativeURL(response.Key),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
