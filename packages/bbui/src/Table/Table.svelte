@@ -289,7 +289,7 @@
     transition: opacity 0.2s ease;
   }
 
-  .spectrum,
+  .container,
   th {
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
@@ -339,7 +339,7 @@
   tr:first-child td {
     border-top: none !important;
   }
-  .spectrum:not(.quiet) td.spectrum-Table-cell--divider {
+  .container:not(.quiet) td.spectrum-Table-cell--divider {
     width: 1px;
     border-right: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
