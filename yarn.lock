@@ -839,6 +839,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/link/-/link-3.1.1.tgz#cb526a2e10b50ef5a7ae29cca7272e2610d597eb"
   integrity sha512-Bi88lRhTY7g6nM/ryW1yY4Cji211ZYNtRxkxbV7n2lPvwMAAQtyx0qVD3ru4kTGj/FFVvmPR3XiOE10K13HSNA==
 
+"@spectrum-css/menu@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/menu/-/menu-3.0.1.tgz#2a376f991acc24e12ec892bb6b9db2650fc41fbe"
+  integrity sha512-Qjg0+1O0eC89sb/bRFq2AGnQ8XqhVy23TUXHyffNM8qdcMssnlny3QmhzjURCZKvx/Y5UytCpzhedPQqSpQwZg==
+
 "@spectrum-css/toast@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/toast/-/toast-3.0.1.tgz#36f62ea05302761e59b9d53e05f6c04423861796"
