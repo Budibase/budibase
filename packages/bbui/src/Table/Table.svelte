@@ -248,8 +248,8 @@
       var(--spectrum-global-color-gray-100);
   }
   .container::-webkit-scrollbar {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
   .container::-webkit-scrollbar-track {
     background: var(--spectrum-global-color-gray-100);
