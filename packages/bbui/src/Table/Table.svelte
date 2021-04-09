@@ -244,7 +244,7 @@
     border: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
     scrollbar-width: thin;
-    scrollbar-color: var(--spectrum-global-color-gray-300)
+    scrollbar-color: var(--spectrum-global-color-gray-400)
       var(--spectrum-global-color-gray-100);
   }
   .container::-webkit-scrollbar {
@@ -255,7 +255,7 @@
     background: var(--spectrum-global-color-gray-100);
   }
   .container::-webkit-scrollbar-thumb {
-    background-color: var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-400);
     border-radius: 20px;
     border: 4px solid var(--spectrum-global-color-gray-100);
   }
