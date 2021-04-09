@@ -8,7 +8,7 @@
   let modal
 </script>
 
-<Button icon="Add" type="overBackground" size="S" quiet on:click={modal.show}>
+<Button icon="Add" primary size="S" quiet on:click={modal.show}>
   {title}
 </Button>
 <Modal bind:this={modal}>

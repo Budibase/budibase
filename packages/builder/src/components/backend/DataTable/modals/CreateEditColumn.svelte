@@ -288,10 +288,10 @@
   {/if}
   <footer class="create-column-options">
     {#if !uneditable && originalName != null}
-      <Button type="warning" size="S" text on:click={confirmDelete}>Delete Column</Button>
+      <Button warning size="S" text on:click={confirmDelete}>Delete Column</Button>
     {/if}
     <Button on:click={onClosed}>Cancel</Button>
-    <Button type="cta" on:click={saveColumn} bind:disabled={invalid}>
+    <Button cta on:click={saveColumn} bind:disabled={invalid}>
       Save Column
     </Button>
   </footer>
