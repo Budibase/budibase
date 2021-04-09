@@ -20,9 +20,7 @@ class TestConfiguration {
     this.ctx = {
       throw: this.throw,
       next: this.next,
-      user: {
-        appId: "test"
-      },
+      appId: "test",
       request: {
         body: {}
       },

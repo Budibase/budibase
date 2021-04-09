@@ -128,7 +128,7 @@ exports.generateRowID = (tableId, id = null) => {
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserMetadataParams = (email = "", otherProps = {}) => {
-  return exports.getRowParams(ViewNames.USERS, email, otherProps)
+  return exports.getRowParams(InternalTables.USER_METADATA, email, otherProps)
 }
 
 /**

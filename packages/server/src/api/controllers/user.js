@@ -54,7 +54,10 @@ exports.createMetadata = async function(ctx) {
   }
 
   const response = await db.post(user)
+  // for automations to make it obvious was successful
+  ctx.status = 200
   ctx.body = {
+    _id: response.id,
     _rev: response.rev,
     email,
   }
