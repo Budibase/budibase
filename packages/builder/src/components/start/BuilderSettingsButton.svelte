@@ -1,12 +1,12 @@
 <script>
-  import { TextButton as Button, Modal } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import BuilderSettingsModal from "./BuilderSettingsModal.svelte"
 
   let modal
 </script>
 
 <div>
-  <Button text on:click={modal.show}>
+  <Button icon="" text on:click={modal.show}>
     <i class="ri-settings-3-fill" />
     <p>Settings</p>
   </Button>

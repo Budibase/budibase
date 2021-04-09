@@ -1,7 +1,7 @@
 <script>
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
-  import ActionButton from '../Button/ActionButton.svelte'
+  import ActionButton from '../ActionButton/ActionButton.svelte'
 
   export let title
 

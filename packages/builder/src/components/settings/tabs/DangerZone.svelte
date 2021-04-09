@@ -1,6 +1,6 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import { Input, TextArea, Button, Body } from "@budibase/bbui"
+  import { Input, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
 
   let value = ""
