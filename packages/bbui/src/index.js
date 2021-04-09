@@ -25,6 +25,7 @@ export { default as Label } from "./Styleguide/Label.svelte"
 export { default as Close } from "./Button/Close.svelte"
 export { default as Modal } from "./Modal/Modal.svelte"
 export { default as ModalContent } from "./Modal/ModalContent.svelte"
+export { default as NotificationDisplay } from "./Notification/NotificationDisplay.svelte"
 export { default as Spacer } from "./Spacer/Spacer.svelte"
 export { default as DatePicker } from "./DatePicker/DatePicker.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
@@ -37,4 +38,4 @@ export { default as positionDropdown } from "./Actions/position_dropdown"
 export { default as clickOutside } from "./Actions/click_outside"
 
 // Stores
-export { notifications } from "./Stores/notifications"
+export { notifications, createNotificationStore } from "./Stores/notifications"

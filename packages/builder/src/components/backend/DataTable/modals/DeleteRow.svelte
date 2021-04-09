@@ -1,7 +1,7 @@
 <script>
   import { rows } from "stores/backend"
   import * as api from "../api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let row
@@ -14,7 +14,7 @@
 
   async function deleteRow() {
     await api.deleteRow(row)
-    notifier.success("Row deleted")
+    notifications.success("Row deleted")
     rows.delete(row)
   }
 </script>

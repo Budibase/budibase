@@ -4,7 +4,7 @@
   import AgGrid from "@budibase/svelte-ag-grid"
 
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import {
@@ -142,7 +142,7 @@
       type: "delete",
     })
     data = data.filter(row => !selectedRows.includes(row))
-    notifier.success(`Successfully deleted ${selectedRows.length} rows`)
+    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
     selectedRows = []
   }
 </script>

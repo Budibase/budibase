@@ -1,7 +1,7 @@
 <script>
   import { Button, Drawer, Spacer, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
@@ -26,7 +26,7 @@
 
   const saveFilter = async () => {
     dispatch("change", tempValue)
-    notifier.success("Filters saved.")
+    notifications.success("Filters saved.")
     drawer.hide()
   }
 

@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { store } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownMenu, Modal, ModalContent, Input } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -18,9 +18,9 @@
   const deleteLayout = async () => {
     try {
       await store.actions.layouts.delete(layout)
-      notifier.success(`Layout ${layout.name} deleted successfully.`)
+      notifications.success(`Layout ${layout.name} deleted successfully.`)
     } catch (err) {
-      notifier.danger(`Error deleting layout: ${err.message}`)
+      notifications.error(`Error deleting layout: ${err.message}`)
     }
   }
 
@@ -29,9 +29,9 @@
       const layoutToSave = cloneDeep(layout)
       layoutToSave.name = name
       await store.actions.layouts.save(layoutToSave)
-      notifier.success(`Layout saved successfully.`)
+      notifications.success(`Layout saved successfully.`)
     } catch (err) {
-      notifier.danger(`Error saving layout: ${err.message}`)
+      notifications.error(`Error saving layout: ${err.message}`)
     }
   }
 </script>

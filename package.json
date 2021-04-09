@@ -29,7 +29,7 @@
     "clean": "lerna clean",
     "kill-port": "kill-port 4001",
     "dev": "yarn run kill-port && lerna link && lerna run --parallel dev:builder --concurrency 1",
-    "dev:noserver": "lerna link && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/server", 
+    "dev:noserver": "lerna link && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/server",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
@@ -38,5 +38,8 @@
     "test:e2e:ci": "lerna run cy:ci",
     "build:docker": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
     "build:docker:staging": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh staging && cd -"
+  },
+  "dependencies": {
+    "@spectrum-css/toast": "^3.0.1"
   }
 }

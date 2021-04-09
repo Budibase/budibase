@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownMenu, Modal, ModalContent } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -20,9 +20,9 @@
       store.actions.routing.fetch()
       confirmDeleteDialog.hide()
       $goto("../")
-      notifier.success("Deleted screen successfully.")
+      notifications.success("Deleted screen successfully.")
     } catch (err) {
-      notifier.danger("Error deleting screen")
+      notifications.error("Error deleting screen")
     }
   }
 </script>

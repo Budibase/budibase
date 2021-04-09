@@ -1,7 +1,7 @@
 <script>
   import { Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import EventEditor from "./EventEditor.svelte"
   import { automationStore } from "builderStore"
 
@@ -22,7 +22,7 @@
     }
 
     dispatch("change", value)
-    notifier.success("Component actions saved.")
+    notifications.success("Component actions saved.")
     drawer.hide()
   }
 

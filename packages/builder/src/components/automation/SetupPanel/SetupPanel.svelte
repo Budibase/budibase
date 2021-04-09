@@ -1,7 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import { Button, Modal } from "@budibase/bbui"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
@@ -19,9 +19,9 @@
     automation.live = live
     automationStore.actions.save({ instanceId, automation })
     if (live) {
-      notifier.info(`Automation ${automation.name} enabled.`)
+      notifications.info(`Automation ${automation.name} enabled.`)
     } else {
-      notifier.danger(`Automation ${automation.name} disabled.`)
+      notifications.error(`Automation ${automation.name} disabled.`)
     }
   }
 
@@ -30,9 +30,9 @@
       automation: $automationStore.selectedAutomation.automation,
     })
     if (result.status === 200) {
-      notifier.success(`Automation ${automation.name} triggered successfully.`)
+      notifications.success(`Automation ${automation.name} triggered successfully.`)
     } else {
-      notifier.danger(`Failed to trigger automation ${automation.name}.`)
+      notifications.error(`Failed to trigger automation ${automation.name}.`)
     }
   }
 
@@ -41,7 +41,7 @@
       instanceId,
       automation,
     })
-    notifier.success(`Automation ${automation.name} saved.`)
+    notifications.success(`Automation ${automation.name} saved.`)
   }
 </script>
 

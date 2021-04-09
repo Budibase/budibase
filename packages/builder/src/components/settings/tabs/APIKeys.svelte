@@ -1,7 +1,7 @@
 <script>
   import { Input, Label, TextButton } from "@budibase/bbui"
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { database } from "stores/backend"
   import analytics from "analytics"
 
@@ -11,7 +11,7 @@
     if (key === "budibase") {
       const isValid = await analytics.identifyByApiKey(value)
       if (!isValid) {
-        notifier.danger("Your API Key is invalid.")
+        notifications.error("Your API Key is invalid.")
         keys = { ...keys }
         return
       }
@@ -19,7 +19,7 @@
     const response = await api.put(`/api/keys/${key}`, { value })
     const res = await response.json()
     keys = { ...keys, ...res }
-    notifier.success("API Key saved.")
+    notifications.success("API Key saved.")
   }
 
   // Get Keys

@@ -1,6 +1,6 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
 
@@ -60,7 +60,7 @@
     }
 
     if (response.status !== 200) {
-      notifier.danger("CSV Invalid, please try another CSV file")
+      notifications.error("CSV Invalid, please try another CSV file")
       return []
     }
   }
@@ -68,7 +68,7 @@
   async function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
-      notifier.danger(
+      notifications.error(
         `Files cannot exceed ${FILE_SIZE_LIMIT /
           BYTES_IN_MB}MB. Please try again with smaller files.`
       )

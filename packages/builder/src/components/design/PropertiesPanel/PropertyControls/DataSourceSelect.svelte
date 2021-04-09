@@ -15,7 +15,7 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
 
@@ -108,7 +108,7 @@
           blue
           thin
           on:click={() => {
-            notifier.success('Query parameters saved.')
+            notifications.success('Query parameters saved.')
             handleSelected(value)
             drawer.hide()
           }}>

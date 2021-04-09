@@ -2,7 +2,7 @@
   import { ModalContent, Select, Input, Button } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
 
@@ -61,9 +61,9 @@
     // Save/create the role
     const response = await roles.save(selectedRole)
     if (response.status === 200) {
-      notifier.success("Role saved successfully.")
+      notifications.success("Role saved successfully.")
     } else {
-      notifier.danger("Error saving role.")
+      notifications.error("Error saving role.")
       return false
     }
   }
@@ -73,9 +73,9 @@
     const response = await roles.delete(selectedRole)
     if (response.status === 200) {
       changeRole()
-      notifier.success("Role deleted successfully.")
+      notifications.success("Role deleted successfully.")
     } else {
-      notifier.danger("Error deleting role.")
+      notifications.error("Error deleting role.")
     }
   }
 

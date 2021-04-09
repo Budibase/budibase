@@ -1,5 +1,5 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { DropdownMenu } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -21,7 +21,7 @@
 
   async function deleteQuery() {
     await queries.delete(query)
-    notifier.success("Query deleted")
+    notifications.success("Query deleted")
     hideEditor()
   }
 </script>

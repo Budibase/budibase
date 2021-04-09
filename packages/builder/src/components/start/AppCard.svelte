@@ -3,7 +3,7 @@
   import { Heading } from "@budibase/bbui"
   import { Spacer } from "@budibase/bbui"
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import download from "downloadjs"
 
@@ -17,10 +17,10 @@
       download(
         `/api/backups/export?appId=${_id}&appname=${encodeURIComponent(name)}`
       )
-      notifier.success("App Export Complete.")
+      notifications.success("App Export Complete.")
     } catch (err) {
       console.error(err)
-      notifier.danger("App Export Failed.")
+      notifications.error("App Export Failed.")
     } finally {
       appExportLoading = false
     }

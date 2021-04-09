@@ -1,5 +1,5 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Dropzone } from "@budibase/bbui"
   import api from "builderStore/api"
 
@@ -8,7 +8,7 @@
   const BYTES_IN_MB = 1000000
 
   function handleFileTooLarge(fileSizeLimit) {
-    notifier.danger(
+    notifications.error(
       `Files cannot exceed ${fileSizeLimit /
         BYTES_IN_MB}MB. Please try again with smaller files.`
     )

@@ -17,7 +17,7 @@
     RelationshipTypes,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -82,10 +82,10 @@
 
   function deleteColumn() {
     if (field.name === $tables.selected.primaryDisplay) {
-      notifier.danger("You cannot delete the display column")
+      notifications.error("You cannot delete the display column")
     } else {
       tables.deleteField(field)
-      notifier.success(`Column ${field.name} deleted.`)
+      notifications.success(`Column ${field.name} deleted.`)
       onClosed()
     }
   }

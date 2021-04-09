@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -24,7 +24,7 @@
       instanceId,
       automation,
     })
-    notifier.success("Automation deleted.")
+    notifications.success("Automation deleted.")
     $goto("../automate")
   }
 </script>

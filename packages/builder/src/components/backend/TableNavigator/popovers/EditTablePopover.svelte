@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
   import { tables } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
@@ -42,7 +42,7 @@
     await tables.delete(table)
     store.actions.screens.delete(templateScreens)
     await tables.fetch()
-    notifier.success("Table deleted")
+    notifications.success("Table deleted")
     if (wasSelectedTable._id === table._id) {
       $goto("./table")
     }
@@ -51,7 +51,7 @@
 
   async function save() {
     await tables.save(table)
-    notifier.success("Table renamed successfully")
+    notifications.success("Table renamed successfully")
     hideEditor()
   }
 

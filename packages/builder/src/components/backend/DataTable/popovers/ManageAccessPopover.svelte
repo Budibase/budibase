@@ -1,6 +1,6 @@
 <script>
   import { roles, permissions as permissionsStore } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
 
   export let resourceId
@@ -16,7 +16,7 @@
 
     // Show updated permissions in UI: REMOVE
     permissions = await permissionsStore.forResource(resourceId)
-    notifier.success("Updated permissions.")
+    notifications.success("Updated permissions.")
     // TODO: update permissions
     // permissions[]
   }

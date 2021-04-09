@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import { tables } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
@@ -60,7 +60,7 @@
 
     // Create table
     const table = await tables.save(newTable)
-    notifier.success(`Table ${name} created successfully.`)
+    notifications.success(`Table ${name} created successfully.`)
     analytics.captureEvent("Table Created", { name })
 
     // Create auto screens
