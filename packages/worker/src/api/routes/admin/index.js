@@ -22,7 +22,12 @@ function buildUserSaveValidation() {
 }
 
 router
-  .post("/api/admin/users", buildUserSaveValidation(), authenticated, controller.userSave)
+  .post(
+    "/api/admin/users",
+    buildUserSaveValidation(),
+    authenticated,
+    controller.userSave
+  )
   .delete("/api/admin/users/:email", authenticated, controller.userDelete)
   .get("/api/admin/users", authenticated, controller.userFetch)
   .get("/api/admin/users/:email", authenticated, controller.userFind)
