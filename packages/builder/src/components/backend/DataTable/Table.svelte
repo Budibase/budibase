@@ -197,7 +197,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-s);
   }
   .popovers :global(button) {
     font-weight: 500;
