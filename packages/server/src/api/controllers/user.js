@@ -28,6 +28,8 @@ exports.fetchMetadata = async function(ctx) {
     users.push({
       ...user,
       ...info,
+      // make sure the ID is always a local ID, not a global one
+      _id: generateUserMetadataID(user.email),
     })
   }
   ctx.body = users
@@ -75,9 +77,15 @@ exports.updateMetadata = async function(ctx) {
 
 exports.destroyMetadata = async function(ctx) {
   const db = new CouchDB(ctx.appId)
-  const email = ctx.params.email
+  const email =
+    ctx.params.email || getEmailFromUserMetadataID(ctx.params.userId)
   await deleteGlobalUser(ctx, email)
-  await db.destroy(generateUserMetadataID(email))
+  try {
+    const dbUser = await db.get(generateUserMetadataID(email))
+    await db.remove(dbUser._id, dbUser._rev)
+  } catch (err) {
+    // error just means the global user has no config in this app
+  }
   ctx.body = {
     message: `User ${ctx.params.email} deleted.`,
   }
@@ -92,5 +100,7 @@ exports.findMetadata = async function(ctx) {
   ctx.body = {
     ...global,
     ...user,
+    // make sure the ID is always a local ID, not a global one
+    _id: generateUserMetadataID(email),
   }
 }
