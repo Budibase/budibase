@@ -3,19 +3,14 @@
     import { createEventDispatcher } from "svelte"
     const dispatch = createEventDispatcher()
 
-    export let disabled = false
-  
+    
     /** @type {('S', 'M', 'L', 'XL')} Size of button */
     export let size = "M";
-    /** @type {('cta','primary','secondary','warning', 'overBackground')} Type of button */
-    export let type = "primary"
-  
     export let quiet = false;
-
-    export let selected = false;
-
+    export let emphasized = false;
+    export let selected = false
     export let longPressable = false;
-    
+    export let disabled = false
     export let icon = '';
 
     function longPress(element) {
@@ -42,7 +37,10 @@
 
 <button 
     use:longPress
-    class="spectrum-ActionButton spectrum-ActionButton--size{size.toUpperCase()} spectrum-ActionButton--{type} {quiet && 'spectrum-ActionButton--quiet'}"
+    class:spectrum-ActionButton--quiet={quiet}
+    class:spectrum-ActionButton--emphasized={emphasized}
+    class:is-selected={selected}
+    class="spectrum-ActionButton spectrum-ActionButton--size{size.toUpperCase()}"
     {disabled}
     on:longPress
     on:click|preventDefault>
