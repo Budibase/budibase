@@ -829,6 +829,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.0.1.tgz#9c75da37ea6915919fb574c74bd60dacc03b6577"
   integrity sha512-AUqtyNabHF451Aj9i3xz82TxS5Z6k1dttA68/1hMeU9kbPCSS4P6Viw3vaRGs9CSspuR8xnnhDgrq+F+zMy2Hw==
 
+"@spectrum-css/actiongroup@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/actiongroup/-/actiongroup-1.0.1.tgz#b95b86e7af229e90fe1e70399d8d4b547b4bd31c"
+  integrity sha512-5Q6uMjzv5BFA2TwGASr/jAtJpTWl26fhWvgGY8kOA0RCSij35l+YJg/FPXf6Nnj2qCOl8DkNycjT9YXJ+bhyVA==
+
 "@spectrum-css/toast@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/toast/-/toast-3.0.1.tgz#36f62ea05302761e59b9d53e05f6c04423861796"
