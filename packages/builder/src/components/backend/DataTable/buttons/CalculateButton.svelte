@@ -9,7 +9,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="Calculator" type="overBackground" size="S" quiet
+  <Button icon="Calculator" primary size="S" quiet
     on:click={dropdown.show}
     active={view.field && view.calculation}>
     Calculate

@@ -16,7 +16,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="LockClosed" type="overBackground" size="S" quiet on:click={openDropdown}>
+  <Button icon="LockClosed" primary size="S" quiet on:click={openDropdown}>
     Manage Access
   </Button>
 </div>
