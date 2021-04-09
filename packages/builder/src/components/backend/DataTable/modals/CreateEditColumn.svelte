@@ -3,7 +3,6 @@
     Input,
     Button,
     Label,
-    TextButton,
     Select,
     Toggle,
     Radio,
@@ -289,7 +288,7 @@
   {/if}
   <footer class="create-column-options">
     {#if !uneditable && originalName != null}
-      <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
+      <Button type="warning" size="S" text on:click={confirmDelete}>Delete Column</Button>
     {/if}
     <Button on:click={onClosed}>Cancel</Button>
     <Button type="cta" on:click={saveColumn} bind:disabled={invalid}>

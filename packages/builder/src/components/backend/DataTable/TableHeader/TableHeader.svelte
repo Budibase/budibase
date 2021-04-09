@@ -75,6 +75,7 @@
   </div>
   <Modal bind:this={modal}>
     <ModalContent
+      size="large"
       showCancelButton={false}
       showConfirmButton={false}
       title={`Edit Column: ${field.name}`}>

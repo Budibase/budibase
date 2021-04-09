@@ -33,7 +33,7 @@
   <div class="controls">
     <Heading small lh>Parameters</Heading>
     {#if !bindable}
-      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+      <Button on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
   <Body small grey>

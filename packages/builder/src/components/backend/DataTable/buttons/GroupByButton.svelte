@@ -1,5 +1,5 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
+  import { Popover, Button } from "@budibase/bbui"
   import GroupByPopover from "../popovers/GroupByPopover.svelte"
 
   export let view = {}
@@ -9,9 +9,9 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton icon="Group" type="overBackground" size="S" quiet active={!!view.groupBy} on:click={dropdown.show}>
+  <Button icon="Group" type="overBackground" size="S" quiet active={!!view.groupBy} on:click={dropdown.show}>
     Group By
-  </TextButton>
+  </Button>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <GroupByPopover {view} onClosed={dropdown.hide} />

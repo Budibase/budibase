@@ -15,6 +15,7 @@
 </Button>
 <Modal bind:this={modal}>
   <ModalContent
+    size="large"
     showCancelButton={false}
     showConfirmButton={false}
     title={'Create Column'}>
