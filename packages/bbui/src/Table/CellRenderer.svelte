@@ -7,13 +7,17 @@
 
   export let schema
   export let value
+  export let customRenderers = []
 
   const plainTypes = ["string", "options", "number", "longform"]
   $: type = schema?.type ?? "string"
+  $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
 </script>
 
 {#if value != null && value !== ''}
-  {#if plainTypes.includes(type)}
+  {#if customRenderer}
+    <svelte:component this={customRenderer.component} {value} />
+  {:else if plainTypes.includes(type)}
     <StringRenderer {value} />
   {:else if type === 'boolean'}
     <BooleanRenderer {value} />

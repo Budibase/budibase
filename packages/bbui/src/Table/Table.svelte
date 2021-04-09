@@ -16,6 +16,7 @@
   export let selectedRows = []
   export let customColumnRenderer = SelectEditRenderer
   export let customColumnTitle
+  export let customRenderers = []
 
   const dispatch = createEventDispatcher()
 
@@ -93,7 +94,11 @@
         autoColumns.push(field)
       }
     })
-    return columns.sort().concat(autoColumns)
+    return columns
+      .sort((a, b) => {
+        return a.toLowerCase() < b.toLowerCase() ? a : b
+      })
+      .concat(autoColumns)
   }
 
   const onScroll = event => {
@@ -181,7 +186,7 @@
                       <use xlink:href="#spectrum-css-icon-Arrow100" />
                     </svg>
                   {/if}
-                  {#if allowEditColumns}
+                  {#if allowEditColumns && schema[field]?.editable !== false}
                     <svg
                       class="spectrum-Icon spectrum-Table-editIcon"
                       focusable="false"
@@ -218,7 +223,10 @@
                 {#each fields as field}
                   <td class="spectrum-Table-cell">
                     <div class="spectrum-Table-cell-content">
-                      <CellRenderer schema={schema[field]} value={row[field]} />
+                      <CellRenderer
+                        {customRenderers}
+                        schema={schema[field]}
+                        value={row[field]} />
                     </div>
                   </td>
                 {/each}
