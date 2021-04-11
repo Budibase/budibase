@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Input, Drawer, Body, Button } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Label, Body, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -14,6 +14,7 @@
   export let thin = true
   export let title = "Bindings"
   export let placeholder
+  export let label
 
   let bindingDrawer
 
@@ -32,6 +33,7 @@
 
 <div class="control">
   <Input
+    {label}
     {thin}
     value={readableValue}
     on:change={event => onChange(event.target.value)}
@@ -67,7 +69,6 @@
 
   .icon {
     right: 2px;
-    top: 2px;
     bottom: 2px;
     position: absolute;
     align-items: center;
@@ -80,7 +81,9 @@
     border-bottom-right-radius: var(--border-radius-m);
     color: var(--grey-7);
     font-size: 14px;
+    height: 40px;
   }
+
   .icon:hover {
     color: var(--ink);
     cursor: pointer;
