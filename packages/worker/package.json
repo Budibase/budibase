@@ -1,7 +1,7 @@
 {
   "name": "@budibase/deployment",
   "email": "hi@budibase.com",
-  "version": "0.8.13",
+  "version": "0.8.14",
   "description": "Budibase Deployment Server",
   "main": "src/index.js",
   "repository": {
@@ -34,5 +34,5 @@
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
   },
-  "gitHead": "1b95326b20d1352d36305910259228b96a683dc7"
+  "gitHead": "4b6efc42ed3273595c7a129411f4d883733d3321"
 }
