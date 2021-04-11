@@ -1,4 +1,6 @@
 const { DocumentTypes, SEPARATOR } = require("./db/utils")
+const jwt = require("jsonwebtoken")
+const { options } = require("./middleware/passport/jwt")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -40,6 +42,23 @@ exports.getAppId = ctx => {
 }
 
 /**
+ * Get a cookie from context, and decrypt if necessary.
+ * @param {object} ctx The request which is to be manipulated.
+ * @param {string} name The name of the cookie to get.
+ * @param {object} options options .
+ */
+exports.getCookie = (ctx, value, options = {}) => {
+  const cookie = ctx.cookies.get(value)
+
+  if (!cookie) return
+
+  if (!options.decrypt) return cookie
+
+  const payload = jwt.verify(cookie, process.env.JWT_SECRET)
+  return payload
+}
+
+/**
  * Store a cookie for the request, has a hardcoded expiry.
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to set.
@@ -52,6 +71,11 @@ exports.setCookie = (ctx, value, name = "builder") => {
   if (!value) {
     ctx.cookies.set(name)
   } else {
+    if (options.encrypt) {
+      value = jwt.sign(value, process.env.JWT_SECRET, {
+        expiresIn: "1 day",
+      })
+    }
     ctx.cookies.set(name, value, {
       expires,
       path: "/",
