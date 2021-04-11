@@ -1,4 +1,4 @@
-const { passport } = require("@budibase/auth")
+const { passport, Cookies } = require("@budibase/auth")
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
@@ -9,7 +9,7 @@ exports.authenticate = async (ctx, next) => {
     const expires = new Date()
     expires.setDate(expires.getDate() + 1)
 
-    ctx.cookies.set("budibase:auth", user.token, {
+    ctx.cookies.set(Cookies.Auth, user.token, {
       expires,
       path: "/",
       httpOnly: false,
@@ -18,4 +18,8 @@ exports.authenticate = async (ctx, next) => {
 
     ctx.body = { success: true }
   })(ctx, next)
+}
+
+exports.googleAuth = async (ctx, next) => {
+  // return passport.authenticate("google")
 }

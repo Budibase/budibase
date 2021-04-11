@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const authenticated = require("../middleware/authenticated")
+const { authenticated } = require("@budibase/auth")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")

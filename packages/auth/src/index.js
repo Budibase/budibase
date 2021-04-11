@@ -4,11 +4,15 @@ const JwtStrategy = require("passport-jwt").Strategy
 // const GoogleStrategy = require("passport-google-oauth").Strategy
 const CouchDB = require("./db")
 const { StaticDatabases } = require("./db/utils")
-const { jwt, local, google } = require("./middleware")
+const { jwt, local, google, authenticated } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
 const { hash, compare } = require("./hashing")
 const { getAppId, setCookie } = require("./utils")
-const { generateUserID, getUserParams, getEmailFromUserID } = require("./db/utils")
+const {
+  generateUserID,
+  getUserParams,
+  getEmailFromUserID,
+} = require("./db/utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -41,4 +45,5 @@ module.exports = {
   compare,
   getAppId,
   setCookie,
+  authenticated,
 }
