@@ -6,27 +6,10 @@
 </script>
 
 <div>
-  <Button icon="" text on:click={modal.show}>
-    <i class="ri-settings-3-fill" />
-    <p>Settings</p>
+  <Button overBackground quiet icon="Settings" text on:click={modal.show}>
+    Settings
   </Button>
 </div>
 <Modal bind:this={modal} width="30%">
   <BuilderSettingsModal />
 </Modal>
-
-<style>
-  div i {
-    font-size: 26px;
-    color: var(--grey-7);
-    margin-left: 12px;
-  }
-
-  div p {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-s);
-    color: var(--ink);
-    font-weight: 400;
-    margin: 0 0 0 12px;
-  }
-</style>
