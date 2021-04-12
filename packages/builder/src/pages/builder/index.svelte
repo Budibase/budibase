@@ -61,7 +61,7 @@
     <div class="button-group">
       <Button secondary on:click={initiateAppImport}>Import Web App</Button>
       <Spacer medium />
-      <Button primary on:click={modal.show}>Create New Web App</Button>
+      <Button cta on:click={modal.show}>Create New Web App</Button>
     </div>
   </div>
 

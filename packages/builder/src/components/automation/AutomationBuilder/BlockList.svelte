@@ -1,7 +1,7 @@
 <script>
   import { sortBy } from "lodash/fp"
   import { automationStore } from "builderStore"
-  import { Button, DropdownMenu, Modal } from "@budibase/bbui"
+  import { ActionButton, DropdownMenu, Modal } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import CreateWebhookModal from "../Shared/CreateWebhookModal.svelte"
 
@@ -64,14 +64,14 @@
 <div class="tab-container">
   {#each tabs as tab, idx}
   <div bind:this={anchors[idx]}>
-    <Button
+    <ActionButton
       size="S"
       quiet
       icon={tab.icon}
       disabled={tab.disabled}
       on:click={tab.disabled ? null : () => onChangeTab(idx)}>
         {tab.label}
-      </Button>
+      </ActionButton>
     </div>
   {/each}
 </div>
