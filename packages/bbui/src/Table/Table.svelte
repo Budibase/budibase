@@ -153,53 +153,55 @@
     class="container">
     <div style={contentStyle}>
       <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
-        <thead class="spectrum-Table-head">
-          <tr>
-            {#if showEditColumn}
-              <th class="spectrum-Table-headCell">
-                <div class="spectrum-Table-headCell-content">
-                  {editColumnTitle || ''}
-                </div>
-              </th>
-            {/if}
-            {#each fields as field}
-              <th
-                class="spectrum-Table-headCell is-sortable"
-                class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
-                class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-                on:click={() => sortBy(field)}>
-                <div class="spectrum-Table-headCell-content">
-                  <div class="title">
-                    {schema[field]?.displayName || schema[field]?.name}
+        {#if sortedRows?.length}
+          <thead class="spectrum-Table-head">
+            <tr>
+              {#if showEditColumn}
+                <th class="spectrum-Table-headCell">
+                  <div class="spectrum-Table-headCell-content">
+                    {editColumnTitle || ''}
                   </div>
-                  {#if schema[field]?.autocolumn}
-                    <svg
-                      class="spectrum-Icon spectrum-Table-autoIcon"
-                      focusable="false">
-                      <use xlink:href="#spectrum-icon-18-MagicWand" />
-                    </svg>
-                  {/if}
-                  {#if sortColumn === field}
-                    <svg
-                      class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                      focusable="false"
-                      aria-hidden="true">
-                      <use xlink:href="#spectrum-css-icon-Arrow100" />
-                    </svg>
-                  {/if}
-                  {#if allowEditColumns && schema[field]?.editable !== false}
-                    <svg
-                      class="spectrum-Icon spectrum-Table-editIcon"
-                      focusable="false"
-                      on:click={e => editColumn(e, field)}>
-                      <use xlink:href="#spectrum-icon-18-Edit" />
-                    </svg>
-                  {/if}
-                </div>
-              </th>
-            {/each}
-          </tr>
-        </thead>
+                </th>
+              {/if}
+              {#each fields as field}
+                <th
+                  class="spectrum-Table-headCell is-sortable"
+                  class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
+                  class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
+                  on:click={() => sortBy(field)}>
+                  <div class="spectrum-Table-headCell-content">
+                    <div class="title">
+                      {schema[field]?.displayName || schema[field]?.name}
+                    </div>
+                    {#if schema[field]?.autocolumn}
+                      <svg
+                        class="spectrum-Icon spectrum-Table-autoIcon"
+                        focusable="false">
+                        <use xlink:href="#spectrum-icon-18-MagicWand" />
+                      </svg>
+                    {/if}
+                    {#if sortColumn === field}
+                      <svg
+                        class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                        focusable="false"
+                        aria-hidden="true">
+                        <use xlink:href="#spectrum-css-icon-Arrow100" />
+                      </svg>
+                    {/if}
+                    {#if allowEditColumns && schema[field]?.editable !== false}
+                      <svg
+                        class="spectrum-Icon spectrum-Table-editIcon"
+                        focusable="false"
+                        on:click={e => editColumn(e, field)}>
+                        <use xlink:href="#spectrum-icon-18-Edit" />
+                      </svg>
+                    {/if}
+                  </div>
+                </th>
+              {/each}
+            </tr>
+          </thead>
+        {/if}
         <tbody class="spectrum-Table-body">
           {#if sortedRows?.length}
             {#each sortedRows as row, idx}
