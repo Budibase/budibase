@@ -5,6 +5,7 @@
   import RelationshipRenderer from "./RelationshipRenderer.svelte"
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
 
+  export let row
   export let schema
   export let value
   export let customRenderers = []
@@ -16,7 +17,7 @@
 
 {#if value != null && value !== ''}
   {#if customRenderer}
-    <svelte:component this={customRenderer.component} {value} />
+    <svelte:component this={customRenderer.component} {schema} {value} />
   {:else if plainTypes.includes(type)}
     <StringRenderer {value} />
   {:else if type === 'boolean'}
@@ -24,7 +25,7 @@
   {:else if type === 'datetime'}
     <DateTimeRenderer {value} />
   {:else if type === 'link'}
-    <RelationshipRenderer {value} />
+    <RelationshipRenderer {row} {schema} {value} on:clickrelationship />
   {:else if type === 'attachment'}
     <AttachmentRenderer {value} />
   {/if}

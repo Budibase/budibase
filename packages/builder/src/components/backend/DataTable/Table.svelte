@@ -58,12 +58,9 @@
     selectedRows = []
   }
 
-  const selectRelationship = (row, fieldName) => {
-    if (!row?.[fieldName]?.length) {
-      return
-    }
+  const selectRelationship = ({ tableId, rowId, fieldName }) => {
     $goto(
-      `/${$params.application}/data/table/${row.tableId}/relationship/${row._id}/${fieldName}`
+      `/builder/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
     )
   }
 
@@ -120,7 +117,8 @@
     allowEditColumns={allowEditing}
     showAutoColumns={!hideAutocolumns}
     on:editcolumn={e => editColumn(e.detail)}
-    on:editrow={e => editRow(e.detail)} />
+    on:editrow={e => editRow(e.detail)}
+    on:clickrelationship={e => selectRelationship(e.detail)} />
 {/key}
 
 <Modal bind:this={editRowModal}>

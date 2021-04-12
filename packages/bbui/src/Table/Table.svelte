@@ -227,8 +227,10 @@
                       <div class="spectrum-Table-cell-content">
                         <CellRenderer
                           {customRenderers}
+                          {row}
                           schema={schema[field]}
-                          value={row[field]} />
+                          value={row[field]}
+                          on:clickrelationship />
                       </div>
                     </td>
                   {/each}
