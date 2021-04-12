@@ -36,7 +36,7 @@ const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   if (ctx.file === "index.html") {
-    await setBuilderToken(ctx)
+    // await setBuilderToken(ctx)
   }
   await send(ctx, ctx.file, { root: builderPath })
 }

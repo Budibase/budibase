@@ -15,6 +15,8 @@ async function setCurrentAppContext(ctx) {
     return
   }
 
+  console.log("THE APP ID", appId)
+
   const currentAppCookie = getCookie(ctx, Cookies.CurrentApp, { decrypt: true })
   const appIdChanged = appId && currentAppCookie.appId !== appId
   if (appIdChanged) {
@@ -44,6 +46,8 @@ module.exports = async (ctx, next) => {
     }
 
     ctx.appId = await setCurrentAppContext(ctx)
+
+    console.log("CONTEXT", ctx)
 
     await next()
   } catch (err) {
