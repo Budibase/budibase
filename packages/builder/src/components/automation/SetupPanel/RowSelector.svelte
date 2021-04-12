@@ -1,6 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { Select } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
 
