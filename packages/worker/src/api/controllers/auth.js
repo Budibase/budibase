@@ -10,8 +10,8 @@ exports.authenticate = async (ctx, next) => {
     expires.setDate(expires.getDate() + 1)
 
     if (!user) {
-      ctx.body = { success: false, user }
-      return
+      ctx.body = { success: false }
+      return next()
     }
 
     ctx.cookies.set(Cookies.Auth, user.token, {

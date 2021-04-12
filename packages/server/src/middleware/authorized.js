@@ -51,11 +51,11 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // this may need to change in the future, right now only admins
   // can have access to builder features, this is hard coded into
   // our rules
-  // if (isAdmin && isAuthed) {
-  //   return next()
-  // } else if (permType === PermissionTypes.BUILDER) {
-  //   return ctx.throw(403, "Not Authorized")
-  // }
+  if (isAuthed) {
+    return next()
+  } else if (permType === PermissionTypes.BUILDER) {
+    return ctx.throw(403, "Not Authorized")
+  }
 
   if (
     hasResource(ctx) &&

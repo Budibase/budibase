@@ -1,11 +1,16 @@
 import { writable, get } from "svelte/store"
 import api from "../../builderStore/api"
 
+async function checkAuth() {
+  const response = await api.get("/api/self")
+  const user = await response.json()
+  if (json) return json
+}
+
 export function createAuthStore() {
   const { subscribe, set } = writable({})
 
-  const user = localStorage.getItem("auth:user")
-  if (user) set({ user: JSON.parse(user) })
+  checkAuth().then(user => set({ user }))
 
   return {
     subscribe,
