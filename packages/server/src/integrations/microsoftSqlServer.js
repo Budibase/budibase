@@ -77,8 +77,8 @@ class SqlServerIntegration {
       throw err
     }
   }
-  
-   async update(query) {
+
+  async update(query) {
     try {
       await this.connect()
       const response = await this.client.query(query.sql)
