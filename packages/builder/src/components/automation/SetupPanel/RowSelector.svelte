@@ -1,13 +1,18 @@
 <script>
+<<<<<<< HEAD
   import { backendUiStore } from "builderStore"
   import { Select, Label } from "@budibase/bbui"
+=======
+  import { tables } from "stores/backend"
+  import { Select } from "@budibase/bbui"
+>>>>>>> 46acb096005b6b0fb2f20ad3618c2ac9a23f639c
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
 
   export let value
   export let bindings
 
-  $: table = $backendUiStore.tables.find(table => table._id === value?.tableId)
+  $: table = $tables.list.find(table => table._id === value?.tableId)
   $: schemaFields = Object.entries(table?.schema ?? {})
 
   // Ensure any nullish tableId values get set to empty string so
@@ -22,7 +27,7 @@
 <div class="block-field">
   <Select bind:value={value.tableId} extraThin secondary>
     <option value="">Choose an option</option>
-    {#each $backendUiStore.tables as table}
+    {#each $tables.list as table}
       <option value={table._id}>{table.name}</option>
     {/each}
   </Select>

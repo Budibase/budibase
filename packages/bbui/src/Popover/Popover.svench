@@ -1,0 +1,121 @@
+<script>
+  import { View } from "svench";
+  import Popover from "./Popover.svelte";
+  import Button from "../Button/Button.svelte";
+  import TextButton from "../Button/TextButton.svelte";
+  import Icon from "../Icons/Icon.svelte";
+  import Input from "../Form/Input.svelte";
+  import Select from "../Form/Select.svelte";
+
+  let anchorRight;
+  let anchorLeft;
+  let dropdownRight;
+  let dropdownLeft;
+
+  const options = ["Column 1", "Column 2", "Super cool column"];
+  const option1s = ["Is", "Is not", "Contains" , "Does not contain"];
+
+</script>
+
+<style>
+  .button-group {
+    margin-top: var(--spacing-l);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-s);
+  }
+
+  h6 {
+    font-size: var(--font-size-m);
+    margin: 0 0 var(--spacing-l) 0;
+    font-weight: 600;
+    font-family: var(--font-sans);
+  }
+
+  .input-group-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .input-group-row {
+    display: grid;
+    grid-template-columns: [boolean-start] 60px [boolean-end property-start] 120px [property-end opererator-start] 110px [operator-end value-start] auto [value-end menu-start] 32px [menu-end];
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-l);
+    align-items: center;
+  }
+
+  p {
+    margin:0;
+    font-size: var(--font-size-xs);
+  }
+</style>
+
+<View name="Simple popover">
+  <div bind:this={anchorLeft}>
+    <Button text on:click={dropdownLeft.show}>
+      <Icon name="view" />
+      Add View
+    </Button>
+  </div>
+  <Popover bind:this={dropdownLeft} anchor={anchorLeft} align="left">
+    <h6>Add New View</h6>
+    <Input thin placeholder="Enter your name" />
+    <div class="button-group">
+      <Button secondary on:click={() => alert('Clicked!')}>Cancel</Button>
+      <Button primary on:click={() => alert('Clicked!')}>Add New View</Button>
+    </div>
+  </Popover>
+</View>
+
+<View name="Stacked columns">
+  <div bind:this={anchorRight}>
+    <Button text on:click={dropdownRight.show}>
+      <Icon name="addrow" />
+      Add Row
+    </Button>
+  </div>
+  <Popover bind:this={dropdownRight} anchor={anchorRight}>
+    <h6>Add New Row</h6>
+    <div class="input-group-column">
+      <Input thin placeholder="Enter your string" />
+      <Input thin placeholder="Enter your string" />
+      <Input thin placeholder="Enter your string" />
+    </div>
+    <div class="button-group">
+      <Button secondary on:click={() => alert('Clicked!')}>Cancel</Button>
+      <Button primary on:click={() => alert('Clicked!')}>Add New Row</Button>
+    </div>
+  </Popover>
+</View>
+
+<View name="Multiple inputs in a row">
+  <div bind:this={anchorLeft}>
+    <Button text on:click={dropdownLeft.show}>
+      <Icon name="filter" />
+      Add Filter
+    </Button>
+  </div>
+  <Popover bind:this={dropdownLeft} anchor={anchorLeft} align="left">
+    <h6>Add New Filter</h6>
+    <div class="input-group-row">
+      <p>Where</p>
+      <Select secondary thin name="Test">
+        {#each options as option}
+          <option value={option}>{option}</option>
+        {/each}
+      </Select>
+      <Select secondary thin name="Test">
+        {#each option1s as option1}
+          <option value={option1}>{option1}</option>
+        {/each}
+      </Select>
+      <Input thin placeholder="Enter your name" />
+      <Button text on:click={() => alert('Clicked!')}>
+         <Icon name="close" />
+      </Button>
+    </div>
+    <Button text on:click={() => alert('Clicked!')}>Add Filter</Button>
+  </Popover>
+</View>

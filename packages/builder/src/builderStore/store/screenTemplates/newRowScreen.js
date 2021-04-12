@@ -37,7 +37,7 @@ const createScreen = table => {
     .customProps({
       theme: "spectrum--lightest",
       size: "spectrum--medium",
-      datasource: {
+      dataSource: {
         label: table.name,
         tableId: table._id,
         type: "table",

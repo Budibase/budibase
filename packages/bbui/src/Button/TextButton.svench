@@ -1,0 +1,69 @@
+<script>
+  import { View } from "svench";
+  import TextButton from "./TextButton.svelte";
+  import Icon from "../Icons/Icon.svelte";
+</script>
+
+<style>
+  div {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: var(--spacing-xl);
+  }
+</style>
+
+<View name="Text">
+  <div>
+    <TextButton text small on:click={() => alert('Clicked!')}>
+      <Icon name="view" />
+      Add View
+    </TextButton>
+    <TextButton text medium on:click={() => alert('Clicked!')}>
+      <Icon name="addcolumn" />
+      Add Column
+    </TextButton>
+    <TextButton text large on:click={() => alert('Clicked!')}>
+      <Icon name="addrow" />
+      Add Row
+    </TextButton>
+    <TextButton text disabled on:click={() => alert('Clicked!')}>
+      <Icon name="arrow" direction="w" />
+      Disabled Text Button
+    </TextButton>
+    <TextButton active text on:click={() => alert('Clicked!')}>
+      <Icon name="calculate" />
+      Active Calculation
+    </TextButton>
+  </div>
+</View>
+
+<View name="Colours">
+  <div>
+    <TextButton text medium yellow on:click={() => alert('Clicked!')}>
+      <Icon name="view" />
+      Add View
+    </TextButton>
+    <TextButton text medium blue on:click={() => alert('Clicked!')}>
+      <Icon name="addcolumn" />
+      Add Column
+    </TextButton>
+    <TextButton text medium purple on:click={() => alert('Clicked!')}>
+      <Icon name="addrow" />
+      Add Row
+    </TextButton>
+    <TextButton text medium red on:click={() => alert('Clicked!')}>
+      <Icon name="arrow" />
+      Delete
+    </TextButton>
+    <TextButton text medium green on:click={() => alert('Clicked!')}>
+      <Icon name="calculate" />
+      Calculate
+    </TextButton>
+  </div>
+</View>
+
+<View name="Usage as a link">
+  <div>
+    <TextButton green text href="https://google.com">This is a link</TextButton>
+  </div>
+</View>

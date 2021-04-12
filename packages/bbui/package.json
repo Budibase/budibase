@@ -1,0 +1,53 @@
+{
+  "name": "@budibase/bbui",
+  "description": "A UI solution used in the different Budibase projects.",
+  "version": "1.58.13",
+  "svelte": "src/index.js",
+  "module": "dist/bbui.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/bbui.es.js"
+    },
+    "./package.json": "./package.json",
+    "./dist/style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "dev:builder": "vite build",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",
+    "cross-env": "^7.0.2",
+    "nollup": "^0.14.1",
+    "postcss": "^8.2.9",
+    "rollup": "^2.34.0",
+    "rollup-plugin-copy": "^3.3.0",
+    "rollup-plugin-delete": "^1.2.0",
+    "rollup-plugin-hot": "^0.1.1",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-svelte-hot": "^0.11.0",
+    "semantic-release": "^17.0.8",
+    "svelte": "^3.29.0",
+    "svench": "^0.0.10-7",
+    "vite": "^2.1.5"
+  },
+  "keywords": [
+    "svelte"
+  ],
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "markdown-it": "^12.0.4",
+    "quill": "^1.3.7",
+    "sirv-cli": "^0.4.6",
+    "svelte-flatpickr": "^2.4.0",
+    "svelte-portal": "^1.0.0",
+    "turndown": "^7.0.0"
+  }
+}

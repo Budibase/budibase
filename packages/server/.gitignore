@@ -1,10 +1,7 @@
 node_modules/
 myapps/
 .env
-/builder/*
-!/builder/assets/
-!/builder/pickr.min.js
-!/builder/nano.min.css
+builder/*
 public/
 db/dev.db/
 dist

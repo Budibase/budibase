@@ -1,5 +1,5 @@
 <script>
-  import { params, goto } from "@sveltech/routify"
+  import { params, goto } from "@roxi/routify"
   import { Input, TextArea, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
 
@@ -11,7 +11,7 @@
     const id = $params.application
     await del(`/api/applications/${id}`)
     loading = false
-    $goto("/")
+    $goto("/builder/")
   }
 </script>
 

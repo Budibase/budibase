@@ -1,13 +1,13 @@
 <script>
   import { onMount } from "svelte"
-  import { goto, params } from "@sveltech/routify"
+  import { goto, params } from "@roxi/routify"
   import {
     store,
     allScreens,
-    backendUiStore,
     selectedAccessRole,
     screenSearchString,
   } from "builderStore"
+  import { roles } from "stores/backend"
   import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
@@ -81,7 +81,7 @@
           on:change={updateAccessRole}
           value={$selectedAccessRole}
           label="Filter by Access">
-          {#each $backendUiStore.roles as role}
+          {#each $roles as role}
             <option value={role._id}>{role.name}</option>
           {/each}
         </Select>

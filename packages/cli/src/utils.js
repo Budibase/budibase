@@ -42,7 +42,7 @@ exports.info = info => {
 }
 
 exports.logErrorToFile = (file, error) => {
-  fs.writeFileSync(path.resolve(`./${file}`), `Budiase Error\n${error}`)
+  fs.writeFileSync(path.resolve(`./${file}`), `Budibase Error\n${error}`)
 }
 
 exports.parseEnv = env => {

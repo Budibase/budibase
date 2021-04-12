@@ -1,0 +1,30 @@
+<script>
+  import { View } from "svench";
+  import Multiselect from "../Form/Multiselect.svelte";
+  import DropdownMenu from "../DropdownMenu/DropdownMenu.svelte";
+  import Button from "../Button/Button.svelte";
+  import Icon from "../Icons/Icon.svelte";
+
+   const options = ["Red", "Blue", "Yellow", "Green", "Pink", "Very long color name to show text wrapping"];
+
+  let anchorLeft;
+  let dropdownLeft;
+</script>
+
+### Click Outside Action
+
+This action can be used to listen for when you want to call a function whenever a user clicks outside of the element it is applied toString.
+
+
+```html
+<script>
+  import { clickOutside } from '@budibase/bbui'
+  const someFunction = () => {
+    // Some logic to close a dropdown or stop the user from doing something without saving?
+  }
+</script>
+
+<button use:clickOutside={someFunction} class="multiselect" bind:this={anchor}>
+  Clicking this opens the
+</button>
+```

@@ -1,0 +1,227 @@
+<script>
+  import { View } from "svench";
+  import Heading from "./Heading.svelte";
+  import Body from "./Body.svelte";
+  import Label from "./Label.svelte";
+
+  const username = "bbuserexample";
+</script>
+
+<style>
+  .typography-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .typography-column {
+    padding: var(--spacing-l);
+  }
+
+  .typography-column--grey {
+    background-color: var(--grey-5);
+  }
+
+  .label-wrapper {
+    padding: var(--spacing-m);
+  }
+</style>
+
+<h1 class="bb-heading bb-heading--large bb-heading--heavy">Typography</h1>
+<p>
+  Budibase uses Inter as its typeface and three types can be used,
+  <strong>heading</strong>
+  ,
+  <strong>body</strong>
+  and
+  <strong>label</strong>
+</p>
+<p>Each type has 5 sizes, xs, s, m l and xl.</p>
+<p>Each type is available in the colors white, grey or black.</p>
+
+<View name="Heading">
+  <div class="typography-container">
+    <div class="typography-column">
+      <Heading extraLarge black>Heading Extra Large Black</Heading>
+
+      <Heading large black>Heading Large Black</Heading>
+
+      <Heading medium black>Heading Medium Black</Heading>
+
+      <Heading small black>Heading Small Black</Heading>
+
+      <Heading extraSmall black>Heading Extra Small Black</Heading>
+    </div>
+
+    <div class="typography-column">
+      <Heading extraLarge grey>Heading Extra Large Grey</Heading>
+
+      <Heading large grey>Heading Large Grey</Heading>
+
+      <Heading medium grey>Heading Medium Grey</Heading>
+
+      <Heading small grey>Heading Small Grey</Heading>
+
+      <Heading extraSmall grey>Heading Extra Small Grey</Heading>
+    </div>
+
+    <div class="typography-column typography-column--grey">
+      <Heading extraLarge white>Heading Extra Large White</Heading>
+
+      <Heading large white>Heading Large White</Heading>
+
+      <Heading medium white>Heading Medium White</Heading>
+
+      <Heading small white>Heading Small White</Heading>
+
+      <Heading extraSmall white>Heading Extra Small White</Heading>
+    </div>
+
+    <div class="typography-column">
+      <Heading extraLarge black lh>Heading Extra Large Black Line Height</Heading>
+
+      <Heading large black lh>Heading Large Black Line Height</Heading>
+
+      <Heading medium black lh>Heading Medium Black Line Height</Heading>
+
+      <Heading small black lh>Heading Small Black Line Height</Heading>
+
+      <Heading extraSmall black lh>Heading Extra Small Black Line Height</Heading>
+    </div>
+  </div>
+</View>
+
+<View name="Body">
+  <div class="typography-container">
+    <div class="typography-column">
+      <Body extraLarge black>Body Extra Large Black</Body>
+
+      <Body large black>Body Large Black</Body>
+
+      <Body medium black>Body Medium Black</Body>
+
+      <Body small black>Body Small Black</Body>
+
+      <Body extraSmall black>Body Extra Small Black</Body>
+    </div>
+
+    <div class="typography-column">
+      <Body extraLarge lh black>Body Extra Large Black Line-height</Body>
+
+      <Body large lh black>Body Large Black Line-height</Body>
+
+      <Body medium lh black>Body Medium Black Line-height</Body>
+
+      <Body small lh black>Body Small Black Line-height</Body>
+
+      <Body extraSmall lh black>Body Extra Small Black Line-height</Body>
+    </div>
+
+    <div class="typography-column">
+      <Body extraLarge grey>Body Extra Large Grey</Body>
+
+      <Body large grey>Body Large Grey</Body>
+
+      <Body medium grey>Body Medium Grey</Body>
+
+      <Body small grey>Body Small Grey</Body>
+
+      <Body extraSmall grey>Body Extra Small Grey</Body>
+    </div>
+
+    <div class="typography-column typography-column--grey">
+      <Body extraLarge white>Body Extra Large White</Body>
+
+      <Body large white>Body Large White</Body>
+
+      <Body medium white>Body Medium White</Body>
+
+      <Body small white>Body Small White</Body>
+
+      <Body extraSmall white>Body Extra Small White</Body>
+    </div>
+  </div>
+</View>
+
+<View name="Label">
+  <div class="typography-container">
+    <div class="label-wrapper">
+      <Label extraLarge black forAttr={username}>Label Extra Large Black</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label large black forAttr={username}>Label Large Black</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label medium black forAttr={username}>Label Medium Black</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label small black forAttr={username}>Label Small Black</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label extraSmall black forAttr={username}>Label Extra Small Black</Label>
+      <input type="text" />
+    </div>
+  </div>
+
+  <div class="typography-container">
+    <div class="label-wrapper">
+      <Label extraLarge grey forAttr={username}>Label Extra Large Grey</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label large grey forAttr={username}>Label Large Grey</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label medium grey forAttr={username}>Label Medium Grey</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label small grey forAttr={username}>Label Small Grey</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label extraSmall grey forAttr={username}>Label Extra Small Grey</Label>
+      <input type="text" />
+    </div>
+  </div>
+
+  <div class="typography-container typography-column--grey">
+    <div class="label-wrapper">
+      <Label extraLarge white forAttr={username}>Label Extra Large White</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label large white forAttr={username}>Label Large White</Label>
+
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label medium white forAttr={username}>Label Medium White</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label small white forAttr={username}>Label Small White</Label>
+      <input type="text" />
+    </div>
+
+    <div class="label-wrapper">
+      <Label extraSmall white forAttr={username}>Label Extra Small White</Label>
+      <input type="text" />
+    </div>
+  </div>
+</View>
