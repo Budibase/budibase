@@ -45,17 +45,15 @@ exports.getAppId = ctx => {
  * Get a cookie from context, and decrypt if necessary.
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
- * @param {object} options options .
  */
-exports.getCookie = (ctx, value, options = {}) => {
-  const cookie = ctx.cookies.get(value)
+exports.getCookie = (ctx, name) => {
+  const cookie = ctx.cookies.get(name)
 
-  if (!cookie) return
+  if (!cookie) {
+    return cookie
+  }
 
-  if (!options.decrypt) return cookie
-
-  const payload = jwt.verify(cookie, process.env.JWT_SECRET)
-  return payload
+  return jwt.verify(cookie, options.secretOrKey)
 }
 
 /**
@@ -71,11 +69,9 @@ exports.setCookie = (ctx, value, name = "builder") => {
   if (!value) {
     ctx.cookies.set(name)
   } else {
-    if (options.encrypt) {
-      value = jwt.sign(value, process.env.JWT_SECRET, {
-        expiresIn: "1 day",
-      })
-    }
+    value = jwt.sign(value, options.secretOrKey, {
+      expiresIn: "1 day",
+    })
     ctx.cookies.set(name, value, {
       expires,
       path: "/",

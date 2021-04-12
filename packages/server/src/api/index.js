@@ -1,5 +1,6 @@
 const Router = require("@koa/router")
 const { authenticated } = require("@budibase/auth")
+const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
@@ -31,6 +32,7 @@ router
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
   .use(authenticated)
+  .use(currentApp)
 
 // error handling middleware
 router.use(async (ctx, next) => {

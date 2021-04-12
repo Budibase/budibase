@@ -1,9 +1,4 @@
-const { Cookies } = require("../../constants")
-
 exports.options = {
-  jwtFromRequest: function(ctx) {
-    return ctx.cookies.get(Cookies.Auth)
-  },
   secretOrKey: process.env.JWT_SECRET,
 }
 

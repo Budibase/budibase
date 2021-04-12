@@ -22,6 +22,10 @@ exports.generateUserID = email => {
   return `${DocumentTypes.USER}${SEPARATOR}${email}`
 }
 
+exports.getEmailFromUserID = userId => {
+  return userId.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
+}
+
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
