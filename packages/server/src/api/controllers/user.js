@@ -11,6 +11,7 @@ const {
   saveGlobalUser,
   deleteGlobalUser,
 } = require("../../utilities/workerRequests")
+const { getFullUser } = require("../../utilities/users")
 
 exports.fetchMetadata = async function(ctx) {
   const database = new CouchDB(ctx.appId)
@@ -95,15 +96,9 @@ exports.destroyMetadata = async function(ctx) {
 }
 
 exports.findMetadata = async function(ctx) {
-  const database = new CouchDB(ctx.appId)
-  const email =
-    ctx.params.email || getEmailFromUserMetadataID(ctx.params.userId)
-  const global = await getGlobalUsers(ctx, ctx.appId, email)
-  const user = await database.get(generateUserMetadataID(email))
-  ctx.body = {
-    ...global,
-    ...user,
-    // make sure the ID is always a local ID, not a global one
-    _id: generateUserMetadataID(email),
-  }
+  ctx.body = await getFullUser({
+    ctx,
+    email: ctx.params.email,
+    userId: ctx.params.userId,
+  })
 }

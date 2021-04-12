@@ -8,7 +8,7 @@ const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { InternalTables } = require("../../db/utils")
 const { UserStatus } = require("@budibase/auth")
-const setBuilderToken = require("../../utilities/builder/setBuilderToken")
+const { getFullUser } = require("../../utilities/users")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -70,11 +70,6 @@ exports.authenticate = async ctx => {
   }
 }
 
-// exports.builderLogin = async ctx => {
-//   await setBuilderToken(ctx)
-//   ctx.status = 200
-// }
-
 exports.fetchSelf = async ctx => {
   const { userId, appId } = ctx.user
   /* istanbul ignore next */
@@ -83,7 +78,7 @@ exports.fetchSelf = async ctx => {
     return
   }
   const db = new CouchDB(appId)
-  const user = await db.get(userId)
+  const user = await getFullUser({ ctx, userId: userId })
   const userTable = await db.get(InternalTables.USER_METADATA)
   if (user) {
     delete user.password
