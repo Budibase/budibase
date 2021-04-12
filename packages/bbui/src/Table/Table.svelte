@@ -232,7 +232,9 @@
                           {row}
                           schema={schema[field]}
                           value={row[field]}
-                          on:clickrelationship />
+                          on:clickrelationship>
+                          <slot />
+                        </CellRenderer>
                       </div>
                     </td>
                   {/each}

@@ -11,22 +11,23 @@
   export let customRenderers = []
 
   const plainTypes = ["string", "options", "number", "longform"]
+  const typeMap = {
+    boolean: BooleanRenderer,
+    datetime: DateTimeRenderer,
+    link: RelationshipRenderer,
+    attachment: AttachmentRenderer,
+    string: StringRenderer,
+    options: StringRenderer,
+    number: StringRenderer,
+    longform: StringRenderer,
+  }
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
+  $: renderer = customRenderer?.component ?? typeMap[type]
 </script>
 
-{#if value != null && value !== ''}
-  {#if customRenderer}
-    <svelte:component this={customRenderer.component} {schema} {value} />
-  {:else if plainTypes.includes(type)}
-    <StringRenderer {value} />
-  {:else if type === 'boolean'}
-    <BooleanRenderer {value} />
-  {:else if type === 'datetime'}
-    <DateTimeRenderer {value} />
-  {:else if type === 'link'}
-    <RelationshipRenderer {row} {schema} {value} on:clickrelationship />
-  {:else if type === 'attachment'}
-    <AttachmentRenderer {value} />
-  {/if}
+{#if renderer && value != null && value !== ''}
+  <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
+    <slot />
+  </svelte:component>
 {/if}
