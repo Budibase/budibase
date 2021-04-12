@@ -70,10 +70,10 @@ exports.authenticate = async ctx => {
   }
 }
 
-exports.builderLogin = async ctx => {
-  await setBuilderToken(ctx)
-  ctx.status = 200
-}
+// exports.builderLogin = async ctx => {
+//   await setBuilderToken(ctx)
+//   ctx.status = 200
+// }
 
 exports.fetchSelf = async ctx => {
   const { userId, appId } = ctx.user
