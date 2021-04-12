@@ -3,7 +3,6 @@
 </script>
 
 <div>{value}</div>
-<slot />
 
 <style>
   div {

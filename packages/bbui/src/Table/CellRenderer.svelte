@@ -26,7 +26,7 @@
   $: renderer = customRenderer?.component ?? typeMap[type]
 </script>
 
-{#if renderer && value != null && value !== ''}
+{#if renderer && (customRenderer || (value != null && value !== ''))}
   <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
     <slot />
   </svelte:component>
