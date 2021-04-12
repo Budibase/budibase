@@ -84,22 +84,41 @@
     }
   }
 
+  const getDisplayName = schema => {
+    let name = schema?.displayName
+    if (schema && name === undefined) {
+      name = schema.name
+    }
+    return name || ""
+  }
+
   const getFields = (schema, showAutoColumns) => {
     let columns = []
     let autoColumns = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
+      if (!field || !fieldSchema) {
+        return
+      }
       schema[field].name = field
       if (!fieldSchema?.autocolumn) {
-        columns.push(field)
+        columns.push(fieldSchema)
       } else if (showAutoColumns) {
-        autoColumns.push(field)
+        autoColumns.push(fieldSchema)
       }
     })
     return columns
       .sort((a, b) => {
-        return a.toLowerCase() < b.toLowerCase() ? a : b
+        const orderA = a.order || Number.MAX_SAFE_INTEGER
+        const orderB = b.order || Number.MAX_SAFE_INTEGER
+        const nameA = getDisplayName(a)
+        const nameB = getDisplayName(b)
+        if (orderA !== orderB) {
+          return orderA < orderB ? orderA : orderB
+        }
+        return nameA < nameB ? a : b
       })
       .concat(autoColumns)
+      .map(column => column.name)
   }
 
   const onScroll = event => {
@@ -170,9 +189,7 @@
                   class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
                   on:click={() => sortBy(field)}>
                   <div class="spectrum-Table-headCell-content">
-                    <div class="title">
-                      {schema[field]?.displayName || schema[field]?.name}
-                    </div>
+                    <div class="title">{getDisplayName(schema[field])}</div>
                     {#if schema[field]?.autocolumn}
                       <svg
                         class="spectrum-Icon spectrum-Table-autoIcon"
