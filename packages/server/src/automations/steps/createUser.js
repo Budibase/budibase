@@ -23,7 +23,6 @@ module.exports.definition = {
         },
         password: {
           type: "string",
-          customType: "password",
           title: "Password",
         },
         roleId: {
