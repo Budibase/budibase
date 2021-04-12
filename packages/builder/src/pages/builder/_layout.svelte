@@ -50,7 +50,6 @@
       <slot />
     </div>
   </div>
-
 {:else}
   <section class="login">
     <LoginForm />

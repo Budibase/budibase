@@ -9,6 +9,11 @@ exports.authenticate = async (ctx, next) => {
     const expires = new Date()
     expires.setDate(expires.getDate() + 1)
 
+    if (!user) {
+      ctx.body = { success: false, user }
+      return
+    }
+
     ctx.cookies.set(Cookies.Auth, user.token, {
       expires,
       path: "/",
@@ -16,7 +21,9 @@ exports.authenticate = async (ctx, next) => {
       overwrite: true,
     })
 
-    ctx.body = { success: true }
+    delete user.token
+
+    ctx.body = { success: true, user }
   })(ctx, next)
 }
 

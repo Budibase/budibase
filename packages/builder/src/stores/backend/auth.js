@@ -2,19 +2,29 @@ import { writable, get } from "svelte/store"
 import api from "../../builderStore/api"
 
 export function createAuthStore() {
-  const { subscribe } = writable({})
+  const { subscribe, set } = writable({})
+
+  const user = localStorage.getItem("auth:user")
+  if (user) set({ user: JSON.parse(user) })
 
   return {
     subscribe,
-    login: async () => {
-      const response = await api.post(`/api/admin/auth/authenticate`)
+    login: async creds => {
+      const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
-      set({ user: json })
+      if (json.user) {
+        localStorage.setItem("auth:user", JSON.stringify(json.user))
+        set({ user: json.user })
+      }
     },
     logout: async () => {
       const response = await api.post(`/api/auth/logout`)
       const json = await response.json()
-      set({ user: null })
+      set({ user: false })
+    },
+    createUser: async user => {
+      const response = await api.post(`/api/admin/users`, user)
+      const json = await response.json()
     },
   }
 }
