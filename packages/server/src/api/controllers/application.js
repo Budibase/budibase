@@ -74,7 +74,7 @@ async function getAppUrlIfNotInUse(ctx) {
   if (!env.SELF_HOSTED) {
     return url
   }
-  const deployedApps = await getDeployedApps()
+  const deployedApps = await getDeployedApps(ctx)
   if (
     deployedApps[url] != null &&
     deployedApps[url].appId !== ctx.params.appId

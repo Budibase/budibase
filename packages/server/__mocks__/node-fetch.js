@@ -41,6 +41,12 @@ module.exports = async (url, opts) => {
       ],
       bookmark: "test",
     })
+  } else if (url.includes("/api/admin")) {
+    return json({
+      email: "test@test.com",
+      _id: "us_test@test.com",
+      status: "active",
+    })
   }
   return fetch(url, opts)
 }

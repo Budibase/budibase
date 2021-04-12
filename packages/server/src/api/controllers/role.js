@@ -10,8 +10,8 @@ const {
 const {
   generateRoleID,
   getRoleParams,
-  getUserParams,
-  ViewNames,
+  getUserMetadataParams,
+  InternalTables,
 } = require("../../db/utils")
 
 const UpdateRolesOptions = {
@@ -28,7 +28,7 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
 ]
 
 async function updateRolesOnUserTable(db, roleId, updateOption) {
-  const table = await db.get(ViewNames.USERS)
+  const table = await db.get(InternalTables.USER_METADATA)
   const schema = table.schema
   const remove = updateOption === UpdateRolesOptions.REMOVED
   let updated = false
@@ -112,7 +112,7 @@ exports.destroy = async function(ctx) {
   // first check no users actively attached to role
   const users = (
     await db.allDocs(
-      getUserParams(null, {
+      getUserMetadataParams(null, {
         include_docs: true,
       })
     )
