@@ -1,6 +1,6 @@
 <script>
   import { themeStore } from "builderStore"
-  import { Label, Toggle, Button, Slider } from "@budibase/bbui"
+  import { Toggle, Button, Slider } from "@budibase/bbui"
 
   let showAdvanced = false
 </script>
@@ -11,7 +11,7 @@
   </div>
   {#if $themeStore.darkMode && !showAdvanced}
     <div class="button">
-      <Button text on:click={() => (showAdvanced = true)}>Customise</Button>
+      <Button secondary on:click={() => (showAdvanced = true)}>Customise</Button>
     </div>
   {/if}
   {#if $themeStore.darkMode && showAdvanced}
@@ -34,7 +34,7 @@
       max="32"
       showValue />
     <div class="button">
-      <Button text on:click={themeStore.reset}>Reset</Button>
+      <Button secondary on:click={themeStore.reset}>Reset</Button>
     </div>
   {/if}
 </div>
