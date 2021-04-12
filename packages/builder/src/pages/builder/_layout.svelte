@@ -13,6 +13,8 @@
   import { auth } from "stores/backend"
 
   let modal
+
+  console.log($auth.user)
 </script>
 
 {#if $auth.user}
