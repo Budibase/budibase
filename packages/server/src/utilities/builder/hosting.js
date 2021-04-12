@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const { StaticDatabases } = require("../../db/utils")
 const fetch = require("node-fetch")
 const env = require("../../environment")
+const { getDeployedApps } = require("../../utilities/workerRequests")
 
 const PROD_HOSTING_URL = "app.budi.live"
 
@@ -84,30 +85,4 @@ exports.getTemplatesUrl = async (appId, type, name) => {
   return `${protocol}${hostingInfo.templatesUrl}/${path}`
 }
 
-exports.getDeployedApps = async () => {
-  if (!env.SELF_HOSTED) {
-    throw "Can only check apps for self hosted environments"
-  }
-  const workerUrl = env.WORKER_URL
-  const hostingKey = env.HOSTING_KEY
-  try {
-    const response = await fetch(`${workerUrl}/api/apps`, {
-      method: "GET",
-      headers: {
-        "x-budibase-auth": hostingKey,
-      },
-    })
-    const json = await response.json()
-    const apps = {}
-    for (let [key, value] of Object.entries(json)) {
-      if (value.url) {
-        value.url = value.url.toLowerCase()
-        apps[key] = value
-      }
-    }
-    return apps
-  } catch (err) {
-    // error, cannot determine deployed apps, don't stop app creation - sort this later
-    return {}
-  }
-}
+exports.getDeployedApps = getDeployedApps

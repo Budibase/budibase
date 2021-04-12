@@ -157,7 +157,7 @@
         password: $createAppStore.values.password,
         roleId: $createAppStore.values.roleId,
       }
-      const userResp = await api.post(`/api/users`, user)
+      const userResp = await api.post(`/api/users/metadata`, user)
       const json = await userResp.json()
       $goto(`./${appJson._id}`)
     } catch (error) {

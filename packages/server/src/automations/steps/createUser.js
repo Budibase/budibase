@@ -62,9 +62,7 @@ module.exports.definition = {
 module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   const { email, password, roleId } = inputs
   const ctx = {
-    user: {
-      appId: appId,
-    },
+    appId,
     request: {
       body: { email, password, roleId },
     },
@@ -79,7 +77,7 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
     return {
       response: ctx.body,
       // internal property not returned through the API
-      id: ctx.userId,
+      id: ctx.body._id,
       revision: ctx.body._rev,
       success: ctx.status === 200,
     }

@@ -1,6 +1,10 @@
 const CouchDB = require("../../../db")
 const csvParser = require("../../../utilities/csvParser")
-const { getRowParams, generateRowID, ViewNames } = require("../../../db/utils")
+const {
+  getRowParams,
+  generateRowID,
+  InternalTables,
+} = require("../../../db/utils")
 const { isEqual } = require("lodash/fp")
 const { AutoFieldSubTypes } = require("../../../constants")
 const { inputProcessing } = require("../../../utilities/rowProcessor")
@@ -136,7 +140,7 @@ exports.handleSearchIndexes = async (appId, table) => {
 
 exports.checkStaticTables = table => {
   // check user schema has all required elements
-  if (table._id === ViewNames.USERS) {
+  if (table._id === InternalTables.USER_METADATA) {
     for (let [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
       // check if the schema exists on the table to be created/updated
       if (table.schema[key] == null) {
