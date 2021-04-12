@@ -32,3 +32,9 @@
 {#if leftover}
   <div>+{leftover} more</div>
 {/if}
+
+<style>
+  span:hover {
+    cursor: pointer;
+  }
+</style>
