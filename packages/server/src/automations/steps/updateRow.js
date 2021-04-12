@@ -73,7 +73,7 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   // have to clean up the row, remove the table from it
   const ctx = {
     params: {
-      id: inputs.rowId,
+      rowId: inputs.rowId,
     },
     request: {
       body: inputs.row,
