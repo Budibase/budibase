@@ -23,7 +23,6 @@
   export let theme = "alpine"
   export let hideAutocolumns
 
-  let columnDefs = []
   let selectedRows = []
   let editableColumn
   let editableRow
@@ -32,6 +31,7 @@
   let customRenderers = []
 
   $: isUsersTable = tableId === TableNames.USERS
+  $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     if (isUsersTable) {
@@ -54,7 +54,11 @@
     }
   }
 
-  function selectRelationship(row, fieldName) {
+  const resetSelectedRows = () => {
+    selectedRows = []
+  }
+
+  const selectRelationship = (row, fieldName) => {
     if (!row?.[fieldName]?.length) {
       return
     }
@@ -110,8 +114,10 @@
     {schema}
     {loading}
     {customRenderers}
-    customColumnTitle="Edit"
     bind:selectedRows
+    allowSelectRows={allowEditing}
+    allowEditRows={allowEditing}
+    allowEditColumns={allowEditing}
     showAutoColumns={!hideAutocolumns}
     on:editcolumn={e => editColumn(e.detail)}
     on:editrow={e => editRow(e.detail)} />
