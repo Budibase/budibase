@@ -14,8 +14,7 @@
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
-  export let customColumnRenderer = SelectEditRenderer
-  export let customColumnTitle = null
+  export let editColumnTitle = "Edit"
   export let customRenderers = []
 
   const dispatch = createEventDispatcher()
@@ -41,6 +40,7 @@
   $: contentStyle = getContentStyle(visibleRowCount, scroll || !loaded)
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: fields = getFields(schema, showAutoColumns)
+  $: showEditColumn = allowEditRows || allowSelectRows
 
   // Scrolling state
   let timeout
@@ -155,10 +155,10 @@
       <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
         <thead class="spectrum-Table-head">
           <tr>
-            {#if customColumnRenderer}
+            {#if showEditColumn}
               <th class="spectrum-Table-headCell">
                 <div class="spectrum-Table-headCell-content">
-                  {customColumnTitle || ''}
+                  {editColumnTitle || ''}
                 </div>
               </th>
             {/if}
@@ -208,12 +208,11 @@
                 class="spectrum-Table-row"
                 class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
                 {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
-                  {#if customColumnRenderer}
+                  {#if showEditColumn}
                     <td
                       class="spectrum-Table-cell spectrum-Table-cell--divider">
                       <div class="spectrum-Table-cell-content">
-                        <svelte:component
-                          this={customColumnRenderer}
+                        <SelectEditRenderer
                           data={row}
                           selected={selectedRows.includes(row)}
                           onToggleSelection={() => toggleSelectRow(row)}
