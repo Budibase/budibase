@@ -75,10 +75,6 @@
   <!-- <TemplateList onSelect={selectTemplate} /> -->
 
   <AppList />
-
-  <div class="just-a-menu-test">
-    <Menu />
-  </div>
 </div>
 
 <Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>
