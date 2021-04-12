@@ -49,12 +49,11 @@ exports.getAppId = ctx => {
 
 /**
  * Get the name of the cookie which is to be updated/retrieved
- * @param {string|undefined|null} name OPTIONAL can specify the specific app if previewing etc
- * @returns {string} The name of the token trying to find
+ * @param {string} name The name/type of cookie.
+ * @returns {string} The full name of the cookie to retrieve/update.
  */
-exports.getCookieName = (name = "builder") => {
-  let environment = env.isProd() ? "cloud" : "local"
-  return `budibase:${name}:${environment}`
+exports.getCookieName = name => {
+  return `budibase:${name}`
 }
 
 /**

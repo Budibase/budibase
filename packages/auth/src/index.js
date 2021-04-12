@@ -7,7 +7,7 @@ const { StaticDatabases } = require("./db/utils")
 const { jwt, local, google, authenticated } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
 const { hash, compare } = require("./hashing")
-const { getAppId, setCookie } = require("./utils")
+const { getAppId, setCookie, getCookie } = require("./utils")
 const {
   generateUserID,
   getUserParams,
@@ -45,5 +45,6 @@ module.exports = {
   compare,
   getAppId,
   setCookie,
+  getCookie,
   authenticated,
 }
