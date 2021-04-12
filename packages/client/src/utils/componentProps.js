@@ -43,8 +43,8 @@ export const enrichProps = async (props, context) => {
   // Enrich all data bindings in top level props
   let enrichedProps = await enrichDataBindings(validProps, totalContext)
 
-  // Enrich button actions if they exist
-  if (props._component?.endsWith("/button") && enrichedProps.onClick) {
+  // Enrich click actions if they exist
+  if (enrichedProps.onClick) {
     enrichedProps.onClick = enrichButtonActions(
       enrichedProps.onClick,
       totalContext

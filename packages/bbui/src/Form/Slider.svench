@@ -1,0 +1,26 @@
+<script>
+  import { View } from "svench";
+  import Slider from "./Slider.svelte";
+</script>
+
+<View name="default">
+  <Slider label=Quantity value="50" />
+</View>
+
+<View name="show value">
+  <Slider label="Quantity" value="50" showValue />
+</View>
+
+<View name="show range">
+  <Slider label="Quantity" value="25" showValue showRange min="0" max="100" />
+</View>
+
+<View name="custom min and max">
+  <Slider label="Quantity" value="350" showValue showRange min="50" max="500" />
+</View>
+
+<View name="custom step">
+  <Slider label="Quantity" value="25" step="25" showValue showRange min="0" max="100" />
+</View>
+
+

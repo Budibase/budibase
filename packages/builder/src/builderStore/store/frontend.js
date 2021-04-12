@@ -2,13 +2,21 @@ import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
   allScreens,
-  backendUiStore,
   hostingStore,
   currentAsset,
   mainLayout,
   selectedComponent,
   selectedAccessRole,
 } from "builderStore"
+// Backendstores
+import {
+  datasources,
+  integrations,
+  queries,
+  database,
+  tables,
+} from "stores/backend"
+
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
@@ -34,6 +42,7 @@ const INITIAL_FRONTEND_STATE = {
   libraries: null,
   appId: "",
   routes: {},
+  clientLibPath: "",
 }
 
 export const getFrontendStore = () => {
@@ -41,7 +50,7 @@ export const getFrontendStore = () => {
 
   store.actions = {
     initialise: async pkg => {
-      const { layouts, screens, application } = pkg
+      const { layouts, screens, application, clientLibPath } = pkg
       const components = await fetchComponentLibDefinitions(application._id)
       store.update(state => ({
         ...state,
@@ -55,9 +64,19 @@ export const getFrontendStore = () => {
         screens,
         hasAppPackage: true,
         appInstance: application.instance,
+        clientLibPath,
       }))
       await hostingStore.actions.fetch()
-      await backendUiStore.actions.database.select(application.instance)
+
+      // Initialise backend stores
+      const [_integrations] = await Promise.all([
+        api.get("/api/integrations").then(r => r.json()),
+      ])
+      datasources.init()
+      integrations.set(_integrations)
+      queries.init()
+      database.set(application.instance)
+      tables.init()
     },
     routing: {
       fetch: async () => {

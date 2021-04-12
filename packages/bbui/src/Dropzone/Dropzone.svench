@@ -1,0 +1,17 @@
+<script>
+  import { View } from "svench";
+  import Dropzone from "./Dropzone.svelte";
+
+  async function processFiles(files) {
+    console.log("Processing", files);
+    return files;
+  }
+
+  function handleFileTooLarge() {
+    alert("File too large.");
+  }
+</script>
+
+<View name="dropzone">
+  <Dropzone {processFiles} {handleFileTooLarge} />
+</View>

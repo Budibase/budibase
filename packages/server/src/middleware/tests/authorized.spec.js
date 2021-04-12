@@ -143,7 +143,7 @@ describe("Authorization middleware", () => {
 
       expect(config.next).toHaveBeenCalled()
     })
-
+    
     it("throws if the user has only builder permissions", async () => {
       config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)

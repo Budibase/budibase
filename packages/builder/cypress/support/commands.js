@@ -25,7 +25,9 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  // wait for init API calls on visit
+  cy.wait(100)
   cy.contains("Create New Web App").click()
   cy.get("body")
     .then($body => {
@@ -56,10 +58,10 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-  cy.get("body").then($body => {
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.get(".apps").then($apps => {
     cy.wait(1000)
-    if ($body.find(`[data-cy="app-${name}"]`).length) {
+    if ($apps.find(`[data-cy="app-${name}"]`).length) {
       cy.get(`[data-cy="app-${name}"] a`).click()
       cy.get("[data-cy=settings-icon]").click()
       cy.get(".modal-content").within(() => {
@@ -156,7 +158,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
     cy.get(`[data-cy="category-${category}"]`).click()
   }
   cy.get(`[data-cy="component-${component}"]`).click()
-  cy.wait(500)
+  cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
