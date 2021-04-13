@@ -39,13 +39,13 @@ module.exports = async (ctx, next) => {
     roleId = BUILTIN_ROLE_IDS.PUBLIC
   } else if (
     requestAppId != null &&
-    (appCookie == null || requestAppId === appCookie.appId)
+    (appCookie == null || requestAppId !== appCookie.appId)
   ) {
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user.email)
     updateCookie = true
     appId = requestAppId
     roleId = globalUser.roles[requestAppId] || BUILTIN_ROLE_IDS.PUBLIC
-  } else if (requestAppId == null && appCookie != null) {
+  } else if (appCookie != null) {
     appId = appCookie.appId
     roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
   }
