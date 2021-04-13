@@ -26,5 +26,5 @@ export default {
   get: apiCall("GET"),
   patch: apiCall("PATCH"),
   delete: apiCall("DELETE"),
-  put: apiCall("PUT")
+  put: apiCall("PUT"),
 }
