@@ -116,13 +116,7 @@ exports.serveComponentLibrary = async function(ctx) {
     componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
   }
   const S3_URL = encodeURI(
-    join(
-      objectStoreUrl(),
-      componentLib,
-      ctx.query.library,
-      "dist",
-      "index.js"
-    )
+    join(objectStoreUrl(), componentLib, ctx.query.library, "dist", "index.js")
   )
   const response = await fetch(S3_URL)
   const body = await response.text()

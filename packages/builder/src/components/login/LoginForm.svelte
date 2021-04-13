@@ -31,7 +31,7 @@
         roles: {},
         builder: {
           global: true,
-        }
+        },
       })
       notifier.success("Test user created")
     } catch (err) {
