@@ -19,8 +19,8 @@ const createAuthStore = () => {
 
   // Logs a user in
   const logIn = async ({ email, password }) => {
-    const user = await API.logIn({ email, password })
-    if (!user.error) {
+    const auth = await API.logIn({ email, password })
+    if (auth.success) {
       await fetchUser()
       await initialise()
       goToDefaultRoute()
@@ -30,12 +30,7 @@ const createAuthStore = () => {
   // Logs a user out
   const logOut = async () => {
     store.set(null)
-    const appId = get(builderStore).appId
-    if (appId) {
-      for (let environment of ["local", "cloud"]) {
-        window.document.cookie = `budibase:${appId}:${environment}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
-      }
-    }
+    window.document.cookie = `budibase:auth=; budibase:currentapp=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
     await initialise()
     goToDefaultRoute()
   }
