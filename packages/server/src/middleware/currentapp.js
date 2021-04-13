@@ -1,5 +1,6 @@
 const { getAppId, setCookie, getCookie, Cookies } = require("@budibase/auth")
 const { getRole } = require("../utilities/security/roles")
+const { generateUserMetadataID } = require("../db/utils")
 const { getGlobalUsers } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 
@@ -35,9 +36,14 @@ module.exports = async (ctx, next) => {
   if (appId) {
     ctx.appId = appId
     if (roleId) {
+      const userId = ctx.user
+        ? generateUserMetadataID(ctx.user.email)
+        : undefined
       ctx.roleId = roleId
       ctx.user = {
         ...ctx.user,
+        _id: userId,
+        userId,
         role: await getRole(appId, roleId),
       }
     }

@@ -106,15 +106,18 @@ exports.serveComponentLibrary = async function(ctx) {
     )
     return send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
   }
+  const db = new CouchDB(appId)
+  const appInfo = await db.get(appId)
+
   let componentLib = "componentlibrary"
-  if (ctx.user.version) {
-    componentLib += `-${ctx.user.version}`
+  if (appInfo && appInfo.version) {
+    componentLib += `-${appInfo.version}`
   } else {
     componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
   }
   const S3_URL = encodeURI(
     join(
-      objectStoreUrl(appId),
+      objectStoreUrl(),
       componentLib,
       ctx.query.library,
       "dist",

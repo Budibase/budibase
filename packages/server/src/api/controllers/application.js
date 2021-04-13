@@ -159,7 +159,6 @@ exports.create = async function(ctx) {
 
   const url = await getAppUrlIfNotInUse(ctx)
   const appId = instance._id
-  const version = packageJson.version
   const newApplication = {
     _id: appId,
     type: "app",
