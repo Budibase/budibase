@@ -6,12 +6,15 @@ exports.StaticDatabases = {
 
 const DocumentTypes = {
   USER: "us",
+  APP: "app",
 }
 
 exports.DocumentTypes = DocumentTypes
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
+
+exports.SEPARATOR = SEPARATOR
 
 /**
  * Generates a new user ID based on the passed in email.

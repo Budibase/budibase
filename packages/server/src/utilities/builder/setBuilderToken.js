@@ -22,7 +22,7 @@ module.exports = async (ctx, appId, version) => {
 
   // set the builder token
   // setCookie(ctx, token, "builder")
-  setCookie(ctx, appId, "currentapp")
+  // setCookie(ctx, appId, "currentapp")
   // need to clear all app tokens or else unable to use the app in the builder
   // let allDbNames = await CouchDB.allDbs()
   // allDbNames.map(dbName => {

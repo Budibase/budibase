@@ -2,11 +2,6 @@ const { getAppId, setCookie, getCookie, Cookies } = require("@budibase/auth")
 const { getGlobalUsers } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 
-function CurrentAppCookie(appId, roleId) {
-  this.appId = appId
-  this.roleId = roleId
-}
-
 function finish(ctx, next, { appId, roleId, cookie = false }) {
   if (appId) {
     ctx.appId = appId
@@ -15,7 +10,7 @@ function finish(ctx, next, { appId, roleId, cookie = false }) {
     ctx.roleId = roleId
   }
   if (cookie && appId) {
-    setCookie(ctx, new CurrentAppCookie(appId, roleId), Cookies.CurrentApp)
+    setCookie(ctx, { appId, roleId }, Cookies.CurrentApp)
   }
   return next()
 }
@@ -37,10 +32,7 @@ module.exports = async (ctx, next) => {
     updateCookie = true
     appId = requestAppId
     roleId = BUILTIN_ROLE_IDS.PUBLIC
-  } else if (
-    requestAppId != null &&
-    (appCookie == null || requestAppId === appCookie.appId)
-  ) {
+  } else if (requestAppId != null) {
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user.email)
     updateCookie = true
     appId = requestAppId

@@ -16,6 +16,6 @@ module.exports = async (ctx, next) => {
 
     await next()
   } catch (err) {
-    ctx.throw(err.status || 403, err.text)
+    ctx.throw(err.status || 403, err)
   }
 }
