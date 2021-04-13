@@ -1,6 +1,5 @@
 const authorizedMiddleware = require("../authorized")
 const env = require("../../environment")
-const { AuthTypes } = require("../../constants")
 const { PermissionTypes, PermissionLevels } = require("../../utilities/security/permissions")
 jest.mock("../../environment", () => ({
     prod: false,

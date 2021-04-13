@@ -6,6 +6,7 @@ const router = Router()
 
 router
   .post("/api/admin/auth", authController.authenticate)
+  .post("/api/admin/auth/logout", authController.logout)
   .get("/api/auth/google", passport.authenticate("google"))
   .get(
     "/api/auth/google/callback",
