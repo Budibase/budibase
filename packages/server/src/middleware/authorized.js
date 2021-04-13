@@ -30,14 +30,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.roleId
   )
 
-  // TODO: need to determine if the user has permission to build here, global cookie
-
-  // this may need to change in the future, right now only admins
-  // can have access to builder features, this is hard coded into
-  // our rules
-  if (isAuthed) {
+  let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
+  if (permType === PermissionTypes.BUILDER && isBuilder) {
     return next()
-  } else if (permType === PermissionTypes.BUILDER) {
+  } else if (permType === PermissionTypes.BUILDER && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
 

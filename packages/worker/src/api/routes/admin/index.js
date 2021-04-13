@@ -13,12 +13,16 @@ function buildUserSaveValidation() {
     _rev: Joi.string(),
     email: Joi.string(),
     password: Joi.string().allow(null, ""),
+    builder: Joi.object({
+      global: Joi.boolean().allow(undefined),
+      apps: Joi.array().allow(undefined),
+    }).unknown(true).allow(undefined),
     // maps appId -> roleId for the user
     roles: Joi.object()
       .pattern(/.*/, Joi.string())
       .required()
       .unknown(true)
-  }).required().unknown(true))
+  }).required().unknown(true).allow(undefined))
 }
 
 router

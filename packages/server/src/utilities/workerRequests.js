@@ -99,6 +99,9 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
       password: body.password || undefined,
       status: body.status,
       roles,
+      builder: {
+        global: true,
+      },
     },
   }
 
