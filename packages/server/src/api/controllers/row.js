@@ -130,11 +130,13 @@ exports.save = async function(ctx) {
   }
 
   // if the row obj had an _id then it will have been retrieved
-  const existingRow = await db.get(inputs._id)
-  if (existingRow) {
-    ctx.params.rowId = inputs._id
-    await exports.patch(ctx)
-    return
+  if (inputs._id && inputs._rev) {
+    const existingRow = await db.get(inputs._id)
+    if (existingRow) {
+      ctx.params.rowId = inputs._id
+      await exports.patch(ctx)
+      return
+    }
   }
 
   if (!inputs._rev && !inputs._id) {
