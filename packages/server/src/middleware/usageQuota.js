@@ -27,6 +27,11 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
+  // if in development or a self hosted cloud usage quotas should not be executed
+  if (env.isDev() || env.SELF_HOSTED) {
+    return next()
+  }
+
   const db = new CouchDB(ctx.appId)
   let usage = METHOD_MAP[ctx.req.method]
   const property = getProperty(ctx.req.url)
@@ -34,20 +39,15 @@ module.exports = async (ctx, next) => {
     return next()
   }
   // post request could be a save of a pre-existing entry
-  if (ctx.request.body && ctx.request.body._id) {
+  if (ctx.request.body && ctx.request.body._id && ctx.request.body._rev) {
     try {
-      ctx.preExisting = await db.get(ctx.request.body._id)
+      await db.get(ctx.request.body._id)
       return next()
     } catch (err) {
       ctx.throw(404, `${ctx.request.body._id} does not exist`)
-      return
     }
   }
 
-  // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED) {
-    return next()
-  }
   // update usage for uploads to be the total size
   if (property === usageQuota.Properties.UPLOAD) {
     const files =

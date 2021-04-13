@@ -79,20 +79,24 @@ exports.fetchSelf = async ctx => {
     return
   }
 
-  if (!appId) {
-    const db = new CouchDB(StaticDatabases.USER.name)
-    const user = await db.get(userId)
-    delete user.password
-    ctx.body = { user }
-    return
-  }
-
-  const db = new CouchDB(appId)
   const user = await getFullUser({ ctx, userId: userId })
-  const userTable = await db.get(InternalTables.USER_METADATA)
-  if (user) {
-    delete user.password
+
+  if (appId) {
+    const db = new CouchDB(appId)
+    // remove the full roles structure
+    delete user.roles
+    try {
+      const userTable = await db.get(InternalTables.USER_METADATA)
+      const metadata = await db.get(userId)
+      // specifically needs to make sure is enriched
+      ctx.body = await outputProcessing(appId, userTable, {
+        ...user,
+        ...metadata,
+      })
+    } catch (err) {
+      ctx.body = user
+    }
+  } else {
+    ctx.body = user
   }
-  // specifically needs to make sure is enriched
-  ctx.body = await outputProcessing(appId, userTable, user)
 }
