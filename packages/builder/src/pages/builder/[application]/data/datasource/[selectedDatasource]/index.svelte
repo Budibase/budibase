@@ -81,7 +81,7 @@
       <Spacer extraLarge />
       <div class="query-header">
         <Heading small>Queries</Heading>
-        <Button secondary on:click={() => $goto('../new')}>Add Query</Button>
+        <Button secondary on:click={() => $goto('./new')}>Add Query</Button>
       </div>
       <Spacer extraLarge />
       <div class="query-list">
