@@ -301,7 +301,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--spectrum-alias-background-color-primary);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -315,22 +315,22 @@
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
     scrollbar-width: thin;
     scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-global-color-gray-100);
+      var(--spectrum-alias-background-color-primary);
   }
   .container::-webkit-scrollbar {
     width: 16px;
     height: 16px;
   }
   .container::-webkit-scrollbar-track {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--spectrum-alias-background-color-primary);
   }
   .container::-webkit-scrollbar-thumb {
     background-color: var(--spectrum-global-color-gray-400);
     border-radius: 20px;
-    border: 4px solid var(--spectrum-global-color-gray-100);
+    border: 4px solid var(--spectrum-alias-background-color-primary);
   }
   .container::-webkit-scrollbar-corner {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--spectrum-alias-background-color-primary);
   }
   .container.quiet {
     border: none !important;
@@ -370,7 +370,7 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--spectrum-alias-background-color-primary);
   }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
