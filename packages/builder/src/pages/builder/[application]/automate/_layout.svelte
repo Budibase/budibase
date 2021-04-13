@@ -24,7 +24,6 @@
     height: calc(100% - 60px);
     display: grid;
     grid-template-columns: 260px minmax(510px, 1fr) 260px;
-    background: var(--grey-2);
   }
 
   .nav {
@@ -36,7 +35,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
-    border-right: 1px solid var(--grey-2);
+    border-right: var(--border-light);
   }
 
   .content {

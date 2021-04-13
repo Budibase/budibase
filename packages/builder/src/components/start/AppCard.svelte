@@ -44,7 +44,7 @@
 
 <style>
   .apps-card {
-    background-color: var(--background);
+    background-color: var(--background-alt);
     padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl)
       var(--spacing-xl);
     max-width: 300px;

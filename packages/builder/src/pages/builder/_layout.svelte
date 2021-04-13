@@ -52,7 +52,6 @@
     grid-template-columns: 260px 1fr;
     height: 100%;
     width: 100%;
-    background: var(--grey-1);
   }
 
   .main {
