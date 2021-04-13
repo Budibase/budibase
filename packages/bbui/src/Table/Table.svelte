@@ -82,11 +82,14 @@
     })
   }
 
-  const sortBy = field => {
-    if (field === sortColumn) {
+  const sortBy = fieldSchema => {
+    if (fieldSchema.sortable === false) {
+      return
+    }
+    if (fieldSchema.name === sortColumn) {
       sortOrder = sortOrder === "Descending" ? "Ascending" : "Descending"
     } else {
-      sortColumn = field
+      sortColumn = fieldSchema.name
       sortOrder = "Descending"
     }
   }
@@ -145,7 +148,7 @@
 
   const calculateLastVisibleRow = (firstRow, visibleRowCount, allRowCount) => {
     if (visibleRowCount === 0) {
-      return firstRow
+      return -1
     }
     return Math.min(firstRow + visibleRowCount + 2 * rowPreload, allRowCount)
   }
@@ -195,10 +198,11 @@
               {/if}
               {#each fields as field}
                 <th
-                  class="spectrum-Table-headCell is-sortable"
+                  class="spectrum-Table-headCell"
+                  class:is-sortable={field.sortable !== false}
                   class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
                   class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-                  on:click={() => sortBy(field)}>
+                  on:click={() => sortBy(schema[field])}>
                   <div class="spectrum-Table-headCell-content">
                     <div class="title">{getDisplayName(schema[field])}</div>
                     {#if schema[field]?.autocolumn}
