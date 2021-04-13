@@ -66,7 +66,7 @@ describe("Authenticated middleware", () => {
     await config.executeMiddleware()
 
     expect(config.ctx.cookies.set).toHaveBeenCalledWith(
-      "budibase:currentapp:local",
+      "budibase:currentapp",
       appId,
       expect.any(Object)
     )
