@@ -1,9 +1,9 @@
-const CouchDB = require("../../db")
+const CouchDB = require("../db")
 const {
   generateUserMetadataID,
   getEmailFromUserMetadataID,
 } = require("../db/utils")
-const { getGlobalUsers } = require("../../utilities/workerRequests")
+const { getGlobalUsers } = require("../utilities/workerRequests")
 
 exports.getFullUser = async ({ ctx, email, userId }) => {
   if (!email) {

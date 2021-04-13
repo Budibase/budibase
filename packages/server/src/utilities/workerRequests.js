@@ -11,7 +11,7 @@ function getAppRole(appId, user) {
   if (!user.roleId) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
-  delete user.roles
+  // delete user.roles
   return user
 }
 

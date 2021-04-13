@@ -12,7 +12,11 @@
         username,
         password,
       })
-      notifier.success("Logged in successfully.")
+      if (json.success) {
+        notifier.success("Logged in successfully.")
+      } else {
+        notifier.danger("Invalid credentials")
+      }
     } catch (err) {
       console.error(err)
       notifier.danger(`Error logging in: ${err}`)
