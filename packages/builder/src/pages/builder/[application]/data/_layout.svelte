@@ -72,7 +72,7 @@
 
   .content {
     flex: 1 1 auto;
-    padding: var(--spacing-l) 40px;
+    padding: var(--spacing-l) 40px 40px 40px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -80,6 +80,9 @@
     align-items: stretch;
     gap: var(--spacing-l);
     background: var(--background);
+  }
+  .content :global(> span) {
+    display: contents;
   }
 
   .nav {
