@@ -7,7 +7,7 @@
   export let data = []
   export let schema = {}
   export let showAutoColumns = false
-  export let rowCount = 14
+  export let rowCount = 0
   export let quiet = true
   export let loading = false
   export let allowSelectRows = true
@@ -23,21 +23,18 @@
   const rowHeight = 55
   const headerHeight = 36
   const rowPreload = 5
-  const maxRows = 100
 
   // Sorting state
   let sortColumn
   let sortOrder
 
   // Table state
+  let height = 0
   let loaded = false
   $: if (!loading) loaded = true
   $: rows = data ?? []
-  $: visibleRowCount = loaded
-    ? Math.min(rows.length, rowCount || maxRows, maxRows)
-    : rowCount || 8
-  $: scroll = rows.length > visibleRowCount
-  $: contentStyle = getContentStyle(visibleRowCount, scroll || !loaded)
+  $: visibleRowCount = getVisibleRowCount(loaded, height, rows.length, rowCount)
+  $: contentStyle = getContentStyle(visibleRowCount, rowCount)
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: fields = getFields(schema, showAutoColumns)
   $: showEditColumn = allowEditRows || allowSelectRows
@@ -53,8 +50,18 @@
     rows.length
   )
 
-  const getContentStyle = (visibleRows, useFixedHeight) => {
-    if (!useFixedHeight) {
+  const getVisibleRowCount = (loaded, height, allRows, rowCount) => {
+    if (!loaded) {
+      return rowCount || 0
+    }
+    if (rowCount) {
+      return Math.min(allRows, rowCount)
+    }
+    return Math.min(allRows, Math.ceil(height / rowHeight))
+  }
+
+  const getContentStyle = (visibleRows, rowCount) => {
+    if (!rowCount) {
       return ""
     }
     return `height: ${headerHeight - 1 + visibleRows * (rowHeight + 1)}px;`
@@ -137,6 +144,9 @@
   }
 
   const calculateLastVisibleRow = (firstRow, visibleRowCount, allRowCount) => {
+    if (visibleRowCount === 0) {
+      return firstRow
+    }
     return Math.min(firstRow + visibleRowCount + 2 * rowPreload, allRowCount)
   }
 
@@ -162,14 +172,15 @@
   }
 </script>
 
-{#if !loaded}
-  <div class="loading" style={contentStyle} />
-{:else}
-  <div
-    on:scroll={onScroll}
-    class:quiet
-    style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
-    class="container">
+<div
+  bind:offsetHeight={height}
+  on:scroll={onScroll}
+  class:quiet
+  style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
+  class="container">
+  {#if !loaded}
+    <div class="loading" style={contentStyle} />
+  {:else}
     <div style={contentStyle}>
       <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
         {#if sortedRows?.length}
@@ -265,14 +276,14 @@
                 focusable="false">
                 <use xlink:href="#spectrum-icon-18-Table" />
               </svg>
-              <div>No rows found.</div>
+              <div>No rows found</div>
             </div>
           {/if}
         </tbody>
       </table>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   .loading,
