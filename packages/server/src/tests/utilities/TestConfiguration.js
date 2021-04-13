@@ -15,6 +15,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
+const { Cookies } = require("@budibase/auth")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -68,16 +69,26 @@ class TestConfiguration {
   }
 
   defaultHeaders() {
-    const builderUser = {
-      userId: "BUILDER",
+    const user = {
+      userId: "us_test@test.com",
+      email: "test@test.com",
       roleId: BUILTIN_ROLE_IDS.BUILDER,
+      builder: {
+        global: true,
+      },
     }
-    const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
-    // can be "production" for test case
-    const type = env.isProd() ? "cloud" : "local"
+    const app = {
+      roleId: BUILTIN_ROLE_IDS.BUILDER,
+      appId: this.appId,
+    }
+    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const appToken = jwt.sign(app, env.JWT_SECRET)
     const headers = {
       Accept: "application/json",
-      Cookie: [`budibase:builder:${type}=${builderToken}`],
+      Cookie: [
+        `${Cookies.Auth}=${authToken}`,
+        `${Cookies.CurrentApp}=${appToken}`,
+      ],
     }
     if (this.appId) {
       headers["x-budibase-app-id"] = this.appId
@@ -307,20 +318,18 @@ class TestConfiguration {
     }
     if (!email || !password) {
       await this.createUser()
-      email = EMAIL
-      password = PASSWORD
     }
-    const result = await this.request
-      .post(`/api/authenticate`)
-      .set({
-        "x-budibase-app-id": this.appId,
-      })
-      .send({ email, password })
+    const user = {
+      userId: "us_test@test.com",
+      email: EMAIL,
+      roleId: BUILTIN_ROLE_IDS.BASIC,
+    }
+    const token = jwt.sign(user, env.JWT_SECRET)
 
     // returning necessary request headers
     return {
       Accept: "application/json",
-      Cookie: result.headers["set-cookie"],
+      Cookie: [`${Cookies.Auth}=${token}`],
       "x-budibase-app-id": this.appId,
     }
   }

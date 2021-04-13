@@ -15,12 +15,11 @@ module.exports = async (ctx, next) => {
 
   let updateCookie = false,
     appId,
-    roleId
+    roleId = BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user) {
     // not logged in, try to set a cookie for public apps
     updateCookie = true
     appId = requestAppId
-    roleId = BUILTIN_ROLE_IDS.PUBLIC
   } else if (
     requestAppId != null &&
     (appCookie == null ||
@@ -31,7 +30,9 @@ module.exports = async (ctx, next) => {
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user.email)
     updateCookie = true
     appId = requestAppId
-    roleId = globalUser.roles[requestAppId] || BUILTIN_ROLE_IDS.PUBLIC
+    if (globalUser.roles && globalUser.roles[requestAppId]) {
+      roleId = globalUser.roles[requestAppId]
+    }
   } else if (appCookie != null) {
     appId = appCookie.appId
     roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
