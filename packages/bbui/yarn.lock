@@ -413,6 +413,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.0.1.tgz#9c75da37ea6915919fb574c74bd60dacc03b6577"
   integrity sha512-AUqtyNabHF451Aj9i3xz82TxS5Z6k1dttA68/1hMeU9kbPCSS4P6Viw3vaRGs9CSspuR8xnnhDgrq+F+zMy2Hw==
 
+"@spectrum-css/actiongroup@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/actiongroup/-/actiongroup-1.0.1.tgz#b95b86e7af229e90fe1e70399d8d4b547b4bd31c"
+  integrity sha512-5Q6uMjzv5BFA2TwGASr/jAtJpTWl26fhWvgGY8kOA0RCSij35l+YJg/FPXf6Nnj2qCOl8DkNycjT9YXJ+bhyVA==
+
 "@spectrum-css/button@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.1.tgz#6db8c3e851baecd0f1c2d88fef37d49d01c6e643"
@@ -449,6 +454,16 @@
   version "2.0.9"
   resolved "https://registry.yarnpkg.com/@spectrum-css/label/-/label-2.0.9.tgz#792f34b906ba81118f4d0edcc81a18da1ecd57cb"
   integrity sha512-0vXhWIZoQDTg+I6MyMpwmeJ+yQHtxkZ7lLcEqxhJ2y7JXP2ftblz2sO4+9jB11ljepeVlV+B6LF1drU8mMu82A==
+
+"@spectrum-css/link@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/link/-/link-3.1.1.tgz#cb526a2e10b50ef5a7ae29cca7272e2610d597eb"
+  integrity sha512-Bi88lRhTY7g6nM/ryW1yY4Cji211ZYNtRxkxbV7n2lPvwMAAQtyx0qVD3ru4kTGj/FFVvmPR3XiOE10K13HSNA==
+
+"@spectrum-css/menu@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/menu/-/menu-3.0.1.tgz#2a376f991acc24e12ec892bb6b9db2650fc41fbe"
+  integrity sha512-Qjg0+1O0eC89sb/bRFq2AGnQ8XqhVy23TUXHyffNM8qdcMssnlny3QmhzjURCZKvx/Y5UytCpzhedPQqSpQwZg==
 
 "@spectrum-css/modal@^3.0.1":
   version "3.0.1"
