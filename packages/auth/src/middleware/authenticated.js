@@ -11,7 +11,7 @@ module.exports = async (ctx, next) => {
       ctx.isAuthenticated = true
       ctx.user = authCookie
       // make sure email is correct from ID
-      ctx.user.email = getEmailFromUserID(authCookie._id)
+      ctx.user.email = getEmailFromUserID(authCookie.userId)
     }
 
     await next()

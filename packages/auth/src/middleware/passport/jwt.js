@@ -1,5 +1,10 @@
+const { Cookies } = require("../../constants")
+
 exports.options = {
   secretOrKey: process.env.JWT_SECRET,
+  jwtFromRequest: function(ctx) {
+    return ctx.cookies.get(Cookies.Auth)
+  },
 }
 
 exports.authenticate = async function(jwt, done) {
