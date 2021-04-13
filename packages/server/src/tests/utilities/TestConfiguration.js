@@ -72,7 +72,6 @@ class TestConfiguration {
     const user = {
       userId: "us_test@test.com",
       email: "test@test.com",
-      roleId: BUILTIN_ROLE_IDS.BUILDER,
       builder: {
         global: true,
       },
@@ -112,7 +111,7 @@ class TestConfiguration {
     } catch (err) {
       // allow errors here
     }
-    return this.login(email, PASSWORD)
+    return this.login(email, PASSWORD, roleId)
   }
 
   async createApp(appName) {
@@ -312,7 +311,7 @@ class TestConfiguration {
     )
   }
 
-  async login(email, password) {
+  async login(email, password, roleId = BUILTIN_ROLE_IDS.BUILDER) {
     if (!this.request) {
       throw "Server has not been opened, cannot login."
     }
@@ -320,16 +319,23 @@ class TestConfiguration {
       await this.createUser()
     }
     const user = {
-      userId: "us_test@test.com",
-      email: EMAIL,
-      roleId: BUILTIN_ROLE_IDS.BASIC,
+      userId: `us_${email || EMAIL}`,
+      email: email || EMAIL,
     }
-    const token = jwt.sign(user, env.JWT_SECRET)
+    const app = {
+      roleId: roleId,
+      appId: this.appId,
+    }
+    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const appToken = jwt.sign(app, env.JWT_SECRET)
 
     // returning necessary request headers
     return {
       Accept: "application/json",
-      Cookie: [`${Cookies.Auth}=${token}`],
+      Cookie: [
+        `${Cookies.Auth}=${authToken}`,
+        `${Cookies.CurrentApp}=${appToken}`,
+      ],
       "x-budibase-app-id": this.appId,
     }
   }

@@ -44,6 +44,10 @@ exports.createMetadata = async function(ctx) {
   const db = new CouchDB(appId)
   const { email, roleId } = ctx.request.body
 
+  if (!email) {
+    ctx.throw(400, "Require email to manage user")
+  }
+
   // check role valid
   const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
@@ -73,9 +77,11 @@ exports.updateMetadata = async function(ctx) {
   const user = ctx.request.body
   let email = user.email || getEmailFromUserMetadataID(user._id)
   const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
-
   if (!metadata._id) {
-    user._id = generateUserMetadataID(email)
+    metadata._id = generateUserMetadataID(email)
+  }
+  if (!metadata._rev) {
+    metadata._rev = ctx.request.body._rev
   }
   ctx.body = await db.put({
     ...metadata,

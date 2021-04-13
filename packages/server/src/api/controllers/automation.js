@@ -35,13 +35,12 @@ function cleanAutomationInputs(automation) {
 /**
  * This function handles checking if any webhooks need to be created or deleted for automations.
  * @param {string} appId The ID of the app in which we are checking for webhooks
- * @param {object} user The user object, including all auth info
  * @param {object|undefined} oldAuto The old automation object if updating/deleting
  * @param {object|undefined} newAuto The new automation object if creating/updating
  * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
-async function checkForWebhooks({ appId, user, oldAuto, newAuto }) {
+async function checkForWebhooks({ appId, oldAuto, newAuto }) {
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
   const newTrigger = newAuto ? newAuto.definition.trigger : null
   function isWebhookTrigger(auto) {
@@ -61,7 +60,7 @@ async function checkForWebhooks({ appId, user, oldAuto, newAuto }) {
     // need to get the webhook to get the rev
     const webhook = await db.get(oldTrigger.webhookId)
     const ctx = {
-      user,
+      appId,
       params: { id: webhook._id, rev: webhook._rev },
     }
     // might be updating - reset the inputs to remove the URLs
@@ -74,7 +73,7 @@ async function checkForWebhooks({ appId, user, oldAuto, newAuto }) {
   // need to create webhook
   else if (!isWebhookTrigger(oldAuto) && isWebhookTrigger(newAuto)) {
     const ctx = {
-      user,
+      appId,
       request: {
         body: new webhooks.Webhook(
           "Automation webhook",
@@ -110,7 +109,6 @@ exports.create = async function(ctx) {
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     appId: ctx.appId,
-    user: ctx.user,
     newAuto: automation,
   })
   const response = await db.put(automation)
@@ -134,7 +132,6 @@ exports.update = async function(ctx) {
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     appId: ctx.appId,
-    user: ctx.user,
     oldAuto: oldAutomation,
     newAuto: automation,
   })
@@ -172,7 +169,6 @@ exports.destroy = async function(ctx) {
   const oldAutomation = await db.get(ctx.params.id)
   await checkForWebhooks({
     appId: ctx.appId,
-    user: ctx.user,
     oldAuto: oldAutomation,
   })
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
