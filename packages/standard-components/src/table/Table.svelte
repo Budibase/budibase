@@ -60,7 +60,11 @@
   const getFilteredSchema = (schema, fields, hasChildren) => {
     let newSchema = {}
     if (hasChildren) {
-      newSchema[customColumnKey] = { displayName: null, order: 0 }
+      newSchema[customColumnKey] = {
+        displayName: null,
+        order: 0,
+        sortable: false,
+      }
     }
     fields.forEach(field => {
       newSchema[field] = schema[field]
