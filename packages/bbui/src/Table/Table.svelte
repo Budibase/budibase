@@ -50,6 +50,15 @@
     rows.length
   )
 
+  // Reset state when data chanegs
+  $: data.length, reset()
+  const reset = () => {
+    nextScrollTop = 0
+    scrollTop = 0
+    clearTimeout(timeout)
+    timeout = null
+  }
+
   const getVisibleRowCount = (loaded, height, allRows, rowCount) => {
     if (!loaded) {
       return rowCount || 0
@@ -175,128 +184,129 @@
   }
 </script>
 
-<div
-  bind:offsetHeight={height}
-  on:scroll={onScroll}
-  class:quiet
-  style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
-  class="container">
+<div class="wrapper" bind:offsetHeight={height}>
   {#if !loaded}
     <div class="loading" style={contentStyle} />
   {:else}
-    <div style={contentStyle}>
-      <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
-        {#if sortedRows?.length}
-          <thead class="spectrum-Table-head">
-            <tr>
-              {#if showEditColumn}
-                <th class="spectrum-Table-headCell">
-                  <div class="spectrum-Table-headCell-content">
-                    {editColumnTitle || ''}
-                  </div>
-                </th>
-              {/if}
-              {#each fields as field}
-                <th
-                  class="spectrum-Table-headCell"
-                  class:is-sortable={field.sortable !== false}
-                  class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
-                  class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
-                  on:click={() => sortBy(schema[field])}>
-                  <div class="spectrum-Table-headCell-content">
-                    <div class="title">{getDisplayName(schema[field])}</div>
-                    {#if schema[field]?.autocolumn}
-                      <svg
-                        class="spectrum-Icon spectrum-Table-autoIcon"
-                        focusable="false">
-                        <use xlink:href="#spectrum-icon-18-MagicWand" />
-                      </svg>
-                    {/if}
-                    {#if sortColumn === field}
-                      <svg
-                        class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                        focusable="false"
-                        aria-hidden="true">
-                        <use xlink:href="#spectrum-css-icon-Arrow100" />
-                      </svg>
-                    {/if}
-                    {#if allowEditColumns && schema[field]?.editable !== false}
-                      <svg
-                        class="spectrum-Icon spectrum-Table-editIcon"
-                        focusable="false"
-                        on:click={e => editColumn(e, field)}>
-                        <use xlink:href="#spectrum-icon-18-Edit" />
-                      </svg>
-                    {/if}
-                  </div>
-                </th>
-              {/each}
-            </tr>
-          </thead>
-        {/if}
-        <tbody class="spectrum-Table-body">
+    <div
+      on:scroll={onScroll}
+      class:quiet
+      style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
+      class="container">
+      <div style={contentStyle}>
+        <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
           {#if sortedRows?.length}
-            {#each sortedRows as row, idx}
-              <tr
-                on:click={() => toggleSelectRow(row)}
-                class="spectrum-Table-row"
-                class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
-                {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
-                  {#if showEditColumn}
-                    <td
-                      class="spectrum-Table-cell spectrum-Table-cell--divider">
-                      <div class="spectrum-Table-cell-content">
-                        <SelectEditRenderer
-                          data={row}
-                          selected={selectedRows.includes(row)}
-                          onToggleSelection={() => toggleSelectRow(row)}
-                          onEdit={e => editRow(e, row)}
-                          {allowSelectRows}
-                          {allowEditRows} />
-                      </div>
-                    </td>
-                  {/if}
-                  {#each fields as field}
-                    <td class="spectrum-Table-cell">
-                      <div class="spectrum-Table-cell-content">
-                        <CellRenderer
-                          {customRenderers}
-                          {row}
-                          schema={schema[field]}
-                          value={row[field]}
-                          on:clickrelationship>
-                          <slot />
-                        </CellRenderer>
-                      </div>
-                    </td>
-                  {/each}
+            <thead class="spectrum-Table-head">
+              <tr>
+                {#if showEditColumn}
+                  <th class="spectrum-Table-headCell">
+                    <div class="spectrum-Table-headCell-content">
+                      {editColumnTitle || ''}
+                    </div>
+                  </th>
                 {/if}
+                {#each fields as field}
+                  <th
+                    class="spectrum-Table-headCell"
+                    class:is-sortable={schema[field].sortable !== false}
+                    class:is-sorted-desc={sortColumn === field && sortOrder === 'Descending'}
+                    class:is-sorted-asc={sortColumn === field && sortOrder === 'Ascending'}
+                    on:click={() => sortBy(schema[field])}>
+                    <div class="spectrum-Table-headCell-content">
+                      <div class="title">{getDisplayName(schema[field])}</div>
+                      {#if schema[field]?.autocolumn}
+                        <svg
+                          class="spectrum-Icon spectrum-Table-autoIcon"
+                          focusable="false">
+                          <use xlink:href="#spectrum-icon-18-MagicWand" />
+                        </svg>
+                      {/if}
+                      {#if sortColumn === field}
+                        <svg
+                          class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                          focusable="false"
+                          aria-hidden="true">
+                          <use xlink:href="#spectrum-css-icon-Arrow100" />
+                        </svg>
+                      {/if}
+                      {#if allowEditColumns && schema[field]?.editable !== false}
+                        <svg
+                          class="spectrum-Icon spectrum-Table-editIcon"
+                          focusable="false"
+                          on:click={e => editColumn(e, field)}>
+                          <use xlink:href="#spectrum-icon-18-Edit" />
+                        </svg>
+                      {/if}
+                    </div>
+                  </th>
+                {/each}
               </tr>
-            {/each}
-          {:else}
-            <div class="placeholder">
-              <svg
-                class="spectrum-Icon spectrum-Icon--sizeXXL"
-                focusable="false">
-                <use xlink:href="#spectrum-icon-18-Table" />
-              </svg>
-              <div>No rows found</div>
-            </div>
+            </thead>
           {/if}
-        </tbody>
-      </table>
+          <tbody class="spectrum-Table-body">
+            {#if sortedRows?.length}
+              {#each sortedRows as row, idx}
+                <tr
+                  on:click={() => toggleSelectRow(row)}
+                  class="spectrum-Table-row"
+                  class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}>
+                  {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
+                    {#if showEditColumn}
+                      <td
+                        class="spectrum-Table-cell spectrum-Table-cell--divider">
+                        <div class="spectrum-Table-cell-content">
+                          <SelectEditRenderer
+                            data={row}
+                            selected={selectedRows.includes(row)}
+                            onToggleSelection={() => toggleSelectRow(row)}
+                            onEdit={e => editRow(e, row)}
+                            {allowSelectRows}
+                            {allowEditRows} />
+                        </div>
+                      </td>
+                    {/if}
+                    {#each fields as field}
+                      <td class="spectrum-Table-cell">
+                        <div class="spectrum-Table-cell-content">
+                          <CellRenderer
+                            {customRenderers}
+                            {row}
+                            schema={schema[field]}
+                            value={row[field]}
+                            on:clickrelationship>
+                            <slot />
+                          </CellRenderer>
+                        </div>
+                      </td>
+                    {/each}
+                  {/if}
+                </tr>
+              {/each}
+            {:else}
+              <div class="placeholder">
+                <svg
+                  class="spectrum-Icon spectrum-Icon--sizeXXL"
+                  focusable="false">
+                  <use xlink:href="#spectrum-icon-18-Table" />
+                </svg>
+                <div>No rows found</div>
+              </div>
+            {/if}
+          </tbody>
+        </table>
+      </div>
     </div>
   {/if}
 </div>
 
 <style>
-  .loading,
-  .container,
-  th {
+  .wrapper {
     background-color: var(--spectrum-global-color-gray-100);
+    overflow: hidden;
   }
 
   .container {
+    height: 100%;
     position: relative;
     overflow: auto;
     border: 1px solid
@@ -358,6 +368,7 @@
     position: sticky;
     top: 0;
     z-index: 2;
+    background-color: var(--spectrum-global-color-gray-100);
   }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
