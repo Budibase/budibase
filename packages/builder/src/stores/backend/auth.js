@@ -10,7 +10,7 @@ async function checkAuth() {
 }
 
 export function createAuthStore() {
-  const { subscribe, set } = writable({})
+  const { subscribe, set } = writable(null)
 
   checkAuth()
     .then(user => set({ user }))
@@ -21,16 +21,13 @@ export function createAuthStore() {
     login: async creds => {
       const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
-      if (json.user) {
-        localStorage.setItem("auth:user", JSON.stringify(json.user))
-        set({ user: json.user })
-      }
+      set({ user: json })
       return json
     },
     logout: async () => {
       const response = await api.post(`/api/auth/logout`)
       const json = await response.json()
-      set({ user: false })
+      set({ user: null })
     },
     createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
