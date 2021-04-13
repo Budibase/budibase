@@ -109,6 +109,7 @@ describe("Current app middleware", () => {
         expect(cookieFn).not.toHaveBeenCalled()
       }
       expect(config.ctx.roleId).toEqual("BASIC")
+      expect(config.ctx.user.role._id).toEqual("BASIC")
       expect(config.ctx.appId).toEqual("app_test")
       expect(config.next).toHaveBeenCalled()
     }

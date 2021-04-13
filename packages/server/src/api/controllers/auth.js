@@ -71,7 +71,8 @@ exports.authenticate = async ctx => {
 }
 
 exports.fetchSelf = async ctx => {
-  const { userId, appId } = ctx.user
+  const appId = ctx.appId
+  const { userId } = ctx.user
   /* istanbul ignore next */
   if (!userId) {
     ctx.body = {}
