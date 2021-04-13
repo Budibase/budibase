@@ -23,8 +23,11 @@ module.exports = async (ctx, next) => {
     roleId = BUILTIN_ROLE_IDS.PUBLIC
   } else if (
     requestAppId != null &&
-    (appCookie == null || requestAppId !== appCookie.appId)
+    (appCookie == null ||
+      requestAppId !== appCookie.appId ||
+      appCookie.roleId === BUILTIN_ROLE_IDS.PUBLIC)
   ) {
+    // Different App ID means cookie needs reset, or if the same public user has logged in
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user.email)
     updateCookie = true
     appId = requestAppId

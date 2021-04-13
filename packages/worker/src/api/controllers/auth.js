@@ -28,7 +28,7 @@ exports.authenticate = async (ctx, next) => {
 }
 
 exports.logout = async ctx => {
-  clearCookie(Cookies.Auth)
+  clearCookie(ctx, Cookies.Auth)
   ctx.body = { success: true }
 }
 
