@@ -38,6 +38,7 @@ export { default as DatePicker } from "./DatePicker/DatePicker.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Context } from "./context"
+export { default as Table } from "./Table/Table.svelte"
 
 // Actions
 export { default as autoResizeTextArea } from "./Actions/autoresize_textarea"

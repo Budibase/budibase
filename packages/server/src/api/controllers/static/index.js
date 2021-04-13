@@ -53,10 +53,11 @@ exports.uploadFile = async function(ctx) {
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
     // need to handle image processing
-    await fileProcessor.process({
-      ...file,
-      extension: fileExtension,
-    })
+    // TODO either offer this as an option, or don't do it at all
+    // await fileProcessor.process({
+    //   ...file,
+    //   extension: fileExtension,
+    // })
 
     return prepareUpload({
       file,

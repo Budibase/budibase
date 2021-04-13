@@ -4,10 +4,15 @@
   const displayLimit = 5
   $: attachments = value?.slice(0, displayLimit) ?? []
   $: leftover = (value?.length ?? 0) - attachments.length
+
+  const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
+  const isImage = extension => {
+    return imageExtensions.includes(extension?.toLowerCase())
+  }
 </script>
 
 {#each attachments as attachment}
-  {#if attachment.type.startsWith('image')}
+  {#if isImage(attachment.extension)}
     <img src={attachment.url} alt={attachment.extension} />
   {:else}
     <div class="file">{attachment.extension}</div>
