@@ -3,7 +3,7 @@ const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
 
 function Request(appId, params) {
-  this.user = { appId }
+  this.appId = appId
   this.params = params
 }
 
@@ -63,7 +63,11 @@ exports.checkPermissionsEndpoint = async ({
 }) => {
   const password = "PASSWORD"
   await config.createUser("passUser@budibase.com", password, passRole)
-  const passHeader = await config.login("passUser@budibase.com", password)
+  const passHeader = await config.login(
+    "passUser@budibase.com",
+    password,
+    passRole
+  )
 
   await exports
     .createRequest(config.request, method, url, body)
@@ -71,7 +75,11 @@ exports.checkPermissionsEndpoint = async ({
     .expect(200)
 
   await config.createUser("failUser@budibase.com", password, failRole)
-  const failHeader = await config.login("failUser@budibase.com", password)
+  const failHeader = await config.login(
+    "failUser@budibase.com",
+    password,
+    failRole
+  )
 
   await exports
     .createRequest(config.request, method, url, body)

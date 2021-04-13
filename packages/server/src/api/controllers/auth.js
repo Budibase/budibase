@@ -7,7 +7,7 @@ const { generateUserMetadataID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { InternalTables } = require("../../db/utils")
-const { UserStatus, StaticDatabases } = require("@budibase/auth")
+const { UserStatus } = require("@budibase/auth")
 const { getFullUser } = require("../../utilities/users")
 
 const INVALID_ERR = "Invalid Credentials"
