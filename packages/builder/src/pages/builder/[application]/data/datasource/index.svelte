@@ -4,12 +4,12 @@
   import { onMount } from "svelte"
 
   onMount(async () => {
-    // navigate to first table in list, if not already selected
+    // navigate to first datasource in list, if not already selected
     $datasources.list.length > 0 && $goto(`../${$datasources.list[0]._id}`)
   })
 </script>
 
-{#if $tables.list.length === 0}
+{#if $datasources.list.length === 0}
   <i>Connect your first datasource to start building.</i>
 {:else}
   <i>Select a datasource to edit</i>
