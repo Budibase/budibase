@@ -96,7 +96,7 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
     body: {
       ...globalUser,
       email,
-      password: body.password,
+      password: body.password || undefined,
       status: body.status,
       roles,
     },
@@ -114,5 +114,7 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
   delete body.password
   delete body.roleId
   delete body.status
+  delete body.roles
+  delete body.builder
   return body
 }

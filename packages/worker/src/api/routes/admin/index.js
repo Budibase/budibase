@@ -12,7 +12,7 @@ function buildUserSaveValidation() {
     _id: Joi.string(),
     _rev: Joi.string(),
     email: Joi.string(),
-    password: Joi.string(),
+    password: Joi.string().allow(null, ""),
     // maps appId -> roleId for the user
     roles: Joi.object()
       .pattern(/.*/, Joi.string())

@@ -26,6 +26,9 @@ exports.fetchMetadata = async function(ctx) {
   const users = []
   for (let user of global) {
     const info = metadata.find(meta => meta._id.includes(user.email))
+    // remove these props, not for the correct DB
+    delete user._id
+    delete user._rev
     users.push({
       ...user,
       ...info,
