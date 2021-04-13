@@ -25,7 +25,7 @@ export function createAuthStore() {
       return json
     },
     logout: async () => {
-      const response = await api.post(`/api/auth/logout`)
+      const response = await api.post(`/api/admin/auth/logout`)
       const json = await response.json()
       set({ user: null })
     },

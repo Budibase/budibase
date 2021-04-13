@@ -1,4 +1,4 @@
-const { passport, Cookies } = require("@budibase/auth")
+const { passport, Cookies, clearCookie } = require("@budibase/auth")
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
@@ -25,6 +25,15 @@ exports.authenticate = async (ctx, next) => {
 
     ctx.body = { success: true, user }
   })(ctx, next)
+}
+
+exports.logout = async ctx => {
+  clearCookie(Cookies.Auth)
+  ctx.body = { success: true }
+}
+
+exports.googleAuth = async (ctx, next) => {
+  // return passport.authenticate("google")
 }
 
 exports.googleAuth = async (ctx, next) => {

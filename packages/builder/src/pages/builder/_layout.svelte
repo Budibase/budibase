@@ -1,5 +1,5 @@
 <script>
-  import { Home as Link } from "@budibase/bbui"
+  import { Home as Link, Button } from "@budibase/bbui"
   import {
     AppsIcon,
     HostingIcon,
@@ -9,6 +9,7 @@
   } from "components/common/Icons"
   import LoginForm from "components/login/LoginForm.svelte"
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
+  import LogoutButton from "components/start/LogoutButton.svelte"
   import Logo from "/assets/budibase-logo.svg"
   import { auth } from "stores/backend"
 
@@ -44,6 +45,7 @@
           </div>
           <div class="nav-bottom">
             <BuilderSettingsButton />
+            <LogoutButton />
           </div>
         </div>
       </div>
