@@ -13,49 +13,49 @@
   import { auth } from "stores/backend"
 
   let modal
-
-  console.log($auth.user)
 </script>
 
-{#if $auth.user}
-  <div class="root">
-    <div class="ui-nav">
-      <div class="home-logo">
-        <img src={Logo} alt="Budibase icon" />
+{#if $auth}
+  {#if $auth.user}
+    <div class="root">
+      <div class="ui-nav">
+        <div class="home-logo">
+          <img src={Logo} alt="Budibase icon" />
+        </div>
+        <div class="nav-section">
+          <div class="nav-top">
+            <Link icon={AppsIcon} title="Apps" href="/" active />
+            <Link
+              icon={HostingIcon}
+              title="Hosting"
+              href="https://portal.budi.live/" />
+            <Link
+              icon={DocumentationIcon}
+              title="Documentation"
+              href="https://docs.budibase.com/" />
+            <Link
+              icon={CommunityIcon}
+              title="Community"
+              href="https://github.com/Budibase/budibase/discussions" />
+            <Link
+              icon={BugIcon}
+              title="Raise an issue"
+              href="https://github.com/Budibase/budibase/issues/new/choose" />
+          </div>
+          <div class="nav-bottom">
+            <BuilderSettingsButton />
+          </div>
+        </div>
       </div>
-      <div class="nav-section">
-        <div class="nav-top">
-          <Link icon={AppsIcon} title="Apps" href="/" active />
-          <Link
-            icon={HostingIcon}
-            title="Hosting"
-            href="https://portal.budi.live/" />
-          <Link
-            icon={DocumentationIcon}
-            title="Documentation"
-            href="https://docs.budibase.com/" />
-          <Link
-            icon={CommunityIcon}
-            title="Community"
-            href="https://github.com/Budibase/budibase/discussions" />
-          <Link
-            icon={BugIcon}
-            title="Raise an issue"
-            href="https://github.com/Budibase/budibase/issues/new/choose" />
-        </div>
-        <div class="nav-bottom">
-          <BuilderSettingsButton />
-        </div>
+      <div class="main">
+        <slot />
       </div>
     </div>
-    <div class="main">
-      <slot />
-    </div>
-  </div>
-{:else}
-  <section class="login">
-    <LoginForm />
-  </section>
+  {:else}
+    <section class="login">
+      <LoginForm />
+    </section>
+  {/if}
 {/if}
 
 <style>
