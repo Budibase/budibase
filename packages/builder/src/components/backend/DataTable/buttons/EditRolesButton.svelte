@@ -6,7 +6,7 @@
 </script>
 
 <div>
-  <Button icon="UsersLock" type="overBackground" size="S" quiet on:click={modal.show}>
+  <Button icon="UsersLock" primary size="S" quiet on:click={modal.show}>
     Edit Roles
   </Button>
 </div>

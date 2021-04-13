@@ -9,7 +9,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="Filter" type="overBackground" size="S" quiet
+  <Button icon="Filter" primary size="S" quiet
     on:click={dropdown.show}
     active={view.filters && view.filters.length}>
     Filter
