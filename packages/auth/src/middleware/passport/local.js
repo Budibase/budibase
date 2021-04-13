@@ -38,7 +38,7 @@ exports.authenticate = async function(username, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const payload = {
-      _id: dbUser._id,
+      userId: dbUser._id,
     }
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {

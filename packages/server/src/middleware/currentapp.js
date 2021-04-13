@@ -15,7 +15,7 @@ function finish(ctx, next, { appId, roleId, cookie = false }) {
     ctx.roleId = roleId
   }
   if (cookie && appId) {
-    setCookie(ctx, new CurrentAppCookie(appId, roleId))
+    setCookie(ctx, new CurrentAppCookie(appId, roleId), Cookies.CurrentApp)
   }
   return next()
 }

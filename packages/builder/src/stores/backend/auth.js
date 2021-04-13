@@ -3,8 +3,7 @@ import api from "../../builderStore/api"
 
 async function checkAuth() {
   const response = await api.get("/api/self")
-  const user = await response.json()
-  if (json) return json
+  return await response.json()
 }
 
 export function createAuthStore() {
@@ -21,6 +20,7 @@ export function createAuthStore() {
         localStorage.setItem("auth:user", JSON.stringify(json.user))
         set({ user: json.user })
       }
+      return json
     },
     logout: async () => {
       const response = await api.post(`/api/auth/logout`)
