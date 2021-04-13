@@ -1,5 +1,5 @@
 <script>
-  import { Input, Label, TextButton } from "@budibase/bbui"
+  import { Input, Label, Link } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifications } from "@budibase/bbui"
   import { database } from "stores/backend"
@@ -41,9 +41,9 @@
     edit
     value={keys.budibase}
     label="Budibase Cloud API Key" />
-  <TextButton text medium blue href="https://portal.budi.live">
+  <Link primary href="https://portal.budi.live">
     Log in to the Budibase Hosting Portal to get your API Key. →
-  </TextButton>
+  </Link>
   <div>
     <Label extraSmall grey>Instance ID (Webhooks)</Label>
     <span>{$database._id}</span>

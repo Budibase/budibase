@@ -13,7 +13,7 @@
   }
 </script>
 
-<Button icon="Delete" size="s" type="overBackground" quiet on:click={modal.show}>
+<Button icon="Delete" size="s" primary quiet on:click={modal.show}>
   Delete
   {selectedRows.length}
   row(s)

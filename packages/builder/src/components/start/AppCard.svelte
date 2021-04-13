@@ -1,8 +1,6 @@
-<script>
-  import { TextButton } from "@budibase/bbui"
-  import { Heading } from "@budibase/bbui"
-  import { Spacer } from "@budibase/bbui"
-  import api from "builderStore/api"
+<script>  
+  import { goto } from "@roxi/routify"
+  import { ActionButton, Heading, Spacer } from "@budibase/bbui"
   import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import download from "downloadjs"
@@ -31,11 +29,11 @@
   <Heading small black>{name}</Heading>
   <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
-    <TextButton text medium blue href="/builder/{_id}">
+    <ActionButton text medium blue on:click={() => $goto(`/builder/${_id}`)}>
       Open
       {name}
       →
-    </TextButton>
+    </ActionButton>
     {#if appExportLoading}
       <Spinner size="10" />
     {:else}<i class="ri-folder-download-line" on:click={exportApp} />{/if}

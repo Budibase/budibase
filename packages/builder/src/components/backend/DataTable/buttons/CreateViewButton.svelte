@@ -7,7 +7,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="CollectionAdd" type="overBackground" size="S" quiet on:click={dropdown.show}>
+  <Button icon="CollectionAdd" primary size="S" quiet on:click={dropdown.show}>
     Create New View
   </Button>
 </div>

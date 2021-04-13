@@ -9,7 +9,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="Download" type="overBackground" size="S" quiet on:click={dropdown.show}>
+  <Button icon="Download" primary size="S" quiet on:click={dropdown.show}>
     Export
   </Button>
 </div>

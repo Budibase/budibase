@@ -46,11 +46,11 @@
         <div class="spectrum-ButtonGroup-item">
           <slot name="footer" />
           {#if showCancelButton}
-            <Button type="secondary" on:click={hide}>{cancelText}</Button>
+            <Button secondary on:click={hide}>{cancelText}</Button>
           {/if}
           {#if showConfirmButton}
             <Button
-            type="cta"
+            cta
               primary
               {...$$restProps}
               disabled={confirmDisabled}

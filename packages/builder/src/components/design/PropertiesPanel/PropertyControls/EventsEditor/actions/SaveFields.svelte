@@ -81,7 +81,7 @@
   {/each}
   <div>
     <Spacer small />
-    <Button icon="AddCircle" size="S" type="cta" on:click={addField}>
+    <Button icon="AddCircle" size="S" cta on:click={addField}>
       Add
       {fieldLabel}
     </Button>

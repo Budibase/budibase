@@ -12,7 +12,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button icon="MagicWand" type="overBackground" size="S" quiet on:click={hideOrUnhide}>
+  <Button icon="MagicWand" primary size="S" quiet on:click={hideOrUnhide}>
     {#if hideAutocolumns}
       Show Auto Columns
     {:else}
