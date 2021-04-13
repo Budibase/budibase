@@ -4,13 +4,17 @@ import api from "../../builderStore/api"
 async function checkAuth() {
   const response = await api.get("/api/self")
   const user = await response.json()
-  if (json) return json
+  if (response.status === 200) return user
+
+  return null
 }
 
 export function createAuthStore() {
   const { subscribe, set } = writable({})
 
-  checkAuth().then(user => set({ user }))
+  checkAuth()
+    .then(user => set({ user }))
+    .catch(err => set({ user: null }))
 
   return {
     subscribe,
@@ -21,6 +25,7 @@ export function createAuthStore() {
         localStorage.setItem("auth:user", JSON.stringify(json.user))
         set({ user: json.user })
       }
+      return json
     },
     logout: async () => {
       const response = await api.post(`/api/auth/logout`)

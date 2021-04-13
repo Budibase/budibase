@@ -2,11 +2,6 @@ const { getAppId, setCookie, getCookie, Cookies } = require("@budibase/auth")
 const { getGlobalUsers } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
 
-function CurrentAppCookie(appId, roleId) {
-  this.appId = appId
-  this.roleId = roleId
-}
-
 function finish(ctx, next, { appId, roleId, cookie = false }) {
   if (appId) {
     ctx.appId = appId
@@ -15,7 +10,7 @@ function finish(ctx, next, { appId, roleId, cookie = false }) {
     ctx.roleId = roleId
   }
   if (cookie && appId) {
-    setCookie(ctx, new CurrentAppCookie(appId, roleId))
+    setCookie(ctx, { appId, roleId }, Cookies.CurrentApp)
   }
   return next()
 }

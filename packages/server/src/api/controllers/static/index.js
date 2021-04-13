@@ -9,7 +9,6 @@ const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
-const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
@@ -35,9 +34,9 @@ const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
-  if (ctx.file === "index.html") {
-    // await setBuilderToken(ctx)
-  }
+  // if (ctx.file === "index.html") {
+  //   // await setBuilderToken(ctx)
+  // }
   await send(ctx, ctx.file, { root: builderPath })
 }
 
