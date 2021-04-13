@@ -78,6 +78,7 @@
     {data}
     {schema}
     {loading}
+    {rowCount}
     {quiet}
     {customRenderers}
     allowSelectRows={false}
@@ -87,3 +88,9 @@
     <slot />
   </Table>
 </div>
+
+<style>
+  div {
+    display: flex !important;
+  }
+</style>
