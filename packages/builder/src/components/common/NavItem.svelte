@@ -45,26 +45,25 @@
 
 <style>
   .nav-item {
+    border-radius: var(--border-radius-s);
     cursor: pointer;
     color: var(--grey-7);
+    transition: background-color
+      var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
   }
   .nav-item.border {
-    border-top: 1px solid var(--grey-1);
+    /*border-top: 1px solid var(--grey-2);*/
   }
   .nav-item.selected {
     background-color: var(--grey-2);
     color: var(--ink);
   }
   .nav-item:hover {
-    background-color: var(--grey-1);
+    background-color: var(--grey-3);
   }
   .nav-item:hover .actions {
     display: flex;
     visibility: visible;
-  }
-  .nav-item:hover,
-  .nav-item.selected {
-    border-radius: var(--border-radius-s);
   }
 
   .content {

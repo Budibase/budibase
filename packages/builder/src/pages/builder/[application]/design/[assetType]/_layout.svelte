@@ -167,7 +167,6 @@
   .root {
     display: grid;
     grid-template-columns: 260px 1fr 260px;
-    background: var(--grey-2);
     align-items: stretch;
     height: calc(100vh - 60px);
   }
@@ -180,6 +179,7 @@
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl) 60px var(--spacing-xl);
     overflow-y: auto;
+    border-right: var(--border-light);
   }
 
   .preview-pane {
@@ -208,5 +208,6 @@
     align-items: stretch;
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
+    border-left: var(--border-light);
   }
 </style>

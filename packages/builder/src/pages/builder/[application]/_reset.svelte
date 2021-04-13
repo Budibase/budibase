@@ -132,7 +132,7 @@
     box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--grey-2);
+    border-bottom: var(--border-light);
   }
 
   .toprightnav {
