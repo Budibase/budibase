@@ -303,6 +303,8 @@
   .wrapper {
     background-color: var(--spectrum-global-color-gray-100);
     overflow: hidden;
+    position: relative;
+    z-index: 1;
   }
 
   .container {
