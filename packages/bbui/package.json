@@ -44,6 +44,7 @@
   ],
   "dependencies": {
     "@spectrum-css/actionbutton": "^1.0.1",
+    "@spectrum-css/actiongroup": "^1.0.1",
     "@spectrum-css/button": "^3.0.1",
     "@spectrum-css/buttongroup": "^3.0.1",
     "@spectrum-css/checkbox": "^3.0.1",
@@ -51,6 +52,8 @@
     "@spectrum-css/divider": "^1.0.1",
     "@spectrum-css/icon": "^3.0.1",
     "@spectrum-css/label": "^2.0.9",
+    "@spectrum-css/link": "^3.1.1",
+    "@spectrum-css/menu": "^3.0.1",
     "@spectrum-css/modal": "^3.0.1",
     "@spectrum-css/popover": "^3.0.1",
     "@spectrum-css/table": "^3.0.1",
