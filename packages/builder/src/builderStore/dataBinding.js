@@ -5,7 +5,7 @@ import { store } from "builderStore"
 import {
   tables as tablesStore,
   queries as queriesStores,
-} from "stores/backend/"
+} from "stores/backend"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -252,7 +252,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
   if (datasource) {
     const { type } = datasource
     if (type === "query") {
-      const queries = get(queriesStores).queries
+      const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
     } else {
       const tables = get(tablesStore).list
