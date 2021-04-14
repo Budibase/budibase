@@ -4,7 +4,7 @@ const JwtStrategy = require("passport-jwt").Strategy
 // const GoogleStrategy = require("passport-google-oauth").Strategy
 const CouchDB = require("./db")
 const { StaticDatabases } = require("./db/utils")
-const { jwt, local, google, authenticated } = require("./middleware")
+const { jwt, local, authenticated } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
 const { hash, compare } = require("./hashing")
 const {
