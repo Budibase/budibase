@@ -1,5 +1,4 @@
 <script>
-  import "@spectrum-css/dialog/dist/index-vars.css"
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
   import { createEventDispatcher, setContext, tick } from "svelte"
