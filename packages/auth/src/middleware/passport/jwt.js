@@ -1,7 +1,8 @@
 const { Cookies } = require("../../constants")
+const env = require("../../environment")
 
 exports.options = {
-  secretOrKey: process.env.JWT_SECRET,
+  secretOrKey: env.JWT_SECRET,
   jwtFromRequest: function(ctx) {
     return ctx.cookies.get(Cookies.Auth)
   },

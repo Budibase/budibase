@@ -1,10 +1,9 @@
-// const CouchDB = require("../db")
+const env = require("../../environment")
 
 exports.options = {
-  clientId: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL,
-  // "http://localhost:" + (process.env.PORT || 3000) + "/auth/google/callback",
+  clientId: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
 }
 
 exports.authenticate = async function(token, tokenSecret, profile, done) {
