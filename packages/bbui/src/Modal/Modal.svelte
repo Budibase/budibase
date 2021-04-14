@@ -2,7 +2,7 @@
   import "@spectrum-css/dialog/dist/index-vars.css"
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext } from "svelte"
+  import { createEventDispatcher, setContext, tick } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
@@ -31,25 +31,11 @@
     }
   }
 
-  function focusFirstInput(node) {
+  async function focusFirstInput(node) {
     const inputs = node.querySelectorAll('input')
-
-    console.log(inputs)
-
-    let timer;
-
     if (inputs) {
-      timer = setTimeout(() => {
-        inputs[0].focus()
-      }, 20)
-    }
-
-    return {
-      destroy() {
-        if (timer) {
-          clearTimeout(timer)
-        }
-      }
+      await tick()
+      inputs[0].focus()
     }
   }
 
