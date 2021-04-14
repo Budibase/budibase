@@ -71,6 +71,7 @@ exports.authenticate = async ctx => {
 }
 
 exports.fetchSelf = async ctx => {
+  ctx.throw(403, "derp")
   const appId = ctx.appId
   const { userId } = ctx.user
   /* istanbul ignore next */
