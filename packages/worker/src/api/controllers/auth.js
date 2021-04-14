@@ -32,10 +32,10 @@ exports.logout = async ctx => {
   ctx.body = { success: true }
 }
 
-exports.googleAuth = async (ctx, next) => {
+exports.googleAuth = async () => {
   // return passport.authenticate("google")
 }
 
-exports.googleAuth = async (ctx, next) => {
+exports.googleAuth = async () => {
   // return passport.authenticate("google")
 }

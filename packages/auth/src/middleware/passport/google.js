@@ -6,7 +6,7 @@ exports.options = {
   callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
 }
 
-exports.authenticate = async function(token, tokenSecret, profile, done) {
-  // retrieve user ...
-  // fetchUser().then(user => done(null, user))
-}
+// exports.authenticate = async function(token, tokenSecret, profile, done) {
+//   // retrieve user ...
+//   fetchUser().then(user => done(null, user))
+// }

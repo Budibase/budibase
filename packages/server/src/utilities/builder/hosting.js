@@ -1,7 +1,5 @@
 const CouchDB = require("../../db")
 const { StaticDatabases } = require("../../db/utils")
-const fetch = require("node-fetch")
-const env = require("../../environment")
 const { getDeployedApps } = require("../../utilities/workerRequests")
 
 const PROD_HOSTING_URL = "app.budi.live"
