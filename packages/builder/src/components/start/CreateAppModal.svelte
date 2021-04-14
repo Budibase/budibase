@@ -25,10 +25,6 @@
     applicationName: string().required("Your application must have a name."),
   }
   const userValidation = {
-    email: string()
-      .email()
-      .required("Your application needs a first user."),
-    password: string().required("Please enter a password for your first user."),
     roleId: string().required("You need to select a role for your user."),
   }
 
@@ -153,8 +149,6 @@
 
       // Create user
       const user = {
-        email: $createAppStore.values.email,
-        password: $createAppStore.values.password,
         roleId: $createAppStore.values.roleId,
       }
       const userResp = await api.post(`/api/users/metadata`, user)

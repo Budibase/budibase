@@ -42,7 +42,8 @@ exports.fetchMetadata = async function(ctx) {
 exports.createMetadata = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const { email, roleId } = ctx.request.body
+  const { roleId } = ctx.request.body
+  const email = ctx.request.body.email || ctx.user.email
 
   if (!email) {
     ctx.throw(400, "Require email to manage user")
