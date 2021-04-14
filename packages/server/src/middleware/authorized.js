@@ -30,8 +30,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.roleId
   )
 
+  // builders for now have permission to do anything
+  // TODO: in future should consider separating permissions with an require("@budibase/auth").isClient check
   let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
-  if (permType === PermissionTypes.BUILDER && isBuilder) {
+  if (isBuilder) {
     return next()
   } else if (permType === PermissionTypes.BUILDER && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
