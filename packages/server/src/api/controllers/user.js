@@ -45,10 +45,6 @@ exports.createMetadata = async function(ctx) {
   const { roleId } = ctx.request.body
   const email = ctx.request.body.email || ctx.user.email
 
-  if (!email) {
-    ctx.throw(400, "Require email to manage user")
-  }
-
   // check role valid
   const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
