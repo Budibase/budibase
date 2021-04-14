@@ -1,20 +1,23 @@
 <script>
     import "@spectrum-css/tabs/dist/index-vars.css"
-
+    import { writable } from 'svelte/store'
+    import { setContext } from 'svelte'
+    
+    export let selected;
     export let vertical = false
+
+    const tab = writable(selected)
+    setContext('tab', tab)
+    $: selected = $tab
 </script>
 <div class="spectrum-Tabs spectrum-Tabs--{vertical ? 'vertical' : 'horizontal'}">
-    <div class="spectrum-Tabs-item is-selected" tabindex="0">
-        <span class="spectrum-Tabs-itemLabel">Tab 1</span>
-    </div>
-    <div class="spectrum-Tabs-item" tabindex="0">
-        <span class="spectrum-Tabs-itemLabel">Tab 2</span>
-    </div>
-    <div class="spectrum-Tabs-item" tabindex="0">
-        <span class="spectrum-Tabs-itemLabel">Tab 3</span>
-    </div>
-    <div class="spectrum-Tabs-item" tabindex="0">
-        <span class="spectrum-Tabs-itemLabel">Tab 4</span>
-    </div>
-    <div class="spectrum-Tabs-selectionIndicator" style="width: 27px; left: 0px;"></div>
+    <slot />
 </div>
+
+<div class="spectrum-Tabs-content" />
+
+<style>
+    .spectrum-Tabs-content {
+        margin-top: var(--spectrum-global-dimension-static-size-150);
+    }
+</style>
