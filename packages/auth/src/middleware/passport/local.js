@@ -3,6 +3,7 @@ const { UserStatus } = require("../../constants")
 const CouchDB = require("../../db")
 const { StaticDatabases, generateUserID } = require("../../db/utils")
 const { compare } = require("../../hashing")
+const env = require("../../environment")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -40,13 +41,12 @@ exports.authenticate = async function(username, password, done) {
     const payload = {
       userId: dbUser._id,
       builder: dbUser.builder,
+      email: dbUser.email,
     }
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    dbUser.token = jwt.sign(payload, env.JWT_SECRET, {
       expiresIn: "1 day",
     })
-
-    dbUser.token = token
     // Remove users password in payload
     delete dbUser.password
 
