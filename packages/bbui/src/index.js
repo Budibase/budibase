@@ -21,8 +21,6 @@ export { default as DetailSummary } from "./List/Items/DetailSummary.svelte"
 export { default as Switcher } from "./Switcher/Switcher.svelte"
 export { default as DropdownMenu } from "./DropdownMenu/DropdownMenu.svelte"
 export { default as Popover } from "./Popover/Popover.svelte"
-export { default as Body } from "./Styleguide/Body.svelte"
-export { default as Heading } from "./Styleguide/Heading.svelte"
 export { default as Label } from "./Styleguide/Label.svelte"
 export { default as Link } from "./Link/Link.svelte"
 export { default as Close } from "./Button/Close.svelte"
@@ -39,6 +37,13 @@ export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"
+
+// Typography
+export { default as Body } from "./Typography/Body.svelte"
+export { default as Heading } from "./Typography/Heading.svelte"
+export { default as Detail } from "./Typography/Detail.svelte"
+export { default as Code } from "./Typography/Code.svelte"
+
 
 // Actions
 export { default as autoResizeTextArea } from "./Actions/autoresize_textarea"

@@ -58,6 +58,7 @@
     "@spectrum-css/popover": "^3.0.1",
     "@spectrum-css/table": "^3.0.1",
     "@spectrum-css/toast": "^3.0.1",
+    "@spectrum-css/typography": "^3.0.1",
     "@spectrum-css/underlay": "^2.0.9",
     "@spectrum-css/vars": "^3.0.1",
     "dayjs": "^1.10.4",
