@@ -31,6 +31,28 @@
     }
   }
 
+  function focusFirstInput(node) {
+    const inputs = node.querySelectorAll('input')
+
+    console.log(inputs)
+
+    let timer;
+
+    if (inputs) {
+      timer = setTimeout(() => {
+        inputs[0].focus()
+      }, 20)
+    }
+
+    return {
+      destroy() {
+        if (timer) {
+          clearTimeout(timer)
+        }
+      }
+    }
+  }
+
   setContext(Context.Modal, { show, hide })
 </script>
 
@@ -38,7 +60,7 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }} on:click|self={hide}>
+    <div use:focusFirstInput class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }} on:click|self={hide}>
       <div class="spectrum-Modal-wrapper">
         <div class="spectrum-Modal is-open" transition:fly={{ y: 30, duration: 200 }}>
           <slot />
