@@ -105,13 +105,7 @@ describe("/users", () => {
         failRole: BUILTIN_ROLE_IDS.PUBLIC,
       })
     })
-
-    it("should error if no email provided", async () => {
-      const user = basicUser(BUILTIN_ROLE_IDS.POWER)
-      delete user.email
-      await create(user, 400)
-    })
-
+    
     it("should error if no role provided", async () => {
       const user = basicUser(null)
       await create(user, 400)
