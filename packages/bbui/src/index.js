@@ -37,6 +37,7 @@ export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"
+export { default as Divider } from "./Divider/Divider.svelte"
 
 // Typography
 export { default as Body } from "./Typography/Body.svelte"
