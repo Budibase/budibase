@@ -1,5 +1,5 @@
 <script>
-    import "@spectrum-css/heading/dist/index-vars.css"
+    import "@spectrum-css/typography/dist/index-vars.css"
 
     // Level
     export let h1 = false;

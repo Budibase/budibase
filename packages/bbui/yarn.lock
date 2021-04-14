@@ -485,6 +485,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/toast/-/toast-3.0.1.tgz#36f62ea05302761e59b9d53e05f6c04423861796"
   integrity sha512-jov++S358BrN2tmMfaoYk1N6u9HojgeuQk61keXrK2m3VE5/n94x7Lg3kIPeSWO0odyDfBlMqT9jacbRey3QTg==
 
+"@spectrum-css/typography@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.1.tgz#957dafd9b18c314fa37a88b549042ba2175f5b3f"
+  integrity sha512-XyR68K2rIZX3u4j7HhMLOqLVHDJZcapp3XUqgYMzMWccBFleA0qPxKpfRWqVIA5DzTMSIw0wEcZPYKWFZ2e6dA==
+
 "@spectrum-css/underlay@^2.0.9":
   version "2.0.9"
   resolved "https://registry.yarnpkg.com/@spectrum-css/underlay/-/underlay-2.0.9.tgz#fc10f971d1325cc844b727e6260f7217844060e8"
