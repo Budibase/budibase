@@ -1,8 +1,8 @@
 <script>
-  import "@spectrum-css/divider/dist/index-vars.css"
-
   import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
+  import Heading from "../Typography/Heading.svelte"
+  import Divider from "../Divider/Divider.svelte"
   import Icon from "../Icons/Icon.svelte"
   import Context from "../context"
 
@@ -31,8 +31,8 @@
 
 <div class="spectrum-Dialog spectrum-Dialog--{size}" role="dialog" tabindex="-1" aria-modal="true">
   <div class="spectrum-Dialog-grid">
-    <h1 class="spectrum-Dialog-heading">{title}</h1>
-    <hr class="spectrum-Divider spectrum-Divider--sizeS spectrum-Divider--horizontal spectrum-Dialog-divider">
+    <Heading m h2>{title}</Heading>
+    <Divider m />
     
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">

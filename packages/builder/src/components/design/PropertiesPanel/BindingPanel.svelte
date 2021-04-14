@@ -63,7 +63,7 @@
       <Input extraThin placeholder="Search" bind:value={search} />
       <Spacer medium />
       {#if context}
-        <Heading extraSmall>Columns</Heading>
+        <Heading xs h3>Columns</Heading>
         <Spacer small />
         <ul>
           {#each context.filter(context =>
@@ -77,7 +77,7 @@
       {/if}
       <Spacer small />
       {#if instance}
-        <Heading extraSmall>Components</Heading>
+        <Heading xs h3>Components</Heading>
         <Spacer small />
         <ul>
           {#each instance.filter(instance =>
@@ -90,7 +90,7 @@
         </ul>
       {/if}
       <Spacer small />
-      <Heading extraSmall>Helpers</Heading>
+      <Heading xs h3>Helpers</Heading>
       <Spacer small />
       <ul>
         {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
