@@ -1,3 +1,3 @@
 Cypress.Cookies.defaults({
-  preserve: "budibase:builder:local",
+  preserve: "budibase:auth",
 })

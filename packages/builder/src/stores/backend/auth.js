@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { writable } from "svelte/store"
 import api from "../../builderStore/api"
 
 async function checkAuth() {
@@ -14,7 +14,7 @@ export function createAuthStore() {
 
   checkAuth()
     .then(user => set({ user }))
-    .catch(err => set({ user: null }))
+    .catch(() => set({ user: null }))
 
   return {
     subscribe,
@@ -26,12 +26,12 @@ export function createAuthStore() {
     },
     logout: async () => {
       const response = await api.post(`/api/admin/auth/logout`)
-      const json = await response.json()
+      await response.json()
       set({ user: null })
     },
     createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
-      const json = await response.json()
+      await response.json()
     },
   }
 }
