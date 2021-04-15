@@ -71,6 +71,9 @@ exports.authenticate = async ctx => {
 }
 
 exports.fetchSelf = async ctx => {
+  if (!ctx.user) {
+    ctx.throw(403, "No user logged in")
+  }
   const appId = ctx.appId
   const { userId } = ctx.user
   /* istanbul ignore next */

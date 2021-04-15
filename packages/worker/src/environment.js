@@ -2,6 +2,14 @@ function isDev() {
   return process.env.NODE_ENV !== "production"
 }
 
+function isTest() {
+  return (
+    process.env.NODE_ENV === "jest" ||
+    process.env.NODE_ENV === "cypress" ||
+    process.env.JEST_WORKER_ID != null
+  )
+}
+
 let LOADED = false
 if (!LOADED && isDev()) {
   require("dotenv").config()
@@ -27,4 +35,8 @@ module.exports = {
     module.exports[key] = value
   },
   isDev,
+  isTest,
+  isProd: () => {
+    return !isDev()
+  },
 }
