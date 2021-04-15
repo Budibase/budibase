@@ -5,10 +5,10 @@ const env = require("../environment")
 // level option is purely for testing (development)
 const COUCH_DB_URL = env.COUCH_DB_URL || "http://localhost:10000/db/"
 
-const Pouch = PouchDB.defaults({
+let POUCH_DB_DEFAULTS = {
   prefix: COUCH_DB_URL,
   skip_setup: env.isProd(),
-})
+}
 
 if (env.isTest()) {
   PouchDB.plugin(require("pouchdb-adapter-memory"))
@@ -17,6 +17,8 @@ if (env.isTest()) {
     adapter: "memory",
   }
 }
+
+const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 
 allDbs(Pouch)
 

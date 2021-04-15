@@ -25,6 +25,8 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("login", () => {
+  if (cy.getCookie("budibase:auth")) return
+  
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.contains("Create Test User").click()
   cy.get("input")
@@ -38,6 +40,7 @@ Cypress.Commands.add("login", () => {
 })
 
 Cypress.Commands.add("createApp", name => {
+  cy.login()
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
   cy.wait(100)
