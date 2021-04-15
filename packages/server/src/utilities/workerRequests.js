@@ -11,11 +11,11 @@ function getAppRole(appId, user) {
   if (!user.roleId) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
-  // delete user.roles
+  delete user.roles
   return user
 }
 
-function prepRequest(ctx, request) {
+function request(ctx, request) {
   if (!request.headers) {
     request.headers = {}
   }
@@ -32,6 +32,8 @@ function prepRequest(ctx, request) {
   return request
 }
 
+exports.request = request
+
 exports.getDeployedApps = async ctx => {
   if (!env.SELF_HOSTED) {
     throw "Can only check apps for self hosted environments"
@@ -39,7 +41,7 @@ exports.getDeployedApps = async ctx => {
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
-      prepRequest(ctx, {
+      request(ctx, {
         method: "GET",
       })
     )
@@ -63,19 +65,22 @@ exports.deleteGlobalUser = async (ctx, email) => {
   const reqCfg = { method: "DELETE" }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    prepRequest(ctx, reqCfg)
+    request(ctx, reqCfg)
   )
   return response.json()
 }
 
-exports.getGlobalUsers = async (ctx, appId, email = null) => {
+exports.getGlobalUsers = async (ctx, appId = null, email = null) => {
   const endpoint = email ? `/api/admin/users/${email}` : `/api/admin/users`
   const reqCfg = { method: "GET" }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    prepRequest(ctx, reqCfg)
+    request(ctx, reqCfg)
   )
   let users = await response.json()
+  if (!appId) {
+    return users
+  }
   if (Array.isArray(users)) {
     users = users.map(user => getAppRole(appId, user))
   } else {
@@ -107,7 +112,7 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
 
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    prepRequest(ctx, reqCfg)
+    request(ctx, reqCfg)
   )
   const json = await response.json()
   if (json.status !== 200 && response.status !== 200) {

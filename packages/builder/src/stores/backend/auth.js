@@ -21,7 +21,11 @@ export function createAuthStore() {
     login: async creds => {
       const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
-      set({ user: json })
+      if (response.status === 200) {
+        set({ user: json.user })
+      } else {
+        throw "Invalid credentials"
+      }
       return json
     },
     logout: async () => {

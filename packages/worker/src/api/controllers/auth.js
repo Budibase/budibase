@@ -3,15 +3,14 @@ const { passport, Cookies, clearCookie } = require("@budibase/auth")
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
     if (err) {
-      return ctx.throw(err)
+      return ctx.throw(403, "Unauthorized")
     }
 
     const expires = new Date()
     expires.setDate(expires.getDate() + 1)
 
     if (!user) {
-      ctx.body = { success: false }
-      return next()
+      return ctx.throw(403, "Unauthorized")
     }
 
     ctx.cookies.set(Cookies.Auth, user.token, {
@@ -23,13 +22,13 @@ exports.authenticate = async (ctx, next) => {
 
     delete user.token
 
-    ctx.body = { success: true, user }
+    ctx.body = { user }
   })(ctx, next)
 }
 
 exports.logout = async ctx => {
   clearCookie(ctx, Cookies.Auth)
-  ctx.body = { success: true }
+  ctx.body = { messaged: "User logged out" }
 }
 
 exports.googleAuth = async () => {
