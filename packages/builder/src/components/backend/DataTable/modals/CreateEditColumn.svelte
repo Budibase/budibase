@@ -1,12 +1,5 @@
 <script>
-  import {
-    Input,
-    Button,
-    Label,
-    Select,
-    Toggle,
-    Radio,
-  } from "@budibase/bbui"
+  import { Input, Button, Label, Select, Toggle, Radio } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
 
@@ -54,8 +47,9 @@
     $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(field.name)
   $: invalid =
+    !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft.schema).some(key => key === field.name)
+    Object.keys($tables.draft?.schema ?? {}).some(key => key === field.name)
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -91,19 +85,19 @@
   }
 
   function handleTypeChange(event) {
-    const definition = fieldDefinitions[event.target.value.toUpperCase()]
-    if (!definition) {
-      return
-    }
     // remove any extra fields that may not be related to this type
     delete field.autocolumn
     delete field.subtype
     delete field.tableId
     delete field.relationshipType
-    // add in defaults and initial definition
-    field.type = definition.type
-    field.constraints = definition.constraints
-    // default relationships many to many
+
+    // Add in defaults and initial definition
+    const definition = fieldDefinitions[event.detail?.toUpperCase()]
+    if (definition?.constraints) {
+      field.constraints = definition.constraints
+    }
+
+    // Default relationships many to many
     if (field.type === LINK_TYPE) {
       field.relationshipType = RelationshipTypes.MANY_TO_MANY
     }
@@ -173,20 +167,15 @@
 </script>
 
 <div class="actions" class:hidden={deletion}>
-  <Input label="Name" thin bind:value={field.name} disabled={uneditable} />
+  <Input label="Name" bind:value={field.name} disabled={uneditable} />
 
   <Select
     disabled={originalName}
-    secondary
-    thin
     label="Type"
-    on:change={handleTypeChange}
-    bind:value={field.type}>
-    {#each Object.values(fieldDefinitions) as field}
-      <option value={field.type}>{field.name}</option>
-    {/each}
-    <option value={AUTO_COL}>Auto Column</option>
-  </Select>
+    bind:value={field.type}
+    options={[...Object.values(fieldDefinitions), { name: 'Auto Column', type: AUTO_COL }]}
+    getOptionLabel={field => field.name}
+    getOptionValue={field => field.type} />
 
   {#if canBeRequired}
     <Toggle
@@ -223,7 +212,6 @@
 
   {#if field.type === 'string'}
     <Input
-      thin
       type="number"
       label="Max Length"
       bind:value={field.constraints.length.maximum} />
@@ -238,22 +226,20 @@
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
   {:else if field.type === 'number'}
     <Input
-      thin
       type="number"
       label="Min Value"
       bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
     <Input
-      thin
       type="number"
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-    <Select label="Table" thin secondary bind:value={field.tableId}>
-      <option value="">Choose an option</option>
-      {#each tableOptions as table}
-        <option value={table._id}>{table.name}</option>
-      {/each}
-    </Select>
+    <Select
+      label="Table"
+      bind:value={field.tableId}
+      options={tableOptions}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id} />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <div>
         <Label grey extraSmall>Define the relationship</Label>
@@ -274,23 +260,24 @@
         </div>
       </div>
     {/if}
-    <Input
-      label={`Column Name in Other Table`}
-      thin
-      bind:value={field.fieldName} />
+    <Input label={`Column Name in Other Table`} bind:value={field.fieldName} />
   {:else if field.type === AUTO_COL}
-    <Select label="Auto Column Type" thin secondary bind:value={field.subtype}>
-      <option value="">Choose a subtype</option>
-      {#each Object.entries(getAutoColumnInformation()) as [subtype, info]}
-        <option value={subtype}>{info.name}</option>
-      {/each}
-    </Select>
+    <Select
+      label="Auto Column Type"
+      value={field.subtype}
+      on:change={e => (field.subtype = e.detail)}
+      options={Object.entries(getAutoColumnInformation())}
+      getOptionLabel={option => option[1].name}
+      getOptionValue={option => option[0]} />
   {/if}
-  <footer class="create-column-options">
+  <footer>
     {#if !uneditable && originalName != null}
-      <Button warning size="S" text on:click={confirmDelete}>Delete Column</Button>
+      <Button warning size="S" text on:click={confirmDelete}>
+        Delete Column
+      </Button>
     {/if}
-    <Button on:click={onClosed}>Cancel</Button>
+    <div class="spacer" />
+    <Button secondary on:click={onClosed}>Cancel</Button>
     <Button cta on:click={saveColumn} bind:disabled={invalid}>
       Save Column
     </Button>
@@ -322,12 +309,13 @@
 
   footer {
     display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
     gap: var(--spacing-m);
   }
-
-  :global(.create-column-options button:first-child) {
-    margin-right: auto;
+  .spacer {
+    flex: 1 1 auto;
   }
 
   .rel-type-center {

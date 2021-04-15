@@ -1,10 +1,5 @@
 <script>
-  import {
-    Button,
-    Icon,
-    Modal,
-    ModalContent,
-  } from "@budibase/bbui"
+  import { Button, Icon, Modal, ModalContent } from "@budibase/bbui"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let modal
@@ -15,7 +10,7 @@
 </Button>
 <Modal bind:this={modal}>
   <ModalContent
-    size="large"
+    size="medium"
     showCancelButton={false}
     showConfirmButton={false}
     title={'Create Column'}>
