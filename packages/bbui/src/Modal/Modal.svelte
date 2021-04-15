@@ -89,5 +89,6 @@
     overflow: visible;
     max-height: none;
     margin: 40px 0;
+    transform: none;
   }
 </style>
