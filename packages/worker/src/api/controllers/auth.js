@@ -28,7 +28,7 @@ exports.authenticate = async (ctx, next) => {
 
 exports.logout = async ctx => {
   clearCookie(ctx, Cookies.Auth)
-  ctx.body = { messaged: "User logged out" }
+  ctx.body = { message: "User logged out" }
 }
 
 exports.googleAuth = async () => {
