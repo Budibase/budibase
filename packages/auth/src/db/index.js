@@ -1,9 +1,5 @@
-let Pouch
-
-module.exports.getDB = () => {
-  return Pouch
-}
-
 module.exports.setDB = pouch => {
-  Pouch = pouch
+  module.exports.CouchDB = pouch
 }
+
+module.exports.CouchDB = null

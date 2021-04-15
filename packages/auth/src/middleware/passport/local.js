@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken")
 const { UserStatus } = require("../../constants")
-const CouchDB = require("../../db")
+const database = require("../../db")
 const { StaticDatabases, generateUserID } = require("../../db/utils")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
@@ -21,7 +21,7 @@ exports.authenticate = async function(username, password, done) {
   if (!password) return done(null, false, "Password Required.")
 
   // Check the user exists in the instance DB by email
-  const db = new CouchDB(StaticDatabases.USER.name)
+  const db = new database.CouchDB(StaticDatabases.USER.name)
 
   let dbUser
   try {
