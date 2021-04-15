@@ -4,7 +4,7 @@
   import Field from "./Field.svelte"
 
   export let value = null
-  export let label = undefined
+  export let label = []
   export let disabled = false
   export let labelPosition = "above"
   export let error = null
