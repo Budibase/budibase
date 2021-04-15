@@ -1,11 +1,14 @@
 <script>
   import { Label, Heading, Input } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
 
-  export let validationErrors
   export let template
+  export let values
+  export let errors
+  export let touched
 
   let blurred = { appName: false }
   let file
@@ -51,12 +54,11 @@
     </div>
   {/if}
   <Input
-    on:input={() => (blurred.appName = true)}
+    on:change={() => ($touched.applicationName = true)}
+    bind:value={$values.applicationName}
     label="Web App Name"
-    name="applicationName"
     placeholder="Enter name of your web application"
-    type="name"
-    error={blurred.appName && validationErrors.applicationName} />
+    error={$touched.applicationName && $errors.applicationName} />
 </div>
 
 <style>

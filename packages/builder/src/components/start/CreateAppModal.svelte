@@ -4,7 +4,6 @@
   import { store, automationStore, hostingStore } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
-  import Form from "@svelteschool/svelte-forms"
   import Spinner from "components/common/Spinner.svelte"
   import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
@@ -16,44 +15,40 @@
   import { onMount } from "svelte"
   import Logo from "/assets/bb-logo.svg"
 
-  //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
-  const createAppStore = writable({ currentStep: 0, values: {} })
-
   export let template
 
-  const infoValidation = {
-    applicationName: string().required("Your application must have a name."),
-  }
-  const userValidation = {
-    email: string()
-      .email()
-      .required("Your application needs a first user."),
-    password: string().required("Please enter a password for your first user."),
-    roleId: string().required("You need to select a role for your user."),
-  }
+  const currentStep = writable(0)
+  const values = writable({ roleId: "ADMIN" })
+  const errors = writable({})
+  const touched = writable({})
+  const steps = [Info, User]
+  let validators = [
+    {
+      applicationName: string().required("Your application must have a name."),
+    },
+    {
+      email: string()
+        .email()
+        .required("Your application needs a first user."),
+      password: string().required(
+        "Please enter a password for your first user."
+      ),
+      roleId: string()
+        .nullable()
+        .required("You need to select a role for your user."),
+    },
+  ]
 
   let submitting = false
-  let errors = {}
-  let validationErrors = {}
-  let validationSchemas = [infoValidation, userValidation]
-
-  function buildStep(component) {
-    return {
-      component,
-      errors,
-    }
-  }
-
-  // steps need to be initialized for cypress from the get go
-  let steps = [buildStep(Info), buildStep(User)]
+  let valid = false
+  $: checkValidity($values, validators[$currentStep])
 
   onMount(async () => {
-    let hostingInfo = await hostingStore.actions.fetch()
-    // re-init the steps based on whether self hosting or cloud hosted
+    const hostingInfo = await hostingStore.actions.fetch()
     if (hostingInfo.type === "self") {
       await hostingStore.actions.fetchDeployedApps()
       const existingAppNames = svelteGet(hostingStore).deployedAppNames
-      infoValidation.applicationName = string()
+      validators[0].applicationName = string()
         .required("Your application must have a name.")
         .test(
           "non-existing-app-name",
@@ -63,54 +58,20 @@
               appName => appName.toLowerCase() === value.toLowerCase()
             )
         )
-
-      steps = [buildStep(Info), buildStep(User)]
-      validationSchemas = [infoValidation, userValidation]
     }
   })
 
-  // Handles form navigation
-  const back = () => {
-    if ($createAppStore.currentStep > 0) {
-      $createAppStore.currentStep -= 1
-    }
-  }
-  const next = () => {
-    $createAppStore.currentStep += 1
-  }
-
-  // $: errors = validationSchemas.validate(values);
-  $: getErrors(
-    $createAppStore.values,
-    validationSchemas[$createAppStore.currentStep]
-  )
-
-  async function getErrors(values, schema) {
+  const checkValidity = async (values, validator) => {
+    const obj = object().shape(validator)
+    Object.keys(validator).forEach(key => ($errors[key] = null))
     try {
-      validationErrors = {}
-      await object(schema).validate(values, { abortEarly: false })
-    } catch (error) {
-      validationErrors = extractErrors(error)
+      await obj.validate(values, { abortEarly: false })
+    } catch (validationErrors) {
+      validationErrors.inner.forEach(error => {
+        $errors[error.path] = error.message
+      })
     }
-  }
-
-  const checkValidity = async (values, currentStep) => {
-    const validity = await object()
-      .shape(validationSchemas[currentStep])
-      .isValid(values)
-    currentStepIsValid = validity
-
-    // Check full form on last step
-    if (currentStep === steps.length - 1) {
-      // Make one big schema from all the small ones
-      const fullSchema = Object.assign({}, ...validationSchemas)
-
-      // Check full form schema
-      const formIsValid = await object()
-        .shape(fullSchema)
-        .isValid(values)
-      fullFormIsValid = formIsValid
-    }
+    valid = await obj.isValid(values)
   }
 
   async function createNewApp() {
@@ -118,7 +79,7 @@
     try {
       // Create form data to create app
       let data = new FormData()
-      data.append("name", $createAppStore.values.applicationName)
+      data.append("name", $values.applicationName)
       data.append("useTemplate", template != null)
       if (template) {
         data.append("templateName", template.name)
@@ -134,7 +95,7 @@
       }
 
       analytics.captureEvent("App Created", {
-        name: $createAppStore.values.applicationName,
+        name: $values.applicationName,
         appId: appJson._id,
         template,
       })
@@ -153,12 +114,12 @@
 
       // Create user
       const user = {
-        email: $createAppStore.values.email,
-        password: $createAppStore.values.password,
-        roleId: $createAppStore.values.roleId,
+        email: $values.email,
+        password: $values.password,
+        roleId: $values.roleId,
       }
       const userResp = await api.post(`/api/users`, user)
-      const json = await userResp.json()
+      await userResp.json()
       $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)
@@ -166,33 +127,14 @@
       submitting = false
     }
   }
-
-  async function updateKey([key, value]) {
-    const response = await api.put(`/api/keys/${key}`, { value })
-    const res = await response.json()
-    return res
-  }
-
-  function extractErrors({ inner }) {
-    if (!inner) return {}
-    return inner.reduce((acc, err) => {
-      return { ...acc, [err.path]: err.message }
-    }, {})
-  }
-
-  let currentStepIsValid = false
-  let fullFormIsValid = false
-  $: checkValidity($createAppStore.values, $createAppStore.currentStep)
-
-  let onChange = () => {}
 </script>
 
 <div class="container">
   <div class="sidebar">
-    {#each steps as { active, done }, i}
+    {#each steps as component, i}
       <Indicator
-        active={$createAppStore.currentStep === i}
-        done={i < $createAppStore.currentStep}
+        active={$currentStep === i}
+        done={i < $currentStep}
         step={i + 1} />
     {/each}
   </div>
@@ -201,34 +143,32 @@
       <h3 class="header">Get Started with Budibase</h3>
     </div>
     <div class="step">
-      <Form bind:values={$createAppStore.values}>
-        {#each steps as step, i (i)}
-          <div class:hidden={$createAppStore.currentStep !== i}>
-            <svelte:component
-              this={step.component}
-              {template}
-              {validationErrors}
-              options={step.options}
-              name={step.name} />
-          </div>
-        {/each}
-      </Form>
+      {#each steps as component, i (i)}
+        <div class:hidden={$currentStep !== i}>
+          <svelte:component
+            this={component}
+            {template}
+            {values}
+            {errors}
+            {touched} />
+        </div>
+      {/each}
     </div>
     <div class="footer">
-      {#if $createAppStore.currentStep > 0}
-        <Button medium secondary on:click={back}>Back</Button>
+      {#if $currentStep > 0}
+        <Button medium secondary on:click={() => $currentStep--}>Back</Button>
       {/if}
-      {#if $createAppStore.currentStep < steps.length - 1}
-        <Button medium blue on:click={next} disabled={!currentStepIsValid}>
+      {#if $currentStep < steps.length - 1}
+        <Button medium blue on:click={() => $currentStep++} disabled={!valid}>
           Next
         </Button>
       {/if}
-      {#if $createAppStore.currentStep === steps.length - 1}
+      {#if $currentStep === steps.length - 1}
         <Button
           medium
           blue
           on:click={createNewApp}
-          disabled={!fullFormIsValid || submitting}>
+          disabled={!valid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}
         </Button>
       {/if}
