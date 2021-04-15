@@ -106,4 +106,10 @@
   .spectrum-Picker {
     width: 100%;
   }
+  .spectrum-Picker-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 0;
+  }
 </style>
