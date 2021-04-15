@@ -14,7 +14,9 @@
   const dispatch = createEventDispatcher()
   $: fieldText = getFieldText(value)
   $: valueLookupMap = getValueLookupMap(value)
-  $: isOptionSelected = option => valueLookupMap[option] === true
+  $: isOptionSelected = option => {
+    return valueLookupMap[option] === true
+  }
 
   const getFieldText = value => {
     if (value?.length) {
@@ -29,21 +31,20 @@
     let map = {}
     if (value?.length) {
       value.forEach(option => {
-        const optionValue = getOptionValue(option)
-        if (optionValue) {
-          map[optionValue] = true
+        if (option) {
+          map[option] = true
         }
       })
     }
     return map
   }
 
-  const toggleOption = option => {
-    if (valueLookupMap[option]) {
-      const filtered = value.filter(option => option !== id)
+  const toggleOption = optionValue => {
+    if (valueLookupMap[optionValue]) {
+      const filtered = value.filter(option => option !== optionValue)
       dispatch("change", filtered)
     } else {
-      dispatch("change", [...value, option])
+      dispatch("change", [...value, optionValue])
     }
   }
 </script>
