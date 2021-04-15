@@ -7,6 +7,10 @@ const { passport } = require("@budibase/auth")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
+const auth = require("@budibase/auth")
+const CouchDB = require("./db")
+
+auth.init(CouchDB)
 
 const app = new Koa()
 
