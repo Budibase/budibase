@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import Multiselect from "./internal/Multiselect.svelte"
+  import Multiselect from "./Core/Multiselect.svelte"
   import Field from "./Field.svelte"
 
   export let value = null

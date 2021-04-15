@@ -1,6 +1,6 @@
 <script>
   import Field from "./Field.svelte"
-  import TextField from "./internal/TextField.svelte"
+  import TextField from "./Core/TextField.svelte"
   import { createEventDispatcher } from "svelte"
 
   export let value = null
