@@ -57,6 +57,7 @@
     "@spectrum-css/modal": "^3.0.1",
     "@spectrum-css/popover": "^3.0.1",
     "@spectrum-css/progressbar": "^1.0.2",
+    "@spectrum-css/progresscircle": "^1.0.2",
     "@spectrum-css/table": "^3.0.1",
     "@spectrum-css/tabs": "^3.0.1",
     "@spectrum-css/toast": "^3.0.1",
