@@ -1,7 +1,7 @@
 <script>
     import "@spectrum-css/tabs/dist/index-vars.css"
     import { writable } from 'svelte/store'
-    import { onMount, setContext } from 'svelte'
+    import { onMount, setContext, createEventDispatcher } from 'svelte'
     
     export let selected;
     export let vertical = false
@@ -11,7 +11,10 @@
     
     let container;
 
+    const dispatch = createEventDispatcher()
+
     $: selected = $tab.title
+    $: selected = dispatch('select', selected)
 
     let top, left, width, height;
     $: calculateIndicatorLength($tab)
