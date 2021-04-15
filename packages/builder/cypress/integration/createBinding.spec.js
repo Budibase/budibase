@@ -10,7 +10,7 @@ context("Create Bindings", () => {
       addSettingBinding("text", "Current User._id")
       cy.getComponent(componentId).should(
         "have.text",
-        `ro_ta_users_us_test@test.com`
+        `ro_ta_users_test@test.com`
       )
     })
   })
