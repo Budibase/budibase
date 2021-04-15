@@ -14,6 +14,7 @@
   import analytics from "analytics"
   import { onMount } from "svelte"
   import Logo from "/assets/bb-logo.svg"
+  import { capitalise } from "../../helpers"
 
   export let template
 
@@ -24,18 +25,18 @@
   const steps = [Info, User]
   let validators = [
     {
-      applicationName: string().required("Your application must have a name."),
+      applicationName: string().required("Your application must have a name"),
     },
     {
       email: string()
         .email()
-        .required("Your application needs a first user."),
+        .required("Your application needs a first user"),
       password: string().required(
-        "Please enter a password for your first user."
+        "Please enter a password for your first user"
       ),
       roleId: string()
         .nullable()
-        .required("You need to select a role for your user."),
+        .required("You need to select a role for your user"),
     },
   ]
 
@@ -68,7 +69,7 @@
       await obj.validate(values, { abortEarly: false })
     } catch (validationErrors) {
       validationErrors.inner.forEach(error => {
-        $errors[error.path] = error.message
+        $errors[error.path] = capitalise(error.message)
       })
     }
     valid = await obj.isValid(values)
