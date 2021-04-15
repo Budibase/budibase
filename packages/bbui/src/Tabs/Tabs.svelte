@@ -28,7 +28,6 @@
     }
 
     function calculateIndicatorOffset() {
-        console.log(container?.getBoundingClientRect())
         if (!vertical) {
             left = $tab.info?.left - container?.getBoundingClientRect().left - 12 + 'px'
             top = $tab.info?.top
