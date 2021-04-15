@@ -1,30 +1,34 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
-  export let validationErrors
 
-  let blurred = { email: false, password: false }
+  export let values
+  export let errors
+  export let touched
 </script>
 
 <h2>Create your first User</h2>
 <div class="container">
   <Input
-    on:input={() => (blurred.email = true)}
+    bind:value={$values.email}
+    on:change={() => ($touched.email = true)}
     label="Email"
-    name="email"
     placeholder="Email"
     type="email"
-    error={blurred.email && validationErrors.email} />
+    error={$touched.email && $errors.email} />
   <Input
-    on:input={() => (blurred.password = true)}
+    bind:value={$values.password}
+    on:change={() => ($touched.password = true)}
     label="Password"
-    name="password"
     placeholder="Password"
     type="password"
-    error={blurred.password && validationErrors.password} />
-  <Select label="Role" secondary name="roleId">
-    <option value="ADMIN">Admin</option>
-    <option value="POWER_USER">Power User</option>
-  </Select>
+    error={$touched.password && $errors.password} />
+  <Select
+    bind:value={$values.roleId}
+    label="Role"
+    options={[{ label: 'Admin', value: 'ADMIN' }, { label: 'Power User', value: 'POWER_USER' }]}
+    getOptionLabel={option => option.label}
+    getOptionValue={option => option.value}
+    error={$errors.roleId} />
 </div>
 
 <style>
