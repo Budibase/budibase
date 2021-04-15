@@ -12,22 +12,22 @@
   export let getOptionValue = option => option
 
   const dispatch = createEventDispatcher()
-  $: fieldText = getFieldText(value)
-  $: valueLookupMap = getValueLookupMap(value)
-  $: isOptionSelected = option => {
-    return valueLookupMap[option] === true
-  }
+  $: selectedLookupMap = getSelectedLookupMap(value)
+  $: optionLookupMap = getOptionLookupMap(options)
+  $: fieldText = getFieldText(value, optionLookupMap, placeholder)
+  $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
+  $: toggleOption = makeToggleOption(selectedLookupMap, value)
 
-  const getFieldText = value => {
+  const getFieldText = (value, map, placeholder) => {
     if (value?.length) {
-      const count = value?.length ?? 0
-      return `${count} selected option${count === 1 ? "" : "s"}`
+      const vals = value.map(option => map[option] || "").join(", ")
+      return `(${value.length}) ${vals}`
     } else {
       return placeholder || "Choose some options"
     }
   }
 
-  const getValueLookupMap = value => {
+  const getSelectedLookupMap = value => {
     let map = {}
     if (value?.length) {
       value.forEach(option => {
@@ -39,12 +39,27 @@
     return map
   }
 
-  const toggleOption = optionValue => {
-    if (valueLookupMap[optionValue]) {
-      const filtered = value.filter(option => option !== optionValue)
-      dispatch("change", filtered)
-    } else {
-      dispatch("change", [...value, optionValue])
+  const getOptionLookupMap = options => {
+    let map = {}
+    if (options) {
+      options.forEach(option => {
+        const optionValue = getOptionValue(option)
+        if (optionValue != null) {
+          map[optionValue] = getOptionLabel(option) || ""
+        }
+      })
+    }
+    return map
+  }
+
+  const makeToggleOption = (map, value) => {
+    return optionValue => {
+      if (map[optionValue]) {
+        const filtered = value.filter(option => option !== optionValue)
+        dispatch("change", filtered)
+      } else {
+        dispatch("change", [...value, optionValue])
+      }
     }
   }
 </script>
