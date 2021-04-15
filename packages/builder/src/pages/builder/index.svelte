@@ -3,7 +3,7 @@
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { Button, Heading, Modal, Spacer, Tabs, Tab, Divider } from "@budibase/bbui"
+  import { Button, Heading, Modal, Spacer, Divider } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
   import Banner from "/assets/orange-landscape.png"
@@ -75,6 +75,7 @@
   <!-- <TemplateList onSelect={selectTemplate} /> -->
 
   <AppList />
+</div>
 
 <Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>
   <CreateAppModal {hasKey} {template} />
