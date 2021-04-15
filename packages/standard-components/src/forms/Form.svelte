@@ -98,13 +98,11 @@
 
       const newValue = value == null ? defaultValue : value
       const newError = validate ? validate(newValue) : null
-      const newValid = !newError
 
       // Update field state
       fieldState.update(state => {
         state.value = newValue
         state.error = newError
-        state.valid = newValid
         return state
       })
 
@@ -120,7 +118,7 @@
         return state
       })
 
-      return newValid
+      return !newError
     }
     return {
       setValue,
@@ -138,7 +136,6 @@
       fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
-      valid: true,
       disabled: fieldDisabled,
     })
   }
