@@ -5,12 +5,12 @@ import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 
-const makeConfig = ({ input, name }) => ({
-  input,
+export default {
+  input: "src/index.js",
   output: {
     sourcemap: true,
     format: "esm",
-    file: `dist/${name}.es.js`,
+    file: "dist/bbui.es.js",
   },
   plugins: [
     resolve(),
@@ -22,9 +22,4 @@ const makeConfig = ({ input, name }) => ({
     terser(),
     json(),
   ],
-})
-
-export default [
-  makeConfig({ input: "src/index.js", name: "bbui" }),
-  makeConfig({ input: "src/Form/internal/index.js", name: "internal" }),
-]
+}

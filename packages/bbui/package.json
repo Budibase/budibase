@@ -9,14 +9,10 @@
     ".": {
       "import": "./dist/bbui.es.js"
     },
-    "./internal": {
-      "import": "./dist/internal.es.js"
-    },
     "./package.json": "./package.json",
     "./dist/style.css": "./dist/style.css"
   },
   "scripts": {
-    "dev:builder": "rollup -cw",
     "build": "rollup -c"
   },
   "devDependencies": {

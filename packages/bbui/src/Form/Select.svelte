@@ -1,6 +1,6 @@
 <script>
   import Field from "./Field.svelte"
-  import Select from "./internal/Select.svelte"
+  import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
 
   export let value = null

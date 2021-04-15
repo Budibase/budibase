@@ -40,6 +40,9 @@ export { default as Slider } from "./Form/Slider.svelte"
 export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"
 
+// Core form components to be used elsewhere (standard components)
+export * from "./Form/Core"
+
 // Actions
 export { default as autoResizeTextArea } from "./Actions/autoresize_textarea"
 export { default as positionDropdown } from "./Actions/position_dropdown"
