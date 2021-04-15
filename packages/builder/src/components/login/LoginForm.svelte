@@ -40,7 +40,7 @@
   }
 </script>
 
-<form on:submit|preventDefault>
+<form on:submit|preventDefault data-cy="login-form">
   <Spacer large />
   <Label small>Email</Label>
   <Input outline bind:value={username} />
