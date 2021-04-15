@@ -8,7 +8,7 @@
   export let schema = {}
   export let showAutoColumns = false
   export let rowCount = 0
-  export let quiet = true
+  export let quiet = false
   export let loading = false
   export let allowSelectRows = true
   export let allowEditRows = true
@@ -311,8 +311,6 @@
     height: 100%;
     position: relative;
     overflow: auto;
-    border: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
     scrollbar-width: thin;
     scrollbar-color: var(--spectrum-global-color-gray-400)
       var(--spectrum-alias-background-color-primary);
@@ -421,13 +419,15 @@
     padding-top: 0;
     padding-bottom: 0;
     border-bottom: none !important;
-    border-left: none !important;
-    border-right: none !important;
     border-top: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   tr:first-child td {
     border-top: none !important;
+  }
+  tr:last-child td {
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   .container:not(.quiet) td.spectrum-Table-cell--divider {
     width: 1px;

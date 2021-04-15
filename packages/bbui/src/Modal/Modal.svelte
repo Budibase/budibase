@@ -38,12 +38,56 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }} on:click|self={hide}>
-      <div class="spectrum-Modal-wrapper">
-        <div class="spectrum-Modal is-open" transition:fly={{ y: 30, duration: 200 }}>
-          <slot />
+    <div
+      class="spectrum-Underlay is-open"
+      transition:fade={{ duration: 200 }}
+      on:click|self={hide}>
+      <div class="modal-wrapper" on:click|self={hide}>
+        <div class="modal-inner-wrapper" on:click|self={hide}>
+          <div
+            class="spectrum-Modal is-open"
+            transition:fly={{ y: 30, duration: 200 }}>
+            <slot />
+          </div>
         </div>
       </div>
     </div>
   </Portal>
 {/if}
+
+<style>
+  .spectrum-Underlay {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    overflow: auto;
+    overflow-x: hidden;
+  }
+
+  .modal-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    -moz-box-pack: center;
+    justify-content: center;
+    align-items: flex-start;
+    max-height: 100%;
+  }
+  .modal-inner-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    -moz-box-pack: center;
+    justify-content: center;
+    align-items: flex-start;
+    width: 0;
+  }
+
+  .spectrum-Modal {
+    overflow: visible;
+    max-height: none;
+    margin: 40px 0;
+  }
+</style>

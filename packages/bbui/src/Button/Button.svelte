@@ -4,16 +4,15 @@
   export let disabled = false
 
   /** @type {('S', 'M', 'L', 'XL')} Size of button */
-  export let size = "M";
+  export let size = "M"
 
   // Types
-  export let cta, primary, secondary, warning, overBackground;
+  export let cta, primary, secondary, warning, overBackground
 
   export let quiet = false
-  
-  export let icon = undefined;
-</script>
 
+  export let icon = undefined
+</script>
 
 <button
   class:spectrum-Button--cta={cta}
@@ -26,15 +25,18 @@
   {disabled}
   on:click|preventDefault>
   {#if icon}
-    <svg class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}" focusable="false" aria-hidden="true" aria-label="{icon}">
+    <svg
+      class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+      focusable="false"
+      aria-hidden="true"
+      aria-label={icon}>
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
-  {#if $$slots} 
+  {#if $$slots}
     <span class="spectrum-Button-label"><slot /></span>
   {/if}
 </button>
 
 <style>
-
 </style>
