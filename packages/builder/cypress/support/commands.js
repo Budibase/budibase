@@ -24,15 +24,15 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-Cypress.Commands.add("login", name => {
+Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.contains("Create Test User").click()
   cy.get("input")
     .first()
     .type("test@test.com")
-    
+
   cy.get('input[type="password"]').type("test")
-  
+
   cy.contains("Login").click()
   cy.wait(1000)
 })
