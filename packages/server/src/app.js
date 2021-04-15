@@ -1,5 +1,7 @@
 // need to load environment first
 const env = require("./environment")
+const CouchDB = require("./db")
+require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const electron = require("electron")
@@ -11,10 +13,6 @@ const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
-const auth = require("@budibase/auth")
-const CouchDB = require("./db")
-
-auth.init(CouchDB)
 
 const app = new Koa()
 
