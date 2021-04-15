@@ -150,7 +150,7 @@ exports.save = async function(ctx) {
 
   // this returns the table and row incase they have been updated
   const dbTable = await db.get(inputs.tableId)
-  let { table, row } = inputProcessing(ctx.user || {}, dbTable, inputs)
+  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
   const validateResult = await validate({
     row,
     table,
