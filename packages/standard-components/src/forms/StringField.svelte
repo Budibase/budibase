@@ -1,5 +1,5 @@
 <script>
-  import { TextField } from "@budibase/bbui/internal"
+  import { CoreTextField } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
@@ -20,7 +20,7 @@
   bind:fieldState
   bind:fieldApi>
   {#if fieldState}
-    <TextField
+    <CoreTextField
       value={$fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
       disabled={$fieldState.disabled}
