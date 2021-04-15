@@ -15,13 +15,13 @@ let POUCH_DB_DEFAULTS = {
   skip_setup: env.isProd(),
 }
 
-// if (env.isTest()) {
-//   PouchDB.plugin(require("pouchdb-adapter-memory"))
-//   POUCH_DB_DEFAULTS = {
-//     prefix: undefined,
-//     adapter: "memory",
-//   }
-// }
+if (env.isTest()) {
+  PouchDB.plugin(require("pouchdb-adapter-memory"))
+  POUCH_DB_DEFAULTS = {
+    prefix: undefined,
+    adapter: "memory",
+  }
+}
 
 const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 
