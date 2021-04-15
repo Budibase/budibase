@@ -2,6 +2,7 @@ context("Create Components", () => {
   let headlineId
 
   before(() => {
+    cy.login()
     cy.createTestApp()
     cy.createTable("dog")
     cy.addColumn("dog", "name", "string")

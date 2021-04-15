@@ -25,22 +25,24 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("login", () => {
-  if (cy.getCookie("budibase:auth")) return
+  cy.getCookie("budibase:auth").then(cookie => {
+    // Already logged in 
+    if (cookie) return
 
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.contains("Create Test User").click()
-  cy.get("input")
-    .first()
-    .type("test@test.com")
+    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.contains("Create Test User").click()
+    cy.get("input")
+      .first()
+      .type("test@test.com")
 
-  cy.get('input[type="password"]').type("test")
+    cy.get('input[type="password"]').type("test")
 
-  cy.contains("Login").click()
-  cy.wait(1000)
+    cy.contains("Login").click()
+  })
+
 })
 
 Cypress.Commands.add("createApp", name => {
-  cy.login()
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
   cy.wait(100)

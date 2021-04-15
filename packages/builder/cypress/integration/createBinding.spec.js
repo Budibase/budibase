@@ -1,5 +1,6 @@
 context("Create Bindings", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
     cy.navigateToFrontend()
   })

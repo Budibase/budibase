@@ -1,5 +1,6 @@
 context("Screen Tests", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
     cy.navigateToFrontend()
   })
