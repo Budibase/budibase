@@ -29,14 +29,3 @@ async function run() {
 }
 
 run()
-
-// TODO: ensure that this still works
-// initialiseBudibase({ dir: homedir, clientId: "cypress-test" })
-// .then(() => {
-//   delete require.cache[require.resolve("../../server/src/environment")]
-//   const xPlatHomeDir = homedir.startsWith("~")
-//     ? join(homedir(), homedir.substring(1))
-//     : homedir
-//   run(xPlatHomeDir)
-// })
-// .catch(e => console.error(e))
