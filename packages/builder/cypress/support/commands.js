@@ -26,7 +26,7 @@
 
 Cypress.Commands.add("login", () => {
   cy.getCookie("budibase:auth").then(cookie => {
-    // Already logged in 
+    // Already logged in
     if (cookie) return
 
     cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
@@ -39,7 +39,6 @@ Cypress.Commands.add("login", () => {
 
     cy.contains("Login").click()
   })
-
 })
 
 Cypress.Commands.add("createApp", name => {
