@@ -1,5 +1,5 @@
 <script>
-  import { Select } from "@budibase/bbui/internal"
+  import { CoreSelect } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
@@ -21,7 +21,7 @@
   bind:fieldApi
   bind:fieldSchema>
   {#if fieldState}
-    <Select
+    <CoreSelect
       value={$fieldState.value}
       fieldId={$fieldState.fieldId}
       disabled={$fieldState.disabled}
