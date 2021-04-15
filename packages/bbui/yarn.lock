@@ -480,6 +480,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/progressbar/-/progressbar-1.0.2.tgz#b5a59432517f9ae6dad49d9504691bc5ac42b424"
   integrity sha512-+jExeBLtVCqo3BqtFq5WCtZ028Dzk+oUnX6y4z6ZamKPqOyOELOtFnhYnyhyRndQOqYwKUTXx9zsaWA/lpJOHw==
 
+"@spectrum-css/progresscircle@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/progresscircle/-/progresscircle-1.0.2.tgz#258ea9170fb70f795edda03e38a61d93bef4487c"
+  integrity sha512-JLULpyzjIY95lzlWR1yE1gv4l1K6p+scQ+edmuZZUHBzwM3pUtkvHJmUlA9TYdResUYW6Uka60VRdY6lZ8gnFQ==
+
 "@spectrum-css/table@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/table/-/table-3.0.1.tgz#753e0e2498082c0c36b9600828516aff3ac338cd"
