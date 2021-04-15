@@ -1,5 +1,5 @@
 <script>
-  import { Home as Link, Button } from "@budibase/bbui"
+  import { Home as Link } from "@budibase/bbui"
   import {
     AppsIcon,
     HostingIcon,

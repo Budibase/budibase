@@ -9,10 +9,11 @@ exports.getFullUser = async ({ ctx, email, userId }) => {
   if (!email) {
     email = getEmailFromUserMetadataID(userId)
   }
-  const db = new CouchDB(ctx.appId)
   const global = await getGlobalUsers(ctx, ctx.appId, email)
   let metadata
   try {
+    // this will throw an error if the db doesn't exist, or there is no appId
+    const db = new CouchDB(ctx.appId)
     metadata = await db.get(generateUserMetadataID(email))
   } catch (err) {
     // it is fine if there is no user metadata, just remove global db info

@@ -1,5 +1,5 @@
 <script>
-  import { Button, Label, Input, TextArea, Spacer } from "@budibase/bbui"
+  import { Button, Label, Input, Spacer } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
   import { auth } from "stores/backend"
 
@@ -8,24 +8,20 @@
 
   async function login() {
     try {
-      const json = await auth.login({
+      await auth.login({
         username,
         password,
       })
-      if (json.success) {
-        notifier.success("Logged in successfully.")
-      } else {
-        notifier.danger("Invalid credentials")
-      }
+      notifier.success("Logged in successfully.")
     } catch (err) {
       console.error(err)
-      notifier.danger(`Error logging in: ${err}`)
+      notifier.danger("Invalid credentials")
     }
   }
 
   async function createTestUser() {
     try {
-      const json = await auth.createUser({
+      await auth.createUser({
         email: "test@test.com",
         password: "test",
         roles: {},
@@ -36,6 +32,7 @@
       notifier.success("Test user created")
     } catch (err) {
       console.error(err)
+      notifier.danger("Could not create test user")
     }
   }
 </script>
