@@ -21,12 +21,11 @@
 </script>
 
 {#if type === 'options'}
-  <Select thin secondary {label} data-cy="{meta.name}-select" bind:value>
-    <option value="">Choose an option</option>
-    {#each meta.constraints.inclusion as opt}
-      <option value={opt}>{opt}</option>
-    {/each}
-  </Select>
+  <Select
+    {label}
+    data-cy="{meta.name}-select"
+    bind:value
+    options={meta.constraints.inclusion} />
 {:else if type === 'datetime'}
   <DatePicker {label} bind:value />
 {:else if type === 'attachment'}
@@ -47,7 +46,6 @@
   </div>
 {:else}
   <Input
-    thin
     {label}
     data-cy="{meta.name}-input"
     {type}

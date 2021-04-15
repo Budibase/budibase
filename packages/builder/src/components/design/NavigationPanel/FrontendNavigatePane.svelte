@@ -38,7 +38,7 @@
   }
 
   const updateAccessRole = event => {
-    const role = event.target.value
+    const role = event.detail
 
     // Select a valid screen with this new role - otherwise we'll not be
     // able to change role at all because ComponentNavigationTree will kick us
@@ -80,11 +80,10 @@
           secondary
           on:change={updateAccessRole}
           value={$selectedAccessRole}
-          label="Filter by Access">
-          {#each $roles as role}
-            <option value={role._id}>{role.name}</option>
-          {/each}
-        </Select>
+          label="Filter by Access"
+          getOptionLabel={role => role.name}
+          getOptionValue={role => role._id}
+          options={$roles} />
         <div class="search-screens">
           <Input
             extraThin

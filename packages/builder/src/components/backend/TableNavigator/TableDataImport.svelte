@@ -201,7 +201,7 @@
 
   .field {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 2fr 4fr 1fr 1fr;
     margin-top: var(--spacing-m);
     align-items: center;
     grid-gap: var(--spacing-m);
