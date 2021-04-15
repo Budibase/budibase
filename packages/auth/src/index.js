@@ -1,3 +1,4 @@
+const db = require("./db")
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
@@ -40,6 +41,9 @@ passport.deserializeUser(async (user, done) => {
 })
 
 module.exports = {
+  init(pouch) {
+    db.setDB(pouch)
+  },
   passport,
   Cookies,
   UserStatus,
