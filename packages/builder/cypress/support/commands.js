@@ -26,7 +26,7 @@
 
 Cypress.Commands.add("login", () => {
   if (cy.getCookie("budibase:auth")) return
-  
+
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.contains("Create Test User").click()
   cy.get("input")
