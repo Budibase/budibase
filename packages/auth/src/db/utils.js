@@ -1,6 +1,6 @@
 exports.StaticDatabases = {
-  USER: {
-    name: "user-db",
+  GLOBAL: {
+    name: "global-db",
   },
 }
 

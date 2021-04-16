@@ -7,10 +7,10 @@ const {
 } = require("@budibase/auth")
 const { UserStatus } = require("../../../constants")
 
-const USER_DB = StaticDatabases.USER.name
+const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.userSave = async ctx => {
-  const db = new CouchDB(USER_DB)
+  const db = new CouchDB(GLOBAL_DB)
   const { email, password, _id } = ctx.request.body
   const hashedPassword = password ? await hash(password) : null
   let user = {
@@ -47,7 +47,7 @@ exports.userSave = async ctx => {
 }
 
 exports.userDelete = async ctx => {
-  const db = new CouchDB(USER_DB)
+  const db = new CouchDB(GLOBAL_DB)
   const dbUser = await db.get(generateUserID(ctx.params.email))
   await db.remove(dbUser._id, dbUser._rev)
   ctx.body = {
@@ -57,7 +57,7 @@ exports.userDelete = async ctx => {
 
 // called internally by app server user fetch
 exports.userFetch = async ctx => {
-  const db = new CouchDB(USER_DB)
+  const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
     getUserParams(null, {
       include_docs: true,
@@ -75,7 +75,7 @@ exports.userFetch = async ctx => {
 
 // called internally by app server user find
 exports.userFind = async ctx => {
-  const db = new CouchDB(USER_DB)
+  const db = new CouchDB(GLOBAL_DB)
   let user
   try {
     user = await db.get(generateUserID(ctx.params.email))
