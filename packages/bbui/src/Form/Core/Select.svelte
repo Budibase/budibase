@@ -14,11 +14,12 @@
   const dispatch = createEventDispatcher()
   let open = false
   $: isNull = value == null || value === ""
+  $: placeholderText = placeholder || "Choose an option"
   $: selectedOption = options.find(option => getOptionValue(option) === value)
   $: selectedLabel = selectedOption
     ? getOptionLabel(selectedOption)
     : placeholderText
-  $: fieldText = isNull ? placeholder || "Choose an option" : selectedLabel
+  $: fieldText = isNull ? placeholderText : selectedLabel
 
   const selectOption = value => {
     dispatch("change", value)
