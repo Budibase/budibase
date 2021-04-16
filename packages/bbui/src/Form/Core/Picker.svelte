@@ -68,23 +68,26 @@
           </svg>
         </li>
       {/if}
-      {#each options as option}
-        <li
-          class="spectrum-Menu-item"
-          class:is-selected={isOptionSelected(getOptionValue(option))}
-          role="option"
-          aria-selected="true"
-          tabindex="0"
-          on:click={() => onSelectOption(getOptionValue(option))}>
-          <span class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true">
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
-        </li>
-      {/each}
+      {#if options && Array.isArray(options)}
+        {#each options as option}
+          <li
+            class="spectrum-Menu-item"
+            class:is-selected={isOptionSelected(getOptionValue(option))}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
+            on:click={() => onSelectOption(getOptionValue(option))}>
+            <span
+              class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true">
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </li>
+        {/each}
+      {/if}
     </ul>
   </div>
 {/if}
