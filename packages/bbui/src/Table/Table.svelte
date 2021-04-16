@@ -73,7 +73,7 @@
     if (!rowCount) {
       return ""
     }
-    return `height: ${headerHeight - 1 + visibleRows * (rowHeight + 1)}px;`
+    return `height: ${headerHeight + visibleRows * (rowHeight + 1)}px;`
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
@@ -266,7 +266,9 @@
                       </td>
                     {/if}
                     {#each fields as field}
-                      <td class="spectrum-Table-cell">
+                      <td
+                        class="spectrum-Table-cell"
+                        class:spectrum-Table-cell--divider={!!schema[field].divider}>
                         <div class="spectrum-Table-cell-content">
                           <CellRenderer
                             {customRenderers}
@@ -301,7 +303,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-primary);
+    background-color: var(--spectrum-alias-background-color-default);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -313,22 +315,22 @@
     overflow: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-alias-background-color-primary);
+      var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar {
     width: 16px;
     height: 16px;
   }
   .container::-webkit-scrollbar-track {
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar-thumb {
     background-color: var(--spectrum-global-color-gray-400);
     border-radius: 20px;
-    border: 4px solid var(--spectrum-alias-background-color-primary);
+    border: 4px solid var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar-corner {
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-default);
   }
   .container.quiet {
     border: none !important;
@@ -357,18 +359,15 @@
     transition: opacity 0.2s ease;
   }
 
-  .container,
-  th {
-    border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
-  }
   th {
     vertical-align: middle;
     height: var(--header-height);
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-alias-background-color-primary);
+    background-color: var(--spectrum-alias-background-color-default);
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
@@ -421,6 +420,7 @@
     border-bottom: none !important;
     border-top: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+    border-radius: 0 !important;
   }
   tr:first-child td {
     border-top: none !important;
@@ -429,10 +429,8 @@
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
-  .container:not(.quiet) td.spectrum-Table-cell--divider {
+  td.spectrum-Table-cell--divider {
     width: 1px;
-    border-right: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   .spectrum-Table-cell-content {
     height: var(--row-height);
