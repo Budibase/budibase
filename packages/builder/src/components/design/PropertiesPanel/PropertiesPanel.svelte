@@ -51,20 +51,6 @@
       {#if definition && definition.name}
         <div class="instance-name">{definition.name}</div>
       {/if}
-      <DesignView
-      componentInstance={$selectedComponent}
-      componentDefinition={definition}
-      {onStyleChanged}
-      {onCustomStyleChanged}
-      {onUpdateTransition}
-      {onResetStyles} />
-    </div>
-  </Tab>
-  <Tab title="Design">
-    <div class="tab-content-padding">
-      {#if definition && definition.name}
-        <div class="instance-name">{definition.name}</div>
-      {/if}
       <SettingsView
       componentInstance={$selectedComponent}
       componentDefinition={definition}
@@ -72,6 +58,20 @@
       onChange={store.actions.components.updateProp}
       onScreenPropChange={setAssetProps}
       assetInstance={$store.currentView !== 'component' && $currentAsset} />
+    </div>
+  </Tab>
+  <Tab title="Design">
+    <div class="tab-content-padding">
+      {#if definition && definition.name}
+        <div class="instance-name">{definition.name}</div>
+      {/if}
+      <DesignView
+      componentInstance={$selectedComponent}
+      componentDefinition={definition}
+      {onStyleChanged}
+      {onCustomStyleChanged}
+      {onUpdateTransition}
+      {onResetStyles} />
     </div>
   </Tab>
 </Tabs>
