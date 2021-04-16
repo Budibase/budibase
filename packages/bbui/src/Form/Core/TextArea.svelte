@@ -7,7 +7,6 @@
   export let disabled = false
   export let error = null
   export let id = null
-  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
 
@@ -33,8 +32,7 @@
     class="spectrum-Textfield-input"
     {disabled}
     {id}
-    on:blur={onChange}
-    on:change={updateOnChange ? onChange : null}>{value || ''}</textarea>
+    on:blur={onChange}>{value || ''}</textarea>
 </div>
 
 <style>

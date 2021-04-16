@@ -23,7 +23,6 @@
     <CoreTextArea
       value={$fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
-      updateOnChange={false}
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}

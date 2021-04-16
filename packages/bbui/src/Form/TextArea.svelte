@@ -9,7 +9,6 @@
   export let placeholder = null
   export let disabled = false
   export let error = null
-  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -19,11 +18,5 @@
 </script>
 
 <Field {label} {labelPosition} {disabled} {error}>
-  <TextArea
-    {error}
-    {disabled}
-    {value}
-    {placeholder}
-    {updateOnChange}
-    on:change={onChange} />
+  <TextArea {error} {disabled} {value} {placeholder} on:change={onChange} />
 </Field>
