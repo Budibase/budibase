@@ -35,7 +35,6 @@ export { default as NotificationDisplay } from "./Notification/NotificationDispl
 export { default as Spacer } from "./Spacer/Spacer.svelte"
 export { default as DatePicker } from "./DatePicker/DatePicker.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
-export { default as Slider } from "./Form/Slider.svelte"
 export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"
 export { default as Tabs } from "./Tabs/Tabs.svelte"

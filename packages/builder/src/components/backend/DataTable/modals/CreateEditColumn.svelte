@@ -6,10 +6,11 @@
     Select,
     Toggle,
     RadioGroup,
+    ModalContent,
+    Context,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
-
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -22,12 +23,13 @@
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
+  import { getContext } from "svelte"
 
   const AUTO_COL = "auto"
   const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
+  const { hide } = getContext(Context.Modal)
 
-  export let onClosed
   export let field = {
     type: "string",
     constraints: fieldDefinitions.STRING.constraints,
@@ -56,7 +58,9 @@
   $: invalid =
     !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft?.schema ?? {}).some(key => key === field.name)
+    Object.keys($tables.draft?.schema ?? {}).some(
+      key => key !== originalName && key === field.name
+    )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -78,7 +82,6 @@
       primaryDisplay,
       indexes,
     })
-    onClosed()
   }
 
   function deleteColumn() {
@@ -87,7 +90,7 @@
     } else {
       tables.deleteField(field)
       notifications.success(`Column ${field.name} deleted.`)
-      onClosed()
+      hide()
     }
   }
 
@@ -111,13 +114,13 @@
   }
 
   function onChangeRequired(e) {
-    const req = e.target.checked
+    const req = e.detail
     field.constraints.presence = req ? { allowEmpty: false } : false
     required = req
   }
 
   function onChangePrimaryDisplay(e) {
-    const isPrimary = e.target.checked
+    const isPrimary = e.detail
     // primary display is always required
     if (isPrimary) {
       field.constraints.presence = { allowEmpty: false }
@@ -125,11 +128,11 @@
   }
 
   function onChangePrimaryIndex(e) {
-    indexes = e.target.checked ? [field.name] : []
+    indexes = e.detail ? [field.name] : []
   }
 
   function onChangeSecondaryIndex(e) {
-    if (e.target.checked) {
+    if (e.detail) {
       indexes[1] = field.name
     } else {
       indexes = indexes.slice(0, 1)
@@ -173,7 +176,11 @@
   }
 </script>
 
-<div class="actions" class:hidden={deletion}>
+<ModalContent
+  title={originalName ? 'Edit Column' : 'Create Column'}
+  confirmText="Save Column"
+  onConfirm={saveColumn}
+  disabled={invalid}>
   <Input label="Name" bind:value={field.name} disabled={uneditable} />
 
   <Select
@@ -185,37 +192,40 @@
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type} />
 
-  {#if canBeRequired}
-    <Toggle
-      checked={required}
-      on:change={onChangeRequired}
-      disabled={primaryDisplay}
-      thin
-      text="Required" />
+  {#if canBeRequired || canBeDisplay}
+    <div>
+      {#if canBeRequired}
+        <Toggle
+          value={required}
+          on:change={onChangeRequired}
+          disabled={primaryDisplay}
+          thin
+          text="Required" />
+      {/if}
+      {#if canBeDisplay}
+        <Toggle
+          bind:value={primaryDisplay}
+          on:change={onChangePrimaryDisplay}
+          thin
+          text="Use as table display column" />
+      {/if}
+    </div>
   {/if}
 
-  {#if canBeDisplay}
-    <Toggle
-      bind:checked={primaryDisplay}
-      on:change={onChangePrimaryDisplay}
-      thin
-      text="Use as table display column" />
-
-    <Label grey small>Search Indexes</Label>
-  {/if}
   {#if canBeSearched}
-    <Toggle
-      checked={indexes[0] === field.name}
-      disabled={indexes[1] === field.name}
-      on:change={onChangePrimaryIndex}
-      thin
-      text="Primary" />
-    <Toggle
-      checked={indexes[1] === field.name}
-      disabled={!indexes[0] || indexes[0] === field.name}
-      on:change={onChangeSecondaryIndex}
-      thin
-      text="Secondary" />
+    <div>
+      <Label grey small>Search Indexes</Label>
+      <Toggle
+        value={indexes[0] === field.name}
+        disabled={indexes[1] === field.name}
+        on:change={onChangePrimaryIndex}
+        text="Primary" />
+      <Toggle
+        value={indexes[1] === field.name}
+        disabled={!indexes[0] || indexes[0] === field.name}
+        on:change={onChangeSecondaryIndex}
+        text="Secondary" />
+    </div>
   {/if}
 
   {#if field.type === 'string'}
@@ -267,19 +277,13 @@
       getOptionLabel={option => option[1].name}
       getOptionValue={option => option[0]} />
   {/if}
-  <footer>
+
+  <div slot="footer">
     {#if !uneditable && originalName != null}
-      <Button warning size="S" text on:click={confirmDelete}>
-        Delete Column
-      </Button>
+      <Button warning text on:click={confirmDelete}>Delete</Button>
     {/if}
-    <div class="spacer" />
-    <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button cta on:click={saveColumn} bind:disabled={invalid}>
-      Save Column
-    </Button>
-  </footer>
-</div>
+  </div>
+</ModalContent>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
@@ -287,45 +291,3 @@
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion" />
-
-<style>
-  .radio-buttons {
-    gap: var(--spacing-m);
-    font-size: var(--font-size-xs);
-  }
-
-  .radio-buttons :global(> *) {
-    margin-top: var(--spacing-s);
-    width: 100%;
-  }
-
-  .actions {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-  }
-
-  footer {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-  .spacer {
-    flex: 1 1 auto;
-  }
-
-  .rel-type-center {
-    font-weight: 500;
-    color: var(--grey-6);
-    margin-right: 4px;
-    margin-left: 4px;
-    padding: 1px 3px 1px 3px;
-    background: var(--grey-3);
-    border-radius: 2px;
-  }
-
-  .radio-button-labels {
-    margin-top: 2px;
-  }
-</style>
