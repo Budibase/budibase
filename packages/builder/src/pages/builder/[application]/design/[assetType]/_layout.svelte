@@ -206,8 +206,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
-    padding: var(--spacing-l) var(--spacing-xl);
     border-left: var(--border-light);
   }
 </style>
