@@ -8,7 +8,7 @@
   export let disabled = false
   export let labelPosition = "above"
   export let error = null
-  export let placeholder = null
+  export let placeholder = "Choose an option"
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option

@@ -4,7 +4,7 @@
 
   export let value = null
   export let fieldId = null
-  export let placeholder = null
+  export let placeholder = "Choose an option"
   export let disabled = false
   export let error = null
   export let options = []
@@ -13,13 +13,12 @@
 
   const dispatch = createEventDispatcher()
   let open = false
-  $: placeholderText = placeholder || "Choose an option"
   $: isNull = value == null || value === ""
   $: selectedOption = options.find(option => getOptionValue(option) === value)
   $: selectedLabel = selectedOption
     ? getOptionLabel(selectedOption)
     : placeholderText
-  $: fieldText = isNull ? placeholderText : selectedLabel
+  $: fieldText = isNull ? placeholder || "Choose an option" : selectedLabel
 
   const selectOption = value => {
     dispatch("change", value)
@@ -37,6 +36,6 @@
   {getOptionLabel}
   {getOptionValue}
   isPlaceholder={isNull}
-  placeholderOption={placeholderText}
+  placeholderOption={placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption} />
