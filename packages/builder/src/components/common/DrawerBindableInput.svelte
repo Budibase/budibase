@@ -32,9 +32,8 @@
 
 <div class="control">
   <Input
-    {thin}
     value={readableValue}
-    on:change={event => onChange(event.target.value)}
+    on:change={event => onChange(event.detail)}
     {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
     <Icon name="lightning" />
