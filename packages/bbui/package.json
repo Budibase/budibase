@@ -9,8 +9,7 @@
     ".": {
       "import": "./dist/bbui.es.js"
     },
-    "./package.json": "./package.json",
-    "./dist/style.css": "./dist/style.css"
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "rollup -c"
