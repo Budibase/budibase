@@ -105,7 +105,7 @@
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);
-    right: var(--spacing-xl);
+    right: var(--spacing-l);
   }
 
   i:hover {

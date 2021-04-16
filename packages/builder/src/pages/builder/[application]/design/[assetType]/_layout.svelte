@@ -177,7 +177,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    padding: var(--spacing-l) var(--spacing-xl) 60px var(--spacing-xl);
+    padding: 0 0 60px 0;
     overflow-y: auto;
     border-right: var(--border-light);
   }
