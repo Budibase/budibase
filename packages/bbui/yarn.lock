@@ -156,6 +156,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/progresscircle/-/progresscircle-1.0.2.tgz#258ea9170fb70f795edda03e38a61d93bef4487c"
   integrity sha512-JLULpyzjIY95lzlWR1yE1gv4l1K6p+scQ+edmuZZUHBzwM3pUtkvHJmUlA9TYdResUYW6Uka60VRdY6lZ8gnFQ==
 
+"@spectrum-css/radio@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/radio/-/radio-3.0.2.tgz#9c1386894920bbed604e4e174fbbd45d9d762152"
+  integrity sha512-0TDdzC9omNXnpKHEXNuuGeXdNh4x8jvTKVUqMRLb7vY4hY94hAdt6X01NBqka+jzK35HxGzpDdPADAz62yZLPQ==
+
 "@spectrum-css/table@^3.0.1":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/table/-/table-3.0.2.tgz#c666743d569fef81ddc8810fac8cda53b315f8d7"

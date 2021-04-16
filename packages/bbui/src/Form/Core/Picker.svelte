@@ -4,7 +4,7 @@
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
 
-  export let fieldId = null
+  export let id = null
   export let disabled = false
   export let error = null
   export let fieldText = ""
@@ -19,7 +19,7 @@
 </script>
 
 <button
-  id={fieldId}
+  {id}
   class="spectrum-Picker spectrum-Picker--sizeM"
   {disabled}
   class:is-invalid={!!error}

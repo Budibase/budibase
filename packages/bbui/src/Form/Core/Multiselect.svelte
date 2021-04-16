@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = []
-  export let fieldId = null
+  export let id = null
   export let placeholder = null
   export let disabled = false
   export let error = null
@@ -69,7 +69,7 @@
 </script>
 
 <Picker
-  {fieldId}
+  {id}
   {error}
   {disabled}
   {fieldText}

@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = ""
-  export let placeholder = ""
+  export let placeholder = null
   export let type = "text"
   export let disabled = false
   export let error = null

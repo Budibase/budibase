@@ -14,7 +14,7 @@ export { default as ActionMenu } from "./ActionMenu/ActionMenu.svelte"
 export { default as Button } from "./Button/Button.svelte"
 export { default as Icon, iconOptions, directions } from "./Icons/Icon.svelte"
 export { default as Toggle } from "./Form/Toggle.svelte"
-export { default as Radio } from "./Form/Radio.svelte"
+export { default as RadioGroup } from "./Form/RadioGroup.svelte"
 export { default as Checkbox } from "./Form/Checkbox.svelte"
 export { default as Home } from "./Links/Home.svelte"
 export { default as DetailSummary } from "./List/Items/DetailSummary.svelte"
@@ -48,7 +48,6 @@ export { default as Body } from "./Typography/Body.svelte"
 export { default as Heading } from "./Typography/Heading.svelte"
 export { default as Detail } from "./Typography/Detail.svelte"
 export { default as Code } from "./Typography/Code.svelte"
-
 
 // Core form components to be used elsewhere (standard components)
 export * from "./Form/Core"

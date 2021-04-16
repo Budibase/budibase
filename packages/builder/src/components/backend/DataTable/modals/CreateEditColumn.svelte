@@ -1,5 +1,12 @@
 <script>
-  import { Input, Button, Label, Select, Toggle, Radio } from "@budibase/bbui"
+  import {
+    Input,
+    Button,
+    Label,
+    Select,
+    Toggle,
+    RadioGroup,
+  } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
 
@@ -242,26 +249,15 @@
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id} />
     {#if relationshipOptions && relationshipOptions.length > 0}
-      <div>
-        <Label grey extraSmall>Define the relationship</Label>
-        <div class="radio-buttons">
-          {#each relationshipOptions as { value, name }}
-            <Radio
-              disabled={originalName}
-              name="Relationship type"
-              {value}
-              bind:group={field.relationshipType}>
-              <div class="radio-button-labels">
-                <label for={value}>{name.split('→')[0]}</label>
-                <label class="rel-type-center" for={value}>→</label>
-                <label for={value}>{name.split('→')[1]}</label>
-              </div>
-            </Radio>
-          {/each}
-        </div>
-      </div>
+      <RadioGroup
+        disabled={originalName}
+        label="Define the relationship"
+        bind:value={field.relationshipType}
+        options={relationshipOptions}
+        getOptionLabel={option => option.name}
+        getOptionValue={option => option.value} />
     {/if}
-    <Input label={`Column Name in Other Table`} bind:value={field.fieldName} />
+    <Input label={`Column name in other table`} bind:value={field.fieldName} />
   {:else if field.type === AUTO_COL}
     <Select
       label="Auto Column Type"
