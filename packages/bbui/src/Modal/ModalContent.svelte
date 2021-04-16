@@ -36,7 +36,10 @@
   tabindex="-1"
   aria-modal="true">
   <div class="spectrum-Dialog-grid">
-    <Heading m h2>{title}</Heading>
+    <h1 class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader">
+      {title}
+    </h1>
+
     <Divider m />
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
@@ -85,9 +88,6 @@
     gap: var(--spectrum-global-dimension-static-size-200);
   }
 
-  h1 {
-    font-weight: normal;
-  }
   .close-icon {
     position: absolute;
     top: 15px;

@@ -9,11 +9,5 @@
   Create New Column
 </Button>
 <Modal bind:this={modal}>
-  <ModalContent
-    size="medium"
-    showCancelButton={false}
-    showConfirmButton={false}
-    title={'Create Column'}>
-    <CreateEditColumn onClosed={modal.hide} />
-  </ModalContent>
+  <CreateEditColumn />
 </Modal>
