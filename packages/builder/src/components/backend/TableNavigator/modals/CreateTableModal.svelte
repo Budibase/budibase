@@ -92,7 +92,6 @@
 <ModalContent
   title="Create Table"
   confirmText="Create"
-  size="large"
   onConfirm={saveTable}
   disabled={error || !name || (dataImport && !dataImport.valid)}>
   <Input
