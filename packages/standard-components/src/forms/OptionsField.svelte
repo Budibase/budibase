@@ -23,7 +23,7 @@
   {#if fieldState}
     <CoreSelect
       value={$fieldState.value}
-      fieldId={$fieldState.fieldId}
+      id={$fieldState.fieldId}
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       options={fieldSchema?.constraints?.inclusion ?? []}

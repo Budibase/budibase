@@ -5,7 +5,7 @@
 
   export let value = false
   export let error = null
-  export let fieldId = null
+  export let id = null
   export let text = null
   export let disabled = false
 
@@ -24,7 +24,7 @@
     on:change={onChange}
     type="checkbox"
     class="spectrum-Checkbox-input"
-    id={fieldId} />
+    {id} />
   <span class="spectrum-Checkbox-box">
     <svg
       class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark"

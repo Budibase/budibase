@@ -3,7 +3,7 @@
   import Picker from "./Picker.svelte"
 
   export let value = null
-  export let fieldId = null
+  export let id = null
   export let placeholder = "Choose an option"
   export let disabled = false
   export let error = null
@@ -39,7 +39,7 @@
 
 <Picker
   bind:open
-  {fieldId}
+  {id}
   {error}
   {disabled}
   {fieldText}

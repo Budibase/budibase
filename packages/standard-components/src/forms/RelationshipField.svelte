@@ -75,7 +75,7 @@
       {options}
       value={multiselect ? multiValue : singleValue}
       on:change={multiselect ? multiHandler : singleHandler}
-      fieldId={$fieldState.fieldId}
+      id={$fieldState.fieldId}
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       getOptionLabel={getDisplayName}
