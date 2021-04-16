@@ -48,9 +48,9 @@
     <div
       class="spectrum-Underlay is-open"
       transition:fade={{ duration: 200 }}
-      on:click|self={hide}>
-      <div class="modal-wrapper" on:click|self={hide}>
-        <div class="modal-inner-wrapper" on:click|self={hide}>
+      on:mousedown|self={hide}>
+      <div class="modal-wrapper" on:mousedown|self={hide}>
+        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
           <div
             use:focusFirstInput
             class="spectrum-Modal is-open"
