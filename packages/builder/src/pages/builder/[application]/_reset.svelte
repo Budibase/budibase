@@ -1,7 +1,7 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Button } from "@budibase/bbui"
+  import { Button, ActionGroup, ActionButton, Icon } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
@@ -60,14 +60,11 @@
         </button>
 
         <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        {#each $layout.children as { path, title }}
-          <span
-            class:active={$isActive(path)}
-            class="topnavitem"
-            on:click={topItemNavigate(path)}>
-            {title}
-          </span>
-        {/each}
+        <ActionGroup>
+          {#each $layout.children as { path, title }}
+            <ActionButton quiet selected={$isActive(path)} on:click={topItemNavigate(path)}>{title}</ActionButton>
+          {/each}
+        </ActionGroup>
       </div>
       <div class="toprightnav">
         <ThemeEditorDropdown />
@@ -76,6 +73,7 @@
           <a
             target="_blank"
             href="https://github.com/Budibase/budibase/discussions">
+            <Icon />
             <i class="ri-github-fill" />
           </a>
         </div>
