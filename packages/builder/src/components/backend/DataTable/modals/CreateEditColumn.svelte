@@ -52,8 +52,8 @@
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
-    $tables.selected?._id === TableNames.USERS &&
-    UNEDITABLE_USER_FIELDS.includes(field.name) ||
+    ($tables.selected?._id === TableNames.USERS &&
+      UNEDITABLE_USER_FIELDS.includes(field.name)) ||
     (originalName && field.type === LINK_TYPE)
   $: invalid =
     (field.type === LINK_TYPE && !field.tableId) ||
