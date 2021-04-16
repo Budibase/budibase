@@ -20,7 +20,10 @@
 
   const getFieldText = (value, map, placeholder) => {
     if (value?.length) {
-      const vals = value.map(option => map[option] || "").join(", ")
+      if (!map) {
+        return ""
+      }
+      const vals = value.map(option => map[option] || option).join(", ")
       return `(${value.length}) ${vals}`
     } else {
       return placeholder || "Choose some options"
@@ -40,8 +43,9 @@
   }
 
   const getOptionLookupMap = options => {
-    let map = {}
-    if (options) {
+    let map = null
+    if (options?.length) {
+      map = {}
       options.forEach(option => {
         const optionValue = getOptionValue(option)
         if (optionValue != null) {
