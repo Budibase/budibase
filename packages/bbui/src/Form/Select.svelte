@@ -10,13 +10,19 @@
   export let error = null
   export let placeholder = "Choose an option"
   export let options = []
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+  export let getOptionLabel = option => extractProperty(option, "label")
+  export let getOptionValue = option => extractProperty(option, "value")
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
     dispatch("change", e.detail)
     value = e.detail
+  }
+  const extractProperty = (value, property) => {
+    if (value && typeof value === "object") {
+      return value[property]
+    }
+    return value
   }
 </script>
 
