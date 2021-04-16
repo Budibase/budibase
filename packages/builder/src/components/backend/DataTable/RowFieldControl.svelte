@@ -5,7 +5,7 @@
     Label,
     DatePicker,
     Toggle,
-    RichText,
+    TextArea,
   } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
   import { capitalise } from "../../../helpers"
@@ -40,10 +40,7 @@
     <LinkedRowSelector bind:linkedRows={value} schema={meta} />
   </div>
 {:else if type === 'longform'}
-  <div>
-    <Label extraSmall grey>{label}</Label>
-    <RichText bind:value />
-  </div>
+  <TextArea {label} bind:value />
 {:else}
   <Input
     {label}
