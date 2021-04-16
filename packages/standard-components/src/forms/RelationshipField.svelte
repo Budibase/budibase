@@ -21,6 +21,8 @@
   $: linkedTableId = fieldSchema?.tableId
   $: fetchRows(linkedTableId)
   $: fetchTable(linkedTableId)
+  $: singleValue = flatten($fieldState?.value)?.[0]
+  $: multiValue = flatten($fieldState?.value) ?? []
 
   const fetchTable = async id => {
     if (id) {
@@ -36,6 +38,13 @@
       const rows = await API.fetchTableData(id)
       options = rows && !rows.error ? rows : []
     }
+  }
+
+  const flatten = values => {
+    if (!values) {
+      return []
+    }
+    return values.map(value => (typeof value === "object" ? value._id : value))
   }
 
   const getDisplayName = row => {
@@ -64,7 +73,7 @@
     <svelte:component
       this={multiselect ? CoreMultiselect : CoreSelect}
       {options}
-      value={multiselect ? $fieldState.value : $fieldState.value?.[0]}
+      value={multiselect ? multiValue : singleValue}
       on:change={multiselect ? multiHandler : singleHandler}
       fieldId={$fieldState.fieldId}
       disabled={$fieldState.disabled}
