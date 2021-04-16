@@ -1,9 +1,9 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/app")
-const checkKey = require("../../middleware/check-key")
+const { authenticated } = require("@budibase/auth")
 
 const router = Router()
 
-router.get("/api/apps", checkKey, controller.getApps)
+router.get("/api/apps", authenticated, controller.getApps)
 
 module.exports = router

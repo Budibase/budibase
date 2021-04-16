@@ -3,7 +3,7 @@ const { getScreenParams, generateScreenID } = require("../../db/utils")
 const { AccessController } = require("../../utilities/security/roles")
 
 exports.fetch = async ctx => {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
 
   const screens = (
@@ -21,7 +21,7 @@ exports.fetch = async ctx => {
 }
 
 exports.save = async ctx => {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   let screen = ctx.request.body
 
@@ -39,7 +39,7 @@ exports.save = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   await db.remove(ctx.params.screenId, ctx.params.screenRev)
   ctx.body = {
     message: "Screen deleted successfully",

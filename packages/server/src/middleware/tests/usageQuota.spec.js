@@ -20,9 +20,7 @@ class TestConfiguration {
     this.ctx = {
       throw: this.throw,
       next: this.next,
-      user: {
-        appId: "test"
-      },
+      appId: "test",
       request: {
         body: {}
       },
@@ -78,8 +76,10 @@ describe("usageQuota middleware", () => {
   })
 
   it("passes through to next middleware if document already exists", async () => {
+    config.setProd(true)
     config.setBody({
-      _id: "test"
+      _id: "test",
+      _rev: "test",
     })
 
     CouchDB.mockImplementationOnce(() => ({ 
@@ -89,13 +89,14 @@ describe("usageQuota middleware", () => {
     await config.executeMiddleware()
 
     expect(config.next).toHaveBeenCalled()
-    expect(config.ctx.preExisting).toBe(true)
   })
 
   it("throws if request has _id, but the document no longer exists", async () => {
     config.setBody({
-      _id: "123"
+      _id: "123",
+      _rev: "test",
     })
+    config.setProd(true)
 
     CouchDB.mockImplementationOnce(() => ({ 
       get: async () => {

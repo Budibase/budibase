@@ -1,5 +1,6 @@
 context("Create a Table", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
   })
 

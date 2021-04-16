@@ -10,8 +10,8 @@ const {
 const {
   generateRoleID,
   getRoleParams,
-  getUserParams,
-  ViewNames,
+  getUserMetadataParams,
+  InternalTables,
 } = require("../../db/utils")
 
 const UpdateRolesOptions = {
@@ -28,7 +28,7 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
 ]
 
 async function updateRolesOnUserTable(db, roleId, updateOption) {
-  const table = await db.get(ViewNames.USERS)
+  const table = await db.get(InternalTables.USER_METADATA)
   const schema = table.schema
   const remove = updateOption === UpdateRolesOptions.REMOVED
   let updated = false
@@ -51,7 +51,7 @@ async function updateRolesOnUserTable(db, roleId, updateOption) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
@@ -79,11 +79,11 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  ctx.body = await getRole(ctx.user.appId, ctx.params.roleId)
+  ctx.body = await getRole(ctx.appId, ctx.params.roleId)
 }
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   let { _id, name, inherits, permissionId } = ctx.request.body
   if (!_id) {
     _id = generateRoleID()
@@ -104,7 +104,7 @@ exports.save = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const roleId = ctx.params.roleId
   if (isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
@@ -112,7 +112,7 @@ exports.destroy = async function(ctx) {
   // first check no users actively attached to role
   const users = (
     await db.allDocs(
-      getUserParams(null, {
+      getUserMetadataParams(null, {
         include_docs: true,
       })
     )

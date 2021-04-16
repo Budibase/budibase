@@ -24,6 +24,23 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
+Cypress.Commands.add("login", () => {
+  cy.getCookie("budibase:auth").then(cookie => {
+    // Already logged in
+    if (cookie) return
+
+    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.contains("Create Test User").click()
+    cy.get("input")
+      .first()
+      .type("test@test.com")
+
+    cy.get('input[type="password"]').type("test")
+
+    cy.contains("Login").click()
+  })
+})
+
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
@@ -44,12 +61,6 @@ Cypress.Commands.add("createApp", name => {
         .type(name)
         .should("have.value", name)
       cy.contains("Next").click()
-      cy.get("input[name=email]")
-        .click()
-        .type("test@test.com")
-      cy.get("input[name=password]")
-        .click()
-        .type("test")
       cy.contains("Submit").click()
       cy.get("[data-cy=new-table]", {
         timeout: 20000,

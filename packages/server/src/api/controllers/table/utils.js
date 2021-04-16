@@ -1,6 +1,10 @@
 const CouchDB = require("../../../db")
 const csvParser = require("../../../utilities/csvParser")
-const { getRowParams, generateRowID, ViewNames } = require("../../../db/utils")
+const {
+  getRowParams,
+  generateRowID,
+  InternalTables,
+} = require("../../../db/utils")
 const { isEqual } = require("lodash/fp")
 const { AutoFieldSubTypes } = require("../../../constants")
 const { inputProcessing } = require("../../../utilities/rowProcessor")
@@ -57,8 +61,8 @@ exports.makeSureTableUpToDate = (table, tableToSave) => {
   return tableToSave
 }
 
-exports.handleDataImport = async (user, table, dataImport) => {
-  const db = new CouchDB(user.appId)
+exports.handleDataImport = async (appId, user, table, dataImport) => {
+  const db = new CouchDB(appId)
   if (dataImport && dataImport.csvString) {
     // Populate the table with rows imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
@@ -136,7 +140,7 @@ exports.handleSearchIndexes = async (appId, table) => {
 
 exports.checkStaticTables = table => {
   // check user schema has all required elements
-  if (table._id === ViewNames.USERS) {
+  if (table._id === InternalTables.USER_METADATA) {
     for (let [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
       // check if the schema exists on the table to be created/updated
       if (table.schema[key] == null) {
@@ -152,7 +156,7 @@ class TableSaveFunctions {
     this.db = db
     this.ctx = ctx
     if (this.ctx && this.ctx.user) {
-      this.appId = this.ctx.user.appId
+      this.appId = this.ctx.appId
     }
     this.oldTable = oldTable
     this.dataImport = dataImport
@@ -184,6 +188,7 @@ class TableSaveFunctions {
   async after(table) {
     table = await exports.handleSearchIndexes(this.appId, table)
     table = await exports.handleDataImport(
+      this.appId,
       this.ctx.user,
       table,
       this.dataImport

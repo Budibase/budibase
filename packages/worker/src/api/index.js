@@ -10,10 +10,10 @@ router
     compress({
       threshold: 2048,
       gzip: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       deflate: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       br: false,
     })

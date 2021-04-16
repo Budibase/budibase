@@ -1,115 +1,110 @@
 const CouchDB = require("../../db")
-const bcrypt = require("../../utilities/bcrypt")
-const { generateUserID, getUserParams, ViewNames } = require("../../db/utils")
+const {
+  generateUserMetadataID,
+  getUserMetadataParams,
+  getEmailFromUserMetadataID,
+} = require("../../db/utils")
+const { InternalTables } = require("../../db/utils")
 const { getRole } = require("../../utilities/security/roles")
-const { UserStatus } = require("../../constants")
+const {
+  getGlobalUsers,
+  saveGlobalUser,
+  deleteGlobalUser,
+} = require("../../utilities/workerRequests")
+const { getFullUser } = require("../../utilities/users")
 
-exports.fetch = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
-  const users = (
+exports.fetchMetadata = async function(ctx) {
+  const database = new CouchDB(ctx.appId)
+  const global = await getGlobalUsers(ctx, ctx.appId)
+  const metadata = (
     await database.allDocs(
-      getUserParams(null, {
+      getUserMetadataParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
-  // user hashed password shouldn't ever be returned
-  for (let user of users) {
-    delete user.password
+  const users = []
+  for (let user of global) {
+    const info = metadata.find(meta => meta._id.includes(user.email))
+    // remove these props, not for the correct DB
+    delete user._id
+    delete user._rev
+    users.push({
+      ...user,
+      ...info,
+      // make sure the ID is always a local ID, not a global one
+      _id: generateUserMetadataID(user.email),
+    })
   }
   ctx.body = users
 }
 
-exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const { email, password, roleId } = ctx.request.body
+exports.createMetadata = async function(ctx) {
+  const appId = ctx.appId
+  const db = new CouchDB(appId)
+  const { roleId } = ctx.request.body
+  const email = ctx.request.body.email || ctx.user.email
 
-  if (!email || !password) {
-    ctx.throw(400, "email and Password Required.")
-  }
-
-  const role = await getRole(ctx.user.appId, roleId)
-
+  // check role valid
+  const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
 
-  const hashedPassword = await bcrypt.hash(password)
+  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
+
   const user = {
-    ...ctx.request.body,
-    // these must all be after the object spread, make sure
-    // any values are overwritten, generateUserID will always
-    // generate the same ID for the user as it is not UUID based
-    _id: generateUserID(email),
+    ...metadata,
+    _id: generateUserMetadataID(email),
     type: "user",
-    password: hashedPassword,
-    tableId: ViewNames.USERS,
-  }
-  // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = UserStatus.ACTIVE
+    tableId: InternalTables.USER_METADATA,
   }
 
-  try {
-    const response = await db.post(user)
-    ctx.status = 200
-    ctx.message = "User created successfully."
-    ctx.userId = response.id
-    ctx.body = {
-      _rev: response.rev,
-      email,
-    }
-  } catch (err) {
-    if (err.status === 409) {
-      ctx.throw(400, "User exists already")
-    } else {
-      ctx.throw(err.status, err)
-    }
-  }
-}
-
-exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const user = ctx.request.body
-  let dbUser
-  if (user.email && !user._id) {
-    user._id = generateUserID(user.email)
-  }
-  // get user incase password removed
-  if (user._id) {
-    dbUser = await db.get(user._id)
-  }
-  if (user.password) {
-    user.password = await bcrypt.hash(user.password)
-  } else {
-    delete user.password
-  }
-
-  const response = await db.put({
-    password: dbUser.password,
-    ...user,
-  })
-  user._rev = response.rev
-
+  const response = await db.post(user)
+  // for automations to make it obvious was successful
   ctx.status = 200
-  ctx.body = response
+  ctx.body = {
+    _id: response.id,
+    _rev: response.rev,
+    email,
+  }
 }
 
-exports.destroy = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
-  await database.destroy(generateUserID(ctx.params.email))
+exports.updateMetadata = async function(ctx) {
+  const appId = ctx.appId
+  const db = new CouchDB(appId)
+  const user = ctx.request.body
+  let email = user.email || getEmailFromUserMetadataID(user._id)
+  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
+  if (!metadata._id) {
+    metadata._id = generateUserMetadataID(email)
+  }
+  if (!metadata._rev) {
+    metadata._rev = ctx.request.body._rev
+  }
+  ctx.body = await db.put({
+    ...metadata,
+  })
+}
+
+exports.destroyMetadata = async function(ctx) {
+  const db = new CouchDB(ctx.appId)
+  const email =
+    ctx.params.email || getEmailFromUserMetadataID(ctx.params.userId)
+  await deleteGlobalUser(ctx, email)
+  try {
+    const dbUser = await db.get(generateUserMetadataID(email))
+    await db.remove(dbUser._id, dbUser._rev)
+  } catch (err) {
+    // error just means the global user has no config in this app
+  }
   ctx.body = {
     message: `User ${ctx.params.email} deleted.`,
   }
-  ctx.status = 200
 }
 
-exports.find = async function(ctx) {
-  const database = new CouchDB(ctx.user.appId)
-  let lookup = ctx.params.email
-    ? generateUserID(ctx.params.email)
-    : ctx.params.userId
-  const user = await database.get(lookup)
-  if (user) {
-    delete user.password
-  }
-  ctx.body = user
+exports.findMetadata = async function(ctx) {
+  ctx.body = await getFullUser({
+    ctx,
+    email: ctx.params.email,
+    userId: ctx.params.userId,
+  })
 }

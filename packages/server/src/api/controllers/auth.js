@@ -3,12 +3,12 @@ const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
-const { generateUserID } = require("../../db/utils")
+const { generateUserMetadataID } = require("../../db/utils")
 const { setCookie } = require("../../utilities")
 const { outputProcessing } = require("../../utilities/rowProcessor")
-const { ViewNames } = require("../../db/utils")
-const { UserStatus } = require("../../constants")
-const setBuilderToken = require("../../utilities/builder/setBuilderToken")
+const { InternalTables } = require("../../db/utils")
+const { UserStatus } = require("@budibase/auth")
+const { getFullUser } = require("../../utilities/users")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -27,7 +27,7 @@ exports.authenticate = async ctx => {
 
   let dbUser
   try {
-    dbUser = await db.get(generateUserID(email))
+    dbUser = await db.get(generateUserMetadataID(email))
   } catch (_) {
     // do not want to throw a 404 - as this could be
     // used to determine valid emails
@@ -49,7 +49,7 @@ exports.authenticate = async ctx => {
     // if in prod add the user api key, unless self hosted
     /* istanbul ignore next */
     if (env.isProd() && !env.SELF_HOSTED) {
-      const { apiKey } = await getAPIKey(ctx.user.appId)
+      const { apiKey } = await getAPIKey(ctx.appId)
       payload.apiKey = apiKey
     }
 
@@ -70,24 +70,36 @@ exports.authenticate = async ctx => {
   }
 }
 
-exports.builderLogin = async ctx => {
-  await setBuilderToken(ctx)
-  ctx.status = 200
-}
-
 exports.fetchSelf = async ctx => {
-  const { userId, appId } = ctx.user
+  if (!ctx.user) {
+    ctx.throw(403, "No user logged in")
+  }
+  const appId = ctx.appId
+  const { userId } = ctx.user
   /* istanbul ignore next */
-  if (!userId || !appId) {
+  if (!userId) {
     ctx.body = {}
     return
   }
-  const db = new CouchDB(appId)
-  const user = await db.get(userId)
-  const userTable = await db.get(ViewNames.USERS)
-  if (user) {
-    delete user.password
+
+  const user = await getFullUser({ ctx, userId: userId })
+
+  if (appId) {
+    const db = new CouchDB(appId)
+    // remove the full roles structure
+    delete user.roles
+    try {
+      const userTable = await db.get(InternalTables.USER_METADATA)
+      const metadata = await db.get(userId)
+      // specifically needs to make sure is enriched
+      ctx.body = await outputProcessing(appId, userTable, {
+        ...user,
+        ...metadata,
+      })
+    } catch (err) {
+      ctx.body = user
+    }
+  } else {
+    ctx.body = user
   }
-  // specifically needs to make sure is enriched
-  ctx.body = await outputProcessing(appId, userTable, user)
 }
