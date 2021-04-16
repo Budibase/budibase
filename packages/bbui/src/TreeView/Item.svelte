@@ -6,8 +6,8 @@
 </script>
 
 <li class:is-selected={selected} class:is-open={open} class="spectrum-TreeView-item">
-    <a class="spectrum-TreeView-itemLink" href="#">
-        {#if $$slots.default}
+    {#if $$slots.default}
+        <a class="spectrum-TreeView-itemLink" href="#">
             <svg class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-TreeView-itemIndicator" focusable="false" aria-hidden="true">
                 <use xlink:href="#spectrum-css-icon-Chevron100" />
             </svg>
@@ -17,16 +17,18 @@
                 </svg>
             {/if}
             <span class="spectrum-TreeView-itemLabel">{title}</span>
-            <ul class="spectrum-TreeView">
-                <slot />
-            </ul>
-        {:else}
+        </a>
+        <ul class="spectrum-TreeView">
+            <slot />
+        </ul>
+    {:else}
+        <a class="spectrum-TreeView-itemLink" href="#">
             {#if icon}
                 <svg class="spectrum-TreeView-itemIcon spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Layers">
                     <use xlink:href="#spectrum-icon-18-{icon}" />
                 </svg>
             {/if}
             <span class="spectrum-TreeView-itemLabel">{title}</span>
-        {/if}
-    </a>
+        </a>
+    {/if}
 </li>
