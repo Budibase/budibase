@@ -142,7 +142,7 @@
 
   .topleftnav {
     display: flex;
-    align-items: center;
+    place-items: center;
   }
 
   .topnavitem {
