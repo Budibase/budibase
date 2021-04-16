@@ -84,7 +84,7 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/buttongroup/-/buttongroup-3.0.2.tgz#fd3387973ca3131609e32112de42a1c0400a48d8"
   integrity sha512-Wu7B4GJ/SAeVHz9SUGAkeIH8pLaZh4t+w2ykSKOPQIRuK2jCBoudkEClVxviNVwqekccf5XLFXg9GpYF1a3Uaw==
 
-"@spectrum-css/checkbox@^3.0.1":
+"@spectrum-css/checkbox@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/checkbox/-/checkbox-3.0.2.tgz#53ca2fba0d9faa1fead10e7206eb1f6cdcfd6ddd"
   integrity sha512-hPbGcnm7kJvJS4jp/P/bdaZvbyR1eIE9mteuZqcBgdmyp9m/k6+mW5jmsbtqb3Y4mMPWvOJFfz/sIvWJP0F0Zg==
@@ -100,6 +100,11 @@
   integrity sha512-piNbNcJ4W3lsnhrhru3SBh1et6lfKKexGKSP3gRFFlbjTT1+/AZGeztqYvdBwE523b7A9xJFekl5Fc0VJ1Flow==
   dependencies:
     "@spectrum-css/vars" "^3.0.2"
+
+"@spectrum-css/fieldgroup@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/fieldgroup/-/fieldgroup-3.0.2.tgz#1c1afd3c444d8650fefac275dc66a7a913933846"
+  integrity sha512-Vyw0kQJdLW18J6w4H+YAsoLntvkw5rXmW3CH5H3SDTXkBztxtHSSe3e106Nw5MoZxTfHlom6CxbYXYCTjQfqGw==
 
 "@spectrum-css/fieldlabel@^3.0.1":
   version "3.0.2"
@@ -2355,6 +2360,7 @@ simple-swizzle@^0.2.2:
     is-arrayish "^0.3.1"
 
 "source-map-fast@npm:source-map@0.7.3", source-map@~0.7.2:
+  name source-map-fast
   version "0.7.3"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.7.3.tgz#5302f8169031735226544092e64981f751750383"
   integrity sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==
