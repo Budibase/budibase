@@ -70,7 +70,7 @@
   }
 
   const getContentStyle = (visibleRows, rowCount) => {
-    if (!rowCount) {
+    if (!rowCount || !visibleRows) {
       return ""
     }
     return `height: ${headerHeight + visibleRows * (rowHeight + 1)}px;`
@@ -318,16 +318,15 @@
       var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
   }
   .container::-webkit-scrollbar-track {
     background: var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar-thumb {
     background-color: var(--spectrum-global-color-gray-400);
-    border-radius: 20px;
-    border: 4px solid var(--spectrum-alias-background-color-default);
+    border-radius: 4px;
   }
   .container::-webkit-scrollbar-corner {
     background: var(--spectrum-alias-background-color-default);
