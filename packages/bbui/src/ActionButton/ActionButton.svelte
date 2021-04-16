@@ -59,7 +59,9 @@
     {/if}
 </button>
   
-  <style>
-  
-  </style>
+<style>
+    span {
+        text-transform: capitalize;
+    }
+</style>
   
