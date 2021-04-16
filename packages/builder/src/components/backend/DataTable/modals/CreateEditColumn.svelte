@@ -173,6 +173,7 @@
     disabled={originalName}
     label="Type"
     bind:value={field.type}
+    on:change={handleTypeChange}
     options={[...Object.values(fieldDefinitions), { name: 'Auto Column', type: AUTO_COL }]}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type} />

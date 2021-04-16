@@ -1,17 +1,14 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import { Button } from "@budibase/bbui"
+  import { Button, Checkbox, Input, Select } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { currentAsset } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
-  import OptionSelect from "./PropertyControls/OptionSelect.svelte"
-  import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
   import DataSourceSelect from "./PropertyControls/DataSourceSelect.svelte"
   import DataProviderSelect from "./PropertyControls/DataProviderSelect.svelte"
@@ -61,7 +58,7 @@
 
   const controlMap = {
     text: Input,
-    select: OptionSelect,
+    select: Select,
     dataSource: DataSourceSelect,
     dataProvider: DataProviderSelect,
     detailScreen: DetailScreenSelect,

@@ -105,6 +105,7 @@
     position: relative;
     display: flex;
     min-height: 0;
+    flex: 1 1 auto;
   }
 
   .property-groups {
