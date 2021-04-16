@@ -87,7 +87,7 @@ const createScreen = table => {
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
       theme: "spectrum--lightest",
       showAutoColumns: false,
-      quiet: false,
+      quiet: true,
       size: "spectrum--medium",
       rowCount: 8,
     })
