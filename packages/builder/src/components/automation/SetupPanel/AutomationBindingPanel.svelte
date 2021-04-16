@@ -46,12 +46,12 @@
 
 <div class="container">
   <div class="list">
-    <Heading small>Available bindings</Heading>
+    <Heading s h3>Available bindings</Heading>
     <Spacer medium />
     <Input extraThin placeholder="Search" bind:value={search} />
     <Spacer medium />
     {#each categories as [categoryName, bindings]}
-      <Heading extraSmall>{categoryName}</Heading>
+      <Heading xs h4>{categoryName}</Heading>
       <Spacer extraSmall />
       {#each bindableProperties.filter(binding =>
         binding.label.match(searchRgx)
@@ -64,7 +64,7 @@
         </div>
       {/each}
     {/each}
-    <Heading extraSmall>Helpers</Heading>
+    <Heading xs h3>Helpers</Heading>
     <Spacer extraSmall />
     {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
       <div class="binding" on:click={() => addToText(helper)}>

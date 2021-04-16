@@ -137,7 +137,7 @@
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading extraSmall>Tables</Heading>
+      <Heading xs h3>Tables</Heading>
     </div>
     <ul>
       {#each tables as table}
@@ -150,7 +150,7 @@
     </ul>
     <hr />
     <div class="title">
-      <Heading extraSmall>Views</Heading>
+      <Heading xs h3>Views</Heading>
     </div>
     <ul>
       {#each views as view}

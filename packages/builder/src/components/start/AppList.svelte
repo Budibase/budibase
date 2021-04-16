@@ -1,6 +1,6 @@
 <script>
   import AppCard from "./AppCard.svelte"
-  import { Heading } from "@budibase/bbui"
+  import { Heading, Divider } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import { get } from "builderStore/api"
 
@@ -19,22 +19,17 @@
 </script>
 
 <div class="root">
-  <Heading lh medium black>Your Apps</Heading>
+  <Heading m h2>Your Apps</Heading>
+  <Divider s />
   {#await promise}
     <div class="spinner-container">
       <Spinner size="30" />
     </div>
   {:then apps}
-    <div class="inner">
-      <div>
-        <div>
-          <div class="apps">
-            {#each apps as app}
-              <AppCard {...app} />
-            {/each}
-          </div>
-        </div>
-      </div>
+    <div class="apps">
+      {#each apps as app}
+        <AppCard {...app} />
+      {/each}
     </div>
   {:catch err}
     <h1 style="color:red">{err}</h1>
@@ -43,6 +38,7 @@
 
 <style>
   .apps {
+    margin-top: var(--spectrum-global-dimension-static-size-150);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     grid-gap: var(--layout-m);

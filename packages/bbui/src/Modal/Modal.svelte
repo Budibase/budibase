@@ -1,8 +1,7 @@
 <script>
-  import "@spectrum-css/dialog/dist/index-vars.css"
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext } from "svelte"
+  import { createEventDispatcher, setContext, tick } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
@@ -31,6 +30,14 @@
     }
   }
 
+  async function focusFirstInput(node) {
+    const inputs = node.querySelectorAll("input")
+    if (inputs) {
+      await tick()
+      inputs[0].focus()
+    }
+  }
+
   setContext(Context.Modal, { show, hide })
 </script>
 
@@ -45,6 +52,7 @@
       <div class="modal-wrapper" on:click|self={hide}>
         <div class="modal-inner-wrapper" on:click|self={hide}>
           <div
+            use:focusFirstInput
             class="spectrum-Modal is-open"
             transition:fly={{ y: 30, duration: 200 }}>
             <slot />
