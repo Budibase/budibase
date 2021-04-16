@@ -5,7 +5,7 @@
 <script>
     export let direction = "n"
     export let name = "Add"
-    export let hidden = false
+    export let hidden = true
     export let s = false
     export let m = false;
     export let l = false;
