@@ -13,13 +13,23 @@
 
   const dispatch = createEventDispatcher()
   let open = false
-  $: isNull = value == null || value === ""
-  $: placeholderText = placeholder || "Choose an option"
-  $: selectedOption = options.find(option => getOptionValue(option) === value)
-  $: selectedLabel = selectedOption
-    ? getOptionLabel(selectedOption)
-    : placeholderText
-  $: fieldText = isNull ? placeholderText : selectedLabel
+  $: fieldText = getFieldText(value, options, placeholder)
+
+  const getFieldText = (value, options, placeholder) => {
+    // Always use placeholder if no value
+    if (value == null || value === "") {
+      return placeholder || "Choose an option"
+    }
+
+    // Wait for options to load if there is a value but no options
+    if (!options?.length) {
+      return ""
+    }
+
+    // Render the label if the selected option is found, otherwide raw value
+    const selected = options.find(option => getOptionValue(option) === value)
+    return selected ? getOptionLabel(selected) : value
+  }
 
   const selectOption = value => {
     dispatch("change", value)
@@ -36,7 +46,7 @@
   {options}
   {getOptionLabel}
   {getOptionValue}
-  isPlaceholder={isNull}
+  isPlaceholder={value == null || value === ''}
   placeholderOption={placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption} />
