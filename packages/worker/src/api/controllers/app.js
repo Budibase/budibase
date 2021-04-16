@@ -15,9 +15,14 @@ exports.getApps = async ctx => {
   }
   const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
   const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
-  const apps = await Promise.all(appPromises)
+
+  const apps = await Promise.allSettled(appPromises)
   const body = {}
   for (let app of apps) {
+    if (app.status !== "fulfilled") {
+      continue
+    }
+    app = app.value
     let url = app.url || encodeURI(`${app.name}`)
     url = `/${url.replace(URL_REGEX_SLASH, "")}`
     body[url] = {

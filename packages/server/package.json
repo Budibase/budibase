@@ -43,7 +43,6 @@
     "electron": "electron src/electron.js",
     "build:electron": "electron-builder --dir",
     "publish:electron": "electron-builder -mwl --publish always",
-    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/",
     "initialise": "node scripts/initialise.js"
   },
@@ -80,6 +79,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/auth": "^0.0.1",
     "@budibase/client": "^0.8.14",
     "@budibase/string-templates": "^0.8.14",
     "@elastic/elasticsearch": "7.10.0",

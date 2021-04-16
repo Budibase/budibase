@@ -93,7 +93,7 @@ async function deployApp(deployment) {
 
 exports.fetchDeployments = async function(ctx) {
   try {
-    const db = new PouchDB(ctx.user.appId)
+    const db = new PouchDB(ctx.appId)
     const deploymentDoc = await db.get("_local/deployments")
     const { updated, deployments } = await checkAllDeployments(
       deploymentDoc,
@@ -110,7 +110,7 @@ exports.fetchDeployments = async function(ctx) {
 
 exports.deploymentProgress = async function(ctx) {
   try {
-    const db = new PouchDB(ctx.user.appId)
+    const db = new PouchDB(ctx.appId)
     const deploymentDoc = await db.get("_local/deployments")
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
@@ -128,7 +128,7 @@ exports.deployApp = async function(ctx) {
     hostingInfo.type === HostingTypes.CLOUD
       ? require("./awsDeploy")
       : require("./selfDeploy")
-  let deployment = new Deployment(ctx.user.appId)
+  let deployment = new Deployment(ctx.appId)
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeLocalDeploymentHistory(deployment)
 

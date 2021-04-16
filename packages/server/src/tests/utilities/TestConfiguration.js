@@ -15,6 +15,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
+const { Cookies } = require("@budibase/auth")
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -68,16 +69,25 @@ class TestConfiguration {
   }
 
   defaultHeaders() {
-    const builderUser = {
-      userId: "BUILDER",
-      roleId: BUILTIN_ROLE_IDS.BUILDER,
+    const user = {
+      userId: "us_test@test.com",
+      email: "test@test.com",
+      builder: {
+        global: true,
+      },
     }
-    const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
-    // can be "production" for test case
-    const type = env.isProd() ? "cloud" : "local"
+    const app = {
+      roleId: BUILTIN_ROLE_IDS.BUILDER,
+      appId: this.appId,
+    }
+    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const appToken = jwt.sign(app, env.JWT_SECRET)
     const headers = {
       Accept: "application/json",
-      Cookie: [`budibase:builder:${type}=${builderToken}`],
+      Cookie: [
+        `${Cookies.Auth}=${authToken}`,
+        `${Cookies.CurrentApp}=${appToken}`,
+      ],
     }
     if (this.appId) {
       headers["x-budibase-app-id"] = this.appId
@@ -101,7 +111,7 @@ class TestConfiguration {
     } catch (err) {
       // allow errors here
     }
-    return this.login(email, PASSWORD)
+    return this.login(email, PASSWORD, roleId)
   }
 
   async createApp(appName) {
@@ -279,7 +289,7 @@ class TestConfiguration {
         roleId,
       },
       null,
-      controllers.user.create
+      controllers.user.createMetadata
     )
   }
 
@@ -289,7 +299,7 @@ class TestConfiguration {
       {
         email,
       },
-      controllers.user.find
+      controllers.user.findMetadata
     )
     return this._req(
       {
@@ -297,30 +307,35 @@ class TestConfiguration {
         status: "inactive",
       },
       null,
-      controllers.user.update
+      controllers.user.updateMetadata
     )
   }
 
-  async login(email, password) {
+  async login(email, password, roleId = BUILTIN_ROLE_IDS.BUILDER) {
     if (!this.request) {
       throw "Server has not been opened, cannot login."
     }
     if (!email || !password) {
       await this.createUser()
-      email = EMAIL
-      password = PASSWORD
     }
-    const result = await this.request
-      .post(`/api/authenticate`)
-      .set({
-        "x-budibase-app-id": this.appId,
-      })
-      .send({ email, password })
+    const user = {
+      userId: `us_${email || EMAIL}`,
+      email: email || EMAIL,
+    }
+    const app = {
+      roleId: roleId,
+      appId: this.appId,
+    }
+    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const appToken = jwt.sign(app, env.JWT_SECRET)
 
     // returning necessary request headers
     return {
       Accept: "application/json",
-      Cookie: result.headers["set-cookie"],
+      Cookie: [
+        `${Cookies.Auth}=${authToken}`,
+        `${Cookies.CurrentApp}=${appToken}`,
+      ],
       "x-budibase-app-id": this.appId,
     }
   }

@@ -10,8 +10,15 @@ module.exports = async (url, opts) => {
     }
   }
 
+  if (url.includes("/api/admin")) {
+    return json({
+      email: "test@test.com",
+      _id: "us_test@test.com",
+      status: "active",
+    })
+  }
   // mocked data based on url
-  if (url.includes("api/apps")) {
+  else if (url.includes("api/apps")) {
     return json({
       app1: {
         url: "/app1",

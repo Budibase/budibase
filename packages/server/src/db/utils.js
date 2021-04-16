@@ -34,7 +34,10 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
-  USERS: "ta_users",
+}
+
+const InternalTables = {
+  USER_METADATA: "ta_users",
 }
 
 const SearchIndexes = {
@@ -43,6 +46,7 @@ const SearchIndexes = {
 
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
+exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
@@ -112,17 +116,19 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
 /**
  * Gets a new row ID for the specified table.
  * @param {string} tableId The table which the row is being created for.
+ * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.
  * @returns {string} The new ID which a row doc can be stored under.
  */
-exports.generateRowID = tableId => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+exports.generateRowID = (tableId, id = null) => {
+  id = id || newid()
+  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
 }
 
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserParams = (email = "", otherProps = {}) => {
-  return exports.getRowParams(ViewNames.USERS, email, otherProps)
+exports.getUserMetadataParams = (email = "", otherProps = {}) => {
+  return exports.getRowParams(InternalTables.USER_METADATA, email, otherProps)
 }
 
 /**
@@ -130,8 +136,17 @@ exports.getUserParams = (email = "", otherProps = {}) => {
  * @param {string} email The email which the ID is going to be built up of.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserID = email => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${email}`
+exports.generateUserMetadataID = email => {
+  return exports.generateRowID(InternalTables.USER_METADATA, email)
+}
+
+/**
+ * Breaks up the ID to get the email address back out of it.
+ */
+exports.getEmailFromUserMetadataID = id => {
+  return id.split(
+    `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+  )[1]
 }
 
 /**

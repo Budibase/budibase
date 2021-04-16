@@ -1,5 +1,6 @@
 const Router = require("@koa/router")
-const authenticated = require("../middleware/authenticated")
+const { authenticated } = require("@budibase/auth")
+const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
@@ -13,10 +14,10 @@ router
     compress({
       threshold: 2048,
       gzip: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       deflate: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       br: false,
     })
@@ -31,6 +32,7 @@ router
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
   .use(authenticated)
+  .use(currentApp)
 
 // error handling middleware
 router.use(async (ctx, next) => {

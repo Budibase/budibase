@@ -1,4 +1,5 @@
-const deployRoutes = require("./deploy")
+const adminRoutes = require("./admin")
+const authRoutes = require("./auth")
 const appRoutes = require("./app")
 
-exports.routes = [deployRoutes, appRoutes]
+exports.routes = [adminRoutes, authRoutes, appRoutes]
