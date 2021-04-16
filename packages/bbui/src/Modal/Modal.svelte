@@ -32,7 +32,7 @@
 
   async function focusFirstInput(node) {
     const inputs = node.querySelectorAll("input")
-    if (inputs) {
+    if (inputs?.length) {
       await tick()
       inputs[0].focus()
     }

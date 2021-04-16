@@ -4,7 +4,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = null
-  export let label = undefined
+  export let label = null
   export let disabled = false
   export let labelPosition = "above"
   export let error = null
