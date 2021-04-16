@@ -10,7 +10,9 @@
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === 'above'}>
-  <FieldLabel forId={id} {label} position={labelPosition} />
+  {#if label}
+    <FieldLabel forId={id} {label} position={labelPosition} />
+  {/if}
   <div class="spectrum-Form-itemField">
     <slot />
     {#if error}
