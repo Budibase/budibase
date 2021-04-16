@@ -1,4 +1,5 @@
 <script>
+  import "@spectrum-css/dialog/dist/index-vars.css"
   import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
   import Heading from "../Typography/Heading.svelte"
