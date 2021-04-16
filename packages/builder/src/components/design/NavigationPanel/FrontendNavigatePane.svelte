@@ -27,7 +27,6 @@
   ]
 
   let modal
-  let routes = {}
   $: selected = tabs.find(t => t.key === $params.assetType).title
 
   const navigate = ({detail}) => {
