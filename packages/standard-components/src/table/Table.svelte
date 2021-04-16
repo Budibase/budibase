@@ -64,6 +64,7 @@
         displayName: null,
         order: 0,
         sortable: false,
+        divider: true,
       }
     }
     fields.forEach(field => {
@@ -92,9 +93,3 @@
     <slot />
   </Table>
 </div>
-
-<style>
-  div {
-    display: flex !important;
-  }
-</style>
