@@ -6,7 +6,7 @@
 </script>
 
 <div>
-  <Button overBackground quiet icon="Settings" text on:click={modal.show}>
+  <Button primary quiet icon="Settings" text on:click={modal.show}>
     Settings
   </Button>
 </div>
