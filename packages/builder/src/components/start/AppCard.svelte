@@ -1,6 +1,6 @@
 <script>  
   import { goto } from "@roxi/routify"
-  import { ActionButton, Heading, Spacer } from "@budibase/bbui"
+  import { ActionButton, Heading, Spacer, Icon } from "@budibase/bbui"
   import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import download from "downloadjs"
@@ -36,7 +36,7 @@
     </ActionButton>
     {#if appExportLoading}
       <Spinner size="10" />
-    {:else}<i class="ri-folder-download-line" on:click={exportApp} />{/if}
+    {:else}<ActionButton icon="Download" quiet />{/if}
   </div>
 </div>
 
