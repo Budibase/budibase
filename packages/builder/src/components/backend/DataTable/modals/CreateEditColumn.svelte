@@ -52,7 +52,7 @@
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
     ($backendUiStore.selectedTable?._id === TableNames.USERS &&
-    UNEDITABLE_USER_FIELDS.includes(field.name)) ||
+      UNEDITABLE_USER_FIELDS.includes(field.name)) ||
     (originalName && field.type === LINK_TYPE)
 
   $: invalid =
