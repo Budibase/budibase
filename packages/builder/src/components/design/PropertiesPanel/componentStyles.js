@@ -1,5 +1,4 @@
-import Input from "./PropertyControls/Input.svelte"
-import OptionSelect from "./PropertyControls/OptionSelect.svelte"
+import { Input, Select } from "@budibase/bbui"
 import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
 import Colorpicker from "./PropertyControls/ColorPicker.svelte"
 
@@ -7,7 +6,7 @@ export const layout = [
   {
     label: "Display",
     key: "display",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Block", value: "block" },
       { label: "Inline Block", value: "inline-block" },
@@ -34,7 +33,7 @@ export const layout = [
   {
     label: "Justify",
     key: "justify-content",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
@@ -47,7 +46,7 @@ export const layout = [
   {
     label: "Align",
     key: "align-items",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
@@ -59,7 +58,7 @@ export const layout = [
   {
     label: "Wrap",
     key: "flex-wrap",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Wrap", value: "wrap" },
       { label: "No wrap", value: "nowrap" },
@@ -68,7 +67,7 @@ export const layout = [
   {
     label: "Gap",
     key: "gap",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -86,7 +85,7 @@ export const margin = [
   {
     label: "All sides",
     key: "margin",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -105,7 +104,7 @@ export const margin = [
   {
     label: "Top",
     key: "margin-top",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -124,7 +123,7 @@ export const margin = [
   {
     label: "Right",
     key: "margin-right",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -143,7 +142,7 @@ export const margin = [
   {
     label: "Bottom",
     key: "margin-bottom",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -162,7 +161,7 @@ export const margin = [
   {
     label: "Left",
     key: "margin-left",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -184,7 +183,7 @@ export const padding = [
   {
     label: "All sides",
     key: "padding",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -201,7 +200,7 @@ export const padding = [
   {
     label: "Top",
     key: "padding-top",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -218,7 +217,7 @@ export const padding = [
   {
     label: "Right",
     key: "padding-right",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -235,7 +234,7 @@ export const padding = [
   {
     label: "Bottom",
     key: "padding-bottom",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -252,7 +251,7 @@ export const padding = [
   {
     label: "Left",
     key: "padding-left",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0px" },
       { label: "4px", value: "4px" },
@@ -272,7 +271,7 @@ export const size = [
   {
     label: "Flex",
     key: "flex",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Shrink", value: "0 1 auto" },
       { label: "Grow", value: "1 1 auto" },
@@ -320,7 +319,7 @@ export const position = [
   {
     label: "Position",
     key: "position",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Static", value: "static" },
       { label: "Relative", value: "relative" },
@@ -356,7 +355,7 @@ export const position = [
   {
     label: "Z-index",
     key: "z-index",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "-9999", value: "-9999" },
       { label: "-3", value: "-3" },
@@ -375,7 +374,7 @@ export const typography = [
   {
     label: "Font",
     key: "font-family",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Arial", value: "Arial" },
       { label: "Arial Black", value: "Arial Black" },
@@ -397,7 +396,7 @@ export const typography = [
   {
     label: "Weight",
     key: "font-weight",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "200", value: "200" },
       { label: "300", value: "300" },
@@ -412,7 +411,7 @@ export const typography = [
   {
     label: "size",
     key: "font-size",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "8px", value: "8px" },
       { label: "10px", value: "10px" },
@@ -431,7 +430,7 @@ export const typography = [
   {
     label: "Line H",
     key: "line-height",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "1", value: "1" },
       { label: "1.25", value: "1.25" },
@@ -472,7 +471,7 @@ export const typography = [
   {
     label: "Decoration",
     key: "text-decoration-line",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Underline", value: "underline" },
       { label: "Overline", value: "overline" },
@@ -491,7 +490,7 @@ export const background = [
   {
     label: "Gradient",
     key: "background-image",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "none" },
       {
@@ -577,7 +576,7 @@ export const border = [
   {
     label: "Radius",
     key: "border-radius",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0" },
       { label: "X Small", value: "0.125rem" },
@@ -592,7 +591,7 @@ export const border = [
   {
     label: "Width",
     key: "border-width",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0" },
       { label: "X Small", value: "0.5px" },
@@ -610,7 +609,7 @@ export const border = [
   {
     label: "Style",
     key: "border-style",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "none" },
       { label: "Hidden", value: "hidden" },
@@ -630,7 +629,7 @@ export const effects = [
   {
     label: "Opacity",
     key: "opacity",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "0", value: "0" },
       { label: "0.2", value: "0.2" },
@@ -643,7 +642,7 @@ export const effects = [
   {
     label: "Rotate",
     key: "transform",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "0" },
       { label: "45 deg", value: "rotate(45deg)" },
@@ -659,7 +658,7 @@ export const effects = [
   {
     label: "Shadow",
     key: "box-shadow",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "none" },
       { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
@@ -691,7 +690,7 @@ export const transitions = [
   {
     label: "Property",
     key: "transition-property",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "None", value: "none" },
       { label: "All", value: "all" },
@@ -711,7 +710,7 @@ export const transitions = [
   {
     label: "Duration",
     key: "transition-duration",
-    control: OptionSelect,
+    control: Select,
     placeholder: "sec",
     options: [
       { label: "0.4s", value: "0.4s" },
@@ -725,7 +724,7 @@ export const transitions = [
   {
     label: "Ease",
     key: "transition-timing-function",
-    control: OptionSelect,
+    control: Select,
     options: [
       { label: "Linear", value: "linear" },
       { label: "Ease", value: "ease" },

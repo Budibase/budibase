@@ -209,5 +209,6 @@
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
     border-left: var(--border-light);
+    overflow-x: hidden;
   }
 </style>
