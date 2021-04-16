@@ -37,6 +37,12 @@ const SCHEMA = {
     read: {
       type: "sql",
     },
+    update: {
+      type: "sql",
+    },
+    delete: {
+      type: "sql",
+    },
   },
 }
 
@@ -62,6 +68,28 @@ class SqlServerIntegration {
   }
 
   async create(query) {
+    try {
+      await this.connect()
+      const response = await this.client.query(query.sql)
+      return response.recordset
+    } catch (err) {
+      console.error("Error querying MS SQL Server", err)
+      throw err
+    }
+  }
+
+  async update(query) {
+    try {
+      await this.connect()
+      const response = await this.client.query(query.sql)
+      return response.recordset
+    } catch (err) {
+      console.error("Error querying MS SQL Server", err)
+      throw err
+    }
+  }
+
+  async delete(query) {
     try {
       await this.connect()
       const response = await this.client.query(query.sql)
