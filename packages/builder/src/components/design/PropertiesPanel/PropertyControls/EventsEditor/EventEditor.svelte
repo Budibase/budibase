@@ -3,6 +3,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
+  import { generate } from "shortid"
 
   const flipDurationMs = 150
 
@@ -11,10 +12,14 @@
   export let actions
 
   // dndzone needs an id on the array items, so this adds some temporary ones.
-  if (actions) {
-    actions = actions.map((action, i) => {
-      return { ...action, id: i }
-    })
+  $: {
+    if (actions) {
+      actions.forEach(action => {
+        if (!action.id) {
+          action.id = generate()
+        }
+      })
+    }
   }
 
   let addActionButton
@@ -41,7 +46,7 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
-      id: actions ? actions.length + 1 : 0,
+      id: generate(),
     }
     if (!actions) {
       actions = []
