@@ -10,6 +10,7 @@
   export let id = null
 
   const dispatch = createEventDispatcher()
+  let focus = false
 
   const updateValue = value => {
     if (type === "number") {
@@ -20,6 +21,7 @@
   }
 
   const onBlur = event => {
+    focus = false
     updateValue(event.target.value)
   }
 
@@ -33,7 +35,8 @@
 <div
   class="spectrum-Textfield"
   class:is-invalid={!!error}
-  class:is-disabled={disabled}>
+  class:is-disabled={disabled}
+  class:is-focused={focus}>
   {#if error}
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
@@ -49,6 +52,7 @@
     value={value || ''}
     placeholder={placeholder || ''}
     on:blur={onBlur}
+    on:focus={() => (focus = true)}
     {type}
     class="spectrum-Textfield-input" />
 </div>

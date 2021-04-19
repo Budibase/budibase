@@ -105,6 +105,7 @@
     max-height: 240px;
     width: 100%;
     z-index: 999;
+    top: 100%;
   }
   .spectrum-Picker {
     width: 100%;
