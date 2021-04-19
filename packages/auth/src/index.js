@@ -51,6 +51,8 @@ module.exports = {
   StaticDatabases,
   generateUserID,
   getUserParams,
+  generateGroupID,
+  getGroupParams,
   getEmailFromUserID,
   hash,
   compare,

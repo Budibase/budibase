@@ -41,7 +41,18 @@ exports.generateGroupID = () => {
 }
 
 /**
- * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ * Gets parameters for retrieving groups.
+ */
+exports.getGroupParams = (id = "", otherProps = {}) => {
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}`,
+    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Gets parameters for retrieving users.
  */
 exports.getUserParams = (email = "", otherProps = {}) => {
   if (!email) {
