@@ -17,6 +17,8 @@ const {
 const {
   generateUserID,
   getUserParams,
+  generateGroupID,
+  getGroupParams,
   getEmailFromUserID,
 } = require("./db/utils")
 

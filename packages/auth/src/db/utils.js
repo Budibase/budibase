@@ -1,3 +1,5 @@
+const { newid } = require("../hashing")
+
 exports.StaticDatabases = {
   USER: {
     name: "user-db",
@@ -7,6 +9,7 @@ exports.StaticDatabases = {
 const DocumentTypes = {
   USER: "us",
   APP: "app",
+  GROUP: "group",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -27,6 +30,14 @@ exports.generateUserID = email => {
 
 exports.getEmailFromUserID = userId => {
   return userId.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
+}
+
+/**
+ * Generates a new group ID.
+ * @returns {string} The new group ID which the group doc can be stored under.
+ */
+exports.generateGroupID = () => {
+  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
 }
 
 /**
