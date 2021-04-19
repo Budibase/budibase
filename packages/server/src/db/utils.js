@@ -127,23 +127,23 @@ exports.generateRowID = (tableId, id = null) => {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserMetadataParams = (email = "", otherProps = {}) => {
-  return exports.getRowParams(InternalTables.USER_METADATA, email, otherProps)
+exports.getUserMetadataParams = (userId = null, otherProps = {}) => {
+  return exports.getRowParams(InternalTables.USER_METADATA, userId, otherProps)
 }
 
 /**
- * Generates a new user ID based on the passed in email.
- * @param {string} email The email which the ID is going to be built up of.
+ * Generates a new user ID based on the passed in global ID.
+ * @param {string} globalId The ID of the global user.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserMetadataID = email => {
-  return exports.generateRowID(InternalTables.USER_METADATA, email)
+exports.generateUserMetadataID = globalId => {
+  return exports.generateRowID(InternalTables.USER_METADATA, globalId)
 }
 
 /**
- * Breaks up the ID to get the email address back out of it.
+ * Breaks up the ID to get the global ID.
  */
-exports.getEmailFromUserMetadataID = id => {
+exports.getGlobalIDFromUserMetadataID = id => {
   return id.split(
     `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
   )[1]

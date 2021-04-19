@@ -16,7 +16,7 @@ router
     controller.fetchMetadata
   )
   .get(
-    "/api/users/metadata/:email",
+    "/api/users/metadata/:id",
     authorized(PermissionTypes.USER, PermissionLevels.READ),
     controller.findMetadata
   )
@@ -32,7 +32,7 @@ router
     controller.createMetadata
   )
   .delete(
-    "/api/users/metadata/:email",
+    "/api/users/metadata/:id",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     usage,
     controller.destroyMetadata

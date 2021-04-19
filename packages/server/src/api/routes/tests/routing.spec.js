@@ -4,11 +4,6 @@ const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { BUILTIN_ROLE_IDS } = require("../../../utilities/security/roles")
 const workerRequests = require("../../../utilities/workerRequests")
 
-jest.mock("../../../utilities/workerRequests", () => ({
-  getGlobalUsers: jest.fn(),
-  saveGlobalUser: jest.fn(),
-}))
-
 const route = "/test"
 
 describe("/routing", () => {
