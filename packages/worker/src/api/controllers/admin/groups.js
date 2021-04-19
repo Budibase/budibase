@@ -11,6 +11,16 @@ const USER_DB = StaticDatabases.USER.name
 
 exports.save = async function(ctx, next) {
   const db = new CouchDB(USER_DB)
+  const doc = ctx.request.body
+
+  const groupDoc = {
+    users: ["us:1234", "us:1234"],
+    managers: ["us:1234"],
+    defaultRole: "BASIC",
+    apps: {
+      abc123: "ADMIN",
+    },
+  }
 }
 
 exports.fetch = async function(ctx, next) {

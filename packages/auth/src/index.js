@@ -30,7 +30,7 @@ passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
 passport.serializeUser((user, done) => done(null, user))
 
 passport.deserializeUser(async (user, done) => {
-  const db = new database.CouchDB(StaticDatabases.USER.name)
+  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
 
   try {
     const user = await db.get(user._id)
