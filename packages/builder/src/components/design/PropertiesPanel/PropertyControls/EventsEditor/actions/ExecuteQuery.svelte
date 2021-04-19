@@ -24,24 +24,22 @@
   }
 </script>
 
-<Label small>Datasource</Label>
-<Select thin secondary bind:value={parameters.datasourceId}>
-  <option value="" />
-  {#each $datasources.list as datasource}
-    <option value={datasource._id}>{datasource.name}</option>
-  {/each}
-</Select>
+<Label>Datasource</Label>
+<Select
+  bind:value={parameters.datasourceId}
+  option={$datasources.list}
+  getOptionLabel={source => source.name}
+  getOptionValue={source => source._id} />
 
 <Spacer medium />
 
 {#if parameters.datasourceId}
-  <Label small>Query</Label>
-  <Select thin secondary bind:value={parameters.queryId}>
-    <option value="" />
-    {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
-      <option value={query._id}>{query.name}</option>
-    {/each}
-  </Select>
+  <Label>Query</Label>
+  <Select
+    bind:value={parameters.queryId}
+    options={$queries.list.filter(query => query.datasourceId === datasource._id)}
+    getOptionLabel={query => query.name}
+    getOptionValue={query => query._id} />
 {/if}
 
 <Spacer medium />

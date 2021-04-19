@@ -1,7 +1,7 @@
 <script>
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
-  import ActionButton from '../ActionButton/ActionButton.svelte'
+  import ActionButton from "../ActionButton/ActionButton.svelte"
 
   export let title
 
@@ -84,5 +84,8 @@
   }
   .text {
     display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
   }
 </style>
