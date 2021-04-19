@@ -21,7 +21,7 @@ exports.authenticate = async function(username, password, done) {
   if (!password) return done(null, false, "Password Required.")
 
   // Check the user exists in the instance DB by email
-  const db = new database.CouchDB(StaticDatabases.USER.name)
+  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
 
   let dbUser
   try {
