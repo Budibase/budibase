@@ -61,7 +61,7 @@
         thin
         secondary
         value={field[0]}
-        on:change={event => updateFieldName(idx, event.target.value)} />
+        on:change={event => updateFieldName(idx, event.detail)} />
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput

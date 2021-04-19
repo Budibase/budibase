@@ -8,17 +8,19 @@
   export let error = null
   export let id = null
 
+  let focus = false
   const dispatch = createEventDispatcher()
-
   const onChange = event => {
     dispatch("change", event.target.value)
+    focus = false
   }
 </script>
 
 <div
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
-  class:is-disabled={disabled}>
+  class:is-disabled={disabled}
+  class:is-focused={focus}>
   {#if error}
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
@@ -32,6 +34,7 @@
     class="spectrum-Textfield-input"
     {disabled}
     {id}
+    on:focus={() => (focus = true)}
     on:blur={onChange}>{value || ''}</textarea>
 </div>
 

@@ -25,6 +25,7 @@
 <ModalContent
   title="Create Automation"
   confirmText="Create"
+  size="L"
   onConfirm={createAutomation}
   disabled={!valid}>
   <Input bind:value={name} label="Name" />
