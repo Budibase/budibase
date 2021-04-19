@@ -1,4 +1,5 @@
-const { userRoutes, groupRoutes } = require("./admin")
+const userRoutes = require("./admin/users")
+const groupRoutes = require("./admin/groups")
 const authRoutes = require("./auth")
 const appRoutes = require("./app")
 
