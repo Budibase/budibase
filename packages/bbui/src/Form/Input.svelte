@@ -9,6 +9,7 @@
   export let placeholder = null
   export let type = "text"
   export let disabled = false
+  export let readonly = false
   export let error = null
 
   const dispatch = createEventDispatcher()
@@ -22,8 +23,10 @@
   <TextField
     {error}
     {disabled}
+    {readonly}
     {value}
     {placeholder}
     {type}
-    on:change={onChange} />
+    on:change={onChange}
+    on:click />
 </Field>

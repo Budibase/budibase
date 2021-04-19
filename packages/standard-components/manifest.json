@@ -46,7 +46,7 @@
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -529,7 +529,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -629,7 +629,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -730,7 +730,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -843,7 +843,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -920,7 +920,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -997,7 +997,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -1482,7 +1482,7 @@
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Data Provider",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {

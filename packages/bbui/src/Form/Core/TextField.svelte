@@ -8,11 +8,15 @@
   export let disabled = false
   export let error = null
   export let id = null
+  export let readonly = false
 
   const dispatch = createEventDispatcher()
   let focus = false
 
   const updateValue = value => {
+    if (readonly) {
+      return
+    }
     if (type === "number") {
       const float = parseFloat(value)
       value = isNaN(float) ? null : float
@@ -20,12 +24,25 @@
     dispatch("change", value)
   }
 
+  const onFocus = () => {
+    if (readonly) {
+      return
+    }
+    focus = true
+  }
+
   const onBlur = event => {
+    if (readonly) {
+      return
+    }
     focus = false
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
+    if (readonly) {
+      return
+    }
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
@@ -46,13 +63,15 @@
     </svg>
   {/if}
   <input
+    on:click
     on:keyup={updateValueOnEnter}
     {disabled}
+    {readonly}
     {id}
     value={value || ''}
     placeholder={placeholder || ''}
     on:blur={onBlur}
-    on:focus={() => (focus = true)}
+    on:focus={onFocus}
     {type}
     class="spectrum-Textfield-input" />
 </div>

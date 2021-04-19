@@ -4,6 +4,8 @@
     Button,
     Icon,
     DropdownMenu,
+    Divider,
+    Select,
     Spacer,
     Heading,
     Drawer,
@@ -27,6 +29,7 @@
   export let otherSources
   export let showAllQueries
 
+  $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
@@ -92,14 +95,12 @@
   }
 </script>
 
-<div class="container">
-  <div
-    class="dropdownbutton"
-    bind:this={anchorRight}
-    on:click={dropdownRight.show}>
-    <span>{value?.label ?? 'Choose option'}</span>
-    <Icon name="arrowdown" />
-  </div>
+<div class="container" bind:this={anchorRight}>
+  <Select
+    readonly
+    value={text}
+    options={[text]}
+    on:click={dropdownRight.show} />
   {#if value?.type === 'query'}
     <i class="ri-settings-5-line" on:click={drawer.show} />
     <Drawer title={'Query Parameters'} bind:this={drawer}>
@@ -148,7 +149,7 @@
         </li>
       {/each}
     </ul>
-    <hr />
+    <Divider s />
     <div class="title">
       <Heading xs h3>Views</Heading>
     </div>
@@ -161,9 +162,9 @@
         </li>
       {/each}
     </ul>
-    <hr />
+    <Divider s />
     <div class="title">
-      <Heading extraSmall>Relationships</Heading>
+      <Heading xs h3>Relationships</Heading>
     </div>
     <ul>
       {#each links as link}
@@ -174,10 +175,9 @@
         </li>
       {/each}
     </ul>
-
-    <hr />
+    <Divider s />
     <div class="title">
-      <Heading extraSmall>Queries</Heading>
+      <Heading xs h3>Queries</Heading>
     </div>
     <ul>
       {#each queries as query}
@@ -190,7 +190,7 @@
     </ul>
 
     {#if otherSources?.length}
-      <hr />
+      <Divider s />
       <div class="title">
         <Heading extraSmall>Other</Heading>
       </div>
@@ -214,33 +214,8 @@
     justify-content: flex-start;
     align-items: center;
   }
-
-  .dropdownbutton {
-    background-color: var(--grey-2);
-    border: var(--border-transparent);
-    padding: var(--spacing-s) var(--spacing-m);
-    border-radius: var(--border-radius-m);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    overflow: hidden;
+  .container :global(:first-child) {
     flex: 1 1 auto;
-  }
-  .dropdownbutton:hover {
-    cursor: pointer;
-    background-color: var(--grey-3);
-  }
-  .dropdownbutton span {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    flex: 1 1 auto;
-    text-align: left;
-    font-size: var(--font-size-xs);
-  }
-  .dropdownbutton :global(svg) {
-    margin: -4px 0;
   }
 
   .dropdown {
@@ -248,11 +223,7 @@
     z-index: 99999999;
   }
   .title {
-    padding: 0 var(--spacing-m) var(--spacing-xs) var(--spacing-m);
-  }
-
-  hr {
-    margin: var(--spacing-m) 0 var(--spacing-xl) 0;
+    padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);
   }
 
   ul {

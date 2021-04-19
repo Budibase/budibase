@@ -43,7 +43,8 @@
       use:clickOutside={hide}
       style={menuStyle}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open" role="presentation">
+      class="spectrum-Popover is-open"
+      role="presentation">
       <slot />
     </div>
   </Portal>
