@@ -16,7 +16,7 @@ const SCHEMA = {
       type: FIELD_TYPES.PASSWORD,
       required: true,
     },
-    secretKey: {
+    secretAccessKey: {
       type: FIELD_TYPES.PASSWORD,
       required: true,
     },
@@ -114,7 +114,7 @@ class DynamoDBIntegration {
     })
   }
 
-  async connect() {
+  connect() {
     AWS.config.update(this.config)
   }
 
