@@ -1,3 +1,9 @@
+const uuid = require("uuid/v4")
+
+exports.ViewNames = {
+  USER_BY_EMAIL: "by_email",
+}
+
 exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
@@ -17,28 +23,23 @@ const SEPARATOR = "_"
 exports.SEPARATOR = SEPARATOR
 
 /**
- * Generates a new user ID based on the passed in email.
- * @param {string} email The email which the ID is going to be built up of.
+ * Generates a new global user ID.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserID = email => {
-  return `${DocumentTypes.USER}${SEPARATOR}${email}`
-}
-
-exports.getEmailFromUserID = userId => {
-  return userId.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
+exports.generateUserID = () => {
+  return `${DocumentTypes.USER}${SEPARATOR}${uuid()}`
 }
 
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserParams = (email = "", otherProps = {}) => {
-  if (!email) {
-    email = ""
+exports.getUserParams = (globalId = "", otherProps = {}) => {
+  if (!globalId) {
+    globalId = ""
   }
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${email}`,
-    endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
 }

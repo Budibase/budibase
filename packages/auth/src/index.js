@@ -17,8 +17,8 @@ const {
 const {
   generateUserID,
   getUserParams,
-  getEmailFromUserID,
 } = require("./db/utils")
+const { getGlobalUserByEmail } = require("./utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -49,7 +49,6 @@ module.exports = {
   StaticDatabases,
   generateUserID,
   getUserParams,
-  getEmailFromUserID,
   hash,
   compare,
   getAppId,
@@ -58,4 +57,5 @@ module.exports = {
   clearCookie,
   authenticated,
   isClient,
+  getGlobalUserByEmail,
 }
