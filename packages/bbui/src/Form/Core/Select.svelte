@@ -10,6 +10,7 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let readonly = false
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -38,10 +39,12 @@
 </script>
 
 <Picker
+  on:click
   bind:open
   {id}
   {error}
   {disabled}
+  {readonly}
   {fieldText}
   {options}
   {getOptionLabel}

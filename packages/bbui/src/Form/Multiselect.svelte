@@ -3,9 +3,10 @@
   import Multiselect from "./Core/Multiselect.svelte"
   import Field from "./Field.svelte"
 
-  export let value = null
-  export let label = []
+  export let value = []
+  export let label = null
   export let disabled = false
+  export let readonly = false
   export let labelPosition = "above"
   export let error = null
   export let placeholder = null
@@ -29,5 +30,6 @@
     {placeholder}
     {getOptionLabel}
     {getOptionValue}
-    on:change={onChange} />
+    on:change={onChange}
+    on:click />
 </Field>

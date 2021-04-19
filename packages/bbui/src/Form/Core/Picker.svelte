@@ -3,6 +3,7 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
+  import { createEventDispatcher } from "svelte"
 
   export let id = null
   export let disabled = false
@@ -16,6 +17,16 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let open = false
+  export let readonly = false
+
+  const dispatch = createEventDispatcher()
+  const onClick = () => {
+    dispatch("click")
+    if (readonly) {
+      return
+    }
+    open = true
+  }
 </script>
 
 <button
@@ -25,7 +36,7 @@
   class:is-invalid={!!error}
   class:is-open={open}
   aria-haspopup="listbox"
-  on:click={() => (open = true)}>
+  on:click={onClick}>
   <span class="spectrum-Picker-label" class:is-placeholder={isPlaceholder}>
     {fieldText}
   </span>

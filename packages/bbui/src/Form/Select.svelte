@@ -6,6 +6,7 @@
   export let value = null
   export let label = undefined
   export let disabled = false
+  export let readonly = false
   export let labelPosition = "above"
   export let error = null
   export let placeholder = "Choose an option"
@@ -30,10 +31,12 @@
   <Select
     {error}
     {disabled}
+    {readonly}
     {value}
     {options}
     {placeholder}
     {getOptionLabel}
     {getOptionValue}
-    on:change={onChange} />
+    on:change={onChange}
+    on:click />
 </Field>
