@@ -1,8 +1,8 @@
 const { newid } = require("../hashing")
 
 exports.StaticDatabases = {
-  USER: {
-    name: "user-db",
+  GLOBAL: {
+    name: "global-db",
   },
 }
 
