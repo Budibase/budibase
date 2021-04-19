@@ -134,6 +134,7 @@
     flex: 1;
     display: inline-block;
     padding-left: 2px;
+    width: 0;
   }
 
   .icon {

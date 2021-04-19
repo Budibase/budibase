@@ -17,7 +17,6 @@
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import FilterEditor from "./PropertyControls/FilterEditor.svelte"
-  import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
@@ -61,7 +60,6 @@
     select: Select,
     dataSource: DataSourceSelect,
     dataProvider: DataProviderSelect,
-    detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
     event: EventsEditor,
