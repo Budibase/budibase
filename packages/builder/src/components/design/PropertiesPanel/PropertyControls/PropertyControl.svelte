@@ -138,18 +138,19 @@
   }
 
   .icon {
-    right: 2px;
-    top: 2px;
-    bottom: 2px;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
     position: absolute;
     align-items: center;
     display: flex;
     box-sizing: border-box;
-    padding-left: 7px;
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
+    padding-left: 4px;
+    padding-right: 2px;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
     color: var(--grey-7);
     font-size: 14px;
   }
