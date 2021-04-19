@@ -1,5 +1,6 @@
 const AWS = require("aws-sdk")
 const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
+const { AWS_REGION } = require("../db/dynamoClient")
 
 const SCHEMA = {
   docs: "https://github.com/dabit3/dynamodb-documentclient-cheat-sheet",
@@ -114,8 +115,20 @@ class DynamoDBIntegration {
     })
   }
 
+  end() {
+    this.disconnect()
+  }
+
   connect() {
     AWS.config.update(this.config)
+  }
+
+  disconnect() {
+    AWS.config.update({
+      secretAccessKey: undefined,
+      accessKeyId: undefined,
+      region: AWS_REGION,
+    })
   }
 
   async create(query) {
