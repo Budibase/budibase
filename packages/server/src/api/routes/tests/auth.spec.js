@@ -1,13 +1,18 @@
 const setup = require("./utilities")
+const { generateUserMetadataID } = require("../../../db/utils")
 
 require("../../../utilities/workerRequests")
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
     return {
-      email: "test@test.com",
+      _id: "us_uuid1",
     }
   }),
-  saveGlobalUser: jest.fn(),
+  saveGlobalUser: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
 }))
 
 describe("/authenticate", () => {
@@ -22,14 +27,14 @@ describe("/authenticate", () => {
 
   describe("fetch self", () => {
     it("should be able to fetch self", async () => {
-      await config.createUser("test@test.com", "p4ssw0rd")
-      const headers = await config.login("test@test.com", "p4ssw0rd")
+      const user = await config.createUser("test@test.com", "p4ssw0rd")
+      const headers = await config.login("test@test.com", "p4ssw0rd", { userId: user._id })
       const res = await request
         .get(`/api/self`)
         .set(headers)
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.email).toEqual("test@test.com")
+      expect(res.body._id).toEqual(generateUserMetadataID("us_uuid1"))
     })
   })
 })

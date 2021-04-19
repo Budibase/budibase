@@ -5,7 +5,7 @@ function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({
     getGlobalUsers: () => {
       return {
-        email: "test@test.com",
+        email: "us_uuid1",
         roles: {
           "app_test": "BASIC",
         }
@@ -59,7 +59,7 @@ class TestConfiguration {
 
   setUser() {
     this.ctx.user = {
-      email: "test@test.com",
+      userId: "ro_ta_user_us_uuid1",
     }
   }
 
