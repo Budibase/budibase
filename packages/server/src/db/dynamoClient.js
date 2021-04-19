@@ -2,6 +2,7 @@ let _ = require("lodash")
 let env = require("../environment")
 
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+exports.AWS_REGION = AWS_REGION
 
 const TableInfo = {
   API_KEYS: {
