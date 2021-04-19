@@ -7,8 +7,13 @@
   export let disabled = false
   export let error = null
   export let id = null
+  export const getCaretPosition = () => ({
+    start: textarea.selectionStart,
+    end: textarea.selectionEnd,
+  })
 
   let focus = false
+  let textarea
   const dispatch = createEventDispatcher()
   const onChange = event => {
     dispatch("change", event.target.value)
@@ -30,6 +35,7 @@
     </svg>
   {/if}
   <textarea
+    bind:this={textarea}
     placeholder={placeholder || ''}
     class="spectrum-Textfield-input"
     {disabled}
