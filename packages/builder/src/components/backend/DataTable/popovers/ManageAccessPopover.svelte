@@ -2,6 +2,7 @@
   import { roles, permissions as permissionsStore } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
+  import { capitalise } from "../../../../helpers"
 
   export let resourceId
   export let permissions
@@ -34,16 +35,13 @@
     <Label extraSmall grey>Level</Label>
     <Label extraSmall grey>Role</Label>
     {#each Object.keys(permissions) as level}
-      <Input secondary thin value={level} disabled={true} />
+      <Input value={capitalise(level)} disabled />
       <Select
-        secondary
-        thin
         value={permissions[level]}
-        on:change={e => changePermission(level, e.target.value)}>
-        {#each $roles as role}
-          <option value={role._id}>{role.name}</option>
-        {/each}
-      </Select>
+        on:change={e => changePermission(level, e.detail)}
+        options={$roles}
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x._id} />
     {/each}
   </div>
 
@@ -58,6 +56,7 @@
   .popover {
     display: grid;
     width: 400px;
+    padding: var(--spacing-xl);
   }
 
   h5 {

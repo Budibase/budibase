@@ -4,6 +4,7 @@
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
+  import clickOutside from "../../Actions/click_outside"
 
   export let id = null
   export let disabled = false
@@ -20,7 +21,7 @@
   export let readonly = false
 
   const dispatch = createEventDispatcher()
-  const onClick = () => {
+  const onClick = e => {
     dispatch("click")
     if (readonly) {
       return
@@ -36,7 +37,7 @@
   class:is-invalid={!!error}
   class:is-open={open}
   aria-haspopup="listbox"
-  on:click={onClick}>
+  on:mousedown={onClick}>
   <span class="spectrum-Picker-label" class:is-placeholder={isPlaceholder}>
     {fieldText}
   </span>
@@ -57,8 +58,8 @@
   </svg>
 </button>
 {#if open}
-  <div class="overlay" on:mousedown|self={() => (open = false)} />
   <div
+    use:clickOutside={() => (open = false)}
     transition:fly={{ y: -20, duration: 200 }}
     class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open">
     <ul class="spectrum-Menu" role="listbox">
@@ -104,14 +105,6 @@
 {/if}
 
 <style>
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 999;
-  }
   .spectrum-Popover {
     max-height: 240px;
     width: 100%;
