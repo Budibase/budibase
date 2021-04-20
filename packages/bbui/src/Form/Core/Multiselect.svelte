@@ -46,10 +46,10 @@
     let map = null
     if (options?.length) {
       map = {}
-      options.forEach(option => {
-        const optionValue = getOptionValue(option)
+      options.forEach((option, idx) => {
+        const optionValue = getOptionValue(option, idx)
         if (optionValue != null) {
-          map[optionValue] = getOptionLabel(option) || ""
+          map[optionValue] = getOptionLabel(option, idx) || ""
         }
       })
     }

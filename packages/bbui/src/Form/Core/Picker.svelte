@@ -81,16 +81,16 @@
         </li>
       {/if}
       {#if options && Array.isArray(options)}
-        {#each options as option}
+        {#each options as option, idx}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={isOptionSelected(getOptionValue(option))}
+            class:is-selected={isOptionSelected(getOptionValue(option, idx))}
             role="option"
             aria-selected="true"
             tabindex="0"
-            on:click={() => onSelectOption(getOptionValue(option))}>
+            on:click={() => onSelectOption(getOptionValue(option, idx))}>
             <span
-              class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span>
+              class="spectrum-Menu-itemLabel">{getOptionLabel(option, idx)}</span>
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
