@@ -117,8 +117,8 @@
     {#if files[0]}{files[0].name}{:else}Upload{/if}
   </label>
 </div>
-<div class="schema-fields">
-  {#if fields.length}
+{#if fields.length}
+  <div class="schema-fields">
     {#each fields as columnName}
       <div class="field">
         <span>{columnName}</span>
@@ -137,8 +137,9 @@
           on:click={() => omitColumn(columnName)} />
       </div>
     {/each}
-  {/if}
-</div>
+  </div>
+{/if}
+
 {#if fields.length}
   <div class="display-column">
     <Select
@@ -174,6 +175,10 @@
 
   input[type="file"] {
     display: none;
+  }
+
+  .schema-fields {
+    margin-top: var(--spacing-xl);
   }
 
   label {
