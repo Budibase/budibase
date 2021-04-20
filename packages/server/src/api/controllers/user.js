@@ -43,6 +43,10 @@ exports.createMetadata = async function(ctx) {
   const db = new CouchDB(appId)
   const { roleId } = ctx.request.body
 
+  if (ctx.request.body._id) {
+    return exports.updateMetadata(ctx)
+  }
+
   // check role valid
   const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
@@ -66,20 +70,26 @@ exports.createMetadata = async function(ctx) {
   }
 }
 
+exports.updateSelfMetadata = async function(ctx) {
+  // overwrite the ID with current users
+  ctx.request.body._id = ctx.user.userId
+  // make sure no stale rev
+  delete ctx.request.body._rev
+  await exports.updateMetadata(ctx)
+}
+
 exports.updateMetadata = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = ctx.request.body
-  const globalUser = await saveGlobalUser(
-    ctx,
-    appId,
-    getGlobalIDFromUserMetadataID(user._id),
-    ctx.request.body
-  )
+  const globalUser = await saveGlobalUser(ctx, appId, {
+    ...user,
+    _id: getGlobalIDFromUserMetadataID(user._id),
+  })
   const metadata = {
     ...globalUser,
     _id: user._id || generateUserMetadataID(globalUser._id),
-    _rev: ctx.request.body._rev,
+    _rev: user._rev,
   }
   ctx.body = await db.put(metadata)
 }

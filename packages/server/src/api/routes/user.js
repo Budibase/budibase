@@ -31,6 +31,12 @@ router
     usage,
     controller.createMetadata
   )
+  .post(
+    "/api/users/metadata/self",
+    authorized(PermissionTypes.USER, PermissionLevels.WRITE),
+    usage,
+    controller.updateSelfMetadata
+  )
   .delete(
     "/api/users/metadata/:id",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),

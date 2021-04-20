@@ -31,15 +31,13 @@ exports.fetch = async function(ctx) {
       include_docs: true,
     })
   )
-  const groups = response.rows.map(row => row.doc)
-  ctx.body = groups
+  ctx.body = response.rows.map(row => row.doc)
 }
 
 exports.find = async function(ctx) {
   const db = new CouchDB(GLOBAL_DB)
   try {
-    const record = await db.get(ctx.params.id)
-    ctx.body = record
+    ctx.body = await db.get(ctx.params.id)
   } catch (err) {
     ctx.throw(err.status, err)
   }
