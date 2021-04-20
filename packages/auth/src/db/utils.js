@@ -1,4 +1,4 @@
-const uuid = require("uuid/v4")
+const { newid } = require("../hashing")
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -13,6 +13,7 @@ exports.StaticDatabases = {
 const DocumentTypes = {
   USER: "us",
   APP: "app",
+  GROUP: "group",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -27,11 +28,30 @@ exports.SEPARATOR = SEPARATOR
  * @returns {string} The new user ID which the user doc can be stored under.
  */
 exports.generateUserID = () => {
-  return `${DocumentTypes.USER}${SEPARATOR}${uuid()}`
+  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ * Generates a new group ID.
+ * @returns {string} The new group ID which the group doc can be stored under.
+ */
+exports.generateGroupID = () => {
+  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving groups.
+ */
+exports.getGroupParams = (id = "", otherProps = {}) => {
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}`,
+    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Gets parameters for retrieving users.
  */
 exports.getUserParams = (globalId = "", otherProps = {}) => {
   if (!globalId) {
