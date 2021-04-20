@@ -162,7 +162,7 @@
     </div>
     <div class="buttons">
       <Button secondary on:click={onClosed}>Cancel</Button>
-      <Button primary on:click={saveView}>Save</Button>
+      <Button cta on:click={saveView}>Save</Button>
     </div>
   </div>
 </div>

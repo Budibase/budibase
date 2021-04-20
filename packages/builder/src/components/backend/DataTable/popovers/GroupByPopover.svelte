@@ -22,26 +22,20 @@
 </script>
 
 <div class="actions">
-  <h5>Group</h5>
-  <div class="input-group-row">
-    <p>By</p>
-    <Select secondary thin bind:value={view.groupBy}>
-      <option value="">Choose an option</option>
-      {#each fields as field}
-        <option value={field}>{field}</option>
-      {/each}
-    </Select>
-  </div>
+  <h5>Group By</h5>
+  <Select bind:value={view.groupBy} options={fields} />
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveView}>Save</Button>
+    <Button cta on:click={saveView}>Save</Button>
   </div>
 </div>
 
 <style>
   .actions {
     display: grid;
+    width: 200px;
     grid-gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
   }
 
   h5 {
