@@ -80,25 +80,19 @@
 
 <div class="container">
   <Input
-    on:save={e => updateApplication({ name: e.detail })}
-    thin
-    edit
-    bind:value={$store.name}
-    bind:error={nameError}
+    on:change={e => updateApplication({ name: e.detail })}
+    value={$store.name}
+    error={nameError}
     label="App Name" />
   {#if $hostingStore.hostingInfo.type === 'self'}
     <Input
-      on:save={e => updateApplication({ url: e.detail })}
-      thin
-      edit
-      bind:value={$store.url}
-      bind:error={urlError}
+      on:change={e => updateApplication({ url: e.detail })}
+      value={$store.url}
+      error={urlError}
       label="App URL" />
   {/if}
   <TextArea
-    on:save={e => updateApplication({ description: e.detail })}
-    thin
-    edit
+    on:change={e => updateApplication({ description: e.detail })}
     value={$store.description}
     label="App Description" />
 </div>
