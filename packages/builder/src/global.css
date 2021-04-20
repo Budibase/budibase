@@ -30,7 +30,7 @@ body {
 #app {
     height: 100%;
     box-sizing: border-box;
-    overflow-y: hidden;
+    overflow: hidden;
 }
 
 .hoverable:hover {

@@ -5,8 +5,9 @@
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
-  const dispatch = createEventDispatcher()
+  import clickOutside from "../Actions/click_outside"
 
+  const dispatch = createEventDispatcher()
   let visible = false
   $: dispatch(visible ? "show" : "hide")
 
@@ -45,13 +46,11 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div
-      class="spectrum-Underlay is-open"
-      transition:fade={{ duration: 200 }}
-      on:mousedown|self={hide}>
-      <div class="modal-wrapper" on:mousedown|self={hide}>
-        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
+    <div class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }}>
+      <div class="modal-wrapper">
+        <div class="modal-inner-wrapper">
           <div
+            use:clickOutside={hide}
             use:focusFirstInput
             class="spectrum-Modal is-open"
             transition:fly={{ y: 30, duration: 200 }}>
