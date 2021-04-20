@@ -1,6 +1,5 @@
 <script>
-  import { Label, Heading, Input } from "@budibase/bbui"
-  import { notifications } from "@budibase/bbui"
+  import { Label, Heading, Input, notifications } from "@budibase/bbui"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -27,12 +26,12 @@
   }
 </script>
 
-{#if template?.fromFile}
-  <h2>Import Your Web App From A File</h2>
-{:else}
-  <h2>Create your Web App</h2>
-{/if}
 <div class="container">
+  {#if template?.fromFile}
+    <Heading l h2>Import your Web App</Heading>
+  {:else}
+    <Heading l h2>Create your Web App</Heading>
+  {/if}
   {#if template?.fromFile}
     <div class="template">
       <Label extraSmall grey>Import File</Label>
@@ -65,6 +64,7 @@
   .container {
     display: grid;
     grid-gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
   }
 
   .template :global(label) {
