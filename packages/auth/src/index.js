@@ -20,6 +20,8 @@ const {
   generateGroupID,
   getGroupParams,
   getEmailFromUserID,
+  generateConfigID,
+  getConfigParams,
 } = require("./db/utils")
 
 // Strategies
@@ -54,6 +56,8 @@ module.exports = {
   generateGroupID,
   getGroupParams,
   getEmailFromUserID,
+  generateConfigID,
+  getConfigParams,
   hash,
   compare,
   getAppId,

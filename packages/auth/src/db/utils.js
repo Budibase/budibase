@@ -10,6 +10,7 @@ const DocumentTypes = {
   USER: "us",
   APP: "app",
   GROUP: "group",
+  CONFIG: "config",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -52,7 +53,7 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
 }
 
 /**
- * Gets parameters for retrieving users.
+ * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserParams = (email = "", otherProps = {}) => {
   if (!email) {
@@ -62,5 +63,28 @@ exports.getUserParams = (email = "", otherProps = {}) => {
     ...otherProps,
     startkey: `${DocumentTypes.USER}${SEPARATOR}${email}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Generates a new configuration ID.
+ * @returns {string} The new configuration ID which the config doc can be stored under.
+ */
+exports.generateConfigID = (type = "", group = "") => {
+  group += SEPARATOR
+
+  return `${
+    DocumentTypes.CONFIG
+  }${SEPARATOR}${type}${SEPARATOR}${group}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving configurations.
+ */
+exports.getConfigParams = (type = "", group = "", otherProps = {}) => {
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.CONFIG}${SEPARATOR}${type}${SEPARATOR}${group}`,
+    endkey: `${DocumentTypes.CONFIG}${SEPARATOR}${type}${SEPARATOR}${group}${UNICODE_MAX}`,
   }
 }
