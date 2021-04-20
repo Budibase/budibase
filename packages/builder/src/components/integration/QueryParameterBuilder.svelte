@@ -31,9 +31,9 @@
 
 <section>
   <div class="controls">
-    <Heading small lh>Parameters</Heading>
+    <Heading>Parameters</Heading>
     {#if !bindable}
-      <Button on:click={newQueryParameter}>Add Param</Button>
+      <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
   <Body small grey>

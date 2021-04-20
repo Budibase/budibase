@@ -1,6 +1,7 @@
 <script>
-  import { Label, Input, TextArea, Spacer } from "@budibase/bbui"
+  import { Label, Input, Spacer } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import { capitalise } from "../../../../helpers"
 
   export let integration
   export let schema
@@ -11,16 +12,15 @@
 <form>
   {#each Object.keys(schema) as configKey}
     {#if schema[configKey].type === 'object'}
-      <Label small>{configKey}</Label>
+      <Label>{capitalise(configKey)}</Label>
       <Spacer small />
       <KeyValueBuilder
         defaults={schema[configKey].default}
         bind:object={integration[configKey]} />
     {:else}
       <div class="form-row">
-        <Label small>{configKey}</Label>
+        <Label>{capitalise(configKey)}</Label>
         <Input
-          outline
           type={schema[configKey].type}
           on:change
           bind:value={integration[configKey]} />

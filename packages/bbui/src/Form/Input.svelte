@@ -28,5 +28,6 @@
     {placeholder}
     {type}
     on:change={onChange}
-    on:click />
+    on:click
+    on:input />
 </Field>
