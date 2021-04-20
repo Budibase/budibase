@@ -1,6 +1,6 @@
 <script>
   import { isActive, goto } from "@roxi/routify"
-  import { Switcher, Modal } from "@budibase/bbui"
+  import { Switcher, Modal, Tabs, Tab } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
@@ -17,11 +17,11 @@
     },
   ]
 
-  let tab = $isActive("./datasource") ? "datasource" : "table"
+  let selected = $isActive("./datasource") ? "External" : "Internal"
 
   function selectFirstTableOrSource({ detail }) {
-    const type = detail.heading.key
-    if (type === "datasource") {
+    const { key } = tabs.find(t => t.title === detail)
+    if (key === "datasource") {
       $goto("./datasource")
     } else {
       $goto("./table")
@@ -34,28 +34,30 @@
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <Switcher
-      headings={tabs}
-      bind:value={tab}
-      on:change={selectFirstTableOrSource}>
-      <div class="title">
-        <i
-          data-cy={`new-${tab}`}
-          class="ri-add-circle-fill"
-          on:click={modal.show} />
-      </div>
-      {#if tab === 'table'}
-        <TableNavigator />
-        <Modal bind:this={modal}>
-          <CreateTableModal />
-        </Modal>
-      {:else if tab === 'datasource'}
-        <DatasourceNavigator />
-        <Modal bind:this={modal}>
-          <CreateDatasourceModal />
-        </Modal>
-      {/if}
-    </Switcher>
+    <Tabs {selected} on:select={selectFirstTableOrSource}>
+      <Tab title="Internal">
+        <div class="tab-content-padding">
+          <TableNavigator />
+          <Modal bind:this={modal}>
+            <CreateTableModal />
+          </Modal>
+        </div>
+      </Tab>
+      <Tab title="External">
+        <div class="tab-content-padding">
+          <DatasourceNavigator />
+          <Modal bind:this={modal}>
+            <CreateDatasourceModal />
+          </Modal>
+        </div>
+      </Tab>
+    </Tabs>
+    <div class="title">
+      <i
+        data-cy={`new-${selected === 'External' ? 'datasource' : 'tabel'}`}
+        class="ri-add-circle-fill"
+        on:click={modal.show} />
+    </div>
   </div>
   <div class="content">
     <slot />
@@ -84,16 +86,17 @@
   .content :global(> span) {
     display: contents;
   }
+  .tab-content-padding {
+    padding: 0 var(--spacing-s);
+  }
 
   .nav {
     overflow-y: auto;
     background: var(--background);
-    padding: var(--spacing-l) var(--spacing-xl);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
     position: relative;
     border-right: var(--border-light);
   }
@@ -102,7 +105,7 @@
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);
-    right: var(--spacing-xl);
+    right: var(--spacing-l);
   }
 
   i:hover {

@@ -8,12 +8,11 @@
     screenSearchString,
   } from "builderStore"
   import { roles } from "stores/backend"
-  import { FrontendTypes } from "constants"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Modal, Switcher, Select, Input } from "@budibase/bbui"
+  import { Modal, Select, Input, Tabs, Tab } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -27,14 +26,11 @@
   ]
 
   let modal
-  let routes = {}
-  $: tab = $params.assetType
+  $: selected = tabs.find(t => t.key === $params.assetType).title
 
   const navigate = ({ detail }) => {
-    if (!detail) {
-      return
-    }
-    $goto(`../${detail.heading.key}`)
+    const { key } = tabs.find(t => t.title === detail)
+    $goto(`../${key}`)
   }
 
   const updateAccessRole = event => {
@@ -68,52 +64,51 @@
 </script>
 
 <div class="title">
-  <Switcher headings={tabs} bind:value={tab} on:change={navigate}>
-    {#if tab === FrontendTypes.SCREEN}
-      <i
-        on:click={modal.show}
-        data-cy="new-screen"
-        class="ri-add-circle-fill" />
-      <div class="role-select">
-        <Select
-          extraThin
-          secondary
-          on:change={updateAccessRole}
-          value={$selectedAccessRole}
-          label="Filter by Access"
-          getOptionLabel={role => role.name}
-          getOptionValue={role => role._id}
-          options={$roles} />
-        <div class="search-screens">
-          <Input
-            extraThin
-            placeholder="Enter a route to search"
-            label="Search Screens"
-            bind:value={$screenSearchString} />
-          <i
-            class="ri-close-line"
-            on:click={() => ($screenSearchString = null)} />
+  <Tabs {selected} on:select={navigate}>
+    <Tab title="Screens">
+      <div class="tab-content-padding">
+        <div class="role-select">
+          <Select
+            on:change={updateAccessRole}
+            value={$selectedAccessRole}
+            label="Filter by Access"
+            getOptionLabel={role => role.name}
+            getOptionValue={role => role._id}
+            options={$roles} />
+          <div class="search-screens">
+            <Input
+              placeholder="Enter a route to search"
+              label="Search Screens"
+              bind:value={$screenSearchString} />
+            <i
+              class="ri-close-line"
+              on:click={() => ($screenSearchString = null)} />
+          </div>
         </div>
+        <div class="nav-items-container">
+          <ComponentNavigationTree />
+        </div>
+        <Modal bind:this={modal}>
+          <NewScreenModal />
+        </Modal>
       </div>
-      <div class="nav-items-container">
-        <ComponentNavigationTree />
+    </Tab>
+    <Tab title="Layouts">
+      <div class="tab-content-padding">
+        <i
+          on:click={modal.show}
+          data-cy="new-layout"
+          class="ri-add-circle-fill" />
+        {#each $store.layouts as layout, idx (layout._id)}
+          <Layout {layout} border={idx > 0} />
+        {/each}
+        <Modal bind:this={modal}>
+          <NewLayoutModal />
+        </Modal>
       </div>
-      <Modal bind:this={modal}>
-        <NewScreenModal />
-      </Modal>
-    {:else if tab === FrontendTypes.LAYOUT}
-      <i
-        on:click={modal.show}
-        data-cy="new-layout"
-        class="ri-add-circle-fill" />
-      {#each $store.layouts as layout, idx (layout._id)}
-        <Layout {layout} border={idx > 0} />
-      {/each}
-      <Modal bind:this={modal}>
-        <NewLayoutModal />
-      </Modal>
-    {/if}
-  </Switcher>
+    </Tab>
+  </Tabs>
+  <i on:click={modal.show} data-cy="new-screen" class="ri-add-circle-fill" />
 </div>
 
 <style>
@@ -127,8 +122,8 @@
   .title i {
     font-size: 20px;
     position: absolute;
-    top: 0;
-    right: 0;
+    top: var(--spacing-l);
+    right: var(--spacing-l);
   }
   .title i:hover {
     cursor: pointer;
@@ -142,6 +137,10 @@
     align-items: stretch;
     margin-bottom: var(--spacing-m);
     gap: var(--spacing-m);
+  }
+
+  .tab-content-padding {
+    padding: 0 var(--spacing-s);
   }
 
   .search-screens {
