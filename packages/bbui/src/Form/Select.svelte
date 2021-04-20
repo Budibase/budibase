@@ -16,8 +16,8 @@
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
-    dispatch("change", e.detail)
     value = e.detail
+    dispatch("change", e.detail)
   }
   const extractProperty = (value, property) => {
     if (value && typeof value === "object") {

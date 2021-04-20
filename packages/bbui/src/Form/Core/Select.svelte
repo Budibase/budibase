@@ -28,8 +28,10 @@
     }
 
     // Render the label if the selected option is found, otherwide raw value
-    const selected = options.find(option => getOptionValue(option) === value)
-    return selected ? getOptionLabel(selected) : value
+    const index = options.findIndex(
+      (option, idx) => getOptionValue(option, idx) === value
+    )
+    return index !== -1 ? getOptionLabel(options[index], index) : value
   }
 
   const selectOption = value => {
