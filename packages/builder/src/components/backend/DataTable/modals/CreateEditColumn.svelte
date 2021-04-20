@@ -6,6 +6,7 @@
     Select,
     Toggle,
     RadioGroup,
+    DatePicker,
     ModalContent,
     Context,
   } from "@budibase/bbui"
@@ -20,7 +21,6 @@
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifications } from "@budibase/bbui"
   import ValuesList from "components/common/ValuesList.svelte"
-  import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
   import { getContext } from "svelte"

@@ -11,7 +11,7 @@ import "./fonts.css"
 import "./budibase.css"
 import "./fonts.css"
 
-import { loadSpectrumIcons } from "./spectrum-icons"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 loadSpectrumIcons()
 
 import App from "./App.svelte"

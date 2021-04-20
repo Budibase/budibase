@@ -1,5 +1,8 @@
 import "./bbui.css"
 
+// Spectrum icons
+import "@spectrum-css/icon/dist/index-vars.css"
+
 // Components
 export { default as Input } from "./Form/Input.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"
@@ -33,7 +36,7 @@ export { default as Modal } from "./Modal/Modal.svelte"
 export { default as ModalContent } from "./Modal/ModalContent.svelte"
 export { default as NotificationDisplay } from "./Notification/NotificationDisplay.svelte"
 export { default as Spacer } from "./Spacer/Spacer.svelte"
-export { default as DatePicker } from "./DatePicker/DatePicker.svelte"
+export { default as DatePicker } from "./Form/DatePicker.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"

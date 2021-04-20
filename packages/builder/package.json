@@ -64,13 +64,11 @@
     }
   },
   "dependencies": {
-    "@adobe/spectrum-css-workflow-icons": "^1.2.0",
     "@budibase/bbui": "^1.58.13",
     "@budibase/client": "^0.8.9",
     "@budibase/colorpicker": "1.1.2",
     "@budibase/string-templates": "^0.8.9",
     "@sentry/browser": "5.19.1",
-    "@spectrum-css/icon": "^3.0.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "codemirror": "^5.59.0",

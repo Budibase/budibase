@@ -6,9 +6,8 @@ import "@spectrum-css/vars/dist/spectrum-light.css"
 import "@spectrum-css/vars/dist/spectrum-dark.css"
 import "@spectrum-css/vars/dist/spectrum-darkest.css"
 import "@spectrum-css/page/dist/index-vars.css"
-import "@spectrum-css/button/dist/index-vars.css"
 
-import { loadSpectrumIcons } from "./spectrum-icons"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 loadSpectrumIcons()
 
 export { default as container } from "./Container.svelte"
