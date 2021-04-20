@@ -305,7 +305,7 @@ class TestConfiguration {
     }
     // have to fake this
     const user = {
-      userId: userId || `ro_ta_users_us_uuid1`,
+      userId: userId || `us_uuid1`,
       email: email || EMAIL,
     }
     const app = {
