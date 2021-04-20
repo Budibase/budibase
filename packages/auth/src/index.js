@@ -17,6 +17,8 @@ const {
 const {
   generateUserID,
   getUserParams,
+  generateGroupID,
+  getGroupParams,
 } = require("./db/utils")
 const { getGlobalUserByEmail } = require("./utils")
 
@@ -49,6 +51,8 @@ module.exports = {
   StaticDatabases,
   generateUserID,
   getUserParams,
+  generateGroupID,
+  getGroupParams,
   hash,
   compare,
   getAppId,
