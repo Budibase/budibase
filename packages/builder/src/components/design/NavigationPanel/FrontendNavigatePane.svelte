@@ -12,7 +12,7 @@
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Modal, Select, Input, Tabs, Tab } from "@budibase/bbui"
+  import { Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -75,15 +75,10 @@
             getOptionLabel={role => role.name}
             getOptionValue={role => role._id}
             options={$roles} />
-          <div class="search-screens">
-            <Input
-              placeholder="Enter a route to search"
-              label="Search Screens"
-              bind:value={$screenSearchString} />
-            <i
-              class="ri-close-line"
-              on:click={() => ($screenSearchString = null)} />
-          </div>
+          <Search
+            placeholder="Enter a route to search"
+            label="Search Screens"
+            bind:value={$screenSearchString} />
         </div>
         <div class="nav-items-container">
           <ComponentNavigationTree />

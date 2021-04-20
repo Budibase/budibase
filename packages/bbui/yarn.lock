@@ -166,6 +166,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/radio/-/radio-3.0.2.tgz#9c1386894920bbed604e4e174fbbd45d9d762152"
   integrity sha512-0TDdzC9omNXnpKHEXNuuGeXdNh4x8jvTKVUqMRLb7vY4hY94hAdt6X01NBqka+jzK35HxGzpDdPADAz62yZLPQ==
 
+"@spectrum-css/search@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/search/-/search-3.0.2.tgz#70e93e321032d40b399498b2324e3b70e050551e"
+  integrity sha512-3UbT8yZmNOwrZxq+CUmumE+26ZySZ8OoKNM6U20SLMPLgdx6MrRugVE88r3Bl0sJ0RZX/5bU8nausdiHeX+Jlw==
+
 "@spectrum-css/switch@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/switch/-/switch-1.0.2.tgz#f0b4c69271964573e02b08e90998096e49e1de44"
