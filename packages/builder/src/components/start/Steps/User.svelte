@@ -1,13 +1,13 @@
 <script>
-  import { Input, Select } from "@budibase/bbui"
+  import { Input, Select, Heading } from "@budibase/bbui"
 
   export let values
   export let errors
   export let touched
 </script>
 
-<h2>Create your first User</h2>
 <div class="container">
+  <Heading l h2>Create your first User</Heading>
   <Input
     bind:value={$values.email}
     on:change={() => ($touched.email = true)}

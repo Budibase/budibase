@@ -1,13 +1,12 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import { notifications } from "@budibase/bbui"
+  import { notifications, Heading, Button } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
-  import { Button } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
@@ -132,16 +131,19 @@
 
 <div class="container">
   <div class="sidebar">
-    {#each steps as component, i}
-      <Indicator
-        active={$currentStep === i}
-        done={i < $currentStep}
-        step={i + 1} />
-    {/each}
+    <img src={Logo} alt="budibase icon" />
+    <div class="steps">
+      {#each steps as component, i}
+        <Indicator
+          active={$currentStep === i}
+          done={i < $currentStep}
+          step={i + 1} />
+      {/each}
+    </div>
   </div>
   <div class="body">
     <div class="heading">
-      <h3 class="header">Get Started with Budibase</h3>
+      <Heading h2 l>Get started with Budibase</Heading>
     </div>
     <div class="step">
       {#each steps as component, i (i)}
@@ -175,7 +177,6 @@
       {/if}
     </div>
   </div>
-  <img src={Logo} alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />
@@ -192,12 +193,20 @@
     position: relative;
   }
   .sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 40px 0;
+    background: var(--grey-1);
+  }
+  .steps {
+    flex: 1 1 auto;
     display: grid;
     border-bottom-left-radius: 0.5rem;
     border-top-left-radius: 0.5rem;
     grid-gap: 30px;
     align-content: center;
-    background: var(--grey-1);
   }
   .heading {
     display: flex;
@@ -205,22 +214,18 @@
     align-items: center;
     margin-bottom: 20px;
   }
-  .header {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-  }
   .body {
-    padding: 40px 60px 60px 60px;
+    padding: 40px 60px 40px 60px;
     display: grid;
     align-items: center;
     grid-template-rows: auto 1fr auto;
   }
   .footer {
-    display: grid;
-    grid-gap: 15px;
-    grid-template-columns: auto auto;
-    justify-content: end;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
   }
   .spinner-container {
     background: var(--background);
@@ -243,9 +248,7 @@
     display: none;
   }
   img {
-    position: absolute;
-    top: 20px;
-    left: 20px;
     height: 40px;
+    margin-bottom: 20px;
   }
 </style>
