@@ -150,6 +150,7 @@
     <Divider />
     <Spacer extraLarge />
     <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+    <Spacer extraLarge />
     <Divider />
   {/if}
 </section>
