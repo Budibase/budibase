@@ -24,14 +24,6 @@ const SEPARATOR = "_"
 exports.SEPARATOR = SEPARATOR
 
 /**
- * Generates a new global user ID.
- * @returns {string} The new user ID which the user doc can be stored under.
- */
-exports.generateUserID = () => {
-  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
-}
-
-/**
  * Generates a new group ID.
  * @returns {string} The new group ID which the group doc can be stored under.
  */
@@ -51,9 +43,17 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
 }
 
 /**
+ * Generates a new global user ID.
+ * @returns {string} The new user ID which the user doc can be stored under.
+ */
+exports.generateGlobalUserID = () => {
+  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
+}
+
+/**
  * Gets parameters for retrieving users.
  */
-exports.getUserParams = (globalId = "", otherProps = {}) => {
+exports.getGlobalUserParams = (globalId = "", otherProps = {}) => {
   if (!globalId) {
     globalId = ""
   }

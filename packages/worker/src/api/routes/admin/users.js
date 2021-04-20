@@ -32,8 +32,9 @@ router
     authenticated,
     controller.userSave
   )
-  .delete("/api/admin/users/:email", authenticated, controller.userDelete)
+  .post("/api/admin/users/first", controller.firstUser)
+  .delete("/api/admin/users/:id", authenticated, controller.userDelete)
   .get("/api/admin/users", authenticated, controller.userFetch)
-  .get("/api/admin/users/:email", authenticated, controller.userFind)
+  .get("/api/admin/users/:id", authenticated, controller.userFind)
 
 module.exports = router

@@ -91,8 +91,10 @@ exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
   return users
 }
 
-exports.saveGlobalUser = async (ctx, appId, body, globalId = null) => {
-  const globalUser = await exports.getGlobalUsers(ctx, appId, globalId)
+exports.saveGlobalUser = async (ctx, appId, body) => {
+  const globalUser = body._id
+    ? await exports.getGlobalUsers(ctx, appId, body._id)
+    : {}
   const roles = globalUser.roles || {}
   if (body.roleId) {
     roles[appId] = body.roleId

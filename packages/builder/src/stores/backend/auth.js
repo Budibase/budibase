@@ -30,11 +30,24 @@ export function createAuthStore() {
     },
     logout: async () => {
       const response = await api.post(`/api/admin/auth/logout`)
+      if (response.status !== 200) {
+        throw "Unable to create logout"
+      }
       await response.json()
       set({ user: null })
     },
     createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
+      if (response.status !== 200) {
+        throw "Unable to create user"
+      }
+      await response.json()
+    },
+    firstUser: async () => {
+      const response = await api.post(`/api/admin/users/first`)
+      if (response.status !== 200) {
+        throw "Unable to create test user"
+      }
       await response.json()
     },
   }

@@ -1,9 +1,24 @@
 const { DocumentTypes, ViewNames, StaticDatabases } = require("./utils")
-const { CouchDB } = require("./index")
+const { getDB } = require("./index")
+
+function DesignDoc() {
+  return {
+    _id: "_design/database",
+    // view collation information, read before writing any complex views:
+    // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
+    views: {},
+  }
+}
 
 exports.createUserEmailView = async () => {
-  const db = new CouchDB(StaticDatabases.GLOBAL.name)
-  const designDoc = await db.get("_design/database")
+  const db = getDB(StaticDatabases.GLOBAL.name)
+  let designDoc
+  try {
+    designDoc = await db.get("_design/database")
+  } catch (err) {
+    // no design doc, make one
+    designDoc = DesignDoc()
+  }
   const view = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {

@@ -1,7 +1,5 @@
 const jwt = require("jsonwebtoken")
 const { UserStatus } = require("../../constants")
-const database = require("../../db")
-const { StaticDatabases, generateUserID } = require("../../db/utils")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
 const { getGlobalUserByEmail } = require("../../utils")
@@ -21,11 +19,8 @@ exports.authenticate = async function(email, password, done) {
   if (!email) return done(null, false, "Email Required.")
   if (!password) return done(null, false, "Password Required.")
 
-  let dbUser
-  try {
-    dbUser = await getGlobalUserByEmail(email)
-  } catch (err) {
-    console.error("User not found", err)
+  const dbUser = await getGlobalUserByEmail(email)
+  if (dbUser == null) {
     return done(null, false, { message: "User not found" })
   }
 

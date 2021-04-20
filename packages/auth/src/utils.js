@@ -2,7 +2,7 @@ const { DocumentTypes, SEPARATOR, ViewNames, StaticDatabases } = require("./db/u
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { CouchDB } = require("./db")
+const { getDB } = require("./db")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -101,19 +101,23 @@ exports.isClient = ctx => {
 }
 
 exports.getGlobalUserByEmail = async email => {
-  const db = new CouchDB(StaticDatabases.GLOBAL.name)
+  const db = getDB(StaticDatabases.GLOBAL.name)
   try {
     let users = (await db.query(
       `database/${ViewNames.USER_BY_EMAIL}`,
       {
-        key: email
+        key: email,
+        include_docs: true,
       })
     ).rows
+    users = users.map(user => user.doc)
     return users.length <= 1 ? users[0] : users
   } catch (err) {
     if (err != null && err.name === "not_found") {
       await createUserEmailView()
       return exports.getGlobalUserByEmail(email)
+    } else {
+      throw err
     }
   }
 }
