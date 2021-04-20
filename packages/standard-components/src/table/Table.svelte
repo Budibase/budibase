@@ -1,5 +1,4 @@
 <script>
-  import "@spectrum-css/table/dist/index-vars.css"
   import { getContext } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"

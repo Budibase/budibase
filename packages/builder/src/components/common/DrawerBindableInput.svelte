@@ -36,7 +36,7 @@
     on:change={event => onChange(event.detail)}
     {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
-    <Icon name="lightning" />
+    <Icon s name="Brackets" />
   </div>
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
@@ -69,20 +69,26 @@
     top: 1px;
     bottom: 1px;
     position: absolute;
+    justify-content: center;
     align-items: center;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
-    padding-left: 4px;
-    padding-right: 2px;
     border-left: 1px solid var(--spectrum-alias-border-color);
-    background-color: var(--spectrum-global-color-gray-50);
     border-top-right-radius: var(--spectrum-alias-border-radius-regular);
     border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
-    color: var(--grey-7);
-    font-size: 14px;
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
   }
   .icon:hover {
-    color: var(--ink);
     cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

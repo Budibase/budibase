@@ -1,5 +1,4 @@
 <script>
-  import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import { setContext, getContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"

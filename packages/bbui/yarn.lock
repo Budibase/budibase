@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@adobe/spectrum-css-workflow-icons@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
+  integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.10.4":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.13.tgz#dcfc826beef65e75c50e21d3837d7d95798dd658"
@@ -2360,10 +2365,10 @@ supports-color@^7.0.0, supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-svelte-flatpickr@^2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-2.4.0.tgz#190871fc3305956c8c8fd3601cd036b8ac71ef49"
-  integrity sha512-UUC5Te+b0qi4POg7VDwfGh0m5W3Hf64OwkfOTj6FEe/dYZN4cBzpQ82EuuQl0CTbbBAsMkcjJcixV1d2V6EHCQ==
+svelte-flatpickr@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.1.0.tgz#ad83588430dbd55196a1a258b8ba27e7f9c1ee37"
+  integrity sha512-zKyV+ukeVuJ8CW0Ing3T19VSekc4bPkou/5Riutt1yATrLvSsanNqcgqi7Q5IePvIoOF9GJ5OtHvn1qK9Wx9BQ==
   dependencies:
     flatpickr "^4.5.2"
 

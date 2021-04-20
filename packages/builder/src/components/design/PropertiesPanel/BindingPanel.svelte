@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
+  import { Search, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -60,7 +60,7 @@
 <div class="drawer-contents">
   <div class="container" data-cy="binding-dropdown-modal">
     <div class="list">
-      <Input extraThin placeholder="Search" bind:value={search} />
+      <Search placeholder="Search" bind:value={search} />
       <Spacer medium />
       {#if context}
         <Heading xs h3>Columns</Heading>
