@@ -2,16 +2,11 @@
   import "@spectrum-css/button/dist/index-vars.css"
 
   export let disabled = false
-
-  /** @type {('S', 'M', 'L', 'XL')} Size of button */
   export let size = "M"
-
-  // Types
   export let cta, primary, secondary, warning, overBackground
-
   export let quiet = false
-
   export let icon = undefined
+  export let active = false
 </script>
 
 <button
@@ -21,6 +16,7 @@
   class:spectrum-Button--warning={warning}
   class:spectrum-Button--overBackground={overBackground}
   class:spectrum-Button--quiet={quiet}
+  class:active
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
   on:click|preventDefault>
@@ -43,5 +39,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  button.active {
+    color: var(--spectrum-semantic-cta-color-background-default);
   }
 </style>
