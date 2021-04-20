@@ -1,4 +1,9 @@
-const { DocumentTypes, SEPARATOR, ViewNames, StaticDatabases } = require("./db/utils")
+const {
+  DocumentTypes,
+  SEPARATOR,
+  ViewNames,
+  StaticDatabases,
+} = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
@@ -103,9 +108,8 @@ exports.isClient = ctx => {
 exports.getGlobalUserByEmail = async email => {
   const db = getDB(StaticDatabases.GLOBAL.name)
   try {
-    let users = (await db.query(
-      `database/${ViewNames.USER_BY_EMAIL}`,
-      {
+    let users = (
+      await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
         key: email,
         include_docs: true,
       })

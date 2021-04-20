@@ -7,7 +7,6 @@ const {
   DocumentTypes,
   SEPARATOR,
   InternalTables,
-  generateUserMetadataID,
 } = require("../../db/utils")
 const userController = require("./user")
 const {
