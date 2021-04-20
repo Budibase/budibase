@@ -105,6 +105,9 @@
       filter.value = ""
     }
   }
+
+  const getOptionLabel = x => x.name
+  const getOptionValue = x => x.key
 </script>
 
 <div class="actions">
@@ -115,49 +118,37 @@
         {#if idx === 0}
           <p>Where</p>
         {:else}
-          <Select secondary thin bind:value={filter.conjunction}>
-            <option value="">Choose an option</option>
-            {#each CONJUNCTIONS as conjunction}
-              <option value={conjunction.key}>{conjunction.name}</option>
-            {/each}
-          </Select>
+          <Select
+            bind:value={filter.conjunction}
+            options={CONJUNCTIONS}
+            {getOptionLabel}
+            {getOptionValue} />
         {/if}
         <Select
-          secondary
-          thin
           bind:value={filter.key}
-          on:change={fieldChanged(filter)}>
-          <option value="">Choose an option</option>
-          {#each fields as field}
-            <option value={field}>{field}</option>
-          {/each}
-        </Select>
-        <Select secondary thin bind:value={filter.condition}>
-          <option value="">Choose an option</option>
-          {#each CONDITIONS as condition}
-            <option value={condition.key}>{condition.name}</option>
-          {/each}
-        </Select>
+          on:change={fieldChanged(filter)}
+          options={fields} />
+        <Select
+          bind:value={filter.condition}
+          options={CONDITIONS}
+          {getOptionLabel}
+          {getOptionValue} />
         {#if filter.key && isMultipleChoice(filter.key)}
-          <Select secondary thin bind:value={filter.value}>
-            <option value="">Choose an option</option>
-            {#each fieldOptions(filter.key) as option}
-              <option value={option}>{option.toString()}</option>
-            {/each}
-          </Select>
+          <Select
+            bind:value={filter.value}
+            options={fieldOptions(filter.key)}
+            getOptionLabel={x => x.toString()} />
         {:else if filter.key && isDate(filter.key)}
           <DatePicker
             bind:value={filter.value}
             placeholder={filter.key || fields[0]} />
         {:else if filter.key && isNumber(filter.key)}
           <Input
-            thin
             bind:value={filter.value}
             placeholder={filter.key || fields[0]}
             type="number" />
         {:else}
           <Input
-            thin
             placeholder={filter.key || fields[0]}
             bind:value={filter.value} />
         {/if}
@@ -180,6 +171,7 @@
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
   }
 
   h5 {
