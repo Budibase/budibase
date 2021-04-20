@@ -46,11 +46,13 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div class="spectrum-Underlay is-open" transition:fade={{ duration: 200 }}>
-      <div class="modal-wrapper">
-        <div class="modal-inner-wrapper">
+    <div
+      class="spectrum-Underlay is-open"
+      transition:fade={{ duration: 200 }}
+      on:mousedown|self={hide}>
+      <div class="modal-wrapper" on:mousedown|self={hide}>
+        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
           <div
-            use:clickOutside={hide}
             use:focusFirstInput
             class="spectrum-Modal is-open"
             transition:fly={{ y: 30, duration: 200 }}>
