@@ -56,7 +56,7 @@
   </div>
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveView} disabled={!view.field}>Save</Button>
+    <Button cta on:click={saveView} disabled={!view.field}>Save</Button>
   </div>
 </div>
 
