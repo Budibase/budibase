@@ -28,7 +28,7 @@ describe("/authenticate", () => {
   describe("fetch self", () => {
     it("should be able to fetch self", async () => {
       const user = await config.createUser("test@test.com", "p4ssw0rd")
-      const headers = await config.login("test@test.com", "p4ssw0rd", { userId: user._id })
+      const headers = await config.login("test@test.com", "p4ssw0rd", { userId: "us_uuid1" })
       const res = await request
         .get(`/api/self`)
         .set(headers)
