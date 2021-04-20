@@ -28,13 +28,10 @@
 
   .nav {
     overflow-y: auto;
-    background: var(--background);
-    padding: var(--spacing-l) var(--spacing-xl);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
     border-right: var(--border-light);
   }
 

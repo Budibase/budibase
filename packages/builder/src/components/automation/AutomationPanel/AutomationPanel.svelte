@@ -1,33 +1,45 @@
 <script>
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, Tabs, Tab } from "@budibase/bbui"
   let modal
 </script>
 
 <div class="title">
-  <h1>Automations</h1>
+  <Tabs selected="Automations">
+    <Tab title="Automations">
+      <div class="tab-content-padding">
+        <AutomationList />
+        <Modal bind:this={modal}>
+          <CreateAutomationModal />
+        </Modal>
+      </div>
+    </Tab>
+  </Tabs>
   <i
     on:click={modal.show}
     data-cy="new-automation"
     class="ri-add-circle-fill" />
 </div>
-<AutomationList />
-<Modal bind:this={modal}>
-  <CreateAutomationModal />
-</Modal>
 
 <style>
+  .tab-content-padding {
+    padding: 0 var(--spacing-s);
+  }
+
+  i {
+    font-size: 20px;
+    position: absolute;
+    top: var(--spacing-l);
+    right: var(--spacing-l);
+  }
+
   .title {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .title h1 {
-    font-size: var(--font-size-m);
-    font-weight: 500;
-    margin: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    position: relative;
   }
   .title i {
     font-size: 20px;
