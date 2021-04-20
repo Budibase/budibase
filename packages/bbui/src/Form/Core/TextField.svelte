@@ -72,6 +72,7 @@
     placeholder={placeholder || ''}
     on:blur={onBlur}
     on:focus={onFocus}
+    on:input
     {type}
     class="spectrum-Textfield-input" />
 </div>

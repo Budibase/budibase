@@ -33,14 +33,6 @@
 </section>
 
 <style>
-  section {
-    overflow: scroll;
-  }
-  ::-webkit-scrollbar {
-    width: 0px;
-    background: transparent; /* make scrollbar transparent */
-  }
-
   .inner {
     width: 640px;
     margin: 0 auto;

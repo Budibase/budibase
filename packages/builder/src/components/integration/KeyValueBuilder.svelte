@@ -25,8 +25,8 @@
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 <div class="container" class:readOnly>
   {#each fields as field, idx}
-    <Input placeholder="Key" thin outline bind:value={field.name} />
-    <Input placeholder="Value" thin outline bind:value={field.value} />
+    <Input placeholder="Key" bind:value={field.name} />
+    <Input placeholder="Value" bind:value={field.value} />
     {#if !readOnly}
       <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
     {/if}

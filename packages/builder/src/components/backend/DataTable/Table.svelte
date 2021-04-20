@@ -22,6 +22,7 @@
   export let loading = false
   export let theme = "alpine"
   export let hideAutocolumns
+  export let rowCount
 
   let selectedRows = []
   let editableColumn
@@ -91,7 +92,9 @@
 
 <div>
   <div class="table-title">
-    <h1>{title}</h1>
+    {#if title}
+      <h1>{title}</h1>
+    {/if}
     {#if loading}
       <div transition:fade>
         <Spinner size="10" />
@@ -111,6 +114,7 @@
     {schema}
     {loading}
     {customRenderers}
+    {rowCount}
     bind:selectedRows
     allowSelectRows={allowEditing}
     allowEditRows={allowEditing}

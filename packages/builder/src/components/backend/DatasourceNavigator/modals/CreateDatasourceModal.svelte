@@ -47,11 +47,10 @@
   disabled={error || !name}>
   <Input
     data-cy="datasource-name-input"
-    thin
     label="Datasource Name"
     on:input={checkValid}
     bind:value={name}
     {error} />
-  <Label grey extraSmall>Source</Label>
+  <Label>Source</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>
