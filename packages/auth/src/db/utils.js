@@ -1,3 +1,5 @@
+const { newid } = require("../hashing")
+
 exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
@@ -7,6 +9,7 @@ exports.StaticDatabases = {
 const DocumentTypes = {
   USER: "us",
   APP: "app",
+  GROUP: "group",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -30,7 +33,26 @@ exports.getEmailFromUserID = userId => {
 }
 
 /**
- * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ * Generates a new group ID.
+ * @returns {string} The new group ID which the group doc can be stored under.
+ */
+exports.generateGroupID = () => {
+  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving groups.
+ */
+exports.getGroupParams = (id = "", otherProps = {}) => {
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}`,
+    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Gets parameters for retrieving users.
  */
 exports.getUserParams = (email = "", otherProps = {}) => {
   if (!email) {

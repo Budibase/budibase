@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin")
+const controller = require("../../controllers/admin/users")
 const joiValidator = require("../../../middleware/joi-validator")
 const { authenticated } = require("@budibase/auth")
 const Joi = require("joi")
