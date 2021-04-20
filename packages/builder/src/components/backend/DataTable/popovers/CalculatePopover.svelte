@@ -1,8 +1,6 @@
 <script>
-  import { Button, Select } from "@budibase/bbui"
-
+  import { Button, Select, Label, notifications } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   const CALCULATIONS = [
@@ -45,21 +43,15 @@
 <div class="actions">
   <h5>Calculate</h5>
   <div class="input-group-row">
-    <p>The</p>
-    <Select secondary thin bind:value={view.calculation}>
-      <option value={''}>Choose an option</option>
-      {#each CALCULATIONS as calculation}
-        <option value={calculation.key}>{calculation.name}</option>
-      {/each}
-    </Select>
+    <Label>The</Label>
+    <Select
+      bind:value={view.calculation}
+      options={CALCULATIONS}
+      getOptionLabel={x => x.name}
+      getOptionValue={x => x.key} />
     {#if view.calculation}
-      <p>of</p>
-      <Select secondary thin bind:value={view.field}>
-        <option value={''}>You must choose an option</option>
-        {#each fields as field}
-          <option value={field}>{field}</option>
-        {/each}
-      </Select>
+      <Label>Of</Label>
+      <Select bind:value={view.field} options={fields} />
     {/if}
   </div>
   <div class="footer">
@@ -70,8 +62,10 @@
 
 <style>
   .actions {
+    width: 200px;
     display: grid;
     grid-gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
   }
 
   h5 {
@@ -90,10 +84,5 @@
     grid-template-columns: auto 1fr;
     gap: var(--spacing-s);
     align-items: center;
-  }
-
-  p {
-    margin: 0;
-    font-size: var(--font-size-xs);
   }
 </style>
