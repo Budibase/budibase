@@ -80,8 +80,12 @@ exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
   if (!templateId) {
     templateId = ""
   }
-  const base = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}`
-  const final = templateId ? `${base}${SEPARATOR}${templateId}` : base
+  let final
+  if (templateId) {
+    final = templateId
+  } else {
+    final = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
+  }
   return {
     ...otherProps,
     startkey: final,

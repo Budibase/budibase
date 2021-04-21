@@ -107,8 +107,7 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
     return getDocParams(DocumentTypes.ROW, null, otherProps)
   }
 
-  const endOfKey =
-    rowId == null ? `${tableId}${SEPARATOR}` : `${tableId}${SEPARATOR}${rowId}`
+  const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
 
   return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
