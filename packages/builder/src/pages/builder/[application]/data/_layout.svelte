@@ -1,6 +1,6 @@
 <script>
   import { isActive, goto } from "@roxi/routify"
-  import { Switcher, Modal, Tabs, Tab } from "@budibase/bbui"
+  import { Modal, Tabs, Tab } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
