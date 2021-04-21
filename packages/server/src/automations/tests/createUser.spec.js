@@ -25,6 +25,7 @@ describe("test the create user action", () => {
     expect(res.id).toBeDefined()
     expect(res.revision).toBeDefined()
     const userDoc = await config.getRow(InternalTables.USER_METADATA, res.id)
+    expect(userDoc).toBeDefined()
   })
 
   it("should return an error if no inputs provided", async () => {

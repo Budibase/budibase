@@ -21,14 +21,7 @@
 
   async function createTestUser() {
     try {
-      await auth.createUser({
-        email: "test@test.com",
-        password: "test",
-        roles: {},
-        builder: {
-          global: true,
-        },
-      })
+      await auth.firstUser()
       notifier.success("Test user created")
     } catch (err) {
       console.error(err)

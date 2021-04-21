@@ -151,8 +151,8 @@
       const user = {
         roleId: $createAppStore.values.roleId,
       }
-      const userResp = await api.post(`/api/users/metadata`, user)
-      const json = await userResp.json()
+      const userResp = await api.post(`/api/users/metadata/self`, user)
+      await userResp.json()
       $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)

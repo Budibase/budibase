@@ -7,7 +7,6 @@ const {
   DocumentTypes,
   SEPARATOR,
   InternalTables,
-  generateUserMetadataID,
 } = require("../../db/utils")
 const userController = require("./user")
 const {
@@ -42,7 +41,7 @@ async function findRow(ctx, db, tableId, rowId) {
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
-      userId: rowId,
+      id: rowId,
     }
     await userController.findMetadata(ctx)
     row = ctx.body
@@ -140,12 +139,7 @@ exports.save = async function(ctx) {
   }
 
   if (!inputs._rev && !inputs._id) {
-    // TODO remove special user case in future
-    if (inputs.tableId === InternalTables.USER_METADATA) {
-      inputs._id = generateUserMetadataID(inputs.email)
-    } else {
-      inputs._id = generateRowID(inputs.tableId)
-    }
+    inputs._id = generateRowID(inputs.tableId)
   }
 
   // this returns the table and row incase they have been updated
@@ -342,7 +336,7 @@ exports.destroy = async function(ctx) {
   // TODO remove special user case in future
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     ctx.params = {
-      userId: ctx.params.rowId,
+      id: ctx.params.rowId,
     }
     await userController.destroyMetadata(ctx)
   } else {
@@ -449,7 +443,7 @@ async function bulkDelete(ctx) {
     updates = updates.concat(
       rows.map(row => {
         ctx.params = {
-          userId: row._id,
+          id: row._id,
         }
         return userController.destroyMetadata(ctx)
       })
