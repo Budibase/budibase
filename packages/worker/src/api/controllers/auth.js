@@ -65,6 +65,14 @@ exports.logout = async ctx => {
   ctx.body = { message: "User logged out" }
 }
 
+// exports.googleAuth = async (ctx, next) =>
+//   passport.authenticate(
+//     "google",
+//     { successRedirect: "/", failureRedirect: "/" },
+//     (ctx
+//     setToken(ctx, next)
+//   )
+
 exports.googleAuth = async (ctx, next) => {
   return passport.authenticate(
     "google",
