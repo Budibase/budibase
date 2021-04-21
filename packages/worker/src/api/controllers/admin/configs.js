@@ -1,9 +1,35 @@
 const CouchDB = require("../../../db")
-const { StaticDatabases } = require("@budibase/auth")
-const { generateConfigID } = require("@budibase/auth")
-const { getConfigParams } = require("@budibase/auth/src/db/utils")
+const { StaticDatabases, DocumentTypes } = require("@budibase/auth")
+const { generateConfigID, getConfigParams } = require("@budibase/auth")
+const { SEPARATOR } = require("@budibase/auth/src/db/utils")
+const { Configs } = require("../../../constants")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
+
+exports.configStatus = async function(ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+  let configured = {}
+
+  // check for super admin user
+  try {
+    configured.user = true
+  } catch (err) {
+    configured.user = false
+  }
+
+  // check for SMTP config
+  try {
+    const response = await db.allDocs(
+      getConfigParams(`${DocumentTypes.CONFIG}${SEPARATOR}${Configs.SMTP}`)
+    )
+    console.log(response)
+    configured.smtp = true
+  } catch (err) {
+    configured.smtp = false
+  }
+
+  ctx.body = configured
+}
 
 exports.save = async function(ctx) {
   const db = new CouchDB(GLOBAL_DB)
@@ -11,7 +37,11 @@ exports.save = async function(ctx) {
 
   // Config does not exist yet
   if (!configDoc._id) {
-    configDoc._id = generateConfigID(configDoc.type, configDoc.group)
+    configDoc._id = generateConfigID(
+      configDoc.type,
+      configDoc.group,
+      configDoc.user
+    )
   }
 
   try {

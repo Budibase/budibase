@@ -70,12 +70,11 @@ exports.getUserParams = (email = "", otherProps = {}) => {
  * Generates a new configuration ID.
  * @returns {string} The new configuration ID which the config doc can be stored under.
  */
-exports.generateConfigID = (type = "", group = "") => {
-  group += SEPARATOR
+exports.generateConfigID = (type = "", group = "", user = "") => {
+  // group += SEPARATOR
+  const scope = [type, group, user].join(SEPARATOR)
 
-  return `${
-    DocumentTypes.CONFIG
-  }${SEPARATOR}${type}${SEPARATOR}${group}${newid()}`
+  return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}${newid()}`
 }
 
 /**

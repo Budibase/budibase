@@ -10,7 +10,7 @@ const router = Router()
 function buildConfigSaveValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    type: Joi.string().valid(...Object.values(Configs)).required()
+    type: Joi.string().valid(...Object.values(Configs)).required(),
   }).required().unknown(true))
 }
 
@@ -21,6 +21,7 @@ router
     authenticated,
     controller.save
   )
+  .post("/api/admin/config/status", controller.configStatus)
   .delete("/api/admin/configs/:id", authenticated, controller.destroy)
   .get("/api/admin/configs", authenticated, controller.fetch)
   .get("/api/admin/configs/:id", authenticated, controller.find)
