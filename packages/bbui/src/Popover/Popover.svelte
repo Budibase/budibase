@@ -1,23 +1,26 @@
 <script>
+  import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { createEventDispatcher } from "svelte"
   import positionDropdown from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
+
   const dispatch = createEventDispatcher()
 
   export let anchor
   export let align = "right"
-  let open = null
 
   export const show = () => {
+    dispatch("open")
     open = true
-    dispatch("show")
   }
 
   export const hide = () => {
+    dispatch("close")
     open = false
-    dispatch("hide")
   }
+
+  let open = null
 
   function handleEscape(e) {
     if (open && e.key === "Escape") {
@@ -33,7 +36,8 @@
       use:positionDropdown={{ anchor, align }}
       use:clickOutside={hide}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open">
+      class="spectrum-Popover is-open"
+      role="presentation">
       <slot />
     </div>
   </Portal>

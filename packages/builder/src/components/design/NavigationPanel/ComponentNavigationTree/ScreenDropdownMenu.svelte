@@ -3,7 +3,7 @@
   import { store, allScreens } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownMenu, Modal, ModalContent } from "@budibase/bbui"
+  import { Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let screenId
@@ -31,14 +31,14 @@
   <div class="icon" on:click={() => dropdown.show()}>
     <i class="ri-more-line" />
   </div>
-  <DropdownMenu bind:this={dropdown} {anchor} align="left">
+  <Popover bind:this={dropdown} {anchor} align="left">
     <DropdownContainer>
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
         on:click={() => confirmDeleteDialog.show()} />
     </DropdownContainer>
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

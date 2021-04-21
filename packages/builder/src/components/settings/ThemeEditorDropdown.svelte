@@ -1,5 +1,5 @@
 <script>
-  import { Label, DropdownMenu } from "@budibase/bbui"
+  import { Label, Popover } from "@budibase/bbui"
   import ThemeEditor from "./ThemeEditor.svelte"
 
   let anchor
@@ -10,12 +10,12 @@
   <i class="ri-paint-fill" />
 </div>
 <div class="dropdown">
-  <DropdownMenu bind:this={popover} {anchor} align="right">
+  <Popover bind:this={popover} {anchor} align="right">
     <div class="content">
       <Label extraSmall grey>Theme</Label>
       <ThemeEditor />
     </div>
-  </DropdownMenu>
+  </Popover>
 </div>
 
 <style>

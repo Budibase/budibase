@@ -1,5 +1,5 @@
 <script>
-    import DropdownMenu from '../DropdownMenu/DropdownMenu.svelte'
+    import Popover from '../Popover/Popover.svelte'
     import Menu from '../Menu/Menu.svelte'
     let anchor;
     let dropdown;
@@ -17,11 +17,11 @@
 <div class="contents" use:getAnchor  on:click={dropdown.show}>
     <slot name="button" />
 </div>
-<DropdownMenu bind:this={dropdown} {anchor} align="left">
+<Popover bind:this={dropdown} {anchor} align="left">
     <Menu>
         <slot />
     </Menu>
-</DropdownMenu>
+</Popover>
 
 <style>
     div {

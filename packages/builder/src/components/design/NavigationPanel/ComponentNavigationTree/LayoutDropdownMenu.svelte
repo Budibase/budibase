@@ -1,9 +1,8 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownMenu, Modal, ModalContent, Input } from "@budibase/bbui"
+  import { Popover, Modal, ModalContent, Input } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import { cloneDeep } from "lodash/fp"
 
@@ -40,7 +39,7 @@
   <div class="icon" on:click={() => dropdown.show()}>
     <i class="ri-more-line" />
   </div>
-  <DropdownMenu bind:this={dropdown} {anchor} align="left">
+  <Popover bind:this={dropdown} {anchor} align="left">
     <DropdownContainer>
       <DropdownItem
         icon="ri-pencil-line"
@@ -51,7 +50,7 @@
         title="Delete"
         on:click={() => confirmDeleteDialog.show()} />
     </DropdownContainer>
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

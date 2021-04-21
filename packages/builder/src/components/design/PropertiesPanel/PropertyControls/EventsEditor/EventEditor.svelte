@@ -1,7 +1,7 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
+  import { Button, Popover, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
 
@@ -77,7 +77,7 @@
         </Button>
         <Spacer small />
       </div>
-      <DropdownMenu
+      <Popover
         bind:this={addActionDropdown}
         anchor={addActionButton}
         align="right">
@@ -88,7 +88,7 @@
             </div>
           {/each}
         </div>
-      </DropdownMenu>
+      </Popover>
     </div>
 
     {#if actions && actions.length > 0}
