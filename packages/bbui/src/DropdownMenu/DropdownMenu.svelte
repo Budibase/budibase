@@ -2,7 +2,6 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { createEventDispatcher } from "svelte"
-  import buildStyle from "../utils/buildStyle"
   import positionDropdown from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
 
@@ -10,7 +9,6 @@
 
   export let anchor
   export let align = "right"
-  export let borderColor = ""
 
   export const show = () => {
     dispatch("open")
@@ -29,10 +27,6 @@
       hide()
     }
   }
-
-  $: menuStyle = buildStyle({
-    borderColor,
-  })
 </script>
 
 {#if open}
@@ -41,7 +35,6 @@
       tabindex="0"
       use:positionDropdown={{ anchor, align }}
       use:clickOutside={hide}
-      style={menuStyle}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
       role="presentation">

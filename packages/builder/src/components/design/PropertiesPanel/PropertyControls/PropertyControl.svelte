@@ -87,7 +87,7 @@
       class="icon"
       data-cy={`${key}-binding-button`}
       on:click={bindingDrawer.show}>
-      <Icon s name="Brackets" />
+      <Icon s name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
       <div slot="description">
