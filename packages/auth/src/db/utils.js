@@ -14,6 +14,7 @@ const DocumentTypes = {
   USER: "us",
   APP: "app",
   GROUP: "group",
+  TEMPLATE: "template",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -53,7 +54,7 @@ exports.generateGlobalUserID = () => {
 /**
  * Gets parameters for retrieving users.
  */
-exports.getGlobalUserParams = (globalId = "", otherProps = {}) => {
+exports.getGlobalUserParams = (globalId, otherProps = {}) => {
   if (!globalId) {
     globalId = ""
   }
@@ -61,5 +62,29 @@ exports.getGlobalUserParams = (globalId = "", otherProps = {}) => {
     ...otherProps,
     startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Generates a template ID.
+ * @param ownerId The owner/user of the template, this could be global or a group level.
+ */
+exports.generateTemplateID = ownerId => {
+  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving templates. Owner ID must be specified, either global or a group level.
+ */
+exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
+  if (!templateId) {
+    templateId = ""
+  }
+  const base = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}`
+  const final = templateId ? `${base}${SEPARATOR}${templateId}` : base
+  return {
+    ...otherProps,
+    startkey: final,
+    endkey: `${final}${UNICODE_MAX}`,
   }
 }
