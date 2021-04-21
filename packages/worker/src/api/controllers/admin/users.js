@@ -1,11 +1,10 @@
 const CouchDB = require("../../../db")
 const {
-  hash,
   generateGlobalUserID,
   getGlobalUserParams,
   StaticDatabases,
-  getGlobalUserByEmail,
-} = require("@budibase/auth")
+} = require("@budibase/auth").db
+const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus } = require("../../../constants")
 
 const FIRST_USER_EMAIL = "test@test.com"

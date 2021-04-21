@@ -1,13 +1,20 @@
 const Router = require("@koa/router")
-const { authenticated } = require("@budibase/auth")
+const { buildAuthMiddleware } = require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
-const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
+const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 
 const router = new Router()
 const env = require("../environment")
+
+const NO_AUTH_ENDPOINTS = [
+  "/health",
+  "/version",
+  "webhooks/trigger",
+  "webhooks/schema",
+]
 
 router
   .use(
@@ -31,7 +38,7 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
-  .use(authenticated)
+  .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
   .use(currentApp)
 
 // error handling middleware
@@ -52,9 +59,6 @@ router.use(async (ctx, next) => {
 })
 
 router.get("/health", ctx => (ctx.status = 200))
-
-router.use(authRoutes.routes())
-router.use(authRoutes.allowedMethods())
 
 // authenticated routes
 for (let route of mainRoutes) {

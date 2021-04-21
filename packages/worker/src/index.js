@@ -5,7 +5,7 @@ require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
-const { passport } = require("@budibase/auth")
+const { passport } = require("@budibase/auth").auth
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")

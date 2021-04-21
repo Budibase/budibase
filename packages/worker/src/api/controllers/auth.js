@@ -1,4 +1,7 @@
-const { passport, Cookies, clearCookie } = require("@budibase/auth")
+const authPkg = require("@budibase/auth")
+const { clearCookie } = authPkg.utils
+const { Cookies } = authPkg.constants
+const { passport } = authPkg.auth
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {

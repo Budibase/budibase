@@ -15,7 +15,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies } = require("@budibase/auth")
+const { Cookies } = require("@budibase/auth").constants
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
