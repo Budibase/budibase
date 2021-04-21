@@ -1,16 +1,8 @@
 <script>
-  import { Home as Link } from "@budibase/bbui"
-  import {
-    AppsIcon,
-    HostingIcon,
-    DocumentationIcon,
-    CommunityIcon,
-    BugIcon,
-  } from "components/common/Icons"
+  import { goto } from "@roxi/routify"
+  import { Home as Link, SideNavigation as Navigation, SideNavigationItem as Item} from "@budibase/bbui"
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
   import Logo from "/assets/budibase-logo.svg"
-
-  let modal
 </script>
 
 <div class="root">
@@ -18,23 +10,23 @@
     <div class="home-logo"><img src={Logo} alt="Budibase icon" /></div>
     <div class="nav-section">
       <div class="nav-top">
-        <Link icon={AppsIcon} title="Apps" href="/" active />
-        <Link
-          icon={HostingIcon}
-          title="Hosting"
-          href="https://portal.budi.live/" />
-        <Link
-          icon={DocumentationIcon}
-          title="Documentation"
-          href="https://docs.budibase.com/" />
-        <Link
-          icon={CommunityIcon}
-          title="Community"
-          href="https://github.com/Budibase/budibase/discussions" />
-        <Link
-          icon={BugIcon}
-          title="Raise an issue"
-          href="https://github.com/Budibase/budibase/issues/new/choose" />
+        <Navigation>
+          <Item href="/builder/" icon="Apps" selected>
+            Apps
+          </Item>
+          <Item external href="https://portal.budi.live/" icon="Servers">
+            Hosting
+          </Item>
+          <Item external href="https://docs.budibase.com/" icon="Book">
+            Documentation
+          </Item>
+          <Item external href="https://github.com/Budibase/budibase/discussions" icon="PeopleGroup">
+            Community
+          </Item>
+          <Item external href="https://github.com/Budibase/budibase/issues/new/choose" icon="Bug">
+            Raise an issue
+          </Item>
+        </Navigation>
       </div>
       <div class="nav-bottom">
         <BuilderSettingsButton />
