@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { views } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { DropdownMenu, Button, Input } from "@budibase/bbui"
+  import { Popover, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -50,7 +50,7 @@
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
     <i class="ri-more-line" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+  <Popover align="left" {anchor} bind:this={dropdown}>
     {#if editing}
       <div class="actions">
         <h5>Edit View</h5>
@@ -74,7 +74,7 @@
           on:click={showDelete} />
       </DropdownContainer>
     {/if}
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

@@ -3,7 +3,7 @@
   import {
     Button,
     Icon,
-    DropdownMenu,
+    Popover,
     Divider,
     Select,
     Spacer,
@@ -135,7 +135,7 @@
     </Drawer>
   {/if}
 </div>
-<DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
+<Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
       <Heading xs h3>Tables</Heading>
@@ -205,7 +205,7 @@
       </ul>
     {/if}
   </div>
-</DropdownMenu>
+</Popover>
 
 <style>
   .container {

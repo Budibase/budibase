@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let component
@@ -74,7 +74,7 @@
 
 <div bind:this={anchor} on:click|stopPropagation>
   <div class="icon" on:click={dropdown.show}><i class="ri-more-line" /></div>
-  <DropdownMenu bind:this={dropdown} width="170px" {anchor} align="left">
+  <Popover bind:this={dropdown} width="170px" {anchor} align="left">
     <DropdownContainer on:click={hideDropdown}>
       <DropdownItem
         icon="ri-delete-bin-line"
@@ -117,7 +117,7 @@
         disabled={noPaste || noChildrenAllowed}
         on:click={() => pasteComponent('inside')} />
     </DropdownContainer>
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

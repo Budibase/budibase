@@ -1,6 +1,6 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { Popover } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -30,7 +30,7 @@
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
     <i class="ri-more-line" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+  <Popover align="left" {anchor} bind:this={dropdown}>
     <DropdownContainer>
       <DropdownItem
         icon="ri-delete-bin-line"
@@ -38,7 +38,7 @@
         on:click={showModal}
         data-cy="delete-datasource" />
     </DropdownContainer>
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

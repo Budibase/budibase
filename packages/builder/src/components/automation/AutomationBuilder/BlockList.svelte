@@ -1,7 +1,7 @@
 <script>
   import { sortBy } from "lodash/fp"
   import { automationStore } from "builderStore"
-  import { ActionButton, DropdownMenu, Modal } from "@budibase/bbui"
+  import { ActionButton, Popover, Modal } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import CreateWebhookModal from "../Shared/CreateWebhookModal.svelte"
 
@@ -75,7 +75,7 @@
     </div>
   {/each}
 </div>
-<DropdownMenu
+<Popover
   on:close={() => (selectedIndex = null)}
   bind:this={popover}
   {anchor}
@@ -89,7 +89,7 @@
         on:click={() => addBlockToAutomation(stepId, blockDefinition)} />
     {/each}
   </DropdownContainer>
-</DropdownMenu>
+</Popover>
 <Modal bind:this={webhookModal} width="30%">
   <CreateWebhookModal />
 </Modal>

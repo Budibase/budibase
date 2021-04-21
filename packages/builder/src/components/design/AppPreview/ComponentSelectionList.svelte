@@ -7,7 +7,7 @@
     currentAssetId,
   } from "builderStore"
   import structure from "./componentStructure.json"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
@@ -66,7 +66,7 @@
     </div>
   {/each}
 </div>
-<DropdownMenu
+<Popover
   on:close={() => (selectedIndex = null)}
   bind:this={popover}
   {anchor}
@@ -82,7 +82,7 @@
       {/if}
     {/each}
   </DropdownContainer>
-</DropdownMenu>
+</Popover>
 
 <style>
   .container {

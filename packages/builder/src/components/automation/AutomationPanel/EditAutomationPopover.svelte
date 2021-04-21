@@ -3,7 +3,7 @@
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
@@ -33,14 +33,14 @@
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
     <i class="ri-more-line" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+  <Popover align="left" {anchor} bind:this={dropdown}>
     <DropdownContainer>
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
         on:click={showModal} />
     </DropdownContainer>
-  </DropdownMenu>
+  </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
