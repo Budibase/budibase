@@ -36,9 +36,7 @@
 
 <div class="container">
   <Input
-    on:save={e => updateKey(['budibase', e.detail])}
-    thin
-    edit
+    on:change={e => updateKey(['budibase', e.detail])}
     value={keys.budibase}
     label="Budibase Cloud API Key" />
   <Link primary href="https://portal.budi.live">

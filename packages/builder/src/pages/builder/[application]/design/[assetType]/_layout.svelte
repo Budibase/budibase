@@ -207,5 +207,6 @@
     justify-content: flex-start;
     align-items: stretch;
     border-left: var(--border-light);
+    overflow-x: hidden;
   }
 </style>

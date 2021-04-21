@@ -53,21 +53,15 @@
     <Label small>{fieldLabel}</Label>
     {#if schemaFields}
       <Select
-        thin
-        secondary
         value={field[0]}
-        on:change={event => updateFieldName(idx, event.target.value)}>
-        <option value="" />
-        {#each schemaFields as schemaField}
-          <option value={schemaField.name}>{schemaField.name}</option>
-        {/each}
-      </Select>
+        on:change={event => updateFieldName(idx, event.detail)}
+        options={schemaFields.map(field => field.name)} />
     {:else}
       <Input
         thin
         secondary
         value={field[0]}
-        on:change={event => updateFieldName(idx, event.target.value)} />
+        on:change={event => updateFieldName(idx, event.detail)} />
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput
@@ -76,7 +70,11 @@
       bindings={bindableProperties}
       on:change={event => updateFieldValue(idx, event.detail)} />
     <div class="remove-field-container">
-      <Button icon="Close" size="S" quiet on:click={() => removeField(field[0])} />
+      <Button
+        icon="Close"
+        size="S"
+        quiet
+        on:click={() => removeField(field[0])} />
     </div>
   {/each}
   <div>

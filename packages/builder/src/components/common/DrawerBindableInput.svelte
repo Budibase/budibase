@@ -32,12 +32,11 @@
 
 <div class="control">
   <Input
-    {thin}
     value={readableValue}
-    on:change={event => onChange(event.target.value)}
+    on:change={event => onChange(event.detail)}
     {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
-    <Icon name="lightning" />
+    <Icon s name="FlashOn" />
   </div>
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
@@ -66,23 +65,30 @@
   }
 
   .icon {
-    right: 2px;
-    top: 2px;
-    bottom: 2px;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
     position: absolute;
+    justify-content: center;
     align-items: center;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
-    padding-left: 7px;
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
   }
   .icon:hover {
-    color: var(--ink);
     cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

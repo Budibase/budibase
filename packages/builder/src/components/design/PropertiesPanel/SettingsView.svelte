@@ -1,17 +1,14 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import { Button } from "@budibase/bbui"
+  import { Button, Checkbox, Input, Select } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { currentAsset } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
-  import OptionSelect from "./PropertyControls/OptionSelect.svelte"
-  import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
   import DataSourceSelect from "./PropertyControls/DataSourceSelect.svelte"
   import DataProviderSelect from "./PropertyControls/DataProviderSelect.svelte"
@@ -20,7 +17,6 @@
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import FilterEditor from "./PropertyControls/FilterEditor.svelte"
-  import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
@@ -61,10 +57,9 @@
 
   const controlMap = {
     text: Input,
-    select: OptionSelect,
+    select: Select,
     dataSource: DataSourceSelect,
     dataProvider: DataProviderSelect,
-    detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
     event: EventsEditor,

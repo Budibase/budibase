@@ -7,7 +7,7 @@
 
 <div class="content">
   <div>
-    <Toggle thin text="Dark theme" bind:checked={$themeStore.darkMode} />
+    <Toggle text="Dark theme" bind:value={$themeStore.darkMode} />
   </div>
 </div>
 

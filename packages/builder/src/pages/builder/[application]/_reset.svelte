@@ -62,7 +62,12 @@
         <!-- This gets all indexable subroutes and sticks them in the top nav. -->
         <ActionGroup>
           {#each $layout.children as { path, title }}
-            <ActionButton quiet selected={$isActive(path)} on:click={topItemNavigate(path)}>{title}</ActionButton>
+            <ActionButton
+              quiet
+              selected={$isActive(path)}
+              on:click={topItemNavigate(path)}>
+              {title}
+            </ActionButton>
           {/each}
         </ActionGroup>
       </div>
@@ -73,7 +78,6 @@
           <a
             target="_blank"
             href="https://github.com/Budibase/budibase/discussions">
-            <Icon />
             <i class="ri-github-fill" />
           </a>
         </div>

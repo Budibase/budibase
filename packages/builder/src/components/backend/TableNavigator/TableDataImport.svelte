@@ -91,9 +91,24 @@
   }
 
   const handleTypeChange = column => evt => {
-    schema[column].type = evt.target.value
+    schema[column].type = evt.detail
     validateCSV()
   }
+
+  const typeOptions = [
+    {
+      label: "Text",
+      value: "string",
+    },
+    {
+      label: "Number",
+      value: "number",
+    },
+    {
+      label: "Date",
+      value: "datetime",
+    },
+  ]
 </script>
 
 <div class="dropzone">
@@ -102,20 +117,18 @@
     {#if files[0]}{files[0].name}{:else}Upload{/if}
   </label>
 </div>
-<div class="schema-fields">
-  {#if fields.length}
+{#if fields.length}
+  <div class="schema-fields">
     {#each fields as columnName}
       <div class="field">
         <span>{columnName}</span>
         <Select
-          secondary
-          thin
           bind:value={schema[columnName].type}
-          on:change={handleTypeChange(columnName)}>
-          <option value={'string'}>Text</option>
-          <option value={'number'}>Number</option>
-          <option value={'datetime'}>Date</option>
-        </Select>
+          on:change={handleTypeChange(columnName)}
+          options={typeOptions}
+          placeholder={null}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value} />
         <span class="field-status" class:error={!schema[columnName].success}>
           {schema[columnName].success ? 'Success' : 'Failure'}
         </span>
@@ -124,16 +137,15 @@
           on:click={() => omitColumn(columnName)} />
       </div>
     {/each}
-  {/if}
-</div>
+  </div>
+{/if}
+
 {#if fields.length}
   <div class="display-column">
-    <Label extraSmall grey>Display Column</Label>
-    <Select thin secondary bind:value={primaryDisplay}>
-      {#each fields as field}
-        <option value={field}>{field}</option>
-      {/each}
-    </Select>
+    <Select
+      label="Display Column"
+      bind:value={primaryDisplay}
+      options={fields} />
   </div>
 {/if}
 
@@ -163,6 +175,10 @@
 
   input[type="file"] {
     display: none;
+  }
+
+  .schema-fields {
+    margin-top: var(--spacing-xl);
   }
 
   label {
@@ -201,7 +217,7 @@
 
   .field {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 2fr 2fr 1fr auto;
     margin-top: var(--spacing-m);
     align-items: center;
     grid-gap: var(--spacing-m);
