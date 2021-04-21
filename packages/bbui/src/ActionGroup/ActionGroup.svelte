@@ -1,9 +1,9 @@
 <script>
     import "@spectrum-css/actiongroup/dist/index-vars.css"
-    export let vertical;
-    export let justified;
-    export let quiet;
-    export let compact;
+    export let vertical = false;
+    export let justified = false;
+    export let quiet = false;
+    export let compact = false;
 
     // Attaches a spectrum-ActionGroup-item class to buttons inside the div
     function group(element) {

@@ -3,7 +3,11 @@
 
   export let disabled = false
   export let size = "M"
-  export let cta, primary, secondary, warning, overBackground
+  export let cta = false;
+  export let primary = false;
+  export let secondary = false;
+  export let warning = false
+  export let overBackground = false;
   export let quiet = false
   export let icon = undefined
   export let active = false
