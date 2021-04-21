@@ -8,7 +8,6 @@
     Input,
     Heading,
     Spacer,
-    Switcher,
     Tabs,
     Tab
   } from "@budibase/bbui"
@@ -20,25 +19,9 @@
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
 
-  const PREVIEW_HEADINGS = [
-    {
-      title: "JSON",
-      key: "JSON",
-    },
-    {
-      title: "Schema",
-      key: "SCHEMA",
-    },
-    {
-      title: "Preview",
-      key: "PREVIEW",
-    },
-  ]
-
   export let query
   export let fields = []
 
-  let tab = "JSON"
   let parameters
   let data = []
   const typeOptions = [
