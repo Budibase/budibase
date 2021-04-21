@@ -89,7 +89,7 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.2.tgz#387712641457d3045bcecf77e13854dd59e9c20e"
   integrity sha512-sUJuYrrmIL0RCkQpTQ9B5AdoWlu4Y6JatrcOB/OOwdzLbQ9bHw1bHj/y0Ua67hEtLOTjODU+2e5K3UM3KGnMTA==
 
-"@spectrum-css/buttongroup@^3.0.1":
+"@spectrum-css/buttongroup@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/buttongroup/-/buttongroup-3.0.2.tgz#fd3387973ca3131609e32112de42a1c0400a48d8"
   integrity sha512-Wu7B4GJ/SAeVHz9SUGAkeIH8pLaZh4t+w2ykSKOPQIRuK2jCBoudkEClVxviNVwqekccf5XLFXg9GpYF1a3Uaw==
