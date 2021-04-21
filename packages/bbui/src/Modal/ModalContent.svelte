@@ -4,7 +4,7 @@
   import Button from "../Button/Button.svelte"
   import Heading from "../Typography/Heading.svelte"
   import Divider from "../Divider/Divider.svelte"
-  import Icon from "../Icons/Icon.svelte"
+  import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
 
   export let title = undefined
@@ -32,6 +32,7 @@
 
 <div
   class="spectrum-Dialog spectrum-Dialog--{size}"
+  style="position: relative;"
   role="dialog"
   tabindex="-1"
   aria-modal="true">
@@ -66,7 +67,7 @@
     {/if}
     {#if showCloseIcon}
       <div class="close-icon" on:click={hide}>
-        <Icon name="closeline" />
+        <Icon name="Close" />
       </div>
     {/if}
   </div>
