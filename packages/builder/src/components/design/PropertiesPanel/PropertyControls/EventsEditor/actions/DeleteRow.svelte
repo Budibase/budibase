@@ -7,18 +7,17 @@
 
   export let parameters
 
-  $: tableOptions = $tables || []
+  $: tableOptions = $tables.list || []
   $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 
 <div class="root">
-  <Label small>Table</Label>
-  <Select thin secondary bind:value={parameters.tableId}>
-    <option value="" />
-    {#each tableOptions as table}
-      <option value={table._id}>{table.name}</option>
-    {/each}
-  </Select>
+  <Label>Table</Label>
+  <Select
+    bind:value={parameters.tableId}
+    options={tableOptions}
+    getOptionLabel={table => table.name}
+    getOptionValue={table => table._id} />
 
   <Label small>Row ID</Label>
   <DrawerBindableInput

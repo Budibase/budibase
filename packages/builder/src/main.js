@@ -6,13 +6,12 @@ import "@spectrum-css/vars/dist/spectrum-dark.css"
 import "@spectrum-css/vars/dist/spectrum-light.css"
 import "@spectrum-css/vars/dist/spectrum-lightest.css"
 import "@spectrum-css/page/dist/index-vars.css"
-import "@budibase/bbui/dist/style.css"
 import "./global.css"
 import "./fonts.css"
 import "./budibase.css"
 import "./fonts.css"
 
-import { loadSpectrumIcons } from "./spectrum-icons"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 loadSpectrumIcons()
 
 import App from "./App.svelte"

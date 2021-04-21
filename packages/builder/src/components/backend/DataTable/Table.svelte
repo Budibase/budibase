@@ -10,7 +10,6 @@
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
-  import "@budibase/svelte-ag-grid/dist/index.css"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
 
@@ -22,6 +21,7 @@
   export let loading = false
   export let theme = "alpine"
   export let hideAutocolumns
+  export let rowCount
 
   let selectedRows = []
   let editableColumn
@@ -91,7 +91,9 @@
 
 <div>
   <div class="table-title">
-    <h1>{title}</h1>
+    {#if title}
+      <h1>{title}</h1>
+    {/if}
     {#if loading}
       <div transition:fade>
         <Spinner size="10" />
@@ -111,6 +113,7 @@
     {schema}
     {loading}
     {customRenderers}
+    {rowCount}
     bind:selectedRows
     allowSelectRows={allowEditing}
     allowEditRows={allowEditing}

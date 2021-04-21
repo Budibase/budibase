@@ -5,14 +5,14 @@ export default function clickOutside(element, callbackFunction) {
     }
   }
 
-  document.body.addEventListener("click", onClick, true)
+  document.body.addEventListener("mousedown", onClick, true)
 
   return {
     update(newCallbackFunction) {
       callbackFunction = newCallbackFunction
     },
     destroy() {
-      document.body.removeEventListener("click", onClick, true)
+      document.body.removeEventListener("mousedown", onClick, true)
     },
   }
 }

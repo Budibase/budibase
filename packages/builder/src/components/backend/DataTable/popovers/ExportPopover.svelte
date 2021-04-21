@@ -30,14 +30,15 @@
 
 <div class="popover">
   <h5>Export Data</h5>
-  <Select label="Format" secondary thin bind:value={exportFormat}>
-    {#each FORMATS as format}
-      <option value={format.key}>{format.name}</option>
-    {/each}
-  </Select>
+  <Select
+    label="Format"
+    bind:value={exportFormat}
+    options={FORMATS}
+    getOptionLabel={x => x.name}
+    getOptionValue={x => x.key} />
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={exportView}>Export</Button>
+    <Button cta on:click={exportView}>Export</Button>
   </div>
 </div>
 
@@ -45,6 +46,7 @@
   .popover {
     display: grid;
     grid-gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
   }
 
   h5 {

@@ -35,7 +35,7 @@
   <Input label="View Name" thin bind:value={name} />
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveView}>Save View</Button>
+    <Button cta on:click={saveView}>Save View</Button>
   </div>
 </div>
 
@@ -48,6 +48,7 @@
   .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
   }
 
   .footer {

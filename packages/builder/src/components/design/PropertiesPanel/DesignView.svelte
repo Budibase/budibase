@@ -63,7 +63,7 @@
           <div class="custom-styles">
             <TextArea
               value={componentInstance._styles.custom}
-              on:change={event => onCustomStyleChanged(event.target.value)}
+              on:change={event => onCustomStyleChanged(event.detail)}
               placeholder="Enter some CSS..." />
           </div>
         </DetailSummary>
@@ -79,15 +79,11 @@
     <div class="transitions">
       <Select
         value={componentInstance._transition}
-        on:change={event => onUpdateTransition(event.target.value)}
+        on:change={event => onUpdateTransition(event.detail)}
         name="transition"
         label="Transition"
-        secondary
-        thin>
-        {#each transitions as transition}
-          <option value={transition}>{capitalize(transition)}</option>
-        {/each}
-      </Select>
+        options={transitions}
+        getOptionLabel={capitalize} />
     </div>
   {/if}
 </div>
@@ -105,6 +101,7 @@
     position: relative;
     display: flex;
     min-height: 0;
+    flex: 1 1 auto;
   }
 
   .property-groups {

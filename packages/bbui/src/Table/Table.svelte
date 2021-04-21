@@ -8,7 +8,7 @@
   export let schema = {}
   export let showAutoColumns = false
   export let rowCount = 0
-  export let quiet = true
+  export let quiet = false
   export let loading = false
   export let allowSelectRows = true
   export let allowEditRows = true
@@ -70,10 +70,10 @@
   }
 
   const getContentStyle = (visibleRows, rowCount) => {
-    if (!rowCount) {
+    if (!rowCount || !visibleRows) {
       return ""
     }
-    return `height: ${headerHeight - 1 + visibleRows * (rowHeight + 1)}px;`
+    return `height: ${headerHeight + visibleRows * (rowHeight + 1)}px;`
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
@@ -266,7 +266,9 @@
                       </td>
                     {/if}
                     {#each fields as field}
-                      <td class="spectrum-Table-cell">
+                      <td
+                        class="spectrum-Table-cell"
+                        class:spectrum-Table-cell--divider={!!schema[field].divider}>
                         <div class="spectrum-Table-cell-content">
                           <CellRenderer
                             {customRenderers}
@@ -301,7 +303,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-primary);
+    background-color: var(--spectrum-alias-background-color-default);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -311,26 +313,23 @@
     height: 100%;
     position: relative;
     overflow: auto;
-    border: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
     scrollbar-width: thin;
     scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-alias-background-color-primary);
+      var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
   }
   .container::-webkit-scrollbar-track {
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-default);
   }
   .container::-webkit-scrollbar-thumb {
     background-color: var(--spectrum-global-color-gray-400);
-    border-radius: 20px;
-    border: 4px solid var(--spectrum-alias-background-color-primary);
+    border-radius: 4px;
   }
   .container::-webkit-scrollbar-corner {
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-default);
   }
   .container.quiet {
     border: none !important;
@@ -359,18 +358,15 @@
     transition: opacity 0.2s ease;
   }
 
-  .container,
-  th {
-    border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
-  }
   th {
     vertical-align: middle;
     height: var(--header-height);
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-alias-background-color-primary);
+    background-color: var(--spectrum-alias-background-color-default);
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
@@ -421,18 +417,19 @@
     padding-top: 0;
     padding-bottom: 0;
     border-bottom: none !important;
-    border-left: none !important;
-    border-right: none !important;
     border-top: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+    border-radius: 0 !important;
   }
   tr:first-child td {
     border-top: none !important;
   }
-  .container:not(.quiet) td.spectrum-Table-cell--divider {
-    width: 1px;
-    border-right: 1px solid
+  tr:last-child td {
+    border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+  }
+  td.spectrum-Table-cell--divider {
+    width: 1px;
   }
   .spectrum-Table-cell-content {
     height: var(--row-height);

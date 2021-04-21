@@ -62,7 +62,6 @@
     background-color: var(--grey-3);
   }
   .nav-item:hover .actions {
-    display: flex;
     visibility: visible;
   }
 

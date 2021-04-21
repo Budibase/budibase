@@ -30,7 +30,7 @@
   }
 
   function updateSelfHosting(event) {
-    if (hostingInfo.type === HostingTypes.CLOUD && event.target.checked) {
+    if (hostingInfo.type === HostingTypes.CLOUD && event.detail) {
       hostingInfo.hostingUrl = "localhost:10000"
       hostingInfo.useHttps = false
       hostingInfo.selfHostKey = "budibase"
@@ -60,14 +60,13 @@
     apps made in this builder.
   </p>
   <Toggle
-    thin
     text="Self hosted"
     on:change={updateSelfHosting}
-    bind:checked={selfhosted} />
+    bind:value={selfhosted} />
   {#if selfhosted}
     <Input bind:value={hostingInfo.hostingUrl} label="Hosting URL" />
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
-    <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
+    <Toggle text="HTTPS" bind:value={hostingInfo.useHttps} />
   {/if}
   <h5>Analytics</h5>
   <p>
@@ -75,9 +74,8 @@
     please let us know below.
   </p>
   <Toggle
-    thin
     text="Send Analytics To Budibase"
-    checked={!analyticsDisabled}
+    value={!analyticsDisabled}
     on:change={toggleAnalytics} />
 </ModalContent>
 

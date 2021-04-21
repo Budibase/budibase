@@ -1,4 +1,5 @@
 <script>
+  import "@spectrum-css/dialog/dist/index-vars.css"
   import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
   import Heading from "../Typography/Heading.svelte"
@@ -29,36 +30,38 @@
   }
 </script>
 
-<div class="spectrum-Dialog spectrum-Dialog--{size}" role="dialog" tabindex="-1" aria-modal="true">
+<div
+  class="spectrum-Dialog spectrum-Dialog--{size}"
+  role="dialog"
+  tabindex="-1"
+  aria-modal="true">
   <div class="spectrum-Dialog-grid">
-    <Heading m h2>{title}</Heading>
+    <h1 class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader">
+      {title}
+    </h1>
+
     <Divider m />
-    
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />
     </section>
     {#if showCancelButton || showConfirmButton}
-      <div class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter">
-        <!-- <footer class="footer-content">
-          <slot name="footer" />
-        </footer> -->
-        <div class="spectrum-ButtonGroup-item">
-          <slot name="footer" />
-          {#if showCancelButton}
-            <Button secondary on:click={hide}>{cancelText}</Button>
-          {/if}
-          {#if showConfirmButton}
-            <Button
+      <div
+        class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter">
+        <slot name="footer" />
+        {#if showCancelButton}
+          <Button group secondary on:click={hide}>{cancelText}</Button>
+        {/if}
+        {#if showConfirmButton}
+          <Button
+            group
             cta
-              primary
-              {...$$restProps}
-              disabled={confirmDisabled}
-              on:click={confirm}>
-              {confirmText}
-            </Button>
-          {/if}
-        </div>
+            {...$$restProps}
+            disabled={confirmDisabled}
+            on:click={confirm}>
+            {confirmText}
+          </Button>
+        {/if}
       </div>
     {/if}
     {#if showCloseIcon}
@@ -69,7 +72,6 @@
   </div>
 </div>
 
-
 <style>
   .content-grid {
     display: grid;
@@ -78,9 +80,14 @@
     color: var(--ink);
   }
 
-  h1 {
-    font-weight: normal;
+  .spectrum-Dialog-content {
+    overflow: visible;
   }
+
+  .spectrum-Dialog-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
+  }
+
   .close-icon {
     position: absolute;
     top: 15px;
@@ -94,28 +101,5 @@
   }
   .close-icon :global(svg) {
     margin-right: 0;
-  }
-
-  footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .footer-content {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--spacing-m);
   }
 </style>

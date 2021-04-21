@@ -1,10 +1,11 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
-  import { Button, Heading, Body, Spacer } from "@budibase/bbui"
+  import { Button, Heading, Body, Spacer, Divider } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
+  import { capitalise } from "../../../../../../helpers"
 
   let unsaved = false
 
@@ -19,11 +20,8 @@
   }
 
   function onClickQuery(query) {
-    if ($queries.selected === query._id) {
-      return
-    }
     queries.select(query)
-    $goto(`../${query._id}`)
+    $goto(`./${query._id}`)
   }
 
   function setUnsaved() {
@@ -45,50 +43,42 @@
   <section>
     <Spacer extraLarge />
     <header>
-      <div class="datasource-icon">
-        <svelte:component
-          this={ICONS[datasource.source]}
-          height="26"
-          width="26" />
-      </div>
-      <h3 class="section-title">{datasource.name}</h3>
+      <svelte:component
+        this={ICONS[datasource.source]}
+        height="26"
+        width="26" />
+      <Heading l>{datasource.name}</Heading>
     </header>
-
     <Body small grey lh>{integration.description}</Body>
     <Spacer extraLarge />
-    <hr />
-    <Spacer large />
+    <Divider />
     <Spacer extraLarge />
-
     <div class="container">
       <div class="config-header">
-        <Heading small>Configuration</Heading>
+        <Heading>Configuration</Heading>
         <Button secondary on:click={saveDatasource}>Save</Button>
       </div>
-
       <Body small grey>
         Connect your database to Budibase using the config below.
       </Body>
-
       <Spacer extraLarge />
       <IntegrationConfigForm
         schema={integration.datasource}
         integration={datasource.config}
         on:change={setUnsaved} />
       <Spacer extraLarge />
-      <hr />
-      <Spacer large />
+      <Divider />
       <Spacer extraLarge />
       <div class="query-header">
-        <Heading small>Queries</Heading>
-        <Button secondary on:click={() => $goto('../new')}>Add Query</Button>
+        <Heading>Queries</Heading>
+        <Button secondary on:click={() => $goto('./new')}>Add Query</Button>
       </div>
       <Spacer extraLarge />
       <div class="query-list">
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
-            <p>{query.queryVerb}</p>
+            <p>{capitalise(query.queryVerb)}</p>
             <p>→</p>
           </div>
         {/each}
@@ -108,18 +98,11 @@
     width: 640px;
   }
 
-  hr {
-    border: 1px solid var(--grey-2);
-  }
-
   header {
     margin: 0 0 var(--spacing-xs) 0;
     display: flex;
-    gap: var(--spacing-m);
-  }
-
-  .section-title {
-    text-transform: capitalize;
+    gap: var(--spacing-l);
+    align-items: center;
   }
 
   .config-header {
@@ -150,7 +133,7 @@
   .query-list-item {
     border-radius: var(--border-radius-m);
     background: var(--background);
-    border: var(--border-grey);
+    border: var(--border-dark);
     display: grid;
     grid-template-columns: 2fr 0.75fr 20px;
     align-items: center;

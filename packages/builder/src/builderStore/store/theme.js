@@ -5,18 +5,7 @@ export const getThemeStore = () => {
   const initialValue = {
     darkMode: true,
   }
-
   const store = localStorageStore("bb-theme", initialValue)
-
-  // Resets the custom theme to the default dark theme.
-  // The reset option is only available when dark theme is on, which is why it
-  // sets dark mode to true here
-  store.reset = () => {
-    store.set({
-      ...initialValue,
-      darkMode: true,
-    })
-  }
 
   // Update theme when store changes
   store.subscribe(theme => {
