@@ -69,6 +69,13 @@ exports.fetch = async function(ctx) {
 
 exports.find = async function(ctx) {
   const db = new CouchDB(GLOBAL_DB)
+  const response = await db.allDocs(
+    getConfigParams(undefined, {
+      include_docs: true,
+    })
+  )
+  const groups = response.rows.map(row => row.doc)
+  ctx.body = groups
   try {
     const record = await db.get(ctx.params.id)
     ctx.body = record

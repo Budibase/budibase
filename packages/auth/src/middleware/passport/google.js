@@ -1,6 +1,7 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const { StaticDatabases, generateUserID } = require("../../db/utils")
 
 exports.options = {
@@ -9,7 +10,7 @@ exports.options = {
   callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
 }
 
-exports.authenticate = async function(token, tokenSecret, profile, done) {
+async function authenticate(token, tokenSecret, profile, done) {
   if (!profile._json.email) return done(null, false, "Email Required.")
 
   // Check the user exists in the instance DB by email
@@ -51,4 +52,15 @@ exports.authenticate = async function(token, tokenSecret, profile, done) {
   })
 
   return done(null, dbUser)
+}
+
+exports.CustomGoogleStrategy = function(config) {
+  return new GoogleStrategy(
+    {
+      clientID: config.clientID,
+      clientSecret: config.clientSecret,
+      callbackURL: config.callbackURL,
+    },
+    authenticate
+  )
 }
