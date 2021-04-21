@@ -14,9 +14,10 @@
     "cy:setup": "node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
-    "cy:run:ci": "cypress run --browser electron --record --key f308590b-6070-41af-b970-794a3823d451",
+    "cy:run:ci": "cypress run --record --key f308590b-6070-41af-b970-794a3823d451",
     "cy:test": "start-server-and-test cy:setup http://localhost:10000/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:10000/builder cy:run:ci"
+    "cy:ci": "start-server-and-test cy:setup http://localhost:10000/builder cy:run:ci",
+    "cy:debug": "start-server-and-test cy:setup http://localhost:10000/builder cy:open"
   },
   "jest": {
     "globals": {

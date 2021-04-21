@@ -1,27 +1,41 @@
 const CouchDB = require("../../../db")
 const {
-  hash,
-  generateUserID,
-  getUserParams,
+  generateGlobalUserID,
+  getGlobalUserParams,
   StaticDatabases,
-} = require("@budibase/auth")
+} = require("@budibase/auth").db
+const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus } = require("../../../constants")
 
+const FIRST_USER_EMAIL = "test@test.com"
+const FIRST_USER_PASSWORD = "test"
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.userSave = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const { email, password, _id } = ctx.request.body
-  const hashedPassword = password ? await hash(password) : null
-  let user = {
-    ...ctx.request.body,
-    _id: generateUserID(email),
-    password: hashedPassword,
+
+  // make sure another user isn't using the same email
+  const dbUser = await getGlobalUserByEmail(email)
+  if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
+    ctx.throw(400, "Email address already in use.")
   }
-  let dbUser
-  // in-case user existed already
-  if (_id) {
-    dbUser = await db.get(_id)
+
+  // get the password, make sure one is defined
+  let hashedPassword
+  if (password) {
+    hashedPassword = await hash(password)
+  } else if (dbUser) {
+    hashedPassword = dbUser.password
+  } else {
+    ctx.throw(400, "Password must be specified.")
+  }
+
+  let user = {
+    ...dbUser,
+    ...ctx.request.body,
+    _id: _id || generateGlobalUserID(),
+    password: hashedPassword,
   }
   // add the active status to a user if its not provided
   if (user.status == null) {
@@ -29,7 +43,7 @@ exports.userSave = async ctx => {
   }
   try {
     const response = await db.post({
-      password: hashedPassword || dbUser.password,
+      password: hashedPassword,
       ...user,
     })
     ctx.body = {
@@ -46,12 +60,24 @@ exports.userSave = async ctx => {
   }
 }
 
+exports.firstUser = async ctx => {
+  ctx.request.body = {
+    email: FIRST_USER_EMAIL,
+    password: FIRST_USER_PASSWORD,
+    roles: {},
+    builder: {
+      global: true,
+    },
+  }
+  await exports.userSave(ctx)
+}
+
 exports.userDelete = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
-  const dbUser = await db.get(generateUserID(ctx.params.email))
+  const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
   ctx.body = {
-    message: `User ${ctx.params.email} deleted.`,
+    message: `User ${ctx.params.id} deleted.`,
   }
 }
 
@@ -59,7 +85,7 @@ exports.userDelete = async ctx => {
 exports.userFetch = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getUserParams(null, {
+    getGlobalUserParams(null, {
       include_docs: true,
     })
   )
@@ -78,7 +104,7 @@ exports.userFind = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   let user
   try {
-    user = await db.get(generateUserID(ctx.params.email))
+    user = await db.get(ctx.params.id)
   } catch (err) {
     // no user found, just return nothing
     user = {}

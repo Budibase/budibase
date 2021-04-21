@@ -1,38 +1,7 @@
-const {
-  passport,
-  Cookies,
-  StaticDatabases,
-  clearCookie,
-} = require("@budibase/auth")
-const CouchDB = require("../../db")
-
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
-
-async function setToken(ctx) {
-  return async function(err, user) {
-    if (err) {
-      return ctx.throw(403, "Unauthorized")
-    }
-
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 1)
-
-    if (!user) {
-      return ctx.throw(403, "Unauthorized")
-    }
-
-    ctx.cookies.set(Cookies.Auth, user.token, {
-      expires,
-      path: "/",
-      httpOnly: false,
-      overwrite: true,
-    })
-
-    delete user.token
-
-    ctx.body = { user }
-  }
-}
+const authPkg = require("@budibase/auth")
+const { clearCookie } = authPkg.utils
+const { Cookies } = authPkg.constants
+const { passport } = authPkg.auth
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {

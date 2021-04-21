@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const { passport } = require("@budibase/auth")
+const { passport } = require("@budibase/auth").auth
 const authController = require("../controllers/auth")
 const context = require("koa/lib/context")
 

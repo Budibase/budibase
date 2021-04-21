@@ -15,7 +15,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies } = require("@budibase/auth")
+const { Cookies } = require("@budibase/auth").constants
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
@@ -70,8 +70,7 @@ class TestConfiguration {
 
   defaultHeaders() {
     const user = {
-      userId: "us_test@test.com",
-      email: "test@test.com",
+      userId: "ro_ta_user_us_uuid1",
       builder: {
         global: true,
       },
@@ -106,12 +105,13 @@ class TestConfiguration {
   }
 
   async roleHeaders(email = EMAIL, roleId = BUILTIN_ROLE_IDS.ADMIN) {
+    let user
     try {
-      await this.createUser(email, PASSWORD, roleId)
+      user = await this.createUser(email, PASSWORD, roleId)
     } catch (err) {
       // allow errors here
     }
-    return this.login(email, PASSWORD, roleId)
+    return this.login(email, PASSWORD, { roleId, userId: user._id })
   }
 
   async createApp(appName) {
@@ -293,33 +293,19 @@ class TestConfiguration {
     )
   }
 
-  async makeUserInactive(email) {
-    const user = await this._req(
-      null,
-      {
-        email,
-      },
-      controllers.user.findMetadata
-    )
-    return this._req(
-      {
-        ...user,
-        status: "inactive",
-      },
-      null,
-      controllers.user.updateMetadata
-    )
-  }
-
-  async login(email, password, roleId = BUILTIN_ROLE_IDS.BUILDER) {
+  async login(email, password, { roleId, userId } = {}) {
+    if (!roleId) {
+      roleId = BUILTIN_ROLE_IDS.BUILDER
+    }
     if (!this.request) {
       throw "Server has not been opened, cannot login."
     }
     if (!email || !password) {
       await this.createUser()
     }
+    // have to fake this
     const user = {
-      userId: `us_${email || EMAIL}`,
+      userId: userId || `us_uuid1`,
       email: email || EMAIL,
     }
     const app = {

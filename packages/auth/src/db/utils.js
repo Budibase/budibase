@@ -1,5 +1,9 @@
 const { newid } = require("../hashing")
 
+exports.ViewNames = {
+  USER_BY_EMAIL: "by_email",
+}
+
 exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
@@ -11,6 +15,7 @@ const DocumentTypes = {
   APP: "app",
   GROUP: "group",
   CONFIG: "config",
+  TEMPLATE: "template",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -19,19 +24,6 @@ const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
 
 exports.SEPARATOR = SEPARATOR
-
-/**
- * Generates a new user ID based on the passed in email.
- * @param {string} email The email which the ID is going to be built up of.
- * @returns {string} The new user ID which the user doc can be stored under.
- */
-exports.generateUserID = email => {
-  return `${DocumentTypes.USER}${SEPARATOR}${email}`
-}
-
-exports.getEmailFromUserID = userId => {
-  return userId.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
-}
 
 /**
  * Generates a new group ID.
@@ -53,16 +45,52 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
 }
 
 /**
- * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ * Generates a new global user ID.
+ * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.getUserParams = (email = "", otherProps = {}) => {
-  if (!email) {
-    email = ""
+exports.generateGlobalUserID = () => {
+  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving users.
+ */
+exports.getGlobalUserParams = (globalId, otherProps = {}) => {
+  if (!globalId) {
+    globalId = ""
   }
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${email}`,
-    endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+  }
+}
+
+/**
+ * Generates a template ID.
+ * @param ownerId The owner/user of the template, this could be global or a group level.
+ */
+exports.generateTemplateID = ownerId => {
+  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving templates. Owner ID must be specified, either global or a group level.
+ */
+exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
+  if (!templateId) {
+    templateId = ""
+  }
+  let final
+  if (templateId) {
+    final = templateId
+  } else {
+    final = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
+  }
+  return {
+    ...otherProps,
+    startkey: final,
+    endkey: `${final}${UNICODE_MAX}`,
   }
 }
 

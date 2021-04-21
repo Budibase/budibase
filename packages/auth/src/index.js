@@ -13,6 +13,7 @@ const {
   clearCookie,
   isClient,
 } = require("./utils")
+const { setDB, getDB } = require("./db")
 const {
   generateUserID,
   getUserParams,
@@ -31,7 +32,7 @@ passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
 passport.serializeUser((user, done) => done(null, user))
 
 passport.deserializeUser(async (user, done) => {
-  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
+  const db = getDB(StaticDatabases.GLOBAL.name)
 
   try {
     const user = await db.get(user._id)
@@ -44,7 +45,16 @@ passport.deserializeUser(async (user, done) => {
 
 module.exports = {
   init(pouch) {
-    database.setDB(pouch)
+    setDB(pouch)
+  },
+  db: require("./db/utils"),
+  utils: {
+    ...require("./utils"),
+    ...require("./hashing"),
+  },
+  auth: {
+    buildAuthMiddleware: authenticated,
+    passport,
   },
   passport,
   Cookies,

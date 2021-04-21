@@ -1,5 +1,5 @@
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
-const { UserStatus } = require("@budibase/auth")
+const { UserStatus } = require("@budibase/auth").constants
 
 exports.LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
@@ -33,6 +33,7 @@ exports.USERS_TABLE_SCHEMA = {
   type: "table",
   views: {},
   name: "Users",
+  // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
       type: exports.FieldTypes.STRING,
