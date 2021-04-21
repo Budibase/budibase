@@ -79,6 +79,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/actiongroup/-/actiongroup-1.0.2.tgz#37f6593c1defdeda682b9e196bcd8cce38c574aa"
   integrity sha512-YHKYruXsJteXlkCvfOoQ1cqc3tV7LbmMmbRpyp2vh0ah9CF5ImyGmBRYOOROtZx7VqfDJ5645rdwB2YfJcCBMw==
 
+"@spectrum-css/avatar@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/avatar/-/avatar-3.0.2.tgz#4f1826223eae330e64b6d3cc899e9bc2e98dac95"
+  integrity sha512-wEczvSqxttTWSiL3cOvXV/RmGRwSkw2w6+slcHhnf0kb7ovymMM+9oz8vvEpEsSeo5u598bc+7ktrKFpAd6soQ==
+
 "@spectrum-css/button@^3.0.1":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.2.tgz#387712641457d3045bcecf77e13854dd59e9c20e"
