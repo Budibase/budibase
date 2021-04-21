@@ -181,6 +181,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/search/-/search-3.0.2.tgz#70e93e321032d40b399498b2324e3b70e050551e"
   integrity sha512-3UbT8yZmNOwrZxq+CUmumE+26ZySZ8OoKNM6U20SLMPLgdx6MrRugVE88r3Bl0sJ0RZX/5bU8nausdiHeX+Jlw==
 
+"@spectrum-css/sidenav@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/sidenav/-/sidenav-3.0.2.tgz#9d70f408d588ee79c69857751010333671f32713"
+  integrity sha512-YpIdH/F0jEICYmoduGrnkTmxwJq1kfKxEp0wOs+ZkQOsvKMv1an7nyhsfOKCQqcGNfYzJ9mJAk7/u5+vsxHa8g==
+
 "@spectrum-css/switch@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/switch/-/switch-1.0.2.tgz#f0b4c69271964573e02b08e90998096e49e1de44"
