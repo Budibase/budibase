@@ -25,6 +25,7 @@ const backupRoutes = require("./backup")
 const devRoutes = require("./dev")
 
 exports.mainRoutes = [
+  authRoutes,
   deployRoutes,
   layoutRoutes,
   screenRoutes,
@@ -52,5 +53,4 @@ exports.mainRoutes = [
   rowRoutes,
 ]
 
-exports.authRoutes = authRoutes
 exports.staticRoutes = staticRoutes

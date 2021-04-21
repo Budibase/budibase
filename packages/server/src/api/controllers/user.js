@@ -2,7 +2,7 @@ const CouchDB = require("../../db")
 const {
   generateUserMetadataID,
   getUserMetadataParams,
-  getEmailFromUserMetadataID,
+  getGlobalIDFromUserMetadataID,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { getRole } = require("../../utilities/security/roles")
@@ -25,15 +25,14 @@ exports.fetchMetadata = async function(ctx) {
   ).rows.map(row => row.doc)
   const users = []
   for (let user of global) {
-    const info = metadata.find(meta => meta._id.includes(user.email))
+    // find the metadata that matches up to the global ID
+    const info = metadata.find(meta => meta._id.includes(user._id))
     // remove these props, not for the correct DB
-    delete user._id
-    delete user._rev
     users.push({
       ...user,
       ...info,
       // make sure the ID is always a local ID, not a global one
-      _id: generateUserMetadataID(user.email),
+      _id: generateUserMetadataID(user._id),
     })
   }
   ctx.body = users
@@ -43,17 +42,20 @@ exports.createMetadata = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const { roleId } = ctx.request.body
-  const email = ctx.request.body.email || ctx.user.email
+
+  if (ctx.request.body._id) {
+    return exports.updateMetadata(ctx)
+  }
 
   // check role valid
   const role = await getRole(appId, roleId)
   if (!role) ctx.throw(400, "Invalid Role")
 
-  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
+  const globalUser = await saveGlobalUser(ctx, appId, ctx.request.body)
 
   const user = {
-    ...metadata,
-    _id: generateUserMetadataID(email),
+    ...globalUser,
+    _id: generateUserMetadataID(globalUser._id),
     type: "user",
     tableId: InternalTables.USER_METADATA,
   }
@@ -64,47 +66,48 @@ exports.createMetadata = async function(ctx) {
   ctx.body = {
     _id: response.id,
     _rev: response.rev,
-    email,
+    email: ctx.request.body.email,
   }
+}
+
+exports.updateSelfMetadata = async function(ctx) {
+  // overwrite the ID with current users
+  ctx.request.body._id = ctx.user.userId
+  // make sure no stale rev
+  delete ctx.request.body._rev
+  await exports.updateMetadata(ctx)
 }
 
 exports.updateMetadata = async function(ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = ctx.request.body
-  let email = user.email || getEmailFromUserMetadataID(user._id)
-  const metadata = await saveGlobalUser(ctx, appId, email, ctx.request.body)
-  if (!metadata._id) {
-    metadata._id = generateUserMetadataID(email)
-  }
-  if (!metadata._rev) {
-    metadata._rev = ctx.request.body._rev
-  }
-  ctx.body = await db.put({
-    ...metadata,
+  const globalUser = await saveGlobalUser(ctx, appId, {
+    ...user,
+    _id: getGlobalIDFromUserMetadataID(user._id),
   })
+  const metadata = {
+    ...globalUser,
+    _id: user._id || generateUserMetadataID(globalUser._id),
+    _rev: user._rev,
+  }
+  ctx.body = await db.put(metadata)
 }
 
 exports.destroyMetadata = async function(ctx) {
   const db = new CouchDB(ctx.appId)
-  const email =
-    ctx.params.email || getEmailFromUserMetadataID(ctx.params.userId)
-  await deleteGlobalUser(ctx, email)
+  await deleteGlobalUser(ctx, getGlobalIDFromUserMetadataID(ctx.params.id))
   try {
-    const dbUser = await db.get(generateUserMetadataID(email))
+    const dbUser = await db.get(ctx.params.id)
     await db.remove(dbUser._id, dbUser._rev)
   } catch (err) {
     // error just means the global user has no config in this app
   }
   ctx.body = {
-    message: `User ${ctx.params.email} deleted.`,
+    message: `User ${ctx.params.id} deleted.`,
   }
 }
 
 exports.findMetadata = async function(ctx) {
-  ctx.body = await getFullUser({
-    ctx,
-    email: ctx.params.email,
-    userId: ctx.params.userId,
-  })
+  ctx.body = await getFullUser(ctx, ctx.params.id)
 }

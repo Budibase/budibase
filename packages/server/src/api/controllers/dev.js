@@ -4,9 +4,9 @@ const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 
 async function redirect(ctx, method) {
-  const { path } = ctx.params
+  const { devPath } = ctx.params
   const response = await fetch(
-    checkSlashesInUrl(`${env.WORKER_URL}/api/admin/${path}`),
+    checkSlashesInUrl(`${env.WORKER_URL}/api/admin/${devPath}`),
     request(ctx, {
       method,
       body: ctx.request.body,

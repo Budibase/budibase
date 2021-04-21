@@ -5,9 +5,10 @@ const env = require("../../environment")
 const router = Router()
 
 if (env.isDev() || env.isTest()) {
-  router.get("/api/admin/:path", controller.redirectGet)
-  router.post("/api/admin/:path", controller.redirectPost)
-  router.delete("/api/admin/:path", controller.redirectDelete)
+  router
+    .get("/api/admin/:devPath(.*)", controller.redirectGet)
+    .post("/api/admin/:devPath(.*)", controller.redirectPost)
+    .delete("/api/admin/:devPath(.*)", controller.redirectDelete)
 }
 
 module.exports = router

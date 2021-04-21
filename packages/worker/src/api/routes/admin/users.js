@@ -1,7 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/admin/users")
 const joiValidator = require("../../../middleware/joi-validator")
-const { authenticated } = require("@budibase/auth")
 const Joi = require("joi")
 
 const router = Router()
@@ -26,14 +25,10 @@ function buildUserSaveValidation() {
 }
 
 router
-  .post(
-    "/api/admin/users",
-    buildUserSaveValidation(),
-    authenticated,
-    controller.userSave
-  )
-  .delete("/api/admin/users/:email", authenticated, controller.userDelete)
-  .get("/api/admin/users", authenticated, controller.userFetch)
-  .get("/api/admin/users/:email", authenticated, controller.userFind)
+  .post("/api/admin/users", buildUserSaveValidation(), controller.userSave)
+  .get("/api/admin/users", controller.userFetch)
+  .post("/api/admin/users/first", controller.firstUser)
+  .delete("/api/admin/users/:id", controller.userDelete)
+  .get("/api/admin/users/:id", controller.userFind)
 
 module.exports = router

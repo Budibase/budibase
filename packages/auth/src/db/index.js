@@ -1,5 +1,9 @@
+let Pouch
+
 module.exports.setDB = pouch => {
-  module.exports.CouchDB = pouch
+  Pouch = pouch
 }
 
-module.exports.CouchDB = null
+module.exports.getDB = dbName => {
+  return new Pouch(dbName)
+}

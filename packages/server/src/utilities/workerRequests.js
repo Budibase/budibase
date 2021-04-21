@@ -60,8 +60,8 @@ exports.getDeployedApps = async ctx => {
   }
 }
 
-exports.deleteGlobalUser = async (ctx, email) => {
-  const endpoint = `/api/admin/users/${email}`
+exports.deleteGlobalUser = async (ctx, globalId) => {
+  const endpoint = `/api/admin/users/${globalId}`
   const reqCfg = { method: "DELETE" }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
@@ -70,8 +70,10 @@ exports.deleteGlobalUser = async (ctx, email) => {
   return response.json()
 }
 
-exports.getGlobalUsers = async (ctx, appId = null, email = null) => {
-  const endpoint = email ? `/api/admin/users/${email}` : `/api/admin/users`
+exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
+  const endpoint = globalId
+    ? `/api/admin/users/${globalId}`
+    : `/api/admin/users`
   const reqCfg = { method: "GET" }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
@@ -89,8 +91,10 @@ exports.getGlobalUsers = async (ctx, appId = null, email = null) => {
   return users
 }
 
-exports.saveGlobalUser = async (ctx, appId, email, body) => {
-  const globalUser = await exports.getGlobalUsers(ctx, appId, email)
+exports.saveGlobalUser = async (ctx, appId, body) => {
+  const globalUser = body._id
+    ? await exports.getGlobalUsers(ctx, appId, body._id)
+    : {}
   const roles = globalUser.roles || {}
   if (body.roleId) {
     roles[appId] = body.roleId
@@ -100,9 +104,9 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
     method: "POST",
     body: {
       ...globalUser,
-      email,
       password: body.password || undefined,
       status: body.status,
+      email: body.email,
       roles,
       builder: {
         global: true,
@@ -124,5 +128,8 @@ exports.saveGlobalUser = async (ctx, appId, email, body) => {
   delete body.status
   delete body.roles
   delete body.builder
-  return body
+  return {
+    ...body,
+    _id: json._id,
+  }
 }
