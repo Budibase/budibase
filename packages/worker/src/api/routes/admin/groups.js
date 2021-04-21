@@ -24,11 +24,7 @@ function buildGroupSaveValidation() {
 }
 
 router
-  .post(
-    "/api/admin/groups",
-    buildGroupSaveValidation(),
-    controller.save
-  )
+  .post("/api/admin/groups", buildGroupSaveValidation(), controller.save)
   .get("/api/admin/groups", controller.fetch)
   .delete("/api/admin/groups/:id", controller.destroy)
   .get("/api/admin/groups/:id", controller.find)

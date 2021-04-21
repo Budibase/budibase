@@ -1,13 +1,11 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/admin/templates")
-const joiValidator = require("../../../middleware/joi-validator")
-const Joi = require("joi")
+// const joiValidator = require("../../../middleware/joi-validator")
+// const Joi = require("joi")
 
 const router = Router()
 
-function buildTemplateSaveValidation() {
-
-}
+function buildTemplateSaveValidation() {}
 
 router
   .post(

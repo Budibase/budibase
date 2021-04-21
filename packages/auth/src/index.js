@@ -31,7 +31,7 @@ module.exports = {
   db: require("./db/utils"),
   utils: {
     ...require("./utils"),
-    ...require("./hashing")
+    ...require("./hashing"),
   },
   auth: {
     buildAuthMiddleware: authenticated,
