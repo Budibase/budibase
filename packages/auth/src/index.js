@@ -2,7 +2,7 @@ const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 // const GoogleStrategy = require("passport-google-oauth").Strategy
-const database = require("./db")
+const { setDB, getDB } = require("./db")
 const { StaticDatabases } = require("./db/utils")
 const { jwt, local, authenticated } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
@@ -13,13 +13,13 @@ const {
   getCookie,
   clearCookie,
   isClient,
+  getGlobalUserByEmail,
 } = require("./utils")
 const {
-  generateUserID,
-  getUserParams,
+  generateGlobalUserID,
+  getGlobalUserParams,
   generateGroupID,
   getGroupParams,
-  getEmailFromUserID,
 } = require("./db/utils")
 
 // Strategies
@@ -30,7 +30,7 @@ passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
 passport.serializeUser((user, done) => done(null, user))
 
 passport.deserializeUser(async (user, done) => {
-  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
+  const db = getDB(StaticDatabases.GLOBAL.name)
 
   try {
     const user = await db.get(user._id)
@@ -43,17 +43,16 @@ passport.deserializeUser(async (user, done) => {
 
 module.exports = {
   init(pouch) {
-    database.setDB(pouch)
+    setDB(pouch)
   },
   passport,
   Cookies,
   UserStatus,
   StaticDatabases,
-  generateUserID,
-  getUserParams,
+  generateGlobalUserID,
+  getGlobalUserParams,
   generateGroupID,
   getGroupParams,
-  getEmailFromUserID,
   hash,
   compare,
   getAppId,
@@ -62,4 +61,5 @@ module.exports = {
   clearCookie,
   authenticated,
   isClient,
+  getGlobalUserByEmail,
 }

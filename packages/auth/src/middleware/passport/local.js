@@ -1,9 +1,8 @@
 const jwt = require("jsonwebtoken")
 const { UserStatus } = require("../../constants")
-const database = require("../../db")
-const { StaticDatabases, generateUserID } = require("../../db/utils")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
+const { getGlobalUserByEmail } = require("../../utils")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -11,23 +10,17 @@ exports.options = {}
 
 /**
  * Passport Local Authentication Middleware.
- * @param {*} username - username to login with
+ * @param {*} email - username to login with
  * @param {*} password - plain text password to log in with
  * @param {*} done - callback from passport to return user information and errors
  * @returns The authenticated user, or errors if they occur
  */
-exports.authenticate = async function(username, password, done) {
-  if (!username) return done(null, false, "Email Required.")
+exports.authenticate = async function(email, password, done) {
+  if (!email) return done(null, false, "Email Required.")
   if (!password) return done(null, false, "Password Required.")
 
-  // Check the user exists in the instance DB by email
-  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
-
-  let dbUser
-  try {
-    dbUser = await db.get(generateUserID(username))
-  } catch (err) {
-    console.error("User not found", err)
+  const dbUser = await getGlobalUserByEmail(email)
+  if (dbUser == null) {
     return done(null, false, { message: "User not found" })
   }
 

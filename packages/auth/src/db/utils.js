@@ -1,5 +1,9 @@
 const { newid } = require("../hashing")
 
+exports.ViewNames = {
+  USER_BY_EMAIL: "by_email",
+}
+
 exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
@@ -18,19 +22,6 @@ const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
 
 exports.SEPARATOR = SEPARATOR
-
-/**
- * Generates a new user ID based on the passed in email.
- * @param {string} email The email which the ID is going to be built up of.
- * @returns {string} The new user ID which the user doc can be stored under.
- */
-exports.generateUserID = email => {
-  return `${DocumentTypes.USER}${SEPARATOR}${email}`
-}
-
-exports.getEmailFromUserID = userId => {
-  return userId.split(`${DocumentTypes.USER}${SEPARATOR}`)[1]
-}
 
 /**
  * Generates a new group ID.
@@ -52,15 +43,23 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
 }
 
 /**
+ * Generates a new global user ID.
+ * @returns {string} The new user ID which the user doc can be stored under.
+ */
+exports.generateGlobalUserID = () => {
+  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
+}
+
+/**
  * Gets parameters for retrieving users.
  */
-exports.getUserParams = (email = "", otherProps = {}) => {
-  if (!email) {
-    email = ""
+exports.getGlobalUserParams = (globalId = "", otherProps = {}) => {
+  if (!globalId) {
+    globalId = ""
   }
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${email}`,
-    endkey: `${DocumentTypes.USER}${SEPARATOR}${email}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
 }
