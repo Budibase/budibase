@@ -1,6 +1,7 @@
 const authPkg = require("@budibase/auth")
+const { google } = require("@budibase/auth/src/middleware")
 const { clearCookie } = authPkg.utils
-const { Cookies } = authPkg.constants
+const { Cookies } = authPkg
 const { passport } = authPkg.auth
 
 exports.authenticate = async (ctx, next) => {
@@ -34,18 +35,20 @@ exports.logout = async ctx => {
   ctx.body = { message: "User logged out" }
 }
 
-// exports.googleAuth = async (ctx, next) =>
-//   passport.authenticate(
-//     "google",
-//     { successRedirect: "/", failureRedirect: "/" },
-//     (ctx
-//     setToken(ctx, next)
-//   )
+exports.googlePreAuth = async (ctx, next) => {
+  const strategy = await google.strategyFactory()
+
+  return passport.authenticate(strategy, {
+    scope: ["profile", "email"],
+  })(ctx, next)
+}
 
 exports.googleAuth = async (ctx, next) => {
+  const strategy = await google.strategyFactory()
+
   return passport.authenticate(
-    "google",
-    { successRedirect: "/", failureRedirect: "/" },
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
     async (err, user) => {
       if (err) {
         return ctx.throw(403, "Unauthorized")

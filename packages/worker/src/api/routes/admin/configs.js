@@ -15,15 +15,10 @@ function buildConfigSaveValidation() {
 }
 
 router
-  .post(
-    "/api/admin/configs",
-    buildConfigSaveValidation(),
-    authenticated,
-    controller.save
-  )
-  .post("/api/admin/config/status", controller.configStatus)
-  .delete("/api/admin/configs/:id", authenticated, controller.destroy)
-  .get("/api/admin/configs", authenticated, controller.fetch)
-  .get("/api/admin/configs/:id", authenticated, controller.find)
+  .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
+  .post("/api/admin/configs/status", controller.configStatus)
+  .delete("/api/admin/configs/:id", controller.destroy)
+  .get("/api/admin/configs", controller.fetch)
+  .get("/api/admin/configs/:id", controller.find)
 
 module.exports = router

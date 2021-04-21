@@ -11,6 +11,7 @@ exports.Configs = {
   SETTINGS: "settings",
   ACCOUNT: "account",
   SMTP: "smtp",
+  GOOGLE: "google",
 }
 
 exports.TemplateTypes = {

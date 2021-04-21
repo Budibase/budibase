@@ -1,7 +1,7 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-const database = require("./db")
+const constants = require("./constants")
 const { StaticDatabases, DocumentTypes } = require("./db/utils")
 const { jwt, local, google, authenticated } = require("./middleware")
 const { Cookies, UserStatus } = require("./constants")
@@ -55,7 +55,11 @@ module.exports = {
   auth: {
     buildAuthMiddleware: authenticated,
     passport,
+    middlewares: {
+      google,
+    },
   },
+  constants,
   passport,
   Cookies,
   UserStatus,

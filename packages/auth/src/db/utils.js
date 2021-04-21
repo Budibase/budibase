@@ -48,8 +48,8 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
  * Generates a new global user ID.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateGlobalUserID = () => {
-  return `${DocumentTypes.USER}${SEPARATOR}${newid()}`
+exports.generateGlobalUserID = id => {
+  return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
 }
 
 /**
