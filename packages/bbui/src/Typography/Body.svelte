@@ -12,7 +12,7 @@
     export let xxs = false;
 
     export let serif = false;
-
+    $: useDefault = ![xxxl, xxl, xl, l, m, s, xs, xxs].includes(true)
 </script>
 
 <p class="spectrum-Body"
@@ -21,7 +21,7 @@
     class:spectrum-Body--sizeXXL={xxl}
     class:spectrum-Body--sizeXL={xl}
     class:spectrum-Body--sizeL={l}
-    class:spectrum-Body--sizeM={m}
+    class:spectrum-Body--sizeM={m || useDefault}
     class:spectrum-Body--sizeS={s}
     class:spectrum-Body--sizeXS={xs}
     class:spectrum-Body--sizeXXS={xxs}>
