@@ -39,7 +39,7 @@
   <Input outline type="password" on:change bind:value={password} />
   <Spacer large />
   <Button primary on:click={login}>Login</Button>
-  <a target="_blank" href="/api/admin/auth/google">Sign In with Google</a>
+  <a target="_blank" href="/api/admin/auth/google">Sign In With Google</a>
   <Button secondary on:click={createTestUser}>Create Test User</Button>
 </form>
 

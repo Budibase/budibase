@@ -2,7 +2,11 @@ const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
-const { StaticDatabases, generateUserID } = require("../../db/utils")
+const {
+  StaticDatabases,
+  generateUserID,
+  generateGlobalUserID,
+} = require("../../db/utils")
 
 exports.options = {
   clientID: env.GOOGLE_CLIENT_ID,
@@ -11,13 +15,11 @@ exports.options = {
 }
 
 async function authenticate(token, tokenSecret, profile, done) {
-  if (!profile._json.email) return done(null, false, "Email Required.")
-
   // Check the user exists in the instance DB by email
-  const db = new database.CouchDB(StaticDatabases.GLOBAL.name)
+  const db = database.getDB(StaticDatabases.GLOBAL.name)
 
   let dbUser
-  const userId = generateUserID(profile._json.email)
+  const userId = generateGlobalUserID(profile.id)
 
   try {
     // use the google profile id
@@ -54,13 +56,37 @@ async function authenticate(token, tokenSecret, profile, done) {
   return done(null, dbUser)
 }
 
-exports.CustomGoogleStrategy = function(config) {
-  return new GoogleStrategy(
-    {
-      clientID: config.clientID,
-      clientSecret: config.clientSecret,
-      callbackURL: config.callbackURL,
-    },
-    authenticate
-  )
+/**
+ * Create an instance of the google passport strategy. This wrapper fetches the configuration
+ * from couchDB rather than environment variables, and is necessary for dynamically configuring passport.
+ * @returns Passport Google Strategy
+ */
+exports.strategyFactory = async function() {
+  try {
+    const db = database.getDB(StaticDatabases.GLOBAL.name)
+
+    const config = await db.get(
+      "config_google__767bd8f363854dfa8752f593a637b3fd"
+    )
+
+    const { clientID, clientSecret, callbackURL } = config
+
+    if (!clientID || !clientSecret || !callbackURL) {
+      throw new Error(
+        "Configuration invalid. Must contain google clientID, clientSecret and callbackURL"
+      )
+    }
+
+    return new GoogleStrategy(
+      {
+        clientID: config.clientID,
+        clientSecret: config.clientSecret,
+        callbackURL: config.callbackURL,
+      },
+      authenticate
+    )
+  } catch (err) {
+    console.error(err)
+    throw new Error("Error constructing google authentication strategy", err)
+  }
 }
