@@ -9,6 +9,8 @@
     Heading,
     Spacer,
     Switcher,
+    Tabs,
+    Tab
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import api from "builderStore/api"
@@ -185,15 +187,15 @@
           <Button thin secondary on:click={previewQuery}>Run Query</Button>
         </div>
       </div>
-      <Body small grey>
+      <Body s grey>
         Below, you can preview the results from your query and change the
         schema.
       </Body>
       <Spacer medium />
       <section class="viewer">
         {#if data}
-          <Switcher headings={PREVIEW_HEADINGS} bind:value={tab}>
-            {#if tab === 'JSON'}
+          <Tabs selected="JSON">
+            <Tab title="JSON">
               <pre
                 class="preview">
                 <!-- prettier-ignore -->
@@ -202,10 +204,9 @@
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
                 {/if}
-            </pre>
-            {:else if tab === 'PREVIEW'}
-              <ExternalDataSourceTable {query} {data} />
-            {:else if tab === 'SCHEMA'}
+              </pre>
+            </Tab>
+            <Tab title="Schema">
               {#each fields as field, idx}
                 <Spacer small />
                 <div class="field">
@@ -218,8 +219,11 @@
               {/each}
               <Spacer extraLarge />
               <Button thin secondary on:click={newField}>Add Field</Button>
-            {/if}
-          </Switcher>
+            </Tab>
+            <Tab title="Preview">
+              <ExternalDataSourceTable {query} {data} />
+            </Tab>
+          </Tabs>
         {/if}
       </section>
     </div>
