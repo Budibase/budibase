@@ -20,6 +20,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/auth": "0.0.1",
+    "@budibase/string-templates": "^0.8.16",
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
     "bcryptjs": "^2.4.3",
