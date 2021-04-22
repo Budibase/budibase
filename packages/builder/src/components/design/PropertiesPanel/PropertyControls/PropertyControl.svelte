@@ -90,22 +90,17 @@
       <Icon s name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
-      <div slot="description">
-        <Body extraSmall grey>
+      <svelte:fragment slot="description">
           Add the objects on the left to enrich your text.
-        </Body>
-      </div>
-      <heading slot="buttons">
-        <Button thin blue disabled={!valid} on:click={handleClose}>Save</Button>
-      </heading>
-      <div slot="body">
-        <BindingPanel
-          bind:valid
-          value={safeValue}
-          close={handleClose}
-          on:update={e => (temporaryBindableValue = e.detail)}
-          {bindableProperties} />
-      </div>
+      </svelte:fragment>
+      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>Save</Button>
+      <BindingPanel
+        slot="body"
+        bind:valid
+        value={safeValue}
+        close={handleClose}
+        on:update={e => (temporaryBindableValue = e.detail)}
+        {bindableProperties} />
     </Drawer>
   {/if}
 </div>
