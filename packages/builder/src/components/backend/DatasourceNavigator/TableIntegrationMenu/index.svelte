@@ -1,4 +1,5 @@
 <script>
+  import { Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
   import ICONS from "../icons"
@@ -41,19 +42,15 @@
         on:click={() => selectIntegration(integrationType)}>
         <svelte:component
           this={ICONS[integrationType]}
-          height="100"
-          width="100" />
-        <span>{integrationType}</span>
+          height="50"
+          width="50"/>
+        <Body xs>{integrationType}</Body>
       </div>
     {/each}
   </div>
 </section>
 
 <style>
-  section {
-    display: grid;
-  }
-
   .integration-list {
     display: grid;
     grid-template-columns: repeat( auto-fit, minmax(150px, 1fr));
@@ -61,23 +58,17 @@
   }
 
   .integration {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    padding: 5px;
+    display: grid;
+    background: var(--background-alt);
+    place-items: center;
+    grid-gap: 10px;
+    padding: 10px;
     transition: 0.3s all;
-    border-radius: var(--border-radius-s);
-    height: 75px;
-  }
-
-  span {
-    font-size: var(--font-size-xs);
-    margin-top: var(--spacing-m);
-    margin-bottom: var(--spacing-xs);
+    border-radius: var(--spectrum-alias-item-rounded-border-radius-s);
   }
 
   .integration:hover,
   .selected {
-    background-color: var(--grey-3);
+    background: var(--spectrum-alias-background-color-tertiary);
   }
 </style>
