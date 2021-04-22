@@ -1,9 +1,9 @@
 <script>
-  import { notifications } from "@budibase/bbui"
-  import { Dropzone } from "@budibase/bbui"
+  import { Dropzone, notifications } from "@budibase/bbui"
   import api from "builderStore/api"
 
-  export let files = []
+  export let value = []
+  export let label
 
   const BYTES_IN_MB = 1000000
 
@@ -24,4 +24,9 @@
   }
 </script>
 
-<Dropzone bind:files {processFiles} {handleFileTooLarge} />
+<Dropzone
+  bind:value
+  {label}
+  {...$$restProps}
+  {processFiles}
+  {handleFileTooLarge} />
