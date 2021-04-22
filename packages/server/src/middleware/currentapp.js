@@ -31,7 +31,7 @@ module.exports = async (ctx, next) => {
       appCookie.roleId === BUILTIN_ROLE_IDS.PUBLIC)
   ) {
     // Different App ID means cookie needs reset, or if the same public user has logged in
-    const globalId = getGlobalIDFromUserMetadataID(ctx.user.userId)
+    const globalId = getGlobalIDFromUserMetadataID(ctx.user._id)
     const globalUser = await getGlobalUsers(ctx, requestAppId, globalId)
     updateCookie = true
     appId = requestAppId
@@ -50,7 +50,7 @@ module.exports = async (ctx, next) => {
   ctx.appId = appId
   if (roleId) {
     ctx.roleId = roleId
-    const userId = ctx.user ? generateUserMetadataID(ctx.user.userId) : null
+    const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
     ctx.user = {
       ...ctx.user,
       // override userID with metadata one

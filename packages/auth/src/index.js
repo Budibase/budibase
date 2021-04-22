@@ -1,14 +1,13 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-// const GoogleStrategy = require("passport-google-oauth").Strategy
-const { setDB, getDB } = require("./db")
 const { StaticDatabases } = require("./db/utils")
-const { jwt, local, authenticated } = require("./middleware")
+const { jwt, local, authenticated, google } = require("./middleware")
+const { setDB, getDB } = require("./db")
+
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
 passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
-// passport.use(new GoogleStrategy(google.options, google.authenticate))
 
 passport.serializeUser((user, done) => done(null, user))
 
@@ -36,6 +35,8 @@ module.exports = {
   auth: {
     buildAuthMiddleware: authenticated,
     passport,
+    google,
   },
+  StaticDatabases,
   constants: require("./constants"),
 }
