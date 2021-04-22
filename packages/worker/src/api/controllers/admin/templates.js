@@ -4,7 +4,12 @@ const {
   StaticDatabases,
 } = require("@budibase/auth").db
 const { CouchDB } = require("../../../db")
-const { TemplatePurposePretty, TemplateTypes, EmailTemplatePurpose, TemplatePurpose } = require("../../../constants")
+const {
+  TemplatePurposePretty,
+  TemplateTypes,
+  EmailTemplatePurpose,
+  TemplatePurpose,
+} = require("../../../constants")
 const { getTemplateByPurpose } = require("../../../constants/templates")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
