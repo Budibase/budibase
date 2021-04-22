@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { datasources } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Input, Label, ModalContent } from "@budibase/bbui"
+  import { Input, Heading, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import analytics from "analytics"
 
@@ -51,6 +51,6 @@
     on:input={checkValid}
     bind:value={name}
     {error} />
-  <Label>Source</Label>
+  <Heading h2 xxs>Source</Heading>
   <TableIntegrationMenu bind:integration />
 </ModalContent>
