@@ -1,9 +1,13 @@
+const { determineScopedConfig } = require("@budibase/auth")
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { Configs } = require("../../constants")
+const CouchDB = require("../../db")
 const { clearCookie } = authPkg.utils
 const { Cookies } = authPkg
 const { passport } = authPkg.auth
+
+const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
@@ -41,11 +45,12 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const strategy = await google.strategyFactory({
+  const db = new CouchDB(GLOBAL_DB)
+  const config = await determineScopedConfig(db, {
     type: Configs.GOOGLE,
-    user: ctx.user._id,
     group: ctx.query.group,
   })
+  const strategy = await google.strategyFactory(config)
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -53,11 +58,13 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const strategy = await google.strategyFactory({
+  const db = new CouchDB(GLOBAL_DB)
+
+  const config = await determineScopedConfig(db, {
     type: Configs.GOOGLE,
-    user: ctx.user._id,
     group: ctx.query.group,
   })
+  const strategy = await google.strategyFactory(config)
 
   return passport.authenticate(
     strategy,
