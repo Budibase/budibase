@@ -2,6 +2,8 @@
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
   import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Body from "../Typography/Body.svelte"
+  import Heading from "../Typography/Heading.svelte"
 
   export let title
 
@@ -35,8 +37,8 @@
     <section class="drawer" transition:slide>
       <header>
         <div class="text">
-          <div class="title">{title}</div>
-          <slot name="description" />
+          <Heading xs>{title}</Heading>
+          <Body xxs><slot name="description" /></Body>
         </div>
         <div class="controls">
           <slot name="buttons" />
@@ -64,23 +66,17 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: var(--spacing-m);
+    padding: 0 var(--spectrum-alias-item-padding-s) ;
+  }
+  header :global(*) + :global(*) {
+    margin: var(--spectrum-alias-grid-baseline);
   }
 
   .controls {
     display: grid;
     grid-auto-flow: column;
-    grid-gap: var(--spacing-m);
+    grid-gap: var(--spectrum-alias-item-padding-s);
     align-items: center;
-  }
-
-  .close {
-    font-size: var(--font-size-xl);
-    cursor: pointer;
-  }
-  .title {
-    font-weight: bold;
-    margin-right: var(--spacing-m);
   }
   .text {
     display: flex;
