@@ -53,7 +53,11 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const strategy = await google.strategyFactory(ctx)
+  const strategy = await google.strategyFactory({
+    type: Configs.GOOGLE,
+    user: ctx.user._id,
+    group: ctx.query.group,
+  })
 
   return passport.authenticate(
     strategy,

@@ -1,4 +1,8 @@
-const { generateTemplateID, getTemplateParams, StaticDatabases } = require("@budibase/auth").db
+const {
+  generateTemplateID,
+  getTemplateParams,
+  StaticDatabases,
+} = require("@budibase/auth").db
 const { CouchDB } = require("../../../db")
 const { TemplatePurposePretty } = require("../../../constants")
 
@@ -42,7 +46,7 @@ exports.save = async ctx => {
 
 exports.definitions = async ctx => {
   ctx.body = {
-    purpose: TemplatePurposePretty
+    purpose: TemplatePurposePretty,
   }
 }
 
