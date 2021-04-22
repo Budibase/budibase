@@ -2,17 +2,7 @@ const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
-const {
-  StaticDatabases,
-  generateUserID,
-  generateGlobalUserID,
-} = require("../../db/utils")
-
-exports.options = {
-  clientID: env.GOOGLE_CLIENT_ID,
-  clientSecret: env.GOOGLE_CLIENT_SECRET,
-  callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
-}
+const { StaticDatabases, generateGlobalUserID } = require("../../db/utils")
 
 async function authenticate(token, tokenSecret, profile, done) {
   // Check the user exists in the instance DB by email
@@ -58,16 +48,14 @@ async function authenticate(token, tokenSecret, profile, done) {
 
 /**
  * Create an instance of the google passport strategy. This wrapper fetches the configuration
- * from couchDB rather than environment variables, and is necessary for dynamically configuring passport.
- * @returns Passport Google Strategy
+ * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
+ * @returns Dynamically configured Passport Google Strategy
  */
-exports.strategyFactory = async function() {
+exports.strategyFactory = async function(scope) {
   try {
     const db = database.getDB(StaticDatabases.GLOBAL.name)
 
-    const config = await db.get(
-      "config_google__767bd8f363854dfa8752f593a637b3fd"
-    )
+    const config = await db.get(scope)
 
     const { clientID, clientSecret, callbackURL } = config
 

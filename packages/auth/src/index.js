@@ -27,7 +27,6 @@ const {
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
 passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
-// passport.use(new GoogleStrategy(google.options, google.authenticate))
 
 passport.serializeUser((user, done) => done(null, user))
 

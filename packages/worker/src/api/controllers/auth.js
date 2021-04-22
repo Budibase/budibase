@@ -1,5 +1,6 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
+const { Configs } = require("../../constants")
 const { clearCookie } = authPkg.utils
 const { Cookies } = authPkg
 const { passport } = authPkg.auth
@@ -35,8 +36,16 @@ exports.logout = async ctx => {
   ctx.body = { message: "User logged out" }
 }
 
+/**
+ * The initial call that google authentication makes to take you to the google login screen.
+ * On a successful login, you will be redirected to the googleAuth callback route.
+ */
 exports.googlePreAuth = async (ctx, next) => {
-  const strategy = await google.strategyFactory()
+  const strategy = await google.strategyFactory({
+    type: Configs.GOOGLE,
+    user: ctx.user._id,
+    group: ctx.query.group,
+  })
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -44,7 +53,7 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const strategy = await google.strategyFactory()
+  const strategy = await google.strategyFactory(ctx)
 
   return passport.authenticate(
     strategy,
