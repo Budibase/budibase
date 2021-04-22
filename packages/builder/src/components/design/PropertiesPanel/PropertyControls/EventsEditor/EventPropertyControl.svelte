@@ -51,12 +51,11 @@
   }
 </script>
 
-<Button secondary wide on:click={drawer.show}>Define Actions</Button>
+<Button primary on:click={drawer.show}>Define Actions</Button>
 <Drawer bind:this={drawer} title={'Actions'}>
-  <heading slot="buttons">
-    <Button thin blue on:click={saveEventData}>Save</Button>
-  </heading>
-  <div slot="body">
-    <EventEditor bind:actions={value} eventType={name} />
-  </div>
+  <svelte:fragment slot="description">
+    Define what actions to run.
+  </svelte:fragment>
+  <Button cta slot="buttons" on:click={saveEventData}>Save</Button>
+  <EventEditor slot="body" bind:actions={value} eventType={name} />
 </Drawer>
