@@ -43,7 +43,7 @@ const TemplatePurposePretty = {
     },
     {
       name: "Password Recovery",
-      value: EmailTemplatePurpose.PASSWORD_RECOVERY
+      value: EmailTemplatePurpose.PASSWORD_RECOVERY,
     },
     {
       name: "New User Invitation",
@@ -52,8 +52,8 @@ const TemplatePurposePretty = {
     {
       name: "Custom",
       value: EmailTemplatePurpose.CUSTOM,
-    }
-  ]
+    },
+  ],
 }
 
 // all purpose combined
