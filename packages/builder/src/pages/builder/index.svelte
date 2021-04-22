@@ -77,11 +77,6 @@
   <AppList />
 </div>
 
-<ButtonGroup>
-  <Button secondary>Test</Button>
-  <Button cta>Test</Button>
-</ButtonGroup>
-
 <Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>
   <CreateAppModal {hasKey} {template} />
 </Modal>
