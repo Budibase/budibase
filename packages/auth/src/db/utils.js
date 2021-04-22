@@ -132,28 +132,27 @@ const determineScopedConfig = async function(db, { type, user, group }) {
       }
     )
   )
-  const configs = response.rows.map(row => row.doc)
+  const configs = response.rows.map(row => {
+    const config = row.doc
 
-  // Find the config with the most granular scope based on context
-  const scopedConfig = configs.find(config => {
     // Config is specific to a user and a group
     if (config._id.includes(generateConfigID({ type, user, group }))) {
-      return config
+      config.score = 4
+    } else if (config._id.includes(generateConfigID({ type, user }))) {
+      // Config is specific to a user only
+      config.score = 3
+    } else if (config._id.includes(generateConfigID({ type, group }))) {
+      // Config is specific to a group only
+      config.score = 2
+    } else if (config._id.includes(generateConfigID({ type }))) {
+      // Config is specific to a type only
+      config.score = 1
     }
-
-    // Config is specific to a user
-    if (config._id.includes(generateConfigID({ type, user }))) {
-      return config
-    }
-
-    // Config is specific to a group only
-    if (config._id.includes(generateConfigID({ type, group }))) {
-      return config
-    }
-
-    // Config specific to a config type only
     return config
   })
+
+  // Find the config with the most granular scope based on context
+  const scopedConfig = configs.sort((a, b) => b.score - a.score)[0]
 
   return scopedConfig
 }
