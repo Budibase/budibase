@@ -21,11 +21,7 @@ function buildTemplateSaveValidation() {
 
 router
   .get("/api/admin/template/definitions", controller.definitions)
-  .post(
-    "/api/admin/template",
-    buildTemplateSaveValidation(),
-    controller.save
-  )
+  .post("/api/admin/template", buildTemplateSaveValidation(), controller.save)
   .get("/api/admin/template", controller.fetch)
   .get("/api/admin/template/:type", controller.fetchByType)
   .get("/api/admin/template/:ownerId", controller.fetchByOwner)
