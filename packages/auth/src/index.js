@@ -22,6 +22,7 @@ const {
   getEmailFromUserID,
   generateConfigID,
   getConfigParams,
+  determineScopedConfig,
 } = require("./db/utils")
 
 // Strategies
@@ -71,6 +72,7 @@ module.exports = {
   getEmailFromUserID,
   generateConfigID,
   getConfigParams,
+  determineScopedConfig,
   hash,
   compare,
   getAppId,

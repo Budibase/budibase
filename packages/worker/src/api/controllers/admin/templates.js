@@ -74,6 +74,6 @@ exports.find = async ctx => {
 
 exports.destroy = async ctx => {
   // TODO
-  const db = new CouchDB(GLOBAL_DB)
+  // const db = new CouchDB(GLOBAL_DB)
   ctx.body = {}
 }

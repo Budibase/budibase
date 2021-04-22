@@ -51,12 +51,8 @@ async function authenticate(token, tokenSecret, profile, done) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport Google Strategy
  */
-exports.strategyFactory = async function(scope) {
+exports.strategyFactory = async function(config) {
   try {
-    const db = database.getDB(StaticDatabases.GLOBAL.name)
-
-    const config = await db.get(scope)
-
     const { clientID, clientSecret, callbackURL } = config
 
     if (!clientID || !clientSecret || !callbackURL) {
