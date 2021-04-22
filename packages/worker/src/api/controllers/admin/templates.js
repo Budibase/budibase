@@ -1,12 +1,6 @@
-const {
-  generateTemplateID,
-  StaticDatabases,
-} = require("@budibase/auth").db
+const { generateTemplateID, StaticDatabases } = require("@budibase/auth").db
 const { CouchDB } = require("../../../db")
-const {
-  TemplateMetadata,
-  TemplateBindings,
-} = require("../../../constants")
+const { TemplateMetadata, TemplateBindings } = require("../../../constants")
 const { getTemplates } = require("../../../constants/templates")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name

@@ -22,7 +22,9 @@ exports.getSettingsTemplateContext = async () => {
   return {
     [TemplateBindings.LOGO_URL]: settings.logoUrl || LOGO_URL,
     [TemplateBindings.URL]: settings.url,
-    [TemplateBindings.REGISTRATION_URL]: checkSlashesInUrl(`${settings.url}/registration`),
+    [TemplateBindings.REGISTRATION_URL]: checkSlashesInUrl(
+      `${settings.url}/registration`
+    ),
     [TemplateBindings.RESET_URL]: checkSlashesInUrl(`${settings.url}/reset`),
     [TemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
   }
