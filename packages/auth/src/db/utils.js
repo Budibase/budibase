@@ -119,7 +119,7 @@ const getConfigParams = ({ type, group, user }, otherProps = {}) => {
 
 /**
  * Returns the most granular configuration document from the DB based on the type, group and userID passed.
- * @param {*} db - db instance to quer
+ * @param {Object} db - db instance to query
  * @param {Object} scopes - the type, group and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
