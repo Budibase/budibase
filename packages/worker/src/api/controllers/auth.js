@@ -1,10 +1,9 @@
-const { determineScopedConfig } = require("@budibase/auth")
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { Configs } = require("../../constants")
 const CouchDB = require("../../db")
 const { clearCookie } = authPkg.utils
-const { Cookies } = authPkg
+const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
@@ -46,7 +45,7 @@ exports.logout = async ctx => {
  */
 exports.googlePreAuth = async (ctx, next) => {
   const db = new CouchDB(GLOBAL_DB)
-  const config = await determineScopedConfig(db, {
+  const config = await authPkg.db.determineScopedConfig(db, {
     type: Configs.GOOGLE,
     group: ctx.query.group,
   })
@@ -60,7 +59,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const db = new CouchDB(GLOBAL_DB)
 
-  const config = await determineScopedConfig(db, {
+  const config = await authPkg.db.determineScopedConfig(db, {
     type: Configs.GOOGLE,
     group: ctx.query.group,
   })
