@@ -1,8 +1,15 @@
 <script>
-  import { notifications } from "@budibase/bbui"
   import { hostingStore } from "builderStore"
   import { HostingTypes } from "constants/backend"
-  import { Input, ModalContent, Toggle } from "@budibase/bbui"
+  import {
+    Heading,
+    Divider,
+    notifications,
+    Input,
+    ModalContent,
+    Toggle,
+    Body,
+  } from "@budibase/bbui"
   import ThemeEditor from "components/settings/ThemeEditor.svelte"
   import analytics from "analytics"
   import { onMount } from "svelte"
@@ -52,13 +59,14 @@
 </script>
 
 <ModalContent title="Builder settings" confirmText="Save" onConfirm={save}>
-  <h5>Theme</h5>
+  <Heading xs>Theme</Heading>
   <ThemeEditor />
-  <h5>Hosting</h5>
-  <p>
+  <Divider noMargin noGrid />
+  <Heading xs>Hosting</Heading>
+  <Body s>
     This section contains settings that relate to the deployment and hosting of
     apps made in this builder.
-  </p>
+  </Body>
   <Toggle
     text="Self hosted"
     on:change={updateSelfHosting}
@@ -68,24 +76,14 @@
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
     <Toggle text="HTTPS" bind:value={hostingInfo.useHttps} />
   {/if}
-  <h5>Analytics</h5>
-  <p>
+  <Divider noMargin noGrid />
+  <Heading xs>Analytics</Heading>
+  <Body s>
     If you would like to send analytics that help us make budibase better,
     please let us know below.
-  </p>
+  </Body>
   <Toggle
     text="Send Analytics To Budibase"
     value={!analyticsDisabled}
     on:change={toggleAnalytics} />
 </ModalContent>
-
-<style>
-  h5 {
-    margin: 0;
-    font-size: 14px;
-  }
-  p {
-    margin: 0;
-    font-size: 12px;
-  }
-</style>
