@@ -10,6 +10,8 @@
   export let m = false
   export let l = false
   export let xl = false
+  export let hoverable = false
+  export let disabled = false
 
   $: rotation = directions.indexOf(direction) * 45
   $: useDefault = ![s, m, l, xl].includes(true)
@@ -17,6 +19,8 @@
 
 <svg
   on:click
+  class:hoverable
+  class:disabled
   class:spectrum-Icon--sizeS={s}
   class:spectrum-Icon--sizeM={m || useDefault}
   class:spectrum-Icon--sizeL={l}
@@ -28,3 +32,19 @@
   style={`transform: rotate(${rotation}deg)`}>
   <use xlink:href="#spectrum-icon-18-{name}" />
 </svg>
+
+<style>
+  svg.hoverable {
+    pointer-events: all;
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+  }
+  svg.hoverable:hover {
+    color: var(--spectrum-alias-icon-color-selected);
+    cursor: pointer;
+  }
+
+  svg.disabled {
+    color: var(--spectrum-global-color-gray-500) !important;
+    pointer-events: none !important;
+  }
+</style>

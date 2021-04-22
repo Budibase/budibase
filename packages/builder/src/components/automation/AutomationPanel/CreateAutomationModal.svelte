@@ -29,14 +29,13 @@
   onConfirm={createAutomation}
   disabled={!valid}>
   <Input bind:value={name} label="Name" />
-  <div slot="footer">
-    <a
-      target="_blank"
-      href="https://docs.budibase.com/automate/introduction-to-automate">
-      <i class="ri-information-line" />
-      <span>Learn about automations</span>
-    </a>
-  </div>
+  <a
+    slot="footer"
+    target="_blank"
+    href="https://docs.budibase.com/automate/introduction-to-automate">
+    <i class="ri-information-line" />
+    <span>Learn about automations</span>
+  </a>
 </ModalContent>
 
 <style>

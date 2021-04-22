@@ -1,6 +1,5 @@
 <script>
-  import { notifications } from "@budibase/bbui"
-  import { Input } from "@budibase/bbui"
+  import { Input, Icon, notifications } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
 
   export let value
@@ -29,10 +28,10 @@
 </script>
 
 <div>
-  <Input disabled="true" thin value={fullWebhookURL(value)} />
-  <span on:click={() => copyToClipboard()}>
-    <i class="ri-clipboard-line copy-icon" />
-  </span>
+  <Input readonly value={fullWebhookURL(value)} />
+  <div class="icon" on:click={() => copyToClipboard()}>
+    <Icon s name="Copy" />
+  </div>
 </div>
 
 <style>
@@ -40,26 +39,31 @@
     position: relative;
   }
 
-  div :global(input:disabled) {
-    color: var(--grey-7);
-  }
-
-  span {
+  .icon {
+    right: 1px;
+    bottom: 1px;
     position: absolute;
-    border: none;
-    border-radius: 50%;
-    height: 24px;
-    width: 24px;
-    background: var(--background);
-    right: var(--spacing-s);
-    bottom: 9px;
-    display: flex;
-    flex-direction: row;
     justify-content: center;
     align-items: center;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
-
-  span:hover {
-    background-color: var(--grey-3);
+  .icon:hover {
+    cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>
