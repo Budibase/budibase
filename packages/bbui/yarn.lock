@@ -211,6 +211,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/toast/-/toast-3.0.2.tgz#8e27cce799b1b1d0054a88b135dddf7fbf1bdc78"
   integrity sha512-sJp8DRsU2iSF67hlOQHFdRkbJHncspoOywHEsqcjh2KFl8gRY12rQL0ORG6J2THUt0LVBWSy48iwph9s4rkwsA==
 
+"@spectrum-css/treeview@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/treeview/-/treeview-3.0.2.tgz#d54d8f17290babb1c885f5d9355e225421beb0d2"
+  integrity sha512-foO7UBJv1JMFaKgDPVt8jBghZSVbqhXR8TaGaxHSnMubv7ygmKkc1AITrWC2STILCn84ju2vchOohMZfW6sYwg==
+
 "@spectrum-css/typography@^3.0.1":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.2.tgz#ea3ca0a60e18064527819d48c8c4364cab4fcd38"
