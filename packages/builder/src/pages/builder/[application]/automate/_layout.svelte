@@ -13,7 +13,7 @@
     <slot />
   </div>
   {#if $automationStore.selectedAutomation}
-    <div class="nav setup">
+    <div class="setup">
       <SetupPanel />
     </div>
   {/if}
@@ -44,5 +44,15 @@
     align-items: stretch;
     gap: var(--spacing-l);
     overflow: hidden;
+  }
+
+  .setup {
+    padding: var(--spectrum-global-dimension-size-200);
+    border-left: var(--border-light);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
   }
 </style>
