@@ -54,15 +54,15 @@
   .integration-list {
     display: grid;
     grid-template-columns: repeat( auto-fit, minmax(150px, 1fr));
-    grid-gap: var(--spacing-m);
+    grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
   .integration {
     display: grid;
     background: var(--background-alt);
     place-items: center;
-    grid-gap: 10px;
-    padding: 10px;
+    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
+    padding: var(--spectrum-alias-item-padding-s);
     transition: 0.3s all;
     border-radius: var(--spectrum-alias-item-rounded-border-radius-s);
   }
