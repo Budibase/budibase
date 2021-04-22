@@ -4,10 +4,31 @@ const {
   StaticDatabases,
 } = require("@budibase/auth").db
 const { CouchDB } = require("../../../db")
-const { TemplatePurposePretty } = require("../../../constants")
+const { TemplatePurposePretty, TemplateTypes, EmailTemplatePurpose, TemplatePurpose } = require("../../../constants")
+const { getTemplateByPurpose } = require("../../../constants/templates")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const GLOBAL_OWNER = "global"
+
+function addBaseTemplates(templates, type = null) {
+  let purposeList
+  switch (type) {
+    case TemplateTypes.EMAIL:
+      purposeList = Object.values(EmailTemplatePurpose)
+      break
+    default:
+      purposeList = Object.values(TemplatePurpose)
+      break
+  }
+  for (let purpose of purposeList) {
+    // check if a template exists already for purpose
+    if (templates.find(template => template.purpose === purpose)) {
+      continue
+    }
+    templates.push(getTemplateByPurpose(purpose))
+  }
+  return templates
+}
 
 async function getTemplates({ ownerId, type, id } = {}) {
   const db = new CouchDB(GLOBAL_DB)
@@ -17,10 +38,15 @@ async function getTemplates({ ownerId, type, id } = {}) {
     })
   )
   let templates = response.rows.map(row => row.doc)
+  // should only be one template with ID
+  if (id) {
+    return templates[0]
+  }
   if (type) {
     templates = templates.filter(template => template.type === type)
   }
-  return templates
+
+  return addBaseTemplates(templates, type)
 }
 
 exports.save = async ctx => {
@@ -73,7 +99,8 @@ exports.find = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  // TODO
-  // const db = new CouchDB(GLOBAL_DB)
-  ctx.body = {}
+  const db = new CouchDB(GLOBAL_DB)
+  await db.remove(ctx.params.id, ctx.params.rev)
+  ctx.message = `Template ${ctx.params.id} deleted.`
+  ctx.status = 200
 }
