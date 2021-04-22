@@ -52,9 +52,9 @@
     border-radius: var(--border-radius-m);
     transition: 0.3s all ease;
     box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
-    background-color: var(--ink);
     font-size: 16px;
-    color: var(--background);
+    background-color: var(--spectrum-global-color-gray-50);
+    color: var(--grey-9);
   }
   .block.selected,
   .block:hover {
@@ -77,9 +77,9 @@
   header .label {
     font-size: 14px;
     padding: var(--spacing-s);
-    color: var(--grey-8);
     border-radius: var(--border-radius-m);
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--grey-2);
+    color: var(--grey-8);
   }
   header i {
     font-size: 20px;
@@ -93,22 +93,12 @@
   }
 
   .ACTION {
-    background-color: var(--background);
-    color: var(--ink);
   }
 
   .TRIGGER {
-    background-color: var(--ink);
-    color: var(--background);
-  }
-  .TRIGGER header .label {
-    background-color: var(--grey-9);
-    color: var(--grey-5);
   }
 
   .LOGIC {
-    background-color: var(--background);
-    color: var(--ink);
   }
 
   p {
