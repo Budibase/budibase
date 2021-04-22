@@ -7,28 +7,52 @@ exports.Groups = {
   ALL_USERS: "all_users",
 }
 
-exports.TemplateTypes = {
+const TemplateTypes = {
   EMAIL: "email",
 }
 
-exports.TemplatePurpose = {
+const EmailTemplatePurpose = {
+  HEADER: "header",
+  FOOTER: "footer",
+  STYLES: "styles",
   PASSWORD_RECOVERY: "password_recovery",
   INVITATION: "invitation",
   CUSTOM: "custom",
 }
 
-exports.TemplatePurposePretty = [
-  {
-    name: "Password Recovery",
-    value: exports.TemplatePurpose.PASSWORD_RECOVERY
-  },
-  {
-    name: "New User Invitation",
-    value: exports.TemplatePurpose.INVITATION,
-  },
-  {
-    name: "Custom",
-    value: exports.TemplatePurpose.CUSTOM,
-  }
-]
+const TemplatePurposePretty = {
+  [TemplateTypes.EMAIL]: [
+    {
+      name: "Styling",
+      value: EmailTemplatePurpose.STYLES,
+    },
+    {
+      name: "Header",
+      value: EmailTemplatePurpose.HEADER,
+    },
+    {
+      name: "Footer",
+      value: EmailTemplatePurpose.FOOTER,
+    },
+    {
+      name: "Password Recovery",
+      value: EmailTemplatePurpose.PASSWORD_RECOVERY
+    },
+    {
+      name: "New User Invitation",
+      value: EmailTemplatePurpose.INVITATION,
+    },
+    {
+      name: "Custom",
+      value: EmailTemplatePurpose.CUSTOM,
+    }
+  ]
+}
 
+// all purpose combined
+exports.TemplatePurpose = {
+  ...EmailTemplatePurpose,
+}
+exports.TemplateTypes = TemplateTypes
+exports.EmailTemplatePurpose = EmailTemplatePurpose
+exports.TemplatePurposePretty = TemplatePurposePretty
