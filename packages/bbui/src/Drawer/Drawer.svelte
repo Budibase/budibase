@@ -40,9 +40,9 @@
           <Heading xs>{title}</Heading>
           <Body xxs><slot name="description" /></Body>
         </div>
-        <div class="controls">
+        <div class="buttons">
           <slot name="buttons" />
-          <ActionButton quiet icon="Close" on:click={hide} />
+          <ActionButton selected quiet icon="Close" on:click={hide} />
         </div>
       </header>
       <slot name="body" />
@@ -66,22 +66,17 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: 0 var(--spectrum-alias-item-padding-s) ;
+    padding: var(--spectrum-alias-item-padding-s) 0;
   }
   header :global(*) + :global(*) {
-    margin: var(--spectrum-alias-grid-baseline);
+    margin: 0 var(--spectrum-alias-grid-baseline);
   }
 
-  .controls {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: var(--spectrum-alias-item-padding-s);
-    align-items: center;
-  }
   .text {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    margin-left: var(--spectrum-alias-item-padding-s);
   }
 </style>

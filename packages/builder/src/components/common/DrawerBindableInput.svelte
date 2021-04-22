@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Input, Drawer, Body, Button } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -10,7 +10,6 @@
   export let panel = BindingPanel
   export let value = ""
   export let bindings = []
-  export let thin = true
   export let title = "Bindings"
   export let placeholder
   export let label
@@ -41,22 +40,17 @@
   </div>
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
-  <div slot="description">
-    <Body extraSmall grey>
-      Add the objects on the left to enrich your text.
-    </Body>
-  </div>
-  <heading slot="buttons">
-    <Button thin blue on:click={handleClose}>Save</Button>
-  </heading>
-  <div slot="body">
-    <svelte:component
-      this={panel}
-      value={readableValue}
-      close={handleClose}
-      on:update={event => (tempValue = event.detail)}
-      bindableProperties={bindings} />
-  </div>
+  <svelte:fragment slot="description">
+    Add the objects on the left to enrich your text.
+  </svelte:fragment>
+  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <svelte:component
+    slot="body"
+    this={panel}
+    value={readableValue}
+    close={handleClose}
+    on:update={event => (tempValue = event.detail)}
+    bindableProperties={bindings} />
 </Drawer>
 
 <style>
