@@ -42,6 +42,8 @@ export { default as Context } from "./context"
 export { default as Table } from "./Table/Table.svelte"
 export { default as Tabs } from "./Tabs/Tabs.svelte"
 export { default as Tab } from "./Tabs/Tab.svelte"
+export { default as TreeView } from "./TreeView/Tree.svelte"
+export { default as TreeItem } from "./TreeView/Item.svelte"
 export { default as Divider } from "./Divider/Divider.svelte"
 export { default as Search } from "./Form/Search.svelte"
 

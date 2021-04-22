@@ -66,6 +66,7 @@
     "@spectrum-css/tabs": "^3.0.1",
     "@spectrum-css/textfield": "^3.0.1",
     "@spectrum-css/toast": "^3.0.1",
+    "@spectrum-css/treeview": "^3.0.2",
     "@spectrum-css/typography": "^3.0.1",
     "@spectrum-css/underlay": "^2.0.9",
     "@spectrum-css/vars": "^3.0.1",
