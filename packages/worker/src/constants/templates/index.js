@@ -1,11 +1,12 @@
 const { readStaticFile } = require("../../utilities/fileSystem")
-const { EmailTemplatePurpose, TemplateTypes, TemplatePurpose } = require("../index")
+const {
+  EmailTemplatePurpose,
+  TemplateTypes,
+  TemplatePurpose,
+} = require("../index")
 const { join } = require("path")
 const CouchDB = require("../../db")
-const {
-  getTemplateParams,
-  StaticDatabases,
-} = require("@budibase/auth").db
+const { getTemplateParams, StaticDatabases } = require("@budibase/auth").db
 
 const TEMPLATE_PATH = join(__dirname, "..", "constants", "templates")
 
@@ -16,9 +17,7 @@ exports.EmailTemplates = {
   [EmailTemplatePurpose.INVITATION]: readStaticFile(
     join(TEMPLATE_PATH, "invitation.html")
   ),
-  [EmailTemplatePurpose.BASE]: readStaticFile(
-    join(TEMPLATE_PATH, "base.html")
-  ),
+  [EmailTemplatePurpose.BASE]: readStaticFile(join(TEMPLATE_PATH, "base.html")),
   [EmailTemplatePurpose.STYLES]: readStaticFile(
     join(TEMPLATE_PATH, "style.css")
   ),
@@ -68,4 +67,3 @@ exports.getTemplateByPurpose = async (type, purpose) => {
   const templates = await exports.getTemplates({ type })
   return templates.find(template => template.purpose === purpose)
 }
-

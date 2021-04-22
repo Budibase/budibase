@@ -46,12 +46,12 @@ const TemplateMetadata = {
     {
       name: "Styling",
       purpose: EmailTemplatePurpose.STYLES,
-      bindings: ["url", "company", "companyUrl", "styles", "body"]
+      bindings: ["url", "company", "companyUrl", "styles", "body"],
     },
     {
       name: "Base Format",
       purpose: EmailTemplatePurpose.BASE,
-      bindings: ["company", "registrationUrl"]
+      bindings: ["company", "registrationUrl"],
     },
     {
       name: "Password Recovery",

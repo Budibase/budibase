@@ -5,7 +5,10 @@ const { getSettingsTemplateContext } = require("./templates")
 
 const TYPE = TemplateTypes.EMAIL
 
-const FULL_EMAIL_PURPOSES = [EmailTemplatePurpose.INVITATION, EmailTemplatePurpose.PASSWORD_RECOVERY]
+const FULL_EMAIL_PURPOSES = [
+  EmailTemplatePurpose.INVITATION,
+  EmailTemplatePurpose.PASSWORD_RECOVERY,
+]
 
 exports.buildEmail = async (email, user, purpose) => {
   // this isn't a full email
@@ -20,9 +23,9 @@ exports.buildEmail = async (email, user, purpose) => {
 
   // TODO: need to extend the context as much as possible
   const context = {
-    ...await getSettingsTemplateContext(),
+    ...(await getSettingsTemplateContext()),
     email,
-    user
+    user,
   }
 
   body = await processString(body, context)
