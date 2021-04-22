@@ -98,20 +98,21 @@ exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
  * Generates a new configuration ID.
  * @returns {string} The new configuration ID which the config doc can be stored under.
  */
-exports.generateConfigID = (type = "", group = "", user = "") => {
-  // group += SEPARATOR
-  const scope = [type, group, user].join(SEPARATOR)
+exports.generateConfigID = ({ type, group, user }) => {
+  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
 
-  return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}${newid()}`
+  return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
 }
 
 /**
  * Gets parameters for retrieving configurations.
  */
-exports.getConfigParams = (type = "", group = "", otherProps = {}) => {
+exports.getConfigParams = ({ type, group, user }, otherProps = {}) => {
+  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
+
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.CONFIG}${SEPARATOR}${type}${SEPARATOR}${group}`,
-    endkey: `${DocumentTypes.CONFIG}${SEPARATOR}${type}${SEPARATOR}${group}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`,
+    endkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
   }
 }
