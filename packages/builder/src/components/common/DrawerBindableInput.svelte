@@ -6,7 +6,6 @@
   } from "builderStore/dataBinding"
   import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  const dispatch = createEventDispatcher()
 
   export let panel = BindingPanel
   export let value = ""
@@ -14,9 +13,10 @@
   export let thin = true
   export let title = "Bindings"
   export let placeholder
+  export let label
 
+  const dispatch = createEventDispatcher()
   let bindingDrawer
-
   $: tempValue = value
   $: readableValue = runtimeToReadableBinding(bindings, value)
 
@@ -32,6 +32,7 @@
 
 <div class="control">
   <Input
+    {label}
     value={readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder} />
@@ -66,7 +67,6 @@
 
   .icon {
     right: 1px;
-    top: 1px;
     bottom: 1px;
     position: absolute;
     justify-content: center;
@@ -84,6 +84,7 @@
         var(--spectrum-global-animation-duration-100, 130ms),
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
   .icon:hover {
     cursor: pointer;

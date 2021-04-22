@@ -1,9 +1,8 @@
 <script>
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
+  import { notifications, Icon, Button, Modal } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
-  import { Button, Modal } from "@budibase/bbui"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
   let webhookModal
@@ -30,7 +29,9 @@
       automation: $automationStore.selectedAutomation.automation,
     })
     if (result.status === 200) {
-      notifications.success(`Automation ${automation.name} triggered successfully.`)
+      notifications.success(
+        `Automation ${automation.name} triggered successfully.`
+      )
     } else {
       notifications.error(`Failed to trigger automation ${automation.name}.`)
     }
@@ -47,17 +48,19 @@
 
 <div class="title">
   <h1>Setup</h1>
-  <i
-    class:highlighted={automationLive}
-    class:hoverable={automationLive}
-    on:click={() => setAutomationLive(false)}
-    class="ri-stop-circle-fill" />
-  <i
-    class:highlighted={!automationLive}
-    class:hoverable={!automationLive}
+  <Icon
+    l
+    disabled={!automationLive}
+    hoverable={automationLive}
+    name="PauseCircle"
+    on:click={() => setAutomationLive(false)} />
+  <Icon
+    l
+    name="PlayCircle"
+    disabled={automationLive}
+    hoverable={!automationLive}
     data-cy="activate-automation"
-    on:click={() => setAutomationLive(true)}
-    class="ri-play-circle-fill" />
+    on:click={() => setAutomationLive(true)} />
 </div>
 {#if $automationStore.selectedBlock}
   <AutomationBlockSetup
@@ -92,29 +95,10 @@
     margin: 0;
     flex: 1 1 auto;
   }
-  .title i {
-    font-size: 20px;
-    color: var(--grey-5);
-  }
-  .title i.highlighted {
-    color: var(--ink);
-  }
-  .title i.hoverable:hover {
-    cursor: pointer;
-    color: var(--blue);
-  }
 
   .block-label {
     font-size: var(--font-size-xs);
     font-weight: 500;
     color: var(--grey-7);
-  }
-
-  .footer {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: stretch;
   }
 </style>
