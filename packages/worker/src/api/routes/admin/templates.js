@@ -29,5 +29,5 @@ router
   .get("/api/admin/template", controller.fetch)
   .get("/api/admin/template/:type", controller.fetchByType)
   .get("/api/admin/template/:ownerId", controller.fetchByOwner)
-  .delete("/api/admin/template/:id", controller.destroy)
   .get("/api/admin/template/:id", controller.find)
+  .delete("/api/admin/template/:id/:rev", controller.destroy)
