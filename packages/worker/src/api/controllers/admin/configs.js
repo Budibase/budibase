@@ -1,6 +1,6 @@
 const CouchDB = require("../../../db")
-const { StaticDatabases, determineScopedConfig } = require("@budibase/auth")
-const { generateConfigID, getConfigParams } = require("@budibase/auth")
+const authPkg = require("@budibase/auth")
+const { utils, StaticDatabases } = authPkg
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -11,7 +11,7 @@ exports.save = async function(ctx) {
 
   // Config does not exist yet
   if (!configDoc._id) {
-    configDoc._id = generateConfigID({
+    configDoc._id = utils.generateConfigID({
       type,
       group,
       user,
@@ -33,7 +33,7 @@ exports.save = async function(ctx) {
 exports.fetch = async function(ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams(undefined, {
+    utils.getConfigParams(undefined, {
       include_docs: true,
     })
   )
@@ -60,7 +60,7 @@ exports.find = async function(ctx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await determineScopedConfig(db, {
+    const scopedConfig = await authPkg.db.determineScopedConfig(db, {
       type: ctx.params.type,
       user: userId,
       group,

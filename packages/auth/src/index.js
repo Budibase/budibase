@@ -1,29 +1,9 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-const constants = require("./constants")
-const { StaticDatabases, DocumentTypes } = require("./db/utils")
-const { jwt, local, google, authenticated } = require("./middleware")
-const { Cookies, UserStatus } = require("./constants")
-const { hash, compare } = require("./hashing")
-const {
-  getAppId,
-  setCookie,
-  getCookie,
-  clearCookie,
-  isClient,
-} = require("./utils")
+const { StaticDatabases } = require("./db/utils")
+const { jwt, local, authenticated, google } = require("./middleware")
 const { setDB, getDB } = require("./db")
-const {
-  generateUserID,
-  getUserParams,
-  generateGroupID,
-  getGroupParams,
-  getEmailFromUserID,
-  generateConfigID,
-  getConfigParams,
-  determineScopedConfig,
-} = require("./db/utils")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -55,30 +35,8 @@ module.exports = {
   auth: {
     buildAuthMiddleware: authenticated,
     passport,
-    middlewares: {
-      google,
-    },
+    google,
   },
-  constants,
-  passport,
-  Cookies,
-  UserStatus,
-  DocumentTypes,
   StaticDatabases,
-  generateUserID,
-  getUserParams,
-  generateGroupID,
-  getGroupParams,
-  getEmailFromUserID,
-  generateConfigID,
-  getConfigParams,
-  determineScopedConfig,
-  hash,
-  compare,
-  getAppId,
-  setCookie,
-  getCookie,
-  clearCookie,
-  authenticated,
-  isClient,
+  constants: require("./constants"),
 }
