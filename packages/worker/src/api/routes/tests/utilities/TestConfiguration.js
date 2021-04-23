@@ -39,6 +39,8 @@ class TestConfiguration {
   async init() {
     // create a test user
     await this._req({
+      email: "test@test.com",
+      password: "test",
       _id: "us_uuid1",
       builder: {
         global: true,
@@ -64,7 +66,7 @@ class TestConfiguration {
     await this._req({
       type: Configs.SETTINGS,
       config: {
-        url: "http://localhost:10000",
+        platformUrl: "http://localhost:10000",
         logoUrl: "http://localhost:10000/logo",
         company: "TestCompany",
       }
@@ -78,7 +80,7 @@ class TestConfiguration {
         port: 12345,
         host: "smtptesthost.com",
         from: "testfrom@test.com",
-
+        subject: "Hello!",
       }
     }, null, controllers.config.save)
   }

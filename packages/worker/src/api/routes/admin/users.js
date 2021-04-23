@@ -25,10 +25,10 @@ function buildUserSaveValidation() {
 }
 
 router
-  .post("/api/admin/users", buildUserSaveValidation(), controller.userSave)
-  .get("/api/admin/users", controller.userFetch)
+  .post("/api/admin/users", buildUserSaveValidation(), controller.save)
+  .get("/api/admin/users", controller.fetch)
   .post("/api/admin/users/first", controller.firstUser)
-  .delete("/api/admin/users/:id", controller.userDelete)
-  .get("/api/admin/users/:id", controller.userFind)
+  .delete("/api/admin/users/:id", controller.destroy)
+  .get("/api/admin/users/:id", controller.find)
 
 module.exports = router

@@ -15,17 +15,18 @@ exports.getSettingsTemplateContext = async () => {
     })
   )
   let settings = response.rows.map(row => row.doc)[0] || {}
-  if (!settings.url) {
-    settings.url = LOCAL_URL
+  if (!settings.platformUrl) {
+    settings.platformUrl = LOCAL_URL
   }
   // TODO: need to fully spec out the context
+  const URL = settings.platformUrl
   return {
     [TemplateBindings.LOGO_URL]: settings.logoUrl || LOGO_URL,
-    [TemplateBindings.URL]: settings.url,
+    [TemplateBindings.PLATFORM_URL]: URL,
     [TemplateBindings.REGISTRATION_URL]: checkSlashesInUrl(
-      `${settings.url}/registration`
+      `${URL}/registration`
     ),
-    [TemplateBindings.RESET_URL]: checkSlashesInUrl(`${settings.url}/reset`),
+    [TemplateBindings.RESET_URL]: checkSlashesInUrl(`${URL}/reset`),
     [TemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
   }
 }

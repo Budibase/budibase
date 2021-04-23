@@ -30,7 +30,7 @@ const EmailTemplatePurpose = {
 }
 
 const TemplateBindings = {
-  URL: "url",
+  PLATFORM_URL: "platformUrl",
   COMPANY: "company",
   LOGO_URL: "logoUrl",
   STYLES: "styles",
@@ -76,3 +76,4 @@ exports.TemplateTypes = TemplateTypes
 exports.EmailTemplatePurpose = EmailTemplatePurpose
 exports.TemplateMetadata = TemplateMetadata
 exports.TemplateBindings = TemplateBindings
+exports.GLOBAL_OWNER = "global"

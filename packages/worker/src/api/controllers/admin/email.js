@@ -28,6 +28,12 @@ async function buildEmail(purpose, email, user) {
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.STYLES),
     getTemplateByPurpose(TYPE, purpose),
   ])
+  if (!base || !styles || !body) {
+    throw "Unable to build email, missing base components"
+  }
+  base = base.contents
+  styles = styles.contents
+  body = body.contents
 
   // TODO: need to extend the context as much as possible
   const context = {
@@ -59,6 +65,9 @@ exports.sendEmail = async ctx => {
     user = db.get(userId)
   }
   const config = await determineScopedConfig(db, params)
+  if (!config) {
+    ctx.throw(400, "Unable to find SMTP configuration")
+  }
   const transport = createSMTPTransport(config)
   const message = {
     from: config.from,
