@@ -1,7 +1,7 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Button, Popover, Spacer } from "@budibase/bbui"
+  import { Icon, Button, Popover, Spacer } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
 
@@ -14,7 +14,7 @@
   // dndzone needs an id on the array items, so this adds some temporary ones.
   $: {
     if (actions) {
-      actions.forEach(action => {
+      actions.forEach((action) => {
         if (!action.id) {
           action.id = generate()
         }
@@ -28,7 +28,7 @@
 
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
+    actionTypes.find((t) => t.name === selectedAction[EVENT_TYPE_KEY]).component
 
   // Select the first action if we delete an action
   $: {
@@ -37,12 +37,12 @@
     }
   }
 
-  const deleteAction = index => {
+  const deleteAction = (index) => {
     actions.splice(index, 1)
     actions = actions
   }
 
-  const addAction = actionType => () => {
+  const addAction = (actionType) => () => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
@@ -56,7 +56,7 @@
     addActionDropdown.hide()
   }
 
-  const selectAction = action => () => {
+  const selectAction = (action) => () => {
     selectedAction = action
   }
 
@@ -80,7 +80,8 @@
       <Popover
         bind:this={addActionDropdown}
         anchor={addActionButton}
-        align="right">
+        align="right"
+      >
         <div class="available-actions-container">
           {#each actionTypes as actionType}
             <div class="available-action" on:click={addAction(actionType)}>
@@ -94,24 +95,33 @@
     {#if actions && actions.length > 0}
       <div
         class="action-dnd-container"
-        use:dndzone={{ items: actions, flipDurationMs, dropTargetStyle: { outline: 'none' } }}
+        use:dndzone={{
+          items: actions,
+          flipDurationMs,
+          dropTargetStyle: { outline: "none" },
+        }}
         on:consider={handleDndConsider}
-        on:finalize={handleDndFinalize}>
+        on:finalize={handleDndFinalize}
+      >
         {#each actions as action, index (action.id)}
           <div
             class="action-container"
-            animate:flip={{ duration: flipDurationMs }}>
+            animate:flip={{ duration: flipDurationMs }}
+          >
             <div
               class="action-header"
               class:selected={action === selectedAction}
-              on:click={selectAction(action)}>
+              on:click={selectAction(action)}
+            >
               {index + 1}.
               {action[EVENT_TYPE_KEY]}
             </div>
-            <i
-              class="ri-close-fill"
+            <div
+              on:click={() => deleteAction(index)}
               style="margin-left: auto;"
-              on:click={() => deleteAction(index)} />
+            >
+              <Icon s hoverable name="Close" />
+            </div>
           </div>
         {/each}
       </div>
@@ -122,7 +132,8 @@
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}
-          parameters={selectedAction.parameters} />
+          parameters={selectedAction.parameters}
+        />
       </div>
     {/if}
   </div>
