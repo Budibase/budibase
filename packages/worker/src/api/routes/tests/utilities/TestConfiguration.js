@@ -1,4 +1,4 @@
-const env = require("../../environment")
+const env = require("../../../../environment")
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { jwt } = require("@budibase/auth").auth
@@ -67,9 +67,10 @@ class TestConfiguration {
     await this._req({
       type: Configs.SMTP,
       config: {
-        url: "http://localhost:10000",
-        logoUrl: "http://localhost:10000/logo",
-        company: "TestCompany",
+        port: 12345,
+        host: "smtptesthost.com",
+        from: "testfrom@test.com",
+
       }
     }, null, controllers.config.save)
   }
