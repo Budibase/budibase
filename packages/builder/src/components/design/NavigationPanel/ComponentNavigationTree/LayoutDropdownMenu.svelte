@@ -2,7 +2,7 @@
   import { store } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Popover, Modal, ModalContent, Input } from "@budibase/bbui"
+  import { Icon, Popover, Modal, ModalContent, Input } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import { cloneDeep } from "lodash/fp"
 
@@ -35,42 +35,40 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
+<div bind:this={anchor}>
   <div class="icon" on:click={() => dropdown.show()}>
-    <i class="ri-more-line" />
+    <Icon name="MoreSmallList" />
   </div>
   <Popover bind:this={dropdown} {anchor} align="left">
     <DropdownContainer>
       <DropdownItem
         icon="ri-pencil-line"
         title="Edit"
-        on:click={() => editLayoutNameModal.show()} />
+        on:click={() => editLayoutNameModal.show()}
+      />
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
+        on:click={() => confirmDeleteDialog.show()}
+      />
     </DropdownContainer>
   </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={'Are you sure you wish to delete this layout?'}
+  body={"Are you sure you wish to delete this layout?"}
   okText="Delete Layout"
-  onOk={deleteLayout} />
+  onOk={deleteLayout}
+/>
 
 <Modal bind:this={editLayoutNameModal}>
   <ModalContent
     title="Edit Layout Name"
     confirmText="Save"
     onConfirm={saveLayout}
-    disabled={!name}>
+    disabled={!name}
+  >
     <Input thin type="text" label="Name" bind:value={name} />
   </ModalContent>
 </Modal>
-
-<style>
-  .icon i {
-    font-size: 16px;
-  }
-</style>
