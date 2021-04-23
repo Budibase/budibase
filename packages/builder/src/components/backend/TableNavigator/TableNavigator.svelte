@@ -34,10 +34,11 @@
     {#each $tables.list as table, idx}
       <NavItem
         border={idx > 0}
-        icon={`ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
+        icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
         selected={selectedView === `all_${table._id}`}
-        on:click={() => selectTable(table)}>
+        on:click={() => selectTable(table)}
+      >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
         {/if}
@@ -48,9 +49,11 @@
           icon="ri-eye-line"
           text={viewName}
           selected={selectedView === viewName}
-          on:click={() => onClickView(table, viewName)}>
+          on:click={() => onClickView(table, viewName)}
+        >
           <EditViewPopover
-            view={{ name: viewName, ...table.views[viewName] }} />
+            view={{ name: viewName, ...table.views[viewName] }}
+          />
         </NavItem>
       {/each}
     {/each}

@@ -93,11 +93,6 @@
     </Tab>
     <Tab title="Layouts">
       <div class="tab-content-padding">
-        <i
-          on:click={modal.show}
-          data-cy="new-layout"
-          class="ri-add-circle-fill"
-        />
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />
         {/each}
