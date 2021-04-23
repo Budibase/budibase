@@ -1,30 +1,34 @@
 <script>
-    import Popover from '../Popover/Popover.svelte'
-    import Menu from '../Menu/Menu.svelte'
-    let anchor;
-    let dropdown;
+  import Popover from "../Popover/Popover.svelte"
+  import Menu from "../Menu/Menu.svelte"
+  let anchor
+  let dropdown
 
-    // This is needed because display: contents is considered "invisible".
-    // It should only ever be an action button, so should be fine.
-    function getAnchor(node) {
-        anchor = node.firstChild
-    }
-    
-    export const hide = () => { dropdown.hide() }
-    export const show = () => { dropdown.show() }
+  // This is needed because display: contents is considered "invisible".
+  // It should only ever be an action button, so should be fine.
+  function getAnchor(node) {
+    anchor = node.firstChild
+  }
+
+  export const hide = () => {
+    dropdown.hide()
+  }
+  export const show = () => {
+    dropdown.show()
+  }
 </script>
 
-<div class="contents" use:getAnchor  on:click={dropdown.show}>
-    <slot name="button" />
+<div class="contents" use:getAnchor on:click={dropdown.show}>
+  <slot name="button" />
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
-    <Menu>
-        <slot />
-    </Menu>
+  <Menu>
+    <slot />
+  </Menu>
 </Popover>
 
 <style>
-    div {
-        display: contents;
-    }
+  div {
+    display: contents;
+  }
 </style>
