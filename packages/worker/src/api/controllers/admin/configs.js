@@ -5,6 +5,8 @@ const {
   getConfigParams,
   determineScopedConfig,
 } = require("@budibase/auth").db
+const { Configs } = require("../../../constants")
+const email = require("../../../utilities/email")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -20,6 +22,13 @@ exports.save = async function(ctx) {
       group,
       user,
     })
+  }
+
+  // verify the configuration
+  switch (type) {
+    case Configs.SMTP:
+      await email.verifyConfig(configDoc)
+      break;
   }
 
   try {
