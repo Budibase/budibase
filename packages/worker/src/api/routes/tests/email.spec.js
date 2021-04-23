@@ -26,6 +26,5 @@ describe("/api/admin/email", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    expect(res.body._rev).toBeDefined()
   })
 })
