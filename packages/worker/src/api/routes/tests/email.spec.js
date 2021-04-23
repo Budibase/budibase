@@ -5,11 +5,18 @@ const { EmailTemplatePurpose } = require("../../../constants")
 const sendMailMock = jest.fn()
 jest.mock("nodemailer")
 const nodemailer = require("nodemailer")
-nodemailer.createTransport.mockReturnValue({"sendMail": sendMailMock});
+nodemailer.createTransport.mockReturnValue({
+  sendMail: sendMailMock,
+  verify: jest.fn()
+})
 
 describe("/api/admin/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
+
+  beforeAll(async () => {
+    await config.init()
+  })
 
   afterAll(setup.afterAll)
 
@@ -26,5 +33,10 @@ describe("/api/admin/email", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
+    expect(res.body.message).toBeDefined()
+    expect(sendMailMock).toHaveBeenCalled()
+    const emailCall = sendMailMock.mock.calls[0][0]
+    expect(emailCall.subject).toBe("Hello!")
+    expect(emailCall.html).not.toContain("Invalid Binding")
   })
 })

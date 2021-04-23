@@ -1,10 +1,13 @@
 const { generateTemplateID, StaticDatabases } = require("@budibase/auth").db
 const { CouchDB } = require("../../../db")
-const { TemplateMetadata, TemplateBindings } = require("../../../constants")
+const {
+  TemplateMetadata,
+  TemplateBindings,
+  GLOBAL_OWNER,
+} = require("../../../constants")
 const { getTemplates } = require("../../../constants/templates")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
-const GLOBAL_OWNER = "global"
 
 exports.save = async ctx => {
   const db = new CouchDB(GLOBAL_DB)

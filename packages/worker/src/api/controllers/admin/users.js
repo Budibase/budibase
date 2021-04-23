@@ -11,7 +11,7 @@ const FIRST_USER_EMAIL = "test@test.com"
 const FIRST_USER_PASSWORD = "test"
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
-exports.userSave = async ctx => {
+exports.save = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const { email, password, _id } = ctx.request.body
 
@@ -69,10 +69,10 @@ exports.firstUser = async ctx => {
       global: true,
     },
   }
-  await exports.userSave(ctx)
+  await exports.save(ctx)
 }
 
-exports.userDelete = async ctx => {
+exports.destroy = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
@@ -82,7 +82,7 @@ exports.userDelete = async ctx => {
 }
 
 // called internally by app server user fetch
-exports.userFetch = async ctx => {
+exports.fetch = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
     getGlobalUserParams(null, {
@@ -100,7 +100,7 @@ exports.userFetch = async ctx => {
 }
 
 // called internally by app server user find
-exports.userFind = async ctx => {
+exports.find = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   let user
   try {
