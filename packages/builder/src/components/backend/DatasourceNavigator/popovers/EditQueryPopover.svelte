@@ -1,6 +1,6 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { Popover } from "@budibase/bbui"
+  import { Icon, Popover } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -28,7 +28,7 @@
 
 <div on:click|stopPropagation>
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+    <Icon s hoverable name="MoreSmallList" />
   </div>
   <Popover align="left" {anchor} bind:this={dropdown}>
     <DropdownContainer>
@@ -36,7 +36,8 @@
         icon="ri-delete-bin-line"
         title="Delete"
         on:click={showModal}
-        data-cy="delete-datasource" />
+        data-cy="delete-datasource"
+      />
     </DropdownContainer>
   </Popover>
 </div>
@@ -44,7 +45,8 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Query"
   onOk={deleteQuery}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete this query? This action cannot be undone.
 </ConfirmDialog>
 
@@ -54,9 +56,5 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 </style>

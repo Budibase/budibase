@@ -3,8 +3,11 @@
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { Icon, Popover } from "@budibase/bbui"
+  import {
+    DropdownContainer,
+    DropdownItem,
+  } from "components/common/Dropdowns"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let automation
@@ -31,14 +34,15 @@
 
 <div on:click|stopPropagation>
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+    <Icon s hoverable name="MoreSmallList" />
   </div>
   <Popover align="left" {anchor} bind:this={dropdown}>
     <DropdownContainer>
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
-        on:click={showModal} />
+        on:click={showModal}
+      />
     </DropdownContainer>
   </Popover>
 </div>
@@ -46,7 +50,8 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
   onOk={deleteAutomation}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete the automation
   <i>{automation.name}?</i>
   This action cannot be undone.
