@@ -1,6 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
   import AutomationBlockTagline from "./AutomationBlockTagline.svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let onSelect
   export let block
@@ -23,13 +24,13 @@
   on:click={() => onSelect(block)}>
   <header>
     {#if block.type === 'TRIGGER'}
-      <i class="ri-lightbulb-fill" />
+      <Icon name="Light" />
       <span>When this happens...</span>
     {:else if block.type === 'ACTION'}
-      <i class="ri-flashlight-fill" />
+      <Icon name="FlashOn" />
       <span>Do this...</span>
     {:else if block.type === 'LOGIC'}
-      <i class="ri-git-branch-line" />
+      <Icon name="Branch2" />
       <span>Only continue if...</span>
     {/if}
     <div class="label">
