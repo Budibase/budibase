@@ -3,7 +3,7 @@
   import { store, allScreens } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Popover } from "@budibase/bbui"
+  import { Icon, Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let screenId
@@ -12,7 +12,7 @@
   let dropdown
   let anchor
 
-  $: screen = $allScreens.find(screen => screen._id === screenId)
+  $: screen = $allScreens.find((screen) => screen._id === screenId)
 
   const deleteScreen = () => {
     try {
@@ -29,23 +29,25 @@
 
 <div bind:this={anchor} on:click|stopPropagation>
   <div class="icon" on:click={() => dropdown.show()}>
-    <i class="ri-more-line" />
+    <Icon s hoverable name="MoreSmallList" />
   </div>
   <Popover bind:this={dropdown} {anchor} align="left">
     <DropdownContainer>
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
+        on:click={() => confirmDeleteDialog.show()}
+      />
     </DropdownContainer>
   </Popover>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={'Are you sure you wish to delete this screen?'}
+  body={"Are you sure you wish to delete this screen?"}
   okText="Delete Screen"
-  onOk={deleteScreen} />
+  onOk={deleteScreen}
+/>
 
 <style>
   .icon i {
