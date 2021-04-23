@@ -1,4 +1,6 @@
 <script>
+  import { Icon } from "@budibase/bbui"
+
   export let icon
   export let withArrow = false
   export let withActions = true
@@ -22,11 +24,12 @@
   on:drop
   on:click
   ondragover="return false"
-  ondragenter="return false">
+  ondragenter="return false"
+>
   <div class="content">
     {#if withArrow}
       <div class:opened class="icon arrow">
-        <i class="ri-arrow-right-s-line" />
+        <Icon s name="ChevronRight" />
       </div>
     {/if}
 
@@ -50,9 +53,6 @@
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
-  }
-  .nav-item.border {
-    /*border-top: 1px solid var(--grey-2);*/
   }
   .nav-item.selected {
     background-color: var(--grey-2);
