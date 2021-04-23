@@ -1,7 +1,7 @@
 <script>
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
   let modal
 </script>
 
@@ -16,22 +16,20 @@
       </div>
     </Tab>
   </Tabs>
-  <i
-    on:click={modal.show}
-    data-cy="new-automation"
-    class="ri-add-circle-fill" />
+  <div class="add-button">
+    <Icon hoverable name="AddCircle" on:click={modal.show} />
+  </div>
 </div>
 
 <style>
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
+    padding: 0 var(--spectrum-alias-item-padding-m);
   }
-
-  i {
-    font-size: 20px;
+  .add-button {
     position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-l);
+    top: var(--spectrum-alias-item-padding-l);
+    bottom: 0;
+    right: var(--spectrum-alias-item-padding-l);
   }
 
   .title {

@@ -1,6 +1,6 @@
 <script>
   import { isActive, goto } from "@roxi/routify"
-  import { Modal, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
@@ -20,7 +20,7 @@
   let selected = $isActive("./datasource") ? "External" : "Internal"
 
   function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find(t => t.title === detail)
+    const { key } = tabs.find((t) => t.title === detail)
     if (key === "datasource") {
       $goto("./datasource")
     } else {
@@ -52,11 +52,8 @@
         </div>
       </Tab>
     </Tabs>
-    <div class="title">
-      <i
-        data-cy={`new-${selected === 'External' ? 'datasource' : 'tabel'}`}
-        class="ri-add-circle-fill"
-        on:click={modal.show} />
+    <div class="add-button" data-cy={`new-${selected === "External" ? "datasource" : "tabel"}`}>
+      <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>
   </div>
   <div class="content">
@@ -83,11 +80,8 @@
     gap: var(--spacing-l);
     background: var(--background);
   }
-  .content :global(> span) {
-    display: contents;
-  }
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
+    padding: 0 var(--spectrum-alias-item-padding-m);
   }
 
   .nav {
@@ -101,11 +95,11 @@
     border-right: var(--border-light);
   }
 
-  i {
-    font-size: 20px;
+  .add-button {
     position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-l);
+    top: var(--spectrum-alias-item-padding-l);
+    bottom: 0;
+    right: var(--spectrum-alias-item-padding-l);
   }
 
   i:hover {
