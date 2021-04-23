@@ -1,5 +1,4 @@
 const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
-const jwt = require("jsonwebtoken")
 const env = require("../../environment")
 const {
   basicTable,
@@ -16,6 +15,7 @@ const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies } = require("@budibase/auth").constants
+const { jwt } = require("@budibase/auth").auth
 
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
