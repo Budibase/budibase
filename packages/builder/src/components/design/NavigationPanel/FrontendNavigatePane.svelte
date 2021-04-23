@@ -26,7 +26,7 @@
   ]
 
   let modal
-  $: selected = tabs.find(t => t.key === $params.assetType).title
+  $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
     const { key } = tabs.find(t => t.title === detail)
@@ -113,7 +113,6 @@
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
-    padding-bottom: 60px;
   }
   .title i {
     font-size: 20px;

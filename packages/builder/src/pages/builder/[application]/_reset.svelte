@@ -212,4 +212,7 @@
     left: var(--spacing-m);
     z-index: 1;
   }
+  .beta :global(button) {
+    background-color: var(--background);
+  }
 </style>
