@@ -1,5 +1,5 @@
 <script>
-  import { Label, Button, Spacer, Select, Input } from "@budibase/bbui"
+  import { Label, ActionButton, Button, Spacer, Select, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
   import { createEventDispatcher } from "svelte"
@@ -69,13 +69,10 @@
       value={field[1]}
       bindings={bindableProperties}
       on:change={event => updateFieldValue(idx, event.detail)} />
-    <div class="remove-field-container">
-      <Button
-        icon="Close"
-        size="S"
-        quiet
-        on:click={() => removeField(field[0])} />
-    </div>
+    <ActionButton
+      quiet
+      icon="Delete"
+      on:click={() => removeField(field[0])} />
   {/each}
   <div>
     <Spacer small />
@@ -85,9 +82,3 @@
     </Button>
   </div>
 {/if}
-
-<style>
-  .remove-field-container :global(button) {
-    vertical-align: bottom;
-  }
-</style>
