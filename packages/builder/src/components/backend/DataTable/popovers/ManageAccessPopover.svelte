@@ -1,7 +1,15 @@
 <script>
   import { roles, permissions as permissionsStore } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import { Button, Label, Input, Select, Spacer } from "@budibase/bbui"
+  import {
+    Button,
+    Label,
+    Input,
+    Select,
+    Spacer,
+    notifications,
+    Heading,
+    Body,
+  } from "@budibase/bbui"
   import { capitalise } from "../../../../helpers"
 
   export let resourceId
@@ -24,11 +32,9 @@
 </script>
 
 <div class="popover">
-  <h5>Who Can Access This Data?</h5>
+  <Heading s>Who Can Access This Data?</Heading>
   <div class="note">
-    <Label extraSmall grey>
-      Specify the minimum access level role for this data.
-    </Label>
+    <Body s>Specify the minimum access level role for this data.</Body>
   </div>
   <Spacer large />
   <div class="row">
@@ -74,7 +80,7 @@
   .row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-gap: var(--spacing-m);
+    grid-gap: var(--spacing-s);
   }
 
   .note {

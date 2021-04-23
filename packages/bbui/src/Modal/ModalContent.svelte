@@ -84,6 +84,9 @@
   .spectrum-Dialog-content {
     overflow: visible;
   }
+  .spectrum-Dialog-heading {
+    font-family: var(--spectrum-alias-body-text-font-family);
+  }
 
   .spectrum-Dialog-buttonGroup {
     gap: var(--spectrum-global-dimension-static-size-200);

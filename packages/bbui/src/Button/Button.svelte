@@ -46,8 +46,4 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  button.active {
-    color: var(--spectrum-semantic-cta-color-background-default);
-  }
 </style>

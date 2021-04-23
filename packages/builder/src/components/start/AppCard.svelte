@@ -1,4 +1,4 @@
-<script>  
+<script>
   import { goto } from "@roxi/routify"
   import { ActionButton, Heading, Spacer, Icon } from "@budibase/bbui"
   import { notifications } from "@budibase/bbui"
@@ -26,7 +26,7 @@
 </script>
 
 <div class="apps-card">
-  <Heading s h3>{name}</Heading>
+  <Heading s>{name}</Heading>
   <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
     <ActionButton text medium blue on:click={() => $goto(`/builder/${_id}`)}>
@@ -36,7 +36,9 @@
     </ActionButton>
     {#if appExportLoading}
       <Spinner size="10" />
-    {:else}<ActionButton icon="Download" quiet />{/if}
+    {:else}
+      <ActionButton icon="Download" quiet />
+    {/if}
   </div>
 </div>
 

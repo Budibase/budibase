@@ -303,7 +303,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-default);
+    background-color: var(--spectrum-alias-background-color-secondary);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -313,23 +313,6 @@
     height: 100%;
     position: relative;
     overflow: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-alias-background-color-default);
-  }
-  .container::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  .container::-webkit-scrollbar-track {
-    background: var(--spectrum-alias-background-color-default);
-  }
-  .container::-webkit-scrollbar-thumb {
-    background-color: var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-  }
-  .container::-webkit-scrollbar-corner {
-    background: var(--spectrum-alias-background-color-default);
   }
   .container.quiet {
     border: none !important;
@@ -364,7 +347,7 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-alias-background-color-default);
+    background-color: var(--spectrum-alias-background-color-secondary);
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }

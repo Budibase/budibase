@@ -21,7 +21,8 @@
 
 <style>
   .root {
-    height: calc(100% - 60px);
+    flex: 1 1 auto;
+    height: 0;
     display: grid;
     grid-template-columns: 260px minmax(510px, 1fr) 260px;
   }
@@ -33,6 +34,8 @@
     justify-content: flex-start;
     align-items: stretch;
     border-right: var(--border-light);
+    background-color: var(--background);
+    padding-bottom: 60px;
   }
 
   .content {
@@ -54,5 +57,6 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
+    background-color: var(--background);
   }
 </style>

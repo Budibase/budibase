@@ -42,3 +42,9 @@
     </div>
   </Portal>
 {/if}
+
+<style>
+  .spectrum-Popover {
+    min-width: var(--spectrum-global-dimension-size-2000) !important;
+  }
+</style>

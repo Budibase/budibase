@@ -19,8 +19,8 @@
 </script>
 
 <div class="root">
-  <Heading m h2>Your Apps</Heading>
-  <Divider s />
+  <Heading m>Your Apps</Heading>
+  <Divider m />
   {#await promise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -37,11 +37,14 @@
 </div>
 
 <style>
+  .root {
+    margin-top: 10px;
+  }
   .apps {
-    margin-top: var(--spectrum-global-dimension-static-size-150);
+    margin-top: var(--layout-m);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    grid-gap: var(--layout-m);
+    grid-gap: var(--layout-s);
     justify-content: start;
   }
 </style>
