@@ -1,9 +1,8 @@
 <script>
-  import { Button, Input } from "@budibase/bbui"
+  import { Button, Input, notifications, Heading } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   export let onClosed
@@ -31,7 +30,7 @@
 </script>
 
 <div class="actions">
-  <h5>Create View</h5>
+  <Heading s>Create View</Heading>
   <Input label="View Name" thin bind:value={name} />
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
@@ -49,6 +48,7 @@
     display: grid;
     grid-gap: var(--spacing-xl);
     padding: var(--spacing-xl);
+    width: 240px;
   }
 
   .footer {

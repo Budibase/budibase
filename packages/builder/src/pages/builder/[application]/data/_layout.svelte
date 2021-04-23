@@ -69,7 +69,6 @@
     height: calc(100vh - 60px);
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    background: var(--grey-2);
   }
 
   .content {
@@ -81,13 +80,12 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
-    background: var(--background);
   }
   .content :global(> span) {
     display: contents;
   }
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
+    padding: 0 var(--spacing-xl);
   }
 
   .nav {
@@ -105,7 +103,7 @@
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);
-    right: var(--spacing-l);
+    right: var(--spacing-xl);
   }
 
   i:hover {

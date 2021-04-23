@@ -221,7 +221,7 @@
     margin-top: var(--spacing-m);
     align-items: center;
     grid-gap: var(--spacing-m);
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 
   .display-column {

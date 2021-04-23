@@ -24,14 +24,14 @@
 
 <style>
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
+    padding: 0 var(--spacing-xl);
   }
 
   i {
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);
-    right: var(--spacing-l);
+    right: var(--spacing-xl);
   }
 
   .title {

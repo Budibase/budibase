@@ -97,7 +97,7 @@
   .text {
     flex: 1 1 auto;
     font-weight: 500;
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

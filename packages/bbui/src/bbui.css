@@ -45,7 +45,7 @@
   --font-bold: "Inter Bold";
   --font-medium: "Inter Medium";
   --font-light: "Inter Light";
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+  --font-sans: Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
     "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
@@ -96,67 +96,6 @@
   --border-transparent: 2px transparent solid;
 }
 
-h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-h2 {
-  font-size: 2.25rem;
-  font-weight: 600;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-h3 {
-  font-size: 1.7rem;
-  font-weight: 600;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-h4 {
-  font-size: var(--font-size-xl);
-  font-weight: 500;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-h5 {
-  font-size: var(--font-size-l);
-  font-weight: 500;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-h6 {
-  font-size: var(--font-size-m);
-  font-weight: 500;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
-p {
-  font-size: var(--font-size);
-  font-family: var(--font-sans);
-  font-weight: 400;
-  text-rendering: var(--text-render);
-  -webkit-font-smoothing: var(--text-smooth);
-  color: var(--ink);
-}
-
 a {
   text-decoration: none;
-}
-
-.spectrum {
-  --spectrum-alias-body-text-font-family: "Inter", sans-serif;
 }

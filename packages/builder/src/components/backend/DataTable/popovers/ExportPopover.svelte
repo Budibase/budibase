@@ -1,5 +1,5 @@
 <script>
-  import { Button, Select } from "@budibase/bbui"
+  import { Button, Select, Heading } from "@budibase/bbui"
   import download from "downloadjs"
 
   const FORMATS = [
@@ -29,7 +29,7 @@
 </script>
 
 <div class="popover">
-  <h5>Export Data</h5>
+  <Heading s>Export Data</Heading>
   <Select
     label="Format"
     bind:value={exportFormat}
@@ -47,6 +47,7 @@
     display: grid;
     grid-gap: var(--spacing-xl);
     padding: var(--spacing-xl);
+    width: 240px;
   }
 
   h5 {

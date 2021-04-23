@@ -303,7 +303,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-default);
+    background-color: var(--spectrum-alias-background-color-secondary);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -364,7 +364,7 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-alias-background-color-default);
+    background-color: var(--spectrum-alias-background-color-secondary);
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
   }

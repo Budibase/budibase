@@ -33,6 +33,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border-right: var(--border-light);
+    background-color: var(--background);
   }
 
   .content {
@@ -54,5 +55,6 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
+    background-color: var(--background);
   }
 </style>
