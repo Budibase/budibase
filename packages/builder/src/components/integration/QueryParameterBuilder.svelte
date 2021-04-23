@@ -31,12 +31,12 @@
 
 <section>
   <div class="controls">
-    <Heading>Parameters</Heading>
+    <Heading s>Parameters</Heading>
     {#if !bindable}
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
-  <Body small grey>
+  <Body s>
     {#if !bindable}
       Parameters come in two parts: the parameter name, and a default/fallback
       value.

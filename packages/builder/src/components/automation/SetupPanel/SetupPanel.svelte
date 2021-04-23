@@ -1,7 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifications, Icon, Button, Modal } from "@budibase/bbui"
+  import { notifications, Icon, Button, Modal, Heading } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
@@ -47,7 +47,7 @@
 </script>
 
 <div class="title">
-  <h1>Setup</h1>
+  <Heading s>Setup</Heading>
   <Icon
     l
     disabled={!automationLive}
@@ -89,10 +89,7 @@
     align-items: center;
     gap: var(--spacing-xs);
   }
-  .title h1 {
-    font-size: var(--font-size-m);
-    font-weight: 500;
-    margin: 0;
+  .title :global(h1) {
     flex: 1 1 auto;
   }
 
