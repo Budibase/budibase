@@ -3,7 +3,7 @@
   import { store, allScreens } from "builderStore"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Popover, Button, Input } from "@budibase/bbui"
+  import { Icon, Popover, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -29,9 +29,11 @@
 
   function showModal() {
     const screens = $allScreens
-    templateScreens = screens.filter(screen => screen.autoTableId === table._id)
+    templateScreens = screens.filter(
+      (screen) => screen.autoTableId === table._id
+    )
     willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
+      templateScreens.map((screen) => `Screen ${screen.props._instanceName}`)
     )
     hideEditor()
     confirmDeleteDialog.show()
@@ -66,7 +68,7 @@
 
 <div on:click|stopPropagation>
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+    <Icon s hoverable name="MoreSmallList" />
   </div>
   <Popover align="left" {anchor} bind:this={dropdown}>
     {#if editing}
@@ -77,7 +79,8 @@
           thin
           bind:value={table.name}
           on:input={checkValid}
-          {error} />
+          {error}
+        />
         <footer>
           <Button secondary on:click={hideEditor}>Cancel</Button>
           <Button primary disabled={error} on:click={save}>Save</Button>
@@ -89,12 +92,14 @@
           icon="ri-edit-line"
           data-cy="edit-table"
           title="Edit"
-          on:click={showEditor} />
+          on:click={showEditor}
+        />
         <DropdownItem
           icon="ri-delete-bin-line"
           title="Delete"
           on:click={showModal}
-          data-cy="delete-table" />
+          data-cy="delete-table"
+        />
       </DropdownContainer>
     {/if}
   </Popover>
@@ -103,7 +108,8 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete the table
   <i>{table.name}?</i>
   The following will also be deleted:
@@ -123,10 +129,6 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 
   div.delete-items {

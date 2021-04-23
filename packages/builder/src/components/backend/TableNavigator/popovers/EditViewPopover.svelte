@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { views } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Popover, Button, Input } from "@budibase/bbui"
+  import { Icon, Popover, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -48,7 +48,7 @@
 
 <div on:click|stopPropagation>
   <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+    <Icon s hoverable name="MoreSmallList" />
   </div>
   <Popover align="left" {anchor} bind:this={dropdown}>
     {#if editing}
@@ -66,12 +66,14 @@
           icon="ri-edit-line"
           data-cy="edit-view"
           title="Edit"
-          on:click={showEditor} />
+          on:click={showEditor}
+        />
         <DropdownItem
           icon="ri-delete-bin-line"
           title="Delete"
           data-cy="delete-view"
-          on:click={showDelete} />
+          on:click={showDelete}
+        />
       </DropdownContainer>
     {/if}
   </Popover>
@@ -81,7 +83,8 @@
   body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
   okText="Delete View"
   onOk={deleteView}
-  title="Confirm Deletion" />
+  title="Confirm Deletion"
+/>
 
 <style>
   div.icon {
@@ -89,10 +92,6 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 
   .actions {
