@@ -3,11 +3,11 @@
 
   export let disabled = false
   export let size = "M"
-  export let cta = false;
-  export let primary = false;
-  export let secondary = false;
+  export let cta = false
+  export let primary = false
+  export let secondary = false
   export let warning = false
-  export let overBackground = false;
+  export let overBackground = false
   export let quiet = false
   export let icon = undefined
   export let active = false
@@ -23,13 +23,15 @@
   class:active
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
-  on:click|preventDefault>
+  on:click|preventDefault
+>
   {#if icon}
     <svg
       class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
       focusable="false"
       aria-hidden="true"
-      aria-label={icon}>
+      aria-label={icon}
+    >
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
