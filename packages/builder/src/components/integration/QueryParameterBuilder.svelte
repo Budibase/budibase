@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
+  import { Icon, Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -67,9 +67,7 @@
           value={runtimeToReadableBinding(bindings, customParams?.[parameter.name])}
           {bindings} />
       {:else}
-        <i
-          class="ri-close-circle-line delete"
-          on:click={() => deleteQueryParameter(idx)} />
+        <Icon hoverable name="Close" on:click={() => deleteQueryParameter(idx)} />
       {/if}
     {/each}
   </div>

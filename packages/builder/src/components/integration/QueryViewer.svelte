@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import {
+    Icon,
     Select,
     Button,
     Body,
@@ -9,7 +10,7 @@
     Heading,
     Spacer,
     Tabs,
-    Tab
+    Tab,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import api from "builderStore/api"
@@ -31,7 +32,7 @@
     { label: "Datetime", value: "DATETIME" },
   ]
 
-  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
+  $: datasource = $datasources.list.find((ds) => ds._id === query.datasourceId)
   $: query.schema = fields.reduce(
     (acc, next) => ({
       ...acc,
@@ -87,7 +88,7 @@
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
-      fields = json.schemaFields.map(field => ({
+      fields = json.schemaFields.map((field) => ({
         name: field,
         type: "STRING",
       }))
@@ -129,7 +130,9 @@
       <Select
         bind:value={query.queryVerb}
         options={Object.keys(queryConfig)}
-        getOptionLabel={verb => queryConfig[verb]?.displayName || capitalise(verb)} />
+        getOptionLabel={(verb) =>
+          queryConfig[verb]?.displayName || capitalise(verb)}
+      />
     </div>
     <Spacer extraLarge />
     <Divider />
@@ -152,7 +155,8 @@
         {query}
         height={300}
         schema={queryConfig[query.queryVerb]}
-        bind:parameters />
+        bind:parameters
+      />
       <Spacer extraLarge />
       <Divider />
       <Spacer extraLarge />
@@ -163,7 +167,8 @@
             secondary
             thin
             disabled={data.length === 0 || !query.name}
-            on:click={saveQuery}>
+            on:click={saveQuery}
+          >
             Save Query
           </Button>
           <Spacer medium />
@@ -195,9 +200,7 @@
                 <div class="field">
                   <Input placeholder="Field Name" bind:value={field.name} />
                   <Select bind:value={field.type} options={typeOptions} />
-                  <i
-                    class="ri-close-circle-line delete"
-                    on:click={() => deleteField(idx)} />
+                  <Icon name="bleClose" on:click={() => deleteField(idx)} />
                 </div>
               {/each}
               <Spacer extraLarge />

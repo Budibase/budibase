@@ -1,5 +1,5 @@
 <script>
-  import { Button, Input } from "@budibase/bbui"
+  import { Icon, Button, Input } from "@budibase/bbui"
 
   export let defaults
   export let object = defaults || {}
@@ -28,7 +28,7 @@
     <Input placeholder="Key" bind:value={field.name} />
     <Input placeholder="Value" bind:value={field.value} />
     {#if !readOnly}
-      <i class="ri-close-circle-fill" on:click={() => deleteEntry(idx)} />
+      <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
     {/if}
   {/each}
 </div>
