@@ -8,18 +8,16 @@ const { join } = require("path")
 const CouchDB = require("../../db")
 const { getTemplateParams, StaticDatabases } = require("@budibase/auth").db
 
-const TEMPLATE_PATH = join(__dirname, "..", "constants", "templates")
-
 exports.EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(
-    join(TEMPLATE_PATH, "passwordRecovery.html")
+    join(__dirname, "passwordRecovery.html")
   ),
   [EmailTemplatePurpose.INVITATION]: readStaticFile(
-    join(TEMPLATE_PATH, "invitation.html")
+    join(__dirname, "invitation.html")
   ),
-  [EmailTemplatePurpose.BASE]: readStaticFile(join(TEMPLATE_PATH, "base.html")),
+  [EmailTemplatePurpose.BASE]: readStaticFile(join(__dirname, "base.html")),
   [EmailTemplatePurpose.STYLES]: readStaticFile(
-    join(TEMPLATE_PATH, "style.css")
+    join(__dirname, "style.css")
   ),
 }
 

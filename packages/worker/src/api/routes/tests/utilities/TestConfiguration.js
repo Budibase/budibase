@@ -36,12 +36,20 @@ class TestConfiguration {
     return request.body
   }
 
-  defaultHeaders() {
-    const user = {
-      userId: "us_uuid1",
+  async init() {
+    // create a test user
+    await this._req({
+      _id: "us_uuid1",
       builder: {
         global: true,
-      },
+      }
+    }, null, controllers.users.save)
+  }
+
+  defaultHeaders() {
+    const user = {
+      _id: "us_uuid1",
+      userId: "us_uuid1",
     }
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {

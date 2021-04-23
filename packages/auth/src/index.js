@@ -36,7 +36,7 @@ module.exports = {
     buildAuthMiddleware: authenticated,
     passport,
     google,
-    jwt,
+    jwt: require("jsonwebtoken"),
   },
   StaticDatabases,
   constants: require("./constants"),

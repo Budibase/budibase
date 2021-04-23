@@ -23,6 +23,13 @@ router
   )
   .use("/health", ctx => (ctx.status = 200))
   .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
+  // for now no public access is allowed to worker (bar health check)
+  .use((ctx, next) => {
+    if (!ctx.isAuthenticated) {
+      ctx.throw(403, "Unauthorized - no public worker access")
+    }
+    return next()
+  })
 
 // error handling middleware
 router.use(async (ctx, next) => {
