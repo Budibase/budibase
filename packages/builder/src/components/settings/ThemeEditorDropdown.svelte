@@ -1,5 +1,5 @@
 <script>
-  import { Label, Popover } from "@budibase/bbui"
+  import { Icon, Label, Popover } from "@budibase/bbui"
   import ThemeEditor from "./ThemeEditor.svelte"
 
   let anchor
@@ -7,7 +7,7 @@
 </script>
 
 <div class="topnavitemright" on:click={popover.show} bind:this={anchor}>
-  <i class="ri-paint-fill" />
+  <Icon hoverable name="ColorFill" />
 </div>
 <div class="dropdown">
   <Popover bind:this={popover} {anchor} align="right">
@@ -22,11 +22,6 @@
   .dropdown {
     z-index: 2;
   }
-
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
@@ -40,10 +35,6 @@
     height: 24px;
     width: 24px;
   }
-  .topnavitemright:hover i {
-    color: var(--ink);
-  }
-
   .content {
     padding: var(--spacing-xl);
   }
