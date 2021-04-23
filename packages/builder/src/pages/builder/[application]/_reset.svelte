@@ -1,18 +1,22 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Button, ActionGroup, ActionButton, Icon } from "@budibase/bbui"
+  import { Button, ActionGroup, ActionButton, Tabs, Tab } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
-  import { isActive, goto, layout } from "@roxi/routify"
+  import { isActive, goto, layout, params } from "@roxi/routify"
   import Logo from "/assets/bb-logo.svg"
+  import { capitalise } from "../../../helpers"
 
   // Get Package and set store
   export let application
 
   let promise = getPackage()
+  $: selected = capitalise(
+    $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
+  )
 
   async function getPackage() {
     const res = await get(`/api/applications/${application}/appPackage`)
@@ -59,17 +63,20 @@
             on:click={() => $goto(`/builder/`)} />
         </button>
 
+        <div class="tabs">
+          <Tabs {selected}>
+            {#each $layout.children as { path, title }}
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)} />
+            {/each}
+          </Tabs>
+        </div>
+
         <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        <ActionGroup>
-          {#each $layout.children as { path, title }}
-            <ActionButton
-              quiet
-              selected={$isActive(path)}
-              on:click={topItemNavigate(path)}>
-              {title}
-            </ActionButton>
-          {/each}
-        </ActionGroup>
+        <ActionGroup />
       </div>
       <div class="toprightnav">
         <ThemeEditorDropdown />
@@ -127,9 +134,8 @@
 
   .top-nav {
     flex: 0 0 auto;
-    height: 60px;
     background: var(--background);
-    padding: 0 20px;
+    padding: 0 var(--spacing-xl);
     display: flex;
     box-sizing: border-box;
     justify-content: space-between;
@@ -146,28 +152,15 @@
 
   .topleftnav {
     display: flex;
-    place-items: center;
-  }
-
-  .topnavitem {
-    cursor: pointer;
-    color: var(--grey-5);
-    margin: 0 0 0 20px;
-    font-weight: 500;
-    font-size: var(--font-size-m);
-    height: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
-    box-sizing: border-box;
   }
 
-  .topnavitem:hover {
-    color: var(--grey-7);
-    font-weight: 500;
-  }
-
-  .active {
-    color: var(--ink);
-    font-weight: 500;
+  .tabs {
+    display: flex;
+    position: relative;
+    margin-bottom: -1px;
   }
 
   .topnavitemright a {
@@ -192,9 +185,9 @@
     background-color: rgba(0, 0, 0, 0);
     cursor: pointer;
     outline: none;
-    height: 40px;
-    padding: 0px 10px 8px 0;
+    padding: 0 10px 0 0;
     align-items: center;
+    height: 32px;
   }
 
   .home-logo:active {
@@ -202,10 +195,7 @@
   }
 
   .home-logo img {
-    height: 40px;
-  }
-  span:first-letter {
-    text-transform: capitalize;
+    height: 32px;
   }
 
   i {
