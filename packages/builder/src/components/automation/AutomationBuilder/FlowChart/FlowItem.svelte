@@ -14,6 +14,7 @@
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
+    console.log('Running')
     automationStore.actions.deleteAutomationBlock(block)
   }
 </script>
@@ -37,7 +38,7 @@
       {#if block.type === 'TRIGGER'}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
     {#if block.type !== 'TRIGGER' || allowDeleteTrigger}
-      <i on:click|stopPropagation={deleteStep} class="delete ri-close-line" />
+    <div on:click|stopPropagation={deleteStep}><Icon name="Close"/></div>
     {/if}
   </header>
   <hr />
@@ -91,19 +92,5 @@
   header i.delete:hover {
     cursor: pointer;
     opacity: 1;
-  }
-
-  .ACTION {
-  }
-
-  .TRIGGER {
-  }
-
-  .LOGIC {
-  }
-
-  p {
-    color: inherit;
-    margin-bottom: 0;
   }
 </style>

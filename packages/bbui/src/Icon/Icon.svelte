@@ -29,7 +29,8 @@
   focusable="false"
   aria-hidden={hidden}
   aria-label={name}
-  style={`transform: rotate(${rotation}deg)`}>
+  style={`transform: rotate(${rotation}deg)`}
+>
   <use xlink:href="#spectrum-icon-18-{name}" />
 </svg>
 
