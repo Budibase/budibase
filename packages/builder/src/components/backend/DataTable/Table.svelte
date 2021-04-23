@@ -1,10 +1,9 @@
 <script>
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
-  import { Table, Modal } from "@budibase/bbui"
+  import { Table, Modal, Heading, notifications } from "@budibase/bbui"
 
   import api from "builderStore/api"
-  import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
@@ -92,7 +91,7 @@
 <div>
   <div class="table-title">
     {#if title}
-      <h1>{title}</h1>
+      <Heading s>{title}</Heading>
     {/if}
     {#if loading}
       <div transition:fade>

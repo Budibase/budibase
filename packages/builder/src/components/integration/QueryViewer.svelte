@@ -112,12 +112,12 @@
 
 <section class="config">
   <Spacer extraLarge />
-  <Heading>Query {integrationInfo?.friendlyName}</Heading>
+  <Heading m>Query {integrationInfo?.friendlyName}</Heading>
   <Spacer extraLarge />
   <Divider />
   <Spacer extraLarge />
-  <Heading>Config</Heading>
-  <Body small grey>Provide a name for your query and select its function.</Body>
+  <Heading s>Config</Heading>
+  <Body s>Provide a name for your query and select its function.</Body>
   <Spacer medium />
   <div class="config-field">
     <Label>Query Name</Label>
@@ -147,8 +147,8 @@
   <section>
     <Spacer extraLarge />
     <div class="config">
-      <Heading>Fields</Heading>
-      <Body small grey>Fill in the fields specific to this query.</Body>
+      <Heading s>Fields</Heading>
+      <Body s>Fill in the fields specific to this query.</Body>
       <Spacer medium />
       <IntegrationQueryEditor
         {datasource}
@@ -161,7 +161,7 @@
       <Divider />
       <Spacer extraLarge />
       <div class="viewer-controls">
-        <Heading>Results</Heading>
+        <Heading s>Results</Heading>
         <div class="button-container">
           <Button
             secondary
@@ -175,7 +175,8 @@
           <Button thin secondary on:click={previewQuery}>Run Query</Button>
         </div>
       </div>
-      <Body s grey>
+      <Spacer small />
+      <Body s>
         Below, you can preview the results from your query and change the
         schema.
       </Body>
