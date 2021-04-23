@@ -12,12 +12,14 @@ const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async function(ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const configDoc = ctx.request.body
-  const { type, group, user } = configDoc
+  const { type, config } = ctx.request.body
+  const { group, user } = config
+  // insert the type into the doc
+  config.type = type
 
   // Config does not exist yet
-  if (!configDoc._id) {
-    configDoc._id = generateConfigID({
+  if (!config._id) {
+    config._id = generateConfigID({
       type,
       group,
       user,
@@ -27,12 +29,12 @@ exports.save = async function(ctx) {
   // verify the configuration
   switch (type) {
     case Configs.SMTP:
-      await email.verifyConfig(configDoc)
+      await email.verifyConfig(config)
       break;
   }
 
   try {
-    const response = await db.post(configDoc)
+    const response = await db.post(config)
     ctx.body = {
       type,
       _id: response.id,

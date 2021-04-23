@@ -103,7 +103,6 @@
     "jimp": "0.16.1",
     "joi": "17.2.1",
     "jsonschema": "1.4.0",
-    "jsonwebtoken": "8.5.1",
     "koa": "2.7.0",
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
