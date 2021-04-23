@@ -35,6 +35,7 @@
     align-items: stretch;
     border-right: var(--border-light);
     background-color: var(--background);
+    padding-bottom: 60px;
   }
 
   .content {
