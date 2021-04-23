@@ -1,4 +1,5 @@
 <script>
+  import { Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
   import WebhookDisplay from "./WebhookDisplay.svelte"
@@ -41,28 +42,30 @@
   title="Webhook Setup"
   confirmText="Finished"
   showConfirmButton={finished}
-  cancelText="Skip">
+  cancelText="Skip"
+>
   <p>
     Webhooks are for receiving data. To make them easier please use the URL
     shown below and send a
     <code>POST</code>
-    request to it from your other application. If you're unable to do this now
-    then you can skip this step, however we will not be able to configure
-    bindings for your later actions!
+    request to it from your other application. If you're unable to do this now then
+    you can skip this step, however we will not be able to configure bindings for
+    your later actions!
   </p>
   <WebhookDisplay value={schemaURL} />
   {#if finished}
     <p class="finished-text">
       Request received! We found
       {propCount}
-      bindable value{propCount > 1 ? 's' : ''}.
+      bindable value{propCount > 1 ? "s" : ""}.
     </p>
   {/if}
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/steps/triggers">
-    <i class="ri-information-line" />
+    href="https://docs.budibase.com/automate/steps/triggers"
+  >
+    <Icon name="InfoOutline" />
     <span>Learn about webhooks</span>
   </a>
 </ModalContent>
@@ -78,11 +81,7 @@
   }
   a span {
     text-decoration: underline;
-  }
-  i {
-    font-size: 20px;
-    margin-right: var(--spacing-m);
-    text-decoration: none;
+    margin-left: var(--spectrum-alias-item-padding-s);
   }
   p {
     margin: 0;
