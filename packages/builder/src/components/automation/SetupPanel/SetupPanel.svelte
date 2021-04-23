@@ -97,7 +97,7 @@
   }
 
   .block-label {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     font-weight: 500;
     color: var(--grey-7);
   }
