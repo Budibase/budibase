@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
-  import { Popover } from "@budibase/bbui"
+  import { Icon, Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let component
@@ -30,7 +30,7 @@
     if (currentIndex === 0) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
+    const newChildren = parent._children.filter((c) => c !== component)
     newChildren.splice(currentIndex - 1, 0, component)
     parent._children = newChildren
     store.actions.preview.saveSelected()
@@ -46,7 +46,7 @@
     if (currentIndex === parent._children.length - 1) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
+    const newChildren = parent._children.filter((c) => c !== component)
     newChildren.splice(currentIndex + 1, 0, component)
     parent._children = newChildren
     store.actions.preview.saveSelected()
@@ -66,56 +66,65 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = mode => {
+  const pasteComponent = (mode) => {
     // lives in store - also used by drag drop
     store.actions.components.paste(component, mode)
   }
 </script>
 
 <div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={dropdown.show}><i class="ri-more-line" /></div>
+  <div class="icon" on:click={dropdown.show}><Icon hoverable name="MoreSmallList" /></div>
   <Popover bind:this={dropdown} width="170px" {anchor} align="left">
     <DropdownContainer on:click={hideDropdown}>
       <DropdownItem
         icon="ri-delete-bin-line"
         title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
+        on:click={() => confirmDeleteDialog.show()}
+      />
       <DropdownItem
         icon="ri-arrow-up-line"
         title="Move up"
-        on:click={moveUpComponent} />
+        on:click={moveUpComponent}
+      />
       <DropdownItem
         icon="ri-arrow-down-line"
         title="Move down"
-        on:click={moveDownComponent} />
+        on:click={moveDownComponent}
+      />
       <DropdownItem
         icon="ri-repeat-one-line"
         title="Duplicate"
-        on:click={duplicateComponent} />
+        on:click={duplicateComponent}
+      />
       <DropdownItem
         icon="ri-scissors-cut-line"
         title="Cut"
-        on:click={() => storeComponentForCopy(true)} />
+        on:click={() => storeComponentForCopy(true)}
+      />
       <DropdownItem
         icon="ri-file-copy-line"
         title="Copy"
-        on:click={() => storeComponentForCopy(false)} />
+        on:click={() => storeComponentForCopy(false)}
+      />
       <hr class="hr-style" />
       <DropdownItem
         icon="ri-insert-row-top"
         title="Paste above"
         disabled={noPaste}
-        on:click={() => pasteComponent('above')} />
+        on:click={() => pasteComponent("above")}
+      />
       <DropdownItem
         icon="ri-insert-row-bottom"
         title="Paste below"
         disabled={noPaste}
-        on:click={() => pasteComponent('below')} />
+        on:click={() => pasteComponent("below")}
+      />
       <DropdownItem
         icon="ri-insert-column-right"
         title="Paste inside"
         disabled={noPaste || noChildrenAllowed}
-        on:click={() => pasteComponent('inside')} />
+        on:click={() => pasteComponent("inside")}
+      />
     </DropdownContainer>
   </Popover>
 </div>
@@ -124,7 +133,8 @@
   title="Confirm Deletion"
   body={`Are you sure you wish to delete this '${definition?.name}' component?`}
   okText="Delete Component"
-  onOk={deleteComponent} />
+  onOk={deleteComponent}
+/>
 
 <style>
   hr {
