@@ -1,6 +1,6 @@
 const { Cookies } = require("../constants")
 const database = require("../db")
-const { getCookie } = require("../utils")
+const { getCookie, clearCookie } = require("../utils")
 const { StaticDatabases } = require("../db/utils")
 
 module.exports = (noAuthPatterns = []) => {
@@ -15,11 +15,20 @@ module.exports = (noAuthPatterns = []) => {
       const authCookie = getCookie(ctx, Cookies.Auth)
 
       if (authCookie) {
-        const db = database.getDB(StaticDatabases.GLOBAL.name)
-        const user = await db.get(authCookie.userId)
-        delete user.password
-        ctx.isAuthenticated = true
-        ctx.user = user
+        try {
+          const db = database.getDB(StaticDatabases.GLOBAL.name)
+          const user = await db.get(authCookie.userId)
+          delete user.password
+          ctx.isAuthenticated = true
+          ctx.user = user
+        } catch (err) {
+          // remove the cookie as the use does not exist anymore
+          clearCookie(ctx, Cookies.Auth)
+        }
+      }
+      // be explicit
+      if (ctx.isAuthenticated !== true) {
+        ctx.isAuthenticated = false
       }
 
       return next()

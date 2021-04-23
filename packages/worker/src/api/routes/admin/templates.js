@@ -27,3 +27,5 @@ router
   .get("/api/admin/template/:ownerId", controller.fetchByOwner)
   .get("/api/admin/template/:id", controller.find)
   .delete("/api/admin/template/:id/:rev", controller.destroy)
+
+module.exports = router

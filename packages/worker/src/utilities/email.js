@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer")
 
-exports.createSMTPTransport = (config) => {
+exports.createSMTPTransport = config => {
   const options = {
     port: config.port,
     host: config.host,

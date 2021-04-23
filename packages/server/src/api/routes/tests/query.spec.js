@@ -93,7 +93,7 @@ describe("/queries", () => {
         const query = await config.createQuery()
         const res = await request
           .get(`/api/queries/${query._id}`)
-          .set(await config.roleHeaders())
+          .set(await config.roleHeaders({}))
           .expect("Content-Type", /json/)
           .expect(200)
         expect(res.body.fields).toBeUndefined()

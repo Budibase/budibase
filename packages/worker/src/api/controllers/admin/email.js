@@ -66,5 +66,9 @@ exports.sendEmail = async ctx => {
     to: email,
     html: await buildEmail(purpose, email, user),
   }
-  await transport.sendMail(message)
+  const response = await transport.sendMail(message)
+  ctx.body = {
+    ...response,
+    message: `Email sent to ${email}.`,
+  }
 }

@@ -5,7 +5,7 @@ function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({
     getGlobalUsers: () => {
       return {
-        email: "us_uuid1",
+        _id: "us_uuid1",
         roles: {
           "app_test": "BASIC",
         }
@@ -67,7 +67,8 @@ class TestConfiguration {
 
   setUser() {
     this.ctx.user = {
-      userId: "ro_ta_user_us_uuid1",
+      userId: "us_uuid1",
+      _id: "us_uuid1",
     }
   }
 
@@ -159,5 +160,4 @@ describe("Current app middleware", () => {
       await checkExpected(false)
     })
   })
-
 })
