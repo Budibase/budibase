@@ -28,7 +28,7 @@
 </script>
 
 <div class="root">
-  <Body small grey>
+  <Body s>
     Choosing a Data Source will automatically use the data it provides, but it's
     optional.<br />
     You can always add or override fields manually.
