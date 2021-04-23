@@ -52,7 +52,10 @@
         </div>
       </Tab>
     </Tabs>
-    <div class="add-button" data-cy={`new-${selected === "External" ? "datasource" : "tabel"}`}>
+    <div
+      class="add-button"
+      data-cy={`new-${selected === "External" ? "datasource" : "tabel"}`}
+    >
       <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>
   </div>
@@ -63,10 +66,10 @@
 
 <style>
   .root {
-    height: calc(100vh - 60px);
+    flex: 1 1 auto;
+    height: 0;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    background: var(--grey-2);
   }
 
   .content {
@@ -78,10 +81,9 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
-    background: var(--background);
   }
   .tab-content-padding {
-    padding: 0 var(--spectrum-alias-item-padding-m);
+    padding: 0 var(--spacing-xl);
   }
 
   .nav {
@@ -93,17 +95,12 @@
     align-items: stretch;
     position: relative;
     border-right: var(--border-light);
+    padding-bottom: 60px;
   }
 
   .add-button {
     position: absolute;
-    top: var(--spectrum-alias-item-padding-l);
-    bottom: 0;
-    right: var(--spectrum-alias-item-padding-l);
-  }
-
-  i:hover {
-    cursor: pointer;
-    color: var(--blue);
+    top: var(--spacing-l);
+    right: var(--spacing-xl);
   }
 </style>

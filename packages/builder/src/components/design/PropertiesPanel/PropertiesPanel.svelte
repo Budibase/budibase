@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
-  import { Tabs, Tab } from '@budibase/bbui'
+  import { Tabs, Tab } from "@budibase/bbui"
   import { FrontendTypes } from "constants"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -52,12 +52,12 @@
         <div class="instance-name">{definition.name}</div>
       {/if}
       <SettingsView
-      componentInstance={$selectedComponent}
-      componentDefinition={definition}
-      {showDisplayName}
-      onChange={store.actions.components.updateProp}
-      onScreenPropChange={setAssetProps}
-      assetInstance={$store.currentView !== 'component' && $currentAsset} />
+        componentInstance={$selectedComponent}
+        componentDefinition={definition}
+        {showDisplayName}
+        onChange={store.actions.components.updateProp}
+        onScreenPropChange={setAssetProps}
+        assetInstance={$store.currentView !== 'component' && $currentAsset} />
     </div>
   </Tab>
   <Tab title="Design">
@@ -66,25 +66,25 @@
         <div class="instance-name">{definition.name}</div>
       {/if}
       <DesignView
-      componentInstance={$selectedComponent}
-      componentDefinition={definition}
-      {onStyleChanged}
-      {onCustomStyleChanged}
-      {onUpdateTransition}
-      {onResetStyles} />
+        componentInstance={$selectedComponent}
+        componentDefinition={definition}
+        {onStyleChanged}
+        {onCustomStyleChanged}
+        {onUpdateTransition}
+        {onResetStyles} />
     </div>
   </Tab>
 </Tabs>
 
 <style>
-
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
+    padding: 0 var(--spacing-xl);
   }
 
   .instance-name {
-    font-size: var(--font-size-xs);
-    margin-bottom: var(--spacing-l);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    margin-bottom: var(--spacing-m);
+    margin-top: var(--spacing-xs);
     font-weight: 500;
     color: var(--grey-7);
   }

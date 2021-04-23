@@ -6,6 +6,10 @@ html, body {
     min-height: 100%;
 }
 
+.spectrum--light {
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-75);
+}
+
 body {
     --background: var(--spectrum-alias-background-color-primary);
     --background-alt: var(--spectrum-alias-background-color-secondary);
@@ -24,7 +28,7 @@ body {
 
     font-family: var(--font-sans);
     color: var(--ink);
-    background-color: var(--background);
+    background-color: var(--background-alt);
 }
 
 #app {
@@ -51,4 +55,25 @@ body {
 
 * + .bb-margin-xl {
     margin-top: var(--spacing-xl);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--spectrum-alias-background-color-default);
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-corner {
+    background: var(--spectrum-alias-background-color-default);
+}
+html * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--spectrum-global-color-gray-400)
+    var(--spectrum-alias-background-color-default);
 }

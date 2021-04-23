@@ -179,8 +179,8 @@
     gap: var(--spacing-s);
   }
   .empty {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spacing-m);
-    color: var(--grey-5);
+    color: var(--grey-6);
   }
 </style>

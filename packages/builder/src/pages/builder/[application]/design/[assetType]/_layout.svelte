@@ -168,7 +168,8 @@
     display: grid;
     grid-template-columns: 260px 1fr 260px;
     align-items: stretch;
-    height: calc(100vh - 60px);
+    flex: 1 1 auto;
+    height: 0;
   }
 
   .ui-nav {

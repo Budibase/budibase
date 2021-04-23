@@ -23,13 +23,12 @@
 
 <style>
   .tab-content-padding {
-    padding: 0 var(--spectrum-alias-item-padding-m);
+    padding: 0 var(--spacing-xl);
   }
   .add-button {
     position: absolute;
-    top: var(--spectrum-alias-item-padding-l);
-    bottom: 0;
-    right: var(--spectrum-alias-item-padding-l);
+    top: var(--spacing-l);
+    right: var(--spacing-xl);
   }
 
   .title {
@@ -38,12 +37,5 @@
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
-  }
-  .title i {
-    font-size: 20px;
-  }
-  .title i:hover {
-    cursor: pointer;
-    color: var(--blue);
   }
 </style>

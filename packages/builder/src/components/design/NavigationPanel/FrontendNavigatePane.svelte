@@ -26,7 +26,8 @@
   ]
 
   let modal
-  $: selected = tabs.find((t) => t.key === $params.assetType).title
+  $: selected =
+    tabs.find((t) => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
     const { key } = tabs.find((t) => t.title === detail)
@@ -121,9 +122,12 @@
   }
   .add-button {
     position: absolute;
-    top: var(--spectrum-alias-item-padding-l);
-    bottom: 0;
-    right: var(--spectrum-alias-item-padding-l);
+    top: var(--spacing-l);
+    right: var(--spacing-xl);
+  }
+  .title i:hover {
+    cursor: pointer;
+    color: var(--blue);
   }
 
   .role-select {
@@ -136,6 +140,6 @@
   }
 
   .tab-content-padding {
-    padding: 0 var(--spectrum-alias-item-padding-m);
+    padding: 0 var(--spacing-xl);
   }
 </style>

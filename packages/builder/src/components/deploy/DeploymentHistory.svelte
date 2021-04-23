@@ -75,7 +75,9 @@
     } catch (err) {
       console.error(err)
       clearInterval(poll)
-      notifications.error("Error fetching deployment history. Please try again.")
+      notifications.error(
+        "Error fetching deployment history. Please try again."
+      )
     }
   }
 
@@ -96,7 +98,7 @@
 {#if deployments.length > 0}
   <section class="deployment-history" in:slide>
     <header>
-      <h4>Deployment History</h4>
+      <Heading>Deployment History</Heading>
       <div class="deploy-div">
         {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
           <a target="_blank" href={deploymentUrl}> View Your Deployed App → </a>
@@ -148,13 +150,13 @@
 </Modal>
 
 <style>
-  .deployment:nth-child(odd) {
-    background: var(--grey-1);
+  section {
+    padding: var(--spacing-xl) 0;
   }
 
   .deployment-list {
     height: 40vh;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   h4 {
@@ -163,9 +165,10 @@
   }
 
   header {
-    margin-left: var(--spacing-l);
-    margin-bottom: var(--spacing-xl);
-    margin-right: var(--spacing-l);
+    padding-left: var(--spacing-l);
+    padding-bottom: var(--spacing-xl);
+    padding-right: var(--spacing-l);
+    border-bottom: var(--border-light);
   }
 
   .deploy-div {
@@ -183,10 +186,14 @@
 
   .deployment {
     padding: var(--spacing-l);
-    height: 100px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: var(--border-light);
+  }
+  .deployment:last-child {
+    border-bottom: none;
   }
 
   .deployment-info {

@@ -99,5 +99,8 @@
     max-height: none;
     margin: 40px 0;
     transform: none;
+    --spectrum-dialog-confirm-border-radius: var(
+      --spectrum-global-dimension-size-100
+    );
   }
 </style>
