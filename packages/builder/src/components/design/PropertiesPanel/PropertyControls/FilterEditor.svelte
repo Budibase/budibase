@@ -36,28 +36,24 @@
 </script>
 
 <Button secondary wide on:click={drawer.show}>Define Filters</Button>
-<Drawer bind:this={drawer} title={'Filtering'}>
-  <heading slot="buttons">
-    <Button thin blue on:click={saveFilter}>Save</Button>
-  </heading>
-  <div slot="body">
-    <div class="root">
-      <Body small grey>
-        {#if !Object.keys(tempValue || {}).length}
-          Add your first filter column.
-        {:else}
-          Results are filtered to only those which match all of the following
-          constaints.
-        {/if}
-      </Body>
-      <Spacer medium />
-      <div class="fields">
-        <SaveFields
-          parameterFields={value}
-          {schemaFields}
-          valueLabel="Equals"
-          on:change={onFieldsChanged} />
-      </div>
+<Drawer bind:this={drawer} title='Filtering'>
+  <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
+  <div class="root" slot="body">
+    <Body s>
+      {#if !Object.keys(tempValue || {}).length}
+        Add your first filter column.
+      {:else}
+        Results are filtered to only those which match all of the following
+        constaints.
+      {/if}
+    </Body>
+    <Spacer medium />
+    <div class="fields">
+      <SaveFields
+        parameterFields={value}
+        {schemaFields}
+        valueLabel="Equals"
+        on:change={onFieldsChanged} />
     </div>
   </div>
 </Drawer>
@@ -74,7 +70,7 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
+    align-items: center;
     grid-template-columns: auto 1fr auto 1fr auto;
-    align-items: baseline;
   }
 </style>
