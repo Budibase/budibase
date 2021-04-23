@@ -66,7 +66,8 @@
 
 <style>
   .root {
-    height: calc(100vh - 60px);
+    flex: 1 1 auto;
+    height: 0;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
   }
