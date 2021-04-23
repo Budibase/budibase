@@ -47,7 +47,7 @@
         this={ICONS[datasource.source]}
         height="26"
         width="26" />
-      <Heading l>{datasource.name}</Heading>
+      <Heading m>{datasource.name}</Heading>
     </header>
     <Body small grey lh>{integration.description}</Body>
     <Spacer extraLarge />
@@ -55,12 +55,10 @@
     <Spacer extraLarge />
     <div class="container">
       <div class="config-header">
-        <Heading>Configuration</Heading>
+        <Heading s>Configuration</Heading>
         <Button secondary on:click={saveDatasource}>Save</Button>
       </div>
-      <Body small grey>
-        Connect your database to Budibase using the config below.
-      </Body>
+      <Body s>Connect your database to Budibase using the config below.</Body>
       <Spacer extraLarge />
       <IntegrationConfigForm
         schema={integration.datasource}
@@ -70,7 +68,7 @@
       <Divider />
       <Spacer extraLarge />
       <div class="query-header">
-        <Heading>Queries</Heading>
+        <Heading s>Queries</Heading>
         <Button secondary on:click={() => $goto('./new')}>Add Query</Button>
       </div>
       <Spacer extraLarge />
