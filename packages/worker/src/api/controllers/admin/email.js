@@ -1,14 +1,26 @@
-const { EmailTemplatePurpose, TemplateTypes } = require("../constants")
-const { getTemplateByPurpose } = require("../constants/templates")
+const CouchDB = require("../../../db")
+const { StaticDatabases, determineScopedConfig } = require("@budibase/auth").db
+const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../../../constants")
+const { getTemplateByPurpose } = require("../../../constants/templates")
+const { getSettingsTemplateContext } = require("../../../utilities/templates")
 const { processString } = require("@budibase/string-templates")
-const { getSettingsTemplateContext } = require("./templates")
+const nodemailer = require("nodemailer")
 
+const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const TYPE = TemplateTypes.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.INVITATION,
   EmailTemplatePurpose.PASSWORD_RECOVERY,
 ]
+
+function createSMTPTransport(config) {
+  const transport = nodemailer.createTransport({
+    port: config.port,
+    host: config.host,
+
+  })
+}
 
 exports.buildEmail = async (email, user, purpose) => {
   // this isn't a full email
@@ -37,3 +49,16 @@ exports.buildEmail = async (email, user, purpose) => {
     body,
   })
 }
+
+exports.sendEmail = async ctx => {
+  const { groupId, email, purpose } = ctx.request.body
+  const db = new CouchDB(GLOBAL_DB)
+  const params = {}
+  if (groupId) {
+    params.group = groupId
+  }
+  params.type = Configs.SMTP
+  const config = await determineScopedConfig(db, params)
+  const transport = createSMTPTransport(config)
+}
+
