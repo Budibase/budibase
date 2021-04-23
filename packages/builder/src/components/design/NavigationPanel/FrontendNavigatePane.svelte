@@ -12,7 +12,7 @@
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
 
   const tabs = [
     {
@@ -26,21 +26,21 @@
   ]
 
   let modal
-  $: selected = tabs.find(t => t.key === $params.assetType).title
+  $: selected = tabs.find((t) => t.key === $params.assetType).title
 
   const navigate = ({ detail }) => {
-    const { key } = tabs.find(t => t.title === detail)
+    const { key } = tabs.find((t) => t.title === detail)
     $goto(`../${key}`)
   }
 
-  const updateAccessRole = event => {
+  const updateAccessRole = (event) => {
     const role = event.detail
 
     // Select a valid screen with this new role - otherwise we'll not be
     // able to change role at all because ComponentNavigationTree will kick us
     // back the current role again because the same screen ID is still selected
     const firstValidScreenId = $allScreens.find(
-      screen => screen.routing.roleId === role
+      (screen) => screen.routing.roleId === role
     )?._id
     if (firstValidScreenId) {
       store.actions.screens.select(firstValidScreenId)
@@ -49,7 +49,7 @@
     // Otherwise clear the selected screen ID so that the first new valid screen
     // can be selected by ComponentNavigationTree
     else {
-      store.update(state => {
+      store.update((state) => {
         state.selectedScreenId = null
         return state
       })
@@ -72,13 +72,15 @@
             on:change={updateAccessRole}
             value={$selectedAccessRole}
             label="Filter by Access"
-            getOptionLabel={role => role.name}
-            getOptionValue={role => role._id}
-            options={$roles} />
+            getOptionLabel={(role) => role.name}
+            getOptionValue={(role) => role._id}
+            options={$roles}
+          />
           <Search
             placeholder="Enter a route to search"
             label="Search Screens"
-            bind:value={$screenSearchString} />
+            bind:value={$screenSearchString}
+          />
         </div>
         <div class="nav-items-container">
           <ComponentNavigationTree />
@@ -93,7 +95,8 @@
         <i
           on:click={modal.show}
           data-cy="new-layout"
-          class="ri-add-circle-fill" />
+          class="ri-add-circle-fill"
+        />
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />
         {/each}
@@ -103,7 +106,9 @@
       </div>
     </Tab>
   </Tabs>
-  <i on:click={modal.show} data-cy="new-screen" class="ri-add-circle-fill" />
+  <div class="add-button">
+    <Icon hoverable name="AddCircle" on:click={modal.show} />
+  </div>
 </div>
 
 <style>
@@ -114,15 +119,11 @@
     align-items: stretch;
     position: relative;
   }
-  .title i {
-    font-size: 20px;
+  .add-button {
     position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-l);
-  }
-  .title i:hover {
-    cursor: pointer;
-    color: var(--blue);
+    top: var(--spectrum-alias-item-padding-l);
+    bottom: 0;
+    right: var(--spectrum-alias-item-padding-l);
   }
 
   .role-select {
@@ -135,25 +136,6 @@
   }
 
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
-  }
-
-  .search-screens {
-    position: relative;
-  }
-  .search-screens i {
-    right: 2px;
-    bottom: 2px;
-    position: absolute;
-    box-sizing: border-box;
-    padding: var(--spacing-s);
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
-    line-height: 15px;
-    top: auto;
+    padding: 0 var(--spectrum-alias-item-padding-m);
   }
 </style>
