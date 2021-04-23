@@ -33,10 +33,8 @@
   function calculateIndicatorOffset() {
     if (!vertical) {
       left = $tab.info?.left - container?.getBoundingClientRect().left + "px"
-      top = $tab.info?.top
     } else {
       top = $tab.info?.top - container?.getBoundingClientRect().top + "px"
-      left = $tab.info?.left
     }
   }
 
@@ -72,11 +70,16 @@
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
+    position: relative;
+    border-width: 1px !important;
   }
   .spectrum-Tabs-content {
     margin-top: var(--spectrum-global-dimension-static-size-150);
   }
   .indicator-transition {
     transition: all 200ms;
+  }
+  .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
+    bottom: 0 !important;
   }
 </style>

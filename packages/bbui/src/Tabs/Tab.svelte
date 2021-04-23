@@ -1,9 +1,10 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext, onMount, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
   export let title
   export let icon = ""
 
+  const dispatch = createEventDispatcher()
   const selected = getContext("tab")
   let tab
   let tabInfo
@@ -17,11 +18,16 @@
   onMount(() => {
     setTabInfo()
   })
+
+  const onClick = () => {
+    $selected = { ...$selected, title, info: tab.getBoundingClientRect() }
+    dispatch("click")
+  }
 </script>
 
 <div
   bind:this={tab}
-  on:click={() => ($selected = { ...$selected, title, info: tab.getBoundingClientRect() })}
+  on:click={onClick}
   class:is-selected={$selected.title === title}
   class="spectrum-Tabs-item"
   tabindex="0">
