@@ -118,7 +118,7 @@
     font-size: 20px;
     position: absolute;
     top: var(--spacing-l);
-    right: var(--spacing-l);
+    right: var(--spacing-xl);
   }
   .title i:hover {
     cursor: pointer;
@@ -135,25 +135,6 @@
   }
 
   .tab-content-padding {
-    padding: 0 var(--spacing-s);
-  }
-
-  .search-screens {
-    position: relative;
-  }
-  .search-screens i {
-    right: 2px;
-    bottom: 2px;
-    position: absolute;
-    box-sizing: border-box;
-    padding: var(--spacing-s);
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
-    line-height: 15px;
-    top: auto;
+    padding: 0 var(--spacing-xl);
   }
 </style>

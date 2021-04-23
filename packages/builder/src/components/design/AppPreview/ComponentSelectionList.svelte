@@ -102,8 +102,8 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-xs);
-    font-size: var(--font-size-xs);
+    gap: var(--spacing-s);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
   .category span {
     font-weight: 500;

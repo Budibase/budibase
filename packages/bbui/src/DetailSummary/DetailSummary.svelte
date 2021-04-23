@@ -1,5 +1,5 @@
 <script>
-  import Icon from '../Icon/Icon.svelte'
+  import Icon from "../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -58,9 +58,10 @@
     text-overflow: ellipsis;
     text-transform: capitalize;
     white-space: nowrap;
+    user-select: none;
   }
   .name.thin {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 
   .icon {

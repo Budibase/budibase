@@ -3,11 +3,11 @@
 
   export let disabled = false
   export let size = "M"
-  export let cta = false;
-  export let primary = false;
-  export let secondary = false;
+  export let cta = false
+  export let primary = false
+  export let secondary = false
   export let warning = false
-  export let overBackground = false;
+  export let overBackground = false
   export let quiet = false
   export let icon = undefined
   export let active = false
@@ -43,9 +43,5 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  button.active {
-    color: var(--spectrum-semantic-cta-color-background-default);
   }
 </style>
