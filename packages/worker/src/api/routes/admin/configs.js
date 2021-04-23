@@ -10,7 +10,9 @@ function smtpValidation() {
   return Joi.object({
     port: Joi.number().required(),
     host: Joi.string().required(),
-    from: Joi.string().email().required(),
+    from: Joi.string()
+      .email()
+      .required(),
     secure: Joi.boolean().optional(),
     selfSigned: Joi.boolean().optional(),
     auth: Joi.object({

@@ -15,7 +15,10 @@ function buildEmailSendValidation() {
   }).required().unknown(true))
 }
 
-router
-  .post("/api/admin/email/send", buildEmailSendValidation(), controller.sendEmail)
+router.post(
+  "/api/admin/email/send",
+  buildEmailSendValidation(),
+  controller.sendEmail
+)
 
 module.exports = router
