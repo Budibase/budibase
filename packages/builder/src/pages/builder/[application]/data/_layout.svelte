@@ -98,6 +98,7 @@
     align-items: stretch;
     position: relative;
     border-right: var(--border-light);
+    padding-bottom: 60px;
   }
 
   i {

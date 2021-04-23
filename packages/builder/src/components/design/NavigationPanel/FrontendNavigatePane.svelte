@@ -113,6 +113,7 @@
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
+    padding-bottom: 60px;
   }
   .title i {
     font-size: 20px;
