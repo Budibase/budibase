@@ -50,6 +50,7 @@ class TestConfiguration {
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
     request.user = { appId: this.appId }
+    request.query = {}
     request.request = {
       body: config,
     }

@@ -26,6 +26,7 @@ const EmailTemplatePurpose = {
   STYLES: "styles",
   PASSWORD_RECOVERY: "password_recovery",
   INVITATION: "invitation",
+  WELCOME: "welcome",
   CUSTOM: "custom",
 }
 
@@ -39,6 +40,9 @@ const TemplateBindings = {
   EMAIL: "email",
   RESET_URL: "resetUrl",
   USER: "user",
+  REQUEST: "request",
+  DOCS_URL: "docsUrl",
+  LOGIN_URL: "loginUrl",
 }
 
 const TemplateMetadata = {

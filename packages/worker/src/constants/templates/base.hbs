@@ -1,83 +1,32 @@
-<!doctype html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<!-- Based on templates: https://github.com/wildbit/postmark-templates/blob/master/templates/plain -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="x-apple-disable-message-reformatting">
-    <style>
-      {{ styles }}
-    </style>
-  </head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title></title>
+  <style type="text/css" rel="stylesheet" media="all">
+    {{ styles }}
+  </style>
+  <!--[if mso]>
+  <style type="text/css">
+    .f-fallback  {
+      font-family: Arial, sans-serif;
+    }
+  </style>
+  <![endif]-->
+</head>
 <body>
-<table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: auto;">
-  <tbody>
+{{ body }}
+<table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
   <tr>
-    <td class="bg_white logo" style="padding: 1em 2.5em; text-align: center">
-      <h1><a href="{{ companyUrl }}">{{ company }}</a></h1>
+    <td class="content-cell" align="center">
+      <p class="f-fallback sub align-center">&copy; 2021 {{ company }}. All rights reserved.</p>
     </td>
   </tr>
-  <tr>
-    <td class="bg_white logo" style="padding: 1em 2.5em; text-align: center">
-      {{ body }}
-    </td>
-  </tr>
-  <tr>
-    <td class="bg_white logo" style="padding: 1em 2.5em; text-align: center">
-      <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: auto;">
-        <tbody><tr>
-          <td valign="middle" class="bg_black footer email-section">
-            <table>
-              <tbody><tr>
-                <td valign="top" width="50%" style="padding-top: 20px;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tbody><tr>
-                      <td style="text-align: left; padding-right: 10px;">
-                        <h3 class="heading">{{ company }}</h3>
-                        <p>Company information.</p>
-                      </td>
-                    </tr>
-                    </tbody></table>
-                </td>
-                <td valign="top" width="50%" style="padding-top: 20px;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tbody><tr>
-                      <td style="text-align: left; padding-left: 10px;">
-                        <h3 class="heading"><a href="{{ platformUrl }}">Budibase Platform</a></h3>
-                      </td>
-                    </tr>
-                    </tbody></table>
-                </td>
-              </tr>
-              </tbody></table>
-          </td>
-        </tr>
-        <tr>
-          <td valign="middle" class="bg_black footer email-section">
-            <table>
-              <tbody><tr>
-                <td valign="top" width="50%">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tbody><tr>
-                      <td style="text-align: left; padding-right: 10px;">
-                        <p>© 2021 {{ company }}. All Rights Reserved</p>
-                      </td>
-                    </tr>
-                    </tbody></table>
-                </td>
-              </tr>
-              </tbody></table>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </td>
-  </tr>
-  </tbody>
 </table>
 </body>
 </html>

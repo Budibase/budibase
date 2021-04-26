@@ -34,7 +34,7 @@ exports.save = async function(ctx) {
   }
 
   try {
-    const response = await db.post(config)
+    const response = await db.put(config)
     ctx.body = {
       type,
       _id: response.id,

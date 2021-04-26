@@ -27,6 +27,7 @@ function settingValidation() {
   return Joi.object({
     platformUrl: Joi.string().valid("", null),
     logoUrl: Joi.string().valid("", null),
+    docsUrl: Joi.string().valid("", null),
     company: Joi.string().required(),
   }).unknown(true)
 }
