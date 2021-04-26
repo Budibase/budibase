@@ -1,20 +1,21 @@
 <script>
-  import { Popover, Button, Icon } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import FilterPopover from "../popovers/FilterPopover.svelte"
 
   export let view = {}
 
-  let anchor
-  let dropdown
+  let modal
 </script>
 
-<div bind:this={anchor}>
-  <Button icon="Filter" primary size="S" quiet
-    on:click={dropdown.show}
-    active={view.filters && view.filters.length}>
-    Filter
-  </Button>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <FilterPopover {view} onClosed={dropdown.hide} />
-</Popover>
+<Button
+  icon="Filter"
+  primary
+  size="S"
+  quiet
+  on:click={modal.show}
+  active={view.filters?.length}>
+  Filter
+</Button>
+<Modal bind:this={modal}>
+  <FilterPopover {view} />
+</Modal>

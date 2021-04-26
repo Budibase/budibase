@@ -1,5 +1,5 @@
 <script>
-  import { Button, Select, Label, notifications } from "@budibase/bbui"
+  import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import analytics from "analytics"
 
@@ -35,13 +35,15 @@
   function saveView() {
     views.save(view)
     notifications.success(`View ${view.name} saved.`)
-    onClosed()
     analytics.captureEvent("Added View Calculate", { field: view.field })
   }
 </script>
 
-<div class="actions">
-  <h5>Calculate</h5>
+<ModalContent
+  title="Calculate"
+  confirmText="Save"
+  onConfirm={saveView}
+  disabled={!view.field}>
   <div class="input-group-row">
     <Label>The</Label>
     <Select
@@ -54,31 +56,9 @@
       <Select bind:value={view.field} options={fields} />
     {/if}
   </div>
-  <div class="footer">
-    <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button cta on:click={saveView} disabled={!view.field}>Save</Button>
-  </div>
-</div>
+</ModalContent>
 
 <style>
-  .actions {
-    width: 200px;
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    padding: var(--spacing-xl);
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  .footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-
   .input-group-row {
     display: grid;
     grid-template-columns: auto 1fr;
