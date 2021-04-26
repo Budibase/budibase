@@ -1,15 +1,12 @@
 <script>
   import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
-  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let screenId
 
   let confirmDeleteDialog
-  let dropdown
-  let anchor
 
   $: screen = $allScreens.find((screen) => screen._id === screenId)
 
@@ -24,18 +21,13 @@
       notifications.error("Error deleting screen")
     }
   }
-
-  const openModal = () => {
-    confirmDeleteDialog.show()
-    dropdown.hide()
-  }
 </script>
 
-<ActionMenu bind:this={dropdown}>
-  <div slot="button" class="icon" on:click={dropdown.show}>
+<ActionMenu let:open let:closeOnClick>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={openModal}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
@@ -45,9 +37,3 @@
   okText="Delete Screen"
   onOk={deleteScreen}
 />
-
-<style>
-  .icon i {
-    font-size: 16px;
-  }
-</style>
