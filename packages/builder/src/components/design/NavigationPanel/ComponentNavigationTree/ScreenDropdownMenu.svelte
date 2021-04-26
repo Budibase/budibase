@@ -3,8 +3,7 @@
   import { store, allScreens } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let screenId
 
