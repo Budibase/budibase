@@ -16,6 +16,11 @@
   export const show = () => {
     dropdown.show()
   }
+
+  const closeOnClickWrapper = (cb) => {
+    dropdown.hide()
+    cb()
+  }
 </script>
 
 <div class="contents" use:getAnchor on:click={dropdown.show}>
@@ -23,7 +28,7 @@
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <Menu>
-    <slot />
+    <slot closeOnClick={closeOnClickWrapper} />
   </Menu>
 </Popover>
 
