@@ -3,7 +3,7 @@
   import { store, allScreens } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Icon, Popover } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let screenId
@@ -25,22 +25,20 @@
       notifications.error("Error deleting screen")
     }
   }
+
+  const openModal = () => {
+    confirmDeleteDialog.show()
+    dropdown.hide()
+  }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={() => dropdown.show()}>
+<ActionMenu bind:this={dropdown}>
+  <div slot="button" class="icon" on:click={dropdown.show}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover bind:this={dropdown} {anchor} align="left">
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()}
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Delete" on:click={openModal}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
