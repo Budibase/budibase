@@ -28,7 +28,8 @@ exports.getSettingsTemplateContext = async () => {
     ),
     [TemplateBindings.RESET_URL]: checkSlashesInUrl(`${URL}/reset`),
     [TemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
-    [TemplateBindings.DOCS_URL]: settings.docsUrl || "https://docs.budibase.com/",
+    [TemplateBindings.DOCS_URL]:
+      settings.docsUrl || "https://docs.budibase.com/",
     [TemplateBindings.LOGIN_URL]: checkSlashesInUrl(`${URL}/login`),
   }
 }

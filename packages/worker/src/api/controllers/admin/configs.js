@@ -30,7 +30,7 @@ exports.save = async function(ctx) {
   switch (type) {
     case Configs.SMTP:
       await email.verifyConfig(config)
-      break;
+      break
   }
 
   try {

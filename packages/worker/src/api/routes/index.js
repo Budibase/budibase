@@ -13,5 +13,5 @@ exports.routes = [
   authRoutes,
   appRoutes,
   templateRoutes,
-  emailRoutes
+  emailRoutes,
 ]
