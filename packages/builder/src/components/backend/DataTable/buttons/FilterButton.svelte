@@ -1,6 +1,6 @@
 <script>
   import { Button, Modal } from "@budibase/bbui"
-  import FilterPopover from "../popovers/FilterPopover.svelte"
+  import FilterModal from "../modals/FilterModal.svelte"
 
   export let view = {}
 
@@ -17,5 +17,5 @@
   Filter
 </Button>
 <Modal bind:this={modal}>
-  <FilterPopover {view} />
+  <FilterModal {view} />
 </Modal>
