@@ -32,11 +32,11 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown}>
+<ActionMenu bind:this={dropdown} let:closeOnClick >
   <div slot="button" class="icon" on:click={dropdown.show}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={showModal}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

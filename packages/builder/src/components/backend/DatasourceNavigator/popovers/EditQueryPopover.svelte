@@ -1,8 +1,7 @@
 <script>
-  import { notifications } from "@budibase/bbui"
-  import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Popover, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { queries } from "stores/backend"
 
   export let query
   
@@ -25,11 +24,11 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown}>
+<ActionMenu bind:this={dropdown} let:closeOnClick>
   <div slot="button" class="icon" on:click={dropdown.show}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={showModal}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

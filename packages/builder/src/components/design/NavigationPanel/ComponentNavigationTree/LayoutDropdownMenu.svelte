@@ -2,8 +2,7 @@
   import { store } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Icon, Popover, Modal, ModalContent, Input } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon, Modal, ModalContent, Input } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
 
   export let layout
@@ -35,25 +34,14 @@
   }
 </script>
 
-<div bind:this={anchor}>
-  <div class="icon" on:click={() => dropdown.show()}>
-    <Icon name="MoreSmallList" />
+<ActionMenu bind:this={dropdown} let:closeOnClick>
+  <div slot="button" class="icon" on:click={dropdown.show}>
+    <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover bind:this={dropdown} {anchor} align="left">
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-pencil-line"
-        title="Edit"
-        on:click={() => editLayoutNameModal.show()}
-      />
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()}
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Edit" on:click={closeOnClick(editLayoutNameModal.show)}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
