@@ -2,25 +2,13 @@
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import { Icon, Popover } from "@budibase/bbui"
-  import {
-    DropdownContainer,
-    DropdownItem,
-  } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let automation
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
   $: instanceId = $database._id
-
-  function showModal() {
-    dropdown.hide()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteAutomation() {
     await automationStore.actions.delete({
@@ -32,20 +20,15 @@
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+<ActionMenu let:open let:closeOnClick>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal}
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}
+    >Delete</MenuItem
+  >
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
