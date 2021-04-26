@@ -5,7 +5,9 @@ const { basicUser } = setup.structures
 const workerRequests = require("../../../utilities/workerRequests")
 
 jest.mock("../../../utilities/workerRequests", () => ({
-  getGlobalUsers: jest.fn(),
+  getGlobalUsers: jest.fn(() => {
+    return {}
+  }),
   saveGlobalUser: jest.fn(() => {
     const uuid = require("uuid/v4")
     return {

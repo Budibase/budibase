@@ -92,7 +92,7 @@ exports.setCookie = (ctx, value, name = "builder") => {
  * Utility function, simply calls setCookie with an empty string for value
  */
 exports.clearCookie = (ctx, name) => {
-  exports.setCookie(ctx, "", name)
+  exports.setCookie(ctx, null, name)
 }
 
 /**

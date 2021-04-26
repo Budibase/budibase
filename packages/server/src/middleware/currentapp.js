@@ -1,11 +1,9 @@
-const { getAppId, setCookie, getCookie, Cookies } = require("@budibase/auth")
+const { getAppId, setCookie, getCookie } = require("@budibase/auth").utils
+const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("../utilities/security/roles")
 const { getGlobalUsers } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
-const {
-  getGlobalIDFromUserMetadataID,
-  generateUserMetadataID,
-} = require("../db/utils")
+const { generateUserMetadataID } = require("../db/utils")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -30,8 +28,7 @@ module.exports = async (ctx, next) => {
       appCookie.roleId === BUILTIN_ROLE_IDS.PUBLIC)
   ) {
     // Different App ID means cookie needs reset, or if the same public user has logged in
-    const globalId = getGlobalIDFromUserMetadataID(ctx.user.userId)
-    const globalUser = await getGlobalUsers(ctx, requestAppId, globalId)
+    const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user._id)
     updateCookie = true
     appId = requestAppId
     if (globalUser.roles && globalUser.roles[requestAppId]) {
@@ -49,7 +46,7 @@ module.exports = async (ctx, next) => {
   ctx.appId = appId
   if (roleId) {
     ctx.roleId = roleId
-    const userId = ctx.user ? generateUserMetadataID(ctx.user.userId) : null
+    const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
     ctx.user = {
       ...ctx.user,
       // override userID with metadata one

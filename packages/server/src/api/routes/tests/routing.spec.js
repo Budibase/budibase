@@ -35,7 +35,11 @@ describe("/routing", () => {
       })
       const res = await request
         .get(`/api/routing/client`)
-        .set(await config.roleHeaders("basic@test.com", BUILTIN_ROLE_IDS.BASIC))
+        .set(await config.roleHeaders({
+          email: "basic@test.com",
+          roleId: BUILTIN_ROLE_IDS.BASIC,
+          builder: false
+        }))
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.routes).toBeDefined()
@@ -59,7 +63,11 @@ describe("/routing", () => {
       })
       const res = await request
         .get(`/api/routing/client`)
-        .set(await config.roleHeaders("basic@test.com", BUILTIN_ROLE_IDS.POWER))
+        .set(await config.roleHeaders({
+          email: "basic@test.com",
+          roleId: BUILTIN_ROLE_IDS.POWER,
+          builder: false,
+        }))
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.routes).toBeDefined()
