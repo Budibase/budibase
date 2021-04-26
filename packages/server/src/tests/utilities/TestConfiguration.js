@@ -1,5 +1,4 @@
 const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
-const jwt = require("jsonwebtoken")
 const env = require("../../environment")
 const {
   basicTable,
@@ -15,8 +14,12 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies } = require("@budibase/auth")
+const { Cookies } = require("@budibase/auth").constants
+const { jwt } = require("@budibase/auth").auth
+const { StaticDatabases } = require("@budibase/auth").db
+const CouchDB = require("../../db")
 
+const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
 
@@ -47,6 +50,7 @@ class TestConfiguration {
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
     request.user = { appId: this.appId }
+    request.query = {}
     request.request = {
       body: config,
     }
@@ -57,7 +61,27 @@ class TestConfiguration {
     return request.body
   }
 
+  async globalUser(id = GLOBAL_USER_ID, builder = true) {
+    const db = new CouchDB(StaticDatabases.GLOBAL.name)
+    let existing
+    try {
+      existing = await db.get(id)
+    } catch (err) {
+      existing = {}
+    }
+    const user = {
+      _id: id,
+      ...existing,
+      roles: {},
+    }
+    if (builder) {
+      user.builder = { global: true }
+    }
+    await db.put(user)
+  }
+
   async init(appName = "test_application") {
+    await this.globalUser()
     return this.createApp(appName)
   }
 
@@ -69,17 +93,14 @@ class TestConfiguration {
   }
 
   defaultHeaders() {
-    const user = {
-      userId: "ro_ta_user_us_uuid1",
-      builder: {
-        global: true,
-      },
+    const auth = {
+      userId: GLOBAL_USER_ID,
     }
     const app = {
       roleId: BUILTIN_ROLE_IDS.BUILDER,
       appId: this.appId,
     }
-    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const authToken = jwt.sign(auth, env.JWT_SECRET)
     const appToken = jwt.sign(app, env.JWT_SECRET)
     const headers = {
       Accept: "application/json",
@@ -104,14 +125,18 @@ class TestConfiguration {
     return headers
   }
 
-  async roleHeaders(email = EMAIL, roleId = BUILTIN_ROLE_IDS.ADMIN) {
+  async roleHeaders({
+    email = EMAIL,
+    roleId = BUILTIN_ROLE_IDS.ADMIN,
+    builder = false,
+  }) {
     let user
     try {
       user = await this.createUser(email, PASSWORD, roleId)
     } catch (err) {
       // allow errors here
     }
-    return this.login(email, PASSWORD, { roleId, userId: user._id })
+    return this.login(email, PASSWORD, { roleId, userId: user._id, builder })
   }
 
   async createApp(appName) {
@@ -282,7 +307,9 @@ class TestConfiguration {
     password = PASSWORD,
     roleId = BUILTIN_ROLE_IDS.POWER
   ) {
-    return this._req(
+    const globalId = `us_${Math.random()}`
+    await this.globalUser(globalId, roleId === BUILTIN_ROLE_IDS.BUILDER)
+    const user = await this._req(
       {
         email,
         password,
@@ -291,28 +318,34 @@ class TestConfiguration {
       null,
       controllers.user.createMetadata
     )
+    return {
+      ...user,
+      globalId,
+    }
   }
 
-  async login(email, password, { roleId, userId } = {}) {
-    if (!roleId) {
-      roleId = BUILTIN_ROLE_IDS.BUILDER
-    }
+  async login(email, password, { roleId, userId, builder } = {}) {
+    roleId = !roleId ? BUILTIN_ROLE_IDS.BUILDER : roleId
+    userId = !userId ? `us_uuid1` : userId
     if (!this.request) {
       throw "Server has not been opened, cannot login."
+    }
+    // make sure the user exists in the global DB
+    if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+      await this.globalUser(userId, builder)
     }
     if (!email || !password) {
       await this.createUser()
     }
     // have to fake this
-    const user = {
-      userId: userId || `us_uuid1`,
-      email: email || EMAIL,
+    const auth = {
+      userId,
     }
     const app = {
       roleId: roleId,
       appId: this.appId,
     }
-    const authToken = jwt.sign(user, env.JWT_SECRET)
+    const authToken = jwt.sign(auth, env.JWT_SECRET)
     const appToken = jwt.sign(app, env.JWT_SECRET)
 
     // returning necessary request headers

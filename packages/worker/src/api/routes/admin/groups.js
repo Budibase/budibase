@@ -1,7 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/admin/groups")
 const joiValidator = require("../../../middleware/joi-validator")
-const { authenticated } = require("@budibase/auth")
 const Joi = require("joi")
 
 const router = Router()
@@ -25,14 +24,9 @@ function buildGroupSaveValidation() {
 }
 
 router
-  .post(
-    "/api/admin/groups",
-    buildGroupSaveValidation(),
-    authenticated,
-    controller.save
-  )
-  .delete("/api/admin/groups/:id", authenticated, controller.destroy)
-  .get("/api/admin/groups", authenticated, controller.fetch)
-  .get("/api/admin/groups/:id", authenticated, controller.find)
+  .post("/api/admin/groups", buildGroupSaveValidation(), controller.save)
+  .get("/api/admin/groups", controller.fetch)
+  .delete("/api/admin/groups/:id", controller.destroy)
+  .get("/api/admin/groups/:id", controller.find)
 
 module.exports = router
