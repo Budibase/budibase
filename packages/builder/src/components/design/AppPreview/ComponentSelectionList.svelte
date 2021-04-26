@@ -1,14 +1,8 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import {
-    store,
-    currentAssetName,
-    selectedComponent,
-    currentAssetId,
-  } from "builderStore"
+  import { ActionMenu, ActionGroup, ActionButton, MenuItem, Icon } from "@budibase/bbui"
+  import { store, currentAssetName } from "builderStore"
+import { iterateeAry } from "lodash/fp/_mapping"
   import structure from "./componentStructure.json"
-  import { Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
 
@@ -19,7 +13,7 @@
 
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
-    structure.forEach(item => {
+    structure.forEach((item) => {
       if (typeof item === "string") {
         const def = definitions[`@budibase/standard-components/${item}`]
         if (def) {
@@ -39,50 +33,37 @@
     return enrichedStructure
   }
 
-  const onItemChosen = async (item, idx) => {
+  const onItemChosen = async (item, idx, open) => {
     if (item.isCategory) {
       // Select and open this category
       selectedIndex = idx
-      popover.show()
+      open()
     } else {
       // Add this component
       await store.actions.components.create(item.component)
-      popover.hide()
     }
   }
 </script>
 
-<div class="container">
+<ActionGroup>
   {#each enrichedStructure as item, idx}
-    <div
-      bind:this={anchors[idx]}
-      class="category"
-      data-cy={item.isCategory ? `category-${item.name}` : `component-${item.name}`}
-      on:click={() => onItemChosen(item, idx)}
-      class:active={idx === selectedIndex}>
-      {#if item.icon}<i class={item.icon} />{/if}
-      <span>{item.name}</span>
-      {#if item.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
-    </div>
+    <ActionMenu supressOpen={item.isCategory} let:open let:closeOnClick>
+      <ActionButton icon={item.icon} xs primary quiet slot="button" on:click={() => onItemChosen(item, idx, open)}>
+        {item.name}
+      </ActionButton>
+      {#each item.children || [] as item}
+        {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
+          <MenuItem
+            dataCy={`component-${item.name}`}
+            icon={item.icon}
+            on:click={closeOnClick(onItemChosen(item))}>
+            {item.name}
+          </MenuItem>
+        {/if}
+      {/each}
+    </ActionMenu>
   {/each}
-</div>
-<Popover
-  on:close={() => (selectedIndex = null)}
-  bind:this={popover}
-  {anchor}
-  align="left">
-  <DropdownContainer>
-    {#each enrichedStructure[selectedIndex].children as item}
-      {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
-        <DropdownItem
-          data-cy={`component-${item.name}`}
-          icon={item.icon}
-          title={item.name}
-          on:click={() => onItemChosen(item)} />
-      {/if}
-    {/each}
-  </DropdownContainer>
-</Popover>
+</ActionGroup>
 
 <style>
   .container {
