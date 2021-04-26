@@ -20,6 +20,7 @@ exports.EmailTemplates = {
   [EmailTemplatePurpose.STYLES]: readStaticFile(
     join(__dirname, "style.hbs")
   ),
+  [EmailTemplatePurpose.WELCOME]: readStaticFile(join(__dirname, "welcome.hbs")),
 }
 
 exports.addBaseTemplates = (templates, type = null) => {

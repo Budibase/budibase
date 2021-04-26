@@ -3,7 +3,7 @@ const controllers = require("./controllers")
 const supertest = require("supertest")
 const { jwt } = require("@budibase/auth").auth
 const { Cookies } = require("@budibase/auth").constants
-const { Configs } = require("../../../../constants")
+const { Configs, LOGO_URL } = require("../../../../constants")
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -26,6 +26,7 @@ class TestConfiguration {
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
     request.user = { appId: this.appId }
+    request.query = {}
     request.request = {
       body: config,
     }
@@ -62,18 +63,34 @@ class TestConfiguration {
     }
   }
 
+  async deleteConfig(type) {
+    try {
+      const cfg = await this._req(null,{
+        type,
+      }, controllers.config.find)
+      if (cfg) {
+        await this._req(null, {
+          id: cfg._id,
+          rev: cfg._rev,
+        }, controllers.config.destroy)
+      }
+    } catch (err) {}
+  }
+
   async saveSettingsConfig() {
+    await this.deleteConfig(Configs.SETTINGS)
     await this._req({
       type: Configs.SETTINGS,
       config: {
         platformUrl: "http://localhost:10000",
-        logoUrl: "http://localhost:10000/logo",
-        company: "TestCompany",
+        logoUrl: LOGO_URL,
+        company: "Budibase",
       }
     }, null, controllers.config.save)
   }
 
   async saveSmtpConfig() {
+    await this.deleteConfig(Configs.SMTP)
     await this._req({
       type: Configs.SMTP,
       config: {
@@ -81,6 +98,22 @@ class TestConfiguration {
         host: "smtptesthost.com",
         from: "testfrom@test.com",
         subject: "Hello!",
+      }
+    }, null, controllers.config.save)
+  }
+
+  async saveEtherealSmtpConfig() {
+    await this.deleteConfig(Configs.SMTP)
+    await this._req({
+      type: Configs.SMTP,
+      config: {
+        port: 587,
+        host: "smtp.ethereal.email",
+        secure: false,
+        auth: {
+          user: "don.bahringer@ethereal.email",
+          pass: "yCKSH8rWyUPbnhGYk9",
+        },
       }
     }, null, controllers.config.save)
   }

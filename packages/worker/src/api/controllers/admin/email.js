@@ -16,6 +16,7 @@ const TYPE = TemplateTypes.EMAIL
 const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.INVITATION,
   EmailTemplatePurpose.PASSWORD_RECOVERY,
+  EmailTemplatePurpose.WELCOME,
 ]
 
 async function buildEmail(purpose, email, user) {
