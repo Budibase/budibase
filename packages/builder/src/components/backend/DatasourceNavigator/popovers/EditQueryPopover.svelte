@@ -12,11 +12,6 @@
     dropdown?.hide()
   }
 
-  function showModal() {
-    hideEditor()
-    confirmDeleteDialog.show()
-  }
-
   async function deleteQuery() {
     await queries.delete(query)
     notifications.success("Query deleted")
@@ -24,8 +19,8 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown} let:closeOnClick>
-  <div slot="button" class="icon" on:click={dropdown.show}>
+<ActionMenu bind:this={dropdown} let:open let:closeOnClick>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>

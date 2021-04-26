@@ -26,16 +26,6 @@
   let templateScreens
   let willBeDeleted
 
-  function showEditor() {
-    editorModal.show()
-    dropdown?.hide()
-  }
-
-  function hideEditor() {
-    editorModal.hide()
-    dropdown?.hide()
-  }
-
   function showDeleteModal() {
     const screens = $allScreens
     templateScreens = screens.filter(
@@ -44,7 +34,6 @@
     willBeDeleted = ["All table data"].concat(
       templateScreens.map((screen) => `Screen ${screen.props._instanceName}`)
     )
-    hideEditor()
     confirmDeleteDialog.show()
   }
 
@@ -57,13 +46,13 @@
     if (wasSelectedTable._id === table._id) {
       $goto("./table")
     }
-    hideEditor()
+    editorModal.hide()
   }
 
   async function save() {
     await tables.save(table)
     notifications.success("Table renamed successfully")
-    hideEditor()
+    editorModal.hide()
   }
 
   function checkValid(evt) {
@@ -75,12 +64,12 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown}>
-  <div slot="button" class="icon" on:click={dropdown.show}>
+<ActionMenu bind:this={dropdown} let:open let:closeOnClick>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={showEditor}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={closeOnClick(editorModal.show)}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(showDeleteModal)}>Delete</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={editorModal}>

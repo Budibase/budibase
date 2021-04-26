@@ -28,7 +28,7 @@
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <Menu>
-    <slot closeOnClick={closeOnClickWrapper} />
+    <slot open={show} closeOnClick={closeOnClickWrapper} />
   </Menu>
 </Popover>
 
