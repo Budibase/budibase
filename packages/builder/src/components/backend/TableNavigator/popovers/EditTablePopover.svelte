@@ -9,17 +9,13 @@
     Icon,
     Modal,
     ModalContent,
-    Popover,
-    Button,
     Input,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let table
 
-  let anchor
   let editorModal
-  let dropdown
   let confirmDeleteDialog
   let error = ""
   let originalName = table.name
@@ -64,20 +60,24 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown} let:open let:closeOnClick>
+<ActionMenu let:open let:closeOnClick>
   <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={closeOnClick(editorModal.show)}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={closeOnClick(showDeleteModal)}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={closeOnClick(editorModal.show)}>Edit</MenuItem
+  >
+  <MenuItem icon="Delete" on:click={closeOnClick(showDeleteModal)}
+    >Delete</MenuItem
+  >
 </ActionMenu>
 
 <Modal bind:this={editorModal}>
   <ModalContent
-    title='Edit Table'
-    confirmText='Save'
+    title="Edit Table"
+    confirmText="Save"
     onConfirm={save}
-    disabled={table.name === originalName || error}>
+    disabled={table.name === originalName || error}
+  >
     <Input
       label="Table Name"
       thin

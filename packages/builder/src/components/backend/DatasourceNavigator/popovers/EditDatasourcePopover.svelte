@@ -4,21 +4,10 @@
   import { notifications } from "@budibase/bbui"
   import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let datasource
 
-  let dropdown
   let confirmDeleteDialog
-
-  function hideEditor() {
-    dropdown?.hide()
-  }
-
-  function showModal() {
-    hideEditor()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
@@ -28,11 +17,10 @@
     if (wasSelectedSource === datasource._id) {
       $goto("./datasource")
     }
-    hideEditor()
   }
 </script>
 
-<ActionMenu bind:this={dropdown} let:open let:closeOnClick >
+<ActionMenu let:open let:closeOnClick >
   <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
