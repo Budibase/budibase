@@ -1,12 +1,11 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { Icon, Popover } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let query
-
-  let anchor
+  
   let dropdown
   let confirmDeleteDialog
 
@@ -26,21 +25,13 @@
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+<ActionMenu bind:this={dropdown}>
+  <div slot="button" class="icon" on:click={dropdown.show}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal}
-        data-cy="delete-datasource"
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Delete" on:click={showModal}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Query"
