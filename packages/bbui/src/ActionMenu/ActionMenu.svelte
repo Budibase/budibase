@@ -1,6 +1,9 @@
 <script>
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
+
+  export let supressOpen = false
+
   let anchor
   let dropdown
 
@@ -23,7 +26,7 @@
   }
 </script>
 
-<div class="contents" use:getAnchor on:click={dropdown.show}>
+<div class="contents" use:getAnchor>
   <slot name="button" />
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
