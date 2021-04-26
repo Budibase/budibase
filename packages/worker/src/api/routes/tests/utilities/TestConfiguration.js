@@ -39,14 +39,18 @@ class TestConfiguration {
 
   async init() {
     // create a test user
-    await this._req({
-      email: "test@test.com",
-      password: "test",
-      _id: "us_uuid1",
-      builder: {
-        global: true,
-      }
-    }, null, controllers.users.save)
+    await this._req(
+      {
+        email: "test@test.com",
+        password: "test",
+        _id: "us_uuid1",
+        builder: {
+          global: true,
+        },
+      },
+      null,
+      controllers.users.save
+    )
   }
 
   defaultHeaders() {
@@ -57,65 +61,83 @@ class TestConfiguration {
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {
       Accept: "application/json",
-      Cookie: [
-        `${Cookies.Auth}=${authToken}`,
-      ],
+      Cookie: [`${Cookies.Auth}=${authToken}`],
     }
   }
 
   async deleteConfig(type) {
     try {
-      const cfg = await this._req(null,{
-        type,
-      }, controllers.config.find)
+      const cfg = await this._req(
+        null,
+        {
+          type,
+        },
+        controllers.config.find
+      )
       if (cfg) {
-        await this._req(null, {
-          id: cfg._id,
-          rev: cfg._rev,
-        }, controllers.config.destroy)
+        await this._req(
+          null,
+          {
+            id: cfg._id,
+            rev: cfg._rev,
+          },
+          controllers.config.destroy
+        )
       }
     } catch (err) {}
   }
 
   async saveSettingsConfig() {
     await this.deleteConfig(Configs.SETTINGS)
-    await this._req({
-      type: Configs.SETTINGS,
-      config: {
-        platformUrl: "http://localhost:10000",
-        logoUrl: LOGO_URL,
-        company: "Budibase",
-      }
-    }, null, controllers.config.save)
+    await this._req(
+      {
+        type: Configs.SETTINGS,
+        config: {
+          platformUrl: "http://localhost:10000",
+          logoUrl: LOGO_URL,
+          company: "Budibase",
+        },
+      },
+      null,
+      controllers.config.save
+    )
   }
 
   async saveSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
-    await this._req({
-      type: Configs.SMTP,
-      config: {
-        port: 12345,
-        host: "smtptesthost.com",
-        from: "testfrom@test.com",
-        subject: "Hello!",
-      }
-    }, null, controllers.config.save)
+    await this._req(
+      {
+        type: Configs.SMTP,
+        config: {
+          port: 12345,
+          host: "smtptesthost.com",
+          from: "testfrom@test.com",
+          subject: "Hello!",
+        },
+      },
+      null,
+      controllers.config.save
+    )
   }
 
   async saveEtherealSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
-    await this._req({
-      type: Configs.SMTP,
-      config: {
-        port: 587,
-        host: "smtp.ethereal.email",
-        secure: false,
-        auth: {
-          user: "don.bahringer@ethereal.email",
-          pass: "yCKSH8rWyUPbnhGYk9",
+    await this._req(
+      {
+        type: Configs.SMTP,
+        config: {
+          port: 587,
+          host: "smtp.ethereal.email",
+          secure: false,
+          auth: {
+            user: "don.bahringer@ethereal.email",
+            pass: "yCKSH8rWyUPbnhGYk9",
+          },
         },
-      }
-    }, null, controllers.config.save)
+      },
+      null,
+      controllers.config.save
+    )
   }
 }
 
