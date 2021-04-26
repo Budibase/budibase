@@ -3,15 +3,23 @@
   import { store, allScreens } from "builderStore"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Icon, Popover, Button, Input } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Modal,
+    ModalContent,
+    Popover,
+    Button,
+    Input,
+  } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let table
 
   let anchor
+  let editorModal
   let dropdown
-  let editing
   let confirmDeleteDialog
   let error = ""
   let originalName = table.name
@@ -19,15 +27,16 @@
   let willBeDeleted
 
   function showEditor() {
-    editing = true
+    editorModal.show()
+    dropdown?.hide()
   }
 
   function hideEditor() {
+    editorModal.hide()
     dropdown?.hide()
-    editing = false
   }
 
-  function showModal() {
+  function showDeleteModal() {
     const screens = $allScreens
     templateScreens = screens.filter(
       (screen) => screen.autoTableId === table._id
@@ -60,50 +69,35 @@
   function checkValid(evt) {
     const tableName = evt.target.value
     error =
-      originalName !== tableName
+      originalName === tableName
         ? `Table with name ${tableName} already exists. Please choose another name.`
         : ""
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+<ActionMenu bind:this={dropdown}>
+  <div slot="button" class="icon" on:click={dropdown.show}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover align="left" {anchor} bind:this={dropdown}>
-    {#if editing}
-      <div class="actions">
-        <h5>Edit Table</h5>
-        <Input
-          label="Table Name"
-          thin
-          bind:value={table.name}
-          on:input={checkValid}
-          {error}
-        />
-        <footer>
-          <Button secondary on:click={hideEditor}>Cancel</Button>
-          <Button primary disabled={error} on:click={save}>Save</Button>
-        </footer>
-      </div>
-    {:else}
-      <DropdownContainer>
-        <DropdownItem
-          icon="ri-edit-line"
-          data-cy="edit-table"
-          title="Edit"
-          on:click={showEditor}
-        />
-        <DropdownItem
-          icon="ri-delete-bin-line"
-          title="Delete"
-          on:click={showModal}
-          data-cy="delete-table"
-        />
-      </DropdownContainer>
-    {/if}
-  </Popover>
-</div>
+  <MenuItem icon="Edit" on:click={showEditor}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+</ActionMenu>
+
+<Modal bind:this={editorModal}>
+  <ModalContent
+    title='Edit Table'
+    confirmText='Save'
+    onConfirm={save}
+    disabled={table.name === originalName || error}>
+    <Input
+      label="Table Name"
+      thin
+      bind:value={table.name}
+      on:input={checkValid}
+      {error}
+    />
+  </ModalContent>
+</Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
