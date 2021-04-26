@@ -84,7 +84,9 @@ class TestConfiguration {
           controllers.config.destroy
         )
       }
-    } catch (err) {}
+    } catch (err) {
+      // don't need to handle error
+    }
   }
 
   async saveSettingsConfig() {
