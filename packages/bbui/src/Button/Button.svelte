@@ -23,15 +23,13 @@
   class:active
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
-  on:click|preventDefault
->
+  on:click|preventDefault>
   {#if icon}
     <svg
       class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
       focusable="false"
       aria-hidden="true"
-      aria-label={icon}
-    >
+      aria-label={icon}>
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
@@ -45,5 +43,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .active {
+    color: var(--spectrum-global-color-blue-600) !important;
   }
 </style>
