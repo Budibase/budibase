@@ -2,15 +2,20 @@
   import { store } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ActionMenu, MenuItem, Icon, Modal, ModalContent, Input } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Modal,
+    ModalContent,
+    Input,
+  } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
 
   export let layout
 
   let confirmDeleteDialog
   let editLayoutNameModal
-  let dropdown
-  let anchor
   let name = layout.name
 
   const deleteLayout = async () => {
@@ -34,12 +39,16 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown} let:closeOnClick>
-  <div slot="button" class="icon" on:click={dropdown.show}>
+<ActionMenu let:open let:closeOnClick>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={closeOnClick(editLayoutNameModal.show)}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={closeOnClick(editLayoutNameModal.show)}
+    >Edit</MenuItem
+  >
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}
+    >Delete</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog

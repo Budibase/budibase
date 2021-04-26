@@ -3,22 +3,16 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
-  import { ActionMenu, MenuItem, MenuSection, Icon, Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let component
 
   let confirmDeleteDialog
-  let dropdown
   let anchor
 
   $: definition = store.actions.components.getDefinition(component?._component)
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
-
-  const hideDropdown = () => {
-    dropdown.hide()
-  }
 
   const moveUpComponent = () => {
     const asset = get(currentAsset)
@@ -72,19 +66,38 @@
   }
 </script>
 
-<ActionMenu bind:this={dropdown}>
-  <div slot="button" class="icon" on:click={dropdown.show}>
+<ActionMenu let:closeOnClick let:open>
+  <div slot="button" class="icon" on:click={open}>
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}
+    >Delete</MenuItem
+  >
   <MenuItem icon="ChevronUp" on:click={moveUpComponent}>Move up</MenuItem>
   <MenuItem icon="ChevronDown" on:click={moveDownComponent}>Move down</MenuItem>
   <MenuItem icon="Duplicate" on:click={duplicateComponent}>Duplicate</MenuItem>
-  <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}>Cut</MenuItem>
-  <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}>Copy</MenuItem>
-  <MenuItem icon="LayersBringToFront" on:click={() => pasteComponent("above")} disabled={noPaste}>Paste above</MenuItem>
-  <MenuItem icon="LayersSendToBack" on:click={() => pasteComponent("below")} disabled={noPaste}>Paste below</MenuItem>
-  <MenuItem icon="ShowOneLayer" on:click={() => pasteComponent("inside")} disabled={noPaste || noChildrenAllowed}>Paste inside</MenuItem>
+  <MenuItem
+    icon="Cut"
+    on:click={closeOnClick(() => storeComponentForCopy(true))}>Cut</MenuItem
+  >
+  <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}
+    >Copy</MenuItem
+  >
+  <MenuItem
+    icon="LayersBringToFront"
+    on:click={closeOnClick(() => pasteComponent("above"))}
+    disabled={noPaste}>Paste above</MenuItem
+  >
+  <MenuItem
+    icon="LayersSendToBack"
+    on:click={closeOnClick(() => pasteComponent("below"))}
+    disabled={noPaste}>Paste below</MenuItem
+  >
+  <MenuItem
+    icon="ShowOneLayer"
+    on:click={closeOnClick(() => pasteComponent("inside"))}
+    disabled={noPaste || noChildrenAllowed}>Paste inside</MenuItem
+  >
 </ActionMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
