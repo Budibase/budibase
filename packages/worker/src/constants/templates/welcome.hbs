@@ -1,62 +1,45 @@
 <!-- Based on template: https://github.com/wildbit/postmark-templates/blob/master/templates/plain/welcome/content.html -->
-<span class="preheader">Thanks for trying out [Product Name]. We’ve pulled together some information and resources to help you get started.</span>
-<table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-  <tr>
-    <td align="center">
-      <table class="email-content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-        <tr>
-          <td class="email-masthead">
-            <a href="https://example.com" class="f-fallback email-masthead_name">
-              {{ company }}
-            </a>
-          </td>
-        </tr>
-        <!-- Email Body -->
-        <tr>
-          <td class="email-body" width="570" cellpadding="0" cellspacing="0">
-            <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
-              <!-- Body content -->
+<tr>
+  <td class="email-body" width="570" cellpadding="0" cellspacing="0">
+    <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+      <!-- Body content -->
+      <tr>
+        <td class="content-cell">
+          <div class="f-fallback">
+            <h1>Welcome, {{ email }}!</h1>
+            <p>Thanks for getting started with {{ company }}'s Budibase platform.</p>
+            <p>For reference, here's your login information:</p>
+            <table class="attributes" width="100%" cellpadding="0" cellspacing="0" role="presentation">
               <tr>
-                <td class="content-cell">
-                  <div class="f-fallback">
-                    <h1>Welcome, {{ email }}!</h1>
-                    <p>Thanks for getting started with {{ company }}'s Budibase platform.</p>
-                    <p>For reference, here's your login information:</p>
-                    <table class="attributes" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <td class="attributes_content">
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                      <td class="attributes_item">
+                        <span class="f-fallback">
+                          <strong>Login Page:</strong> <a href="{{ loginUrl }}">{{ loginUrl }}</a>
+                        </span>
+                      </td>
+                    </tr>
+                    {{#if request}}
                       <tr>
-                        <td class="attributes_content">
-                          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-                            <tr>
-                              <td class="attributes_item">
-                                <span class="f-fallback">
-                                  <strong>Login Page:</strong> <a href="{{ loginUrl }}">{{ loginUrl }}</a>
-                                </span>
-                              </td>
-                            </tr>
-                            {{#if request}}
-                              <tr>
-                                <td class="attributes_item">
-                                  <span class="f-fallback">
-                                    <strong>Username:</strong> {{ request.loginUsername }}
-                                  </span>
-                                </td>
-                              </tr>
-                            {{/if}}
-                          </table>
+                        <td class="attributes_item">
+                          <span class="f-fallback">
+                            <strong>Username:</strong> {{ request.loginUsername }}
+                          </span>
                         </td>
                       </tr>
-                    </table>
-                    <p>If you have any questions get in contact with your {{ company }}'s Budibase platform administration team.</p>
-                    <p>Thanks,
-                      <br>The {{ company }} Team</p>
-                    <p><strong>P.S.</strong> Need immediate help getting started? Check out our <a href="{{ docsUrl }}">help documentation</a>.</p>
-                  </div>
+                    {{/if}}
+                  </table>
                 </td>
               </tr>
             </table>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+            <p>If you have any questions get in contact with your {{ company }}'s Budibase platform administration team.</p>
+            <p>Thanks,
+              <br>The {{ company }} Team</p>
+            <p><strong>P.S.</strong> Need immediate help getting started? Check out our <a href="{{ docsUrl }}">help documentation</a>.</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
