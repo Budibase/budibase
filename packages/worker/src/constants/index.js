@@ -43,6 +43,8 @@ const TemplateBindings = {
   REQUEST: "request",
   DOCS_URL: "docsUrl",
   LOGIN_URL: "loginUrl",
+  CURRENT_YEAR: "currentYear",
+  CURRENT_DATE: "currentDate",
 }
 
 const TemplateMetadata = {

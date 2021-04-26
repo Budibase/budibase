@@ -31,5 +31,7 @@ exports.getSettingsTemplateContext = async () => {
     [TemplateBindings.DOCS_URL]:
       settings.docsUrl || "https://docs.budibase.com/",
     [TemplateBindings.LOGIN_URL]: checkSlashesInUrl(`${URL}/login`),
+    [TemplateBindings.CURRENT_DATE]: new Date().toISOString(),
+    [TemplateBindings.CURRENT_YEAR]: new Date().getFullYear(),
   }
 }
