@@ -47,7 +47,6 @@ exports.reset = async ctx => {
   try {
     const user = getGlobalUserByEmail(email)
     if (user) {
-
     }
   } catch (err) {
     // don't throw any kind of error to the user, this might give away something

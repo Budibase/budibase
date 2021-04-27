@@ -15,9 +15,9 @@ let CLIENT
  */
 function init() {
   return new Promise((resolve, reject) => {
-    const [ host, port ] = env.REDIS_URL.split(":")
+    const [host, port] = env.REDIS_URL.split(":")
     const opts = {
-      connectTimeout: CONNECT_TIMEOUT_MS
+      connectTimeout: CONNECT_TIMEOUT_MS,
     }
     if (CLUSTERED) {
       opts.redisOptions = {}
@@ -25,7 +25,7 @@ function init() {
       opts.redisOptions.password = env.REDIS_PASSWORD
       opts.slotsRefreshTimeout = SLOT_REFRESH_MS
       opts.dnsLookup = (address, callback) => callback(null, address)
-      CLIENT = new Redis.Cluster([ { port, host } ])
+      CLIENT = new Redis.Cluster([{ port, host }])
     } else {
       opts.password = env.REDIS_PASSWORD
       opts.port = port
@@ -58,7 +58,7 @@ function promisifyStream(stream) {
         outputKeys.add(key)
       })
     })
-    stream.on("error", (err) => {
+    stream.on("error", err => {
       reject(err)
     })
     stream.on("end", async () => {
@@ -69,10 +69,12 @@ function promisifyStream(stream) {
           getPromises.push(CLIENT.get(key))
         }
         const jsonArray = await Promise.all(getPromises)
-        resolve(keysArray.map(key => ({
-          key: removeDbPrefix(key),
-          value: JSON.parse(jsonArray.shift()),
-        })))
+        resolve(
+          keysArray.map(key => ({
+            key: removeDbPrefix(key),
+            value: JSON.parse(jsonArray.shift()),
+          }))
+        )
       } catch (err) {
         reject(err)
       }
@@ -91,20 +93,21 @@ class RedisWrapper {
   }
 
   async scan() {
-    const db = this._db, client = this._client
+    const db = this._db,
+      client = this._client
     let stream
     if (CLUSTERED) {
       let node = client.nodes("master")
-      stream = node[0].scanStream({match: db + "-*", count: 100})
-
+      stream = node[0].scanStream({ match: db + "-*", count: 100 })
     } else {
-      stream = client.scanStream({match: db + "-*", count: 100})
+      stream = client.scanStream({ match: db + "-*", count: 100 })
     }
     return promisifyStream(stream)
   }
 
   async get(key) {
-    const db = this._db, client = this._client
+    const db = this._db,
+      client = this._client
     let response = await client.get(addDbPrefix(db, key))
     // overwrite the prefixed key
     if (response != null && response.key) {
@@ -114,8 +117,9 @@ class RedisWrapper {
   }
 
   async store(key, value, expirySeconds = null) {
-    const db = this._db, client = this._client
-    if (typeof(value) === "object") {
+    const db = this._db,
+      client = this._client
+    if (typeof value === "object") {
       value = JSON.stringify(value)
     }
     const prefixedKey = addDbPrefix(db, key)
@@ -126,7 +130,8 @@ class RedisWrapper {
   }
 
   async delete(key) {
-    const db = this._db, client = this._client
+    const db = this._db,
+      client = this._client
     await client.del(addDbPrefix(db, key))
   }
 
