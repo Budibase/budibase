@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
+  import { Search, TextArea, Heading, Spacer, Label, Layout, DrawerContentWithSidebar } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -57,16 +57,15 @@
   }
 </script>
 
-<div class="drawer-contents">
-  <div class="container" data-cy="binding-dropdown-modal">
-    <div class="list">
-      <Search placeholder="Search" bind:value={search} />
-      <Spacer medium />
+<DrawerContentWithSidebar>
+  <Search placeholder="Search" bind:value={search} />
+      <svelte:fragment slot="sidebar">
+        <Spacer medium />
       {#if context}
         <Heading xs h3>Columns</Heading>
         <Spacer small />
         <ul>
-          {#each context.filter(context =>
+          {#each context.filter((context) =>
             context.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -80,7 +79,7 @@
         <Heading xs h3>Components</Heading>
         <Spacer small />
         <ul>
-          {#each instance.filter(instance =>
+          {#each instance.filter((instance) =>
             instance.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -93,7 +92,7 @@
       <Heading xs h3>Helpers</Heading>
       <Spacer small />
       <ul>
-        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
@@ -105,49 +104,24 @@
           </li>
         {/each}
       </ul>
-    </div>
-    <div class="text">
-      <TextArea
-        bind:getCaretPosition
-        bind:value
-        placeholder="Add text, or click the objects on the left to add them to the textbox." />
-      {#if !valid}
-        <p class="syntax-error">
-          Current Handlebars syntax is invalid, please check the guide
-          <a href="https://handlebarsjs.com/guide/">here</a>
-          for more details.
-        </p>
-      {/if}
-    </div>
-  </div>
-</div>
+      </svelte:fragment>
+      <svelte:fragment slot="main">
+        <TextArea
+          bind:getCaretPosition
+          bind:value
+          placeholder="Add text, or click the objects on the left to add them to the textbox."
+        />
+        {#if !valid}
+          <p class="syntax-error">
+            Current Handlebars syntax is invalid, please check the guide
+            <a href="https://handlebarsjs.com/guide/">here</a>
+            for more details.
+          </p>
+        {/if}
+      </svelte:fragment>
+</DrawerContentWithSidebar>
 
 <style>
-  .container {
-    height: 100%;
-    display: grid;
-    grid-template-columns: 260px 1fr;
-  }
-  .list {
-    border-right: var(--border-light);
-    padding: var(--spacing-l);
-    overflow: auto;
-  }
-
-  .list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .text {
-    padding: var(--spacing-l);
-    font-family: var(--font-sans);
-  }
-  .text :global(textarea) {
-    min-height: 200px;
-  }
-  .text :global(p) {
-    margin: 0;
-  }
   ul {
     list-style: none;
     padding-left: 0;
@@ -180,11 +154,6 @@
 
   li:active {
     color: var(--blue);
-  }
-
-  .drawer-contents {
-    height: 40vh;
-    overflow-y: auto;
   }
 
   .syntax-error {
