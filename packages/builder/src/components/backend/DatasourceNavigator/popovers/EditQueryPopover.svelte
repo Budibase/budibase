@@ -14,12 +14,10 @@
 </script>
 
 <ActionMenu>
-  <div slot="button" class="icon">
+  <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
-    >Delete</MenuItem
-  >
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

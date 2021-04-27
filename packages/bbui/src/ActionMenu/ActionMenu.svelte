@@ -29,7 +29,7 @@
 </script>
 
 <div class="contents" use:getAnchor on:click={openMenu}>
-  <slot name="button" />
+  <slot name="control" />
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <Menu>
