@@ -3,7 +3,7 @@
 </script>
 
 <label
-  class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel`}>
+  class={`spectrum-FieldLabel spectrum-FieldLabel--sizeL spectrum-Form-itemLabel`}>
   <slot />
 </label>
 
