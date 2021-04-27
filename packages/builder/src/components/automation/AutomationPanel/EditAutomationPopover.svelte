@@ -47,8 +47,4 @@
     justify-content: flex-end;
     align-items: center;
   }
-
-  div.icon i {
-    font-size: 16px;
-  }
 </style>

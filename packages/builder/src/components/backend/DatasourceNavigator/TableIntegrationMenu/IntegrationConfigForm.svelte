@@ -11,19 +11,21 @@
 
 <form>
   {#each Object.keys(schema) as configKey}
-    {#if schema[configKey].type === 'object'}
+    {#if schema[configKey].type === "object"}
       <Label>{capitalise(configKey)}</Label>
       <Spacer small />
       <KeyValueBuilder
         defaults={schema[configKey].default}
-        bind:object={integration[configKey]} />
+        bind:object={integration[configKey]}
+      />
     {:else}
       <div class="form-row">
         <Label>{capitalise(configKey)}</Label>
         <Input
           type={schema[configKey].type}
           on:change
-          bind:value={integration[configKey]} />
+          bind:value={integration[configKey]}
+        />
       </div>
     {/if}
   {/each}
