@@ -1,23 +1,19 @@
 <script>
   import "@spectrum-css/divider/dist/index-vars.css"
-  export let l = false
-  export let m = false
-  export let s = false
+  export let size = "M"
 
   export let vertical = false
   export let noMargin = false
   export let noGrid = false
-
-  $: useDefault = ![l, m, s].includes(true)
 </script>
 
 <hr
   class:noMargin
   class:noGrid
-  class:spectrum-Divider--sizeL={l}
-  class:spectrum-Divider--sizeM={m || useDefault}
-  class:spectrum-Divider--sizeS={s}
-  class="spectrum-Divider spectrum-Divider--{vertical ? 'vertical' : 'horizontal'} spectrum-Dialog-divider" />
+  class="spectrum-Divider spectrum-Divider--{vertical
+    ? 'vertical'
+    : 'horizontal'} spectrum-Dialog-divider spectrum-Divider--size{size}"
+/>
 
 <style>
   hr.noMargin {
