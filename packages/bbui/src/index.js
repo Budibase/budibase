@@ -29,7 +29,6 @@ export { default as ProgressCircle } from "./ProgressCircle/ProgressCircle.svelt
 export { default as Label } from "./Styleguide/Label.svelte"
 export { default as Layout } from "./Layout/Layout.svelte"
 export { default as Link } from "./Link/Link.svelte"
-export { default as Close } from "./Button/Close.svelte"
 export { default as Menu } from "./Menu/Menu.svelte"
 export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
