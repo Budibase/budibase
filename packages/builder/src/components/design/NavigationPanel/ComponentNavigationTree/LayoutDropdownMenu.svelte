@@ -39,14 +39,14 @@
   }
 </script>
 
-<ActionMenu let:open let:closeOnClick>
-  <div slot="button" class="icon" on:click={open}>
+<ActionMenu>
+  <div slot="button" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={closeOnClick(editLayoutNameModal.show)}
+  <MenuItem icon="Edit" on:click={editLayoutNameModal.show}
     >Edit</MenuItem
   >
-  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
     >Delete</MenuItem
   >
 </ActionMenu>

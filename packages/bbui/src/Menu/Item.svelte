@@ -1,12 +1,25 @@
 <script>
+  import { createEventDispatcher, getContext } from "svelte"
+
+  const dispatch = createEventDispatcher()
+  const actionMenu = getContext("actionMenu")
+
   export let dataCy
   export let icon = undefined
   export let disabled = undefined
+  export let noClose = false
+
+  const onClick = () => {
+    if (actionMenu && !noClose) {
+      actionMenu.hide()
+    }
+    dispatch("click")
+  }
 </script>
 
 <li
   data-cy={dataCy}
-  on:click|preventDefault
+  on:click|preventDefault={onClick}
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
