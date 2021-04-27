@@ -1,29 +1,25 @@
 <script>
-  import { Button, Popover } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import { permissions } from "stores/backend"
-  import ManageAccessPopover from "../popovers/ManageAccessPopover.svelte"
+  import ManageAccessModal from "../modals/ManageAccessModal.svelte"
 
   export let resourceId
 
-  let anchor
-  let dropdown
+  let modal
   let resourcePermissions
 
   async function openDropdown() {
     resourcePermissions = await permissions.forResource(resourceId)
-    dropdown.show()
+    modal.show()
   }
 </script>
 
-<div bind:this={anchor}>
-  <Button icon="LockClosed" primary size="S" quiet on:click={openDropdown}>
-    Manage Access
-  </Button>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <ManageAccessPopover
+<Button icon="LockClosed" primary size="S" quiet on:click={openDropdown}>
+  Manage Access
+</Button>
+<Modal bind:this={modal}>
+  <ManageAccessModal
     {resourceId}
     levels={$permissions}
-    permissions={resourcePermissions}
-    onClosed={dropdown.hide} />
-</Popover>
+    permissions={resourcePermissions} />
+</Modal>
