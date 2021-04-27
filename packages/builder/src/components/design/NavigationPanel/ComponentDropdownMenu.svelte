@@ -67,18 +67,21 @@
 </script>
 
 <ActionMenu>
-  <div slot="button" class="icon">
+  <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
-    >Delete</MenuItem
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}
+    >Move up</MenuItem
   >
-  <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>Move up</MenuItem>
-  <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}>Move down</MenuItem>
-  <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}>Duplicate</MenuItem>
-  <MenuItem
-    icon="Cut"
-    on:click={() => storeComponentForCopy(true)}>Cut</MenuItem
+  <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}
+    >Move down</MenuItem
+  >
+  <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}
+    >Duplicate</MenuItem
+  >
+  <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}
+    >Cut</MenuItem
   >
   <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}
     >Copy</MenuItem
