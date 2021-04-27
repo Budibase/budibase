@@ -1,25 +1,18 @@
 <script>
-  import { goto } from "@roxi/routify"
   import {
-    store,
-    currentAssetName,
-    selectedComponent,
-    currentAssetId,
-  } from "builderStore"
+    ActionMenu,
+    ActionGroup,
+    ActionButton,
+    MenuItem,
+  } from "@budibase/bbui"
+  import { store, currentAssetName } from "builderStore"
   import structure from "./componentStructure.json"
-  import { Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
 
-  let selectedIndex
-  let anchors = []
-  let popover
-  $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
-
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
-    structure.forEach(item => {
+    structure.forEach((item) => {
       if (typeof item === "string") {
         const def = definitions[`@budibase/standard-components/${item}`]
         if (def) {
@@ -43,77 +36,37 @@
     if (item.isCategory) {
       // Select and open this category
       selectedIndex = idx
-      popover.show()
     } else {
       // Add this component
       await store.actions.components.create(item.component)
-      popover.hide()
     }
   }
 </script>
 
-<div class="container">
+<ActionGroup>
   {#each enrichedStructure as item, idx}
-    <div
-      bind:this={anchors[idx]}
-      class="category"
-      data-cy={item.isCategory ? `category-${item.name}` : `component-${item.name}`}
-      on:click={() => onItemChosen(item, idx)}
-      class:active={idx === selectedIndex}>
-      {#if item.icon}<i class={item.icon} />{/if}
-      <span>{item.name}</span>
-      {#if item.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
-    </div>
+    <ActionMenu disabled={!item.isCategory}>
+      <ActionButton
+        icon={item.icon}
+        xs
+        primary
+        quiet
+        slot="control"
+        on:click={() => onItemChosen(item, idx)}
+      >
+        {item.name}
+      </ActionButton>
+      {#each item.children || [] as item}
+        {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
+          <MenuItem
+            dataCy={`component-${item.name}`}
+            icon={item.icon}
+            on:click={() => onItemChosen(item)}
+          >
+            {item.name}
+          </MenuItem>
+        {/if}
+      {/each}
+    </ActionMenu>
   {/each}
-</div>
-<Popover
-  on:close={() => (selectedIndex = null)}
-  bind:this={popover}
-  {anchor}
-  align="left">
-  <DropdownContainer>
-    {#each enrichedStructure[selectedIndex].children as item}
-      {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
-        <DropdownItem
-          data-cy={`component-${item.name}`}
-          icon={item.icon}
-          title={item.name}
-          on:click={() => onItemChosen(item)} />
-      {/if}
-    {/each}
-  </DropdownContainer>
-</Popover>
-
-<style>
-  .container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    min-height: 24px;
-    flex-wrap: wrap;
-    gap: var(--spacing-l);
-  }
-
-  .category {
-    color: var(--grey-7);
-    cursor: pointer;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-s);
-    font-size: var(--spectrum-global-dimension-font-size-75);
-  }
-  .category span {
-    font-weight: 500;
-    user-select: none;
-  }
-  .category.active,
-  .category:hover {
-    color: var(--ink);
-  }
-  .category i:not(:last-child) {
-    font-size: 16px;
-  }
-</style>
+</ActionGroup>

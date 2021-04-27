@@ -70,6 +70,7 @@
       bindings={bindableProperties}
       on:change={event => updateFieldValue(idx, event.detail)} />
     <ActionButton
+      s
       quiet
       icon="Delete"
       on:click={() => removeField(field[0])} />

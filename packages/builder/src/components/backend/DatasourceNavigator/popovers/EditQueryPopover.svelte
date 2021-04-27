@@ -1,46 +1,25 @@
 <script>
-  import { notifications } from "@budibase/bbui"
-  import { Icon, Popover } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { queries } from "stores/backend"
 
   export let query
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
-
-  function hideEditor() {
-    dropdown?.hide()
-  }
-
-  function showModal() {
-    hideEditor()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteQuery() {
     await queries.delete(query)
     notifications.success("Query deleted")
-    hideEditor()
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+<ActionMenu>
+  <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal}
-        data-cy="delete-datasource"
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Query"

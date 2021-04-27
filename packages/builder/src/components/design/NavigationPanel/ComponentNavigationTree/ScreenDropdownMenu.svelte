@@ -1,16 +1,12 @@
 <script>
   import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
-  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Icon, Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let screenId
 
   let confirmDeleteDialog
-  let dropdown
-  let anchor
 
   $: screen = $allScreens.find((screen) => screen._id === screenId)
 
@@ -27,20 +23,13 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={() => dropdown.show()}>
+<ActionMenu>
+  <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover bind:this={dropdown} {anchor} align="left">
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()}
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
@@ -48,9 +37,3 @@
   okText="Delete Screen"
   onOk={deleteScreen}
 />
-
-<style>
-  .icon i {
-    font-size: 16px;
-  }
-</style>
