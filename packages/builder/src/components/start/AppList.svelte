@@ -20,7 +20,7 @@
 
 <div class="root">
   <Heading m>Your Apps</Heading>
-  <Divider m />
+  <Divider size="M" />
   {#await promise}
     <div class="spinner-container">
       <Spinner size="30" />

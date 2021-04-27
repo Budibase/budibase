@@ -29,13 +29,13 @@
   <div class="content">
     {#if withArrow}
       <div class:opened class="icon arrow">
-        <Icon s name="ChevronRight" />
+        <Icon size="S" name="ChevronRight" />
       </div>
     {/if}
 
     <slot name="icon" />
     {#if icon}
-      <div class="icon"><Icon s name={icon} /></div>
+      <div class="icon"><Icon size="S" name={icon} /></div>
     {/if}
     <div class="text">{text}</div>
     {#if withActions}

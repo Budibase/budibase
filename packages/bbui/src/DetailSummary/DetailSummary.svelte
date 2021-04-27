@@ -20,7 +20,7 @@
   <div class="property-group-name" on:click={onHeaderClick}>
     <div class:thin class="name">{name}</div>
     <div class="icon">
-      <Icon s name={show ? 'Remove' : 'Add'} />
+      <Icon size="S" name={show ? "Remove" : "Add"} />
     </div>
   </div>
   <div class="property-panel" class:show>

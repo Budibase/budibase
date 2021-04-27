@@ -120,7 +120,7 @@
               on:click={() => deleteAction(index)}
               style="margin-left: auto;"
             >
-              <Icon s hoverable name="Close" />
+              <Icon size="S" hoverable name="Close" />
             </div>
           </div>
         {/each}
