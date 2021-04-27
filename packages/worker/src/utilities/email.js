@@ -1,11 +1,7 @@
 const nodemailer = require("nodemailer")
 const CouchDB = require("../db")
 const { StaticDatabases, determineScopedConfig } = require("@budibase/auth").db
-const {
-  EmailTemplatePurpose,
-  TemplateTypes,
-  Configs,
-} = require("../constants")
+const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
@@ -93,7 +89,6 @@ exports.sendEmail = async (email, purpose, { groupId, userId }) => {
   }
   return transport.sendMail(message)
 }
-
 
 exports.verifyConfig = async config => {
   const transport = createSMTPTransport(config)
