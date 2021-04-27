@@ -68,7 +68,7 @@
 
 <ActionMenu>
   <div slot="control" class="icon">
-    <Icon s hoverable name="MoreSmallList" />
+    <Icon size="S" hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
   <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}

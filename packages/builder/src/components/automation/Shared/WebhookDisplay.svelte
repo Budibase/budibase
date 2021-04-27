@@ -30,7 +30,7 @@
 <div>
   <Input readonly value={fullWebhookURL(value)} />
   <div class="icon" on:click={() => copyToClipboard()}>
-    <Icon s name="Copy" />
+    <Icon size="S" name="Copy" />
   </div>
 </div>
 

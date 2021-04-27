@@ -87,7 +87,7 @@
       class="icon"
       data-cy={`${key}-binding-button`}
       on:click={bindingDrawer.show}>
-      <Icon s name="FlashOn" />
+      <Icon size="S" name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
       <svelte:fragment slot="description">

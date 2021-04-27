@@ -6,26 +6,18 @@
   export let direction = "n"
   export let name = "Add"
   export let hidden = false
-  export let s = false
-  export let m = false
-  export let l = false
-  export let xl = false
+  export let size = "M"
   export let hoverable = false
   export let disabled = false
 
   $: rotation = directions.indexOf(direction) * 45
-  $: useDefault = ![s, m, l, xl].includes(true)
 </script>
 
 <svg
   on:click
   class:hoverable
   class:disabled
-  class:spectrum-Icon--sizeS={s}
-  class:spectrum-Icon--sizeM={m || useDefault}
-  class:spectrum-Icon--sizeL={l}
-  class:spectrum-Icon--sizeXL={xl}
-  class="spectrum-Icon"
+  class="spectrum-Icon spectrum-Icon--size{size}"
   focusable="false"
   aria-hidden={hidden}
   aria-label={name}
