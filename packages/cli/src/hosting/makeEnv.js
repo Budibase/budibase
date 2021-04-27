@@ -20,6 +20,7 @@ MINIO_ACCESS_KEY=${randomString.generate()}
 MINIO_SECRET_KEY=${randomString.generate()}
 COUCH_DB_PASSWORD=${randomString.generate()}
 COUCH_DB_USER=${randomString.generate()}
+REDIS_PASSWORD=${randomString.generate()}
 
 # This section contains variables that do not need to be altered under normal circumstances
 APP_PORT=4002

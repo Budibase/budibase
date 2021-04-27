@@ -2,36 +2,57 @@ const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { Configs } = require("../../constants")
 const CouchDB = require("../../db")
-const { clearCookie } = authPkg.utils
+const { sendEmail } = require("../../utilities/email")
+const { clearCookie, getGlobalUserByEmail } = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
+function authInternal(ctx, user, err = null) {
+  if (err) {
+    return ctx.throw(403, "Unauthorized")
+  }
+
+  const expires = new Date()
+  expires.setDate(expires.getDate() + 1)
+
+  if (!user) {
+    return ctx.throw(403, "Unauthorized")
+  }
+
+  ctx.cookies.set(Cookies.Auth, user.token, {
+    expires,
+    path: "/",
+    httpOnly: false,
+    overwrite: true,
+  })
+}
+
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
-    if (err) {
-      return ctx.throw(403, "Unauthorized")
-    }
-
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 1)
-
-    if (!user) {
-      return ctx.throw(403, "Unauthorized")
-    }
-
-    ctx.cookies.set(Cookies.Auth, user.token, {
-      expires,
-      path: "/",
-      httpOnly: false,
-      overwrite: true,
-    })
+    authInternal(ctx, err, user)
 
     delete user.token
 
     ctx.body = { user }
   })(ctx, next)
+}
+
+/**
+ * Reset the user password, used as part of a forgotten password flow.
+ */
+exports.reset = async ctx => {
+  const { email } = ctx.request.body
+  try {
+    const user = getGlobalUserByEmail(email)
+    if (user) {
+
+    }
+  } catch (err) {
+    // don't throw any kind of error to the user, this might give away something
+  }
+  ctx.body = {}
 }
 
 exports.logout = async ctx => {
@@ -69,23 +90,7 @@ exports.googleAuth = async (ctx, next) => {
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, user) => {
-      if (err) {
-        return ctx.throw(403, "Unauthorized")
-      }
-
-      const expires = new Date()
-      expires.setDate(expires.getDate() + 1)
-
-      if (!user) {
-        return ctx.throw(403, "Unauthorized")
-      }
-
-      ctx.cookies.set(Cookies.Auth, user.token, {
-        expires,
-        path: "/",
-        httpOnly: false,
-        overwrite: true,
-      })
+      authInternal(ctx, user, err)
 
       ctx.redirect("/")
     }
