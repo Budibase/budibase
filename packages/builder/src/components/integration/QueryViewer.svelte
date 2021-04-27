@@ -6,6 +6,7 @@
     Button,
     Body,
     Label,
+    Layout,
     Input,
     Heading,
     Spacer,
@@ -110,46 +111,33 @@
   }
 </script>
 
-<section class="config">
-  <Spacer extraLarge />
+<Layout gap="S" noPadding>
   <Heading m>Query {integrationInfo?.friendlyName}</Heading>
-  <Spacer extraLarge />
   <Divider />
-  <Spacer extraLarge />
   <Heading s>Config</Heading>
-  <Body s>Provide a name for your query and select its function.</Body>
-  <Spacer medium />
-  <div class="config-field">
-    <Label>Query Name</Label>
-    <Input bind:value={query.name} />
-  </div>
-  <Spacer medium />
-  {#if queryConfig}
+  <div class="config">
     <div class="config-field">
-      <Label>Function</Label>
-      <Select
-        bind:value={query.queryVerb}
-        options={Object.keys(queryConfig)}
-        getOptionLabel={(verb) =>
-          queryConfig[verb]?.displayName || capitalise(verb)}
-      />
+      <Label>Query Name</Label>
+      <Input bind:value={query.name} />
     </div>
-    <Spacer extraLarge />
+    {#if queryConfig}
+      <div class="config-field">
+        <Label>Function</Label>
+        <Select
+          bind:value={query.queryVerb}
+          options={Object.keys(queryConfig)}
+          getOptionLabel={(verb) =>
+            queryConfig[verb]?.displayName || capitalise(verb)}
+        />
+      </div>
+      <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+    {/if}
+  </div>
+  {#if shouldShowQueryConfig}
     <Divider />
-    <Spacer extraLarge />
-    <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
-    <Spacer extraLarge />
-    <Divider />
-  {/if}
-</section>
-
-{#if shouldShowQueryConfig}
-  <section>
-    <Spacer extraLarge />
     <div class="config">
       <Heading s>Fields</Heading>
       <Body s>Fill in the fields specific to this query.</Body>
-      <Spacer medium />
       <IntegrationQueryEditor
         {datasource}
         {query}
@@ -157,30 +145,27 @@
         schema={queryConfig[query.queryVerb]}
         bind:parameters
       />
-      <Spacer extraLarge />
       <Divider />
-      <Spacer extraLarge />
-      <div class="viewer-controls">
-        <Heading s>Results</Heading>
-        <div class="button-container">
-          <Button
-            secondary
-            thin
-            disabled={data.length === 0 || !query.name}
-            on:click={saveQuery}
-          >
-            Save Query
-          </Button>
-          <Spacer medium />
-          <Button thin secondary on:click={previewQuery}>Run Query</Button>
-        </div>
+    </div>
+    <div class="viewer-controls">
+      <Heading s>Results</Heading>
+      <div class="button-container">
+        <Button
+          secondary
+          thin
+          disabled={data.length === 0 || !query.name}
+          on:click={saveQuery}
+        >
+          Save Query
+        </Button>
+        <Spacer medium />
+        <Button thin secondary on:click={previewQuery}>Run Query</Button>
       </div>
-      <Spacer small />
+    </div>
       <Body s>
         Below, you can preview the results from your query and change the
         schema.
       </Body>
-      <Spacer medium />
       <section class="viewer">
         {#if data}
           <Tabs selected="JSON">
@@ -213,12 +198,14 @@
           </Tabs>
         {/if}
       </section>
-    </div>
-  </section>
-{/if}
-<Spacer extraLarge />
+  {/if}
+</Layout>
 
 <style>
+  .config {
+    display: grid;
+    grid-gap: var(--spacing-s);
+  }
   .config-field {
     display: grid;
     grid-template-columns: 20% 1fr;
@@ -234,10 +221,6 @@
 
   .button-container {
     display: flex;
-  }
-
-  .config {
-    margin-bottom: var(--spacing-s);
   }
 
   .delete {

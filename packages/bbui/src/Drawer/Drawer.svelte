@@ -42,7 +42,7 @@
         </div>
         <div class="buttons">
           <slot name="buttons" />
-          <ActionButton selected quiet icon="Close" on:click={hide} />
+          <ActionButton quiet icon="Close" on:click={hide} />
         </div>
       </header>
       <slot name="body" />

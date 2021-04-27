@@ -65,8 +65,8 @@
   {#each tabs as tab, idx}
   <div bind:this={anchors[idx]}>
     <ActionButton
-      size="S"
       quiet
+      s
       icon={tab.icon}
       disabled={tab.disabled}
       on:click={tab.disabled ? null : () => onChangeTab(idx)}>

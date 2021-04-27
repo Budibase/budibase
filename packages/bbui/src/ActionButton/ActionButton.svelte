@@ -3,14 +3,18 @@
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
-  /** @type {('S', 'M', 'L', 'XL')} Size of button */
-  export let size = "M"
   export let quiet = false
   export let emphasized = false
   export let selected = false
   export let longPressable = false
   export let disabled = false
   export let icon = ""
+
+  export let xl = false
+  export let l = false
+  export let m = false
+  export let s = false
+  $: useDefault = ![xl, l, m, s].includes(true)
 
   function longPress(element) {
     if (!longPressable) return
@@ -38,7 +42,11 @@
   class:spectrum-ActionButton--quiet={quiet}
   class:spectrum-ActionButton--emphasized={emphasized}
   class:is-selected={selected}
-  class="spectrum-ActionButton spectrum-ActionButton--size{size.toUpperCase()}"
+  class:spectrum-ActionButton--sizeS={s}
+  class:spectrum-ActionButton--sizeM={m || useDefault}
+  class:spectrum-ActionButton--sizeL={l}
+  class:spectrum-ActionButton--sizeXL={xl}
+  class="spectrum-ActionButton"
   {disabled}
   on:longPress
   on:click|preventDefault
@@ -54,7 +62,11 @@
   {/if}
   {#if icon}
     <svg
-      class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+      class:spectrum-Icon--sizeS={s}
+      class:spectrum-Icon--sizeM={m || useDefault}
+      class:spectrum-Icon--sizeL={l}
+      class:spectrum-Icon--sizeXL={xl}
+      class="spectrum-Icon"
       focusable="false"
       aria-hidden="true"
       aria-label={icon}

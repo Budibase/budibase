@@ -29,7 +29,7 @@
   <Heading s>{name}</Heading>
   <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
-    <ActionButton text medium blue on:click={() => $goto(`/builder/${_id}`)}>
+    <ActionButton on:click={() => $goto(`/builder/${_id}`)}>
       Open
       {name}
       →

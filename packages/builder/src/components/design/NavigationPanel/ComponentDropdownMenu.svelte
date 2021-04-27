@@ -3,22 +3,16 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
-  import { Icon, Popover } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let component
 
   let confirmDeleteDialog
-  let dropdown
   let anchor
 
   $: definition = store.actions.components.getDefinition(component?._component)
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
-
-  const hideDropdown = () => {
-    dropdown.hide()
-  }
 
   const moveUpComponent = () => {
     const asset = get(currentAsset)
@@ -72,62 +66,42 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={dropdown.show}><Icon hoverable name="MoreSmallList" /></div>
-  <Popover bind:this={dropdown} width="170px" {anchor} align="left">
-    <DropdownContainer on:click={hideDropdown}>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()}
-      />
-      <DropdownItem
-        icon="ri-arrow-up-line"
-        title="Move up"
-        on:click={moveUpComponent}
-      />
-      <DropdownItem
-        icon="ri-arrow-down-line"
-        title="Move down"
-        on:click={moveDownComponent}
-      />
-      <DropdownItem
-        icon="ri-repeat-one-line"
-        title="Duplicate"
-        on:click={duplicateComponent}
-      />
-      <DropdownItem
-        icon="ri-scissors-cut-line"
-        title="Cut"
-        on:click={() => storeComponentForCopy(true)}
-      />
-      <DropdownItem
-        icon="ri-file-copy-line"
-        title="Copy"
-        on:click={() => storeComponentForCopy(false)}
-      />
-      <hr class="hr-style" />
-      <DropdownItem
-        icon="ri-insert-row-top"
-        title="Paste above"
-        disabled={noPaste}
-        on:click={() => pasteComponent("above")}
-      />
-      <DropdownItem
-        icon="ri-insert-row-bottom"
-        title="Paste below"
-        disabled={noPaste}
-        on:click={() => pasteComponent("below")}
-      />
-      <DropdownItem
-        icon="ri-insert-column-right"
-        title="Paste inside"
-        disabled={noPaste || noChildrenAllowed}
-        on:click={() => pasteComponent("inside")}
-      />
-    </DropdownContainer>
-  </Popover>
-</div>
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon s hoverable name="MoreSmallList" />
+  </div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}
+    >Move up</MenuItem
+  >
+  <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}
+    >Move down</MenuItem
+  >
+  <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}
+    >Duplicate</MenuItem
+  >
+  <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}
+    >Cut</MenuItem
+  >
+  <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}
+    >Copy</MenuItem
+  >
+  <MenuItem
+    icon="LayersBringToFront"
+    on:click={() => pasteComponent("above")}
+    disabled={noPaste}>Paste above</MenuItem
+  >
+  <MenuItem
+    icon="LayersSendToBack"
+    on:click={() => pasteComponent("below")}
+    disabled={noPaste}>Paste below</MenuItem
+  >
+  <MenuItem
+    icon="ShowOneLayer"
+    on:click={() => pasteComponent("inside")}
+    disabled={noPaste || noChildrenAllowed}>Paste inside</MenuItem
+  >
+</ActionMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"

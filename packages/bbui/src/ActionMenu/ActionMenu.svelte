@@ -1,6 +1,10 @@
 <script>
+  import { setContext } from "svelte"
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
+
+  export let disabled = false
+
   let anchor
   let dropdown
 
@@ -16,10 +20,16 @@
   export const show = () => {
     dropdown.show()
   }
+
+  const openMenu = () => {
+    if (!disabled) show()
+  }
+
+  setContext("actionMenu", { show, hide })
 </script>
 
-<div class="contents" use:getAnchor on:click={dropdown.show}>
-  <slot name="button" />
+<div class="contents" use:getAnchor on:click={openMenu}>
+  <slot name="control" />
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <Menu>
