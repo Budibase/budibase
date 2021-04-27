@@ -1,14 +1,13 @@
 <script>
   import { roles, permissions as permissionsStore } from "stores/backend"
   import {
-    Button,
     Label,
     Input,
     Select,
     Spacer,
     notifications,
-    Heading,
     Body,
+    ModalContent,
   } from "@budibase/bbui"
   import { capitalise } from "../../../../helpers"
 
@@ -31,12 +30,8 @@
   }
 </script>
 
-<div class="popover">
-  <Heading s>Who Can Access This Data?</Heading>
-  <div class="note">
-    <Body s>Specify the minimum access level role for this data.</Body>
-  </div>
-  <Spacer large />
+<ModalContent title="Manage Access" showCancelButton={false} confirmText="Done">
+  <Body s>Specify the minimum access level role for this data.</Body>
   <div class="row">
     <Label extraSmall grey>Level</Label>
     <Label extraSmall grey>Role</Label>
@@ -50,41 +45,12 @@
         getOptionValue={x => x._id} />
     {/each}
   </div>
-
-  <Spacer large />
-
-  <div class="footer">
-    <Button secondary on:click={onClosed}>Cancel</Button>
-  </div>
-</div>
+</ModalContent>
 
 <style>
-  .popover {
-    display: grid;
-    width: 400px;
-    padding: var(--spacing-xl);
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  .footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-    margin-top: var(--spacing-l);
-  }
-
   .row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-s);
-  }
-
-  .note {
-    margin-top: 10px;
-    margin-bottom: 0;
   }
 </style>

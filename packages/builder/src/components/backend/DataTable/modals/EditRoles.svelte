@@ -21,7 +21,7 @@
 
   // Changes the selected role
   const changeRole = event => {
-    const id = event?.target?.value
+    const id = event?.detail
     const role = $roles.find(role => role._id === id)
     if (role) {
       selectedRole = {
@@ -94,42 +94,34 @@
     secondary
     label="Role"
     value={selectedRoleId}
-    on:change={changeRole}>
-    <option value="">Create new role</option>
-    {#each $roles as role}
-      <option value={role._id}>{role.name}</option>
-    {/each}
-  </Select>
+    on:change={changeRole}
+    options={$roles}
+    placeholder="Create new role"
+    getOptionValue={role => role._id}
+    getOptionLabel={role => role.name} />
   {#if selectedRole}
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      thin
       disabled={builtInRoles.includes(selectedRole.name)} />
     <Select
-      thin
-      secondary
       label="Inherits Role"
-      bind:value={selectedRole.inherits}>
-      <option value="">None</option>
-      {#each otherRoles as role}
-        <option value={role._id}>{role.name}</option>
-      {/each}
-    </Select>
+      bind:value={selectedRole.inherits}
+      options={otherRoles}
+      getOptionValue={role => role._id}
+      getOptionLabel={role => role.name}
+      placeholder="None" />
     <Select
-      thin
-      secondary
       label="Base Permissions"
-      bind:value={selectedRole.permissionId}>
-      <option value="">Choose permissions</option>
-      {#each basePermissions as basePerm}
-        <option value={basePerm._id}>{basePerm.name}</option>
-      {/each}
-    </Select>
+      bind:value={selectedRole.permissionId}
+      options={basePermissions}
+      getOptionValue={x => x._id}
+      getOptionLabel={x => x.name}
+      placeholder="Choose permissions" />
   {/if}
   <div slot="footer">
     {#if !isCreating}
-      <Button red on:click={deleteRole}>Delete</Button>
+      <Button warning on:click={deleteRole}>Delete</Button>
     {/if}
   </div>
 </ModalContent>

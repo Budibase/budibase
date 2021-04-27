@@ -1,7 +1,16 @@
 <script>
-  import { Button, Input, Select, DatePicker } from "@budibase/bbui"
+  import {
+    Button,
+    Input,
+    Body,
+    Select,
+    DatePicker,
+    ModalContent,
+    Label,
+    notifications,
+    Icon,
+  } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import analytics from "analytics"
 
   const CONDITIONS = [
@@ -55,7 +64,6 @@
   function saveView() {
     views.save(view)
     notifications.success(`View ${view.name} saved.`)
-    onClosed()
     analytics.captureEvent("Added View Filter", {
       filters: JSON.stringify(view.filters),
     })
@@ -67,7 +75,7 @@
   }
 
   function addFilter() {
-    view.filters.push({})
+    view.filters.push({ conjunction: "AND" })
     view.filters = view.filters
   }
 
@@ -98,9 +106,8 @@
     // reset if type changed
     if (
       filter.key &&
-      ev.target.value &&
-      viewTable.schema[filter.key].type !==
-        viewTable.schema[ev.target.value].type
+      ev.detail &&
+      viewTable.schema[filter.key].type !== viewTable.schema[ev.detail].type
     ) {
       filter.value = ""
     }
@@ -110,17 +117,21 @@
   const getOptionValue = x => x.key
 </script>
 
-<div class="actions">
-  <h5>Filter</h5>
+<ModalContent
+  title="Filter"
+  confirmText="Save"
+  onConfirm={saveView}
+  size="large">
   {#if view.filters.length}
     <div class="input-group-row">
       {#each view.filters as filter, idx}
         {#if idx === 0}
-          <p>Where</p>
+          <Label>Where</Label>
         {:else}
           <Select
             bind:value={filter.conjunction}
             options={CONJUNCTIONS}
+            placeholder={null}
             {getOptionLabel}
             {getOptionValue} />
         {/if}
@@ -152,61 +163,22 @@
             placeholder={filter.key || fields[0]}
             bind:value={filter.value} />
         {/if}
-        <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
+        <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
       {/each}
     </div>
+  {:else}
+    <Body s>Add a filter to get started.</Body>
   {/if}
-  <div class="footer">
-    <div class="add-filter">
-      <Button text on:click={addFilter}>Add Filter</Button>
-    </div>
-    <div class="buttons">
-      <Button secondary on:click={onClosed}>Cancel</Button>
-      <Button cta on:click={saveView}>Save</Button>
-    </div>
+  <div slot="footer">
+    <Button secondary on:click={addFilter}>Add Filter</Button>
   </div>
-</div>
+</ModalContent>
 
 <style>
-  .actions {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    padding: var(--spacing-xl);
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-
-  .ri-close-circle-fill {
-    cursor: pointer;
-  }
-
   .input-group-row {
     display: grid;
-    grid-template-columns: minmax(50px, auto) 1fr 1fr 1fr 15px;
+    grid-template-columns: minmax(70px, auto) 1fr 1fr 1fr 15px;
     gap: var(--spacing-s);
     align-items: center;
-  }
-
-  p {
-    margin: 0;
-    font-size: var(--font-size-xs);
-  }
-
-  .add-filter {
-    margin-right: 16px;
   }
 </style>
