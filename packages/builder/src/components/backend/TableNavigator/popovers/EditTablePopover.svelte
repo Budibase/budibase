@@ -60,13 +60,13 @@
   }
 </script>
 
-<ActionMenu let:open let:closeOnClick>
-  <div slot="button" class="icon" on:click={open}>
+<ActionMenu>
+  <div slot="button" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={closeOnClick(editorModal.show)}>Edit</MenuItem
+  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem
   >
-  <MenuItem icon="Delete" on:click={closeOnClick(showDeleteModal)}
+  <MenuItem icon="Delete" on:click={showDeleteModal}
     >Delete</MenuItem
   >
 </ActionMenu>

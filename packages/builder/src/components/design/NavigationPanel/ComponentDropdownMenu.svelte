@@ -66,36 +66,36 @@
   }
 </script>
 
-<ActionMenu let:closeOnClick let:open>
-  <div slot="button" class="icon" on:click={open}>
+<ActionMenu>
+  <div slot="button" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={closeOnClick(confirmDeleteDialog.show)}
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
     >Delete</MenuItem
   >
-  <MenuItem icon="ChevronUp" on:click={moveUpComponent}>Move up</MenuItem>
-  <MenuItem icon="ChevronDown" on:click={moveDownComponent}>Move down</MenuItem>
-  <MenuItem icon="Duplicate" on:click={duplicateComponent}>Duplicate</MenuItem>
+  <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>Move up</MenuItem>
+  <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}>Move down</MenuItem>
+  <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}>Duplicate</MenuItem>
   <MenuItem
     icon="Cut"
-    on:click={closeOnClick(() => storeComponentForCopy(true))}>Cut</MenuItem
+    on:click={() => storeComponentForCopy(true)}>Cut</MenuItem
   >
   <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}
     >Copy</MenuItem
   >
   <MenuItem
     icon="LayersBringToFront"
-    on:click={closeOnClick(() => pasteComponent("above"))}
+    on:click={() => pasteComponent("above")}
     disabled={noPaste}>Paste above</MenuItem
   >
   <MenuItem
     icon="LayersSendToBack"
-    on:click={closeOnClick(() => pasteComponent("below"))}
+    on:click={() => pasteComponent("below")}
     disabled={noPaste}>Paste below</MenuItem
   >
   <MenuItem
     icon="ShowOneLayer"
-    on:click={closeOnClick(() => pasteComponent("inside"))}
+    on:click={() => pasteComponent("inside")}
     disabled={noPaste || noChildrenAllowed}>Paste inside</MenuItem
   >
 </ActionMenu>

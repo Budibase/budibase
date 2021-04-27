@@ -1,7 +1,6 @@
 <script>
-  import { ActionMenu, ActionGroup, ActionButton, MenuItem, Icon } from "@budibase/bbui"
+  import { ActionMenu, ActionGroup, ActionButton, MenuItem } from "@budibase/bbui"
   import { store, currentAssetName } from "builderStore"
-import { iterateeAry } from "lodash/fp/_mapping"
   import structure from "./componentStructure.json"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
@@ -37,7 +36,6 @@ import { iterateeAry } from "lodash/fp/_mapping"
     if (item.isCategory) {
       // Select and open this category
       selectedIndex = idx
-      open()
     } else {
       // Add this component
       await store.actions.components.create(item.component)
@@ -47,8 +45,8 @@ import { iterateeAry } from "lodash/fp/_mapping"
 
 <ActionGroup>
   {#each enrichedStructure as item, idx}
-    <ActionMenu supressOpen={item.isCategory} let:open let:closeOnClick>
-      <ActionButton icon={item.icon} xs primary quiet slot="button" on:click={() => onItemChosen(item, idx, open)}>
+    <ActionMenu disabled={!item.isCategory}>
+      <ActionButton icon={item.icon} xs primary quiet slot="button" on:click={() => onItemChosen(item, idx)}>
         {item.name}
       </ActionButton>
       {#each item.children || [] as item}
@@ -56,7 +54,7 @@ import { iterateeAry } from "lodash/fp/_mapping"
           <MenuItem
             dataCy={`component-${item.name}`}
             icon={item.icon}
-            on:click={closeOnClick(onItemChosen(item))}>
+            on:click={() => onItemChosen(item)}>
             {item.name}
           </MenuItem>
         {/if}
