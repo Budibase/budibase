@@ -46,7 +46,7 @@
 <ActionGroup>
   {#each enrichedStructure as item, idx}
     <ActionMenu disabled={!item.isCategory}>
-      <ActionButton icon={item.icon} xs primary quiet slot="button" on:click={() => onItemChosen(item, idx)}>
+      <ActionButton icon={item.icon} size="XS" primary quiet slot="button" on:click={() => onItemChosen(item, idx)}>
         {item.name}
       </ActionButton>
       {#each item.children || [] as item}
