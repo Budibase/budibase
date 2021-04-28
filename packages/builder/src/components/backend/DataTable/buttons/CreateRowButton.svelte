@@ -1,16 +1,16 @@
 <script>
-  import { Button, Icon, Modal } from "@budibase/bbui"
+  import { ActionButton, Modal } from "@budibase/bbui"
   import CreateEditRow from "../modals/CreateEditRow.svelte"
 
   export let modalContentComponent = CreateEditRow
-  export let title = "Create New Row"
+  export let title = "Create row"
 
   let modal
 </script>
 
-<Button icon="Add" primary size="S" quiet on:click={modal.show}>
+<ActionButton icon="TableRowAddBottom" size="S" quiet on:click={modal.show}>
   {title}
-</Button>
+</ActionButton>
 <Modal bind:this={modal}>
   <svelte:component this={modalContentComponent} />
 </Modal>
