@@ -3,6 +3,10 @@ const database = require("../db")
 const { getCookie, clearCookie } = require("../utils")
 const { StaticDatabases } = require("../db/utils")
 
+function makeRegex() {
+
+}
+
 module.exports = (noAuthPatterns = []) => {
   const regex = new RegExp(noAuthPatterns.join("|"))
   return async (ctx, next) => {
