@@ -27,7 +27,6 @@
 
 <div class="apps-card">
   <Heading s>{name}</Heading>
-  <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
     <ActionButton on:click={() => $goto(`/builder/${_id}`)}>
       Open
@@ -58,6 +57,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    margin-top: var(--spacing-m);
   }
 
   i {
