@@ -1,7 +1,7 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Icon, Button, Popover, Spacer } from "@budibase/bbui"
+  import { Icon, Button, Popover, Layout, DrawerContent } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
 
@@ -68,14 +68,13 @@
   }
 </script>
 
-<div class="actions-container">
-  <div class="actions-list">
-    <div>
+<DrawerContent>
+  <div class="actions-list" slot="sidebar">
+    <Layout>
       <div bind:this={addActionButton}>
         <Button wide secondary on:click={addActionDropdown.show}>
           Add Action
         </Button>
-        <Spacer small />
       </div>
       <Popover
         bind:this={addActionDropdown}
@@ -90,44 +89,44 @@
           {/each}
         </div>
       </Popover>
-    </div>
 
-    {#if actions && actions.length > 0}
-      <div
-        class="action-dnd-container"
-        use:dndzone={{
-          items: actions,
-          flipDurationMs,
-          dropTargetStyle: { outline: "none" },
-        }}
-        on:consider={handleDndConsider}
-        on:finalize={handleDndFinalize}
-      >
-        {#each actions as action, index (action.id)}
-          <div
-            class="action-container"
-            animate:flip={{ duration: flipDurationMs }}
-          >
+      {#if actions && actions.length > 0}
+        <div
+          class="action-dnd-container"
+          use:dndzone={{
+            items: actions,
+            flipDurationMs,
+            dropTargetStyle: { outline: "none" },
+          }}
+          on:consider={handleDndConsider}
+          on:finalize={handleDndFinalize}
+        >
+          {#each actions as action, index (action.id)}
             <div
-              class="action-header"
-              class:selected={action === selectedAction}
-              on:click={selectAction(action)}
+              class="action-container"
+              animate:flip={{ duration: flipDurationMs }}
             >
-              {index + 1}.
-              {action[EVENT_TYPE_KEY]}
+              <div
+                class="action-header"
+                class:selected={action === selectedAction}
+                on:click={selectAction(action)}
+              >
+                {index + 1}.
+                {action[EVENT_TYPE_KEY]}
+              </div>
+              <div
+                on:click={() => deleteAction(index)}
+                style="margin-left: auto;"
+              >
+                <Icon size="S" hoverable name="Close" />
+              </div>
             </div>
-            <div
-              on:click={() => deleteAction(index)}
-              style="margin-left: auto;"
-            >
-              <Icon size="S" hoverable name="Close" />
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/if}
+          {/each}
+        </div>
+      {/if}
+    </Layout>
   </div>
-  <div class="action-config">
+  <Layout>
     {#if selectedAction}
       <div class="selected-action-container">
         <svelte:component
@@ -136,15 +135,15 @@
         />
       </div>
     {/if}
-  </div>
-</div>
+  </Layout>
+</DrawerContent>
 
 <style>
   .action-header {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-top: var(--spacing-m);
+    margin-top: var(--spacing-s);
   }
 
   .action-header {
@@ -160,11 +159,6 @@
     color: var(--ink);
   }
 
-  .actions-list {
-    border-right: var(--border-light);
-    padding: var(--spacing-l);
-  }
-
   .available-action {
     padding: var(--spacing-s);
     font-size: var(--font-size-xs);
@@ -175,16 +169,6 @@
     background: var(--grey-2);
   }
 
-  .actions-container {
-    height: 40vh;
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-auto-flow: column;
-    min-height: 0;
-    padding-top: 0;
-    overflow-y: auto;
-  }
-
   .action-container {
     border-bottom: 1px solid var(--grey-1);
     display: flex;
@@ -192,10 +176,6 @@
   }
   .action-container:last-child {
     border-bottom: none;
-  }
-
-  .selected-action-container {
-    padding: var(--spacing-l);
   }
 
   i:hover {

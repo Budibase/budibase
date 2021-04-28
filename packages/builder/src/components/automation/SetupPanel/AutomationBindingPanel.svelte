@@ -1,6 +1,12 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Input, TextArea, Heading, Layout } from "@budibase/bbui"
+  import {
+    Input,
+    TextArea,
+    Heading,
+    Layout,
+    DrawerContent,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
@@ -44,8 +50,8 @@
   }
 </script>
 
-<div class="container">
-  <div class="list">
+<DrawerContent>
+  <div slot="sidebar" class="list">
     <Layout>
       <div class="section">
         <Heading s h3>Available bindings</Heading>
@@ -98,16 +104,9 @@
       </p>
     {/if}
   </div>
-</div>
+</DrawerContent>
 
 <style>
-  .container {
-    height: 40vh;
-    overflow-y: auto;
-    display: grid;
-    grid-template-columns: 290px 1fr;
-  }
-
   .list {
     grid-gap: var(--spacing-s);
     border-right: var(--border-light);
