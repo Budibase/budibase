@@ -141,15 +141,15 @@
   li {
     display: flex;
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-7);
     padding: var(--spacing-m);
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
-    border-radius: var(--spacing-s);
-    border: var(--border-light);
+    border-top: var(--border-light);
     border-width: 1px 0 1px 0;
+    border-radius: 4px;
   }
 
   pre,

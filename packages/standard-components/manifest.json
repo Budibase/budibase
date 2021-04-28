@@ -101,8 +101,8 @@
     }
   },
   "stackedlist": {
-    "name": "TaskList",
-    "icon": "ri-archive-drawer-line",
+    "name": "Stacked List",
+    "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
     "styleable": true,
     "settings": [
