@@ -9,7 +9,9 @@
 
   let unsaved = false
 
-  $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
+  $: datasource = $datasources.list.find(
+    (ds) => ds._id === $datasources.selected
+  )
   $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {
@@ -46,7 +48,8 @@
       <svelte:component
         this={ICONS[datasource.source]}
         height="26"
-        width="26" />
+        width="26"
+      />
       <Heading m>{datasource.name}</Heading>
     </header>
     <Body small grey lh>{integration.description}</Body>
@@ -63,17 +66,18 @@
       <IntegrationConfigForm
         schema={integration.datasource}
         integration={datasource.config}
-        on:change={setUnsaved} />
+        on:change={setUnsaved}
+      />
       <Spacer extraLarge />
       <Divider />
       <Spacer extraLarge />
       <div class="query-header">
         <Heading s>Queries</Heading>
-        <Button secondary on:click={() => $goto('./new')}>Add Query</Button>
+        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
       </div>
       <Spacer extraLarge />
       <div class="query-list">
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+        {#each $queries.list.filter((query) => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
             <p>{capitalise(query.queryVerb)}</p>
@@ -86,11 +90,6 @@
 {/if}
 
 <style>
-  h3 {
-    margin: 0;
-    font-size: 24px;
-  }
-
   section {
     margin: 0 auto;
     width: 640px;

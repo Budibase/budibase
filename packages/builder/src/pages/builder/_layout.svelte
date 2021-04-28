@@ -1,6 +1,8 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { Home as Link, SideNavigation as Navigation, SideNavigationItem as Item} from "@budibase/bbui"
+  import {
+    SideNavigation as Navigation,
+    SideNavigationItem as Item,
+  } from "@budibase/bbui"
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
   import Logo from "/assets/budibase-logo.svg"
 </script>
@@ -11,19 +13,25 @@
     <div class="nav-section">
       <div class="nav-top">
         <Navigation>
-          <Item href="/builder/" icon="Apps" selected>
-            Apps
-          </Item>
+          <Item href="/builder/" icon="Apps" selected>Apps</Item>
           <Item external href="https://portal.budi.live/" icon="Servers">
             Hosting
           </Item>
           <Item external href="https://docs.budibase.com/" icon="Book">
             Documentation
           </Item>
-          <Item external href="https://github.com/Budibase/budibase/discussions" icon="PeopleGroup">
+          <Item
+            external
+            href="https://github.com/Budibase/budibase/discussions"
+            icon="PeopleGroup"
+          >
             Community
           </Item>
-          <Item external href="https://github.com/Budibase/budibase/issues/new/choose" icon="Bug">
+          <Item
+            external
+            href="https://github.com/Budibase/budibase/issues/new/choose"
+            icon="Bug"
+          >
             Raise an issue
           </Item>
         </Navigation>
