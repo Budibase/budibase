@@ -4,6 +4,7 @@
     ActionGroup,
     ActionButton,
     MenuItem,
+    Icon,
   } from "@budibase/bbui"
   import { store, currentAssetName } from "builderStore"
   import structure from "./componentStructure.json"
@@ -12,7 +13,7 @@
 
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
-    structure.forEach((item) => {
+    structure.forEach(item => {
       if (typeof item === "string") {
         const def = definitions[`@budibase/standard-components/${item}`]
         if (def) {
@@ -32,37 +33,65 @@
     return enrichedStructure
   }
 
-  const onItemChosen = async (item) => {
+  const onItemChosen = async item => {
     if (!item.isCategory) {
-      // Add this component
       await store.actions.components.create(item.component)
     }
   }
 </script>
 
-<ActionGroup>
+<div class="components">
   {#each enrichedStructure as item}
     <ActionMenu disabled={!item.isCategory}>
       <ActionButton
         icon={item.icon}
-        primary
         quiet
+        size="S"
         slot="control"
-        on:click={() => onItemChosen(item)}
-      >
-        {item.name}
+        on:click={() => onItemChosen(item)}>
+        <div class="buttonContent">
+          {item.name}
+          {#if item.isCategory}
+            <Icon size="S" name="ChevronDown" />
+          {/if}
+        </div>
       </ActionButton>
       {#each item.children || [] as item}
         {#if !item.showOnAsset || item.showOnAsset.includes($currentAssetName)}
           <MenuItem
             dataCy={`component-${item.name}`}
             icon={item.icon}
-            on:click={() => onItemChosen(item)}
-          >
+            on:click={() => onItemChosen(item)}>
             {item.name}
           </MenuItem>
         {/if}
       {/each}
     </ActionMenu>
   {/each}
-</ActionGroup>
+</div>
+
+<style>
+  .components {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: -10px;
+  }
+  .components :global(> *) {
+    margin-top: 10px;
+  }
+
+  .buttonContent {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-end;
+  }
+  .buttonContent :global(svg) {
+    margin-left: 2px !important;
+    margin-right: 0 !important;
+    margin-bottom: -1px;
+  }
+</style>
