@@ -1,6 +1,6 @@
 <script>
   import SettingsModal from "./SettingsModal.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, Icon } from "@budibase/bbui"
 
   let modal
 </script>
@@ -9,7 +9,7 @@
   class="topnavitemright settings"
   data-cy="settings-icon"
   on:click={modal.show}>
-  <i class="ri-settings-3-line" />
+  <Icon hoverable name="Settings" />
 </div>
 <Modal bind:this={modal} width="600px">
   <SettingsModal />

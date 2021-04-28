@@ -54,7 +54,7 @@
     </Tabs>
     <div
       class="add-button"
-      data-cy={`new-${selected === 'External' ? 'datasource' : 'tabel'}`}>
+      data-cy={`new-${selected === 'External' ? 'datasource' : 'table'}`}>
       <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>
   </div>

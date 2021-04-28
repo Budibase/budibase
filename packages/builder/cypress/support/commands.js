@@ -40,20 +40,29 @@ Cypress.Commands.add("createApp", name => {
       }
     })
     .then(() => {
-      cy.get("input[name=applicationName]")
-        .type(name)
-        .should("have.value", name)
-      cy.contains("Next").click()
-      cy.get("input[name=email]")
-        .click()
-        .type("test@test.com")
-      cy.get("input[name=password]")
-        .click()
-        .type("test")
-      cy.contains("Submit").click()
-      cy.get("[data-cy=new-table]", {
-        timeout: 20000,
-      }).should("be.visible")
+      cy.get(".spectrum-Modal")
+        .within(() => {
+          cy.get("input")
+            .eq(0)
+            .type(name)
+            .should("have.value", name)
+            .blur()
+          cy.contains("Next").click()
+          cy.get("input")
+            .eq(1)
+            .type("test@test.com")
+            .blur()
+          cy.get("input")
+            .eq(2)
+            .type("test")
+            .blur()
+          cy.contains("Submit").click()
+        })
+        .then(() => {
+          cy.get("[data-cy=new-table]", {
+            timeout: 20000,
+          }).should("be.visible")
+        })
     })
 })
 
@@ -62,11 +71,15 @@ Cypress.Commands.add("deleteApp", name => {
   cy.get(".apps").then($apps => {
     cy.wait(1000)
     if ($apps.find(`[data-cy="app-${name}"]`).length) {
-      cy.get(`[data-cy="app-${name}"] a`).click()
+      cy.get(`[data-cy="app-${name}"]`)
+        .contains("Open")
+        .click()
       cy.get("[data-cy=settings-icon]").click()
-      cy.get(".modal-content").within(() => {
+      cy.get(".spectrum-Dialog").within(() => {
         cy.contains("Danger Zone").click()
-        cy.get("input").type("DELETE")
+        cy.get("input")
+          .type("DELETE")
+          .blur()
         cy.contains("Delete Entire App").click()
       })
     }
