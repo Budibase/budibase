@@ -32,11 +32,8 @@
     return enrichedStructure
   }
 
-  const onItemChosen = async (item, idx) => {
-    if (item.isCategory) {
-      // Select and open this category
-      selectedIndex = idx
-    } else {
+  const onItemChosen = async (item) => {
+    if (!item.isCategory) {
       // Add this component
       await store.actions.components.create(item.component)
     }
@@ -44,15 +41,14 @@
 </script>
 
 <ActionGroup>
-  {#each enrichedStructure as item, idx}
+  {#each enrichedStructure as item}
     <ActionMenu disabled={!item.isCategory}>
       <ActionButton
         icon={item.icon}
-        xs
         primary
         quiet
         slot="control"
-        on:click={() => onItemChosen(item, idx)}
+        on:click={() => onItemChosen(item)}
       >
         {item.name}
       </ActionButton>

@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
+  import { Input, TextArea, Heading, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
@@ -46,43 +46,50 @@
 
 <div class="container">
   <div class="list">
-    <Heading s h3>Available bindings</Heading>
-    <Spacer medium />
-    <Input extraThin placeholder="Search" bind:value={search} />
-    <Spacer medium />
-    {#each categories as [categoryName, bindings]}
-      <Heading xs h4>{categoryName}</Heading>
-      <Spacer extraSmall />
-      {#each bindableProperties.filter(binding =>
-        binding.label.match(searchRgx)
-      ) as binding}
-        <div class="binding" on:click={() => addToText(binding)}>
-          <span class="binding__label">{binding.label}</span>
-          <span class="binding__type">{binding.type}</span>
-          <br />
-          <div class="binding__description">{binding.description || ''}</div>
-        </div>
-      {/each}
-    {/each}
-    <Heading xs h3>Helpers</Heading>
-    <Spacer extraSmall />
-    {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
-      <div class="binding" on:click={() => addToText(helper)}>
-        <span class="binding__label">{helper.label}</span>
-        <br />
-        <div class="binding__description">
-          {@html helper.description || ''}
-        </div>
-        <pre>{helper.example || ''}</pre>
+    <Layout>
+      <div class="section">
+        <Heading s h3>Available bindings</Heading>
+        <Input extraThin placeholder="Search" bind:value={search} />
       </div>
-    {/each}
+      <div class="section">
+        {#each categories as [categoryName, bindings]}
+          <Heading xs h4>{categoryName}</Heading>
+          {#each bindableProperties.filter((binding) =>
+            binding.label.match(searchRgx)
+          ) as binding}
+            <div class="binding" on:click={() => addToText(binding)}>
+              <span class="binding__label">{binding.label}</span>
+              <span class="binding__type">{binding.type}</span>
+              <br />
+              <div class="binding__description">
+                {binding.description || ""}
+              </div>
+            </div>
+          {/each}
+        {/each}
+      </div>
+      <div class="section">
+        <Heading xs h3>Helpers</Heading>
+        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+          <div class="binding" on:click={() => addToText(helper)}>
+            <span class="binding__label">{helper.label}</span>
+            <br />
+            <div class="binding__description">
+              {@html helper.description || ""}
+            </div>
+            <pre>{helper.example || ''}</pre>
+          </div>
+        {/each}
+      </div>
+    </Layout>
   </div>
   <div class="text">
     <TextArea
       bind:getCaretPosition
       thin
       bind:value
-      placeholder="Add text, or click the objects on the left to add them to the textbox." />
+      placeholder="Add text, or click the objects on the left to add them to the textbox."
+    />
     {#if !validity}
       <p class="syntax-error">
         Current Handlebars syntax is invalid, please check the guide
@@ -98,22 +105,17 @@
     height: 40vh;
     overflow-y: auto;
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 290px 1fr;
   }
 
   .list {
+    grid-gap: var(--spacing-s);
     border-right: var(--border-light);
-    padding: var(--spacing-l);
-    overflow: auto;
+    overflow-y: auto;
   }
-  .list {
-    border-right: var(--border-light);
-    padding: var(--spacing-l);
-    overflow: auto;
-  }
-
-  .list::-webkit-scrollbar {
-    display: none;
+  .section {
+    display: grid;
+    grid-gap: var(--spacing-s);
   }
 
   .text {
@@ -157,21 +159,6 @@
     padding: 2px;
     margin-left: 2px;
     font-weight: 500;
-  }
-
-  .editor {
-    padding-left: var(--spacing-l);
-  }
-  .editor :global(textarea) {
-    min-height: 60px;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-gap: var(--spacing-l);
-    align-items: center;
-    margin-top: var(--spacing-m);
   }
 
   .syntax-error {

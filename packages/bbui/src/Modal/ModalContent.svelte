@@ -42,7 +42,7 @@
       {title}
     </h1>
 
-    <Divider m />
+    <Divider size="M" />
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />

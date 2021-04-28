@@ -13,5 +13,5 @@
   <Checkbox value={selected} />
 {/if}
 {#if allowEditRows}
-  <ActionButton s on:click={onEdit}>Edit</ActionButton>
+  <ActionButton size="S" on:click={onEdit}>Edit</ActionButton>
 {/if}

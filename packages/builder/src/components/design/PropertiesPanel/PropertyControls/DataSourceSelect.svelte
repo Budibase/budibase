@@ -149,7 +149,7 @@
         </li>
       {/each}
     </ul>
-    <Divider s />
+    <Divider size="S" />
     <div class="title">
       <Heading xs h3>Views</Heading>
     </div>
@@ -162,7 +162,7 @@
         </li>
       {/each}
     </ul>
-    <Divider s />
+    <Divider size="S" />
     <div class="title">
       <Heading xs h3>Relationships</Heading>
     </div>
@@ -175,7 +175,7 @@
         </li>
       {/each}
     </ul>
-    <Divider s />
+    <Divider size="S" />
     <div class="title">
       <Heading xs h3>Queries</Heading>
     </div>
@@ -190,7 +190,7 @@
     </ul>
 
     {#if otherSources?.length}
-      <Divider s />
+      <Divider size="S" />
       <div class="title">
         <Heading extraSmall>Other</Heading>
       </div>

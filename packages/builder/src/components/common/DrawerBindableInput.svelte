@@ -36,7 +36,7 @@
     on:change={event => onChange(event.detail)}
     {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
-    <Icon s name="FlashOn" />
+    <Icon size="S" name="FlashOn" />
   </div>
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
