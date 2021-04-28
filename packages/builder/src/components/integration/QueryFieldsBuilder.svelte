@@ -1,5 +1,5 @@
 <script>
-  import { Label, Spacer, Input } from "@budibase/bbui"
+  import { Label, Layout, Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
 
@@ -15,22 +15,22 @@
 </script>
 
 <form on:submit|preventDefault>
-  <div class="field">
+  <Layout noPadding gap="S">
     {#each schemaKeys as field}
-      {#if schema.fields[field]?.type === 'object'}
+      {#if schema.fields[field]?.type === "object"}
         <div>
           <Label small>{field}</Label>
-          <Spacer small />
           <KeyValueBuilder readOnly={!editable} bind:object={fields[field]} />
         </div>
-      {:else if schema.fields[field]?.type === 'json'}
+      {:else if schema.fields[field]?.type === "json"}
         <div>
           <Label extraSmall grey>{field}</Label>
           <Editor
             mode="json"
             on:change={({ detail }) => (fields[field] = detail.value)}
             readOnly={!editable}
-            value={fields[field]} />
+            value={fields[field]}
+          />
         </div>
       {:else}
         <div class="horizontal">
@@ -41,11 +41,12 @@
             disabled={!editable}
             type={schema.fields[field]?.type}
             required={schema.fields[field]?.required}
-            bind:value={fields[field]} />
+            bind:value={fields[field]}
+          />
         </div>
       {/if}
     {/each}
-  </div>
+  </Layout>
 </form>
 {#if schema.customisable}
   <Editor
@@ -53,7 +54,8 @@
     mode="json"
     on:change={updateCustomFields}
     readOnly={!editable}
-    value={fields.customData} />
+    value={fields.customData}
+  />
 {/if}
 
 <style>

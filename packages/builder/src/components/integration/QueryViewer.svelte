@@ -4,12 +4,12 @@
     Icon,
     Select,
     Button,
+    ButtonGroup,
     Body,
     Label,
     Layout,
     Input,
     Heading,
-    Spacer,
     Tabs,
     Tab,
   } from "@budibase/bbui"
@@ -149,29 +149,26 @@
     </div>
     <div class="viewer-controls">
       <Heading s>Results</Heading>
-      <div class="button-container">
+      <ButtonGroup>
         <Button
-          secondary
-          thin
+          cta
           disabled={data.length === 0 || !query.name}
           on:click={saveQuery}
         >
           Save Query
         </Button>
-        <Spacer medium />
-        <Button thin secondary on:click={previewQuery}>Run Query</Button>
-      </div>
+        <Button secondary on:click={previewQuery}>Run Query</Button>
+      </ButtonGroup>
     </div>
-      <Body s>
-        Below, you can preview the results from your query and change the
-        schema.
-      </Body>
-      <section class="viewer">
-        {#if data}
-          <Tabs selected="JSON">
-            <Tab title="JSON">
-              <pre
-                class="preview">
+    <Body s>
+      Below, you can preview the results from your query and change the schema.
+    </Body>
+    <section class="viewer">
+      {#if data}
+        <Tabs selected="JSON">
+          <Tab title="JSON">
+            <pre
+              class="preview">
                 <!-- prettier-ignore -->
                 {#if !data[0]}
                   Please run your query to fetch some data.
@@ -179,25 +176,27 @@
                   {JSON.stringify(data[0], undefined, 2)}
                 {/if}
               </pre>
-            </Tab>
-            <Tab title="Schema">
+          </Tab>
+          <Tab title="Schema">
+            <Layout gap="S">
               {#each fields as field, idx}
-                <Spacer small />
                 <div class="field">
                   <Input placeholder="Field Name" bind:value={field.name} />
                   <Select bind:value={field.type} options={typeOptions} />
                   <Icon name="bleClose" on:click={() => deleteField(idx)} />
                 </div>
               {/each}
-              <Spacer extraLarge />
-              <Button thin secondary on:click={newField}>Add Field</Button>
-            </Tab>
-            <Tab title="Preview">
-              <ExternalDataSourceTable {query} {data} />
-            </Tab>
-          </Tabs>
-        {/if}
-      </section>
+              <div>
+                <Button secondary on:click={newField}>Add Field</Button>
+              </div>
+            </Layout>
+          </Tab>
+          <Tab title="Preview">
+            <ExternalDataSourceTable {query} {data} />
+          </Tab>
+        </Tabs>
+      {/if}
+    </section>
   {/if}
 </Layout>
 

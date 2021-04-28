@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, Heading, Label, DrawerContentWithSidebar, Layout } from "@budibase/bbui"
+  import { Search, TextArea, Heading, Label, DrawerContent, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -57,7 +57,7 @@
   }
 </script>
 
-<DrawerContentWithSidebar>
+<DrawerContent>
   <svelte:fragment slot="sidebar">
   <Layout>
     <Search placeholder="Search" bind:value={search} />
@@ -107,7 +107,7 @@
     </section>
   </Layout>
   </svelte:fragment>
-  <div class="main" slot="main">
+  <div class="main">
     <TextArea
       bind:getCaretPosition
       bind:value
@@ -121,7 +121,7 @@
       </p>
     {/if}
   </div>
-</DrawerContentWithSidebar>
+</DrawerContent>
 
 <style>
   .main {

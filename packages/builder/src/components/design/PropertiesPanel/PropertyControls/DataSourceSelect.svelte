@@ -2,13 +2,13 @@
   import { getBindableProperties } from "builderStore/dataBinding"
   import {
     Button,
-    Icon,
     Popover,
     Divider,
     Select,
-    Spacer,
+    Layout,
     Heading,
     Drawer,
+    DrawerContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
@@ -30,7 +30,7 @@
   export let showAllQueries
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(m => ({
+  $: tables = $tablesStore.list.map((m) => ({
     label: m.name,
     tableId: m._id,
     type: "table",
@@ -46,9 +46,9 @@
   }, [])
   $: queries = $queriesStore.list
     .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
+      (query) => showAllQueries || query.queryVerb === "read" || query.readable
     )
-    .map(query => ({
+    .map((query) => ({
       label: query.name,
       name: query.name,
       tableId: query._id,
@@ -61,15 +61,15 @@
     $currentAsset,
     $store.selectedComponentId
   )
-  $: queryBindableProperties = bindableProperties.map(property => ({
+  $: queryBindableProperties = bindableProperties.map((property) => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
     path: property.readableBinding,
   }))
   $: links = bindableProperties
-    .filter(x => x.fieldSchema?.type === "link")
-    .map(property => {
+    .filter((x) => x.fieldSchema?.type === "link")
+    .map((property) => {
       return {
         providerId: property.providerId,
         label: property.readableBinding,
@@ -89,7 +89,7 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
+    const source = $datasources.list.find((ds) => ds._id === query.datasourceId)
       .source
     return $integrations[source].query[query.queryVerb]
   }
@@ -100,38 +100,43 @@
     readonly
     value={text}
     options={[text]}
-    on:click={dropdownRight.show} />
-  {#if value?.type === 'query'}
+    on:click={dropdownRight.show}
+  />
+  {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query Parameters'} bind:this={drawer}>
-      <div slot="buttons">
-        <Button
-          blue
-          thin
-          on:click={() => {
-            notifications.success('Query parameters saved.')
-            handleSelected(value)
-            drawer.hide()
-          }}>
-          Save
-        </Button>
-      </div>
-      <div class="drawer-contents" slot="body">
-        {#if value.parameters.length > 0}
-          <ParameterBuilder
-            bind:customParams={value.queryParams}
-            parameters={queries.find(query => query._id === value._id).parameters}
-            bindings={queryBindableProperties} />
-        {/if}
-        <!--        <Spacer large />-->
-        <IntegrationQueryEditor
-          height={200}
-          query={value}
-          schema={fetchQueryDefinition(value)}
-          datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
-          editable={false} />
-        <Spacer large />
-      </div>
+    <Drawer title={"Query Parameters"} bind:this={drawer}>
+      <Button
+        slot="buttons"
+        cta
+        on:click={() => {
+          notifications.success("Query parameters saved.")
+          handleSelected(value)
+          drawer.hide()
+        }}
+      >
+        Save
+      </Button>
+      <DrawerContent slot="body">
+        <Layout>
+          {#if value.parameters.length > 0}
+            <ParameterBuilder
+              bind:customParams={value.queryParams}
+              parameters={queries.find((query) => query._id === value._id)
+                .parameters}
+              bindings={queryBindableProperties}
+            />
+          {/if}
+          <IntegrationQueryEditor
+            height={200}
+            query={value}
+            schema={fetchQueryDefinition(value)}
+            datasource={$datasources.list.find(
+              (ds) => ds._id === value.datasourceId
+            )}
+            editable={false}
+          />
+        </Layout>
+      </DrawerContent>
     </Drawer>
   {/if}
 </div>
@@ -144,7 +149,8 @@
       {#each tables as table}
         <li
           class:selected={value === table}
-          on:click={() => handleSelected(table)}>
+          on:click={() => handleSelected(table)}
+        >
           {table.label}
         </li>
       {/each}
@@ -157,7 +163,8 @@
       {#each views as view}
         <li
           class:selected={value === view}
-          on:click={() => handleSelected(view)}>
+          on:click={() => handleSelected(view)}
+        >
           {view.label}
         </li>
       {/each}
@@ -170,7 +177,8 @@
       {#each links as link}
         <li
           class:selected={value === link}
-          on:click={() => handleSelected(link)}>
+          on:click={() => handleSelected(link)}
+        >
           {link.label}
         </li>
       {/each}
@@ -183,7 +191,8 @@
       {#each queries as query}
         <li
           class:selected={value === query}
-          on:click={() => handleSelected(query)}>
+          on:click={() => handleSelected(query)}
+        >
           {query.label}
         </li>
       {/each}
@@ -198,7 +207,8 @@
         {#each otherSources as source}
           <li
             class:selected={value === source}
-            on:click={() => handleSelected(source)}>
+            on:click={() => handleSelected(source)}
+          >
             {source.label}
           </li>
         {/each}

@@ -252,7 +252,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
   if (datasource) {
     const { type } = datasource
     if (type === "query") {
-      const queries = get(queriesStores).queries
+      const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
     } else {
       const tables = get(tablesStore).list
