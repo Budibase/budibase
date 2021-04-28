@@ -1,5 +1,5 @@
 <script>
-  import { Button, Drawer, Spacer, Body } from "@budibase/bbui"
+  import { Button, Drawer, Body, DrawerContent, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
   import {
@@ -18,7 +18,7 @@
 
   $: schemaFields = getSchemaFields(componentInstance)
 
-  const getSchemaFields = component => {
+  const getSchemaFields = (component) => {
     const datasource = getDatasourceForProvider($currentAsset, component)
     const { schema } = getSchemaForDatasource(datasource)
     return Object.values(schema || {})
@@ -30,42 +30,37 @@
     drawer.hide()
   }
 
-  const onFieldsChanged = event => {
+  const onFieldsChanged = (event) => {
     tempValue = event.detail
   }
 </script>
 
 <Button secondary wide on:click={drawer.show}>Define Filters</Button>
-<Drawer bind:this={drawer} title='Filtering'>
+<Drawer bind:this={drawer} title="Filtering">
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
-  <div class="root" slot="body">
-    <Body s>
-      {#if !Object.keys(tempValue || {}).length}
-        Add your first filter column.
-      {:else}
-        Results are filtered to only those which match all of the following
-        constaints.
-      {/if}
-    </Body>
-    <Spacer medium />
-    <div class="fields">
-      <SaveFields
-        parameterFields={value}
-        {schemaFields}
-        valueLabel="Equals"
-        on:change={onFieldsChanged} />
-    </div>
-  </div>
+  <DrawerContent slot="body">
+    <Layout>
+      <Body s>
+        {#if !Object.keys(tempValue || {}).length}
+          Add your first filter column.
+        {:else}
+          Results are filtered to only those which match all of the following
+          constaints.
+        {/if}
+      </Body>
+      <div class="fields">
+        <SaveFields
+          parameterFields={value}
+          {schemaFields}
+          valueLabel="Equals"
+          on:change={onFieldsChanged}
+        />
+      </div>
+    </Layout>
+  </DrawerContent>
 </Drawer>
 
 <style>
-  .root {
-    padding: var(--spacing-l);
-    min-height: calc(40vh - 2 * var(--spacing-l));
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
   .fields {
     display: grid;
     column-gap: var(--spacing-l);

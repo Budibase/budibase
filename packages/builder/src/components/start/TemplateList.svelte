@@ -1,5 +1,5 @@
 <script>
-  import { Button, Heading, Body, Spacer } from "@budibase/bbui"
+  import { Button, Heading, Body } from "@budibase/bbui"
   import AppCard from "./AppCard.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
@@ -25,7 +25,6 @@
       {#each templates as template}
         <div class="templates-card">
           <Heading black small>{template.name}</Heading>
-          <Spacer small />
           <Body medium grey>{template.category}</Body>
           <Body lh small black>{template.description}</Body>
           <div><img src={template.image} width="100%" /></div>

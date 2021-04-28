@@ -62,8 +62,11 @@ const SCHEMA_MAP = {
 function parseFilterExpression(filters) {
   const expression = []
 
+  let first = true
   for (let filter of filters) {
-    if (filter.conjunction) expression.push(TOKEN_MAP[filter.conjunction])
+    if (!first && filter.conjunction) {
+      expression.push(TOKEN_MAP[filter.conjunction])
+    }
 
     if (filter.condition === "CONTAINS") {
       expression.push(
@@ -77,6 +80,7 @@ function parseFilterExpression(filters) {
         `doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} ${value}`
       )
     }
+    first = false
   }
 
   return expression.join(" ")
@@ -104,6 +108,10 @@ function parseEmitExpression(field, groupBy) {
  * calculation: an optional calculation to be performed over the view data.
  */
 function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
+  // first filter can't have a conjuction
+  if (filters && filters.length > 0 && filters[0].conjunction) {
+    delete filters[0].conjunction
+  }
   const parsedFilters = parseFilterExpression(filters)
   const filterExpression = parsedFilters ? `&& ${parsedFilters}` : ""
 
