@@ -1,8 +1,14 @@
 <div class="drawer-contents">
-  <div class="container" data-cy="binding-dropdown-modal">
-    <div class="sidebar">
-      <slot name="sidebar" />
-    </div>
+  <div
+    class:no-sidebar={!$$slots.sidebar}
+    class="container"
+    data-cy="binding-dropdown-modal"
+  >
+    {#if $$slots.sidebar}
+      <div class="sidebar">
+        <slot name="sidebar" />
+      </div>
+    {/if}
     <div class="main">
       <slot name="main" />
     </div>
@@ -18,6 +24,9 @@
     height: 100%;
     display: grid;
     grid-template-columns: 290px 1fr;
+  }
+  .no-sidebar {
+    grid-template-columns: 1fr;
   }
   .sidebar {
     border-right: var(--border-light);
