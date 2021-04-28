@@ -41,14 +41,12 @@
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
   {disabled}
   on:longPress
-  on:click|preventDefault
->
+  on:click|preventDefault>
   {#if longPressable}
     <svg
       class="spectrum-Icon spectrum-UIIcon-CornerTriangle100 spectrum-ActionButton-hold"
       focusable="false"
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       <use xlink:href="#spectrum-css-icon-CornerTriangle100" />
     </svg>
   {/if}
@@ -57,8 +55,7 @@
       class="spectrum-Icon spectrum-Icon--size{size}"
       focusable="false"
       aria-hidden="true"
-      aria-label={icon}
-    >
+      aria-label={icon}>
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
@@ -66,9 +63,3 @@
     <span class="spectrum-ActionButton-label"><slot /></span>
   {/if}
 </button>
-
-<style>
-  span {
-    text-transform: capitalize;
-  }
-</style>

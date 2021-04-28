@@ -28,7 +28,7 @@
   setContext("actionMenu", { show, hide })
 </script>
 
-<div class="contents" use:getAnchor on:click={openMenu}>
+<div use:getAnchor on:click={openMenu}>
   <slot name="control" />
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
@@ -36,9 +36,3 @@
     <slot />
   </Menu>
 </Popover>
-
-<style>
-  div {
-    display: contents;
-  }
-</style>
