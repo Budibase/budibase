@@ -24,7 +24,7 @@
   }
 </script>
 
-<Layout gap="S">
+<Layout noGap noPadding>
   <Label>Datasource</Label>
   <Select
     bind:value={parameters.datasourceId}
