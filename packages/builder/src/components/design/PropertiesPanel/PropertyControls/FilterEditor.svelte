@@ -1,12 +1,5 @@
 <script>
-  import {
-    Button,
-    Drawer,
-    Spacer,
-    Body,
-    DrawerContent,
-    Layout,
-  } from "@budibase/bbui"
+  import { Button, Drawer, Body, DrawerContent, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
   import {

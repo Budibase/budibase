@@ -4,7 +4,6 @@
     Label,
     Input,
     Select,
-    Spacer,
     notifications,
     Body,
     ModalContent,
@@ -39,10 +38,11 @@
       <Input value={capitalise(level)} disabled />
       <Select
         value={permissions[level]}
-        on:change={e => changePermission(level, e.detail)}
+        on:change={(e) => changePermission(level, e.detail)}
         options={$roles}
-        getOptionLabel={x => x.name}
-        getOptionValue={x => x._id} />
+        getOptionLabel={(x) => x.name}
+        getOptionValue={(x) => x._id}
+      />
     {/each}
   </div>
 </ModalContent>
