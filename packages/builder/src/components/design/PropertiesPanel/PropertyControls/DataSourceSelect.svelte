@@ -5,8 +5,10 @@
     Popover,
     Divider,
     Select,
+    Layout,
     Heading,
     Drawer,
+    DrawerContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
@@ -103,38 +105,38 @@
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={drawer.show} />
     <Drawer title={"Query Parameters"} bind:this={drawer}>
-      <div slot="buttons">
-        <Button
-          blue
-          thin
-          on:click={() => {
-            notifications.success("Query parameters saved.")
-            handleSelected(value)
-            drawer.hide()
-          }}
-        >
-          Save
-        </Button>
-      </div>
-      <div class="drawer-contents" slot="body">
-        {#if value.parameters.length > 0}
-          <ParameterBuilder
-            bind:customParams={value.queryParams}
-            parameters={queries.find((query) => query._id === value._id)
-              .parameters}
-            bindings={queryBindableProperties}
+      <Button
+        slot="buttons"
+        cta
+        on:click={() => {
+          notifications.success("Query parameters saved.")
+          handleSelected(value)
+          drawer.hide()
+        }}
+      >
+        Save
+      </Button>
+      <DrawerContent slot="body">
+        <Layout>
+          {#if value.parameters.length > 0}
+            <ParameterBuilder
+              bind:customParams={value.queryParams}
+              parameters={queries.find((query) => query._id === value._id)
+                .parameters}
+              bindings={queryBindableProperties}
+            />
+          {/if}
+          <IntegrationQueryEditor
+            height={200}
+            query={value}
+            schema={fetchQueryDefinition(value)}
+            datasource={$datasources.list.find(
+              (ds) => ds._id === value.datasourceId
+            )}
+            editable={false}
           />
-        {/if}
-        <IntegrationQueryEditor
-          height={200}
-          query={value}
-          schema={fetchQueryDefinition(value)}
-          datasource={$datasources.list.find(
-            (ds) => ds._id === value.datasourceId
-          )}
-          editable={false}
-        />
-      </div>
+        </Layout>
+      </DrawerContent>
     </Drawer>
   {/if}
 </div>
