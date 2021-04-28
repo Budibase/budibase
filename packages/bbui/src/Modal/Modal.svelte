@@ -5,10 +5,11 @@
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
-  import clickOutside from "../Actions/click_outside"
+
+  export let fixed = false
 
   const dispatch = createEventDispatcher()
-  let visible = false
+  let visible = !!fixed
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -19,7 +20,7 @@
   }
 
   export function hide() {
-    if (!visible) {
+    if (!visible || fixed) {
       return
     }
     visible = false
