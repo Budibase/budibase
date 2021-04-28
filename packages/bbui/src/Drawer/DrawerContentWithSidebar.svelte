@@ -21,7 +21,6 @@
   }
   .sidebar {
     border-right: var(--border-light);
-    padding: var(--spacing-l);
     overflow: auto;
   }
 
@@ -30,7 +29,6 @@
   }
 
   .main {
-    padding: var(--spacing-l);
     font-family: var(--font-sans);
   }
   .main :global(textarea) {
