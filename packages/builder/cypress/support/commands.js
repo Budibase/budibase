@@ -101,11 +101,12 @@ Cypress.Commands.add("createTestTableWithData", () => {
 Cypress.Commands.add("createTable", tableName => {
   // Enter table name
   cy.get("[data-cy=new-table]").click()
-  cy.get(".modal").within(() => {
+  cy.get(".spectrum-Modal").within(() => {
     cy.get("input")
       .first()
       .type(tableName)
-    cy.get(".buttons")
+      .blur()
+    cy.get(".spectrum-ButtonGroup")
       .contains("Create")
       .click()
   })
@@ -115,30 +116,32 @@ Cypress.Commands.add("createTable", tableName => {
 Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   // Select Table
   cy.contains(".nav-item", tableName).click()
-  cy.contains("Create New Column").click()
+  cy.contains("Create column").click()
 
   // Configure column
-  cy.get(".actions").within(() => {
+  cy.get(".spectrum-Modal").within(() => {
     cy.get("input")
       .first()
       .type(columnName)
+      .blur()
 
     // Unset table display column
-    cy.contains("display column").click()
+    cy.contains("display column").click({ force: true })
     cy.get("select").select(type)
     cy.contains("Save").click()
   })
 })
 
 Cypress.Commands.add("addRow", values => {
-  cy.contains("Create New Row").click()
-  cy.get(".modal").within(() => {
+  cy.contains("Create row").click()
+  cy.get(".spectrum-Modal").within(() => {
     for (let i = 0; i < values.length; i++) {
       cy.get("input")
         .eq(i)
         .type(values[i])
+        .blur()
     }
-    cy.get(".buttons")
+    cy.get(".spectrum-ButtonGroup")
       .contains("Create")
       .click()
   })
@@ -147,20 +150,22 @@ Cypress.Commands.add("addRow", values => {
 Cypress.Commands.add("createUser", (email, password, role) => {
   // Create User
   cy.contains("Users").click()
-  cy.contains("Create New User").click()
-  cy.get(".modal").within(() => {
+  cy.contains("Create user").click()
+  cy.get(".spectrum-Modal").within(() => {
     cy.get("input")
       .first()
       .type(email)
+      .blur()
     cy.get("input")
       .eq(1)
       .type(password)
+      .blur()
     cy.get("select")
       .first()
       .select(role)
 
     // Save
-    cy.get(".buttons")
+    cy.get(".spectrum-ButtonGroup")
       .contains("Create User")
       .click()
   })
@@ -197,14 +202,16 @@ Cypress.Commands.add("navigateToFrontend", () => {
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get("[data-cy=new-screen]").click()
-  cy.get(".modal").within(() => {
+  cy.get(".spectrum-Modal").within(() => {
     cy.get("input")
       .eq(0)
       .type(screenName)
+      .blur()
     if (route) {
       cy.get("input")
         .eq(1)
         .type(route)
+        .blur()
     }
     cy.contains("Create Screen").click()
   })

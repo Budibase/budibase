@@ -9,7 +9,7 @@
   export let longPressable = false
   export let disabled = false
   export let icon = ""
-
+  export let dataCy = null
   export let size = "M"
 
   function longPress(element) {
@@ -34,6 +34,7 @@
 </script>
 
 <button
+  data-cy={dataCy}
   use:longPress
   class:spectrum-ActionButton--quiet={quiet}
   class:spectrum-ActionButton--emphasized={emphasized}

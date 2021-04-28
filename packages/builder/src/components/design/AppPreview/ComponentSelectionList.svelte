@@ -48,6 +48,7 @@
         quiet
         size="S"
         slot="control"
+        dataCy={`category-${item.name}`}
         on:click={() => onItemChosen(item)}>
         <div class="buttonContent">
           {item.name}
