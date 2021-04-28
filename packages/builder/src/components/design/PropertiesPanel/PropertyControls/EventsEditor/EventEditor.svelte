@@ -1,7 +1,13 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Icon, Button, Popover, Spacer } from "@budibase/bbui"
+  import {
+    Icon,
+    Button,
+    Popover,
+    Spacer,
+    DrawerContentWithSidebar,
+  } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
 
@@ -68,8 +74,8 @@
   }
 </script>
 
-<div class="actions-container">
-  <div class="actions-list">
+<DrawerContentWithSidebar>
+  <div class="actions-list" slot="sidebar">
     <div>
       <div bind:this={addActionButton}>
         <Button wide secondary on:click={addActionDropdown.show}>
@@ -127,6 +133,8 @@
       </div>
     {/if}
   </div>
+</DrawerContentWithSidebar>
+<div class="actions-container">
   <div class="action-config">
     {#if selectedAction}
       <div class="selected-action-container">
