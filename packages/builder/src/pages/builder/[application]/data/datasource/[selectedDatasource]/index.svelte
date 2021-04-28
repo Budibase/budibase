@@ -1,6 +1,6 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
-  import { Button, Heading, Body, Spacer, Divider } from "@budibase/bbui"
+  import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -43,39 +43,36 @@
 
 {#if datasource}
   <section>
-    <Spacer extraLarge />
-    <header>
-      <svelte:component
-        this={ICONS[datasource.source]}
-        height="26"
-        width="26"
-      />
-      <Heading m>{datasource.name}</Heading>
-    </header>
-    <Body small grey lh>{integration.description}</Body>
-    <Spacer extraLarge />
-    <Divider />
-    <Spacer extraLarge />
-    <div class="container">
-      <div class="config-header">
-        <Heading s>Configuration</Heading>
-        <Button secondary on:click={saveDatasource}>Save</Button>
-      </div>
-      <Body s>Connect your database to Budibase using the config below.</Body>
-      <Spacer extraLarge />
-      <IntegrationConfigForm
-        schema={integration.datasource}
-        integration={datasource.config}
-        on:change={setUnsaved}
-      />
-      <Spacer extraLarge />
+    <Layout>
+      <header>
+        <svelte:component
+          this={ICONS[datasource.source]}
+          height="26"
+          width="26"
+        />
+        <Heading m>{datasource.name}</Heading>
+      </header>
+      <Body small grey lh>{integration.description}</Body>
       <Divider />
-      <Spacer extraLarge />
+      <div class="container">
+        <div class="config-header">
+          <Heading s>Configuration</Heading>
+          <Button secondary on:click={saveDatasource}>Save</Button>
+        </div>
+        <Body size="S"
+          >Connect your database to Budibase using the config below.</Body
+        >
+        <IntegrationConfigForm
+          schema={integration.datasource}
+          integration={datasource.config}
+          on:change={setUnsaved}
+        />
+      </div>
+      <Divider />
       <div class="query-header">
         <Heading s>Queries</Heading>
         <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
       </div>
-      <Spacer extraLarge />
       <div class="query-list">
         {#each $queries.list.filter((query) => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
@@ -85,7 +82,7 @@
           </div>
         {/each}
       </div>
-    </div>
+    </Layout>
   </section>
 {/if}
 
@@ -109,6 +106,7 @@
   }
 
   .container {
+    width: 100%;
     border-radius: var(--border-radius-m);
     margin: 0 auto;
   }
