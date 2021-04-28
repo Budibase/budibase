@@ -162,14 +162,14 @@
         <Button medium secondary on:click={() => $currentStep--}>Back</Button>
       {/if}
       {#if $currentStep < steps.length - 1}
-        <Button medium blue on:click={() => $currentStep++} disabled={!valid}>
+        <Button medium cta on:click={() => $currentStep++} disabled={!valid}>
           Next
         </Button>
       {/if}
       {#if $currentStep === steps.length - 1}
         <Button
           medium
-          blue
+          cta
           on:click={createNewApp}
           disabled={!valid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}
