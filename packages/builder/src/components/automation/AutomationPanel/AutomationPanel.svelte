@@ -16,7 +16,7 @@
       </div>
     </Tab>
   </Tabs>
-  <div class="add-button">
+  <div class="add-button" data-cy="new-screen">
     <Icon hoverable name="AddCircle" on:click={modal.show} />
   </div>
 </div>
