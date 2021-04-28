@@ -1,8 +1,11 @@
 <script>
   import { themeStore } from "builderStore"
-  import { Toggle } from "@budibase/bbui"
-
-  let showAdvanced = false
+  import { Select } from "@budibase/bbui"
+  import { capitalise } from "../../helpers"
 </script>
 
-<Toggle text="Dark theme" bind:value={$themeStore.darkMode} />
+<Select
+  options={$themeStore.options}
+  bind:value={$themeStore.theme}
+  placeholder={null}
+  getOptionLabel={capitalise} />

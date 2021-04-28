@@ -1,5 +1,5 @@
 <script>
-  import { Button, Modal } from "@budibase/bbui"
+  import { ActionButton, Modal } from "@budibase/bbui"
   import { permissions } from "stores/backend"
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
 
@@ -14,9 +14,9 @@
   }
 </script>
 
-<Button icon="LockClosed" primary size="S" quiet on:click={openDropdown}>
-  Manage Access
-</Button>
+<ActionButton icon="LockClosed" size="S" quiet on:click={openDropdown}>
+  Manage access
+</ActionButton>
 <Modal bind:this={modal}>
   <ManageAccessModal
     {resourceId}
