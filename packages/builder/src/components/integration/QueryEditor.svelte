@@ -166,6 +166,7 @@
 
 {#if label}
   <Label small>{label}</Label>
+  <Spacer medium />
 {/if}
 <div style={`--code-mirror-height: ${editorHeight}px`}>
   <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
