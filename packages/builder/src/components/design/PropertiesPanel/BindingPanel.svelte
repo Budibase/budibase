@@ -107,7 +107,7 @@
     </section>
   </Layout>
   </svelte:fragment>
-  <div class="main" slot="main">
+  <div class="main">
     <TextArea
       bind:getCaretPosition
       bind:value

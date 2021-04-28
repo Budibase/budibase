@@ -127,19 +127,19 @@
       </div>
     {/if}
   </div>
-</DrawerContent>
-<div class="actions-container">
-  <div class="action-config">
-    {#if selectedAction}
-      <div class="selected-action-container">
-        <svelte:component
-          this={selectedActionComponent}
-          parameters={selectedAction.parameters}
-        />
-      </div>
-    {/if}
+  <div class="actions-container">
+    <div class="action-config">
+      {#if selectedAction}
+        <div class="selected-action-container">
+          <svelte:component
+            this={selectedActionComponent}
+            parameters={selectedAction.parameters}
+          />
+        </div>
+      {/if}
+    </div>
   </div>
-</div>
+</DrawerContent>
 
 <style>
   .action-header {

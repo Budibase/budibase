@@ -10,7 +10,7 @@
       </div>
     {/if}
     <div class="main">
-      <slot name="main" />
+      <slot />
     </div>
   </div>
 </div>
