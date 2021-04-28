@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
+  import { Icon, Body, Button, Input, Heading, Layout } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -29,7 +29,7 @@
   }
 </script>
 
-<section>
+<Layout paddingX="none" gap="S">
   <div class="controls">
     <Heading s>Parameters</Heading>
     {#if !bindable}
@@ -45,7 +45,6 @@
       values left blank.
     {/if}
   </Body>
-  <Spacer large />
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
       <Input
@@ -81,7 +80,7 @@
       {/if}
     {/each}
   </div>
-</section>
+</Layout>
 
 <style>
   .parameters.bindable {
