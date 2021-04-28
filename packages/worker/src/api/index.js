@@ -5,10 +5,22 @@ const { routes } = require("./routes")
 const { buildAuthMiddleware } = require("@budibase/auth").auth
 
 const NO_AUTH_ENDPOINTS = [
-  "/api/admin/users/first",
-  "/api/admin/auth",
-  "/api/admin/auth/google",
-  "/api/admin/auth/google/callback",
+  {
+    route: "/api/admin/users/first",
+    method: "POST",
+  },
+  {
+    route: "/api/admin/auth",
+    method: "POST",
+  },
+  {
+    route: "/api/admin/auth/google",
+    method: "GET",
+  },
+  {
+    route: "/api/admin/auth/google/callback",
+    method: "GET",
+  },
 ]
 
 const router = new Router()

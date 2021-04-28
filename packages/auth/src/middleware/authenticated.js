@@ -3,15 +3,35 @@ const database = require("../db")
 const { getCookie, clearCookie } = require("../utils")
 const { StaticDatabases } = require("../db/utils")
 
-function makeRegex() {
+const PARAM_REGEX = /\/:(.*?)\//g
 
+function buildNoAuthRegex(patterns) {
+  return patterns.map(pattern => {
+    const isObj = typeof pattern === "object" && pattern.route
+    const method = isObj ? pattern.method : "GET"
+    let route = isObj ? pattern.route : pattern
+
+    const matches = route.match(PARAM_REGEX)
+    if (matches) {
+      for (let match of matches) {
+        route = route.replace(match, "/.*/")
+      }
+    }
+    return { regex: new RegExp(route), method }
+  })
 }
 
-module.exports = (noAuthPatterns = []) => {
-  const regex = new RegExp(noAuthPatterns.join("|"))
+module.exports = (noAuthPatterns = [], opts) => {
+  const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
   return async (ctx, next) => {
     // the path is not authenticated
-    if (regex.test(ctx.request.url)) {
+    const found = noAuthOptions.find(({ regex, method }) => {
+      return (
+        regex.test(ctx.request.url) &&
+        ctx.request.method.toLowerCase() === method.toLowerCase()
+      )
+    })
+    if (found != null) {
       return next()
     }
     try {
@@ -34,10 +54,14 @@ module.exports = (noAuthPatterns = []) => {
       if (ctx.isAuthenticated !== true) {
         ctx.isAuthenticated = false
       }
-
       return next()
     } catch (err) {
-      ctx.throw(err.status || 403, err)
+      // allow configuring for public access
+      if (opts && opts.publicAllowed) {
+        ctx.isAuthenticated = false
+      } else {
+        ctx.throw(err.status || 403, err)
+      }
     }
   }
 }

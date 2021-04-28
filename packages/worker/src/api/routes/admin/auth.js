@@ -1,6 +1,6 @@
 const Router = require("@koa/router")
-const authController = require("../controllers/auth")
-const joiValidator = require("../../middleware/joi-validator")
+const authController = require("../../controllers/admin/auth")
+const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
 
 const router = Router()
