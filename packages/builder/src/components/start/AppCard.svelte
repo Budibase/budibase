@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { ActionButton, Heading, Spacer, Icon } from "@budibase/bbui"
+  import { ActionButton, Heading } from "@budibase/bbui"
   import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import download from "downloadjs"
