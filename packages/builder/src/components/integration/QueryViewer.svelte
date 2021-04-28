@@ -10,7 +10,6 @@
     Layout,
     Input,
     Heading,
-    Spacer,
     Tabs,
     Tab,
   } from "@budibase/bbui"

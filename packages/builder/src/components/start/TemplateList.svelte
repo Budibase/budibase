@@ -1,5 +1,5 @@
 <script>
-  import { Button, Heading, Body, Spacer } from "@budibase/bbui"
+  import { Button, Heading, Body } from "@budibase/bbui"
   import AppCard from "./AppCard.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
