@@ -9,13 +9,6 @@ const pkg = require("../../package.json")
 const router = new Router()
 const env = require("../environment")
 
-const NO_AUTH_ENDPOINTS = [
-  "/health",
-  "/version",
-  "webhooks/trigger",
-  "webhooks/schema",
-]
-
 router
   .use(
     compress({
@@ -38,7 +31,11 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
-  .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
+  .use(
+    buildAuthMiddleware(null, {
+      publicAllowed: true,
+    })
+  )
   .use(currentApp)
 
 // error handling middleware

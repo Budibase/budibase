@@ -1,8 +1,8 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
-const { Configs } = require("../../constants")
-const CouchDB = require("../../db")
-const { sendEmail } = require("../../utilities/email")
+const { Configs } = require("../../../constants")
+const CouchDB = require("../../../db")
+const { sendEmail } = require("../../../utilities/email")
 const { clearCookie, getGlobalUserByEmail } = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
