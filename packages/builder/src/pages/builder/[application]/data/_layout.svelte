@@ -20,7 +20,7 @@
   let selected = $isActive("./datasource") ? "External" : "Internal"
 
   function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find((t) => t.title === detail)
+    const { key } = tabs.find(t => t.title === detail)
     if (key === "datasource") {
       $goto("./datasource")
     } else {
@@ -54,8 +54,7 @@
     </Tabs>
     <div
       class="add-button"
-      data-cy={`new-${selected === "External" ? "datasource" : "tabel"}`}
-    >
+      data-cy={`new-${selected === 'External' ? 'datasource' : 'tabel'}`}>
       <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>
   </div>
@@ -82,6 +81,10 @@
     align-items: stretch;
     gap: var(--spacing-l);
   }
+  .content :global(> span) {
+    display: contents;
+  }
+
   .tab-content-padding {
     padding: 0 var(--spacing-xl);
   }
