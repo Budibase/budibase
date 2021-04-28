@@ -1,9 +1,5 @@
 <div class="drawer-contents">
-  <div
-    class:no-sidebar={!$$slots.sidebar}
-    class="container"
-    data-cy="binding-dropdown-modal"
-  >
+  <div class:no-sidebar={!$$slots.sidebar} class="container">
     {#if $$slots.sidebar}
       <div class="sidebar">
         <slot name="sidebar" />
