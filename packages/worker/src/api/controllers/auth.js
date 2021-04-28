@@ -31,7 +31,7 @@ function authInternal(ctx, user, err = null) {
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
-    authInternal(ctx, err, user)
+    authInternal(ctx, user, err)
 
     delete user.token
 

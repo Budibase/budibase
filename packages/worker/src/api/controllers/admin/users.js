@@ -61,7 +61,14 @@ exports.save = async ctx => {
 }
 
 exports.firstUser = async ctx => {
+  const existing = await getGlobalUserByEmail(FIRST_USER_EMAIL)
+  const params = {}
+  if (existing) {
+    params._id = existing._id
+    params._rev = existing._rev
+  }
   ctx.request.body = {
+    ...params,
     email: FIRST_USER_EMAIL,
     password: FIRST_USER_PASSWORD,
     roles: {},
