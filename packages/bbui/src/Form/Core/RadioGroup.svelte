@@ -19,6 +19,7 @@
   {#if options && Array.isArray(options)}
     {#each options as option}
       <div
+        title={getOptionLabel(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
         class:is-invalid={!!error}>
         <input

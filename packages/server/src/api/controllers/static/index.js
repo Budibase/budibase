@@ -9,7 +9,6 @@ const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
-const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
@@ -22,7 +21,7 @@ const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-  const apps = await getDeployedApps()
+  const apps = await getDeployedApps(ctx)
   if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
     return apps[possibleAppUrl].appId
   } else {
@@ -35,9 +34,6 @@ const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
-  if (ctx.file === "index.html") {
-    await setBuilderToken(ctx)
-  }
   await send(ctx, ctx.file, { root: builderPath })
 }
 
@@ -61,7 +57,7 @@ exports.uploadFile = async function(ctx) {
 
     return prepareUpload({
       file,
-      s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+      s3Key: `assets/${ctx.appId}/attachments/${processedFileName}`,
       bucket: "prod-budi-app-assets",
     })
   })
@@ -111,20 +107,17 @@ exports.serveComponentLibrary = async function(ctx) {
     )
     return send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
   }
+  const db = new CouchDB(appId)
+  const appInfo = await db.get(appId)
+
   let componentLib = "componentlibrary"
-  if (ctx.user.version) {
-    componentLib += `-${ctx.user.version}`
+  if (appInfo && appInfo.version) {
+    componentLib += `-${appInfo.version}`
   } else {
     componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
   }
   const S3_URL = encodeURI(
-    join(
-      objectStoreUrl(appId),
-      componentLib,
-      ctx.query.library,
-      "dist",
-      "index.js"
-    )
+    join(objectStoreUrl(), componentLib, ctx.query.library, "dist", "index.js")
   )
   const response = await fetch(S3_URL)
   const body = await response.text()

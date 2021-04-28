@@ -80,6 +80,7 @@
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
+
   .icon:hover {
     cursor: pointer;
     color: var(--spectrum-alias-text-color-hover);

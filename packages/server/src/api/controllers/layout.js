@@ -3,7 +3,7 @@ const CouchDB = require("../../db")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   let layout = ctx.request.body
 
   if (!layout.props) {
@@ -22,7 +22,7 @@ exports.save = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 

@@ -27,12 +27,6 @@
       applicationName: string().required("Your application must have a name"),
     },
     {
-      email: string()
-        .email()
-        .required("Your application needs a first user"),
-      password: string().required(
-        "Please enter a password for your first user"
-      ),
       roleId: string()
         .nullable()
         .required("You need to select a role for your user"),
@@ -114,11 +108,9 @@
 
       // Create user
       const user = {
-        email: $values.email,
-        password: $values.password,
         roleId: $values.roleId,
       }
-      const userResp = await api.post(`/api/users`, user)
+      const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
       $goto(`./${appJson._id}`)
     } catch (error) {

@@ -1,8 +1,7 @@
 const usageQuota = require("../../utilities/usageQuota")
-const env = require("../../environment")
 const setup = require("./utilities")
 const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
-const { ViewNames } = require("../../db/utils")
+const { InternalTables } = require("../../db/utils")
 
 jest.mock("../../utilities/usageQuota")
 
@@ -25,8 +24,8 @@ describe("test the create user action", () => {
     const res = await setup.runStep(setup.actions.CREATE_USER.stepId, user)
     expect(res.id).toBeDefined()
     expect(res.revision).toBeDefined()
-    const userDoc = await config.getRow(ViewNames.USERS, res.id)
-    expect(userDoc.email).toEqual(user.email)
+    const userDoc = await config.getRow(InternalTables.USER_METADATA, res.id)
+    expect(userDoc).toBeDefined()
   })
 
   it("should return an error if no inputs provided", async () => {

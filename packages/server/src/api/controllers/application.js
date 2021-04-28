@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const env = require("../../environment")
-const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const packageJson = require("../../../package.json")
 const {
   createLinkView,
@@ -74,7 +73,7 @@ async function getAppUrlIfNotInUse(ctx) {
   if (!env.SELF_HOSTED) {
     return url
   }
-  const deployedApps = await getDeployedApps()
+  const deployedApps = await getDeployedApps(ctx)
   if (
     deployedApps[url] != null &&
     deployedApps[url].appId !== ctx.params.appId
@@ -145,7 +144,6 @@ exports.fetchAppPackage = async function(ctx) {
     layouts,
     clientLibPath: clientLibraryPath(ctx.params.appId),
   }
-  await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
 exports.create = async function(ctx) {
@@ -161,7 +159,6 @@ exports.create = async function(ctx) {
 
   const url = await getAppUrlIfNotInUse(ctx)
   const appId = instance._id
-  const version = packageJson.version
   const newApplication = {
     _id: appId,
     type: "app",
@@ -184,7 +181,6 @@ exports.create = async function(ctx) {
     await createApp(appId)
   }
 
-  await setBuilderToken(ctx, appId, version)
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
