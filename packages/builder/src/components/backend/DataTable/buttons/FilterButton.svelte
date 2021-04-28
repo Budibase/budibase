@@ -1,5 +1,5 @@
 <script>
-  import { Button, Modal } from "@budibase/bbui"
+  import { ActionButton, Modal } from "@budibase/bbui"
   import FilterModal from "../modals/FilterModal.svelte"
 
   export let view = {}
@@ -7,15 +7,14 @@
   let modal
 </script>
 
-<Button
+<ActionButton
   icon="Filter"
-  primary
   size="S"
   quiet
   on:click={modal.show}
   active={view.filters?.length}>
   Filter
-</Button>
+</ActionButton>
 <Modal bind:this={modal}>
   <FilterModal {view} />
 </Modal>

@@ -1,5 +1,5 @@
 <script>
-  import { Modal, Button } from "@budibase/bbui"
+  import { Modal, ActionButton } from "@budibase/bbui"
   import CalculateModal from "../modals/CalculateModal.svelte"
 
   export let view = {}
@@ -7,15 +7,14 @@
   let modal
 </script>
 
-<Button
+<ActionButton
   icon="Calculator"
-  primary
   size="S"
   quiet
   on:click={modal.show}
   active={view.field && view.calculation}>
   Calculate
-</Button>
+</ActionButton>
 <Modal bind:this={modal}>
   <CalculateModal {view} />
 </Modal>

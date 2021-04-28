@@ -1,32 +1,23 @@
 <script>
   import { goto } from "@roxi/routify"
   import { views } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import { Icon, Popover, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import {
+    notifications,
+    Icon,
+    Input,
+    ActionMenu,
+    MenuItem,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
 
   export let view
 
-  let anchor
-  let dropdown
-  let editing
+  let editorModal
+  let confirmDeleteDialogue
   let originalName = view.name
   let confirmDeleteDialog
-
-  function showEditor() {
-    editing = true
-  }
-
-  function hideEditor() {
-    dropdown.hide()
-    editing = false
-  }
-
-  function showDelete() {
-    dropdown.hide()
-    confirmDeleteDialog.show()
-  }
 
   async function save() {
     await views.save({
@@ -34,7 +25,6 @@
       ...view,
     })
     notifications.success("View renamed successfully")
-    hideEditor()
   }
 
   async function deleteView() {
@@ -46,69 +36,21 @@
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+<ActionMenu>
+  <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <Popover align="left" {anchor} bind:this={dropdown}>
-    {#if editing}
-      <div class="actions">
-        <h5>Edit View</h5>
-        <Input label="View Name" thin bind:value={view.name} />
-        <footer>
-          <Button secondary on:click={hideEditor}>Cancel</Button>
-          <Button primary on:click={save}>Save</Button>
-        </footer>
-      </div>
-    {:else}
-      <DropdownContainer>
-        <DropdownItem
-          icon="ri-edit-line"
-          data-cy="edit-view"
-          title="Edit"
-          on:click={showEditor}
-        />
-        <DropdownItem
-          icon="ri-delete-bin-line"
-          title="Delete"
-          data-cy="delete-view"
-          on:click={showDelete}
-        />
-      </DropdownContainer>
-    {/if}
-  </Popover>
-</div>
+  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+<Modal bind:this={editorModal}>
+  <ModalContent title="Edit View" onConfirm={save} confirmText="Save">
+    <Input label="View Name" thin bind:value={view.name} />
+  </ModalContent>
+</Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
   okText="Delete View"
   onOk={deleteView}
-  title="Confirm Deletion"
-/>
-
-<style>
-  div.icon {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .actions {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    min-width: 400px;
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 500;
-  }
-
-  footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-</style>
+  title="Confirm Deletion" />

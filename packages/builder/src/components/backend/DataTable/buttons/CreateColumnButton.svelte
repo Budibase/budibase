@@ -1,13 +1,13 @@
 <script>
-  import { Button, Icon, Modal, ModalContent } from "@budibase/bbui"
+  import { ActionButton, Modal } from "@budibase/bbui"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let modal
 </script>
 
-<Button icon="AddCircle" primary size="S" quiet on:click={modal.show}>
-  Create New Column
-</Button>
+<ActionButton icon="TableColumnAddRight" quiet size="S" on:click={modal.show}>
+  Create column
+</ActionButton>
 <Modal bind:this={modal}>
   <CreateEditColumn />
 </Modal>
