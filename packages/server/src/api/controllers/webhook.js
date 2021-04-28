@@ -22,7 +22,7 @@ exports.WebhookType = {
 }
 
 exports.fetch = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const response = await db.allDocs(
     getWebhookParams(null, {
       include_docs: true,
@@ -32,9 +32,9 @@ exports.fetch = async ctx => {
 }
 
 exports.save = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const webhook = ctx.request.body
-  webhook.appId = ctx.user.appId
+  webhook.appId = ctx.appId
 
   // check that the webhook exists
   if (webhook._id) {
@@ -51,7 +51,7 @@ exports.save = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 

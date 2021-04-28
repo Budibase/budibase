@@ -1,10 +1,14 @@
+// need to load environment first
+const env = require("./environment")
+const CouchDB = require("./db")
+require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
+const { passport } = require("@budibase/auth").auth
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
-const env = require("./environment")
 
 const app = new Koa()
 
@@ -24,6 +28,10 @@ app.use(
   })
 )
 
+// authentication
+app.use(passport.initialize())
+app.use(passport.session())
+
 // api routes
 app.use(api.routes())
 
@@ -32,7 +40,7 @@ destroyable(server)
 
 server.on("close", () => console.log("Server Closed"))
 
-module.exports = server.listen(env.PORT || 4002, async () => {
+module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
 })
 

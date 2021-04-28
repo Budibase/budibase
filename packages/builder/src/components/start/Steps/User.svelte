@@ -1,5 +1,5 @@
 <script>
-  import { Input, Select, Heading } from "@budibase/bbui"
+  import { Select, Heading } from "@budibase/bbui"
 
   export let values
   export let errors
@@ -7,21 +7,7 @@
 </script>
 
 <div class="container">
-  <Heading l h2>Create your first User</Heading>
-  <Input
-    bind:value={$values.email}
-    on:change={() => ($touched.email = true)}
-    label="Email"
-    placeholder="Email"
-    type="email"
-    error={$touched.email && $errors.email} />
-  <Input
-    bind:value={$values.password}
-    on:change={() => ($touched.password = true)}
-    label="Password"
-    placeholder="Password"
-    type="password"
-    error={$touched.password && $errors.password} />
+  <Heading l h2>What's your role for this app?</Heading>
   <Select
     bind:value={$values.roleId}
     label="Role"

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.8.9",
+  "version": "0.8.16",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -14,9 +14,10 @@
     "cy:setup": "node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
-    "cy:run:ci": "cypress run --browser electron --record --key f308590b-6070-41af-b970-794a3823d451",
+    "cy:run:ci": "cypress run --record --key f308590b-6070-41af-b970-794a3823d451",
     "cy:test": "start-server-and-test cy:setup http://localhost:10000/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:10000/builder cy:run:ci"
+    "cy:ci": "start-server-and-test cy:setup http://localhost:10000/builder cy:run:ci",
+    "cy:debug": "start-server-and-test cy:setup http://localhost:10000/builder cy:open"
   },
   "jest": {
     "globals": {
@@ -65,9 +66,9 @@
   },
   "dependencies": {
     "@budibase/bbui": "^1.58.13",
-    "@budibase/client": "^0.8.9",
+    "@budibase/client": "^0.8.16",
     "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^0.8.9",
+    "@budibase/string-templates": "^0.8.16",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",

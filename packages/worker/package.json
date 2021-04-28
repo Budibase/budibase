@@ -1,7 +1,7 @@
 {
-  "name": "@budibase/deployment",
+  "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.8.9",
+  "version": "0.8.16",
   "description": "Budibase Deployment Server",
   "main": "src/index.js",
   "repository": {
@@ -12,26 +12,43 @@
     "budibase"
   ],
   "scripts": {
-    "run:docker": "node src/index.js"
+    "run:docker": "node src/index.js",
+    "dev:stack:init": "node ./scripts/dev/manage.js init",
+    "dev:builder": "npm run dev:stack:init && nodemon src/index.js"
   },
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/auth": "0.0.1",
+    "@budibase/string-templates": "^0.8.16",
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.2.0",
     "got": "^11.8.1",
-    "joi": "^17.2.1",
+    "joi": "^17.4.0",
     "koa": "^2.7.0",
     "koa-body": "^4.2.0",
     "koa-compress": "^4.0.1",
+    "koa-passport": "^4.1.4",
     "koa-pino-logger": "^3.0.0",
     "koa-send": "^5.0.0",
     "koa-session": "^5.12.0",
     "koa-static": "^5.0.0",
     "node-fetch": "^2.6.1",
+    "nodemailer": "^6.5.0",
+    "passport-google-oauth": "^2.0.0",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
     "pino-pretty": "^4.0.0",
-    "pouchdb": "^7.2.2",
+    "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.7",
+    "pouchdb-adapter-memory": "^7.2.2",
+    "supertest": "^6.1.3"
   }
 }

@@ -1,16 +1,13 @@
 context("Create Bindings", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
     cy.navigateToFrontend()
   })
 
   it("should add a current user binding", () => {
-    cy.addComponent("Elements", "Paragraph").then(componentId => {
+    cy.addComponent("Elements", "Paragraph").then(() => {
       addSettingBinding("text", "Current User._id")
-      cy.getComponent(componentId).should(
-        "have.text",
-        `ro_ta_users_us_test@test.com`
-      )
     })
   })
 

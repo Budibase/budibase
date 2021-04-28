@@ -3,7 +3,7 @@ const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
 
 function Request(appId, params) {
-  this.user = { appId }
+  this.appId = appId
   this.params = params
 }
 
@@ -46,7 +46,10 @@ exports.createRequest = (request, method, url, body) => {
 }
 
 exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
-  const headers = await config.login()
+  const headers = await config.login("test@test.com", "test", {
+    userId: "us_fail",
+    builder: false,
+  })
   await exports
     .createRequest(config.request, method, url, body)
     .set(headers)
@@ -62,16 +65,22 @@ exports.checkPermissionsEndpoint = async ({
   failRole,
 }) => {
   const password = "PASSWORD"
-  await config.createUser("passUser@budibase.com", password, passRole)
-  const passHeader = await config.login("passUser@budibase.com", password)
+  let user = await config.createUser("pass@budibase.com", password, passRole)
+  const passHeader = await config.login("pass@budibase.com", password, {
+    roleId: passRole,
+    userId: user.globalId,
+  })
 
   await exports
     .createRequest(config.request, method, url, body)
     .set(passHeader)
     .expect(200)
 
-  await config.createUser("failUser@budibase.com", password, failRole)
-  const failHeader = await config.login("failUser@budibase.com", password)
+  user = await config.createUser("fail@budibase.com", password, failRole)
+  const failHeader = await config.login("fail@budibase.com", password, {
+    roleId: failRole,
+    userId: user.globalId,
+  })
 
   await exports
     .createRequest(config.request, method, url, body)
