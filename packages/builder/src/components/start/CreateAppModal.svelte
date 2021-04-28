@@ -29,7 +29,7 @@
     {
       roleId: string()
         .nullable()
-        .required("You need to select a role for your user"),
+        .required("You need to select a role for this app"),
     },
   ]
 

@@ -105,4 +105,8 @@
     justify-content: space-between;
     height: 100%;
   }
+
+  .nav-bottom :global(> *) {
+    margin-top: 5px;
+  }
 </style>
