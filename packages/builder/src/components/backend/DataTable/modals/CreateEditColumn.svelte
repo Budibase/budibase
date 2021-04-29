@@ -8,23 +8,23 @@
     Toggle,
     Radio,
   } from "@budibase/bbui"
-  import {cloneDeep} from "lodash/fp"
-  import {tables} from "stores/backend"
+  import { cloneDeep } from "lodash/fp"
+  import { tables } from "stores/backend"
 
-  import {TableNames, UNEDITABLE_USER_FIELDS} from "constants"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
     AUTO_COLUMN_SUB_TYPES,
     RelationshipTypes,
   } from "constants/backend"
-  import {getAutoColumnInformation, buildAutoColumn} from "builderStore/utils"
-  import {notifier} from "builderStore/store/notifications"
+  import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
+  import { notifier } from "builderStore/store/notifications"
   import ValuesList from "components/common/ValuesList.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import {truncate} from "lodash"
+  import { truncate } from "lodash"
   import ModalBindableInput from "components/common/ModalBindableInput.svelte"
-  import {getBindings} from "components/backend/DataTable/formula"
+  import { getBindings } from "components/backend/DataTable/formula"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -70,7 +70,8 @@
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
     field.type !== FORMULA_TYPE
-  $: canBeDisplay = field.type !== LINK_TYPE &&
+  $: canBeDisplay =
+    field.type !== LINK_TYPE &&
     field.type !== AUTO_TYPE &&
     field.type !== FORMULA_TYPE
   $: canBeRequired =
@@ -121,7 +122,7 @@
 
   function onChangeRequired(e) {
     const req = e.target.checked
-    field.constraints.presence = req ? {allowEmpty: false} : false
+    field.constraints.presence = req ? { allowEmpty: false } : false
     required = req
   }
 
@@ -129,7 +130,7 @@
     const isPrimary = e.target.checked
     // primary display is always required
     if (isPrimary) {
-      field.constraints.presence = {allowEmpty: false}
+      field.constraints.presence = { allowEmpty: false }
     }
   }
 
@@ -163,8 +164,8 @@
     if (!linkTable) {
       return null
     }
-    const thisName = truncate(table.name, {length: 14}),
-      linkName = truncate(linkTable.name, {length: 14})
+    const thisName = truncate(table.name, { length: 14 }),
+      linkName = truncate(linkTable.name, { length: 14 })
     return [
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
@@ -298,7 +299,7 @@
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
       bindings={getBindings({ table })}
-      serverSide=true />
+      serverSide="true" />
   {:else if field.type === AUTO_TYPE}
     <Select label="Auto Column Type" thin secondary bind:value={field.subtype}>
       <option value="">Choose a subtype</option>
