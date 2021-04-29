@@ -1,0 +1,57 @@
+<script>
+  import { View } from "svench";
+  import Select from "./Select.svelte";
+  import DataList from "./DataList.svelte";
+  import Spacer from "../Spacer/Spacer.svelte"
+
+  const options = ["Chocolate", "Vanilla", "Strawberry Cheesecake"];
+</script>
+
+<View name="default">
+  <DataList name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+
+<View name="secondary">
+  <DataList secondary name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+
+<View name="outline">
+  <DataList outline name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+
+<View name="disabled">
+  <DataList disabled name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+
+<View name="thin">
+  <DataList thin name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+
+<View name="extraThin">
+  <DataList extraThin name="Test" label="Flavour">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </DataList>
+</View>
+

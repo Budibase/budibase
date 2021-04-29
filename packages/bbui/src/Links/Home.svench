@@ -1,0 +1,19 @@
+<script>
+  import { View } from "svench";
+  import Home from "./Home.svelte";
+  import Contribution from "../Icons/Contribution.svelte";
+</script>
+
+<View name="default">
+  <Home
+    href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
+    title="Contribute"
+    icon={Contribution} />
+</View>
+<View name="active">
+  <Home
+    active
+    href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
+    title="Contribute"
+    icon={Contribution} />
+</View>

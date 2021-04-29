@@ -1,5 +1,6 @@
 import { store } from "./index"
 import { get as svelteGet } from "svelte/store"
+import { removeCookie, Cookies } from "./cookies"
 
 const apiCall = method => async (
   url,
@@ -8,11 +9,15 @@ const apiCall = method => async (
 ) => {
   headers["x-budibase-app-id"] = svelteGet(store).appId
   const json = headers["Content-Type"] === "application/json"
-  return await fetch(url, {
+  const resp = await fetch(url, {
     method: method,
     body: json ? JSON.stringify(body) : body,
     headers,
   })
+  if (resp.status === 403) {
+    removeCookie(Cookies.Auth)
+  }
+  return resp
 }
 
 export const post = apiCall("POST")

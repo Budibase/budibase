@@ -9,7 +9,8 @@
     Radio,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
-  import { backendUiStore } from "builderStore"
+  import { tables } from "stores/backend"
+
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -33,30 +34,31 @@
     constraints: fieldDefinitions.STRING.constraints,
 
     // Initial value for column name in other table for linked records
-    fieldName: $backendUiStore.selectedTable.name,
+    fieldName: $tables.selected.name,
   }
 
   let originalName = field.name
   let primaryDisplay =
-    $backendUiStore.selectedTable.primaryDisplay == null ||
-    $backendUiStore.selectedTable.primaryDisplay === field.name
+    $tables.selected.primaryDisplay == null ||
+    $tables.selected.primaryDisplay === field.name
 
-  let table = $backendUiStore.selectedTable
-  let indexes = [...($backendUiStore.selectedTable.indexes || [])]
+  let table = $tables.selected
+  let indexes = [...($tables.selected.indexes || [])]
   let confirmDeleteDialog
   let deletion
 
-  $: tableOptions = $backendUiStore.tables.filter(
-    table => table._id !== $backendUiStore.draftTable._id
+  $: tableOptions = $tables.list.filter(
+    table => table._id !== $tables.draft._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
-    $backendUiStore.selectedTable?._id === TableNames.USERS &&
-    UNEDITABLE_USER_FIELDS.includes(field.name)
+    ($tables.selected?._id === TableNames.USERS &&
+      UNEDITABLE_USER_FIELDS.includes(field.name)) ||
+    (originalName && field.type === LINK_TYPE)
   $: invalid =
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($backendUiStore.draftTable.schema).some(
-      key => key === field.name
+    Object.keys($tables.draft.schema).some(
+      key => key === field.name && key !== originalName
     )
 
   // used to select what different options can be displayed for column type
@@ -71,29 +73,22 @@
 
   async function saveColumn() {
     if (field.type === AUTO_COL) {
-      field = buildAutoColumn(
-        $backendUiStore.draftTable.name,
-        field.name,
-        field.subtype
-      )
+      field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
-    backendUiStore.update(state => {
-      backendUiStore.actions.tables.saveField({
-        originalName,
-        field,
-        primaryDisplay,
-        indexes,
-      })
-      return state
+    tables.saveField({
+      originalName,
+      field,
+      primaryDisplay,
+      indexes,
     })
     onClosed()
   }
 
   function deleteColumn() {
-    if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
+    if (field.name === $tables.selected.primaryDisplay) {
       notifier.danger("You cannot delete the display column")
     } else {
-      backendUiStore.actions.tables.deleteField(field)
+      tables.deleteField(field)
       notifier.success(`Column ${field.name} deleted.`)
       onClosed()
     }
@@ -162,19 +157,22 @@
     if (!linkTable) {
       return null
     }
-    const thisName = truncate(table.name, { length: 15 }),
-      linkName = truncate(linkTable.name, { length: 15 })
+    const thisName = truncate(table.name, { length: 14 }),
+      linkName = truncate(linkTable.name, { length: 14 })
     return [
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
+        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
         name: `One ${linkName} row → many ${thisName} rows`,
+        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
         name: `One ${thisName} row → many ${linkName} rows`,
+        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -267,13 +265,13 @@
       <div>
         <Label grey extraSmall>Define the relationship</Label>
         <div class="radio-buttons">
-          {#each relationshipOptions as { value, name }}
+          {#each relationshipOptions as { value, name, alt }}
             <Radio
               disabled={originalName}
               name="Relationship type"
               {value}
               bind:group={field.relationshipType}>
-              <div class="radio-button-labels">
+              <div class="radio-button-labels" title={alt}>
                 <label for={value}>{name.split('→')[0]}</label>
                 <label class="rel-type-center" for={value}>→</label>
                 <label for={value}>{name.split('→')[1]}</label>

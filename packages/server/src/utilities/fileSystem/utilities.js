@@ -10,8 +10,13 @@ const fs = require("fs")
 const { budibaseTempDir } = require("../budibaseDir")
 const env = require("../../environment")
 const { ObjectStoreBuckets } = require("../../constants")
+const uuid = require("uuid/v4")
 
 const streamPipeline = promisify(stream.pipeline)
+// use this as a temporary store of buckets that are being created
+const STATE = {
+  bucketCreationPromises: {},
+}
 
 const CONTENT_TYPE_MAP = {
   html: "text/html",
@@ -80,13 +85,18 @@ exports.makeSureBucketExists = async (client, bucketName) => {
       })
       .promise()
   } catch (err) {
-    // bucket doesn't exist create it
-    if (err.statusCode === 404) {
-      await client
+    const promises = STATE.bucketCreationPromises
+    if (promises[bucketName]) {
+      await promises[bucketName]
+    } else if (err.statusCode === 404) {
+      // bucket doesn't exist create it
+      promises[bucketName] = client
         .createBucket({
           Bucket: bucketName,
         })
         .promise()
+      await promises[bucketName]
+      delete promises[bucketName]
       // public buckets are quite hidden in the system, make sure
       // no bucket is set accidentally
       if (PUBLIC_BUCKETS.includes(bucketName)) {
@@ -146,11 +156,11 @@ exports.streamUpload = async (bucket, filename, stream) => {
  * retrieves the contents of a file from the object store, if it is a known content type it
  * will be converted, otherwise it will be returned as a buffer stream.
  */
-exports.retrieve = async (bucket, filename) => {
+exports.retrieve = async (bucket, filepath) => {
   const objectStore = exports.ObjectStore(bucket)
   const params = {
     Bucket: bucket,
-    Key: sanitize(filename).replace(/\\/g, "/"),
+    Key: sanitize(filepath).replace(/\\/g, "/"),
   }
   const response = await objectStore.getObject(params).promise()
   // currently these are all strings
@@ -159,6 +169,16 @@ exports.retrieve = async (bucket, filename) => {
   } else {
     return response.Body
   }
+}
+
+/**
+ * Same as retrieval function but puts to a temporary file.
+ */
+exports.retrieveToTmp = async (bucket, filepath) => {
+  const data = await exports.retrieve(bucket, filepath)
+  const outputPath = join(budibaseTempDir(), uuid())
+  fs.writeFileSync(outputPath, data)
+  return outputPath
 }
 
 exports.deleteFolder = async (bucket, folder) => {
@@ -215,7 +235,9 @@ exports.downloadTarball = async (url, bucket, path) => {
 
   const tmpPath = join(budibaseTempDir(), path)
   await streamPipeline(response.body, zlib.Unzip(), tar.extract(tmpPath))
-  await exports.uploadDirectory(bucket, tmpPath, path)
+  if (!env.isTest()) {
+    await exports.uploadDirectory(bucket, tmpPath, path)
+  }
   // return the temporary path incase there is a use for it
   return tmpPath
 }

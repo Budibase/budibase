@@ -1,0 +1,63 @@
+<script>
+  import { View } from "svench";
+  import Multiselect from "./Multiselect.svelte";
+
+  const options = ["Red", "Blue", "Yellow", "Green", "Pink", "Very long color name to show text wrapping"];
+</script>
+
+<View name="default">
+  <Multiselect name="Test" label="Colours" placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<View name="right aligned">
+<div class="max-width">
+  <Multiselect align="right" name="Test" label="Colours" placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</div>
+</View>
+
+<View name="secondary">
+  <Multiselect name="Test" label="Colours" secondary placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<View name="outline">
+  <Multiselect name="Test" label="Colours" outline placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<View name="disabled">
+  <Multiselect name="Test" label="Colours" disabled placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<View name="extraThin">
+  <Multiselect name="Test" label="Colours" extraThin placeholder="Choose some colours">
+    {#each options as option}
+      <option value={option}>{option}</option>
+    {/each}
+  </Multiselect>
+</View>
+
+<style>
+  .max-width {
+    align-self: flex-end;
+    max-width: 150px;
+  }
+</style>

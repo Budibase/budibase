@@ -1,0 +1,191 @@
+<script>
+  import { View } from "svench";
+</script>
+
+<h1>2 Scales, 1 Spatial System</h1>
+<p>Budibase has 2 scales, spacing and layout, and follows a 4pt grid system.</p>
+<p><strong>Spacing</strong> is used for smaller, more refined spacing needs, specifically within the context of a component.</p>
+<p><strong>Layout</strong> is used for laying out your page and positing components within that page.</p>
+<p>Spacing and layout will mostly exist alongside margin and padding.</p>
+<p><code>margin: var(--spacing-s);</code></p>
+<code>padding: var(--spacing-s) var(--spacing-l);</code>
+
+<hr>
+
+<h2>Spacing</h2>
+
+<table>
+  <tr>
+    <th>Var</th>
+    <th>rem</th>
+    <th>px</th>
+    <th>Visual</th>
+  </tr>
+  <tr>
+    <td>var(--spacing-xs)</td>
+    <td>0.25</td>
+    <td>4</td>
+    <td><div class="xs"></div></td>
+  </tr>
+  <tr>
+    <td>var(--spacing-s)</td>
+    <td>0.5</td>
+    <td>8</td>
+    <td><div class="s"></div></td>
+  </tr>
+  <tr>
+    <td>var(--spacing-m)</td>
+    <td>.75</td>
+    <td>12</td>
+    <td><div class="m"></div></td>
+  </tr>
+  <tr>
+    <td>var(--spacing-l)</td>
+    <td>1</td>
+    <td>16</td>
+    <td><div class="l"></div></td>
+  </tr>
+  <tr>
+    <td>var(--spacing-xl)</td>
+    <td>1.25</td>
+    <td>20</td>
+    <td><div class="xl"></div></td>
+  </tr>
+</table>
+
+<hr>
+
+<h2>Layout</h2>
+
+<table>
+  <tr>
+    <th>Var</th>
+    <th>rem</th>
+    <th>px</th>
+    <th>Visual</th>
+  </tr>
+  <tr>
+    <td>var(--layout-xs)</td>
+    <td>1.25</td>
+    <td>20</td>
+    <td><div class="layout-xs"></div></td>
+  </tr>
+  <tr>
+    <td>var(--layout-s)</td>
+    <td>1.5</td>
+    <td>24</td>
+    <td><div class="layout-s"></div></td>
+  </tr>
+  <tr>
+    <td>var(--layout-m)</td>
+    <td>2</td>
+    <td>32</td>
+    <td><div class="layout-m"></div></td>
+  </tr>
+  <tr>
+    <td>var(--layout-l)</td>
+    <td>3</td>
+    <td>48</td>
+    <td><div class="layout-l"></div></td>
+  </tr>
+  <tr>
+    <td>var(--layout-xl)</td>
+    <td>4</td>
+    <td>64</td>
+    <td><div class="layout-xl"></div></td>
+  </tr>
+</table>
+
+<style>
+
+table {
+  font-family: var(--font-sans);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+code {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: var(--spacing-s) var(--spacing-l);
+    margin: var(--spacing-s) 0;
+    background-color: var(--grey-2);
+    color: var(--red-dark);
+    border-radius: var(--spacing-xs);
+}
+
+td, th {
+  border: 1px solid var(--grey-4);
+  text-align: left;
+  padding: var(--spacing-m);
+  width: 25%;
+}
+
+tr:nth-child(even) {
+  background-color: var(--grey-3);
+}
+
+hr {
+    margin: var(--layout-xl) 0px;
+}
+
+.xs {
+    height: var(--spacing-xs);
+    width:  var(--spacing-xs);
+    background-color: var(--purple);
+}
+
+.s {
+    height: var(--spacing-s);
+    width:  var(--spacing-s);
+    background-color: var(--purple);
+}
+
+.m {
+    height: var(--spacing-m);
+    width:  var(--spacing-m);
+    background-color: var(--purple);
+}
+
+.l {
+    height: var(--spacing-l);
+    width:  var(--spacing-l);
+    background-color: var(--purple);
+}
+
+.xl {
+    height: var(--spacing-xl);
+    width:  var(--spacing-xl);
+    background-color: var(--purple);
+}
+
+.layout-xs {
+    height: var(--layout-xs);
+    width:  var(--layout-xs);
+    background-color: var(--blue);
+}
+
+.layout-s {
+    height: var(--layout-s);
+    width:  var(--layout-s);
+    background-color: var(--blue);
+}
+
+.layout-m {
+    height: var(--layout-m);
+    width:  var(--layout-m);
+    background-color: var(--blue);
+}
+
+.layout-l {
+    height: var(--layout-l);
+    width:  var(--layout-l);
+    background-color: var(--blue);
+}
+
+.layout-xl {
+    height: var(--layout-xl);
+    width:  var(--layout-xl);
+    background-color: var(--blue);
+}
+</style>

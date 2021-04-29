@@ -1,9 +1,9 @@
 const Router = require("@koa/router")
-const authenticated = require("../middleware/authenticated")
+const { buildAuthMiddleware } = require("@budibase/auth").auth
+const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
-const { budibaseAppsDir } = require("../utilities/budibaseDir")
-const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
+const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const bullboard = require("bull-board")
 const expressApp = require("express")()
@@ -13,22 +13,28 @@ expressApp.use("/bulladmin", bullboard.router)
 const router = new Router()
 const env = require("../environment")
 
+const NO_AUTH_ENDPOINTS = [
+  "/health",
+  "/version",
+  "webhooks/trigger",
+  "webhooks/schema",
+]
+
 router
   .use(
     compress({
       threshold: 2048,
       gzip: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       deflate: {
-        flush: zlib.Z_SYNC_FLUSH,
+        flush: zlib.constants.Z_SYNC_FLUSH,
       },
       br: false,
     })
   )
   .use(async (ctx, next) => {
     ctx.config = {
-      latestPackagesFolder: budibaseAppsDir(),
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
@@ -41,7 +47,8 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
-  .use(authenticated)
+  .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
+  .use(currentApp)
 
 // error handling middleware
 router.use(async (ctx, next) => {
@@ -62,9 +69,6 @@ router.use(async (ctx, next) => {
 
 router.get("/health", ctx => (ctx.status = 200))
 
-router.use(authRoutes.routes())
-router.use(authRoutes.allowedMethods())
-
 // authenticated routes
 for (let route of mainRoutes) {
   router.use(route.routes())
@@ -75,6 +79,6 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-router.redirect("/", "/_builder")
+router.redirect("/", "/builder")
 
 module.exports = router

@@ -1,16 +1,6 @@
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 
-jest.mock("../../../utilities/fileSystem/utilities", () => ({
-  ...jest.requireActual("../../../utilities/fileSystem/utilities"),
-  retrieve: () => {
-    const { join } = require("path")
-    const library = join("@budibase", "standard-components")
-    const path = require.resolve(library).split(join("dist", "index.js"))[0] + "manifest.json"
-    return JSON.stringify(require(path))
-  }
-}))
-
 describe("/component", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -24,7 +14,7 @@ describe("/component", () => {
   describe("fetch definitions", () => {
     it("should be able to fetch definitions", async () => {
       const res = await request
-        .get(`/${config.getAppId()}/components/definitions`)
+        .get(`/api/${config.getAppId()}/components/definitions`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -35,7 +25,7 @@ describe("/component", () => {
       await checkBuilderEndpoint({
         config,
         method: "GET",
-        url: `/${config.getAppId()}/components/definitions`,
+        url: `/api/${config.getAppId()}/components/definitions`,
       })
     })
   })

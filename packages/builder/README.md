@@ -1,6 +1,6 @@
 ## Get Started 
 
-`npm install`
+`yarn install`
 
-Webpack dev server (port 8080): `npm run dev`
-Build `npm run build`
+Vite dev server (port 3000): `yarn run dev`
+Build `yarn run build`

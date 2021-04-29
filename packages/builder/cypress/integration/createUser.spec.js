@@ -1,5 +1,6 @@
 context("Create a User", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
   })
 

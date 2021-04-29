@@ -10,8 +10,15 @@ module.exports = async (url, opts) => {
     }
   }
 
+  if (url.includes("/api/admin")) {
+    return json({
+      email: "test@test.com",
+      _id: "us_test@test.com",
+      status: "active",
+    })
+  }
   // mocked data based on url
-  if (url.includes("api/apps")) {
+  else if (url.includes("api/apps")) {
     return json({
       app1: {
         url: "/app1",
@@ -30,6 +37,17 @@ module.exports = async (url, opts) => {
       },
       404
     )
+  } else if (url.includes("_search")) {
+    return json({
+      rows: [
+        {
+          doc: {
+            _id: "test",
+          },
+        },
+      ],
+      bookmark: "test",
+    })
   }
   return fetch(url, opts)
 }

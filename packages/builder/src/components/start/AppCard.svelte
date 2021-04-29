@@ -31,7 +31,7 @@
   <Heading small black>{name}</Heading>
   <Spacer medium />
   <div class="card-footer" data-cy={`app-${name}`}>
-    <TextButton text medium blue href="/_builder/{_id}">
+    <TextButton text medium blue href="/builder/{_id}">
       Open
       {name}
       →

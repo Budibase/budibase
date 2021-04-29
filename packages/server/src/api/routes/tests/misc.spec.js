@@ -41,10 +41,12 @@ describe("run misc tests", () => {
       const dataImport = {
         csvString: "a,b,c,d\n1,2,3,4"
       }
-      await tableUtils.handleDataImport({
-        appId: config.getAppId(),
-        userId: "test",
-      }, table, dataImport)
+      await tableUtils.handleDataImport(
+        config.getAppId(),
+        { userId: "test" },
+        table,
+        dataImport
+      )
       const rows = await config.getRows()
       expect(rows[0].a).toEqual("1")
       expect(rows[0].b).toEqual("2")

@@ -143,7 +143,7 @@ exports.coerce = (row, type) => {
  * @param {object} table the table which the row is being saved to.
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-exports.inputProcessing = (user, table, row) => {
+exports.inputProcessing = (user = {}, table, row) => {
   let clonedRow = cloneDeep(row)
   // need to copy the table so it can be differenced on way out
   const copiedTable = cloneDeep(table)

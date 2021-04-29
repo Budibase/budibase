@@ -28,7 +28,7 @@ function formatResponse(resp) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
 
   const body = await db.allDocs(
     getQueryParams(null, {
@@ -39,7 +39,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const query = ctx.request.body
 
   if (!query._id) {
@@ -90,7 +90,7 @@ async function enrichQueryFields(fields, parameters) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
   if (env.isProd()) {
@@ -102,7 +102,7 @@ exports.find = async function(ctx) {
 }
 
 exports.preview = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
 
   const datasource = await db.get(ctx.request.body.datasourceId)
 
@@ -130,7 +130,7 @@ exports.preview = async function(ctx) {
 }
 
 exports.execute = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
@@ -153,7 +153,7 @@ exports.execute = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200

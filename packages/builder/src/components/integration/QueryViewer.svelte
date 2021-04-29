@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto } from "@roxi/routify"
   import {
     Select,
     Button,
@@ -15,7 +15,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
-  import { backendUiStore } from "builderStore"
+  import { datasources, integrations, queries } from "stores/backend"
 
   const PREVIEW_HEADINGS = [
     {
@@ -35,15 +35,11 @@
   export let query
   export let fields = []
 
-  let config
   let tab = "JSON"
   let parameters
   let data = []
-  let popover
 
-  $: datasource = $backendUiStore.datasources.find(
-    ds => ds._id === query.datasourceId
-  )
+  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
 
   $: query.schema = fields.reduce(
     (acc, next) => ({
@@ -58,7 +54,7 @@
 
   $: datasourceType = datasource?.source
 
-  $: integrationInfo = $backendUiStore.integrations[datasourceType]
+  $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
 
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
@@ -115,10 +111,7 @@
 
   async function saveQuery() {
     try {
-      const { _id } = await backendUiStore.actions.queries.save(
-        query.datasourceId,
-        query
-      )
+      const { _id } = await queries.save(query.datasourceId, query)
       notifier.success(`Query saved successfully.`)
       $goto(`../../${_id}`)
     } catch (err) {

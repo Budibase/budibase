@@ -34,14 +34,23 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
-  USERS: "ta_users",
+}
+
+const InternalTables = {
+  USER_METADATA: "ta_users",
+}
+
+const SearchIndexes = {
+  ROWS: "rows",
 }
 
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
+exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
+exports.SearchIndexes = SearchIndexes
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`
@@ -98,8 +107,7 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
     return getDocParams(DocumentTypes.ROW, null, otherProps)
   }
 
-  const endOfKey =
-    rowId == null ? `${tableId}${SEPARATOR}` : `${tableId}${SEPARATOR}${rowId}`
+  const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
 
   return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
@@ -107,26 +115,37 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
 /**
  * Gets a new row ID for the specified table.
  * @param {string} tableId The table which the row is being created for.
+ * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.
  * @returns {string} The new ID which a row doc can be stored under.
  */
-exports.generateRowID = tableId => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+exports.generateRowID = (tableId, id = null) => {
+  id = id || newid()
+  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
 }
 
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-exports.getUserParams = (email = "", otherProps = {}) => {
-  return exports.getRowParams(ViewNames.USERS, email, otherProps)
+exports.getUserMetadataParams = (userId = null, otherProps = {}) => {
+  return exports.getRowParams(InternalTables.USER_METADATA, userId, otherProps)
 }
 
 /**
- * Generates a new user ID based on the passed in email.
- * @param {string} email The email which the ID is going to be built up of.
+ * Generates a new user ID based on the passed in global ID.
+ * @param {string} globalId The ID of the global user.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserID = email => {
-  return `${DocumentTypes.ROW}${SEPARATOR}${ViewNames.USERS}${SEPARATOR}${DocumentTypes.USER}${SEPARATOR}${email}`
+exports.generateUserMetadataID = globalId => {
+  return exports.generateRowID(InternalTables.USER_METADATA, globalId)
+}
+
+/**
+ * Breaks up the ID to get the global ID.
+ */
+exports.getGlobalIDFromUserMetadataID = id => {
+  return id.split(
+    `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+  )[1]
 }
 
 /**

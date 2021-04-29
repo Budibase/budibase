@@ -2,6 +2,7 @@ context("Create Components", () => {
   let headlineId
 
   before(() => {
+    cy.login()
     cy.createTestApp()
     cy.createTable("dog")
     cy.addColumn("dog", "name", "string")
@@ -43,7 +44,7 @@ context("Create Components", () => {
   it("should create a form and reset to match schema", () => {
     cy.addComponent("Form", "Form").then(() => {
       cy.get("[data-cy=Settings]").click()
-      cy.get("[data-cy=setting-datasource]")
+      cy.get("[data-cy=setting-dataSource]")
         .contains("Choose option")
         .click()
       cy.get(".dropdown")

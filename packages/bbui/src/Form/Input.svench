@@ -1,0 +1,62 @@
+<script>
+  import { View } from "svench";
+  import Input from "./Input.svelte";
+  import Button from "../Button/Button.svelte";
+</script>
+
+<View name="default">
+  <Input placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="presentation">
+  <Input presentation placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="outline">
+  <Input outline placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="disabled">
+  <Input disabled placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="disabled with value">
+  <Input value="Some text" disabled placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="thin">
+  <Input thin placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="extraThin">
+  <Input extraThin placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="large">
+  <Input large placeholder="Enter your name" label="Name" />
+</View>
+
+<View name="border">
+  <Input border presentation placeholder="Enter your name" label="Name" />
+</View>
+
+
+<View name="number">
+  <Input type="number" placeholder="Enter your age" label="Age" />
+</View>
+
+<View name="with edit buttons">
+  <Input
+    thin
+    edit
+    placeholder="Enter your name"
+    label="Name"
+    on:save={console.log} />
+</View>
+<View name="with error message">
+  <Input
+    placeholder="Enter your name"
+    label="Name"
+    error="This is an error message!"
+    on:save={console.log} />
+</View>

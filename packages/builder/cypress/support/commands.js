@@ -1,31 +1,31 @@
 // ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
 // For more comprehensive examples of custom
 // commands please read more here:
 // https://on.cypress.io/custom-commands
 // ***********************************************
 //
-//
-// -- This is a parent command --
-// Cypress.Commands.add("login", (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+Cypress.Commands.add("login", () => {
+  cy.getCookie("budibase:auth").then(cookie => {
+    // Already logged in
+    if (cookie) return
+
+    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.contains("Create Test User").click()
+    cy.get("input")
+      .first()
+      .type("test@test.com")
+
+    cy.get('input[type="password"]').type("test")
+
+    cy.contains("Login").click()
+  })
+})
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  // wait for init API calls on visit
+  cy.wait(100)
   cy.contains("Create New Web App").click()
   cy.get("body")
     .then($body => {
@@ -42,12 +42,6 @@ Cypress.Commands.add("createApp", name => {
         .type(name)
         .should("have.value", name)
       cy.contains("Next").click()
-      cy.get("input[name=email]")
-        .click()
-        .type("test@test.com")
-      cy.get("input[name=password]")
-        .click()
-        .type("test")
       cy.contains("Submit").click()
       cy.get("[data-cy=new-table]", {
         timeout: 20000,
@@ -56,10 +50,10 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/_builder`)
-  cy.get("body").then($body => {
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.get(".apps").then($apps => {
     cy.wait(1000)
-    if ($body.find(`[data-cy="app-${name}"]`).length) {
+    if ($apps.find(`[data-cy="app-${name}"]`).length) {
       cy.get(`[data-cy="app-${name}"] a`).click()
       cy.get("[data-cy=settings-icon]").click()
       cy.get(".modal-content").within(() => {
@@ -156,7 +150,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
     cy.get(`[data-cy="category-${category}"]`).click()
   }
   cy.get(`[data-cy="component-${component}"]`).click()
-  cy.wait(500)
+  cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]

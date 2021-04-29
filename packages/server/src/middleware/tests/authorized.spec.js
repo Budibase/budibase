@@ -1,7 +1,5 @@
 const authorizedMiddleware = require("../authorized")
 const env = require("../../environment")
-const apiKey = require("../../utilities/security/apikey")
-const { AuthTypes } = require("../../constants")
 const { PermissionTypes, PermissionLevels } = require("../../utilities/security/permissions")
 jest.mock("../../environment", () => ({
     prod: false,
@@ -12,7 +10,6 @@ jest.mock("../../environment", () => ({
     }
   })
 )
-jest.mock("../../utilities/security/apikey")
 
 class TestConfiguration {
   constructor(role) {
@@ -92,29 +89,6 @@ describe("Authorization middleware", () => {
         "x-instanceid": "instance123",
       })
     })
-
-    it("passes to next() if api key is valid", async () => {
-      apiKey.isAPIKeyValid.mockResolvedValueOnce(true)
-
-      await config.executeMiddleware()
-
-      expect(config.next).toHaveBeenCalled()
-      expect(config.ctx.auth).toEqual({
-        authenticated: AuthTypes.EXTERNAL,
-        apiKey: config.ctx.headers["x-api-key"],
-      })
-      expect(config.ctx.user).toEqual({
-        appId: config.ctx.headers["x-instanceid"],
-      })
-    })
-
-    it("throws if api key is invalid", async () => {
-      apiKey.isAPIKeyValid.mockResolvedValueOnce(false)
-
-      await config.executeMiddleware()
-
-      expect(config.throw).toHaveBeenCalledWith(403, "API key invalid")
-    })
   })
 
   describe("non-webhook call", () => {
@@ -143,7 +117,7 @@ describe("Authorization middleware", () => {
 
       expect(config.next).toHaveBeenCalled()
     })
-
+    
     it("throws if the user has only builder permissions", async () => {
       config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)

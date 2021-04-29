@@ -2,6 +2,15 @@ const TestConfig = require("../../../../tests/utilities/TestConfiguration")
 const structures = require("../../../../tests/utilities/structures")
 const env = require("../../../../environment")
 
+jest.mock("../../../../utilities/workerRequests", () => ({
+  getGlobalUsers: jest.fn(),
+  saveGlobalUser: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
+}))
+
 exports.delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let request, config

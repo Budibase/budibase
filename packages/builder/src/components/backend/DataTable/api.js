@@ -1,7 +1,7 @@
 import api from "builderStore/api"
 
 export async function createUser(user) {
-  const CREATE_USER_URL = `/api/users`
+  const CREATE_USER_URL = `/api/users/metadata`
   const response = await api.post(CREATE_USER_URL, user)
   return await response.json()
 }
@@ -15,8 +15,7 @@ export async function saveRow(row, tableId) {
 
 export async function deleteRow(row) {
   const DELETE_ROWS_URL = `/api/${row.tableId}/rows/${row._id}/${row._rev}`
-  const response = await api.delete(DELETE_ROWS_URL)
-  return response
+  return api.delete(DELETE_ROWS_URL)
 }
 
 export async function fetchDataForView(view) {

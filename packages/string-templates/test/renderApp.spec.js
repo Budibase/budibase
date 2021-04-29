@@ -1,9 +1,8 @@
-const { processString } = require("../src/index")
+const { processString } = require("../src/index.cjs")
 
 describe("specific test case for whether or not full app template can still be rendered", () => {
   it("should be able to render the app template", async () => {
-    const template =
-      `<!doctype html>
+    const template = `<!doctype html>
         <html>
         <head>
           {{{head}}}
@@ -16,7 +15,7 @@ describe("specific test case for whether or not full app template can still be r
     const context = {
       appId: "App1",
       head: "<title>App</title>",
-      body: "<body><p>App things</p></body>"
+      body: "<body><p>App things</p></body>",
     }
     const output = await processString(template, context)
     expect(output).toBe(`<!doctype html>

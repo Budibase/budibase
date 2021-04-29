@@ -1,9 +1,11 @@
 const CouchDB = require("../../db")
 const env = require("../../environment")
-const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const packageJson = require("../../../package.json")
-const { createLinkView } = require("../../db/linkedRows")
-const { createRoutingView } = require("../../utilities/routing")
+const {
+  createLinkView,
+  createRoutingView,
+  createAllSearchIndex,
+} = require("../../db/views/staticViews")
 const {
   getTemplateStream,
   createApp,
@@ -29,6 +31,7 @@ const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const { getDeployedApps } = require("../../utilities/builder/hosting")
+const { clientLibraryPath } = require("../../utilities")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -70,7 +73,7 @@ async function getAppUrlIfNotInUse(ctx) {
   if (!env.SELF_HOSTED) {
     return url
   }
-  const deployedApps = await getDeployedApps()
+  const deployedApps = await getDeployedApps(ctx)
   if (
     deployedApps[url] != null &&
     deployedApps[url].appId !== ctx.params.appId
@@ -92,6 +95,7 @@ async function createInstance(template) {
   // add view for linked rows
   await createLinkView(appId)
   await createRoutingView(appId)
+  await createAllSearchIndex(appId)
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
@@ -138,8 +142,8 @@ exports.fetchAppPackage = async function(ctx) {
     application,
     screens,
     layouts,
+    clientLibPath: clientLibraryPath(ctx.params.appId),
   }
-  await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
 exports.create = async function(ctx) {
@@ -155,7 +159,6 @@ exports.create = async function(ctx) {
 
   const url = await getAppUrlIfNotInUse(ctx)
   const appId = instance._id
-  const version = packageJson.version
   const newApplication = {
     _id: appId,
     type: "app",
@@ -174,11 +177,10 @@ exports.create = async function(ctx) {
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
-  if (env.NODE_ENV !== "jest") {
+  if (!env.isTest()) {
     await createApp(appId)
   }
 
-  await setBuilderToken(ctx, appId, version)
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
@@ -204,8 +206,8 @@ exports.delete = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const app = await db.get(ctx.params.appId)
   const result = await db.destroy()
-
-  if (env.NODE_ENV !== "jest") {
+  /* istanbul ignore next */
+  if (!env.isTest()) {
     await deleteApp(ctx.params.appId)
   }
 

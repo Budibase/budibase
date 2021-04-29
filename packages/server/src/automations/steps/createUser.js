@@ -23,7 +23,6 @@ module.exports.definition = {
         },
         password: {
           type: "string",
-          customType: "password",
           title: "Password",
         },
         roleId: {
@@ -62,9 +61,7 @@ module.exports.definition = {
 module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
   const { email, password, roleId } = inputs
   const ctx = {
-    user: {
-      appId: appId,
-    },
+    appId,
     request: {
       body: { email, password, roleId },
     },
@@ -75,11 +72,11 @@ module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
     if (env.isProd()) {
       await usage.update(apiKey, usage.Properties.USER, 1)
     }
-    await userController.create(ctx)
+    await userController.createMetadata(ctx)
     return {
       response: ctx.body,
       // internal property not returned through the API
-      id: ctx.userId,
+      id: ctx.body._id,
       revision: ctx.body._rev,
       success: ctx.status === 200,
     }

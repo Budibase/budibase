@@ -108,14 +108,6 @@ describe("/webhooks", () => {
         type: "object",
       })
     })
-
-    it("should apply authorization to endpoint", async () => {
-      await checkBuilderEndpoint({
-        config,
-        method: "POST",
-        url: `/api/webhooks/schema/${config.getAppId()}/${webhook._id}`,
-      })
-    })
   })
 
   describe("trigger", () => {
