@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import { findComponent, findComponentPath } from "./storeUtils"
-import { store } from "builderStore"
+import {currentAssetId, store} from "builderStore"
 import { tables as tablesStore, queries as queriesStores } from "stores/backend"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
@@ -330,6 +330,21 @@ export function removeBindings(obj) {
 }
 
 /**
+ * When converting from readable to runtime it can sometimes add too many square brackets,
+ * this makes sure that doesn't happen.
+ */
+function shouldReplaceBinding(currentValue, from, convertTo) {
+  if (!currentValue.includes(from)) {
+    return false
+  }
+  if (convertTo === "readableBinding") {
+    return true
+  }
+  const noSpaces = currentValue.replace(/\s+/g, "")
+  return !noSpaces.includes(`[${from}]`)
+}
+
+/**
  * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
 function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
@@ -348,7 +363,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
   for (let boundValue of boundValues) {
     let newBoundValue = boundValue
     for (let from of convertFromProps) {
-      if (newBoundValue.includes(from)) {
+      if (shouldReplaceBinding(newBoundValue, from, convertTo)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
         newBoundValue = newBoundValue.replace(from, binding[convertTo])
       }

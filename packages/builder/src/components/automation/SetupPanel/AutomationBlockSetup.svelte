@@ -6,7 +6,7 @@
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
+  import AutomationBindingPanel from "../../common/ServerBindingPanel.svelte"
 
   export let block
   export let webhookModal

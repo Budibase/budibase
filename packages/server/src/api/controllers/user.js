@@ -88,6 +88,7 @@ exports.updateMetadata = async function(ctx) {
   })
   const metadata = {
     ...globalUser,
+    tableId: InternalTables.USER_METADATA,
     _id: user._id || generateUserMetadataID(globalUser._id),
     _rev: user._rev,
   }
