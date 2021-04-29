@@ -45,10 +45,7 @@
   </div>
 </div>
 <Modal bind:this={bindingModal} width="50%">
-  <ModalContent
-    {title}
-    onConfirm={saveBinding}
-    bind:disabled={invalid}>
+  <ModalContent {title} onConfirm={saveBinding} bind:disabled={invalid}>
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
@@ -56,7 +53,7 @@
       this={panel}
       serverSide
       value={readableValue}
-      bind:validity={validity}
+      bind:validity
       on:update={event => (tempValue = event.detail)}
       bindableProperties={bindings} />
   </ModalContent>
