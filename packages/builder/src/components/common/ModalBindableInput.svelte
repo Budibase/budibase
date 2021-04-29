@@ -1,16 +1,14 @@
 <script>
-  import { Icon, Input, Drawer, Body, Button } from "@budibase/bbui"
+  import { Icon, Input, Modal, Body, ModalContent } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
   import ServerBindingPanel from "components/common/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
-  export let serverSide = false
-  export let panel = serverSide ? ServerBindingPanel : BindingPanel
+  export let panel = ServerBindingPanel
   export let value = ""
   export let bindings = []
   export let thin = true
@@ -18,18 +16,20 @@
   export let placeholder
   export let label
 
-  let bindingDrawer
+  let bindingModal
+  let validity = true
 
-  $: tempValue = value
   $: readableValue = runtimeToReadableBinding(bindings, value)
+  $: tempValue = readableValue
+  $: invalid = !validity
 
-  const handleClose = () => {
+  const saveBinding = () => {
     onChange(tempValue)
-    bindingDrawer.hide()
+    bindingModal.hide()
   }
 
-  const onChange = value => {
-    dispatch("change", readableToRuntimeBinding(bindings, value))
+  const onChange = input => {
+    dispatch("change", readableToRuntimeBinding(bindings, input))
   }
 </script>
 
@@ -40,28 +40,27 @@
     value={readableValue}
     on:change={event => onChange(event.target.value)}
     {placeholder} />
-  <div class="icon" on:click={bindingDrawer.show}>
+  <div class="icon" on:click={bindingModal.show}>
     <Icon name="lightning" />
   </div>
 </div>
-<Drawer bind:this={bindingDrawer} {title}>
-  <div slot="description">
+<Modal bind:this={bindingModal} width="50%">
+  <ModalContent
+    {title}
+    onConfirm={saveBinding}
+    bind:disabled={invalid}>
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
-  </div>
-  <heading slot="buttons">
-    <Button thin blue on:click={handleClose}>Save</Button>
-  </heading>
-  <div slot="body">
     <svelte:component
       this={panel}
+      serverSide
       value={readableValue}
-      close={handleClose}
+      bind:validity={validity}
       on:update={event => (tempValue = event.detail)}
       bindableProperties={bindings} />
-  </div>
-</Drawer>
+  </ModalContent>
+</Modal>
 
 <style>
   .control {

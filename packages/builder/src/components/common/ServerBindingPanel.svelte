@@ -4,18 +4,20 @@
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
+  import { readableToRuntimeBinding } from "../../builderStore/dataBinding"
 
   const dispatch = createEventDispatcher()
 
-  export let value = ""
-  export let bindingDrawer
+  export let bindingContainer
   export let bindableProperties = []
+  export let validity = true
+  export let value = ""
 
+  let hasReadable = bindableProperties[0].readableBinding != null
   let originalValue = value
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let validity = true
 
   $: categories = Object.entries(groupBy("category", bindableProperties))
   $: value && checkValid()
@@ -23,7 +25,11 @@
   $: searchRgx = new RegExp(search, "ig")
 
   function checkValid() {
-    validity = isValid(value)
+    if (hasReadable) {
+      validity = isValid(readableToRuntimeBinding(bindableProperties, value))
+    } else {
+      validity = isValid(value)
+    }
   }
 
   function addToText(binding) {
@@ -40,7 +46,9 @@
   }
   export function cancel() {
     dispatch("update", originalValue)
-    bindingDrawer.close()
+    if (bindingContainer && bindingContainer.close) {
+      bindingContainer.close()
+    }
   }
 </script>
 
@@ -53,14 +61,16 @@
     {#each categories as [categoryName, bindings]}
       <Heading extraSmall>{categoryName}</Heading>
       <Spacer extraSmall />
-      {#each bindableProperties.filter(binding =>
+      {#each bindings.filter(binding =>
         binding.label.match(searchRgx)
       ) as binding}
         <div class="binding" on:click={() => addToText(binding)}>
           <span class="binding__label">{binding.label}</span>
           <span class="binding__type">{binding.type}</span>
           <br />
-          <div class="binding__description">{binding.description || ''}</div>
+          {#if binding.description}
+            <div class="binding__description">{binding.description || ''}</div>
+          {/if}
         </div>
       {/each}
     {/each}
@@ -129,8 +139,12 @@
 
   .binding {
     font-size: 12px;
-    padding: var(--spacing-s);
-    border-radius: var(--border-radius-m);
+    border: var(--border-light);
+    border-width: 1px 0 0 0;
+    padding: var(--spacing-m) 0;
+    margin: auto 0;
+    align-items: center;
+    cursor: pointer;
   }
   .binding:hover {
     background-color: var(--grey-2);
