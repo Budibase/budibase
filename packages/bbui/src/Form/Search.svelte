@@ -16,7 +16,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {disabled}>
+<Field {label} {labelPosition}>
   <Search
     {disabled}
     {value}
