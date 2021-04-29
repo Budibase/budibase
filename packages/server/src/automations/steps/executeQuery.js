@@ -12,16 +12,19 @@ module.exports.definition = {
     inputs: {
       properties: {
         query: {
-          type: "string",
-          customType: "query",
-          title: "Query",
-        },
-        parameters: {
-          title: "Query Parameters",
           type: "object",
-          customType: "query",
+          properties: {
+            queryId: {
+              type: "string",
+              customType: "query",
+            },
+          },
+          customType: "queryParams",
+          title: "Parameters",
+          required: ["queryId"],
         },
       },
+      required: ["query"],
     },
     outputs: {
       properties: {
@@ -48,16 +51,20 @@ module.exports.run = async function({ inputs, appId, emitter }) {
       },
     }
   }
+
+  const { queryId, ...rest } = inputs.query
+  console.log(JSON.stringify(inputs.query))
+
   const ctx = {
     params: {
-      queryId: inputs.query,
+      queryId,
     },
     request: {
       body: {
-        parameters: inputs.parameters,
+        parameters: rest,
       },
     },
-    user: { appId },
+    appId,
     eventEmitter: emitter,
   }
 

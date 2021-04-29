@@ -1,7 +1,9 @@
 <script>
   import TableSelector from "./TableSelector.svelte"
   import RowSelector from "./RowSelector.svelte"
+  import QuerySelector from "./QuerySelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
+  import QueryParamSelector from "./QueryParamSelector.svelte"
   import { Button, Input, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
@@ -74,8 +76,12 @@
         value={block.inputs[key]}
         on:change={e => (block.inputs[key] = e.detail)}
         {bindings} />
+    {:else if value.customType === 'query'}
+      <QuerySelector bind:value={block.inputs[key]} />
     {:else if value.customType === 'table'}
       <TableSelector bind:value={block.inputs[key]} />
+    {:else if value.customType === 'queryParams'}
+      <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
     {:else if value.customType === 'row'}
       <RowSelector bind:value={block.inputs[key]} {bindings} />
     {:else if value.customType === 'webhookUrl'}
