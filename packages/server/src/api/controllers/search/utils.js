@@ -34,6 +34,7 @@ class QueryBuilder {
       fuzzy: {},
       range: {},
       equal: {},
+      notEqual: {},
       ...base,
     }
     this.limit = 50
@@ -73,6 +74,11 @@ class QueryBuilder {
     return this
   }
 
+  addNotEqual(key, value) {
+    this.query.notEqual[key] = value
+    return this
+  }
+
   addTable(tableId) {
     this.query.equal.tableId = tableId
     return this
@@ -85,7 +91,7 @@ class QueryBuilder {
         if (output.length !== 0) {
           output += " AND "
         }
-        output += queryFn(key, value)
+        output += queryFn(key, value).replace(/ /, "\\ ")
       }
     }
 
@@ -103,6 +109,9 @@ class QueryBuilder {
     }
     if (this.query.equal) {
       build(this.query.equal, (key, value) => `${key}:${value}`)
+    }
+    if (this.query.notEqual) {
+      build(this.query.notEqual, (key, value) => `!${key}:${value}`)
     }
     if (rawQuery) {
       output = output.length === 0 ? rawQuery : `&${rawQuery}`
