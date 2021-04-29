@@ -25,7 +25,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {disabled} {error}>
+<Field {label} {labelPosition} {error}>
   <RadioGroup
     {error}
     {disabled}
