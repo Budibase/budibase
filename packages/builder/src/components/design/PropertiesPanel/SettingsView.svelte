@@ -13,7 +13,8 @@
   import OptionSelect from "./PropertyControls/OptionSelect.svelte"
   import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
-  import DatasourceSelect from "./PropertyControls/DatasourceSelect.svelte"
+  import DataSourceSelect from "./PropertyControls/DataSourceSelect.svelte"
+  import DataProviderSelect from "./PropertyControls/DataProviderSelect.svelte"
   import FieldSelect from "./PropertyControls/FieldSelect.svelte"
   import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
@@ -61,7 +62,8 @@
   const controlMap = {
     text: Input,
     select: OptionSelect,
-    datasource: DatasourceSelect,
+    dataSource: DataSourceSelect,
+    dataProvider: DataProviderSelect,
     detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
@@ -108,8 +110,8 @@
       componentInstance._id,
       component => component._component.endsWith("/form")
     )
-    const datasource = form?.datasource
-    const fields = makeDatasourceFormComponents(datasource)
+    const dataSource = form?.dataSource
+    const fields = makeDatasourceFormComponents(dataSource)
     onChange(
       "_children",
       fields.map(field => field.json())

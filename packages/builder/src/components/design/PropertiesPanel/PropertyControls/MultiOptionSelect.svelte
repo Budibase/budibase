@@ -4,6 +4,7 @@
   export let options = []
   export let value = []
   export let onChange = () => {}
+  export let placeholder
 
   let boundValue = getValidOptions(value, options)
 
@@ -26,6 +27,7 @@
     align="right"
     extraThin
     secondary
+    {placeholder}
     value={boundValue}
     on:change={setValue}>
     {#each options as option}

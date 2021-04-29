@@ -3,7 +3,8 @@ const yargs = require("yargs")
 const fs = require("fs")
 const { join } = require("path")
 const CouchDB = require("../src/db")
-const { budibaseAppsDir } = require("../src/utilities/budibaseDir")
+// load environment
+const env = require("../src/environment")
 
 // Script to export a chosen budibase app into a package
 // Usage: ./scripts/exportAppTemplate.js export --name=Funky --appId=appId
@@ -25,6 +26,9 @@ yargs
       },
     },
     async args => {
+      if (!env.isDev()) {
+        throw "Only works in dev"
+      }
       const name = args.name,
         appId = args.appId
       console.log("Exporting app..")
@@ -34,10 +38,11 @@ yargs
         )
         return
       }
-      const exportPath = join(budibaseAppsDir(), "templates", "app", name, "db")
+      const exportPath = join(process.cwd(), name, "db")
       fs.ensureDirSync(exportPath)
       const writeStream = fs.createWriteStream(join(exportPath, "dump.text"))
       // perform couch dump
+
       const instanceDb = new CouchDB(appId)
       await instanceDb.dump(writeStream, {})
       console.log(`Template ${name} exported to ${exportPath}`)

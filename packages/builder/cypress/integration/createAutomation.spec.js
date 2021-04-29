@@ -1,5 +1,6 @@
 context("Create a automation", () => {
   before(() => {
+    cy.login()
     cy.createTestApp()
   })
 

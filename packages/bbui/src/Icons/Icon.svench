@@ -1,0 +1,109 @@
+<script>
+  import { View } from "svench";
+  import Icon from "./Icon.svelte";
+</script>
+
+<View name="add icon">
+  <Icon name="add" />
+</View>
+
+<View name="Add Row icon">
+  <Icon name="addrow" />
+</View>
+
+<View name="Add Column icon">
+  <Icon name="addcolumn" />
+</View>
+
+<View name="View icon">
+  <Icon name="view" />
+</View>
+
+<View name="Table icon">
+  <Icon name="table" />
+</View>
+
+<View name="Edit icon">
+  <Icon name="edit" />
+</View>
+
+<View name="Delete icon">
+  <Icon name="delete" />
+</View>
+
+<View name="Close icon">
+  <Icon name="close" />
+</View>
+
+<View name="Arrow Up icon">
+  <Icon name="arrowup" />
+</View>
+
+<View name="Arrow Right icon">
+  <Icon name="arrowright" />
+</View>
+
+<View name="Arrow Down icon">
+  <Icon name="arrowdown" />
+</View>
+
+<View name="Arrow Left icon">
+  <Icon name="arrowleft" />
+</View>
+
+<View name="Search icon">
+  <Icon name="search" />
+</View>
+
+<View name="Preview icon">
+  <Icon name="preview" />
+</View>
+
+<View name="Settings icon">
+  <Icon name="settings" />
+</View>
+
+<View name="Add User icon">
+  <Icon name="adduser" />
+</View>
+
+<View name="Plugin icon">
+  <Icon name="plugin" />
+</View>
+
+<View name="Help icon">
+  <Icon name="help" />
+</View>
+
+<View name="Sort Ascending icon">
+  <Icon name="sortascending" />
+</View>
+
+<View name="Sort Descending icon">
+  <Icon name="sortdescending" />
+</View>
+
+<View name="Calculate icon">
+  <Icon name="calculate" />
+</View>
+
+<View name="Filter icon">
+  <Icon name="filter" />
+</View>
+
+<View name="Add Fill">
+  <Icon name="addfill" />
+</View>
+
+<View name="Group">
+  <Icon name="group" />
+</View>
+
+<View name="Lightning">
+  <Icon name="lightning" />
+</View>
+
+<View name="Download">
+  <Icon name="download" />
+</View>
+

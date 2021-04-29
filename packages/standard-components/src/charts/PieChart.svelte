@@ -1,13 +1,9 @@
 <script>
-  import { getContext, onMount } from "svelte"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
-  import { isEmpty } from "lodash/fp"
-
-  const { API } = getContext("sdk")
 
   export let title
-  export let datasource
+  export let dataProvider
   export let labelColumn
   export let valueColumn
   export let height
@@ -19,25 +15,21 @@
   export let donut
   export let palette
 
-  let options
+  $: options = setUpChart(dataProvider)
 
   // Fetch data on mount
-  onMount(async () => {
-    if (isEmpty(datasource) || !labelColumn || !valueColumn) {
-      options = false
-      return
+  const setUpChart = provider => {
+    if (!provider || !labelColumn || !valueColumn) {
+      return null
     }
 
     // Fetch, filter and sort data
-    const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
-    const result = await API.fetchDatasource(datasource)
-    const data = result
+    const { schema, rows } = provider
+    const data = rows
       .filter(row => row[labelColumn] != null && row[valueColumn] != null)
-      .slice(0, 20)
-      .sort((a, b) => (a[labelColumn] > b[labelColumn] ? 1 : -1))
+      .slice(0, 100)
     if (!schema || !data.length) {
-      options = false
-      return
+      return null
     }
 
     // Initialise default chart
@@ -58,8 +50,8 @@
     builder = builder.series(series).labels(labels)
 
     // Build chart options
-    options = builder.getOptions()
-  })
+    return builder.getOptions()
+  }
 </script>
 
 <ApexChart {options} />

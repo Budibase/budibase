@@ -6,7 +6,7 @@ const { BUILDER } = require("../../utilities/security/permissions")
 const router = Router()
 
 router.get(
-  "/:appId/components/definitions",
+  "/api/:appId/components/definitions",
   authorized(BUILDER),
   controller.fetchAppComponentDefinitions
 )

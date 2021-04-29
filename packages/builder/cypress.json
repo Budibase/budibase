@@ -1,9 +1,9 @@
 {
-  "baseUrl": "http://localhost:4001/_builder/",
+  "baseUrl": "http://localhost:10000/builder/",
   "video": true,
   "projectId": "bmbemn",
   "env": {
-    "PORT": "4001",
+    "PORT": "10000",
     "JWT_SECRET": "test"
   }
 }

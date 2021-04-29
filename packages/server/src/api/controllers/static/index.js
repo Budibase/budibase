@@ -6,31 +6,22 @@ const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
-const {
-  budibaseAppsDir,
-  budibaseTempDir,
-} = require("../../../utilities/budibaseDir")
+const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/builder/hosting")
 const CouchDB = require("../../../db")
-const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
-const { loadHandlebarsFile } = require("../../../utilities/fileSystem")
+const {
+  loadHandlebarsFile,
+  NODE_MODULES_PATH,
+  TOP_LEVEL_PATH,
+} = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const { OBJ_STORE_DIRECTORY } = require("../../../constants")
 const fileProcessor = require("../../../utilities/fileSystem/processor")
-
-function objectStoreUrl() {
-  if (env.SELF_HOSTED) {
-    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
-    return OBJ_STORE_DIRECTORY
-  } else {
-    return "https://cdn.app.budi.live/assets"
-  }
-}
+const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-  const apps = await getDeployedApps()
+  const apps = await getDeployedApps(ctx)
   if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
     return apps[possibleAppUrl].appId
   } else {
@@ -42,11 +33,8 @@ async function checkForSelfHostedURL(ctx) {
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(__dirname, "../../../../builder")
-  if (ctx.file === "index.html") {
-    await setBuilderToken(ctx)
-  }
-  await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
+  let builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  await send(ctx, ctx.file, { root: builderPath })
 }
 
 exports.uploadFile = async function(ctx) {
@@ -68,7 +56,7 @@ exports.uploadFile = async function(ctx) {
 
     return prepareUpload({
       file,
-      s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+      s3Key: `assets/${ctx.appId}/attachments/${processedFileName}`,
       bucket: "prod-budi-app-assets",
     })
   })
@@ -89,7 +77,7 @@ exports.serveApp = async function(ctx) {
     title: appInfo.name,
     production: env.isProd(),
     appId,
-    objectStoreUrl: objectStoreUrl(),
+    clientLibPath: clientLibraryPath(appId),
   })
 
   const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
@@ -101,70 +89,37 @@ exports.serveApp = async function(ctx) {
   })
 }
 
-exports.serveAttachment = async function(ctx) {
-  const appId = ctx.user.appId
-  const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
-
-  // Serve from object store
-  if (env.isProd()) {
-    const S3_URL = join(objectStoreUrl(), appId, "attachments", ctx.file)
-    const response = await fetch(S3_URL)
-    const body = await response.text()
-    ctx.set("Content-Type", response.headers.get("Content-Type"))
-    ctx.body = body
-    return
-  }
-
-  await send(ctx, ctx.file, { root: attachmentsPath })
-}
-
-exports.serveAppAsset = async function(ctx) {
-  // default to homedir
-  const appPath = resolve(budibaseAppsDir(), ctx.user.appId, "public")
-
-  await send(ctx, ctx.file, { root: ctx.devPath || appPath })
+exports.serveClientLibrary = async function(ctx) {
+  return send(ctx, "budibase-client.js", {
+    root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
+  })
 }
 
 exports.serveComponentLibrary = async function(ctx) {
   const appId = ctx.query.appId || ctx.appId
-  // default to homedir
-  let componentLibraryPath = resolve(
-    budibaseAppsDir(),
-    appId,
-    "node_modules",
-    decodeURI(ctx.query.library),
-    "package",
-    "dist"
-  )
 
-  if (env.isDev()) {
-    componentLibraryPath = join(
+  if (env.isDev() || env.isTest()) {
+    const componentLibraryPath = join(
       budibaseTempDir(),
       decodeURI(ctx.query.library),
       "dist"
     )
-  } else {
-    let componentLib = "componentlibrary"
-    if (ctx.user.version) {
-      componentLib += `-${ctx.user.version}`
-    } else {
-      componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
-    }
-    const S3_URL = encodeURI(
-      join(
-        objectStoreUrl(appId),
-        componentLib,
-        ctx.query.library,
-        "dist",
-        "index.js"
-      )
-    )
-    const response = await fetch(S3_URL)
-    const body = await response.text()
-    ctx.type = "application/javascript"
-    ctx.body = body
-    return
+    return send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
   }
+  const db = new CouchDB(appId)
+  const appInfo = await db.get(appId)
 
-  await send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
+  let componentLib = "componentlibrary"
+  if (appInfo && appInfo.version) {
+    componentLib += `-${appInfo.version}`
+  } else {
+    componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
+  }
+  const S3_URL = encodeURI(
+    join(objectStoreUrl(), componentLib, ctx.query.library, "dist", "index.js")
+  )
+  const response = await fetch(S3_URL)
+  const body = await response.text()
+  ctx.type = "application/javascript"
+  ctx.body = body
 }

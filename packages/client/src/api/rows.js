@@ -1,4 +1,4 @@
-import { notificationStore, datasourceStore } from "../store"
+import { notificationStore, dataSourceStore } from "../store"
 import API from "./api"
 import { fetchTableDefinition } from "./tables"
 
@@ -31,7 +31,7 @@ export const saveRow = async row => {
     : notificationStore.success("Row saved")
 
   // Refresh related datasources
-  datasourceStore.actions.invalidateDatasource(row.tableId)
+  dataSourceStore.actions.invalidateDataSource(row.tableId)
 
   return res
 }
@@ -52,7 +52,7 @@ export const updateRow = async row => {
     : notificationStore.success("Row updated")
 
   // Refresh related datasources
-  datasourceStore.actions.invalidateDatasource(row.tableId)
+  dataSourceStore.actions.invalidateDataSource(row.tableId)
 
   return res
 }
@@ -72,7 +72,7 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
     : notificationStore.success("Row deleted")
 
   // Refresh related datasources
-  datasourceStore.actions.invalidateDatasource(tableId)
+  dataSourceStore.actions.invalidateDataSource(tableId)
 
   return res
 }
@@ -96,7 +96,7 @@ export const deleteRows = async ({ tableId, rows }) => {
     : notificationStore.success(`${rows.length} row(s) deleted`)
 
   // Refresh related datasources
-  datasourceStore.actions.invalidateDatasource(tableId)
+  dataSourceStore.actions.invalidateDataSource(tableId)
 
   return res
 }

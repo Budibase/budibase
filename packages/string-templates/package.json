@@ -1,12 +1,18 @@
 {
   "name": "@budibase/string-templates",
-  "version": "0.8.9",
+  "version": "0.8.16",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "browser": "dist/bundle.js",
+  "main": "src/index.cjs",
+  "module": "dist/bundle.mjs",
   "license": "AGPL-3.0",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./src/index.cjs",
+      "import": "./dist/bundle.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "tsc && rollup -c",
     "dev:builder": "tsc && rollup -cw",
@@ -33,5 +39,5 @@
     "rollup-plugin-terser": "^7.0.2",
     "typescript": "^4.1.3"
   },
-  "gitHead": "1b95326b20d1352d36305910259228b96a683dc7"
+  "gitHead": "4b6efc42ed3273595c7a129411f4d883733d3321"
 }

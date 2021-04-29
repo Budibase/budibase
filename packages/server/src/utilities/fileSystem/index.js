@@ -8,6 +8,7 @@ const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
   retrieve,
+  retrieveToTmp,
   streamUpload,
   deleteFolder,
   downloadTarball,
@@ -21,6 +22,8 @@ const fetch = require("node-fetch")
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
 const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
+const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
+const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -38,6 +41,10 @@ exports.init = () => {
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir)
   }
+  const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
+  if (env.isTest() && !fs.existsSync(clientLibPath)) {
+    fs.copyFileSync(require.resolve("@budibase/client"), clientLibPath)
+  }
 }
 
 /**
@@ -48,11 +55,10 @@ exports.checkDevelopmentEnvironment = () => {
   if (!isDev()) {
     return
   }
-  let error
   if (!fs.existsSync(budibaseTempDir())) {
-    error =
-      "Please run a build before attempting to run server independently to fill 'tmp' directory."
+    fs.mkdirSync(budibaseTempDir())
   }
+  let error
   if (!fs.existsSync(join(process.cwd(), ".env"))) {
     error = "Must run via yarn once to generate environment."
   }
@@ -157,7 +163,26 @@ exports.downloadTemplate = async (type, name) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 exports.getComponentLibraryManifest = async (appId, library) => {
-  const path = join(appId, "node_modules", library, "package", "manifest.json")
+  const filename = "manifest.json"
+  /* istanbul ignore next */
+  // when testing in cypress and so on we need to get the package
+  // as the environment may not be fully fleshed out for dev or prod
+  if (env.isTest()) {
+    const lib = library.split("/")[1]
+    const path = require.resolve(library).split(lib)[0]
+    return require(join(path, lib, filename))
+  } else if (env.isDev()) {
+    const path = join(
+      NODE_MODULES_PATH,
+      "@budibase",
+      "standard-components",
+      filename
+    )
+    // always load from new so that updates are refreshed
+    delete require.cache[require.resolve(path)]
+    return require(path)
+  }
+  const path = join(appId, "node_modules", library, "package", filename)
   let resp = await retrieve(ObjectStoreBuckets.APPS, path)
   if (typeof resp !== "string") {
     resp = resp.toString("utf8")
@@ -198,7 +223,19 @@ exports.readFileSync = (filepath, options = "utf8") => {
 }
 
 /**
+ * Given a set of app IDs makes sure file system is cleared of any of their temp info.
+ */
+exports.cleanup = appIds => {
+  for (let appId of appIds) {
+    fs.rmdirSync(join(budibaseTempDir(), appId), { recursive: true })
+  }
+}
+
+/**
  * Full function definition for below can be found in the utilities.
  */
 exports.upload = upload
 exports.retrieve = retrieve
+exports.retrieveToTmp = retrieveToTmp
+exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
+exports.NODE_MODULES_PATH = NODE_MODULES_PATH

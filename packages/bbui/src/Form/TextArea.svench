@@ -1,0 +1,30 @@
+<script>
+  import { View } from "svench";
+  import TextArea from "./TextArea.svelte";
+
+  import Button from "../Button/Button.svelte";
+</script>
+
+<View name="default">
+  <TextArea placeholder="Enter your email text" label="Email Body" />
+</View>
+
+<View name="disabled">
+  <TextArea disabled placeholder="Enter your email text" label="Email Body" />
+</View>
+
+<View name="no label">
+  <TextArea placeholder="Enter your email text" />
+</View>
+
+<View name="thin">
+  <TextArea thin placeholder="Enter your email text" label="Email Body" />
+</View>
+
+<View name="extraThin">
+  <TextArea extraThin placeholder="Enter your email text" label="Email Body" />
+</View>
+
+<View name="with buttons">
+  <TextArea edit placeholder="Enter your email text" label="Email Body" />
+</View>

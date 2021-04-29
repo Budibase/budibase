@@ -2,6 +2,9 @@ const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
 
+// mock the fetch for the search system
+jest.mock("node-fetch")
+
 describe("/rows", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -303,25 +306,19 @@ describe("/rows", () => {
 
   describe("search", () => {
     it("should run a search on the table", async () => {
-      const row = await config.createRow()
-      // add another row that shouldn't be found
-      await config.createRow({
-        ...basicRow(),
-        name: "Other Contact",
-      })
       const res = await request
         .post(`/api/${table._id}/rows/search`)
         .send({
           query: {
             name: "Test",
           },
-          pagination: { pageSize: 25, page: 0 }
+          pagination: { pageSize: 25 }
         })
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
-      expect(res.body.length).toEqual(1)
-      expect(res.body[0]._id).toEqual(row._id)
+      expect(res.body.rows.length).toEqual(1)
+      expect(res.body.bookmark).toBeDefined()
     })
   })
 

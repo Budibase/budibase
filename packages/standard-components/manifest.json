@@ -8,47 +8,6 @@
     "transitionable": true,
     "settings": []
   },
-  "datagrid": {
-    "name": "Grid",
-    "description": "A datagrid component with functionality to add, remove and edit rows.",
-    "icon": "ri-grid-line",
-    "styleable": true,
-    "settings": [
-      {
-        "type": "datasource",
-        "label": "Source",
-        "key": "datasource"
-      },
-      {
-        "type": "detailScreen",
-        "label": "Detail URL",
-        "key": "detailUrl"
-      },
-      {
-        "type": "boolean",
-        "label": "Editable",
-        "key": "editable"
-      },
-      {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "options": ["alpine", "alpine-dark", "balham", "balham-dark", "material"],
-        "defaultValue": "alpine"
-      },
-      {
-        "type": "number",
-        "label": "Height",
-        "key": "height",
-        "defaultValue": "500"
-      },
-      {
-        "type": "boolean",
-        "label": "Pagination",
-        "key": "pagination"
-      }
-    ]
-  },
   "screenslot": {
     "name": "Screenslot",
     "icon": "ri-artboard-2-line",
@@ -78,19 +37,17 @@
       }
     ]
   },
-  "list": {
+  "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "ri-list-check-2",
     "styleable": true,
     "hasChildren": true,
-    "dataProvider": true,
-    "actions": ["RefreshDatasource"],
     "settings": [
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "text",
@@ -103,7 +60,10 @@
         "label": "Filtering",
         "key": "filter"
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "search": {
     "name": "Search",
@@ -111,7 +71,6 @@
     "icon": "ri-search-line",
     "styleable": true,
     "hasChildren": true,
-    "dataProvider": true,
     "settings": [
       {
         "type": "table",
@@ -136,7 +95,10 @@
         "key": "noRowsMessage",
         "defaultValue": "No rows found."
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "stackedlist": {
     "name": "Stacked List",
@@ -369,6 +331,11 @@
         "label": "Color",
         "key": "color",
         "defaultValue": "#000"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },
@@ -435,36 +402,6 @@
         "type": "boolean",
         "label": "External",
         "key": "external"
-      }
-    ]
-  },
-  "rowdetail": {
-    "name": "Row Detail",
-    "description": "Loads a row, using an id from the URL, which can be used with {{ context }}, in children",
-    "icon": "ri-profile-line",
-    "styleable": true,
-    "hasChildren": true,
-    "dataProvider": true,
-    "settings": [
-      {
-        "type": "table",
-        "label": "Table",
-        "key": "table"
-      }
-    ]
-  },
-  "newrow": {
-    "name": "New Row",
-    "description": "Sets up a new row for creation, which can be used with {{ context }}, in children",
-    "icon": "ri-profile-line",
-    "hasChildren": true,
-    "styleable": true,
-    "dataProvider": true,
-    "settings": [
-      {
-        "type": "table",
-        "label": "Table",
-        "key": "table"
       }
     ]
   },
@@ -591,21 +528,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -691,21 +628,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -792,21 +729,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -905,21 +842,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "text",
@@ -982,21 +919,21 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "text",
@@ -1059,39 +996,39 @@
         "key": "title"
       },
       {
-        "type": "datasource",
+        "type": "dataProvider",
         "label": "Data",
-        "key": "datasource"
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Date Col.",
         "key": "dateColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Open Col.",
         "key": "openColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Close Col.",
         "key": "closeColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "High Col.",
         "key": "highColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Low Col.",
         "key": "lowColumn",
-        "dependsOn": "datasource"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -1134,13 +1071,14 @@
     "icon": "ri-file-text-line",
     "styleable": true,
     "hasChildren": true,
-    "dataProvider": true,
-    "actions": ["ValidateForm"],
+    "actions": [
+      "ValidateForm"
+    ],
     "settings": [
       {
         "type": "schema",
         "label": "Schema",
-        "key": "datasource"
+        "key": "dataSource"
       },
       {
         "type": "select",
@@ -1188,7 +1126,10 @@
         "key": "disabled",
         "defaultValue": false
       }
-    ]
+    ],
+    "context": {
+      "type": "form"
+    }
   },
   "fieldgroup": {
     "name": "Field Group",
@@ -1472,5 +1413,145 @@
         "defaultValue": false
       }
     ]
+  },
+  "dataprovider": {
+    "name": "Data Provider",
+    "icon": "ri-database-2-line",
+    "styleable": false,
+    "hasChildren": true,
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values":  [
+        {
+          "label": "Rows",
+          "key": "rows"
+        },
+        {
+          "label": "Rows Length",
+          "key": "rowsLength"
+        },
+        {
+          "label": "Schema",
+          "key": "schema"
+        },
+        {
+          "label": "Loading",
+          "key": "loading"
+        },
+        {
+          "label": "Loaded",
+          "key": "loaded"
+        }
+      ]
+    }
+  },
+  "table": {
+    "name": "Table",
+    "icon": "ri-table-line",
+    "styleable": true,
+    "hasChildren": true,
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Data Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "number",
+        "label": "Row Count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
+        "type": "select",
+        "label": "Theme",
+        "key": "theme",
+        "defaultValue": "spectrum--light",
+        "options": [
+          {
+            "label": "Lightest",
+            "value": "spectrum--lightest"
+          },
+          {
+            "label": "Light",
+            "value": "spectrum--light"
+          },
+          {
+            "label": "Dark",
+            "value": "spectrum--dark"
+          },
+          {
+            "label": "Darkest",
+            "value": "spectrum--darkest"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet"
+      },
+      {
+        "type": "multifield",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "dataProvider",
+        "placeholder": "All columns"
+      },
+      {
+        "type": "boolean",
+        "label": "Auto Cols.",
+        "key": "showAutoColumns",
+        "defaultValue": false
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
   }
 }

@@ -21,14 +21,16 @@ export const fetchTableData = async tableId => {
  * Perform a mango query against an internal table
  * @param {String} tableId - id of the table to search
  * @param {Object} search - Mango Compliant search object
+ * @param {Object} pagination - the pagination controls
  */
 export const searchTableData = async ({ tableId, search, pagination }) => {
-  const rows = await API.post({
+  const output = await API.post({
     url: `/api/${tableId}/rows/search`,
     body: {
       query: search,
       pagination,
     },
   })
-  return await enrichRows(rows, tableId)
+  output.rows = await enrichRows(output.rows, tableId)
+  return output
 }

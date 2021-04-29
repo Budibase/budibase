@@ -10,7 +10,7 @@ const { FieldTypes } = require("../../../constants")
 const { TableSaveFunctions } = require("./utils")
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -20,12 +20,12 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
+  const db = new CouchDB(ctx.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
 exports.save = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   const { dataImport, ...rest } = ctx.request.body
   let tableToSave = {
@@ -127,7 +127,7 @@ exports.save = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableToDelete = await db.get(ctx.params.tableId)
 
