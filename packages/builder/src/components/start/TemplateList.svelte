@@ -25,8 +25,8 @@
       {#each templates as template}
         <div class="templates-card">
           <Heading black small>{template.name}</Heading>
-          <Body medium grey>{template.category}</Body>
-          <Body lh small black>{template.description}</Body>
+          <Body size="M" grey>{template.category}</Body>
+          <Body size="S" black>{template.description}</Body>
           <div><img src={template.image} width="100%" /></div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>

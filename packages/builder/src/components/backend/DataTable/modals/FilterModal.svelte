@@ -102,7 +102,7 @@
     return viewTable.schema[field].type === "number"
   }
 
-  const fieldChanged = filter => ev => {
+  const fieldChanged = (filter) => (ev) => {
     // reset if type changed
     if (
       filter.key &&
@@ -113,15 +113,16 @@
     }
   }
 
-  const getOptionLabel = x => x.name
-  const getOptionValue = x => x.key
+  const getOptionLabel = (x) => x.name
+  const getOptionValue = (x) => x.key
 </script>
 
 <ModalContent
   title="Filter"
   confirmText="Save"
   onConfirm={saveView}
-  size="large">
+  size="large"
+>
   {#if view.filters.length}
     <div class="input-group-row">
       {#each view.filters as filter, idx}
@@ -133,41 +134,48 @@
             options={CONJUNCTIONS}
             placeholder={null}
             {getOptionLabel}
-            {getOptionValue} />
+            {getOptionValue}
+          />
         {/if}
         <Select
           bind:value={filter.key}
           on:change={fieldChanged(filter)}
-          options={fields} />
+          options={fields}
+        />
         <Select
           bind:value={filter.condition}
           options={CONDITIONS}
           {getOptionLabel}
-          {getOptionValue} />
+          {getOptionValue}
+        />
         {#if filter.key && isMultipleChoice(filter.key)}
           <Select
             bind:value={filter.value}
             options={fieldOptions(filter.key)}
-            getOptionLabel={x => x.toString()} />
+            getOptionLabel={(x) => x.toString()}
+          />
         {:else if filter.key && isDate(filter.key)}
           <DatePicker
             bind:value={filter.value}
-            placeholder={filter.key || fields[0]} />
+            placeholder={filter.key || fields[0]}
+          />
         {:else if filter.key && isNumber(filter.key)}
           <Input
             bind:value={filter.value}
             placeholder={filter.key || fields[0]}
-            type="number" />
+            type="number"
+          />
         {:else}
           <Input
             placeholder={filter.key || fields[0]}
-            bind:value={filter.value} />
+            bind:value={filter.value}
+          />
         {/if}
         <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
       {/each}
     </div>
   {:else}
-    <Body s>Add a filter to get started.</Body>
+    <Body size="S">Add a filter to get started.</Body>
   {/if}
   <div slot="footer">
     <Button secondary on:click={addFilter}>Add Filter</Button>

@@ -137,7 +137,7 @@
     <Divider />
     <div class="config">
       <Heading s>Fields</Heading>
-      <Body s>Fill in the fields specific to this query.</Body>
+      <Body size="S">Fill in the fields specific to this query.</Body>
       <IntegrationQueryEditor
         {datasource}
         {query}
@@ -160,7 +160,7 @@
         <Button secondary on:click={previewQuery}>Run Query</Button>
       </ButtonGroup>
     </div>
-    <Body s>
+    <Body size="S">
       Below, you can preview the results from your query and change the schema.
     </Body>
     <section class="viewer">
