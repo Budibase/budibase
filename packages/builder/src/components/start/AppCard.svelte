@@ -26,7 +26,7 @@
 </script>
 
 <div class="apps-card">
-  <Heading s>{name}</Heading>
+  <Heading size="S">{name}</Heading>
   <div class="card-footer" data-cy={`app-${name}`}>
     <ActionButton on:click={() => $goto(`/builder/${_id}`)}>
       Open

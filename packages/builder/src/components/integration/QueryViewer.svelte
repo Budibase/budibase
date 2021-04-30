@@ -112,9 +112,9 @@
 </script>
 
 <Layout gap="S" noPadding>
-  <Heading m>Query {integrationInfo?.friendlyName}</Heading>
+  <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
   <Divider />
-  <Heading s>Config</Heading>
+  <Heading size="S">Config</Heading>
   <div class="config">
     <div class="config-field">
       <Label>Query Name</Label>
@@ -136,7 +136,7 @@
   {#if shouldShowQueryConfig}
     <Divider />
     <div class="config">
-      <Heading s>Fields</Heading>
+      <Heading size="S">Fields</Heading>
       <Body size="S">Fill in the fields specific to this query.</Body>
       <IntegrationQueryEditor
         {datasource}
@@ -148,7 +148,7 @@
       <Divider />
     </div>
     <div class="viewer-controls">
-      <Heading s>Results</Heading>
+      <Heading size="S">Results</Heading>
       <ButtonGroup>
         <Button
           cta

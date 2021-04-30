@@ -14,10 +14,11 @@
 
   function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
-    if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
+    if (fileArray.some((file) => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
-        `Files cannot exceed ${FILE_SIZE_LIMIT /
-          BYTES_IN_MB}MB. Please try again with smaller files.`
+        `Files cannot exceed ${
+          FILE_SIZE_LIMIT / BYTES_IN_MB
+        }MB. Please try again with smaller files.`
       )
       return
     }
@@ -28,9 +29,9 @@
 
 <div class="container">
   {#if template?.fromFile}
-    <Heading l h2>Import your Web App</Heading>
+    <Heading size="L">Import your Web App</Heading>
   {:else}
-    <Heading l h2>Create your Web App</Heading>
+    <Heading size="L">Create your Web App</Heading>
   {/if}
   {#if template?.fromFile}
     <div class="template">
@@ -40,7 +41,8 @@
           id="file-upload"
           accept=".txt"
           type="file"
-          on:change={handleFile} />
+          on:change={handleFile}
+        />
         <label for="file-upload" class:uploaded={file}>
           {#if file}{file.name}{:else}Import{/if}
         </label>
@@ -49,7 +51,7 @@
   {:else if template}
     <div class="template">
       <Label extraSmall grey>Selected Template</Label>
-      <Heading small>{template.name}</Heading>
+      <Heading size="S">{template.name}</Heading>
     </div>
   {/if}
   <Input
@@ -57,7 +59,8 @@
     bind:value={$values.applicationName}
     label="Web App Name"
     placeholder="Enter name of your web application"
-    error={$touched.applicationName && $errors.applicationName} />
+    error={$touched.applicationName && $errors.applicationName}
+  />
 </div>
 
 <style>

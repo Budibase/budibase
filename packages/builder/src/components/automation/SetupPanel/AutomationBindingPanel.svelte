@@ -54,12 +54,12 @@
   <div slot="sidebar" class="list">
     <Layout>
       <div class="section">
-        <Heading s h3>Available bindings</Heading>
+        <Heading size="S">Available bindings</Heading>
         <Input extraThin placeholder="Search" bind:value={search} />
       </div>
       <div class="section">
         {#each categories as [categoryName, bindings]}
-          <Heading xs h4>{categoryName}</Heading>
+          <Heading size="XS">{categoryName}</Heading>
           {#each bindableProperties.filter((binding) =>
             binding.label.match(searchRgx)
           ) as binding}
@@ -75,7 +75,7 @@
         {/each}
       </div>
       <div class="section">
-        <Heading xs h3>Helpers</Heading>
+        <Heading size="XS">Helpers</Heading>
         {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <div class="binding" on:click={() => addToText(helper)}>
             <span class="binding__label">{helper.label}</span>

@@ -37,7 +37,7 @@
     <section class="drawer" transition:slide>
       <header>
         <div class="text">
-          <Heading xs>{title}</Heading>
+          <Heading size="XS">{title}</Heading>
           <Body size="XXS"><slot name="description" /></Body>
         </div>
         <div class="buttons">

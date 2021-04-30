@@ -143,7 +143,7 @@
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading xs h3>Tables</Heading>
+      <Heading size="XS">Tables</Heading>
     </div>
     <ul>
       {#each tables as table}
@@ -157,7 +157,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Views</Heading>
+      <Heading size="XS">Views</Heading>
     </div>
     <ul>
       {#each views as view}
@@ -171,7 +171,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Relationships</Heading>
+      <Heading size="XS">Relationships</Heading>
     </div>
     <ul>
       {#each links as link}
@@ -185,7 +185,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Queries</Heading>
+      <Heading size="XS">Queries</Heading>
     </div>
     <ul>
       {#each queries as query}
@@ -201,7 +201,7 @@
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">
-        <Heading extraSmall>Other</Heading>
+        <Heading size="XS">Other</Heading>
       </div>
       <ul>
         {#each otherSources as source}
