@@ -91,6 +91,7 @@
     {:else if value.customType === 'code'}
       <CodeEditorModal>
         <pre>{JSON.stringify(bindings, null, 2)}</pre>
+        <Label small grey>Note: The result of the very last statement of this script will be returned and available as the "value" property in following automation blocks.</Label>
         <Editor
           mode="javascript"
           on:change={e => { 

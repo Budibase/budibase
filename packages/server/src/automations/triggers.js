@@ -1,6 +1,5 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-// const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
 const Queue = require("bull")
 const { setQueues, BullAdapter } = require("bull-board")
 const { getAutomationParams } = require("../db/utils")

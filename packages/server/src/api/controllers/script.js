@@ -9,8 +9,8 @@ class ScriptExecutor {
   }
 
   execute() {
-    this.script.runInContext(this.context)
-    return this.context
+    const returnValue = this.script.runInContext(this.context)
+    return returnValue
   }
 }
 
@@ -18,6 +18,5 @@ exports.execute = async function(ctx) {
   const executor = new ScriptExecutor(ctx.request.body)
 
   const result = executor.execute()
-
   ctx.body = result
 }
