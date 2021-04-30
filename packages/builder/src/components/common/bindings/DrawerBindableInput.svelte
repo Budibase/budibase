@@ -1,16 +1,14 @@
 <script>
-  import { Icon, Input, Drawer, Body, Button } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Label, Body, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
-  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
-  export let serverSide = false
-  export let panel = serverSide ? ServerBindingPanel : BindingPanel
+  export let panel = BindingPanel
   export let value = ""
   export let bindings = []
   export let thin = true

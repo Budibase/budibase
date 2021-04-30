@@ -1,7 +1,8 @@
 export function addToText(value, caretPos, binding) {
-  let toAdd = binding.path
+  binding = typeof binding === "string" ? binding : binding.path
+  let toAdd = binding
   if (!value.includes("{{") && !value.includes("}}")) {
-    toAdd = `{{ ${binding.path} }}`
+    toAdd = `{{ ${binding} }}`
   }
   if (caretPos.start) {
     value =
