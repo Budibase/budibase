@@ -53,7 +53,6 @@ module.exports.run = async function({ inputs, appId, emitter }) {
   }
 
   const { queryId, ...rest } = inputs.query
-  console.log(JSON.stringify(inputs.query))
 
   const ctx = {
     params: {

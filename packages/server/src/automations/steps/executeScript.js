@@ -2,7 +2,7 @@ const scriptController = require("../../api/controllers/script")
 
 module.exports.definition = {
   name: "Scripting",
-  tagline: "Execute code",
+  tagline: "Execute JavaScript Code",
   icon: "ri-terminal-box-line",
   description: "Run a piece of JavaScript code in your automation",
   type: "ACTION",
@@ -21,6 +21,11 @@ module.exports.definition = {
     },
     outputs: {
       properties: {
+        value: {
+          type: "string",
+          description:
+            "The result of the last statement of the executed script.",
+        },
         success: {
           type: "boolean",
           description: "Whether the action was successful",
@@ -56,6 +61,7 @@ module.exports.run = async function({ inputs, appId, context, emitter }) {
     await scriptController.execute(ctx)
     return {
       success: ctx.status === 200,
+      value: ctx.body,
     }
   } catch (err) {
     console.error(err)
