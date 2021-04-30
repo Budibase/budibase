@@ -9,6 +9,7 @@
   } from "builderStore/dataBinding"
   import { currentAsset, store } from "../../../builderStore"
   import { handlebarsCompletions } from "constants/completions"
+  import { addToText } from "./utils"
 
   const dispatch = createEventDispatcher()
 
@@ -37,20 +38,6 @@
     valid = isValid(runtimeBinding)
   }
 
-  function addToText(readableBinding) {
-    const position = getCaretPosition()
-    const toAdd = `{{ ${readableBinding} }}`
-
-    if (position.start) {
-      value =
-        value.substring(0, position.start) +
-        toAdd +
-        value.substring(position.end, value.length)
-    } else {
-      value = toAdd
-    }
-  }
-
   export function cancel() {
     dispatch("update", originalValue)
     bindingDrawer.close()
@@ -69,7 +56,10 @@
           {#each context.filter(context =>
             context.readableBinding.match(searchRgx)
           ) as { readableBinding }}
-            <li on:click={() => addToText(readableBinding)}>
+            <li
+              on:click={() => {
+                value = addToText(value, getCaretPosition(), readableBinding)
+              }}>
               {readableBinding}
             </li>
           {/each}
@@ -83,7 +73,10 @@
           {#each instance.filter(instance =>
             instance.readableBinding.match(searchRgx)
           ) as { readableBinding }}
-            <li on:click={() => addToText(readableBinding)}>
+            <li
+              on:click={() => {
+                value = addToText(value, getCaretPosition(), readableBinding)
+              }}>
               {readableBinding}
             </li>
           {/each}
@@ -94,7 +87,10 @@
       <Spacer small />
       <ul>
         {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
-          <li on:click={() => addToText(helper.text)}>
+          <li
+            on:click={() => {
+              value = addToText(value, getCaretPosition(), helper.text)
+            }}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
               <div class="description">
@@ -152,7 +148,6 @@
   }
   ul {
     list-style: none;
-    padding-left: 0;
     margin: 0;
     padding: 0;
   }

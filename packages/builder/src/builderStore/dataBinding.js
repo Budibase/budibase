@@ -340,8 +340,16 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   if (convertTo === "readableBinding") {
     return true
   }
+  // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
+  // this makes sure it is detected
   const noSpaces = currentValue.replace(/\s+/g, "")
-  return !noSpaces.includes(`[${from}]`)
+  const fromNoSpaces = from.replace(/\s+/g, "")
+  const invalids = [
+    `[${fromNoSpaces}]`,
+    `"${fromNoSpaces}"`,
+    `'${fromNoSpaces}'`,
+  ]
+  return !invalids.find(invalid => noSpaces.includes(invalid))
 }
 
 /**

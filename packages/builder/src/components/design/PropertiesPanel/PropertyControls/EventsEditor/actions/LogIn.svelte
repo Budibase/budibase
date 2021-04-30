@@ -2,7 +2,7 @@
   import { Label } from "@budibase/bbui"
   import { getBindableProperties } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
 

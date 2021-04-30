@@ -4,7 +4,7 @@
   import { getBindableProperties } from "builderStore/dataBinding"
   import { CloseCircleIcon, AddIcon } from "components/common/Icons"
   import { createEventDispatcher } from "svelte"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 

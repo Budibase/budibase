@@ -1,8 +1,8 @@
 <script>
   import { tables } from "stores/backend"
   import { Select } from "@budibase/bbui"
-  import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "../../common/ServerBindingPanel.svelte"
+  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
   export let value
   export let bindings
