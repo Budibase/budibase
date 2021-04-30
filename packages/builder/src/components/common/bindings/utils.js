@@ -1,16 +1,16 @@
 export function addToText(value, caretPos, binding) {
   binding = typeof binding === "string" ? binding : binding.path
-  let toAdd = binding
+  value = value == null ? "" : value
   if (!value.includes("{{") && !value.includes("}}")) {
-    toAdd = `{{ ${binding} }}`
+    binding = `{{ ${binding} }}`
   }
   if (caretPos.start) {
     value =
       value.substring(0, caretPos.start) +
-      toAdd +
+      binding +
       value.substring(caretPos.end, value.length)
   } else {
-    value += toAdd
+    value += binding
   }
   return value
 }
