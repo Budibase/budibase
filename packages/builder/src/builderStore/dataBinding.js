@@ -16,7 +16,7 @@ const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 export const getBindableProperties = (asset, componentId) => {
   const contextBindings = getContextBindings(asset, componentId)
   const userBindings = getUserBindings()
-  const urlBindings = getUrlBindings(asset, componentId)
+  const urlBindings = getUrlBindings(asset)
   return [...contextBindings, ...userBindings, ...urlBindings]
 }
 
@@ -334,7 +334,7 @@ export function removeBindings(obj) {
  * this makes sure that doesn't happen.
  */
 function shouldReplaceBinding(currentValue, from, convertTo) {
-  if (!currentValue.includes(from)) {
+  if (!currentValue?.includes(from)) {
     return false
   }
   if (convertTo === "readableBinding") {
@@ -349,7 +349,7 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
     `"${fromNoSpaces}"`,
     `'${fromNoSpaces}'`,
   ]
-  return !invalids.find(invalid => noSpaces.includes(invalid))
+  return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
 /**
