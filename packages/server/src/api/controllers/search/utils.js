@@ -10,24 +10,43 @@ const fetch = require("node-fetch")
  * @param {string|null} bookmark If there were more than the limit specified can send the bookmark that was
  * returned with query for next set of search results.
  * @param {number} limit The number of entries to return per query.
+ * @param {string} sort The column to sort by.
+ * @param {string} sortOrder The order to sort by. "ascending" or "descending".
  * @param {boolean} excludeDocs By default full rows are returned, if required this can be disabled.
  * @return {string} The URL which a GET can be performed on to receive results.
  */
-function buildSearchUrl({ appId, query, bookmark, excludeDocs, limit = 50 }) {
+function buildSearchUrl({
+  appId,
+  query,
+  bookmark,
+  sort,
+  sortOrder,
+  excludeDocs,
+  limit = 50,
+}) {
   let url = `${env.COUCH_DB_URL}/${appId}/_design/database/_search`
   url += `/${SearchIndexes.ROWS}?q=${query}`
   url += `&limit=${limit}`
   if (!excludeDocs) {
     url += "&include_docs=true"
   }
+  if (sort) {
+    const orderChar = sortOrder === "descending" ? "-" : ""
+    url += `&sort="${orderChar}${sort.replace(/ /, "_")}<string>"`
+  }
   if (bookmark) {
     url += `&bookmark=${bookmark}`
   }
+  console.log(url)
   return checkSlashesInUrl(url)
 }
 
+const luceneEscape = (value) => {
+  return `${value}`.replace(/[ #+\-&|!(){}\[\]^"~*?:\\]/g, "\\$&")
+}
+
 class QueryBuilder {
-  constructor(appId, base) {
+  constructor(appId, base, bookmark, limit, sort, sortOrder) {
     this.appId = appId
     this.query = {
       string: {},
@@ -35,10 +54,14 @@ class QueryBuilder {
       range: {},
       equal: {},
       notEqual: {},
+      empty: {},
+      notEmpty: {},
       ...base,
     }
-    this.limit = 50
-    this.bookmark = null
+    this.bookmark = bookmark
+    this.limit = limit || 50
+    this.sort = sort
+    this.sortOrder = sortOrder || "ascending"
   }
 
   setLimit(limit) {
@@ -79,39 +102,73 @@ class QueryBuilder {
     return this
   }
 
+  addEmpty(key, value) {
+    this.query.empty[key] = value
+    return this
+  }
+
+  addNotEmpty(key, value) {
+    this.query.notEmpty[key] = value
+    return this
+  }
+
   addTable(tableId) {
     this.query.equal.tableId = tableId
     return this
   }
 
   complete(rawQuery = null) {
-    let output = ""
+    let output = "*:*"
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        if (output.length !== 0) {
-          output += " AND "
+        const expression = queryFn(luceneEscape(key.replace(/ /, "_")), value)
+        if (expression == null) {
+          continue
         }
-        output += queryFn(key, value).replace(/ /, "\\ ")
+        output += ` AND ${expression}`
       }
     }
 
     if (this.query.string) {
-      build(this.query.string, (key, value) => `${key}:${value}*`)
+      build(this.query.string, (key, value) => {
+        return value ? `${key}:${luceneEscape(value.toLowerCase())}*` : null
+      })
     }
     if (this.query.range) {
-      build(
-        this.query.range,
-        (key, value) => `${key}:[${value.low} TO ${value.high}]`
-      )
+      build(this.query.range, (key, value) => {
+        if (!value) {
+          return null
+        }
+        if (isNaN(value.low) || value.low == null || value.low === "") {
+          return null
+        }
+        if (isNaN(value.high) || value.high == null || value.high === "") {
+          return null
+        }
+        console.log(value)
+        return `${key}:[${value.low} TO ${value.high}]`
+      })
     }
     if (this.query.fuzzy) {
-      build(this.query.fuzzy, (key, value) => `${key}:${value}~`)
+      build(this.query.fuzzy, (key, value) => {
+        return value ? `${key}:${luceneEscape(value.toLowerCase())}~` : null
+      })
     }
     if (this.query.equal) {
-      build(this.query.equal, (key, value) => `${key}:${value}`)
+      build(this.query.equal, (key, value) => {
+        return value ? `${key}:${luceneEscape(value.toLowerCase())}` : null
+      })
     }
     if (this.query.notEqual) {
-      build(this.query.notEqual, (key, value) => `!${key}:${value}`)
+      build(this.query.notEqual, (key, value) => {
+        return value ? `!${key}:${luceneEscape(value.toLowerCase())}` : null
+      })
+    }
+    if (this.query.empty) {
+      build(this.query.empty, (key) => `!${key}:["" TO *]`)
+    }
+    if (this.query.notEmpty) {
+      build(this.query.notEmpty, (key) => `${key}:["" TO *]`)
     }
     if (rawQuery) {
       output = output.length === 0 ? rawQuery : `&${rawQuery}`
@@ -121,11 +178,13 @@ class QueryBuilder {
       query: output,
       bookmark: this.bookmark,
       limit: this.limit,
+      sort: this.sort,
+      sortOrder: this.sortOrder,
     })
   }
 }
 
-exports.search = async query => {
+exports.search = async (query) => {
   const response = await fetch(query, {
     method: "GET",
   })
@@ -134,7 +193,7 @@ exports.search = async query => {
     rows: [],
   }
   if (json.rows != null && json.rows.length > 0) {
-    output.rows = json.rows.map(row => row.doc)
+    output.rows = json.rows.map((row) => row.doc)
   }
   if (json.bookmark) {
     output.bookmark = json.bookmark

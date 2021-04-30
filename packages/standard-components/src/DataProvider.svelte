@@ -5,7 +5,7 @@
   export let filter
   export let sortColumn
   export let sortOrder
-  export let limit
+  export let limit = 50
 
   const { API, styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
@@ -16,19 +16,32 @@
   // Loading flag for the initial load
   let loaded = false
 
-  let allRows = []
+  // Provider state
+  let rows = []
   let schema = {}
+  let bookmarks = [null]
+  let pageNumber = 0
 
-  $: fetchData(dataSource)
-  $: filteredRows = filterRows(allRows, filter)
-  $: sortedRows = sortRows(filteredRows, sortColumn, sortOrder)
-  $: rows = limitRows(sortedRows, limit)
+  $: query = dataSource?.type === "table" ? buildLuceneQuery(filter) : null
+  $: hasNextPage = bookmarks[pageNumber + 1] != null
+  $: hasPrevPage = pageNumber > 0
+  $: fetchData(dataSource, query, limit, sortColumn, sortOrder)
+  // $: sortedRows = sortRows(filteredRows, sortColumn, sortOrder)
+  // $: rows = limitRows(sortedRows, limit)
   $: getSchema(dataSource)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
       callback: () => fetchData(dataSource),
       metadata: { dataSource },
+    },
+    {
+      type: ActionTypes.NextPage,
+      callback: () => nextPage(),
+    },
+    {
+      type: ActionTypes.PrevPage,
+      callback: () => prevPage(),
     },
   ]
   $: dataContext = {
@@ -37,23 +50,82 @@
     rowsLength: rows.length,
     loading,
     loaded,
+    pageNumber: pageNumber + 1,
+    hasNextPage,
+    hasPrevPage,
   }
 
-  const fetchData = async dataSource => {
+  const buildLuceneQuery = (filter) => {
+    let query = {
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {},
+      notEqual: {},
+      empty: {},
+      notEmpty: {},
+    }
+    if (Array.isArray(filter)) {
+      filter.forEach((expression) => {
+        if (expression.operator.startsWith("range")) {
+          let range = {
+            low: Number.MIN_SAFE_INTEGER,
+            high: Number.MAX_SAFE_INTEGER,
+          }
+          if (expression.operator === "rangeLow") {
+            range.low = expression.value
+          } else if (expression.operator === "rangeHigh") {
+            range.high = expression.value
+          }
+          query.range[expression.field] = range
+        } else if (query[expression.operator]) {
+          query[expression.operator][expression.field] = expression.value
+        }
+      })
+    }
+    return query
+  }
+
+  const fetchData = async (dataSource, query, limit, sortColumn, sortOrder) => {
     loading = true
-    allRows = await API.fetchDatasource(dataSource)
+    if (dataSource?.type === "table") {
+      const res = await API.searchTable({
+        tableId: dataSource.tableId,
+        query,
+        limit,
+        sort: sortColumn,
+        sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      })
+      pageNumber = 0
+      rows = res.rows
+
+      // Check we have next data
+      const next = await API.searchTable({
+        tableId: dataSource.tableId,
+        query,
+        limit: 1,
+        bookmark: res.bookmark,
+        sort: sortColumn,
+        sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      })
+      if (next.rows?.length) {
+        bookmarks = [null, res.bookmark]
+      } else {
+        bookmarks = [null]
+      }
+    } else {
+      const rows = await API.fetchDatasource(dataSource)
+      rows = inMemoryFilterRows(rows, filter)
+    }
     loading = false
     loaded = true
   }
 
-  const filterRows = (rows, filter) => {
-    if (!Object.keys(filter || {}).length) {
-      return rows
-    }
+  const inMemoryFilterRows = (rows, filter) => {
     let filteredData = [...rows]
     Object.entries(filter).forEach(([field, value]) => {
       if (value != null && value !== "") {
-        filteredData = filteredData.filter(row => {
+        filteredData = filteredData.filter((row) => {
           return row[field] === value
         })
       }
@@ -84,7 +156,7 @@
     return rows.slice(0, numLimit)
   }
 
-  const getSchema = async dataSource => {
+  const getSchema = async (dataSource) => {
     if (dataSource?.schema) {
       schema = dataSource.schema
     } else if (dataSource?.tableId) {
@@ -100,6 +172,51 @@
         value.name = key
       }
     })
+  }
+
+  const nextPage = async () => {
+    if (!hasNextPage) {
+      return
+    }
+    const res = await API.searchTable({
+      tableId: dataSource?.tableId,
+      query,
+      bookmark: bookmarks[pageNumber + 1],
+      limit,
+      sort: sortColumn,
+      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+    })
+    pageNumber++
+    rows = res.rows
+
+    // Check we have next data
+    const next = await API.searchTable({
+      tableId: dataSource.tableId,
+      query,
+      limit: 1,
+      bookmark: res.bookmark,
+      sort: sortColumn,
+      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+    })
+    if (next.rows?.length) {
+      bookmarks[pageNumber + 1] = res.bookmark
+    }
+  }
+
+  const prevPage = async () => {
+    if (!hasPrevPage) {
+      return
+    }
+    const res = await API.searchTable({
+      tableId: dataSource?.tableId,
+      query,
+      bookmark: bookmarks[pageNumber - 1],
+      limit,
+      sort: sortColumn,
+      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+    })
+    pageNumber--
+    rows = res.rows
   }
 </script>
 

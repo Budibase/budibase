@@ -1419,6 +1419,7 @@
     "icon": "Data",
     "styleable": false,
     "hasChildren": true,
+    "actions": ["NextPage", "PrevPage"],
     "settings": [
       {
         "type": "dataSource",
@@ -1470,6 +1471,10 @@
         {
           "label": "Loaded",
           "key": "loaded"
+        },
+        {
+          "label": "Page Number",
+          "key": "pageNumber"
         }
       ]
     }

@@ -5,4 +5,6 @@ export const TableNames = {
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
   RefreshDatasource: "RefreshDatasource",
+  NextPage: "NextPage",
+  PrevPage: "PrevPage",
 }
