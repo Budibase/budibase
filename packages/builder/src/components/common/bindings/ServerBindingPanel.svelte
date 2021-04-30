@@ -4,7 +4,8 @@
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
-  import { readableToRuntimeBinding } from "../../builderStore/dataBinding"
+  import { readableToRuntimeBinding } from "../../../builderStore/dataBinding"
+  import { addToText } from "./utils"
 
   const dispatch = createEventDispatcher()
 
@@ -26,24 +27,14 @@
 
   function checkValid() {
     if (hasReadable) {
-      validity = isValid(readableToRuntimeBinding(bindableProperties, value))
+      const runtime = readableToRuntimeBinding(bindableProperties, value)
+      console.log(runtime)
+      validity = isValid(runtime)
     } else {
       validity = isValid(value)
     }
   }
 
-  function addToText(binding) {
-    const position = getCaretPosition()
-    const toAdd = `{{ ${binding.path} }}`
-    if (position.start) {
-      value =
-        value.substring(0, position.start) +
-        toAdd +
-        value.substring(position.end, value.length)
-    } else {
-      value += toAdd
-    }
-  }
   export function cancel() {
     dispatch("update", originalValue)
     if (bindingContainer && bindingContainer.close) {
@@ -64,7 +55,11 @@
       {#each bindings.filter(binding =>
         binding.label.match(searchRgx)
       ) as binding}
-        <div class="binding" on:click={() => addToText(binding)}>
+        <div
+          class="binding"
+          on:click={() => {
+            value = addToText(value, getCaretPosition(), binding)
+          }}>
           <span class="binding__label">{binding.label}</span>
           <span class="binding__type">{binding.type}</span>
           <br />
@@ -77,7 +72,11 @@
     <Heading extraSmall>Helpers</Heading>
     <Spacer extraSmall />
     {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
-      <div class="binding" on:click={() => addToText(helper)}>
+      <div
+        class="binding"
+        on:click={() => {
+          value = addToText(value, getCaretPosition(), helper)
+        }}>
         <span class="binding__label">{helper.label}</span>
         <br />
         <div class="binding__description">

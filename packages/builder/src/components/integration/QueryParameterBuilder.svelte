@@ -4,7 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let bindable = true
   export let parameters = []

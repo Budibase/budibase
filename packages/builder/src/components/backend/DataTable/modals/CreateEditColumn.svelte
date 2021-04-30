@@ -23,7 +23,7 @@
   import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
-  import ModalBindableInput from "components/common/ModalBindableInput.svelte"
+  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
 
   const AUTO_TYPE = "auto"

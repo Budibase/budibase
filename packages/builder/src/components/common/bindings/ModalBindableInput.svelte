@@ -4,7 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import ServerBindingPanel from "components/common/ServerBindingPanel.svelte"
+  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
