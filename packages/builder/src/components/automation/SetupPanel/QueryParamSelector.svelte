@@ -32,8 +32,8 @@
         panel={AutomationBindingPanel}
         extraThin
         value={value[field.name]}
-        on:change={e => { 
-          value[field.name] = e.detail 
+        on:change={e => {
+          value[field.name] = e.detail
         }}
         label={field.name}
         type="string"
