@@ -19,7 +19,7 @@
 </script>
 
 <div class="root">
-  <Heading m>Your Apps</Heading>
+  <Heading size="M">Your Apps</Heading>
   <Divider size="M" />
   {#await promise}
     <div class="spinner-container">

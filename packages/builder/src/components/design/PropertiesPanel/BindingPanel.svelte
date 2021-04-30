@@ -63,7 +63,7 @@
     <Search placeholder="Search" bind:value={search} />
     {#if context}
       <section>
-        <Heading xs h3>Columns</Heading>
+        <Heading size="XS">Columns</Heading>
         <ul>
           {#each context.filter((context) =>
             context.readableBinding.match(searchRgx)
@@ -77,7 +77,7 @@
     {/if}
     {#if instance}
       <section>
-        <Heading xs h3>Components</Heading>
+        <Heading size="XS">Components</Heading>
         <ul>
           {#each instance.filter((instance) =>
             instance.readableBinding.match(searchRgx)
@@ -90,7 +90,7 @@
       </section>
     {/if}
     <section>
-      <Heading xs h3>Helpers</Heading>
+      <Heading size="XS">Helpers</Heading>
       <ul>
         {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <li on:click={() => addToText(helper.text)}>

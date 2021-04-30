@@ -7,14 +7,18 @@
 </script>
 
 <div class="container">
-  <Heading l h2>What's your role for this app?</Heading>
+  <Heading size="L">What's your role for this app?</Heading>
   <Select
     bind:value={$values.roleId}
     label="Role"
-    options={[{ label: 'Admin', value: 'ADMIN' }, { label: 'Power User', value: 'POWER_USER' }]}
-    getOptionLabel={option => option.label}
-    getOptionValue={option => option.value}
-    error={$errors.roleId} />
+    options={[
+      { label: "Admin", value: "ADMIN" },
+      { label: "Power User", value: "POWER_USER" },
+    ]}
+    getOptionLabel={(option) => option.label}
+    getOptionValue={(option) => option.value}
+    error={$errors.roleId}
+  />
 </div>
 
 <style>

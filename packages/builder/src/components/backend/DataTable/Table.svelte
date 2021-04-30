@@ -40,7 +40,7 @@
           component: RoleCell,
         },
       ]
-      UNEDITABLE_USER_FIELDS.forEach(field => {
+      UNEDITABLE_USER_FIELDS.forEach((field) => {
         if (schema[field]) {
           schema[field].editable = false
         }
@@ -68,19 +68,19 @@
       rows: selectedRows,
       type: "delete",
     })
-    data = data.filter(row => !selectedRows.includes(row))
+    data = data.filter((row) => !selectedRows.includes(row))
     notifications.success(`Successfully deleted ${selectedRows.length} rows`)
     selectedRows = []
   }
 
-  const editRow = row => {
+  const editRow = (row) => {
     editableRow = row
     if (row) {
       editRowModal.show()
     }
   }
 
-  const editColumn = field => {
+  const editColumn = (field) => {
     editableColumn = schema?.[field]
     if (editableColumn) {
       editColumnModal.show()
@@ -91,7 +91,7 @@
 <div>
   <div class="table-title">
     {#if title}
-      <Heading s>{title}</Heading>
+      <Heading size="S">{title}</Heading>
     {/if}
     {#if loading}
       <div transition:fade>
@@ -118,9 +118,10 @@
     allowEditRows={allowEditing}
     allowEditColumns={allowEditing}
     showAutoColumns={!hideAutocolumns}
-    on:editcolumn={e => editColumn(e.detail)}
-    on:editrow={e => editRow(e.detail)}
-    on:clickrelationship={e => selectRelationship(e.detail)} />
+    on:editcolumn={(e) => editColumn(e.detail)}
+    on:editrow={(e) => editRow(e.detail)}
+    on:clickrelationship={(e) => selectRelationship(e.detail)}
+  />
 {/key}
 
 <Modal bind:this={editRowModal}>

@@ -57,7 +57,7 @@
 
 <div class="container">
   <div class="header">
-    <Heading m h1>Welcome to the Budibase Beta</Heading>
+    <Heading size="M">Welcome to the Budibase Beta</Heading>
     <ButtonGroup>
       <Button secondary on:click={initiateAppImport}>Import Web App</Button>
       <Button cta on:click={modal.show}>Create New Web App</Button>

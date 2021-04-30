@@ -59,10 +59,10 @@
 </script>
 
 <ModalContent title="Builder settings" confirmText="Save" onConfirm={save}>
-  <Heading xs>Theme</Heading>
+  <Heading size="XS">Theme</Heading>
   <ThemeEditor />
   <Divider noMargin noGrid />
-  <Heading xs>Hosting</Heading>
+  <Heading size="XS">Hosting</Heading>
   <Body size="S">
     This section contains settings that relate to the deployment and hosting of
     apps made in this builder.
@@ -78,7 +78,7 @@
     <Toggle text="HTTPS" bind:value={hostingInfo.useHttps} />
   {/if}
   <Divider noMargin noGrid />
-  <Heading xs>Analytics</Heading>
+  <Heading size="XS">Analytics</Heading>
   <Body size="S">
     If you would like to send analytics that help us make budibase better,
     please let us know below.

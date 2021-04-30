@@ -31,7 +31,7 @@
 
 <Layout paddingX="none" gap="S">
   <div class="controls">
-    <Heading s>Parameters</Heading>
+    <Heading size="XS">Parameters</Heading>
     {#if !bindable}
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}

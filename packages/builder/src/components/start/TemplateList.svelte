@@ -15,7 +15,7 @@
 </script>
 
 <div class="root">
-  <Heading lh medium black>Start With a Template</Heading>
+  <Heading size="M">Start With a Template</Heading>
   {#await templatesPromise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -24,7 +24,7 @@
     <div class="templates">
       {#each templates as template}
         <div class="templates-card">
-          <Heading black small>{template.name}</Heading>
+          <Heading size="S">{template.name}</Heading>
           <Body size="M" grey>{template.category}</Body>
           <Body size="S" black>{template.description}</Body>
           <div><img src={template.image} width="100%" /></div>

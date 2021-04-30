@@ -50,13 +50,13 @@
           height="26"
           width="26"
         />
-        <Heading m>{datasource.name}</Heading>
+        <Heading size="M">{datasource.name}</Heading>
       </header>
       <Body size="S" grey lh>{integration.description}</Body>
       <Divider />
       <div class="container">
         <div class="config-header">
-          <Heading s>Configuration</Heading>
+          <Heading size="S">Configuration</Heading>
           <Button secondary on:click={saveDatasource}>Save</Button>
         </div>
         <Body size="S"
@@ -70,7 +70,7 @@
       </div>
       <Divider />
       <div class="query-header">
-        <Heading s>Queries</Heading>
+        <Heading size="S">Queries</Heading>
         <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
       </div>
       <div class="query-list">

@@ -59,7 +59,7 @@
 <section>
   <img src={Rocket} alt="Rocket flying through sky" />
   <div>
-    <Heading m>It's time to shine!</Heading>
+    <Heading size="M">It's time to shine!</Heading>
     <Button size="XL" cta medium on:click={deployApp}>Deploy App</Button>
   </div>
 </section>
