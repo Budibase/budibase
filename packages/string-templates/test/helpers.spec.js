@@ -281,7 +281,7 @@ describe("Test the object/array helper", () => {
         { price: 30 },
       ]
     }
-    const output = await processString("{{ sum ( pluck items 'price' ) }}", context)
+    const output = await processString("{{ literal ( sum ( pluck items 'price' ) ) }}", context)
     expect(output).toBe(50)
   })
 })
