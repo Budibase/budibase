@@ -36,7 +36,7 @@
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
-  <Body s>
+  <Body size="S">
     {#if !bindable}
       Parameters come in two parts: the parameter name, and a default/fallback
       value.

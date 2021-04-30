@@ -40,7 +40,7 @@
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <DrawerContent slot="body">
     <Layout>
-      <Body s>
+      <Body size="S">
         {#if !Object.keys(tempValue || {}).length}
           Add your first filter column.
         {:else}

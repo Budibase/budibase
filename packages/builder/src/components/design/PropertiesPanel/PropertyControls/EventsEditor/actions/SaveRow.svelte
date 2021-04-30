@@ -17,18 +17,18 @@
   $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list || []
 
-  const getSchemaFields = tableId => {
+  const getSchemaFields = (tableId) => {
     const { schema } = getSchemaForDatasource({ type: "table", tableId })
     return Object.values(schema || {})
   }
 
-  const onFieldsChanged = e => {
+  const onFieldsChanged = (e) => {
     parameters.fields = e.detail
   }
 </script>
 
 <div class="root">
-  <Body s>
+  <Body size="S">
     Choosing a Data Source will automatically use the data it provides, but it's
     optional.<br />
     You can always add or override fields manually.
@@ -39,21 +39,24 @@
       bind:value={parameters.providerId}
       options={dataProviderComponents}
       placeholder="None"
-      getOptionLabel={option => option._instanceName}
-      getOptionValue={option => option._id} />
+      getOptionLabel={(option) => option._instanceName}
+      getOptionValue={(option) => option._id}
+    />
 
     <Label small>Table</Label>
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
-      getOptionLabel={option => option.name}
-      getOptionValue={option => option._id} />
+      getOptionLabel={(option) => option.name}
+      getOptionValue={(option) => option._id}
+    />
 
     {#if parameters.tableId}
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
-        on:change={onFieldsChanged} />
+        on:change={onFieldsChanged}
+      />
     {/if}
   </div>
 </div>

@@ -52,7 +52,7 @@
         />
         <Heading m>{datasource.name}</Heading>
       </header>
-      <Body small grey lh>{integration.description}</Body>
+      <Body size="S" grey lh>{integration.description}</Body>
       <Divider />
       <div class="container">
         <div class="config-header">
