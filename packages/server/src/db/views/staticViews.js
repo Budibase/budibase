@@ -25,11 +25,11 @@ const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
  * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
  * so it may be slow.
  */
-exports.createLinkView = async appId => {
+exports.createLinkView = async (appId) => {
   const db = new CouchDB(appId)
   const designDoc = await db.get("_design/database")
   const view = {
-    map: function(doc) {
+    map: function (doc) {
       // everything in this must remain constant as its going to Pouch, no external variables
       if (doc.type === "link") {
         let doc1 = doc.doc1
@@ -57,7 +57,7 @@ exports.createLinkView = async appId => {
   await db.put(designDoc)
 }
 
-exports.createRoutingView = async appId => {
+exports.createRoutingView = async (appId) => {
   const db = new CouchDB(appId)
   const designDoc = await db.get("_design/database")
   const view = {
@@ -89,11 +89,11 @@ async function searchIndex(appId, indexName, fnString) {
   await db.put(designDoc)
 }
 
-exports.createAllSearchIndex = async appId => {
+exports.createAllSearchIndex = async (appId) => {
   await searchIndex(
     appId,
     SearchIndexes.ROWS,
-    function(doc) {
+    function (doc) {
       function idx(input, prev) {
         for (let key of Object.keys(input)) {
           const idxKey = prev != null ? `${prev}.${key}` : key

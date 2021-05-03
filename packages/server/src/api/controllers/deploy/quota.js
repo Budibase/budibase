@@ -6,7 +6,7 @@ const {
   ViewNames,
 } = require("../../../db/utils")
 
-exports.getAppQuota = async function(appId) {
+exports.getAppQuota = async function (appId) {
   const db = new PouchDB(appId)
 
   const rows = await db.allDocs({

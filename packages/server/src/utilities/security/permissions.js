@@ -126,9 +126,9 @@ exports.getBuiltinPermissions = () => {
   return cloneDeep(BUILTIN_PERMISSIONS)
 }
 
-exports.getBuiltinPermissionByID = id => {
+exports.getBuiltinPermissionByID = (id) => {
   const perms = Object.values(BUILTIN_PERMISSIONS)
-  return perms.find(perm => perm._id === id)
+  return perms.find((perm) => perm._id === id)
 }
 
 exports.doesHaveResourcePermission = (
@@ -163,8 +163,8 @@ exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
   const builtins = Object.values(BUILTIN_PERMISSIONS)
   let permissions = flatten(
     builtins
-      .filter(builtin => permissionIds.indexOf(builtin._id) !== -1)
-      .map(builtin => builtin.permissions)
+      .filter((builtin) => permissionIds.indexOf(builtin._id) !== -1)
+      .map((builtin) => builtin.permissions)
   )
   for (let permission of permissions) {
     if (
@@ -181,7 +181,7 @@ exports.higherPermission = (perm1, perm2) => {
   return levelToNumber(perm1) > levelToNumber(perm2) ? perm1 : perm2
 }
 
-exports.isPermissionLevelHigherThanRead = level => {
+exports.isPermissionLevelHigherThanRead = (level) => {
   return levelToNumber(level) > 1
 }
 

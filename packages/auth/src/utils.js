@@ -22,7 +22,7 @@ function confirmAppId(possibleAppId) {
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-exports.getAppId = ctx => {
+exports.getAppId = (ctx) => {
   const options = [ctx.headers["x-budibase-app-id"], ctx.params.appId]
   if (ctx.subdomains) {
     options.push(ctx.subdomains[1])
@@ -41,7 +41,7 @@ exports.getAppId = ctx => {
   }
   let appPath =
     ctx.request.headers.referrer ||
-    ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
+    ctx.path.split("/").filter((subPath) => subPath.startsWith(APP_PREFIX))
   if (!appId && appPath.length !== 0) {
     appId = confirmAppId(appPath[0])
   }
@@ -101,11 +101,11 @@ exports.clearCookie = (ctx, name) => {
  * @param {object} ctx The koa context object to be tested.
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
-exports.isClient = ctx => {
+exports.isClient = (ctx) => {
   return ctx.headers["x-budibase-type"] === "client"
 }
 
-exports.getGlobalUserByEmail = async email => {
+exports.getGlobalUserByEmail = async (email) => {
   const db = getDB(StaticDatabases.GLOBAL.name)
   try {
     let users = (
@@ -114,7 +114,7 @@ exports.getGlobalUserByEmail = async email => {
         include_docs: true,
       })
     ).rows
-    users = users.map(user => user.doc)
+    users = users.map((user) => user.doc)
     return users.length <= 1 ? users[0] : users
   } catch (err) {
     if (err != null && err.name === "not_found") {

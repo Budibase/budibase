@@ -6,7 +6,7 @@ class Helper {
 
   register(handlebars) {
     // wrap the function so that no helper can cause handlebars to break
-    handlebars.registerHelper(this.name, value => {
+    handlebars.registerHelper(this.name, (value) => {
       return this.fn(value) || value
     })
   }

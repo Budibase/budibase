@@ -7,7 +7,7 @@ import { executeQuery } from "./queries"
 /**
  * Fetches all rows for a particular Budibase data source.
  */
-export const fetchDatasource = async dataSource => {
+export const fetchDatasource = async (dataSource) => {
   if (!dataSource || !dataSource.type) {
     return []
   }

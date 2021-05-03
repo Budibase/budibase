@@ -47,7 +47,7 @@ async function getAllDBRoles(db) {
       include_docs: true,
     })
   )
-  return body.rows.map(row => row.doc)
+  return body.rows.map((row) => row.doc)
 }
 
 async function updatePermissionOnRole(
@@ -63,7 +63,7 @@ async function updatePermissionOnRole(
   const docUpdates = []
 
   // the permission is for a built in, make sure it exists
-  if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
+  if (isABuiltin && !dbRoles.some((role) => role._id === dbRoleId)) {
     const builtin = getBuiltinRoles()[roleId]
     builtin._id = getDBRoleID(builtin._id)
     dbRoles.push(builtin)
@@ -101,23 +101,23 @@ async function updatePermissionOnRole(
   }
 
   const response = await db.bulkDocs(docUpdates)
-  return response.map(resp => {
+  return response.map((resp) => {
     resp._id = getExternalRoleID(resp.id)
     delete resp.id
     return resp
   })
 }
 
-exports.fetchBuiltin = function(ctx) {
+exports.fetchBuiltin = function (ctx) {
   ctx.body = Object.values(getBuiltinPermissions())
 }
 
-exports.fetchLevels = function(ctx) {
+exports.fetchLevels = function (ctx) {
   // for now only provide the read/write perms externally
   ctx.body = SUPPORTED_LEVELS
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const roles = await getAllDBRoles(db)
   let permissions = {}
@@ -144,7 +144,7 @@ exports.fetch = async function(ctx) {
   ctx.body = finalPermissions
 }
 
-exports.getResourcePerms = async function(ctx) {
+exports.getResourcePerms = async function (ctx) {
   const resourceId = ctx.params.resourceId
   const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
@@ -152,7 +152,7 @@ exports.getResourcePerms = async function(ctx) {
       include_docs: true,
     })
   )
-  const roles = body.rows.map(row => row.doc)
+  const roles = body.rows.map((row) => row.doc)
   let permissions = {}
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
@@ -169,7 +169,7 @@ exports.getResourcePerms = async function(ctx) {
   ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
 }
 
-exports.addPermission = async function(ctx) {
+exports.addPermission = async function (ctx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
@@ -177,7 +177,7 @@ exports.addPermission = async function(ctx) {
   )
 }
 
-exports.removePermission = async function(ctx) {
+exports.removePermission = async function (ctx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
