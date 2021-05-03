@@ -100,7 +100,7 @@ class Table {
   }
 }
 
-exports.init = endpoint => {
+exports.init = (endpoint) => {
   let AWS = require("aws-sdk")
   AWS.config.update({
     region: AWS_REGION,

@@ -13,12 +13,12 @@ export const DropPosition = {
   INSIDE: "inside",
 }
 
-export default function() {
+export default function () {
   const store = writable({})
 
   store.actions = {
-    dragstart: component => {
-      store.update(state => {
+    dragstart: (component) => {
+      store.update((state) => {
         state.dragged = component
         return state
       })
@@ -29,7 +29,7 @@ export default function() {
       canHaveChildrenButIsEmpty,
       mousePosition,
     }) => {
-      store.update(state => {
+      store.update((state) => {
         state.targetComponent = component
         // only allow dropping inside when container is empty
         // if container has children, drag over them
@@ -65,7 +65,7 @@ export default function() {
       })
     },
     reset: () => {
-      store.update(state => {
+      store.update((state) => {
         state.dropPosition = ""
         state.targetComponent = null
         state.dragged = null
@@ -85,7 +85,7 @@ export default function() {
       }
       // Stop if the target is a child of source
       const path = findComponentPath(state.dragged, state.targetComponent._id)
-      const ids = path.map(component => component._id)
+      const ids = path.map((component) => component._id)
       if (ids.includes(state.targetComponent._id)) {
         return
       }

@@ -43,7 +43,7 @@ async function getLayouts(db) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map((row) => row.doc)
 }
 
 async function getScreens(db) {
@@ -53,7 +53,7 @@ async function getScreens(db) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map((row) => row.doc)
 }
 
 function getUserRoleId(ctx) {
@@ -113,11 +113,11 @@ async function createInstance(template) {
   return { _id: appId }
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   ctx.body = await getAllApps()
 }
 
-exports.fetchAppDefinition = async function(ctx) {
+exports.fetchAppDefinition = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
   const layouts = await getLayouts(db)
   const userRoleId = getUserRoleId(ctx)
@@ -133,7 +133,7 @@ exports.fetchAppDefinition = async function(ctx) {
   }
 }
 
-exports.fetchAppPackage = async function(ctx) {
+exports.fetchAppPackage = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
   const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
@@ -146,7 +146,7 @@ exports.fetchAppPackage = async function(ctx) {
   }
 }
 
-exports.create = async function(ctx) {
+exports.create = async function (ctx) {
   const { useTemplate, templateKey } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -186,7 +186,7 @@ exports.create = async function(ctx) {
   ctx.message = `Application ${ctx.request.body.name} created successfully`
 }
 
-exports.update = async function(ctx) {
+exports.update = async function (ctx) {
   const url = await getAppUrlIfNotInUse(ctx)
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
@@ -202,7 +202,7 @@ exports.update = async function(ctx) {
   ctx.body = response
 }
 
-exports.delete = async function(ctx) {
+exports.delete = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
   const app = await db.get(ctx.params.appId)
   const result = await db.destroy()

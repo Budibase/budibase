@@ -49,10 +49,10 @@ export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
   store.actions = {
-    initialise: async pkg => {
+    initialise: async (pkg) => {
       const { layouts, screens, application, clientLibPath } = pkg
       const components = await fetchComponentLibDefinitions(application._id)
-      store.update(state => ({
+      store.update((state) => ({
         ...state,
         libraries: application.componentLibraries,
         components,
@@ -70,7 +70,7 @@ export const getFrontendStore = () => {
 
       // Initialise backend stores
       const [_integrations] = await Promise.all([
-        api.get("/api/integrations").then(r => r.json()),
+        api.get("/api/integrations").then((r) => r.json()),
       ])
       datasources.init()
       integrations.set(_integrations)
@@ -82,18 +82,18 @@ export const getFrontendStore = () => {
       fetch: async () => {
         const response = await api.get("/api/routing")
         const json = await response.json()
-        store.update(state => {
+        store.update((state) => {
           state.routes = json.routes
           return state
         })
       },
     },
     screens: {
-      select: screenId => {
-        store.update(state => {
+      select: (screenId) => {
+        store.update((state) => {
           let screens = get(allScreens)
           let screen =
-            screens.find(screen => screen._id === screenId) || screens[0]
+            screens.find((screen) => screen._id === screenId) || screens[0]
           if (!screen) return state
 
           // Update role to the screen's role setting so that it will always
@@ -107,9 +107,9 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      create: async screen => {
+      create: async (screen) => {
         screen = await store.actions.screens.save(screen)
-        store.update(state => {
+        store.update((state) => {
           state.selectedScreenId = screen._id
           state.selectedComponentId = screen.props._id
           state.currentFrontEndType = FrontendTypes.SCREEN
@@ -118,15 +118,15 @@ export const getFrontendStore = () => {
         })
         return screen
       },
-      save: async screen => {
+      save: async (screen) => {
         const creatingNewScreen = screen._id === undefined
         const response = await api.post(`/api/screens`, screen)
         screen = await response.json()
         await store.actions.routing.fetch()
 
-        store.update(state => {
+        store.update((state) => {
           const foundScreen = state.screens.findIndex(
-            el => el._id === screen._id
+            (el) => el._id === screen._id
           )
           if (foundScreen !== -1) {
             state.screens.splice(foundScreen, 1)
@@ -141,14 +141,14 @@ export const getFrontendStore = () => {
 
         return screen
       },
-      delete: async screens => {
+      delete: async (screens) => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
         const screenDeletePromises = []
-        store.update(state => {
+        store.update((state) => {
           for (let screenToDelete of screensToDelete) {
             state.screens = state.screens.filter(
-              screen => screen._id !== screenToDelete._id
+              (screen) => screen._id !== screenToDelete._id
             )
             screenDeletePromises.push(
               api.delete(
@@ -177,8 +177,8 @@ export const getFrontendStore = () => {
       },
     },
     layouts: {
-      select: layoutId => {
-        store.update(state => {
+      select: (layoutId) => {
+        store.update((state) => {
           const layout =
             store.actions.layouts.find(layoutId) || get(store).layouts[0]
           if (!layout) return
@@ -189,15 +189,15 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      save: async layout => {
+      save: async (layout) => {
         const layoutToSave = cloneDeep(layout)
         const creatingNewLayout = layoutToSave._id === undefined
         const response = await api.post(`/api/layouts`, layoutToSave)
         const savedLayout = await response.json()
 
-        store.update(state => {
+        store.update((state) => {
           const layoutIdx = state.layouts.findIndex(
-            stateLayout => stateLayout._id === savedLayout._id
+            (stateLayout) => stateLayout._id === savedLayout._id
           )
           if (layoutIdx >= 0) {
             // update existing layout
@@ -216,14 +216,14 @@ export const getFrontendStore = () => {
 
         return savedLayout
       },
-      find: layoutId => {
+      find: (layoutId) => {
         if (!layoutId) {
           return get(mainLayout)
         }
         const storeContents = get(store)
-        return storeContents.layouts.find(layout => layout._id === layoutId)
+        return storeContents.layouts.find((layout) => layout._id === layoutId)
       },
-      delete: async layoutToDelete => {
+      delete: async (layoutToDelete) => {
         const response = await api.delete(
           `/api/layouts/${layoutToDelete._id}/${layoutToDelete._rev}`
         )
@@ -231,9 +231,9 @@ export const getFrontendStore = () => {
           const json = await response.json()
           throw new Error(json.message)
         }
-        store.update(state => {
+        store.update((state) => {
           state.layouts = state.layouts.filter(
-            layout => layout._id !== layoutToDelete._id
+            (layout) => layout._id !== layoutToDelete._id
           )
           if (layoutToDelete._id === state.selectedLayoutId) {
             state.selectedLayoutId = get(mainLayout)._id
@@ -243,7 +243,7 @@ export const getFrontendStore = () => {
       },
     },
     components: {
-      select: component => {
+      select: (component) => {
         if (!component) {
           return
         }
@@ -263,13 +263,13 @@ export const getFrontendStore = () => {
         }
 
         // Otherwise select the component
-        store.update(state => {
+        store.update((state) => {
           state.selectedComponentId = component._id
           state.currentView = "component"
           return state
         })
       },
-      getDefinition: componentName => {
+      getDefinition: (componentName) => {
         if (!componentName) {
           return null
         }
@@ -287,7 +287,7 @@ export const getFrontendStore = () => {
         // Generate default props
         let props = { ...presetProps }
         if (definition.settings) {
-          definition.settings.forEach(setting => {
+          definition.settings.forEach((setting) => {
             if (setting.defaultValue !== undefined) {
               props[setting.key] = setting.defaultValue
             }
@@ -367,7 +367,7 @@ export const getFrontendStore = () => {
 
         // Save components and update UI
         await store.actions.preview.saveSelected()
-        store.update(state => {
+        store.update((state) => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
           return state
@@ -380,7 +380,7 @@ export const getFrontendStore = () => {
 
         return componentInstance
       },
-      delete: async component => {
+      delete: async (component) => {
         if (!component) {
           return
         }
@@ -391,7 +391,7 @@ export const getFrontendStore = () => {
         const parent = findComponentParent(asset.props, component._id)
         if (parent) {
           parent._children = parent._children.filter(
-            child => child._id !== component._id
+            (child) => child._id !== component._id
           )
           store.actions.components.select(parent)
         }
@@ -404,7 +404,7 @@ export const getFrontendStore = () => {
         }
 
         // Update store with copied component
-        store.update(state => {
+        store.update((state) => {
           state.componentToPaste = cloneDeep(component)
           state.componentToPaste.isCut = cut
           return state
@@ -415,7 +415,7 @@ export const getFrontendStore = () => {
           const parent = findComponentParent(selectedAsset.props, component._id)
           if (parent) {
             parent._children = parent._children.filter(
-              child => child._id !== component._id
+              (child) => child._id !== component._id
             )
             store.actions.components.select(parent)
           }
@@ -423,7 +423,7 @@ export const getFrontendStore = () => {
       },
       paste: async (targetComponent, mode) => {
         let promises = []
-        store.update(state => {
+        store.update((state) => {
           // Stop if we have nothing to paste
           if (!state.componentToPaste) {
             return state
@@ -444,7 +444,7 @@ export const getFrontendStore = () => {
           if (cut) {
             state.componentToPaste = null
           } else {
-            const randomizeIds = component => {
+            const randomizeIds = (component) => {
               if (!component) {
                 return
               }
@@ -497,7 +497,7 @@ export const getFrontendStore = () => {
         }
         await store.actions.preview.saveSelected()
       },
-      updateCustomStyle: async style => {
+      updateCustomStyle: async (style) => {
         const selected = get(selectedComponent)
         selected._styles.custom = style
         await store.actions.preview.saveSelected()
@@ -507,7 +507,7 @@ export const getFrontendStore = () => {
         selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
-      updateTransition: async transition => {
+      updateTransition: async (transition) => {
         const selected = get(selectedComponent)
         if (transition == null || transition === "") {
           selected._transition = ""
@@ -522,7 +522,7 @@ export const getFrontendStore = () => {
           return
         }
         component[name] = value
-        store.update(state => {
+        store.update((state) => {
           state.selectedComponentId = component._id
           return state
         })

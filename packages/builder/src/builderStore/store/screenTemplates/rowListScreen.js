@@ -4,8 +4,8 @@ import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 import { makePropSafe } from "@budibase/string-templates"
 
-export default function(tables) {
-  return tables.map(table => {
+export default function (tables) {
+  return tables.map((table) => {
     return {
       name: `${table.name} - List`,
       create: () => createScreen(table),
@@ -15,7 +15,7 @@ export default function(tables) {
 }
 
 export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
-export const rowListUrl = table => sanitizeUrl(`/${table.name}`)
+export const rowListUrl = (table) => sanitizeUrl(`/${table.name}`)
 
 function generateTitleContainer(table) {
   const newButton = new Component("@budibase/standard-components/button")
@@ -70,7 +70,7 @@ function generateTitleContainer(table) {
     .addChild(newButton)
 }
 
-const createScreen = table => {
+const createScreen = (table) => {
   const provider = new Component("@budibase/standard-components/dataprovider")
     .instanceName(`Data Provider`)
     .customProps({

@@ -1,9 +1,9 @@
 import { writable, derived } from "svelte/store"
 
-export const createContextStore = oldContext => {
+export const createContextStore = (oldContext) => {
   const newContext = writable({})
   const contexts = oldContext ? [oldContext, newContext] : [newContext]
-  const totalContext = derived(contexts, $contexts => {
+  const totalContext = derived(contexts, ($contexts) => {
     return $contexts.reduce((total, context) => ({ ...total, ...context }), {})
   })
 
@@ -12,7 +12,7 @@ export const createContextStore = oldContext => {
     if (!providerId || data === undefined) {
       return
     }
-    newContext.update(state => {
+    newContext.update((state) => {
       state[providerId] = data
 
       // Keep track of the closest component ID so we can later hydrate a "data" prop.
@@ -29,7 +29,7 @@ export const createContextStore = oldContext => {
     if (!providerId || !actionType) {
       return
     }
-    newContext.update(state => {
+    newContext.update((state) => {
       state[`${providerId}_${actionType}`] = callback
       return state
     })

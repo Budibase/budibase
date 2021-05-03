@@ -27,12 +27,12 @@ module.exports.preprocess = (string, finalise = true) => {
   // might want to pre-process for other benefits but still want to see errors
   if (!finalise) {
     processors = processors.filter(
-      processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
+      (processor) => processor.name !== preprocessor.PreprocessorNames.FINALISE
     )
   }
   return process(string, processors)
 }
 
-module.exports.postprocess = string => {
+module.exports.postprocess = (string) => {
   return process(string, postprocessor.processors)
 }

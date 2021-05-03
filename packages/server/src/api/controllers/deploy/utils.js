@@ -22,7 +22,7 @@ function walkDir(dirPath, callback) {
   }
 }
 
-exports.fetchCredentials = async function(url, body) {
+exports.fetchCredentials = async function (url, body) {
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
@@ -43,7 +43,7 @@ exports.fetchCredentials = async function(url, body) {
   return json
 }
 
-exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
+exports.prepareUpload = async function ({ s3Key, bucket, metadata, file }) {
   const response = await upload({
     bucket,
     metadata,
@@ -62,13 +62,13 @@ exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
   }
 }
 
-exports.deployToObjectStore = async function(appId, bucket, metadata) {
+exports.deployToObjectStore = async function (appId, bucket, metadata) {
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
   let uploads = []
 
   // Upload HTML, CSS and JS for each page of the web app
-  walkDir(appAssetsPath, function(filePath) {
+  walkDir(appAssetsPath, function (filePath) {
     const filePathParts = filePath.split("/")
     const appAssetUpload = exports.prepareUpload({
       bucket,
@@ -122,7 +122,7 @@ exports.performReplication = (appId, session, dbUrl) => {
     const local = new PouchDB(appId)
 
     const remote = new CouchDB(`${dbUrl}/${appId}`, {
-      fetch: function(url, opts) {
+      fetch: function (url, opts) {
         opts.headers.set("Cookie", `${session};`)
         return CouchDB.fetch(url, opts)
       },
@@ -131,6 +131,6 @@ exports.performReplication = (appId, session, dbUrl) => {
     const replication = local.sync(remote)
 
     replication.on("complete", () => resolve())
-    replication.on("error", err => reject(err))
+    replication.on("error", (err) => reject(err))
   })
 }

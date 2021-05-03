@@ -53,7 +53,7 @@ async function buildEmail(purpose, email, user) {
   })
 }
 
-exports.sendEmail = async ctx => {
+exports.sendEmail = async (ctx) => {
   const { groupId, email, userId, purpose } = ctx.request.body
   const db = new CouchDB(GLOBAL_DB)
   const params = {}

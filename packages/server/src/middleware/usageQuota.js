@@ -54,7 +54,7 @@ module.exports = async (ctx, next) => {
       ctx.request.files.file.length > 1
         ? Array.from(ctx.request.files.file)
         : [ctx.request.files.file]
-    usage = files.map(file => file.size).reduce((total, size) => total + size)
+    usage = files.map((file) => file.size).reduce((total, size) => total + size)
   }
   try {
     await usageQuota.update(ctx.auth.apiKey, property, usage)

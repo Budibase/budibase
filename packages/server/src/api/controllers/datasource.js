@@ -5,7 +5,7 @@ const {
   getQueryParams,
 } = require("../../db/utils")
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
   ctx.body = (
     await database.allDocs(
@@ -13,10 +13,10 @@ exports.fetch = async function(ctx) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map((row) => row.doc)
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   const datasource = {
@@ -33,12 +33,12 @@ exports.save = async function(ctx) {
   ctx.body = datasource
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   // Delete all queries for the datasource
   const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  await db.bulkDocs(rows.rows.map((row) => ({ ...row.doc, _deleted: true })))
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)
@@ -47,7 +47,7 @@ exports.destroy = async function(ctx) {
   ctx.status = 200
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const database = new CouchDB(ctx.appId)
   ctx.body = await database.get(ctx.params.datasourceId)
 }
