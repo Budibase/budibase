@@ -12,7 +12,8 @@
   <ModalContent
     title="Builder Theme"
     confirmText="Done"
-    showCancelButton={false}>
+    showCancelButton={false}
+  >
     <ThemeEditor />
   </ModalContent>
 </Modal>

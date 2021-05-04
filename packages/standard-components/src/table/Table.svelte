@@ -32,7 +32,7 @@
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
     let invalid = false
-    customColumns?.forEach(column => {
+    customColumns?.forEach((column) => {
       if (schema[column] == null) {
         invalid = true
       }
@@ -66,7 +66,7 @@
         divider: true,
       }
     }
-    fields.forEach(field => {
+    fields.forEach((field) => {
       newSchema[field] = schema[field]
     })
     return newSchema
@@ -77,7 +77,8 @@
   lang="en"
   dir="ltr"
   use:styleable={$component.styles}
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+  class={`spectrum ${size || "spectrum--medium"} ${theme || "spectrum--light"}`}
+>
   <Table
     {data}
     {schema}
@@ -88,7 +89,8 @@
     allowSelectRows={false}
     allowEditRows={false}
     allowEditColumns={false}
-    showAutoColumns={true}>
+    showAutoColumns={true}
+  >
     <slot />
   </Table>
 </div>

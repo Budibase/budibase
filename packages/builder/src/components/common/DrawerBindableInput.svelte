@@ -24,7 +24,7 @@
     bindingDrawer.hide()
   }
 
-  const onChange = value => {
+  const onChange = (value) => {
     dispatch("change", readableToRuntimeBinding(bindings, value))
   }
 </script>
@@ -33,8 +33,9 @@
   <Input
     {label}
     value={readableValue}
-    on:change={event => onChange(event.detail)}
-    {placeholder} />
+    on:change={(event) => onChange(event.detail)}
+    {placeholder}
+  />
   <div class="icon" on:click={bindingDrawer.show}>
     <Icon size="S" name="FlashOn" />
   </div>
@@ -45,12 +46,13 @@
   </svelte:fragment>
   <Button cta slot="buttons" on:click={handleClose}>Save</Button>
   <svelte:component
-    slot="body"
     this={panel}
+    slot="body"
     value={readableValue}
     close={handleClose}
-    on:update={event => (tempValue = event.detail)}
-    bindableProperties={bindings} />
+    on:update={(event) => (tempValue = event.detail)}
+    bindableProperties={bindings}
+  />
 </Drawer>
 
 <style>

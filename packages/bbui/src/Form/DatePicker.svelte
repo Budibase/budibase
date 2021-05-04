@@ -12,7 +12,7 @@
   export let placeholder = null
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e) => {
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -25,5 +25,6 @@
     {value}
     {placeholder}
     {enableTime}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>

@@ -15,13 +15,13 @@
   export let options = []
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+  export let getOptionLabel = (option) => option
+  export let getOptionValue = (option) => option
   export let open = false
   export let readonly = false
 
   const dispatch = createEventDispatcher()
-  const onClick = e => {
+  const onClick = (e) => {
     dispatch("click")
     if (readonly) {
       return
@@ -37,7 +37,8 @@
   class:is-invalid={!!error}
   class:is-open={open}
   aria-haspopup="listbox"
-  on:mousedown={onClick}>
+  on:mousedown={onClick}
+>
   <span class="spectrum-Picker-label" class:is-placeholder={isPlaceholder}>
     {fieldText}
   </span>
@@ -46,14 +47,16 @@
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
       focusable="false"
       aria-hidden="true"
-      aria-label="Folder">
+      aria-label="Folder"
+    >
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
   {/if}
   <svg
     class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
     focusable="false"
-    aria-hidden="true">
+    aria-hidden="true"
+  >
     <use xlink:href="#spectrum-css-icon-Chevron100" />
   </svg>
 </button>
@@ -61,7 +64,8 @@
   <div
     use:clickOutside={() => (open = false)}
     transition:fly={{ y: -20, duration: 200 }}
-    class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open">
+    class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+  >
     <ul class="spectrum-Menu" role="listbox">
       {#if placeholderOption}
         <li
@@ -70,12 +74,14 @@
           role="option"
           aria-selected="true"
           tabindex="0"
-          on:click={() => onSelectOption(null)}>
+          on:click={() => onSelectOption(null)}
+        >
           <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
           <svg
             class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
             focusable="false"
-            aria-hidden="true">
+            aria-hidden="true"
+          >
             <use xlink:href="#spectrum-css-icon-Checkmark100" />
           </svg>
         </li>
@@ -88,13 +94,16 @@
             role="option"
             aria-selected="true"
             tabindex="0"
-            on:click={() => onSelectOption(getOptionValue(option, idx))}>
-            <span
-              class="spectrum-Menu-itemLabel">{getOptionLabel(option, idx)}</span>
+            on:click={() => onSelectOption(getOptionValue(option, idx))}
+          >
+            <span class="spectrum-Menu-itemLabel"
+              >{getOptionLabel(option, idx)}</span
+            >
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
-              aria-hidden="true">
+              aria-hidden="true"
+            >
               <use xlink:href="#spectrum-css-icon-Checkmark100" />
             </svg>
           </li>

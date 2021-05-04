@@ -9,5 +9,6 @@
   bind:value
   on:change
   options={$roles}
-  getOptionLabel={role => role.name}
-  getOptionValue={role => role._id} />
+  getOptionLabel={(role) => role.name}
+  getOptionValue={(role) => role._id}
+/>

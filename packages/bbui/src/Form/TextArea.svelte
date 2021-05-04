@@ -12,7 +12,7 @@
   export let getCaretPosition = null
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e) => {
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -25,5 +25,6 @@
     {disabled}
     {value}
     {placeholder}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>

@@ -11,7 +11,7 @@
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $roles.filter(role => role._id !== selectedRoleId)
+  $: otherRoles = $roles.filter((role) => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
   const fetchBasePermissions = async () => {
@@ -20,9 +20,9 @@
   }
 
   // Changes the selected role
-  const changeRole = event => {
+  const changeRole = (event) => {
     const id = event?.detail
-    const role = $roles.find(role => role._id === id)
+    const role = $roles.find((role) => role._id === id)
     if (role) {
       selectedRole = {
         ...role,
@@ -41,7 +41,7 @@
 
     // Clean up empty strings
     const keys = ["_id", "inherits", "permissionId"]
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (selectedRole[key] === "") {
         delete selectedRole[key]
       }
@@ -84,8 +84,9 @@
 
 <ModalContent
   title="Edit Roles"
-  confirmText={isCreating ? 'Create' : 'Save'}
-  onConfirm={saveRole}>
+  confirmText={isCreating ? "Create" : "Save"}
+  onConfirm={saveRole}
+>
   {#if errors.length}
     <ErrorsBox {errors} />
   {/if}
@@ -97,27 +98,31 @@
     on:change={changeRole}
     options={$roles}
     placeholder="Create new role"
-    getOptionValue={role => role._id}
-    getOptionLabel={role => role.name} />
+    getOptionValue={(role) => role._id}
+    getOptionLabel={(role) => role.name}
+  />
   {#if selectedRole}
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      disabled={builtInRoles.includes(selectedRole.name)} />
+      disabled={builtInRoles.includes(selectedRole.name)}
+    />
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
       options={otherRoles}
-      getOptionValue={role => role._id}
-      getOptionLabel={role => role.name}
-      placeholder="None" />
+      getOptionValue={(role) => role._id}
+      getOptionLabel={(role) => role.name}
+      placeholder="None"
+    />
     <Select
       label="Base Permissions"
       bind:value={selectedRole.permissionId}
       options={basePermissions}
-      getOptionValue={x => x._id}
-      getOptionLabel={x => x.name}
-      placeholder="Choose permissions" />
+      getOptionValue={(x) => x._id}
+      getOptionLabel={(x) => x.name}
+      placeholder="Choose permissions"
+    />
   {/if}
   <div slot="footer">
     {#if !isCreating}

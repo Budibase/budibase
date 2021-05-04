@@ -13,7 +13,7 @@
   export let error = null
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e) => {
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -29,5 +29,6 @@
     {type}
     on:change={onChange}
     on:click
-    on:input />
+    on:input
+  />
 </Field>

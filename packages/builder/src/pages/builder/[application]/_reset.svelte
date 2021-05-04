@@ -15,7 +15,7 @@
 
   let promise = getPackage()
   $: selected = capitalise(
-    $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
+    $layout.children.find((layout) => $isActive(layout.path))?.title ?? "data"
   )
 
   async function getPackage() {
@@ -37,10 +37,10 @@
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen
-  const topItemNavigate = path => () => {
-    const activeTopNav = $layout.children.find(c => $isActive(c.path))
+  const topItemNavigate = (path) => () => {
+    const activeTopNav = $layout.children.find((c) => $isActive(c.path))
     if (!activeTopNav) return
-    store.update(state => {
+    store.update((state) => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
       state.previousTopNavPath[activeTopNav.path] = window.location.pathname
       $goto(state.previousTopNavPath[path] || path)
@@ -60,7 +60,8 @@
           <img
             src={Logo}
             alt="budibase icon"
-            on:click={() => $goto(`/builder/`)} />
+            on:click={() => $goto(`/builder/`)}
+          />
         </button>
 
         <div class="tabs">
@@ -70,7 +71,8 @@
                 quiet
                 selected={$isActive(path)}
                 on:click={topItemNavigate(path)}
-                title={capitalise(title)} />
+                title={capitalise(title)}
+              />
             {/each}
           </Tabs>
         </div>
@@ -84,7 +86,8 @@
         <div class="topnavitemright">
           <a
             target="_blank"
-            href="https://github.com/Budibase/budibase/discussions">
+            href="https://github.com/Budibase/budibase/discussions"
+          >
             <i class="ri-github-fill" />
           </a>
         </div>
@@ -93,7 +96,8 @@
           secondary
           on:click={() => {
             window.open(`/${application}`)
-          }}>
+          }}
+        >
           Preview
         </Button>
       </div>
@@ -101,7 +105,8 @@
     <div class="beta">
       <Button
         secondary
-        href="https://github.com/Budibase/budibase/discussions/categories/ideas">
+        href="https://github.com/Budibase/budibase/discussions/categories/ideas"
+      >
         Request feature
       </Button>
     </div>

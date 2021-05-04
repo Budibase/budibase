@@ -30,7 +30,7 @@
 
   function setAssetProps(name, value) {
     const selectedAsset = get(currentAsset)
-    store.update(state => {
+    store.update((state) => {
       if (
         name === "_instanceName" &&
         state.currentFrontEndType === FrontendTypes.SCREEN
@@ -57,7 +57,8 @@
         {showDisplayName}
         onChange={store.actions.components.updateProp}
         onScreenPropChange={setAssetProps}
-        assetInstance={$store.currentView !== 'component' && $currentAsset} />
+        assetInstance={$store.currentView !== "component" && $currentAsset}
+      />
     </div>
   </Tab>
   <Tab title="Design">
@@ -71,7 +72,8 @@
         {onStyleChanged}
         {onCustomStyleChanged}
         {onUpdateTransition}
-        {onResetStyles} />
+        {onResetStyles}
+      />
     </div>
   </Tab>
 </Tabs>

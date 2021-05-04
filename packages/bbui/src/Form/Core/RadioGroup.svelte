@@ -8,11 +8,11 @@
   export let options = []
   export let error = null
   export let disabled = false
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+  export let getOptionLabel = (option) => option
+  export let getOptionValue = (option) => option
 
   const dispatch = createEventDispatcher()
-  const onChange = e => dispatch("change", e.target.value)
+  const onChange = (e) => dispatch("change", e.target.value)
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
@@ -21,14 +21,16 @@
       <div
         title={getOptionLabel(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
-        class:is-invalid={!!error}>
+        class:is-invalid={!!error}
+      >
         <input
           on:change={onChange}
           bind:group={value}
           value={getOptionValue(option)}
           type="radio"
           class="spectrum-Radio-input"
-          {disabled} />
+          {disabled}
+        />
         <span class="spectrum-Radio-button" />
         <label class="spectrum-Radio-label">{getOptionLabel(option)}</label>
       </div>

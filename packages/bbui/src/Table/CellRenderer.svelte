@@ -22,11 +22,11 @@
     longform: StringRenderer,
   }
   $: type = schema?.type ?? "string"
-  $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
+  $: customRenderer = customRenderers?.find((x) => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type]
 </script>
 
-{#if renderer && (customRenderer || (value != null && value !== ''))}
+{#if renderer && (customRenderer || (value != null && value !== ""))}
   <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
     <slot />
   </svelte:component>

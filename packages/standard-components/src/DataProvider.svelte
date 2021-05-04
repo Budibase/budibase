@@ -39,7 +39,7 @@
     loaded,
   }
 
-  const fetchData = async dataSource => {
+  const fetchData = async (dataSource) => {
     loading = true
     allRows = await API.fetchDatasource(dataSource)
     loading = false
@@ -53,7 +53,7 @@
     let filteredData = [...rows]
     Object.entries(filter).forEach(([field, value]) => {
       if (value != null && value !== "") {
-        filteredData = filteredData.filter(row => {
+        filteredData = filteredData.filter((row) => {
           return row[field] === value
         })
       }
@@ -84,7 +84,7 @@
     return rows.slice(0, numLimit)
   }
 
-  const getSchema = async dataSource => {
+  const getSchema = async (dataSource) => {
     if (dataSource?.schema) {
       schema = dataSource.schema
     } else if (dataSource?.tableId) {
@@ -94,12 +94,23 @@
       schema = {}
     }
 
-    // Ensure all schema fields have a name property
-    Object.entries(schema).forEach(([key, value]) => {
-      if (!value.name) {
-        value.name = key
+    // Ensure there are "name" properties for all fields and that field schema
+    // are objects
+    let fixedSchema = {}
+    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      if (typeof fieldSchema === "string") {
+        fixedSchema[fieldName] = {
+          type: fieldSchema,
+          name: fieldName,
+        }
+      } else {
+        fixedSchema[fieldName] = {
+          ...fieldSchema,
+          name: fieldName,
+        }
       }
     })
+    schema = fixedSchema
   }
 </script>
 

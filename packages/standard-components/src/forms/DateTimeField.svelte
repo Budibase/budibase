@@ -16,11 +16,12 @@
   {#if fieldState}
     <CoreDatePicker
       value={$fieldState.value}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={(e) => fieldApi.setValue(e.detail)}
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}
       {enableTime}
-      {placeholder} />
+      {placeholder}
+    />
   {/if}
 </Field>

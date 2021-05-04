@@ -7,7 +7,7 @@
   export let value
   export let bindings
 
-  $: table = $tables.list.find(table => table._id === value?.tableId)
+  $: table = $tables.list.find((table) => table._id === value?.tableId)
   $: schemaFields = Object.entries(table?.schema ?? {})
 
   // Ensure any nullish tableId values get set to empty string so
@@ -22,8 +22,9 @@
 <Select
   bind:value={value.tableId}
   options={$tables.list}
-  getOptionLabel={table => table.name}
-  getOptionValue={table => table._id} />
+  getOptionLabel={(table) => table.name}
+  getOptionValue={(table) => table._id}
+/>
 
 {#if schemaFields.length}
   <div class="schema-fields">
@@ -33,15 +34,17 @@
           <Select
             label={field}
             bind:value={value[field]}
-            options={schema.constraints.inclusion} />
-        {:else if schema.type === 'string' || schema.type === 'number'}
+            options={schema.constraints.inclusion}
+          />
+        {:else if schema.type === "string" || schema.type === "number"}
           <DrawerBindableInput
             panel={AutomationBindingPanel}
             value={value[field]}
-            on:change={e => (value[field] = e.detail)}
+            on:change={(e) => (value[field] = e.detail)}
             label={field}
             type="string"
-            {bindings} />
+            {bindings}
+          />
         {/if}
       {/if}
     {/each}

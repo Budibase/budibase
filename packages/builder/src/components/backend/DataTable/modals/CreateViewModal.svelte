@@ -10,7 +10,7 @@
   let name
   let field
 
-  $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
+  $: views = $tables.list.flatMap((table) => Object.keys(table.views || {}))
 
   function saveView() {
     if (views.includes(name)) {
@@ -31,6 +31,7 @@
 <ModalContent
   title="Create View"
   confirmText="Create View"
-  onConfirm={saveView}>
+  onConfirm={saveView}
+>
   <Input label="View Name" thin bind:value={name} />
 </ModalContent>

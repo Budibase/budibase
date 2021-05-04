@@ -12,7 +12,7 @@
   $: relationships = value?.slice(0, displayLimit) ?? []
   $: leftover = (value?.length ?? 0) - relationships.length
 
-  const onClick = e => {
+  const onClick = (e) => {
     e.stopPropagation()
     dispatch("clickrelationship", {
       tableId: row.tableId,

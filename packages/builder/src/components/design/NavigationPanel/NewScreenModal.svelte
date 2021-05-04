@@ -25,7 +25,7 @@
     }
   }
 
-  const templateChanged = newTemplateIndex => {
+  const templateChanged = (newTemplateIndex) => {
     if (newTemplateIndex === undefined) return
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
@@ -75,13 +75,13 @@
 
   const routeExists = (route, roleId) => {
     return $allScreens.some(
-      screen =>
+      (screen) =>
         screen.routing.route.toLowerCase() === route.toLowerCase() &&
         screen.routing.roleId === roleId
     )
   }
 
-  const routeChanged = event => {
+  const routeChanged = (event) => {
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
@@ -92,22 +92,25 @@
   <Select
     label="Choose a Template"
     bind:value={templateIndex}
-    on:change={ev => templateChanged(ev.detail)}
+    on:change={(ev) => templateChanged(ev.detail)}
     options={templates}
     placeholder={null}
-    getOptionLabel={x => x.name}
-    getOptionValue={(x, idx) => idx} />
+    getOptionLabel={(x) => x.name}
+    getOptionValue={(x, idx) => idx}
+  />
   <Input label="Name" bind:value={name} />
   <Input
     label="Url"
     error={routeError}
     bind:value={route}
-    on:change={routeChanged} />
+    on:change={routeChanged}
+  />
   <Select
     label="Access"
     bind:value={roleId}
     options={$roles}
-    getOptionLabel={x => x.name}
-    getOptionValue={x => x._id} />
+    getOptionLabel={(x) => x.name}
+    getOptionValue={(x) => x._id}
+  />
   <Toggle text="Create link in navigation bar" bind:value={createLink} />
 </ModalContent>

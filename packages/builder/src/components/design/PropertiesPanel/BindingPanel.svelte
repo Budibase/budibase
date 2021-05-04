@@ -1,6 +1,13 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, Heading, Label, DrawerContent, Layout } from "@budibase/bbui"
+  import {
+    Search,
+    TextArea,
+    Heading,
+    Label,
+    DrawerContent,
+    Layout,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -59,53 +66,53 @@
 
 <DrawerContent>
   <svelte:fragment slot="sidebar">
-  <Layout>
-    <Search placeholder="Search" bind:value={search} />
-    {#if context}
+    <Layout>
+      <Search placeholder="Search" bind:value={search} />
+      {#if context}
+        <section>
+          <Heading size="XS">Columns</Heading>
+          <ul>
+            {#each context.filter((context) =>
+              context.readableBinding.match(searchRgx)
+            ) as { readableBinding }}
+              <li on:click={() => addToText(readableBinding)}>
+                {readableBinding}
+              </li>
+            {/each}
+          </ul>
+        </section>
+      {/if}
+      {#if instance}
+        <section>
+          <Heading size="XS">Components</Heading>
+          <ul>
+            {#each instance.filter((instance) =>
+              instance.readableBinding.match(searchRgx)
+            ) as { readableBinding }}
+              <li on:click={() => addToText(readableBinding)}>
+                {readableBinding}
+              </li>
+            {/each}
+          </ul>
+        </section>
+      {/if}
       <section>
-        <Heading size="XS">Columns</Heading>
+        <Heading size="XS">Helpers</Heading>
         <ul>
-          {#each context.filter((context) =>
-            context.readableBinding.match(searchRgx)
-          ) as { readableBinding }}
-            <li on:click={() => addToText(readableBinding)}>
-              {readableBinding}
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if}
-    {#if instance}
-      <section>
-        <Heading size="XS">Components</Heading>
-        <ul>
-          {#each instance.filter((instance) =>
-            instance.readableBinding.match(searchRgx)
-          ) as { readableBinding }}
-            <li on:click={() => addToText(readableBinding)}>
-              {readableBinding}
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if}
-    <section>
-      <Heading size="XS">Helpers</Heading>
-      <ul>
-        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
-          <li on:click={() => addToText(helper.text)}>
-            <div>
-              <Label extraSmall>{helper.displayText}</Label>
-              <div class="description">
-                {@html helper.description}
+          {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+            <li on:click={() => addToText(helper.text)}>
+              <div>
+                <Label extraSmall>{helper.displayText}</Label>
+                <div class="description">
+                  {@html helper.description}
+                </div>
+                <pre>{helper.example || ''}</pre>
               </div>
-              <pre>{helper.example || ''}</pre>
-            </div>
-          </li>
-        {/each}
-      </ul>
-    </section>
-  </Layout>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    </Layout>
   </svelte:fragment>
   <div class="main">
     <TextArea
@@ -125,7 +132,7 @@
 
 <style>
   .main {
-    padding: var(--spacing-m)
+    padding: var(--spacing-m);
   }
   section {
     display: grid;

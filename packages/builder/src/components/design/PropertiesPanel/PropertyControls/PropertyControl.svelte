@@ -29,7 +29,8 @@
     $store.selectedComponentId
   )
   $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
-  $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
+  $: replaceBindings = (val) =>
+    readableToRuntimeBinding(bindableProperties, val)
 
   const handleClose = () => {
     handleChange(temporaryBindableValue)
@@ -38,7 +39,7 @@
 
   // Handle a value change of any type
   // String values have any bindings handled
-  const handleChange = value => {
+  const handleChange = (value) => {
     let innerVal = value
     if (value && typeof value === "object") {
       if ("detail" in value) {
@@ -80,27 +81,32 @@
       onChange={handleChange}
       {type}
       {...props}
-      name={key} />
+      name={key}
+    />
   </div>
-  {#if bindable && !key.startsWith('_') && type === 'text'}
+  {#if bindable && !key.startsWith("_") && type === "text"}
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={bindingDrawer.show}>
+      on:click={bindingDrawer.show}
+    >
       <Icon size="S" name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
       <svelte:fragment slot="description">
-          Add the objects on the left to enrich your text.
+        Add the objects on the left to enrich your text.
       </svelte:fragment>
-      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>Save</Button>
+      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}
+        >Save</Button
+      >
       <BindingPanel
         slot="body"
         bind:valid
         value={safeValue}
         close={handleClose}
-        on:update={e => (temporaryBindableValue = e.detail)}
-        {bindableProperties} />
+        on:update={(e) => (temporaryBindableValue = e.detail)}
+        {bindableProperties}
+      />
     </Drawer>
   {/if}
 </div>

@@ -17,4 +17,5 @@
   class:spectrum-Link--secondary={secondary}
   class:spectrum-Link--overBackground={overBackground}
   class:spectrum-Link--quiet={quiet}
-  class="spectrum-Link spectrum-Link--size{size}"><slot /></a>
+  class="spectrum-Link spectrum-Link--size{size}"><slot /></a
+>
