@@ -28,11 +28,9 @@
     border-right: var(--border-light);
     overflow: auto;
   }
-
   .sidebar::-webkit-scrollbar {
     display: none;
   }
-
   .main {
     font-family: var(--font-sans);
   }

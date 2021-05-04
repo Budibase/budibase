@@ -80,6 +80,15 @@ export const FIELDS = {
       presence: false,
     },
   },
+  FORMULA: {
+    name: "Formula",
+    icon: "ri-braces-line",
+    type: "formula",
+    constraints: {
+      type: "string",
+      presence: false,
+    },
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {

@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import { getBindableProperties } from "builderStore/dataBinding"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
 

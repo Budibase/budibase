@@ -1,16 +1,12 @@
 <script>
   import TableSelector from "./TableSelector.svelte"
   import RowSelector from "./RowSelector.svelte"
-  import QuerySelector from "./QuerySelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
-  import QueryParamSelector from "./QueryParamSelector.svelte"
   import { Button, Input, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
-  import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import CodeEditorModal from "./CodeEditorModal.svelte"
+  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
   export let block
   export let webhookModal

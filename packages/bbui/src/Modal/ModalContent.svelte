@@ -83,6 +83,7 @@
   .spectrum-Dialog--extraLarge {
     width: 1000px;
   }
+
   .content-grid {
     display: grid;
     position: relative;
