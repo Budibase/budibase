@@ -117,12 +117,7 @@
   const getOptionValue = (x) => x.key
 </script>
 
-<ModalContent
-  title="Filter"
-  confirmText="Save"
-  onConfirm={saveView}
-  size="large"
->
+<ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">
   {#if view.filters.length}
     <div class="input-group-row">
       {#each view.filters as filter, idx}

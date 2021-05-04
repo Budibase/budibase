@@ -43,7 +43,7 @@
 
 <ModalContent
   title="Create Datasource"
-  size="large"
+  size="L"
   confirmText="Create"
   onConfirm={saveDatasource}
   disabled={error || !name}
