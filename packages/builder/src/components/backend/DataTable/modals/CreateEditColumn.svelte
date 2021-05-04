@@ -23,9 +23,12 @@
   import ValuesList from "components/common/ValuesList.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
+  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import { getBindings } from "components/backend/DataTable/formula"
   import { getContext } from "svelte"
 
-  const AUTO_COL = "auto"
+  const AUTO_TYPE = "auto"
+  const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
   const { hide } = getContext(Context.Modal)
@@ -67,14 +70,18 @@
   $: canBeSearched =
     field.type !== LINK_TYPE &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
-    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_COL
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
+    field.type !== FORMULA_TYPE
+  $: canBeDisplay =
+    field.type !== LINK_TYPE &&
+    field.type !== AUTO_TYPE &&
+    field.type !== FORMULA_TYPE
   $: canBeRequired =
-    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
+    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
 
   async function saveColumn() {
-    if (field.type === AUTO_COL) {
+    if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
     tables.saveField({
@@ -195,7 +202,7 @@
     on:change={handleTypeChange}
     options={[
       ...Object.values(fieldDefinitions),
-      { name: "Auto Column", type: AUTO_COL },
+      { name: "Auto Column", type: AUTO_TYPE },
     ]}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type}
@@ -288,7 +295,16 @@
       />
     {/if}
     <Input label={`Column name in other table`} bind:value={field.fieldName} />
-  {:else if field.type === AUTO_COL}
+  {:else if field.type === FORMULA_TYPE}
+    <ModalBindableInput
+      title="Handlebars Formula"
+      label="Formula"
+      value={field.formula}
+      on:change={e => (field.formula = e.detail)}
+      bindings={getBindings({ table })}
+      serverSide="true"
+    />
+  {:else if field.type === AUTO_TYPE}
     <Select
       label="Auto Column Type"
       value={field.subtype}

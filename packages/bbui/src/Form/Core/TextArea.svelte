@@ -37,6 +37,7 @@
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
   {/if}
+  <!-- prettier-ignore -->
   <textarea
     bind:this={textarea}
     placeholder={placeholder || ""}
@@ -45,9 +46,7 @@
     {id}
     on:focus={() => (focus = true)}
     on:blur={onChange}
-  >
-    {value || ""}
-  </textarea>
+  >{value || ""}</textarea>
 </div>
 
 <style>

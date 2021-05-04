@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
   import { createEventDispatcher } from "svelte"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 

@@ -10,18 +10,20 @@
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
+  import { readableToRuntimeBinding } from "../../../builderStore/dataBinding"
+  import { addToText } from "./utils"
 
   const dispatch = createEventDispatcher()
 
-  export let value = ""
-  export let bindingDrawer
+  export let bindingContainer
   export let bindableProperties = []
+  export let validity = true
+  export let value = ""
 
-  let originalValue = value
+  let hasReadable = bindableProperties[0].readableBinding != null
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let validity = true
 
   $: categories = Object.entries(groupBy("category", bindableProperties))
   $: value && checkValid()
@@ -29,24 +31,12 @@
   $: searchRgx = new RegExp(search, "ig")
 
   function checkValid() {
-    validity = isValid(value)
-  }
-
-  function addToText(binding) {
-    const position = getCaretPosition()
-    const toAdd = `{{ ${binding.path} }}`
-    if (position.start) {
-      value =
-        value.substring(0, position.start) +
-        toAdd +
-        value.substring(position.end, value.length)
+    if (hasReadable) {
+      const runtime = readableToRuntimeBinding(bindableProperties, value)
+      validity = isValid(runtime)
     } else {
-      value += toAdd
+      validity = isValid(value)
     }
-  }
-  export function cancel() {
-    dispatch("update", originalValue)
-    bindingDrawer.close()
   }
 </script>
 
@@ -63,7 +53,12 @@
           {#each bindableProperties.filter(binding =>
             binding.label.match(searchRgx)
           ) as binding}
-            <div class="binding" on:click={() => addToText(binding)}>
+            <div
+              class="binding"
+              on:click={() => {
+                value = addToText(value, getCaretPosition(), binding)
+              }}
+            >
               <span class="binding__label">{binding.label}</span>
               <span class="binding__type">{binding.type}</span>
               <br />
@@ -77,13 +72,18 @@
       <div class="section">
         <Heading size="XS">Helpers</Heading>
         {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
-          <div class="binding" on:click={() => addToText(helper)}>
+          <div
+            class="binding"
+            on:click={() => {
+              value = addToText(value, getCaretPosition(), helper.text)
+            }}
+          >
             <span class="binding__label">{helper.label}</span>
             <br />
             <div class="binding__description">
               {@html helper.description || ""}
             </div>
-            <pre>{helper.example || ''}</pre>
+            <pre>{helper.example || ""}</pre>
           </div>
         {/each}
       </div>
@@ -92,7 +92,6 @@
   <div class="text">
     <TextArea
       bind:getCaretPosition
-      thin
       bind:value
       placeholder="Add text, or click the objects on the left to add them to the textbox."
     />
@@ -122,7 +121,7 @@
     font-family: var(--font-sans);
   }
   .text :global(textarea) {
-    min-height: 100px;
+    min-height: 150px !important;
   }
   .text :global(p) {
     margin: 0;
@@ -130,8 +129,12 @@
 
   .binding {
     font-size: 12px;
-    padding: var(--spacing-s);
-    border-radius: var(--border-radius-m);
+    border: var(--border-light);
+    border-width: 1px 0 0 0;
+    padding: var(--spacing-m) 0;
+    margin: auto 0;
+    align-items: center;
+    cursor: pointer;
   }
   .binding:hover {
     background-color: var(--grey-2);

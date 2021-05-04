@@ -5,6 +5,9 @@
   import * as api from "../api"
   import { ModalContent } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { FIELDS } from "constants/backend"
+
+  const FORMULA_TYPE = FIELDS.FORMULA.type
 
   export let row = {}
 
@@ -45,7 +48,7 @@
 >
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
-    {#if !meta.autocolumn}
+    {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
       <div>
         <RowFieldControl {meta} bind:value={row[key]} />
       </div>
