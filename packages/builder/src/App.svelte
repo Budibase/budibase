@@ -4,7 +4,7 @@
   import { routes } from "../.routify/routes"
   import { initialise } from "builderStore"
   import { NotificationDisplay } from "@budibase/bbui"
-  
+
   onMount(async () => {
     await initialise()
   })

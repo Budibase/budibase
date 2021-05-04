@@ -30,7 +30,7 @@
   export let showAllQueries
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(m => ({
+  $: tables = $tablesStore.list.map((m) => ({
     label: m.name,
     tableId: m._id,
     type: "table",
@@ -46,9 +46,9 @@
   }, [])
   $: queries = $queriesStore.list
     .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
+      (query) => showAllQueries || query.queryVerb === "read" || query.readable
     )
-    .map(query => ({
+    .map((query) => ({
       label: query.name,
       name: query.name,
       tableId: query._id,
@@ -61,15 +61,15 @@
     $currentAsset,
     $store.selectedComponentId
   )
-  $: queryBindableProperties = bindableProperties.map(property => ({
+  $: queryBindableProperties = bindableProperties.map((property) => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
     path: property.readableBinding,
   }))
   $: links = bindableProperties
-    .filter(x => x.fieldSchema?.type === "link")
-    .map(property => {
+    .filter((x) => x.fieldSchema?.type === "link")
+    .map((property) => {
       return {
         providerId: property.providerId,
         label: property.readableBinding,
@@ -89,7 +89,7 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
+    const source = $datasources.list.find((ds) => ds._id === query.datasourceId)
       .source
     return $integrations[source].query[query.queryVerb]
   }
@@ -100,18 +100,20 @@
     readonly
     value={text}
     options={[text]}
-    on:click={dropdownRight.show} />
-  {#if value?.type === 'query'}
+    on:click={dropdownRight.show}
+  />
+  {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query Parameters'} bind:this={drawer}>
+    <Drawer title={"Query Parameters"} bind:this={drawer}>
       <Button
         slot="buttons"
         cta
         on:click={() => {
-          notifications.success('Query parameters saved.')
+          notifications.success("Query parameters saved.")
           handleSelected(value)
           drawer.hide()
-        }}>
+        }}
+      >
         Save
       </Button>
       <DrawerContent slot="body">
@@ -119,15 +121,20 @@
           {#if value.parameters.length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
-              parameters={queries.find(query => query._id === value._id).parameters}
-              bindings={queryBindableProperties} />
+              parameters={queries.find((query) => query._id === value._id)
+                .parameters}
+              bindings={queryBindableProperties}
+            />
           {/if}
           <IntegrationQueryEditor
             height={200}
             query={value}
             schema={fetchQueryDefinition(value)}
-            datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
-            editable={false} />
+            datasource={$datasources.list.find(
+              (ds) => ds._id === value.datasourceId
+            )}
+            editable={false}
+          />
         </Layout>
       </DrawerContent>
     </Drawer>
@@ -169,7 +176,8 @@
       {#each queries as query}
         <li
           class:selected={value === query}
-          on:click={() => handleSelected(query)}>
+          on:click={() => handleSelected(query)}
+        >
           {query.label}
         </li>
       {/each}

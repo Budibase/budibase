@@ -27,12 +27,12 @@
     wrap: true,
   }
 
-  const handleChange = event => {
+  const handleChange = (event) => {
     const [dates] = event.detail
     dispatch("change", dates[0])
   }
 
-  const clearDateOnBackspace = event => {
+  const clearDateOnBackspace = (event) => {
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
       dispatch("change", null)
       flatpickr.close()
@@ -53,7 +53,7 @@
     // We need to blur both because the focus styling does not get properly
     // applied.
     const els = document.querySelectorAll(`#${flatpickrId} input`)
-    els.forEach(el => el.blur())
+    els.forEach((el) => el.blur())
   }
 </script>
 
@@ -64,7 +64,8 @@
   on:close={onClose}
   options={flatpickrOptions}
   on:change={handleChange}
-  element={`#${flatpickrId}`}>
+  element={`#${flatpickrId}`}
+>
   <div
     id={flatpickrId}
     class:is-disabled={disabled}
@@ -73,17 +74,20 @@
     class:is-focused={open}
     aria-readonly="false"
     aria-required="false"
-    aria-haspopup="true">
+    aria-haspopup="true"
+  >
     <div
       on:click={flatpickr?.open}
       class="spectrum-Textfield spectrum-InputGroup-textfield"
       class:is-disabled={disabled}
-      class:is-invalid={!!error}>
+      class:is-invalid={!!error}
+    >
       {#if !!error}
         <svg
           class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
           focusable="false"
-          aria-hidden="true">
+          aria-hidden="true"
+        >
           <use xlink:href="#spectrum-icon-18-Alert" />
         </svg>
       {/if}
@@ -94,7 +98,8 @@
         class="spectrum-Textfield-input spectrum-InputGroup-input"
         {placeholder}
         {id}
-        {value} />
+        {value}
+      />
     </div>
     <button
       type="button"
@@ -102,12 +107,14 @@
       tabindex="-1"
       {disabled}
       class:is-invalid={!!error}
-      on:click={flatpickr?.open}>
+      on:click={flatpickr?.open}
+    >
       <svg
         class="spectrum-Icon spectrum-Icon--sizeM"
         focusable="false"
         aria-hidden="true"
-        aria-label="Calendar">
+        aria-label="Calendar"
+      >
         <use xlink:href="#spectrum-icon-18-Calendar" />
       </svg>
     </button>

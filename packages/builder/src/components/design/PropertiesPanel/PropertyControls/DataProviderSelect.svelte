@@ -8,7 +8,7 @@
 
   $: path = findComponentPath($currentAsset.props, $store.selectedComponentId)
   $: providers = path.filter(
-    component =>
+    (component) =>
       component._component === "@budibase/standard-components/dataprovider"
   )
 </script>
@@ -17,5 +17,6 @@
   {value}
   on:change
   options={providers}
-  getOptionLabel={component => component._instanceName}
-  getOptionValue={component => `{{ literal ${makePropSafe(component._id)} }}`} />
+  getOptionLabel={(component) => component._instanceName}
+  getOptionValue={(component) => `{{ literal ${makePropSafe(component._id)} }}`}
+/>

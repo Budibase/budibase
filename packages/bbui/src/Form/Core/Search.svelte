@@ -10,7 +10,7 @@
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = value => {
+  const updateValue = (value) => {
     dispatch("change", value)
   }
 
@@ -18,12 +18,12 @@
     focus = true
   }
 
-  const onBlur = event => {
+  const onBlur = (event) => {
     focus = false
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = event => {
+  const updateValueOnEnter = (event) => {
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
@@ -34,11 +34,13 @@
   <div
     class="spectrum-Textfield"
     class:is-focused={focus}
-    class:is-disabled={disabled}>
+    class:is-disabled={disabled}
+  >
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-icon-18-Magnify" />
     </svg>
     <input
@@ -46,23 +48,26 @@
       on:keyup={updateValueOnEnter}
       {disabled}
       {id}
-      value={value || ''}
-      placeholder={placeholder || ''}
+      value={value || ""}
+      placeholder={placeholder || ""}
       on:blur={onBlur}
       on:focus={onFocus}
       on:input
       type="search"
       class="spectrum-Textfield-input spectrum-Search-input"
-      autocomplete="off" />
+      autocomplete="off"
+    />
   </div>
   <button
-    on:click={() => updateValue('')}
+    on:click={() => updateValue("")}
     type="reset"
-    class="spectrum-ClearButton spectrum-Search-clearButton">
+    class="spectrum-ClearButton spectrum-Search-clearButton"
+  >
     <svg
       class="spectrum-Icon spectrum-UIIcon-Cross75"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-css-icon-Cross75" />
     </svg>
   </button>

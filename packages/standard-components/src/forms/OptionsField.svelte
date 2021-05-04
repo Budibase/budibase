@@ -19,7 +19,8 @@
   type="options"
   bind:fieldState
   bind:fieldApi
-  bind:fieldSchema>
+  bind:fieldSchema
+>
   {#if fieldState}
     <CoreSelect
       value={$fieldState.value}
@@ -28,6 +29,7 @@
       error={$fieldState.error}
       options={fieldSchema?.constraints?.inclusion ?? []}
       {placeholder}
-      on:change={e => fieldApi.setValue(e.detail)} />
+      on:change={(e) => fieldApi.setValue(e.detail)}
+    />
   {/if}
 </Field>

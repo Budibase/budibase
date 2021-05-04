@@ -31,7 +31,8 @@
   bind:this={modal}
   confirmText="Submit"
   onConfirm={answerQuiz}
-  on:show={resetState}>
+  on:show={resetState}
+>
   {#if error}
     <p class="error">Wrong answer! Try again.</p>
   {/if}

@@ -6,7 +6,7 @@
   $: leftover = (value?.length ?? 0) - attachments.length
 
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
-  const isImage = extension => {
+  const isImage = (extension) => {
     return imageExtensions.includes(extension?.toLowerCase())
   }
 </script>

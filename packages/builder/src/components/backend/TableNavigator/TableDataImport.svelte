@@ -18,7 +18,7 @@
   let schema = {}
   let fields = []
 
-  $: valid = !schema || fields.every(column => schema[column].success)
+  $: valid = !schema || fields.every((column) => schema[column].success)
   $: dataImport = {
     valid,
     schema: buildTableSchema(schema),
@@ -51,7 +51,7 @@
     const parseResult = await response.json()
     schema = parseResult && parseResult.schema
     fields = Object.keys(schema || {}).filter(
-      key => schema[key].type !== "omit"
+      (key) => schema[key].type !== "omit"
     )
 
     // Check primary display is valid
@@ -67,17 +67,18 @@
 
   async function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
-    if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
+    if (fileArray.some((file) => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
-        `Files cannot exceed ${FILE_SIZE_LIMIT /
-          BYTES_IN_MB}MB. Please try again with smaller files.`
+        `Files cannot exceed ${
+          FILE_SIZE_LIMIT / BYTES_IN_MB
+        }MB. Please try again with smaller files.`
       )
       return
     }
 
     // Read CSV as plain text to upload alongside schema
     let reader = new FileReader()
-    reader.addEventListener("load", function(e) {
+    reader.addEventListener("load", function (e) {
       csvString = e.target.result
       files = fileArray
       validateCSV()
@@ -90,7 +91,7 @@
     await validateCSV()
   }
 
-  const handleTypeChange = column => evt => {
+  const handleTypeChange = (column) => (evt) => {
     schema[column].type = evt.detail
     validateCSV()
   }
@@ -127,14 +128,16 @@
           on:change={handleTypeChange(columnName)}
           options={typeOptions}
           placeholder={null}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value} />
+          getOptionLabel={(option) => option.label}
+          getOptionValue={(option) => option.value}
+        />
         <span class="field-status" class:error={!schema[columnName].success}>
-          {schema[columnName].success ? 'Success' : 'Failure'}
+          {schema[columnName].success ? "Success" : "Failure"}
         </span>
         <i
           class="omit-button ri-close-circle-fill"
-          on:click={() => omitColumn(columnName)} />
+          on:click={() => omitColumn(columnName)}
+        />
       </div>
     {/each}
   </div>
@@ -145,7 +148,8 @@
     <Select
       label="Display Column"
       bind:value={primaryDisplay}
-      options={fields} />
+      options={fields}
+    />
   </div>
 {/if}
 

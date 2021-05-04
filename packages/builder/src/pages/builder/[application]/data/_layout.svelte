@@ -20,7 +20,7 @@
   let selected = $isActive("./datasource") ? "External" : "Internal"
 
   function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find(t => t.title === detail)
+    const { key } = tabs.find((t) => t.title === detail)
     if (key === "datasource") {
       $goto("./datasource")
     } else {
@@ -54,7 +54,8 @@
     </Tabs>
     <div
       class="add-button"
-      data-cy={`new-${selected === 'External' ? 'datasource' : 'table'}`}>
+      data-cy={`new-${selected === "External" ? "datasource" : "table"}`}
+    >
       <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>
   </div>

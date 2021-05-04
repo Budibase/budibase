@@ -36,9 +36,10 @@
 
 <div class="container">
   <Input
-    on:change={e => updateKey(['budibase', e.detail])}
+    on:change={(e) => updateKey(["budibase", e.detail])}
     value={keys.budibase}
-    label="Budibase Cloud API Key" />
+    label="Budibase Cloud API Key"
+  />
   <Link primary href="https://portal.budi.live">
     Log in to the Budibase Hosting Portal to get your API Key. →
   </Link>

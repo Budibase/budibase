@@ -27,12 +27,14 @@
   confirmText="Create"
   size="L"
   onConfirm={createAutomation}
-  disabled={!valid}>
+  disabled={!valid}
+>
   <Input bind:value={name} label="Name" />
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/introduction-to-automate">
+    href="https://docs.budibase.com/automate/introduction-to-automate"
+  >
     <Icon name="InfoOutline" />
     <span>Learn about automations</span>
   </a>

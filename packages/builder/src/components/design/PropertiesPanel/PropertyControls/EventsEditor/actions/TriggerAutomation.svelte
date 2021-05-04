@@ -15,8 +15,8 @@
     : AUTOMATION_STATUS.NEW
 
   $: automations = $automationStore.automations
-    .filter(a => a.definition.trigger?.stepId === "APP")
-    .map(automation => {
+    .filter((a) => a.definition.trigger?.stepId === "APP")
+    .map((automation) => {
       const schema = Object.entries(
         automation.definition.trigger.inputs.fields
       ).map(([name, type]) => ({ name, type }))
@@ -29,11 +29,11 @@
     })
   $: hasAutomations = automations && automations.length > 0
   $: selectedAutomation = automations?.find(
-    a => a._id === parameters?.automationId
+    (a) => a._id === parameters?.automationId
   )
   $: selectedSchema = selectedAutomation?.schema
 
-  const onFieldsChanged = e => {
+  const onFieldsChanged = (e) => {
     parameters.fields = e.detail
   }
 
@@ -57,7 +57,8 @@
       <input
         type="radio"
         value={AUTOMATION_STATUS.NEW}
-        bind:group={automationStatus} />
+        bind:group={automationStatus}
+      />
       <Label small>Create a new automation</Label>
     </div>
     <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
@@ -65,7 +66,8 @@
         type="radio"
         value={AUTOMATION_STATUS.EXISTING}
         bind:group={automationStatus}
-        disabled={!hasAutomations} />
+        disabled={!hasAutomations}
+      />
       <Label small grey={!hasAutomations}>Use an existing automation</Label>
     </div>
   </div>
@@ -78,12 +80,14 @@
         bind:value={parameters.automationId}
         placeholder="Choose automation"
         options={automations}
-        getOptionLabel={x => x.name}
-        getOptionValue={x => x._id} />
+        getOptionLabel={(x) => x.name}
+        getOptionValue={(x) => x._id}
+      />
     {:else}
       <Input
         bind:value={parameters.newAutomationName}
-        placeholder="Enter automation name" />
+        placeholder="Enter automation name"
+      />
     {/if}
 
     {#key parameters.automationId}
@@ -91,7 +95,8 @@
         schemaFields={selectedSchema}
         parameterFields={parameters.fields}
         fieldLabel="Field"
-        on:change={onFieldsChanged} />
+        on:change={onFieldsChanged}
+      />
     {/key}
   </div>
 </div>

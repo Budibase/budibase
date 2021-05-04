@@ -15,7 +15,7 @@
   const saveEventData = async () => {
     // any automations that need created from event triggers
     const automationsToCreate = value.filter(
-      action => action["##eventHandlerType"] === "Trigger Automation"
+      (action) => action["##eventHandlerType"] === "Trigger Automation"
     )
     for (let action of automationsToCreate) {
       await createAutomation(action.parameters)
@@ -27,7 +27,7 @@
   }
 
   // called by the parent modal when actions are saved
-  const createAutomation = async parameters => {
+  const createAutomation = async (parameters) => {
     if (parameters.automationId || !parameters.newAutomationName) return
     await automationStore.actions.create({ name: parameters.newAutomationName })
     const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
@@ -52,7 +52,7 @@
 </script>
 
 <Button secondary on:click={drawer.show}>Define Actions</Button>
-<Drawer bind:this={drawer} title={'Actions'}>
+<Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.
   </svelte:fragment>

@@ -14,7 +14,9 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if (
-      $datasources?.list.some(datasource => datasource.name === datasourceName)
+      $datasources?.list.some(
+        (datasource) => datasource.name === datasourceName
+      )
     ) {
       error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
       return
@@ -44,13 +46,15 @@
   size="large"
   confirmText="Create"
   onConfirm={saveDatasource}
-  disabled={error || !name}>
+  disabled={error || !name}
+>
   <Input
     data-cy="datasource-name-input"
     label="Datasource Name"
     on:input={checkValid}
     bind:value={name}
-    {error} />
+    {error}
+  />
   <Label>Datasource Type</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

@@ -37,7 +37,8 @@
       use:clickOutside={hide}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
-      role="presentation">
+      role="presentation"
+    >
       <slot />
     </div>
   </Portal>

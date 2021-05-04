@@ -23,10 +23,10 @@
     if (!Array.isArray(selectedOptions)) {
       selectedOptions = []
     }
-    return selectedOptions.filter(val => allOptions.indexOf(val) !== -1)
+    return selectedOptions.filter((val) => allOptions.indexOf(val) !== -1)
   }
 
-  const setValue = value => {
+  const setValue = (value) => {
     boundValue = getValidOptions(value.detail, options)
     dispatch("change", boundValue)
   }

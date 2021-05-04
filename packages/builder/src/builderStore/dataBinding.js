@@ -277,14 +277,23 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       schema["_rev"] = { type: "string" }
     }
 
-    // Ensure there are "name" properties for all fields
-    if (schema) {
-      Object.keys(schema).forEach((field) => {
-        if (!schema[field].name) {
-          schema[field].name = field
+    // Ensure there are "name" properties for all fields and that field schema
+    // are objects
+    let fixedSchema = {}
+    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      if (typeof fieldSchema === "string") {
+        fixedSchema[fieldName] = {
+          type: fieldSchema,
+          name: fieldName,
         }
-      })
-    }
+      } else {
+        fixedSchema[fieldName] = {
+          ...fieldSchema,
+          name: fieldName,
+        }
+      }
+    })
+    schema = fixedSchema
   }
   return { schema, table }
 }

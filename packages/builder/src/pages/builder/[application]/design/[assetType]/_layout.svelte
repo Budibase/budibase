@@ -51,7 +51,7 @@
       assetType = FrontendTypes.SCREEN
     }
     if (assetType !== state.currentFrontEndType) {
-      store.update(state => {
+      store.update((state) => {
         state.currentFrontEndType = assetType
         return state
       })
@@ -74,7 +74,7 @@
       }
 
       // Find and select the current asset
-      asset = assetList.find(asset => asset._id === assetId)
+      asset = assetList.find((asset) => asset._id === assetId)
       if (asset && asset._id !== selectedAsset?._id) {
         actions.select(assetId)
       }
@@ -128,7 +128,7 @@
             const componentPath = findComponentPath(asset.props, componentId)
             const componentURL = componentPath
               .slice(1)
-              .map(comp => comp._id)
+              .map((comp) => comp._id)
               .join("/")
             url += `/${componentURL}`
           }

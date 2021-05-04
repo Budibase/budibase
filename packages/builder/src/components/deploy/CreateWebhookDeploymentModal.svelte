@@ -10,7 +10,7 @@
   $: automations = $automationStore.automations
 
   onMount(() => {
-    webhookUrls = automations.map(automation => {
+    webhookUrls = automations.map((automation) => {
       const trigger = automation.definition.trigger
       if (trigger?.stepId === "WEBHOOK" && trigger.inputs) {
         return {
@@ -26,7 +26,8 @@
 <ModalContent
   title="Webhook Endpoints"
   confirmText="OK"
-  showCancelButton={false}>
+  showCancelButton={false}
+>
   <p>See below the list of deployed webhook URLs.</p>
   {#each webhookUrls as webhookUrl}
     <div>
@@ -40,7 +41,8 @@
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/steps/triggers">
+    href="https://docs.budibase.com/automate/steps/triggers"
+  >
     <i class="ri-information-line" />
     <span>Learn about webhooks</span>
   </a>

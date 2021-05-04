@@ -30,7 +30,7 @@
     if ($views.selected?.name?.startsWith("all_")) {
       loading = true
       const loadingTableId = $tables.selected?._id
-      api.fetchDataForView($views.selected).then(rows => {
+      api.fetchDataForView($views.selected).then((rows) => {
         loading = false
 
         // If we started a slow request then quickly change table, sometimes
@@ -53,12 +53,14 @@
   {data}
   allowEditing={true}
   bind:hideAutocolumns
-  {loading}>
+  {loading}
+>
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
     <CreateRowButton
-      title={isUsersTable ? 'Create user' : 'Create row'}
-      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
+      title={isUsersTable ? "Create user" : "Create row"}
+      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow}
+    />
     <CreateViewButton />
     <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}

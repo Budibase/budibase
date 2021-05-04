@@ -4,7 +4,7 @@
 
   if ($params.automation) {
     const automation = $automationStore.automations.find(
-      m => m._id === $params.automation
+      (m) => m._id === $params.automation
     )
     if (automation) {
       automationStore.actions.select(automation)

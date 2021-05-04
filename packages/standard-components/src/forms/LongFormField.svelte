@@ -18,14 +18,16 @@
   type="longform"
   bind:fieldState
   bind:fieldApi
-  defaultValue="">
+  defaultValue=""
+>
   {#if fieldState}
     <CoreTextArea
       value={$fieldState.value}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={(e) => fieldApi.setValue(e.detail)}
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}
-      {placeholder} />
+      {placeholder}
+    />
   {/if}
 </Field>

@@ -12,7 +12,8 @@
   size="S"
   quiet
   on:click={modal.show}
-  active={view.field && view.calculation}>
+  active={view.field && view.calculation}
+>
   Calculate
 </ActionButton>
 <Modal bind:this={modal}>

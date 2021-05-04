@@ -28,9 +28,9 @@
 
   async function fetchViewData(name, field, groupBy, calculation) {
     const _tables = $tables.list
-    const allTableViews = _tables.map(table => table.views)
+    const allTableViews = _tables.map((table) => table.views)
     const thisView = allTableViews.filter(
-      views => views != null && views[name] != null
+      (views) => views != null && views[name] != null
     )[0]
     // don't fetch view data if the view no longer exists
     if (!thisView) {
@@ -58,7 +58,8 @@
   {data}
   {loading}
   allowEditing={!view?.calculation}
-  bind:hideAutocolumns>
+  bind:hideAutocolumns
+>
   <FilterButton {view} />
   <CalculateButton {view} />
   {#if view.calculation}

@@ -30,13 +30,15 @@
   on:click={onClick}
   class:is-selected={$selected.title === title}
   class="spectrum-Tabs-item"
-  tabindex="0">
+  tabindex="0"
+>
   {#if icon}
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM"
       focusable="false"
       aria-hidden="true"
-      aria-label="Folder">
+      aria-label="Folder"
+    >
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
