@@ -15,7 +15,7 @@
   async function updateApplication(data) {
     const response = await api.put(`/api/applications/${$store.appId}`, data)
     await response.json()
-    store.update((state) => {
+    store.update(state => {
       state = {
         ...state,
         ...data,
@@ -76,21 +76,21 @@
 
 <div class="container">
   <Input
-    on:change={(e) => updateApplication({ name: e.detail })}
+    on:change={e => updateApplication({ name: e.detail })}
     value={$store.name}
     error={nameError}
     label="App Name"
   />
   {#if $hostingStore.hostingInfo.type === "self"}
     <Input
-      on:change={(e) => updateApplication({ url: e.detail })}
+      on:change={e => updateApplication({ url: e.detail })}
       value={$store.url}
       error={urlError}
       label="App URL"
     />
   {/if}
   <TextArea
-    on:change={(e) => updateApplication({ description: e.detail })}
+    on:change={e => updateApplication({ description: e.detail })}
     value={$store.description}
     label="App Description"
   />

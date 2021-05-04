@@ -65,11 +65,7 @@
           <div class="custom-styles">
             <TextArea
               value={componentInstance._styles.custom}
-<<<<<<< HEAD
-              on:change={(event) => onCustomStyleChanged(event.detail)}
-=======
               on:change={event => onCustomStyleChanged(event.detail)}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
               placeholder="Enter some CSS..."
             />
           </div>
@@ -86,7 +82,7 @@
     <div class="transitions">
       <Select
         value={componentInstance._transition}
-        on:change={(event) => onUpdateTransition(event.detail)}
+        on:change={event => onUpdateTransition(event.detail)}
         name="transition"
         label="Transition"
         options={transitions}

@@ -28,7 +28,7 @@
     "bmp",
     "jfif",
   ]
-  const onChange = (event) => {
+  const onChange = event => {
     dispatch("change", event.target.checked)
   }
 
@@ -42,7 +42,7 @@
   async function processFileList(fileList) {
     if (
       handleFileTooLarge &&
-      Array.from(fileList).some((file) => file.size >= fileSizeLimit)
+      Array.from(fileList).some(file => file.size >= fileSizeLimit)
     ) {
       handleFileTooLarge(fileSizeLimit, value)
       return

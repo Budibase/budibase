@@ -17,7 +17,7 @@
     let screenRoleId
 
     // Filter all routes down to only those which match the current role
-    sortedPaths.forEach((path) => {
+    sortedPaths.forEach(path => {
       const config = allRoutes[path]
       Object.entries(config.subpaths).forEach(([subpath, pathConfig]) => {
         Object.entries(pathConfig.screens).forEach(([roleId, screenId]) => {

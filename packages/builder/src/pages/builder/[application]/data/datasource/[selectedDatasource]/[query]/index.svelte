@@ -15,7 +15,7 @@
   }
 
   $: selectedQuery = $queries.list.find(
-    (query) => query._id === $queries.selected
+    query => query._id === $queries.selected
   ) || {
     datasourceId: $params.selectedDatasource,
     parameters: [],

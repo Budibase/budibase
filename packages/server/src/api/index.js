@@ -40,18 +40,8 @@ router
     }
     await next()
   })
-<<<<<<< HEAD
-  .use("/bulladmin", (ctx) => {
-    ctx.status = 200
-    ctx.respond = false
-    expressApp(ctx.req, ctx.res)
-  })
-  .use("/health", (ctx) => (ctx.status = 200))
-  .use("/version", (ctx) => (ctx.body = pkg.version))
-=======
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
   .use(currentApp)
 

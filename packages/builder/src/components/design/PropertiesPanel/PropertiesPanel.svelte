@@ -30,7 +30,7 @@
 
   function setAssetProps(name, value) {
     const selectedAsset = get(currentAsset)
-    store.update((state) => {
+    store.update(state => {
       if (
         name === "_instanceName" &&
         state.currentFrontEndType === FrontendTypes.SCREEN

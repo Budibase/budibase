@@ -8,8 +8,8 @@
   export let disabled = false
   export let error = null
   export let options = []
-  export let getOptionLabel = (option) => option
-  export let getOptionValue = (option) => option
+  export let getOptionLabel = option => option
+  export let getOptionValue = option => option
   export let readonly = false
 
   const dispatch = createEventDispatcher()
@@ -34,7 +34,7 @@
     return index !== -1 ? getOptionLabel(options[index], index) : value
   }
 
-  const selectOption = (value) => {
+  const selectOption = value => {
     dispatch("change", value)
     open = false
   }
@@ -53,10 +53,6 @@
   {getOptionValue}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
-<<<<<<< HEAD
-  isOptionSelected={(option) => option === value}
-=======
   isOptionSelected={option => option === value}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   onSelectOption={selectOption}
 />

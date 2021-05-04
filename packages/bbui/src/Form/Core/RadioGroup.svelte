@@ -8,11 +8,11 @@
   export let options = []
   export let error = null
   export let disabled = false
-  export let getOptionLabel = (option) => option
-  export let getOptionValue = (option) => option
+  export let getOptionLabel = option => option
+  export let getOptionValue = option => option
 
   const dispatch = createEventDispatcher()
-  const onChange = (e) => dispatch("change", e.target.value)
+  const onChange = e => dispatch("change", e.target.value)
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>

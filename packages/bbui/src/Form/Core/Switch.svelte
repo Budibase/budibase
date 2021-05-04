@@ -9,7 +9,7 @@
   export let disabled = false
 
   const dispatch = createEventDispatcher()
-  const onChange = (event) => {
+  const onChange = event => {
     dispatch("change", event.target.checked)
   }
 </script>

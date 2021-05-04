@@ -12,7 +12,7 @@
 
   $: creating = row?._id == null
   $: table = row.tableId
-    ? $tables.list.find((table) => table._id === row?.tableId)
+    ? $tables.list.find(table => table._id === row?.tableId)
     : $tables.selected
   $: tableSchema = Object.entries(table?.schema ?? {})
 

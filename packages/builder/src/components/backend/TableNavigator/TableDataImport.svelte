@@ -18,7 +18,7 @@
   let schema = {}
   let fields = []
 
-  $: valid = !schema || fields.every((column) => schema[column].success)
+  $: valid = !schema || fields.every(column => schema[column].success)
   $: dataImport = {
     valid,
     schema: buildTableSchema(schema),
@@ -51,7 +51,7 @@
     const parseResult = await response.json()
     schema = parseResult && parseResult.schema
     fields = Object.keys(schema || {}).filter(
-      (key) => schema[key].type !== "omit"
+      key => schema[key].type !== "omit"
     )
 
     // Check primary display is valid
@@ -67,7 +67,7 @@
 
   async function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
-    if (fileArray.some((file) => file.size >= FILE_SIZE_LIMIT)) {
+    if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
         `Files cannot exceed ${
           FILE_SIZE_LIMIT / BYTES_IN_MB
@@ -91,7 +91,7 @@
     await validateCSV()
   }
 
-  const handleTypeChange = (column) => (evt) => {
+  const handleTypeChange = column => evt => {
     schema[column].type = evt.detail
     validateCSV()
   }
@@ -128,13 +128,8 @@
           on:change={handleTypeChange(columnName)}
           options={typeOptions}
           placeholder={null}
-<<<<<<< HEAD
-          getOptionLabel={(option) => option.label}
-          getOptionValue={(option) => option.value}
-=======
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
         />
         <span class="field-status" class:error={!schema[columnName].success}>
           {schema[columnName].success ? "Success" : "Failure"}

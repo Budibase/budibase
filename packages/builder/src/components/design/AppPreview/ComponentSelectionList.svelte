@@ -13,7 +13,7 @@
 
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
-    structure.forEach((item) => {
+    structure.forEach(item => {
       if (typeof item === "string") {
         const def = definitions[`@budibase/standard-components/${item}`]
         if (def) {
@@ -33,7 +33,7 @@
     return enrichedStructure
   }
 
-  const onItemChosen = async (item) => {
+  const onItemChosen = async item => {
     if (!item.isCategory) {
       await store.actions.components.create(item.component)
     }

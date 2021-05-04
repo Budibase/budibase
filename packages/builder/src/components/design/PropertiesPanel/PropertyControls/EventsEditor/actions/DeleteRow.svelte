@@ -16,13 +16,8 @@
   <Select
     bind:value={parameters.tableId}
     options={tableOptions}
-<<<<<<< HEAD
-    getOptionLabel={(table) => table.name}
-    getOptionValue={(table) => table._id}
-=======
     getOptionLabel={table => table.name}
     getOptionValue={table => table._id}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 
   <Label small>Row ID</Label>
@@ -30,11 +25,7 @@
     {bindings}
     title="Row ID to delete"
     value={parameters.rowId}
-<<<<<<< HEAD
-    on:change={(value) => (parameters.rowId = value.detail)}
-=======
     on:change={value => (parameters.rowId = value.detail)}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 
   <Label small>Row Rev</Label>
@@ -42,11 +33,7 @@
     {bindings}
     title="Row rev to delete"
     value={parameters.revId}
-<<<<<<< HEAD
-    on:change={(value) => (parameters.revId = value.detail)}
-=======
     on:change={value => (parameters.revId = value.detail)}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 </div>
 

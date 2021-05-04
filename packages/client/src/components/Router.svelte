@@ -15,9 +15,9 @@
     id: $routeStore.routeSessionId,
   }
 
-  const getRouterConfig = (routes) => {
+  const getRouterConfig = routes => {
     let config = {}
-    routes.forEach((route) => {
+    routes.forEach(route => {
       config[route.path] = Screen
     })
 

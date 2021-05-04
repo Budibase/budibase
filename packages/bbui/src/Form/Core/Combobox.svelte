@@ -11,8 +11,8 @@
   export let disabled = false
   export let error = null
   export let options = []
-  export let getOptionLabel = (option) => option
-  export let getOptionValue = (option) => option
+  export let getOptionLabel = option => option
+  export let getOptionValue = option => option
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -31,16 +31,16 @@
     }
 
     // Render the label if the selected option is found, otherwise raw value
-    const selected = options.find((option) => getOptionValue(option) === value)
+    const selected = options.find(option => getOptionValue(option) === value)
     return selected ? getOptionLabel(selected) : value
   }
 
-  const selectOption = (value) => {
+  const selectOption = value => {
     dispatch("change", value)
     open = false
   }
 
-  const onChange = (e) => {
+  const onChange = e => {
     selectOption(e.target.value)
   }
 </script>
