@@ -40,13 +40,13 @@ router
     }
     await next()
   })
-  .use("/bulladmin", ctx => {
+  .use("/bulladmin", (ctx) => {
     ctx.status = 200
     ctx.respond = false
     expressApp(ctx.req, ctx.res)
   })
-  .use("/health", ctx => (ctx.status = 200))
-  .use("/version", ctx => (ctx.body = pkg.version))
+  .use("/health", (ctx) => (ctx.status = 200))
+  .use("/version", (ctx) => (ctx.body = pkg.version))
   .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
   .use(currentApp)
 
@@ -67,7 +67,7 @@ router.use(async (ctx, next) => {
   }
 })
 
-router.get("/health", ctx => (ctx.status = 200))
+router.get("/health", (ctx) => (ctx.status = 200))
 
 // authenticated routes
 for (let route of mainRoutes) {

@@ -5,7 +5,7 @@
   export let values
   export let label
 
-  const inputChanged = ev => {
+  const inputChanged = (ev) => {
     try {
       values = ev.target.value.split("\n")
     } catch (_) {

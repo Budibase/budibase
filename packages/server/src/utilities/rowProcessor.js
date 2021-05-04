@@ -1,8 +1,8 @@
-const env = require("../environment")
-const { OBJ_STORE_DIRECTORY } = require("../constants")
+// const { ObjectStoreBuckets } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../constants")
+const { attachmentsRelativeURL } = require("./index")
 
 const BASE_AUTO_ID = 1
 
@@ -14,9 +14,9 @@ const TYPE_TRANSFORM_MAP = {
     "": [],
     [null]: [],
     [undefined]: undefined,
-    parse: link => {
+    parse: (link) => {
       if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map(el => (el && el._id ? el._id : el))
+        return link.map((el) => (el && el._id ? el._id : el))
       }
       if (typeof link === "string") {
         return [link]
@@ -43,13 +43,13 @@ const TYPE_TRANSFORM_MAP = {
     "": null,
     [null]: null,
     [undefined]: undefined,
-    parse: n => parseFloat(n),
+    parse: (n) => parseFloat(n),
   },
   [FieldTypes.DATETIME]: {
     "": null,
     [undefined]: undefined,
     [null]: null,
-    parse: date => {
+    parse: (date) => {
       if (date instanceof Date) {
         return date.toISOString()
       }
@@ -180,18 +180,15 @@ exports.outputProcessing = async (appId, table, rows) => {
     rows
   )
   // update the attachments URL depending on hosting
-  if (env.isProd() && env.SELF_HOSTED) {
-    for (let [property, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        for (let row of outputRows) {
-          if (row[property] == null || row[property].length === 0) {
-            continue
-          }
-          row[property].forEach(attachment => {
-            attachment.url = `${OBJ_STORE_DIRECTORY}/${appId}/${attachment.url}`
-            attachment.url = attachment.url.replace("//", "/")
-          })
+  for (let [property, column] of Object.entries(table.schema)) {
+    if (column.type === FieldTypes.ATTACHMENT) {
+      for (let row of outputRows) {
+        if (row[property] == null || row[property].length === 0) {
+          continue
         }
+        row[property].forEach((attachment) => {
+          attachment.url = attachmentsRelativeURL(attachment.key)
+        })
       }
     }
   }

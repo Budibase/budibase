@@ -91,7 +91,7 @@ async function deployApp(deployment) {
   }
 }
 
-exports.fetchDeployments = async function(ctx) {
+exports.fetchDeployments = async function (ctx) {
   try {
     const db = new PouchDB(ctx.appId)
     const deploymentDoc = await db.get("_local/deployments")
@@ -108,7 +108,7 @@ exports.fetchDeployments = async function(ctx) {
   }
 }
 
-exports.deploymentProgress = async function(ctx) {
+exports.deploymentProgress = async function (ctx) {
   try {
     const db = new PouchDB(ctx.appId)
     const deploymentDoc = await db.get("_local/deployments")
@@ -121,7 +121,7 @@ exports.deploymentProgress = async function(ctx) {
   }
 }
 
-exports.deployApp = async function(ctx) {
+exports.deployApp = async function (ctx) {
   // start by checking whether to deploy local or to cloud
   const hostingInfo = await getHostingInfo()
   deploymentService =

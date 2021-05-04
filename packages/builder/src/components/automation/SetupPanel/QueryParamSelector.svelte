@@ -7,7 +7,7 @@
   export let value
   export let bindings
 
-  $: query = $queries.list.find(query => query._id === value?.queryId)
+  $: query = $queries.list.find((query) => query._id === value?.queryId)
   $: parameters = query?.parameters ?? []
 
   // Ensure any nullish queryId values get set to empty string so
@@ -32,12 +32,13 @@
         panel={AutomationBindingPanel}
         extraThin
         value={value[field.name]}
-        on:change={e => {
+        on:change={(e) => {
           value[field.name] = e.detail
         }}
         label={field.name}
         type="string"
-        {bindings} />
+        {bindings}
+      />
     {/each}
   </div>
 {/if}

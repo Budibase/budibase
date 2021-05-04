@@ -73,7 +73,7 @@ exports.checkDevelopmentEnvironment = () => {
  * @param {Object} template The template object retrieved from the Koa context object.
  * @returns {Object} Returns an fs read stream which can be loaded into the database.
  */
-exports.getTemplateStream = async template => {
+exports.getTemplateStream = async (template) => {
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else {
@@ -89,7 +89,7 @@ exports.getTemplateStream = async template => {
  * @param {string} path The path to the handlebars file which is to be loaded.
  * @returns {string} The loaded handlebars file as a string - loaded as utf8.
  */
-exports.loadHandlebarsFile = path => {
+exports.loadHandlebarsFile = (path) => {
   return fs.readFileSync(path, "utf8")
 }
 
@@ -99,7 +99,7 @@ exports.loadHandlebarsFile = path => {
  * @param {string} contents the contents of the file which is to be returned from the API.
  * @return {Object} the read stream which can be put into the koa context body.
  */
-exports.apiFileReturn = contents => {
+exports.apiFileReturn = (contents) => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, contents)
   return fs.createReadStream(path)
@@ -132,7 +132,7 @@ exports.performBackup = async (appId, backupName) => {
  * @param {string} appId The ID of the app which is being created.
  * @return {Promise<void>} once promise completes app resources should be ready in object store.
  */
-exports.createApp = async appId => {
+exports.createApp = async (appId) => {
   await downloadLibraries(appId)
   await newAppPublicPath(appId)
 }
@@ -142,7 +142,7 @@ exports.createApp = async appId => {
  * @param {string} appId The ID of the app which is being deleted.
  * @return {Promise<void>} once promise completes the app resources will be removed from object store.
  */
-exports.deleteApp = async appId => {
+exports.deleteApp = async (appId) => {
   await deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)
 }
 
@@ -225,7 +225,7 @@ exports.readFileSync = (filepath, options = "utf8") => {
 /**
  * Given a set of app IDs makes sure file system is cleared of any of their temp info.
  */
-exports.cleanup = appIds => {
+exports.cleanup = (appIds) => {
   for (let appId of appIds) {
     fs.rmdirSync(join(budibaseTempDir(), appId), { recursive: true })
   }

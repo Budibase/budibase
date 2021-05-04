@@ -15,7 +15,8 @@
   <ModalContent
     title="Edit Code"
     showConfirmButton={false}
-    showCancelButton={false}>
+    showCancelButton={false}
+  >
     <div class="container">
       <slot />
     </div>

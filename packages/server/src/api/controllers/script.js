@@ -14,7 +14,7 @@ class ScriptExecutor {
   }
 }
 
-exports.execute = async function(ctx) {
+exports.execute = async function (ctx) {
   const executor = new ScriptExecutor(ctx.request.body)
 
   const result = executor.execute()

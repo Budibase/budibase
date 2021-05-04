@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Input, TextArea, Heading, Spacer, Label } from "@budibase/bbui"
+  import { Search, TextArea, Heading, Label, DrawerContent, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import {
@@ -57,16 +57,15 @@
   }
 </script>
 
-<div class="drawer-contents">
-  <div class="container" data-cy="binding-dropdown-modal">
-    <div class="list">
-      <Input extraThin placeholder="Search" bind:value={search} />
-      <Spacer medium />
-      {#if context}
-        <Heading extraSmall>Columns</Heading>
-        <Spacer small />
+<DrawerContent>
+  <svelte:fragment slot="sidebar">
+  <Layout>
+    <Search placeholder="Search" bind:value={search} />
+    {#if context}
+      <section>
+        <Heading size="XS">Columns</Heading>
         <ul>
-          {#each context.filter(context =>
+          {#each context.filter((context) =>
             context.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -74,13 +73,13 @@
             </li>
           {/each}
         </ul>
-      {/if}
-      <Spacer small />
-      {#if instance}
-        <Heading extraSmall>Components</Heading>
-        <Spacer small />
+      </section>
+    {/if}
+    {#if instance}
+      <section>
+        <Heading size="XS">Components</Heading>
         <ul>
-          {#each instance.filter(instance =>
+          {#each instance.filter((instance) =>
             instance.readableBinding.match(searchRgx)
           ) as { readableBinding }}
             <li on:click={() => addToText(readableBinding)}>
@@ -88,12 +87,12 @@
             </li>
           {/each}
         </ul>
-      {/if}
-      <Spacer small />
-      <Heading extraSmall>Helpers</Heading>
-      <Spacer small />
+      </section>
+    {/if}
+    <section>
+      <Heading size="XS">Helpers</Heading>
       <ul>
-        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <li on:click={() => addToText(helper.text)}>
             <div>
               <Label extraSmall>{helper.displayText}</Label>
@@ -105,50 +104,32 @@
           </li>
         {/each}
       </ul>
-    </div>
-    <div class="text">
-      <TextArea
-        bind:getCaretPosition
-        thin
-        bind:value
-        placeholder="Add text, or click the objects on the left to add them to
-        the textbox." />
-      {#if !valid}
-        <p class="syntax-error">
-          Current Handlebars syntax is invalid, please check the guide
-          <a href="https://handlebarsjs.com/guide/">here</a>
-          for more details.
-        </p>
-      {/if}
-    </div>
+    </section>
+  </Layout>
+  </svelte:fragment>
+  <div class="main">
+    <TextArea
+      bind:getCaretPosition
+      bind:value
+      placeholder="Add text, or click the objects on the left to add them to the textbox."
+    />
+    {#if !valid}
+      <p class="syntax-error">
+        Current Handlebars syntax is invalid, please check the guide
+        <a href="https://handlebarsjs.com/guide/">here</a>
+        for more details.
+      </p>
+    {/if}
   </div>
-</div>
+</DrawerContent>
 
 <style>
-  .container {
-    height: 100%;
+  .main {
+    padding: var(--spacing-m)
+  }
+  section {
     display: grid;
-    grid-template-columns: 260px 1fr;
-  }
-  .list {
-    border-right: var(--border-light);
-    padding: var(--spacing-l);
-    overflow: auto;
-  }
-
-  .list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .text {
-    padding: var(--spacing-l);
-    font-family: var(--font-sans);
-  }
-  .text :global(textarea) {
-    min-height: 100px;
-  }
-  .text :global(p) {
-    margin: 0;
+    grid-gap: var(--spacing-s);
   }
   ul {
     list-style: none;
@@ -160,14 +141,15 @@
   li {
     display: flex;
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-7);
-    padding: var(--spacing-m) 0;
+    padding: var(--spacing-m);
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
-    border: var(--border-light);
+    border-top: var(--border-light);
     border-width: 1px 0 1px 0;
+    border-radius: 4px;
   }
 
   pre,
@@ -176,17 +158,12 @@
   }
 
   li:hover {
-    color: var(--ink);
-    font-weight: 500;
+    background-color: var(--grey-2);
+    cursor: pointer;
   }
 
   li:active {
     color: var(--blue);
-  }
-
-  .drawer-contents {
-    height: 40vh;
-    overflow-y: auto;
   }
 
   .syntax-error {

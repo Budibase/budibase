@@ -1,17 +1,14 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import { Button } from "@budibase/bbui"
+  import { Button, Checkbox, Input, Select } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { currentAsset } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import Input from "./PropertyControls/Input.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
-  import OptionSelect from "./PropertyControls/OptionSelect.svelte"
-  import Checkbox from "./PropertyControls/Checkbox.svelte"
   import TableSelect from "./PropertyControls/TableSelect.svelte"
   import DataSourceSelect from "./PropertyControls/DataSourceSelect.svelte"
   import DataProviderSelect from "./PropertyControls/DataProviderSelect.svelte"
@@ -20,7 +17,6 @@
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import FilterEditor from "./PropertyControls/FilterEditor.svelte"
-  import DetailScreenSelect from "./PropertyControls/DetailScreenSelect.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
@@ -61,10 +57,9 @@
 
   const controlMap = {
     text: Input,
-    select: OptionSelect,
+    select: Select,
     dataSource: DataSourceSelect,
     dataProvider: DataProviderSelect,
-    detailScreen: DetailScreenSelect,
     boolean: Checkbox,
     number: Input,
     event: EventsEditor,
@@ -85,11 +80,11 @@
     "field/link": RelationshipFieldSelect,
   }
 
-  const getControl = type => {
+  const getControl = (type) => {
     return controlMap[type]
   }
 
-  const canRenderControl = setting => {
+  const canRenderControl = (setting) => {
     const control = getControl(setting?.type)
     if (!control) {
       return false
@@ -100,7 +95,7 @@
     return true
   }
 
-  const onInstanceNameChange = name => {
+  const onInstanceNameChange = (name) => {
     onChange("_instanceName", name)
   }
 
@@ -108,13 +103,13 @@
     const form = findClosestMatchingComponent(
       $currentAsset.props,
       componentInstance._id,
-      component => component._component.endsWith("/form")
+      (component) => component._component.endsWith("/form")
     )
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)
     onChange(
       "_children",
-      fields.map(field => field.json())
+      fields.map((field) => field.json())
     )
   }
 </script>
@@ -128,7 +123,8 @@
         label={def.label}
         key={def.key}
         value={get(assetInstance, def.key)}
-        onChange={val => onScreenPropChange(def.key, val)} />
+        onChange={(val) => onScreenPropChange(def.key, val)}
+      />
     {/each}
   {/if}
 
@@ -139,7 +135,8 @@
       label="Name"
       key="_instanceName"
       value={componentInstance._instanceName}
-      onChange={onInstanceNameChange} />
+      onChange={onInstanceNameChange}
+    />
   {/if}
 
   {#if settings && settings.length > 0}
@@ -150,10 +147,12 @@
           control={getControl(setting.type)}
           label={setting.label}
           key={setting.key}
-          value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
+          value={componentInstance[setting.key] ??
+            componentInstance[setting.key]?.defaultValue}
           {componentInstance}
-          onChange={val => onChange(setting.key, val)}
-          props={{ options: setting.options, placeholder: setting.placeholder }} />
+          onChange={(val) => onChange(setting.key, val)}
+          props={{ options: setting.options, placeholder: setting.placeholder }}
+        />
       {/if}
     {/each}
   {:else}
@@ -162,10 +161,12 @@
     </div>
   {/if}
 
-  {#if componentDefinition?.component?.endsWith('/fieldgroup')}
-    <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
-      Update Form Fields
-    </Button>
+  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
+    <div class="buttonWrapper">
+      <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
+        Update Form Fields
+      </Button>
+    </div>
   {/if}
 </div>
 <ConfirmDialog
@@ -173,7 +174,8 @@
   body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to update this Field Group?`}
   okText="Update"
   onOk={resetFormFields}
-  title="Confirm Form Field Update" />
+  title="Confirm Form Field Update"
+/>
 
 <style>
   .settings-view-container {
@@ -184,8 +186,13 @@
     gap: var(--spacing-s);
   }
   .empty {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spacing-m);
-    color: var(--grey-5);
+    color: var(--grey-6);
+  }
+  .buttonWrapper {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
   }
 </style>

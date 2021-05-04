@@ -34,7 +34,8 @@
         on:change={updateQuery}
         readOnly={!editable}
         value={query.fields.sql}
-        parameters={query.parameters} />
+        parameters={query.parameters}
+      />
     {:else if schema.type === QueryTypes.JSON}
       <Editor
         editorHeight={height}
@@ -43,7 +44,8 @@
         on:change={updateQuery}
         readOnly={!editable}
         value={query.fields.json}
-        parameters={query.parameters} />
+        parameters={query.parameters}
+      />
     {:else if schema.type === QueryTypes.FIELDS}
       <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
       {#if schema.urlDisplay}

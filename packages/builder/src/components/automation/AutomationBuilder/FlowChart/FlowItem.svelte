@@ -1,6 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
   import AutomationBlockTagline from "./AutomationBlockTagline.svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let onSelect
   export let block
@@ -9,10 +10,11 @@
   $: selected = $automationStore.selectedBlock?.id === block.id
   $: steps =
     $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex(step => step.id === block.id)
+  $: blockIdx = steps.findIndex((step) => step.id === block.id)
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
+    console.log("Running")
     automationStore.actions.deleteAutomationBlock(block)
   }
 </script>
@@ -20,23 +22,26 @@
 <div
   class={`block ${block.type} hoverable`}
   class:selected
-  on:click={() => onSelect(block)}>
+  on:click={() => onSelect(block)}
+>
   <header>
-    {#if block.type === 'TRIGGER'}
-      <i class="ri-lightbulb-fill" />
+    {#if block.type === "TRIGGER"}
+      <Icon name="Light" />
       <span>When this happens...</span>
-    {:else if block.type === 'ACTION'}
-      <i class="ri-flashlight-fill" />
+    {:else if block.type === "ACTION"}
+      <Icon name="FlashOn" />
       <span>Do this...</span>
-    {:else if block.type === 'LOGIC'}
-      <i class="ri-git-branch-line" />
+    {:else if block.type === "LOGIC"}
+      <Icon name="Branch2" />
       <span>Only continue if...</span>
     {/if}
     <div class="label">
-      {#if block.type === 'TRIGGER'}Trigger{:else}Step {blockIdx + 1}{/if}
+      {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
-    {#if block.type !== 'TRIGGER' || allowDeleteTrigger}
-      <i on:click|stopPropagation={deleteStep} class="delete ri-close-line" />
+    {#if block.type !== "TRIGGER" || allowDeleteTrigger}
+      <div on:click|stopPropagation={deleteStep}>
+        <Icon name="Close" />
+      </div>
     {/if}
   </header>
   <hr />
@@ -52,9 +57,9 @@
     border-radius: var(--border-radius-m);
     transition: 0.3s all ease;
     box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
-    background-color: var(--ink);
     font-size: 16px;
-    color: var(--background);
+    background-color: var(--spectrum-global-color-gray-50);
+    color: var(--grey-9);
   }
   .block.selected,
   .block:hover {
@@ -77,9 +82,9 @@
   header .label {
     font-size: 14px;
     padding: var(--spacing-s);
-    color: var(--grey-8);
     border-radius: var(--border-radius-m);
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--grey-2);
+    color: var(--grey-8);
   }
   header i {
     font-size: 20px;
@@ -90,29 +95,5 @@
   header i.delete:hover {
     cursor: pointer;
     opacity: 1;
-  }
-
-  .ACTION {
-    background-color: var(--background);
-    color: var(--ink);
-  }
-
-  .TRIGGER {
-    background-color: var(--ink);
-    color: var(--background);
-  }
-  .TRIGGER header .label {
-    background-color: var(--grey-9);
-    color: var(--grey-5);
-  }
-
-  .LOGIC {
-    background-color: var(--background);
-    color: var(--ink);
-  }
-
-  p {
-    color: inherit;
-    margin-bottom: 0;
   }
 </style>

@@ -93,7 +93,7 @@ async function checkForWebhooks({ appId, oldAuto, newAuto }) {
   return newAuto
 }
 
-exports.create = async function(ctx) {
+exports.create = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -124,7 +124,7 @@ exports.create = async function(ctx) {
   }
 }
 
-exports.update = async function(ctx) {
+exports.update = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -149,22 +149,22 @@ exports.update = async function(ctx) {
   }
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const response = await db.allDocs(
     getAutomationParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map(row => row.doc)
+  ctx.body = response.rows.map((row) => row.doc)
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const oldAutomation = await db.get(ctx.params.id)
   await checkForWebhooks({
@@ -174,19 +174,19 @@ exports.destroy = async function(ctx) {
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 
-exports.getActionList = async function(ctx) {
+exports.getActionList = async function (ctx) {
   ctx.body = actions.DEFINITIONS
 }
 
-exports.getTriggerList = async function(ctx) {
+exports.getTriggerList = async function (ctx) {
   ctx.body = triggers.BUILTIN_DEFINITIONS
 }
 
-exports.getLogicList = async function(ctx) {
+exports.getLogicList = async function (ctx) {
   ctx.body = logic.BUILTIN_DEFINITIONS
 }
 
-module.exports.getDefinitionList = async function(ctx) {
+module.exports.getDefinitionList = async function (ctx) {
   ctx.body = {
     logic: logic.BUILTIN_DEFINITIONS,
     trigger: triggers.BUILTIN_DEFINITIONS,
@@ -200,7 +200,7 @@ module.exports.getDefinitionList = async function(ctx) {
  *                   *
  *********************/
 
-exports.trigger = async function(ctx) {
+exports.trigger = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {

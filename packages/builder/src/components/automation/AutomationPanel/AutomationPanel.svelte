@@ -1,39 +1,41 @@
 <script>
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
   let modal
 </script>
 
 <div class="title">
-  <h1>Automations</h1>
-  <i
-    on:click={modal.show}
-    data-cy="new-automation"
-    class="ri-add-circle-fill" />
+  <Tabs selected="Automations">
+    <Tab title="Automations">
+      <div class="tab-content-padding">
+        <AutomationList />
+        <Modal bind:this={modal}>
+          <CreateAutomationModal />
+        </Modal>
+      </div>
+    </Tab>
+  </Tabs>
+  <div class="add-button" data-cy="new-screen">
+    <Icon hoverable name="AddCircle" on:click={modal.show} />
+  </div>
 </div>
-<AutomationList />
-<Modal bind:this={modal}>
-  <CreateAutomationModal />
-</Modal>
 
 <style>
+  .tab-content-padding {
+    padding: 0 var(--spacing-xl);
+  }
+  .add-button {
+    position: absolute;
+    top: var(--spacing-l);
+    right: var(--spacing-xl);
+  }
+
   .title {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .title h1 {
-    font-size: var(--font-size-m);
-    font-weight: 500;
-    margin: 0;
-  }
-  .title i {
-    font-size: 20px;
-  }
-  .title i:hover {
-    cursor: pointer;
-    color: var(--blue);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    position: relative;
   }
 </style>

@@ -27,17 +27,17 @@
   $: options = setUpChart(dataProvider)
 
   // Fetch data on mount
-  const setUpChart = provider => {
+  const setUpChart = (provider) => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || allCols.find(x => x == null)) {
+    if (!provider || allCols.find((x) => x == null)) {
       return null
     }
 
     // Fetch, filter and sort data
     const { schema, rows } = provider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row))
+    const reducer = (row) => (valid, column) => valid && row[column] != null
+    const hasAllColumns = (row) => allCols.reduce(reducer(row), true)
+    const data = rows.filter((row) => hasAllColumns(row))
     if (!schema || !data.length) {
       return null
     }
@@ -66,9 +66,9 @@
       builder = builder.xType(labelFieldType)
       useDates = labelFieldType === "datetime"
     }
-    const series = valueColumns.map(column => ({
+    const series = valueColumns.map((column) => ({
       name: column,
-      data: data.map(row => {
+      data: data.map((row) => {
         if (!useDates) {
           return row[column]
         } else {
@@ -78,7 +78,7 @@
     }))
     builder = builder.series(series)
     if (!useDates) {
-      builder = builder.categories(data.map(row => row[labelColumn]))
+      builder = builder.categories(data.map((row) => row[labelColumn]))
     }
 
     // Build chart options

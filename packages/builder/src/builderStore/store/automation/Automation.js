@@ -37,7 +37,7 @@ export default class Automation {
       return
     }
 
-    const stepIdx = steps.findIndex(step => step.id === id)
+    const stepIdx = steps.findIndex((step) => step.id === id)
     if (stepIdx < 0) throw new Error("Block not found.")
     steps.splice(stepIdx, 1, updatedBlock)
     this.automation.definition.steps = steps
@@ -51,7 +51,7 @@ export default class Automation {
       return
     }
 
-    const stepIdx = steps.findIndex(step => step.id === id)
+    const stepIdx = steps.findIndex((step) => step.id === id)
     if (stepIdx < 0) throw new Error("Block not found.")
     steps.splice(stepIdx, 1)
     this.automation.definition.steps = steps

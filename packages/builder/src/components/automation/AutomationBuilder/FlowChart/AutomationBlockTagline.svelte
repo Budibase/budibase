@@ -16,7 +16,7 @@
     const tableId = inputs.tableId || inputs.row?.tableId
     if (tableId) {
       enrichedInputs.enriched.table = $tables.list.find(
-        table => table._id === tableId
+        (table) => table._id === tableId
       )
     }
     return enrichedInputs
@@ -30,8 +30,8 @@
 
     // Extract schema paths for any input bindings
     let inputPaths = formattedTagline.match(/{{\s*\S+\s*}}/g) || []
-    inputPaths = inputPaths.map(path => path.replace(/[{}]/g, "").trim())
-    const schemaPaths = inputPaths.map(path =>
+    inputPaths = inputPaths.map((path) => path.replace(/[{}]/g, "").trim())
+    const schemaPaths = inputPaths.map((path) =>
       path.replace(/\./g, ".properties.")
     )
 

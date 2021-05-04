@@ -12,13 +12,13 @@ export const localStorageStore = (localStorageKey, initialValue) => {
   })
 
   // New store setter which updates the store and localstorage
-  const set = value => {
+  const set = (value) => {
     store.set(value)
     localStorage.setItem(localStorageKey, JSON.stringify(value))
   }
 
   // New store updater which updates the store and localstorage
-  const update = updaterFn => set(updaterFn(get(store)))
+  const update = (updaterFn) => set(updaterFn(get(store)))
 
   // Hydrates the store from localstorage
   const hydrate = () => {

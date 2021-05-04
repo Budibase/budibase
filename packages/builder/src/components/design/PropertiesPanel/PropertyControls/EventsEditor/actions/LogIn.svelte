@@ -15,14 +15,16 @@
   <DrawerBindableInput
     title="Email"
     value={parameters.email}
-    on:change={value => (parameters.email = value.detail)}
-    {bindings} />
+    on:change={(value) => (parameters.email = value.detail)}
+    {bindings}
+  />
   <Label small>Password</Label>
   <DrawerBindableInput
     title="Password"
     value={parameters.password}
-    on:change={value => (parameters.password = value.detail)}
-    {bindings} />
+    on:change={(value) => (parameters.password = value.detail)}
+    {bindings}
+  />
 </div>
 
 <style>

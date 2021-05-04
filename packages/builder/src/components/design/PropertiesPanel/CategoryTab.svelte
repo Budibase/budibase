@@ -1,7 +1,7 @@
 <script>
   export let categories = []
   export let selectedCategory = {}
-  export let onClick = category => {}
+  export let onClick = (category) => {}
 </script>
 
 <div class="tabs">
@@ -9,7 +9,8 @@
     <li
       data-cy={category.name}
       on:click={() => onClick(category)}
-      class:active={selectedCategory === category}>
+      class:active={selectedCategory === category}
+    >
       {category.name}
     </li>
   {/each}

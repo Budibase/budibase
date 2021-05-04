@@ -3,7 +3,7 @@ import { getManifest } from "@budibase/string-templates"
 export function handlebarsCompletions() {
   const manifest = getManifest()
 
-  return Object.keys(manifest).flatMap(key =>
+  return Object.keys(manifest).flatMap((key) =>
     Object.entries(manifest[key]).map(([helperName, helperConfig]) => ({
       text: helperName,
       path: helperName,

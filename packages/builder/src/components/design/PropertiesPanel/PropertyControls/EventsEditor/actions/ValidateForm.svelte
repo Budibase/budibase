@@ -14,21 +14,19 @@
 
 <div class="root">
   <Label small>Form</Label>
-  <Select thin secondary bind:value={parameters.componentId}>
-    <option value="" />
-    {#if actionProviders}
-      {#each actionProviders as component}
-        <option value={component._id}>{component._instanceName}</option>
-      {/each}
-    {/if}
-  </Select>
+  <Select
+    bind:value={parameters.componentId}
+    options={actionProviders}
+    getOptionLabel={(x) => x._instanceName}
+    getOptionValue={(x) => x._id}
+  />
 </div>
 
 <style>
   .root {
     display: flex;
     flex-direction: row;
-    align-items: baseline;
+    align-items: center;
     max-width: 800px;
     margin: 0 auto;
   }

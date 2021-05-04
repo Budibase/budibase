@@ -31,7 +31,7 @@
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex(step => step.id === block.id)
+    const blockIdx = allSteps.findIndex((step) => step.id === block.id)
 
     // Extract all outputs from all previous steps as available bindings
     let bindings = []
@@ -53,81 +53,87 @@
   }
 </script>
 
-<div class="block-label">{block.name}</div>
-{#each inputs as [key, value]}
-  <div class="block-field">
-    <Label extraSmall grey>{value.title}</Label>
-    {#if value.type === 'string' && value.enum}
-      <Select bind:value={block.inputs[key]} extraThin secondary>
-        <option value="">Choose an option</option>
-        {#each value.enum as option, idx}
-          <option value={option}>
-            {value.pretty ? value.pretty[idx] : option}
-          </option>
-        {/each}
-      </Select>
-    {:else if value.customType === 'password'}
-      <Input type="password" extraThin bind:value={block.inputs[key]} />
-    {:else if value.customType === 'email'}
-      <DrawerBindableInput
-        panel={AutomationBindingPanel}
-        type={'email'}
-        extraThin
-        value={block.inputs[key]}
-        on:change={e => (block.inputs[key] = e.detail)}
-        {bindings} />
-    {:else if value.customType === 'query'}
-      <QuerySelector bind:value={block.inputs[key]} />
-    {:else if value.customType === 'table'}
-      <TableSelector bind:value={block.inputs[key]} />
-    {:else if value.customType === 'queryParams'}
-      <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
-    {:else if value.customType === 'row'}
-      <RowSelector bind:value={block.inputs[key]} {bindings} />
-    {:else if value.customType === 'webhookUrl'}
-      <WebhookDisplay value={block.inputs[key]} />
-    {:else if value.customType === 'triggerSchema'}
-      <SchemaSetup bind:value={block.inputs[key]} />
-    {:else if value.customType === 'code'}
-      <CodeEditorModal>
-        <pre>{JSON.stringify(bindings, null, 2)}</pre>
-        <Label small grey>
-          Note: The result of the very last statement of this script will be
-          returned and available as the "value" property in following automation
-          blocks.
-        </Label>
-        <Editor
-          mode="javascript"
-          on:change={e => {
-            block.inputs[key] = e.detail.value
-          }}
-          value={block.inputs[key]} />
-      </CodeEditorModal>
-    {:else if value.type === 'string' || value.type === 'number'}
-      <DrawerBindableInput
-        panel={AutomationBindingPanel}
-        type={value.customType}
-        extraThin
-        value={block.inputs[key]}
-        on:change={e => (block.inputs[key] = e.detail)}
-        {bindings} />
-    {/if}
-  </div>
-{/each}
-{#if stepId === 'WEBHOOK'}
-  <Button wide secondary on:click={() => webhookModal.show()}>
-    Set Up Webhook
-  </Button>
+<div class="fields">
+  <div class="block-label">{block.name}</div>
+  {#each inputs as [key, value]}
+    <div class="block-field">
+      <Label>{value.title}</Label>
+      {#if value.type === "string" && value.enum}
+        <Select
+          bind:value={block.inputs[key]}
+          options={value.enum}
+          getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
+        />
+      {:else if value.customType === "password"}
+        <Input type="password" bind:value={block.inputs[key]} />
+      {:else if value.customType === "email"}
+        <DrawerBindableInput
+          panel={AutomationBindingPanel}
+          type={"email"}
+          value={block.inputs[key]}
+          on:change={(e) => (block.inputs[key] = e.detail)}
+          {bindings}
+        />
+      {:else if value.customType === "query"}
+        <QuerySelector bind:value={block.inputs[key]} />
+      {:else if value.customType === "table"}
+        <TableSelector bind:value={block.inputs[key]} />
+      {:else if value.customType === "queryParams"}
+        <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
+      {:else if value.customType === "row"}
+        <RowSelector bind:value={block.inputs[key]} {bindings} />
+      {:else if value.customType === "webhookUrl"}
+        <WebhookDisplay value={block.inputs[key]} />
+      {:else if value.customType === "triggerSchema"}
+        <SchemaSetup bind:value={block.inputs[key]} />
+      {:else if value.customType === "code"}
+        <CodeEditorModal>
+          <pre>{JSON.stringify(bindings, null, 2)}</pre>
+          <Label small grey>
+            Note: The result of the very last statement of this script will be
+            returned and available as the "value" property in following
+            automation blocks.
+          </Label>
+          <Editor
+            mode="javascript"
+            on:change={(e) => {
+              block.inputs[key] = e.detail.value
+            }}
+            value={block.inputs[key]}
+          />
+        </CodeEditorModal>
+      {:else if value.type === "string" || value.type === "number"}
+        <DrawerBindableInput
+          panel={AutomationBindingPanel}
+          type={value.customType}
+          value={block.inputs[key]}
+          on:change={(e) => (block.inputs[key] = e.detail)}
+          {bindings}
+        />
+      {/if}
+    </div>
+  {/each}
+</div>
+{#if stepId === "WEBHOOK"}
+  <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
 
 <style>
+  .fields {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-s);
+  }
+
   .block-field {
     display: grid;
   }
 
   .block-label {
     font-weight: 500;
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-7);
   }
 </style>

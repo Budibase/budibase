@@ -1,50 +1,56 @@
-import { writable, derived } from "svelte/store"
+import { writable } from "svelte/store"
 
 const NOTIFICATION_TIMEOUT = 3000
 
-const createNotificationStore = () => {
-  const _notifications = writable([])
-
-  const send = (message, type = "default") => {
-    _notifications.update(state => {
-      return [...state, { id: id(), type, message }]
-    })
-  }
-
-  const notifications = derived(_notifications, ($_notifications, set) => {
-    set($_notifications)
-    if ($_notifications.length > 0) {
-      const timeout = setTimeout(() => {
-        _notifications.update(state => {
-          state.shift()
-          return state
-        })
-        set($_notifications)
-      }, NOTIFICATION_TIMEOUT)
-      return () => {
-        clearTimeout(timeout)
-      }
+export const createNotificationStore = () => {
+  const timeoutIds = new Set()
+  const _notifications = writable([], () => {
+    return () => {
+      // clear all the timers
+      timeoutIds.forEach((timeoutId) => {
+        clearTimeout(timeoutId)
+      })
+      _notifications.set([])
     }
   })
-  const { subscribe } = notifications
+  let block = false
+
+  const blockNotifications = (timeout = 1000) => {
+    block = true
+    setTimeout(() => (block = false), timeout)
+  }
+
+  const send = (message, type = "default", icon = "") => {
+    if (block) {
+      return
+    }
+    let _id = id()
+    _notifications.update((state) => {
+      return [...state, { id: _id, type, message, icon }]
+    })
+    const timeoutId = setTimeout(() => {
+      _notifications.update((state) => {
+        return state.filter(({ id }) => id !== _id)
+      })
+    }, NOTIFICATION_TIMEOUT)
+    timeoutIds.add(timeoutId)
+  }
+
+  const { subscribe } = _notifications
 
   return {
     subscribe,
     send,
-    danger: msg => send(msg, "danger"),
-    warning: msg => send(msg, "warning"),
-    info: msg => send(msg, "info"),
-    success: msg => send(msg, "success"),
+    info: (msg) => send(msg, "info", "Info"),
+    error: (msg) => send(msg, "error", "Alert"),
+    warning: (msg) => send(msg, "warning", "Alert"),
+    success: (msg) => send(msg, "success", "CheckmarkCircle"),
+    blockNotifications,
   }
 }
 
 function id() {
-  return (
-    "_" +
-    Math.random()
-      .toString(36)
-      .substr(2, 9)
-  )
+  return "_" + Math.random().toString(36).substr(2, 9)
 }
 
 export const notifications = createNotificationStore()

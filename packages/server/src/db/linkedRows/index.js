@@ -33,11 +33,11 @@ exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
 
 async function getLinksForRows(appId, rows) {
-  const tableIds = [...new Set(rows.map(el => el.tableId))]
+  const tableIds = [...new Set(rows.map((el) => el.tableId))]
   // start by getting all the link values for performance reasons
   const responses = flatten(
     await Promise.all(
-      tableIds.map(tableId =>
+      tableIds.map((tableId) =>
         getLinkDocuments({
           appId,
           tableId: tableId,
@@ -51,7 +51,7 @@ async function getLinksForRows(appId, rows) {
   return getUniqueByProp(
     responses
       // create a unique ID which we can use for getting only unique ones
-      .map(el => ({ ...el, unique: el.id + el.thisId + el.fieldName })),
+      .map((el) => ({ ...el, unique: el.id + el.thisId + el.fieldName })),
     "unique"
   )
 }
@@ -68,7 +68,7 @@ async function getLinksForRows(appId, rows) {
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
-exports.updateLinks = async function({
+exports.updateLinks = async function ({
   eventType,
   appId,
   row,
@@ -127,8 +127,8 @@ exports.attachLinkIDs = async (appId, rows) => {
   for (let row of rows) {
     // find anything that matches the row's ID we are searching for and join it
     links
-      .filter(el => el.thisId === row._id)
-      .forEach(link => {
+      .filter((el) => el.thisId === row._id)
+      .forEach((link) => {
         if (row[link.fieldName] == null) {
           row[link.fieldName] = []
         }
@@ -154,21 +154,21 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
     return rows
   }
   const db = new CouchDB(appId)
-  const links = (await getLinksForRows(appId, rows)).filter(link =>
-    rows.some(row => row._id === link.thisId)
+  const links = (await getLinksForRows(appId, rows)).filter((link) =>
+    rows.some((row) => row._id === link.thisId)
   )
-  const linkedRowIds = links.map(link => link.id)
+  const linkedRowIds = links.map((link) => link.id)
   const linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
-    row => row.doc
+    (row) => row.doc
   )
   // will populate this as we find them
   const linkedTables = []
   for (let row of rows) {
-    for (let link of links.filter(link => link.thisId === row._id)) {
+    for (let link of links.filter((link) => link.thisId === row._id)) {
       if (row[link.fieldName] == null) {
         row[link.fieldName] = []
       }
-      const linkedRow = linked.find(row => row._id === link.id)
+      const linkedRow = linked.find((row) => row._id === link.id)
       const linkedTableId =
         linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
       const linkedTable = await getLinkedTable(db, linkedTableId, linkedTables)

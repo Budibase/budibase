@@ -10,30 +10,31 @@
   export let open = false
 
   $: style = componentInstance["_styles"][styleCategory] || {}
-  $: changed = properties.some(prop => hasPropChanged(style, prop))
+  $: changed = properties.some((prop) => hasPropChanged(style, prop))
 
   const hasPropChanged = (style, prop) => {
     return style[prop.key] != null && style[prop.key] !== ""
   }
 
-  const getControlProps = props => {
+  const getControlProps = (props) => {
     const { label, key, control, ...otherProps } = props || {}
     return otherProps || {}
   }
 </script>
 
-<DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
+<DetailSummary name={`${name}${changed ? " *" : ""}`} on:open show={open} thin>
   {#if open}
     <div>
       {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
         <PropertyControl
           bindable={false}
-          label={`${prop.label}${hasPropChanged(style, prop) ? ' *' : ''}`}
+          label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
-          onChange={value => onStyleChanged(styleCategory, prop.key, value)}
-          props={getControlProps(prop)} />
+          onChange={(value) => onStyleChanged(styleCategory, prop.key, value)}
+          props={getControlProps(prop)}
+        />
       {/each}
     </div>
   {/if}

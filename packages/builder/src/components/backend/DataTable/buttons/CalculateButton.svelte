@@ -1,23 +1,21 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
-  import CalculatePopover from "../popovers/CalculatePopover.svelte"
+  import { Modal, ActionButton } from "@budibase/bbui"
+  import CalculateModal from "../modals/CalculateModal.svelte"
 
   export let view = {}
 
-  let anchor
-  let dropdown
+  let modal
 </script>
 
-<div bind:this={anchor}>
-  <TextButton
-    text
-    small
-    on:click={dropdown.show}
-    active={view.field && view.calculation}>
-    <Icon name="calculate" />
-    Calculate
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <CalculatePopover {view} onClosed={dropdown.hide} />
-</Popover>
+<ActionButton
+  icon="Calculator"
+  size="S"
+  quiet
+  on:click={modal.show}
+  active={view.field && view.calculation}
+>
+  Calculate
+</ActionButton>
+<Modal bind:this={modal}>
+  <CalculateModal {view} />
+</Modal>

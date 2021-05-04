@@ -208,8 +208,8 @@ async function queueRelevantRowAutomations(event, eventType) {
 
   // filter down to the correct event type
   automations = automations.rows
-    .map(automation => automation.doc)
-    .filter(automation => {
+    .map((automation) => automation.doc)
+    .filter((automation) => {
       const trigger = automation.definition.trigger
       return trigger && trigger.event === eventType
     })
@@ -228,7 +228,7 @@ async function queueRelevantRowAutomations(event, eventType) {
   }
 }
 
-emitter.on("row:save", async function(event) {
+emitter.on("row:save", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -236,7 +236,7 @@ emitter.on("row:save", async function(event) {
   await queueRelevantRowAutomations(event, "row:save")
 })
 
-emitter.on("row:update", async function(event) {
+emitter.on("row:update", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -244,7 +244,7 @@ emitter.on("row:update", async function(event) {
   await queueRelevantRowAutomations(event, "row:update")
 })
 
-emitter.on("row:delete", async function(event) {
+emitter.on("row:delete", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -285,7 +285,7 @@ async function fillRowOutput(automation, params) {
   return params
 }
 
-module.exports.externalTrigger = async function(automation, params) {
+module.exports.externalTrigger = async function (automation, params) {
   // TODO: replace this with allowing user in builder to input values in future
   if (automation.definition != null && automation.definition.trigger != null) {
     if (automation.definition.trigger.inputs.tableId != null) {

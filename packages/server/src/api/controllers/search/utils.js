@@ -116,7 +116,7 @@ class QueryBuilder {
   }
 }
 
-exports.search = async query => {
+exports.search = async (query) => {
   const response = await fetch(query, {
     method: "GET",
   })
@@ -125,7 +125,7 @@ exports.search = async query => {
     rows: [],
   }
   if (json.rows != null && json.rows.length > 0) {
-    output.rows = json.rows.map(row => row.doc)
+    output.rows = json.rows.map((row) => row.doc)
   }
   if (json.bookmark) {
     output.bookmark = json.bookmark

@@ -51,7 +51,7 @@
       assetType = FrontendTypes.SCREEN
     }
     if (assetType !== state.currentFrontEndType) {
-      store.update(state => {
+      store.update((state) => {
         state.currentFrontEndType = assetType
         return state
       })
@@ -74,7 +74,7 @@
       }
 
       // Find and select the current asset
-      asset = assetList.find(asset => asset._id === assetId)
+      asset = assetList.find((asset) => asset._id === assetId)
       if (asset && asset._id !== selectedAsset?._id) {
         actions.select(assetId)
       }
@@ -128,7 +128,7 @@
             const componentPath = findComponentPath(asset.props, componentId)
             const componentURL = componentPath
               .slice(1)
-              .map(comp => comp._id)
+              .map((comp) => comp._id)
               .join("/")
             url += `/${componentURL}`
           }
@@ -167,9 +167,9 @@
   .root {
     display: grid;
     grid-template-columns: 260px 1fr 260px;
-    background: var(--grey-2);
     align-items: stretch;
-    height: calc(100vh - 60px);
+    flex: 1 1 auto;
+    height: 0;
   }
 
   .ui-nav {
@@ -178,8 +178,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    padding: var(--spacing-l) var(--spacing-xl) 60px var(--spacing-xl);
+    padding: 0 0 60px 0;
     overflow-y: auto;
+    border-right: var(--border-light);
   }
 
   .preview-pane {
@@ -206,7 +207,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
-    padding: var(--spacing-l) var(--spacing-xl);
+    border-left: var(--border-light);
+    overflow-x: hidden;
   }
 </style>

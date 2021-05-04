@@ -1,11 +1,13 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte"
+  import "@spectrum-css/dialog/dist/index-vars.css"
+  import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
-  import Icon from "../Icons/Icon.svelte"
+  import Divider from "../Divider/Divider.svelte"
+  import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
-  const dispatch = createEventDispatcher()
 
   export let title = undefined
+  export let size = "small"
   export let cancelText = "Cancel"
   export let confirmText = "Confirm"
   export let showCancelButton = true
@@ -27,75 +29,75 @@
   }
 </script>
 
-<div class="modal-content">
-  {#if title}
-    <header>
-      <h5>{title}</h5>
-      <div class="header-content">
-        <slot name="header" />
-      </div>
-    </header>
-  {/if}
-  <slot />
-  {#if showCancelButton || showConfirmButton}
-    <footer>
-      <div class="footer-content">
+<div
+  class="spectrum-Dialog spectrum-Dialog--{size}"
+  style="position: relative;"
+  role="dialog"
+  tabindex="-1"
+  aria-modal="true"
+>
+  <div class="spectrum-Dialog-grid">
+    <h1 class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader">
+      {title}
+    </h1>
+
+    <Divider size="M" />
+    <!-- TODO: Remove content-grid class once Layout components are in bbui -->
+    <section class="spectrum-Dialog-content content-grid">
+      <slot />
+    </section>
+    {#if showCancelButton || showConfirmButton}
+      <div
+        class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
+      >
         <slot name="footer" />
-      </div>
-      <div class="buttons">
         {#if showCancelButton}
-          <Button secondary on:click={hide}>{cancelText}</Button>
+          <Button group secondary on:click={hide}>{cancelText}</Button>
         {/if}
         {#if showConfirmButton}
           <Button
-            primary
+            group
+            cta
             {...$$restProps}
             disabled={confirmDisabled}
-            on:click={confirm}>
+            on:click={confirm}
+          >
             {confirmText}
           </Button>
         {/if}
       </div>
-    </footer>
-  {/if}
-  {#if showCloseIcon}
-    <div class="close-icon" on:click={hide}>
-      <Icon name="closeline" />
-    </div>
-  {/if}
+    {/if}
+    {#if showCloseIcon}
+      <div class="close-icon" on:click={hide}>
+        <Icon hoverable name="Close" />
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
-  .modal-content {
+  .content-grid {
     display: grid;
     position: relative;
     gap: var(--spacing-xl);
     color: var(--ink);
   }
 
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-right: 40px;
+  .spectrum-Dialog-content {
+    overflow: visible;
   }
-  header h5 {
-    margin: 0;
-    font-weight: 500;
+  .spectrum-Dialog-heading {
+    font-family: var(--spectrum-alias-body-text-font-family);
   }
 
-  .header-content {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
+  .spectrum-Dialog-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
   }
 
   .close-icon {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 15px;
+    right: 15px;
     color: var(--ink);
     font-size: var(--font-size-m);
   }
@@ -105,28 +107,5 @@
   }
   .close-icon :global(svg) {
     margin-right: 0;
-  }
-
-  footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .footer-content {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--spacing-m);
   }
 </style>
