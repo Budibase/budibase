@@ -6,7 +6,7 @@ const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 const BB_CDN = "https://cdn.app.budi.live/assets"
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
-exports.wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
 
@@ -19,14 +19,14 @@ exports.isDev = env.isDev
  */
 exports.getAllApps = async () => {
   let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter((dbName) => dbName.startsWith(APP_PREFIX))
-  const appPromises = appDbNames.map((db) => new CouchDB(db).get(db))
+  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
   if (appPromises.length === 0) {
     return []
   } else {
     const response = await Promise.allSettled(appPromises)
     return response
-      .filter((result) => result.status === "fulfilled")
+      .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
   }
 }
@@ -37,7 +37,7 @@ exports.getAllApps = async () => {
  * @param {string} url The URL to test and remove any extra double slashes.
  * @return {string} The updated url.
  */
-exports.checkSlashesInUrl = (url) => {
+exports.checkSlashesInUrl = url => {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }
 
@@ -63,7 +63,7 @@ exports.objectStoreUrl = () => {
  * @return {string} The URL to be inserted into appPackage response or server rendered
  * app index file.
  */
-exports.clientLibraryPath = (appId) => {
+exports.clientLibraryPath = appId => {
   if (env.isProd()) {
     return `${exports.objectStoreUrl()}/${appId}/budibase-client.js`
   } else {
@@ -71,7 +71,7 @@ exports.clientLibraryPath = (appId) => {
   }
 }
 
-exports.attachmentsRelativeURL = (attachmentKey) => {
+exports.attachmentsRelativeURL = attachmentKey => {
   return exports.checkSlashesInUrl(
     `/${ObjectStoreBuckets.APPS}/${attachmentKey}`
   )

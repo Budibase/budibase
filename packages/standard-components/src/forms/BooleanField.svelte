@@ -26,7 +26,11 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}
+<<<<<<< HEAD
       on:change={(e) => fieldApi.setValue(e.detail)}
+=======
+      on:change={e => fieldApi.setValue(e.detail)}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       {text}
     />
   {/if}

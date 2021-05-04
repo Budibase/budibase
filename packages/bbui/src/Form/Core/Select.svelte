@@ -53,6 +53,10 @@
   {getOptionValue}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
+<<<<<<< HEAD
   isOptionSelected={(option) => option === value}
+=======
+  isOptionSelected={option => option === value}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   onSelectOption={selectOption}
 />

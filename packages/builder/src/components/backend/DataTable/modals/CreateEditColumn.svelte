@@ -197,8 +197,13 @@
       ...Object.values(fieldDefinitions),
       { name: "Auto Column", type: AUTO_COL },
     ]}
+<<<<<<< HEAD
     getOptionLabel={(field) => field.name}
     getOptionValue={(field) => field.type}
+=======
+    getOptionLabel={field => field.name}
+    getOptionValue={field => field.type}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 
   {#if canBeRequired || canBeDisplay}
@@ -274,8 +279,13 @@
       label="Table"
       bind:value={field.tableId}
       options={tableOptions}
+<<<<<<< HEAD
       getOptionLabel={(table) => table.name}
       getOptionValue={(table) => table._id}
+=======
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
@@ -283,8 +293,13 @@
         label="Define the relationship"
         bind:value={field.relationshipType}
         options={relationshipOptions}
+<<<<<<< HEAD
         getOptionLabel={(option) => option.name}
         getOptionValue={(option) => option.value}
+=======
+        getOptionLabel={option => option.name}
+        getOptionValue={option => option.value}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       />
     {/if}
     <Input label={`Column name in other table`} bind:value={field.fieldName} />
@@ -294,8 +309,13 @@
       value={field.subtype}
       on:change={(e) => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
+<<<<<<< HEAD
       getOptionLabel={(option) => option[1].name}
       getOptionValue={(option) => option[0]}
+=======
+      getOptionLabel={option => option[1].name}
+      getOptionValue={option => option[0]}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     />
   {/if}
 

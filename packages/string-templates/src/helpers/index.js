@@ -14,11 +14,11 @@ const HTML_SWAPS = {
 
 const HELPERS = [
   // external helpers
-  new Helper(HelperFunctionNames.OBJECT, (value) => {
+  new Helper(HelperFunctionNames.OBJECT, value => {
     return new SafeString(JSON.stringify(value))
   }),
   // this help is applied to all statements
-  new Helper(HelperFunctionNames.ALL, (value) => {
+  new Helper(HelperFunctionNames.ALL, value => {
     // null/undefined values produce bad results
     if (value == null) {
       return ""
@@ -27,12 +27,12 @@ const HELPERS = [
     if (text == null || typeof text !== "string") {
       return text
     }
-    return text.replace(/[<>]/g, (tag) => {
+    return text.replace(/[<>]/g, tag => {
       return HTML_SWAPS[tag] || tag
     })
   }),
   // adds a note for post-processor
-  new Helper(HelperFunctionNames.LITERAL, (value) => {
+  new Helper(HelperFunctionNames.LITERAL, value => {
     const type = typeof value
     const outputVal = type === "object" ? JSON.stringify(value) : value
     return `{{${LITERAL_MARKER} ${type}-${outputVal}}}`
@@ -46,7 +46,7 @@ module.exports.HelperNames = () => {
   )
 }
 
-module.exports.registerAll = (handlebars) => {
+module.exports.registerAll = handlebars => {
   for (let helper of HELPERS) {
     helper.register(handlebars)
   }
@@ -54,7 +54,7 @@ module.exports.registerAll = (handlebars) => {
   externalHandlebars.registerAll(handlebars)
 }
 
-module.exports.unregisterAll = (handlebars) => {
+module.exports.unregisterAll = handlebars => {
   for (let helper of HELPERS) {
     helper.unregister(handlebars)
   }

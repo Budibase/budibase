@@ -66,7 +66,11 @@
       />
       <Select
         value={field.type}
+<<<<<<< HEAD
         on:change={(e) => (value[field.name] = e.target.value)}
+=======
+        on:change={e => (value[field.name] = e.target.value)}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
         options={typeOptions}
       />
       <i

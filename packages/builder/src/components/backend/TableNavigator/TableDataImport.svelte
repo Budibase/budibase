@@ -128,8 +128,13 @@
           on:change={handleTypeChange(columnName)}
           options={typeOptions}
           placeholder={null}
+<<<<<<< HEAD
           getOptionLabel={(option) => option.label}
           getOptionValue={(option) => option.value}
+=======
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
         />
         <span class="field-status" class:error={!schema[columnName].success}>
           {schema[columnName].success ? "Success" : "Failure"}

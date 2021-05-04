@@ -2,7 +2,7 @@ import { store } from "./index"
 import { get as svelteGet } from "svelte/store"
 import { removeCookie, Cookies } from "./cookies"
 
-const apiCall = (method) => async (
+const apiCall = method => async (
   url,
   body,
   headers = { "Content-Type": "application/json" }

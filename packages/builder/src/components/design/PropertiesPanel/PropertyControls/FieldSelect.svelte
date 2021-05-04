@@ -32,7 +32,11 @@
     return value
   }
 
+<<<<<<< HEAD
   const onChange = (value) => {
+=======
+  const onChange = value => {
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     boundValue = getValidValue(value.detail, options)
     dispatch("change", boundValue)
   }

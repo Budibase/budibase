@@ -82,7 +82,11 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       getOptionLabel={getDisplayName}
+<<<<<<< HEAD
       getOptionValue={(option) => option._id}
+=======
+      getOptionValue={option => option._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     />
   {/if}
 </Field>

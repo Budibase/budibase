@@ -44,8 +44,13 @@
     value={linkedIds?.[0]}
     options={rows}
     getOptionLabel={getPrettyName}
+<<<<<<< HEAD
     getOptionValue={(row) => row._id}
     on:change={(e) => (linkedIds = e.detail ? [e.detail] : [])}
+=======
+    getOptionValue={row => row._id}
+    on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     {label}
   />
 {:else}
@@ -54,6 +59,10 @@
     {label}
     options={rows}
     getOptionLabel={getPrettyName}
+<<<<<<< HEAD
     getOptionValue={(row) => row._id}
+=======
+    getOptionValue={row => row._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 {/if}

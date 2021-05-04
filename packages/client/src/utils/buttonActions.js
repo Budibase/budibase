@@ -16,27 +16,27 @@ const saveRowHandler = async (action, context) => {
   }
 }
 
-const deleteRowHandler = async (action) => {
+const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
     await deleteRow({ tableId, rowId, revId })
   }
 }
 
-const triggerAutomationHandler = async (action) => {
+const triggerAutomationHandler = async action => {
   const { fields } = action.parameters
   if (fields) {
     await triggerAutomation(action.parameters.automationId, fields)
   }
 }
 
-const navigationHandler = (action) => {
+const navigationHandler = action => {
   if (action.parameters.url) {
     routeStore.actions.navigate(action.parameters.url)
   }
 }
 
-const queryExecutionHandler = async (action) => {
+const queryExecutionHandler = async action => {
   const { datasourceId, queryId, queryParams } = action.parameters
   await executeQuery({
     datasourceId,
@@ -68,7 +68,7 @@ const refreshDatasourceHandler = async (action, context) => {
   )
 }
 
-const loginHandler = async (action) => {
+const loginHandler = async action => {
   const { email, password } = action.parameters
   await authStore.actions.logIn({ email, password })
 }
@@ -98,7 +98,7 @@ export const enrichButtonActions = (actions, context) => {
   if (get(builderStore).inBuilder) {
     return () => {}
   }
-  const handlers = actions.map((def) => handlerMap[def["##eventHandlerType"]])
+  const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
       try {

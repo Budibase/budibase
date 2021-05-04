@@ -36,7 +36,11 @@
 
 <div class="container">
   <Input
+<<<<<<< HEAD
     on:change={(e) => updateKey(["budibase", e.detail])}
+=======
+    on:change={e => updateKey(["budibase", e.detail])}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     value={keys.budibase}
     label="Budibase Cloud API Key"
   />

@@ -98,8 +98,13 @@
     on:change={changeRole}
     options={$roles}
     placeholder="Create new role"
+<<<<<<< HEAD
     getOptionValue={(role) => role._id}
     getOptionLabel={(role) => role.name}
+=======
+    getOptionValue={role => role._id}
+    getOptionLabel={role => role.name}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
   {#if selectedRole}
     <Input
@@ -111,16 +116,26 @@
       label="Inherits Role"
       bind:value={selectedRole.inherits}
       options={otherRoles}
+<<<<<<< HEAD
       getOptionValue={(role) => role._id}
       getOptionLabel={(role) => role.name}
+=======
+      getOptionValue={role => role._id}
+      getOptionLabel={role => role.name}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       placeholder="None"
     />
     <Select
       label="Base Permissions"
       bind:value={selectedRole.permissionId}
       options={basePermissions}
+<<<<<<< HEAD
       getOptionValue={(x) => x._id}
       getOptionLabel={(x) => x.name}
+=======
+      getOptionValue={x => x._id}
+      getOptionLabel={x => x.name}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       placeholder="Choose permissions"
     />
   {/if}

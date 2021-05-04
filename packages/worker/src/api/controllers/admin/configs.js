@@ -52,7 +52,7 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map((row) => row.doc)
+  ctx.body = response.rows.map(row => row.doc)
 }
 
 /**
@@ -66,7 +66,7 @@ exports.find = async function (ctx) {
   const { group } = ctx.query
   if (group) {
     const group = await db.get(group)
-    const userInGroup = group.users.some((groupUser) => groupUser === userId)
+    const userInGroup = group.users.some(groupUser => groupUser === userId)
     if (!ctx.user.admin && !userInGroup) {
       ctx.throw(400, `User is not in specified group: ${group}.`)
     }

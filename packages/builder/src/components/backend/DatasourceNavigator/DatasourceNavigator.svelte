@@ -44,7 +44,7 @@
         </div>
         <EditDatasourcePopover {datasource} />
       </NavItem>
-      {#each $queries.list.filter((query) => query.datasourceId === datasource._id) as query}
+      {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}
           icon="SQLQuery"

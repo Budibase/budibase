@@ -17,8 +17,13 @@
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
+<<<<<<< HEAD
     getOptionLabel={(x) => x._instanceName}
     getOptionValue={(x) => x._id}
+=======
+    getOptionLabel={x => x._instanceName}
+    getOptionValue={x => x._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 </div>
 

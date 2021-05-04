@@ -39,9 +39,13 @@
       {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
     {#if block.type !== "TRIGGER" || allowDeleteTrigger}
+<<<<<<< HEAD
       <div on:click|stopPropagation={deleteStep}>
         <Icon name="Close" />
       </div>
+=======
+      <div on:click|stopPropagation={deleteStep}><Icon name="Close" /></div>
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     {/if}
   </header>
   <hr />

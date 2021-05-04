@@ -121,7 +121,11 @@
           {#if value.parameters.length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
+<<<<<<< HEAD
               parameters={queries.find((query) => query._id === value._id)
+=======
+              parameters={queries.find(query => query._id === value._id)
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
                 .parameters}
               bindings={queryBindableProperties}
             />
@@ -131,7 +135,11 @@
             query={value}
             schema={fetchQueryDefinition(value)}
             datasource={$datasources.list.find(
+<<<<<<< HEAD
               (ds) => ds._id === value.datasourceId
+=======
+              ds => ds._id === value.datasourceId
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
             )}
             editable={false}
           />

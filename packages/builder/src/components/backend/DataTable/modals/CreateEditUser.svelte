@@ -94,8 +94,13 @@
     data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}
+<<<<<<< HEAD
     getOptionLabel={(role) => role.name}
     getOptionValue={(role) => role._id}
+=======
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
   <Select
     label="Status"
@@ -104,8 +109,13 @@
       { label: "Active", value: "active" },
       { label: "Inactive", value: "inactive" },
     ]}
+<<<<<<< HEAD
     getOptionLabel={(status) => status.label}
     getOptionValue={(status) => status.value}
+=======
+    getOptionLabel={status => status.label}
+    getOptionValue={status => status.value}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}
