@@ -5,11 +5,9 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
-  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let serverSide = false
-  export let panel = serverSide ? ServerBindingPanel : BindingPanel
+  export let panel = BindingPanel
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
