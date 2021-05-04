@@ -24,9 +24,9 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}
-    >Delete</MenuItem
-  >
+  <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
+    Delete
+  </MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

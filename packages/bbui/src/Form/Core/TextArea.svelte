@@ -29,7 +29,8 @@
 >
   {#if error}
     <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+      class="spectrum-Icon spectrum-Icon--sizeM
+      spectrum-Textfield-validationIcon"
       focusable="false"
       aria-hidden="true"
     >

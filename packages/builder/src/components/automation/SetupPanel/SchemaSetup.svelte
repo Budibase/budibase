@@ -54,7 +54,9 @@
 </script>
 
 <div class="root">
-  <div class="add-field"><i class="ri-add-line" on:click={addField} /></div>
+  <div class="add-field">
+    <i class="ri-add-line" on:click={addField} />
+  </div>
   <div class="spacer" />
   {#each fieldsArray as field}
     <div class="field">

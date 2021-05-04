@@ -57,9 +57,9 @@
           <Heading size="S">Configuration</Heading>
           <Button secondary on:click={saveDatasource}>Save</Button>
         </div>
-        <Body size="S"
-          >Connect your database to Budibase using the config below.</Body
-        >
+        <Body size="S">
+          Connect your database to Budibase using the config below.
+        </Body>
         <IntegrationConfigForm
           schema={integration.datasource}
           integration={datasource.config}
