@@ -36,7 +36,7 @@ function buildBundleName(pkgName, version) {
 }
 
 /* istanbul ignore next */
-module.exports.getAction = async function(actionName) {
+module.exports.getAction = async function (actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
   }
@@ -53,7 +53,7 @@ module.exports.getAction = async function(actionName) {
   return getExternalAutomationStep(pkg.stepId, pkg.version, bundleName)
 }
 
-module.exports.init = async function() {
+module.exports.init = async function () {
   try {
     MANIFEST = await automationInit()
     module.exports.DEFINITIONS =

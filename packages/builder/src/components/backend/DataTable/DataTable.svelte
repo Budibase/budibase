@@ -29,9 +29,18 @@
   $: {
     if ($views.selected?.name?.startsWith("all_")) {
       loading = true
+      const loadingTableId = $tables.selected?._id
       api.fetchDataForView($views.selected).then(rows => {
-        data = rows || []
         loading = false
+
+        // If we started a slow request then quickly change table, sometimes
+        // the old data overwrites the new data.
+        // This check ensures that we don't do that.
+        if (loadingTableId !== $tables.selected?._id) {
+          return
+        }
+
+        data = rows || []
       })
     }
   }
@@ -48,7 +57,7 @@
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
     <CreateRowButton
-      title={isUsersTable ? 'Create New User' : 'Create New Row'}
+      title={isUsersTable ? 'Create user' : 'Create row'}
       modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
     <CreateViewButton />
     <ManageAccessButton resourceId={$tables.selected?._id} />

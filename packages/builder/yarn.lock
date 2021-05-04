@@ -882,13 +882,6 @@
   resolved "https://registry.yarnpkg.com/@budibase/colorpicker/-/colorpicker-1.1.2.tgz#f7436924ee746d7be9b2009c2fa193e710c30f89"
   integrity sha512-2PlZBVkATDqDC4b4Ri8Xi8X3OxhuHOGfmZwtXbZL38lNIeofaQT3Qyc1ECzEY5N+HrdGrWhY9EnliF6QM+LIuA==
 
-"@budibase/svelte-ag-grid@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-1.0.4.tgz#41cceec4bde2c4aea8b9da8f610fe36055c7709f"
-  integrity sha512-JZm6qujxnZpqw7Twbegr6se4sHhyWzN0Cibrk5bVBH32hBgzD6dd33fxwrjHKkWFxjys9wRT+cqYgYVlSt9E3w==
-  dependencies:
-    ag-grid-community "^24.0.0"
-
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -1318,6 +1311,18 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@spectrum-css/page@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/page/-/page-3.0.1.tgz#5e1c3dd5b1a1ee591f9d636b75f03665f542d846"
+  integrity sha512-LAlKF8km5BlsGPpZ2SNtwKOQIHn1lz0X93aczGZVZceOg73O4gyeoT5cx4vi1z+KtBRY5VMDWx3XgGtUwwjqwA==
+  dependencies:
+    "@spectrum-css/vars" "^3.0.1"
+
+"@spectrum-css/vars@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-3.0.1.tgz#561fd69098f896a647242dd8d6108af603bfa31e"
+  integrity sha512-l4oRcCOqInChYXZN6OQhpe3isk6l4OE6Ys8cgdlsiKp53suNoQxyyd9p/eGRbCjZgH3xQ8nK0t4DHa7QYC0S6w==
+
 "@sveltejs/vite-plugin-svelte@^1.0.0-next.5":
   version "1.0.0-next.5"
   resolved "https://registry.yarnpkg.com/@sveltejs/vite-plugin-svelte/-/vite-plugin-svelte-1.0.0-next.5.tgz#8cf608f7a3c33dfa5b648397aae1ba90e6a4883f"
@@ -1331,11 +1336,6 @@
     slash "^3.0.0"
     source-map "^0.7.3"
     svelte-hmr "^0.13.3"
-
-"@svelteschool/svelte-forms@0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@svelteschool/svelte-forms/-/svelte-forms-0.7.0.tgz#4ecba15e9a9ab2b04fad3d892931a561118a4cea"
-  integrity sha512-TSt8ROqK6wq+Hav7EhZL1I0GtsZhg28aJuuDSviBzG/NG9pC0eprf8roWjl59DKHOVWIUTPTeY+T+lipb9gf8w==
 
 "@testing-library/dom@^7.0.3":
   version "7.30.3"
@@ -1560,11 +1560,6 @@ acorn@^8.1.0:
   version "8.1.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.1.0.tgz#52311fd7037ae119cbb134309e901aa46295b3fe"
   integrity sha512-LWCF/Wn0nfHOmJ9rzQApGnxnvgfROzGilS8936rqN/lfcYkY9MYZzdMqN+2NJ4SlTc+m5HiSa+kNfDtI64dwUA==
-
-ag-grid-community@^24.0.0:
-  version "24.1.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-24.1.0.tgz#1e3cab51211822e08d56f03a491b7c0deaa398e6"
-  integrity sha512-pWnWphuDcejZ8ahf6C734EpCx3XQ6dHEZWMWTlCdHNT0mZBLJ4YKCGACX+ttAEtSX2MGM3G13JncvuratUlYag==
 
 ajv@^6.10.0, ajv@^6.12.3, ajv@^6.12.4:
   version "6.12.6"

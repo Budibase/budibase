@@ -1,28 +1,13 @@
 <script>
-  import {
-    DropdownMenu,
-    TextButton as Button,
-    Icon,
-    Modal,
-    ModalContent,
-  } from "@budibase/bbui"
+  import { ActionButton, Modal } from "@budibase/bbui"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let modal
-  let fieldName
 </script>
 
-<div>
-  <Button text small on:click={modal.show}>
-    <Icon name="addcolumn" />
-    Create New Column
-  </Button>
-</div>
+<ActionButton icon="TableColumnAddRight" quiet size="S" on:click={modal.show}>
+  Create column
+</ActionButton>
 <Modal bind:this={modal}>
-  <ModalContent
-    showCancelButton={false}
-    showConfirmButton={false}
-    title={'Create Column'}>
-    <CreateEditColumn onClosed={modal.hide} />
-  </ModalContent>
+  <CreateEditColumn />
 </Modal>

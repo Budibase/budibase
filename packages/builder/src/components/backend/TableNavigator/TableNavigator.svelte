@@ -34,7 +34,7 @@
     {#each $tables.list as table, idx}
       <NavItem
         border={idx > 0}
-        icon={`ri-${table._id === TableNames.USERS ? 'user' : 'table'}-line`}
+        icon={table._id === TableNames.USERS ? 'UserGroup' : 'Table'}
         text={table.name}
         selected={selectedView === `all_${table._id}`}
         on:click={() => selectTable(table)}>
@@ -45,7 +45,7 @@
       {#each Object.keys(table.views || {}) as viewName, idx (idx)}
         <NavItem
           indentLevel={1}
-          icon="ri-eye-line"
+          icon="Remove"
           text={viewName}
           selected={selectedView === viewName}
           on:click={() => onClickView(table, viewName)}>

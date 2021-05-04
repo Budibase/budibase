@@ -33,22 +33,25 @@
         border={idx > 0}
         text={datasource.name}
         selected={$datasources.selected === datasource._id}
-        on:click={() => selectDatasource(datasource)}>
+        on:click={() => selectDatasource(datasource)}
+      >
         <div class="datasource-icon" slot="icon">
           <svelte:component
             this={ICONS[datasource.source]}
             height="18"
-            width="18" />
+            width="18"
+          />
         </div>
         <EditDatasourcePopover {datasource} />
       </NavItem>
-      {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+      {#each $queries.list.filter((query) => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}
-          icon="ri-eye-line"
+          icon="SQLQuery"
           text={query.name}
           selected={$queries.selected === query._id}
-          on:click={() => onClickQuery(query)}>
+          on:click={() => onClickQuery(query)}
+        >
           <EditQueryPopover {query} />
         </NavItem>
       {/each}

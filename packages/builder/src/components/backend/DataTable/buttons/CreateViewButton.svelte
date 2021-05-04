@@ -1,17 +1,13 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
-  import CreateViewPopover from "../popovers/CreateViewPopover.svelte"
+  import { Modal, ActionButton } from "@budibase/bbui"
+  import CreateViewModal from "../modals/CreateViewModal.svelte"
 
-  let anchor
-  let dropdown
+  let modal
 </script>
 
-<div bind:this={anchor}>
-  <TextButton text small on:click={dropdown.show}>
-    <Icon name="view" />
-    Create New View
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <CreateViewPopover onClosed={dropdown.hide} />
-</Popover>
+<ActionButton icon="CollectionAdd" size="S" quiet on:click={modal.show}>
+  Create view
+</ActionButton>
+<Modal bind:this={modal}>
+  <CreateViewModal />
+</Modal>

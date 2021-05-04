@@ -75,17 +75,13 @@
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
-        thin
-        secondary
         bind:value={parameters.automationId}
-        placeholder="Choose automation">
-        {#each automations as automation}
-          <option value={automation._id}>{automation.name}</option>
-        {/each}
-      </Select>
+        placeholder="Choose automation"
+        options={automations}
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x._id} />
     {:else}
       <Input
-        thin
         bind:value={parameters.newAutomationName}
         placeholder="Enter automation name" />
     {/if}

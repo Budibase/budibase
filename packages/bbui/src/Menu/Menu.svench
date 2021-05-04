@@ -1,0 +1,19 @@
+<script>
+    import Menu from './Menu.svelte'
+    import Separator from './Separator.svelte'
+    import Section from './Section.svelte'
+    import Item from './Item.svelte'
+</script>
+
+<Menu>
+    <Section heading="Section heading">
+        <Item>Some Item 1</Item>
+        <Item>Some Item 2</Item>
+        <Item>Some Item 3</Item>
+    </Section>
+    <Separator />
+    <Section heading="Section heading">
+        <Item icon="SaveFloppy">Save</Item>
+        <Item disabled icon="DataDownload">Download</Item>
+    </Section>
+</Menu>

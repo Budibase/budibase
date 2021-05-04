@@ -1,6 +1,6 @@
 const builderDB = require("../../db/builder")
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   try {
     const mainDoc = await builderDB.getBuilderMainDoc()
     ctx.body = mainDoc.apiKeys ? mainDoc.apiKeys : {}
@@ -10,7 +10,7 @@ exports.fetch = async function(ctx) {
   }
 }
 
-exports.update = async function(ctx) {
+exports.update = async function (ctx) {
   const key = ctx.params.key
   const value = ctx.request.body.value
 

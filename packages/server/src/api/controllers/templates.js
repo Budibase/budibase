@@ -5,7 +5,7 @@ const { downloadTemplate } = require("../../utilities/fileSystem")
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const { type = "app" } = ctx.query
   const response = await fetch(
     `https://${DEFAULT_TEMPLATES_BUCKET}/manifest.json`
@@ -16,7 +16,7 @@ exports.fetch = async function(ctx) {
 
 // can't currently test this, have to ignore from coverage
 /* istanbul ignore next */
-exports.downloadTemplate = async function(ctx) {
+exports.downloadTemplate = async function (ctx) {
   const { type, name } = ctx.params
 
   await downloadTemplate(type, name)

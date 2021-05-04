@@ -2,6 +2,7 @@
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
   "version": "1.58.13",
+  "license": "AGPL-3.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
   "exports": {
@@ -9,31 +10,24 @@
       "import": "./dist/bbui.es.js"
     },
     "./package.json": "./package.json",
-    "./dist/style.css": "./dist/style.css"
+    "./spectrum-icons-rollup.js": "./src/spectrum-icons-rollup.js",
+    "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
   },
   "scripts": {
-    "dev:builder": "vite build",
-    "build": "vite build"
+    "build": "rollup -c"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.0.0",
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",
+    "@rollup/plugin-node-resolve": "^11.2.1",
     "cross-env": "^7.0.2",
     "nollup": "^0.14.1",
     "postcss": "^8.2.9",
-    "rollup": "^2.34.0",
-    "rollup-plugin-copy": "^3.3.0",
-    "rollup-plugin-delete": "^1.2.0",
-    "rollup-plugin-hot": "^0.1.1",
-    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup": "^2.45.2",
     "rollup-plugin-postcss": "^4.0.0",
-    "rollup-plugin-svelte-hot": "^0.11.0",
-    "semantic-release": "^17.0.8",
-    "svelte": "^3.29.0",
-    "svench": "^0.0.10-7",
-    "vite": "^2.1.5"
+    "rollup-plugin-svelte": "^7.1.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "svelte": "^3.37.0"
   },
   "keywords": [
     "svelte"
@@ -43,11 +37,44 @@
     "dist"
   ],
   "dependencies": {
-    "markdown-it": "^12.0.4",
-    "quill": "^1.3.7",
-    "sirv-cli": "^0.4.6",
-    "svelte-flatpickr": "^2.4.0",
-    "svelte-portal": "^1.0.0",
-    "turndown": "^7.0.0"
+    "@adobe/spectrum-css-workflow-icons": "^1.2.1",
+    "@spectrum-css/actionbutton": "^1.0.1",
+    "@spectrum-css/actiongroup": "^1.0.1",
+    "@spectrum-css/avatar": "^3.0.2",
+    "@spectrum-css/button": "^3.0.1",
+    "@spectrum-css/buttongroup": "^3.0.2",
+    "@spectrum-css/checkbox": "^3.0.2",
+    "@spectrum-css/dialog": "^3.0.1",
+    "@spectrum-css/divider": "^1.0.1",
+    "@spectrum-css/dropzone": "^3.0.2",
+    "@spectrum-css/fieldgroup": "^3.0.2",
+    "@spectrum-css/fieldlabel": "^3.0.1",
+    "@spectrum-css/icon": "^3.0.1",
+    "@spectrum-css/illustratedmessage": "^3.0.2",
+    "@spectrum-css/inputgroup": "^3.0.2",
+    "@spectrum-css/label": "^2.0.9",
+    "@spectrum-css/link": "^3.1.1",
+    "@spectrum-css/menu": "^3.0.1",
+    "@spectrum-css/modal": "^3.0.1",
+    "@spectrum-css/picker": "^1.0.1",
+    "@spectrum-css/popover": "^3.0.1",
+    "@spectrum-css/progressbar": "^1.0.2",
+    "@spectrum-css/progresscircle": "^1.0.2",
+    "@spectrum-css/radio": "^3.0.2",
+    "@spectrum-css/search": "^3.0.2",
+    "@spectrum-css/sidenav": "^3.0.2",
+    "@spectrum-css/switch": "^1.0.2",
+    "@spectrum-css/table": "^3.0.1",
+    "@spectrum-css/tabs": "^3.0.1",
+    "@spectrum-css/tags": "^3.0.2",
+    "@spectrum-css/textfield": "^3.0.1",
+    "@spectrum-css/toast": "^3.0.1",
+    "@spectrum-css/treeview": "^3.0.2",
+    "@spectrum-css/typography": "^3.0.1",
+    "@spectrum-css/underlay": "^2.0.9",
+    "@spectrum-css/vars": "^3.0.1",
+    "dayjs": "^1.10.4",
+    "svelte-flatpickr": "^3.1.0",
+    "svelte-portal": "^1.0.0"
   }
 }

@@ -2,7 +2,7 @@
   import { ModalContent, Select, Input, Button } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
 
@@ -21,7 +21,7 @@
 
   // Changes the selected role
   const changeRole = event => {
-    const id = event?.target?.value
+    const id = event?.detail
     const role = $roles.find(role => role._id === id)
     if (role) {
       selectedRole = {
@@ -61,9 +61,9 @@
     // Save/create the role
     const response = await roles.save(selectedRole)
     if (response.status === 200) {
-      notifier.success("Role saved successfully.")
+      notifications.success("Role saved successfully.")
     } else {
-      notifier.danger("Error saving role.")
+      notifications.error("Error saving role.")
       return false
     }
   }
@@ -73,9 +73,9 @@
     const response = await roles.delete(selectedRole)
     if (response.status === 200) {
       changeRole()
-      notifier.success("Role deleted successfully.")
+      notifications.success("Role deleted successfully.")
     } else {
-      notifier.danger("Error deleting role.")
+      notifications.error("Error deleting role.")
     }
   }
 
@@ -94,42 +94,34 @@
     secondary
     label="Role"
     value={selectedRoleId}
-    on:change={changeRole}>
-    <option value="">Create new role</option>
-    {#each $roles as role}
-      <option value={role._id}>{role.name}</option>
-    {/each}
-  </Select>
+    on:change={changeRole}
+    options={$roles}
+    placeholder="Create new role"
+    getOptionValue={role => role._id}
+    getOptionLabel={role => role.name} />
   {#if selectedRole}
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      thin
       disabled={builtInRoles.includes(selectedRole.name)} />
     <Select
-      thin
-      secondary
       label="Inherits Role"
-      bind:value={selectedRole.inherits}>
-      <option value="">None</option>
-      {#each otherRoles as role}
-        <option value={role._id}>{role.name}</option>
-      {/each}
-    </Select>
+      bind:value={selectedRole.inherits}
+      options={otherRoles}
+      getOptionValue={role => role._id}
+      getOptionLabel={role => role.name}
+      placeholder="None" />
     <Select
-      thin
-      secondary
       label="Base Permissions"
-      bind:value={selectedRole.permissionId}>
-      <option value="">Choose permissions</option>
-      {#each basePermissions as basePerm}
-        <option value={basePerm._id}>{basePerm.name}</option>
-      {/each}
-    </Select>
+      bind:value={selectedRole.permissionId}
+      options={basePermissions}
+      getOptionValue={x => x._id}
+      getOptionLabel={x => x.name}
+      placeholder="Choose permissions" />
   {/if}
   <div slot="footer">
     {#if !isCreating}
-      <Button red on:click={deleteRole}>Delete</Button>
+      <Button warning on:click={deleteRole}>Delete</Button>
     {/if}
   </div>
 </ModalContent>

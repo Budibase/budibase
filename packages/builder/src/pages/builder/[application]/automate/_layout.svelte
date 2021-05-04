@@ -13,7 +13,7 @@
     <slot />
   </div>
   {#if $automationStore.selectedAutomation}
-    <div class="nav setup">
+    <div class="setup">
       <SetupPanel />
     </div>
   {/if}
@@ -21,22 +21,21 @@
 
 <style>
   .root {
-    height: calc(100% - 60px);
+    flex: 1 1 auto;
+    height: 0;
     display: grid;
     grid-template-columns: 260px minmax(510px, 1fr) 260px;
-    background: var(--grey-2);
   }
 
   .nav {
     overflow-y: auto;
-    background: var(--background);
-    padding: var(--spacing-l) var(--spacing-xl);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
-    border-right: 1px solid var(--grey-2);
+    border-right: var(--border-light);
+    background-color: var(--background);
+    padding-bottom: 60px;
   }
 
   .content {
@@ -48,5 +47,16 @@
     align-items: stretch;
     gap: var(--spacing-l);
     overflow: hidden;
+  }
+
+  .setup {
+    padding: var(--spectrum-global-dimension-size-200);
+    border-left: var(--border-light);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+    background-color: var(--background);
   }
 </style>

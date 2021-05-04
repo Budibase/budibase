@@ -19,30 +19,24 @@
   }
 </script>
 
-<div class="block-field">
-  <Select bind:value={value.tableId} extraThin secondary>
-    <option value="">Choose an option</option>
-    {#each $tables.list as table}
-      <option value={table._id}>{table.name}</option>
-    {/each}
-  </Select>
-</div>
+<Select
+  bind:value={value.tableId}
+  options={$tables.list}
+  getOptionLabel={table => table.name}
+  getOptionValue={table => table._id} />
 
 {#if schemaFields.length}
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn}
         {#if schemaHasOptions(schema)}
-          <Select label={field} extraThin secondary bind:value={value[field]}>
-            <option value="">Choose an option</option>
-            {#each schema.constraints.inclusion as option}
-              <option value={option}>{option}</option>
-            {/each}
-          </Select>
+          <Select
+            label={field}
+            bind:value={value[field]}
+            options={schema.constraints.inclusion} />
         {:else if schema.type === 'string' || schema.type === 'number'}
           <DrawerBindableInput
             panel={AutomationBindingPanel}
-            extraThin
             value={value[field]}
             on:change={e => (value[field] = e.detail)}
             label={field}
@@ -57,8 +51,8 @@
 <style>
   .schema-fields {
     display: grid;
-    grid-gap: var(--spacing-xl);
-    margin-top: var(--spacing-xl);
+    grid-gap: var(--spacing-s);
+    margin-top: var(--spacing-s);
   }
   .schema-fields :global(label) {
     text-transform: capitalize;

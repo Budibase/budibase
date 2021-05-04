@@ -87,25 +87,20 @@
       class="icon"
       data-cy={`${key}-binding-button`}
       on:click={bindingDrawer.show}>
-      <Icon name="lightning" />
+      <Icon size="S" name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
-      <div slot="description">
-        <Body extraSmall grey>
+      <svelte:fragment slot="description">
           Add the objects on the left to enrich your text.
-        </Body>
-      </div>
-      <heading slot="buttons">
-        <Button thin blue disabled={!valid} on:click={handleClose}>Save</Button>
-      </heading>
-      <div slot="body">
-        <BindingPanel
-          bind:valid
-          value={safeValue}
-          close={handleClose}
-          on:update={e => (temporaryBindableValue = e.detail)}
-          {bindableProperties} />
-      </div>
+      </svelte:fragment>
+      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>Save</Button>
+      <BindingPanel
+        slot="body"
+        bind:valid
+        value={safeValue}
+        close={handleClose}
+        on:update={e => (temporaryBindableValue = e.detail)}
+        {bindableProperties} />
     </Drawer>
   {/if}
 </div>
@@ -134,27 +129,34 @@
     flex: 1;
     display: inline-block;
     padding-left: 2px;
-    overflow: hidden;
+    width: 0;
   }
 
   .icon {
-    right: 2px;
-    top: 2px;
-    bottom: 2px;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
     position: absolute;
+    justify-content: center;
     align-items: center;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
-    padding-left: 7px;
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
   }
   .icon:hover {
-    color: var(--ink);
     cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

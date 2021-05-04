@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Input, Drawer, Body, Button } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -7,19 +7,17 @@
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  const dispatch = createEventDispatcher()
 
   export let serverSide = false
   export let panel = serverSide ? ServerBindingPanel : BindingPanel
   export let value = ""
   export let bindings = []
-  export let thin = true
   export let title = "Bindings"
   export let placeholder
   export let label
 
+  const dispatch = createEventDispatcher()
   let bindingDrawer
-
   $: tempValue = value
   $: readableValue = runtimeToReadableBinding(bindings, value)
 
@@ -36,31 +34,25 @@
 <div class="control">
   <Input
     {label}
-    {thin}
     value={readableValue}
-    on:change={event => onChange(event.target.value)}
+    on:change={event => onChange(event.detail)}
     {placeholder} />
   <div class="icon" on:click={bindingDrawer.show}>
-    <Icon name="lightning" />
+    <Icon size="S" name="FlashOn" />
   </div>
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
-  <div slot="description">
-    <Body extraSmall grey>
-      Add the objects on the left to enrich your text.
-    </Body>
-  </div>
-  <heading slot="buttons">
-    <Button thin blue on:click={handleClose}>Save</Button>
-  </heading>
-  <div slot="body">
-    <svelte:component
-      this={panel}
-      value={readableValue}
-      close={handleClose}
-      on:update={event => (tempValue = event.detail)}
-      bindableProperties={bindings} />
-  </div>
+  <svelte:fragment slot="description">
+    Add the objects on the left to enrich your text.
+  </svelte:fragment>
+  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <svelte:component
+    slot="body"
+    this={panel}
+    value={readableValue}
+    close={handleClose}
+    on:update={event => (tempValue = event.detail)}
+    bindableProperties={bindings} />
 </Drawer>
 
 <style>
@@ -70,24 +62,31 @@
   }
 
   .icon {
-    right: 2px;
-    bottom: 2px;
+    right: 1px;
+    bottom: 1px;
     position: absolute;
+    justify-content: center;
     align-items: center;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
-    padding-left: 7px;
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
-    height: 40px;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
 
   .icon:hover {
-    color: var(--ink);
     cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

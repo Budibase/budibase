@@ -103,6 +103,8 @@
   }
 </script>
 
-<Provider {actions} data={dataContext}>
-  <slot />
-</Provider>
+<div use:styleable={$component.styles}>
+  <Provider {actions} data={dataContext}>
+    <slot />
+  </Provider>
+</div>

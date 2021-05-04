@@ -11,7 +11,7 @@
 {#if error}
   <div class="errors">{error}</div>
 {/if}
-<Table title={''} schema={query.schema} {data} {loading} />
+<Table schema={query.schema} {data} {loading} rowCount={5} />
 
 <style>
   .errors {

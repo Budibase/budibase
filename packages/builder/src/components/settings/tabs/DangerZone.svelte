@@ -1,6 +1,6 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import { Input, TextArea, Button, Body } from "@budibase/bbui"
+  import { Input, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
 
   let value = ""
@@ -23,16 +23,13 @@
     app.
   </Body>
   <Input
-    on:change={e => (value = e.target.value)}
-    on:input={e => (value = e.target.value)}
-    thin
+    on:change={e => (value = e.detail)}
     disabled={loading}
     placeholder="" />
   <div class="buttons">
     <Button
-      primary
+      warning
       disabled={value !== 'DELETE' || loading}
-      red
       on:click={deleteApp}>
       Delete Entire App
     </Button>
