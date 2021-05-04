@@ -65,7 +65,7 @@ exports.sendEmail = async ctx => {
   if (userId) {
     user = db.get(userId)
   }
-  const config = await determineScopedConfig(db, params)
+  const { config } = await determineScopedConfig(db, params)
   if (!config) {
     ctx.throw(400, "Unable to find SMTP configuration")
   }
