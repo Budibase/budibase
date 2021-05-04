@@ -38,7 +38,7 @@ class ResourceIdGetter {
 
 module.exports.ResourceIdGetter = ResourceIdGetter
 
-module.exports.paramResource = (main) => {
+module.exports.paramResource = main => {
   return new ResourceIdGetter("params").mainResource(main).build()
 }
 
@@ -49,7 +49,7 @@ module.exports.paramSubResource = (main, sub) => {
     .build()
 }
 
-module.exports.bodyResource = (main) => {
+module.exports.bodyResource = main => {
   return new ResourceIdGetter("body").mainResource(main).build()
 }
 

@@ -32,7 +32,7 @@
     bind:value={exportFormat}
     options={FORMATS}
     placeholder={null}
-    getOptionLabel={(x) => x.name}
-    getOptionValue={(x) => x.key}
+    getOptionLabel={x => x.name}
+    getOptionValue={x => x.key}
   />
 </ModalContent>

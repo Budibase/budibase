@@ -16,7 +16,7 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  ctx.body = body.rows.map((row) => row.doc)
+  ctx.body = body.rows.map(row => row.doc)
 }
 
 exports.find = async function (ctx) {
@@ -137,7 +137,7 @@ exports.destroy = async function (ctx) {
       include_docs: true,
     })
   )
-  await db.bulkDocs(rows.rows.map((row) => ({ ...row.doc, _deleted: true })))
+  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
 
   // update linked rows
   await linkRows.updateLinks({
@@ -152,7 +152,7 @@ exports.destroy = async function (ctx) {
   // remove table search index
   const currentIndexes = await db.getIndexes()
   const existingIndex = currentIndexes.indexes.find(
-    (existing) => existing.name === `search:${ctx.params.tableId}`
+    existing => existing.name === `search:${ctx.params.tableId}`
   )
   if (existingIndex) {
     await db.deleteIndex(existingIndex)

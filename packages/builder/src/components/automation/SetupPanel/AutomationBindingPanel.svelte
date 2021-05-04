@@ -60,7 +60,7 @@
       <div class="section">
         {#each categories as [categoryName, bindings]}
           <Heading size="XS">{categoryName}</Heading>
-          {#each bindableProperties.filter((binding) =>
+          {#each bindableProperties.filter(binding =>
             binding.label.match(searchRgx)
           ) as binding}
             <div class="binding" on:click={() => addToText(binding)}>
@@ -76,7 +76,7 @@
       </div>
       <div class="section">
         <Heading size="XS">Helpers</Heading>
-        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <div class="binding" on:click={() => addToText(helper)}>
             <span class="binding__label">{helper.label}</span>
             <br />

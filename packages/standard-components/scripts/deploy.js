@@ -36,6 +36,6 @@ run()
   .then(() => {
     console.log(`Deployment complete, version ${packageJson.version}`)
   })
-  .catch((err) => {
+  .catch(err => {
     console.error(err)
   })

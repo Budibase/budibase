@@ -10,7 +10,7 @@
   $: fields =
     viewTable &&
     Object.entries(viewTable.schema)
-      .filter((entry) => entry[1].type !== FIELDS.LINK.type)
+      .filter(entry => entry[1].type !== FIELDS.LINK.type)
       .map(([key]) => key)
 
   function saveView() {

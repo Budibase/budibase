@@ -13,12 +13,12 @@ export function createAuthStore() {
   const { subscribe, set } = writable(null)
 
   checkAuth()
-    .then((user) => set({ user }))
+    .then(user => set({ user }))
     .catch(() => set({ user: null }))
 
   return {
     subscribe,
-    login: async (creds) => {
+    login: async creds => {
       const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
       if (response.status === 200) {
@@ -36,7 +36,7 @@ export function createAuthStore() {
       await response.json()
       set({ user: null })
     },
-    createUser: async (user) => {
+    createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
       if (response.status !== 200) {
         throw "Unable to create user"

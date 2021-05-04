@@ -178,7 +178,7 @@ export function makeDatasourceFormComponents(datasource) {
   const { schema } = getSchemaForDatasource(datasource, true)
   let components = []
   let fields = Object.keys(schema || {})
-  fields.forEach((field) => {
+  fields.forEach(field => {
     const fieldSchema = schema[field]
     // skip autocolumns
     if (fieldSchema.autocolumn) {

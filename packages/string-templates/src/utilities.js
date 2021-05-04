@@ -3,7 +3,7 @@ const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 module.exports.FIND_HBS_REGEX = /{{([^{].*?)}}/g
 
-module.exports.isAlphaNumeric = (char) => {
+module.exports.isAlphaNumeric = char => {
   return char.match(ALPHA_NUMERIC_REGEX)
 }
 
@@ -12,7 +12,7 @@ module.exports.swapStrings = (string, start, length, swap) => {
 }
 
 // removes null and undefined
-module.exports.removeNull = (obj) => {
+module.exports.removeNull = obj => {
   obj = _(obj).omitBy(_.isUndefined).omitBy(_.isNull).value()
   for (let [key, value] of Object.entries(obj)) {
     // only objects
@@ -23,14 +23,14 @@ module.exports.removeNull = (obj) => {
   return obj
 }
 
-module.exports.addConstants = (obj) => {
+module.exports.addConstants = obj => {
   if (obj.now == null) {
     obj.now = new Date()
   }
   return obj
 }
 
-module.exports.removeHandlebarsStatements = (string) => {
+module.exports.removeHandlebarsStatements = string => {
   let regexp = new RegExp(exports.FIND_HBS_REGEX)
   let matches = string.match(regexp)
   if (matches == null) {

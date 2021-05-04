@@ -37,14 +37,14 @@
     value = newValues
   }
 
-  const fieldNameChanged = (originalName) => (e) => {
+  const fieldNameChanged = originalName => e => {
     // reconstruct using fieldsArray, so field order is preserved
     let entries = [...fieldsArray]
     const newName = e.detail
     if (newName) {
-      entries.find((f) => f.name === originalName).name = newName
+      entries.find(f => f.name === originalName).name = newName
     } else {
-      entries = entries.filter((f) => f.name !== originalName)
+      entries = entries.filter(f => f.name !== originalName)
     }
     value = entries.reduce((newVals, current) => {
       newVals[current.name] = current.type
@@ -66,7 +66,7 @@
       />
       <Select
         value={field.type}
-        on:change={(e) => (value[field.name] = e.target.value)}
+        on:change={e => (value[field.name] = e.target.value)}
         options={typeOptions}
       />
       <i

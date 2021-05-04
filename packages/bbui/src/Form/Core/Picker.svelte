@@ -15,13 +15,13 @@
   export let options = []
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
-  export let getOptionLabel = (option) => option
-  export let getOptionValue = (option) => option
+  export let getOptionLabel = option => option
+  export let getOptionValue = option => option
   export let open = false
   export let readonly = false
 
   const dispatch = createEventDispatcher()
-  const onClick = (e) => {
+  const onClick = e => {
     dispatch("click")
     if (readonly) {
       return

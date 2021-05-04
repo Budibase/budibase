@@ -15,8 +15,8 @@
       { label: "Admin", value: "ADMIN" },
       { label: "Power User", value: "POWER_USER" },
     ]}
-    getOptionLabel={(option) => option.label}
-    getOptionValue={(option) => option.value}
+    getOptionLabel={option => option.label}
+    getOptionValue={option => option.value}
     error={$errors.roleId}
   />
 </div>

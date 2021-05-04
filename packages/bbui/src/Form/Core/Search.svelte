@@ -10,7 +10,7 @@
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = (value) => {
+  const updateValue = value => {
     dispatch("change", value)
   }
 
@@ -18,12 +18,12 @@
     focus = true
   }
 
-  const onBlur = (event) => {
+  const onBlur = event => {
     focus = false
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = (event) => {
+  const updateValueOnEnter = event => {
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }

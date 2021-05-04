@@ -25,7 +25,7 @@
   $: fields =
     viewTable &&
     Object.keys(viewTable.schema).filter(
-      (field) =>
+      field =>
         view.calculation === "count" ||
         // don't want to perform calculations based on auto ID
         (viewTable.schema[field].type === "number" &&
@@ -50,8 +50,8 @@
     <Select
       bind:value={view.calculation}
       options={CALCULATIONS}
-      getOptionLabel={(x) => x.name}
-      getOptionValue={(x) => x.key}
+      getOptionLabel={x => x.name}
+      getOptionValue={x => x.key}
     />
     {#if view.calculation}
       <Label>Of</Label>

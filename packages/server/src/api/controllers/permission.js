@@ -47,7 +47,7 @@ async function getAllDBRoles(db) {
       include_docs: true,
     })
   )
-  return body.rows.map((row) => row.doc)
+  return body.rows.map(row => row.doc)
 }
 
 async function updatePermissionOnRole(
@@ -63,7 +63,7 @@ async function updatePermissionOnRole(
   const docUpdates = []
 
   // the permission is for a built in, make sure it exists
-  if (isABuiltin && !dbRoles.some((role) => role._id === dbRoleId)) {
+  if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
     const builtin = getBuiltinRoles()[roleId]
     builtin._id = getDBRoleID(builtin._id)
     dbRoles.push(builtin)
@@ -101,7 +101,7 @@ async function updatePermissionOnRole(
   }
 
   const response = await db.bulkDocs(docUpdates)
-  return response.map((resp) => {
+  return response.map(resp => {
     resp._id = getExternalRoleID(resp.id)
     delete resp.id
     return resp
@@ -152,7 +152,7 @@ exports.getResourcePerms = async function (ctx) {
       include_docs: true,
     })
   )
-  const roles = body.rows.map((row) => row.doc)
+  const roles = body.rows.map(row => row.doc)
   let permissions = {}
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions

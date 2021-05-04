@@ -131,6 +131,6 @@ exports.performReplication = (appId, session, dbUrl) => {
     const replication = local.sync(remote)
 
     replication.on("complete", () => resolve())
-    replication.on("error", (err) => reject(err))
+    replication.on("error", err => reject(err))
   })
 }

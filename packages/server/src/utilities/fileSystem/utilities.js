@@ -53,7 +53,7 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
  * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
-exports.ObjectStore = (bucket) => {
+exports.ObjectStore = bucket => {
   if (env.SELF_HOSTED) {
     AWS.config.update({
       accessKeyId: env.MINIO_ACCESS_KEY,
@@ -199,7 +199,7 @@ exports.deleteFolder = async (bucket, folder) => {
     },
   }
 
-  response.Contents.forEach((content) => {
+  response.Contents.forEach(content => {
     deleteParams.Delete.Objects.push({ Key: content.Key })
   })
 

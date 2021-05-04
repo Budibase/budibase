@@ -27,7 +27,7 @@
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex((step) => step.id === block.id)
+    const blockIdx = allSteps.findIndex(step => step.id === block.id)
 
     // Extract all outputs from all previous steps as available bindings
     let bindings = []
@@ -67,7 +67,7 @@
           panel={AutomationBindingPanel}
           type={"email"}
           value={block.inputs[key]}
-          on:change={(e) => (block.inputs[key] = e.detail)}
+          on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
         />
       {:else if value.customType === "table"}
@@ -83,7 +83,7 @@
           panel={AutomationBindingPanel}
           type={value.customType}
           value={block.inputs[key]}
-          on:change={(e) => (block.inputs[key] = e.detail)}
+          on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
         />
       {/if}

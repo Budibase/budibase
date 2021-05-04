@@ -23,7 +23,7 @@ const ADDED_HELPERS = {
   duration: duration,
 }
 
-exports.registerAll = (handlebars) => {
+exports.registerAll = handlebars => {
   for (let [name, helper] of Object.entries(ADDED_HELPERS)) {
     handlebars.registerHelper(name, helper)
   }
@@ -51,7 +51,7 @@ exports.registerAll = (handlebars) => {
   exports.externalHelperNames = externalNames.concat(Object.keys(ADDED_HELPERS))
 }
 
-exports.unregisterAll = (handlebars) => {
+exports.unregisterAll = handlebars => {
   for (let name of Object.keys(ADDED_HELPERS)) {
     handlebars.unregisterHelper(name)
   }

@@ -34,7 +34,7 @@ class Command {
       "--help",
       getSubHelpDescription(`Get help with ${this.command} options`)
     )
-    command.action(async (options) => {
+    command.action(async options => {
       try {
         let executed = false
         for (let opt of thisCmd.opts) {

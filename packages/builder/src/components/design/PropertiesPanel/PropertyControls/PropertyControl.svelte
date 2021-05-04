@@ -29,8 +29,7 @@
     $store.selectedComponentId
   )
   $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
-  $: replaceBindings = (val) =>
-    readableToRuntimeBinding(bindableProperties, val)
+  $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
 
   const handleClose = () => {
     handleChange(temporaryBindableValue)
@@ -39,7 +38,7 @@
 
   // Handle a value change of any type
   // String values have any bindings handled
-  const handleChange = (value) => {
+  const handleChange = value => {
     let innerVal = value
     if (value && typeof value === "object") {
       if ("detail" in value) {
@@ -104,7 +103,7 @@
         bind:valid
         value={safeValue}
         close={handleClose}
-        on:update={(e) => (temporaryBindableValue = e.detail)}
+        on:update={e => (temporaryBindableValue = e.detail)}
         {bindableProperties}
       />
     </Drawer>

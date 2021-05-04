@@ -17,7 +17,7 @@ exports.afterAll = () => {
   config.end()
 }
 
-exports.runInProd = async (fn) => {
+exports.runInProd = async fn => {
   env._set("NODE_ENV", "production")
   env._set("USE_QUOTAS", 1)
   let error
@@ -37,7 +37,7 @@ exports.runStep = async function runStep(stepId, inputs) {
   let step
   if (
     Object.values(exports.actions)
-      .map((action) => action.stepId)
+      .map(action => action.stepId)
       .includes(stepId)
   ) {
     step = await actions.getAction(stepId)

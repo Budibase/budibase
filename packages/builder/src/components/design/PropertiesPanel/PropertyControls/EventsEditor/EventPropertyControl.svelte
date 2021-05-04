@@ -15,7 +15,7 @@
   const saveEventData = async () => {
     // any automations that need created from event triggers
     const automationsToCreate = value.filter(
-      (action) => action["##eventHandlerType"] === "Trigger Automation"
+      action => action["##eventHandlerType"] === "Trigger Automation"
     )
     for (let action of automationsToCreate) {
       await createAutomation(action.parameters)
@@ -27,7 +27,7 @@
   }
 
   // called by the parent modal when actions are saved
-  const createAutomation = async (parameters) => {
+  const createAutomation = async parameters => {
     if (parameters.automationId || !parameters.newAutomationName) return
     await automationStore.actions.create({ name: parameters.newAutomationName })
     const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP

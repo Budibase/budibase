@@ -32,7 +32,7 @@
     return value
   }
 
-  const onChange = (value) => {
+  const onChange = value => {
     boundValue = getValidValue(value.detail, options)
     dispatch("change", boundValue)
   }

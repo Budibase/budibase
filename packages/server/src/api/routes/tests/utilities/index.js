@@ -11,7 +11,7 @@ jest.mock("../../../../utilities/workerRequests", () => ({
   }),
 }))
 
-exports.delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+exports.delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let request, config
 
@@ -44,7 +44,7 @@ exports.getConfig = () => {
   return config
 }
 
-exports.switchToSelfHosted = async (func) => {
+exports.switchToSelfHosted = async func => {
   // self hosted stops any attempts to Dynamo
   env._set("NODE_ENV", "production")
   env._set("SELF_HOSTED", true)

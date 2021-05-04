@@ -60,7 +60,7 @@
     timeout = null
   }
 
-  const fixSchema = (schema) => {
+  const fixSchema = schema => {
     let fixedSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
@@ -110,7 +110,7 @@
     })
   }
 
-  const sortBy = (fieldSchema) => {
+  const sortBy = fieldSchema => {
     if (fieldSchema.sortable === false) {
       return
     }
@@ -122,7 +122,7 @@
     }
   }
 
-  const getDisplayName = (schema) => {
+  const getDisplayName = schema => {
     let name = schema?.displayName
     if (schema && name === undefined) {
       name = schema.name
@@ -155,10 +155,10 @@
         return nameA < nameB ? a : b
       })
       .concat(autoColumns)
-      .map((column) => column.name)
+      .map(column => column.name)
   }
 
-  const onScroll = (event) => {
+  const onScroll = event => {
     nextScrollTop = event.target.scrollTop
     if (timeout) {
       return
@@ -169,7 +169,7 @@
     }, 50)
   }
 
-  const calculateFirstVisibleRow = (scrollTop) => {
+  const calculateFirstVisibleRow = scrollTop => {
     return Math.max(Math.floor(scrollTop / (rowHeight + 1)) - rowPreload, 0)
   }
 
@@ -190,12 +190,12 @@
     dispatch("editrow", row)
   }
 
-  const toggleSelectRow = (row) => {
+  const toggleSelectRow = row => {
     if (!allowSelectRows) {
       return
     }
     if (selectedRows.includes(row)) {
-      selectedRows = selectedRows.filter((selectedRow) => selectedRow !== row)
+      selectedRows = selectedRows.filter(selectedRow => selectedRow !== row)
     } else {
       selectedRows = [...selectedRows, row]
     }
@@ -257,7 +257,7 @@
                         <svg
                           class="spectrum-Icon spectrum-Table-editIcon"
                           focusable="false"
-                          on:click={(e) => editColumn(e, field)}
+                          on:click={e => editColumn(e, field)}
                         >
                           <use xlink:href="#spectrum-icon-18-Edit" />
                         </svg>
@@ -286,7 +286,7 @@
                             data={row}
                             selected={selectedRows.includes(row)}
                             onToggleSelection={() => toggleSelectRow(row)}
-                            onEdit={(e) => editRow(e, row)}
+                            onEdit={e => editRow(e, row)}
                             {allowSelectRows}
                             {allowEditRows}
                           />

@@ -22,11 +22,11 @@ exports.fetchMetadata = async function (ctx) {
         include_docs: true,
       })
     )
-  ).rows.map((row) => row.doc)
+  ).rows.map(row => row.doc)
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
-    const info = metadata.find((meta) => meta._id.includes(user._id))
+    const info = metadata.find(meta => meta._id.includes(user._id))
     // remove these props, not for the correct DB
     users.push({
       ...user,

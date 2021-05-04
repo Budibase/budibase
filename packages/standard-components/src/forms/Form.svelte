@@ -19,7 +19,7 @@
   let fieldMap = {}
 
   // Returns the closes data context which isn't a built in context
-  const getInitialValues = (context) => {
+  const getInitialValues = context => {
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
@@ -47,7 +47,7 @@
         // state in the builder makes updates in real time.
         // We only need this because of optimisations which prevent fully
         // remounting when settings change.
-        fieldMap[field].fieldState.update((state) => {
+        fieldMap[field].fieldState.update(state => {
           state.disabled = disabled || fieldDisabled || isAutoColumn
           return state
         })
@@ -71,7 +71,7 @@
     },
     validate: () => {
       const fields = Object.keys(fieldMap)
-      fields.forEach((field) => {
+      fields.forEach(field => {
         const { fieldApi } = fieldMap[field]
         fieldApi.validate()
       })
@@ -99,14 +99,14 @@
       const newError = validate ? validate(newValue) : null
 
       // Update field state
-      fieldState.update((state) => {
+      fieldState.update(state => {
         state.value = newValue
         state.error = newError
         return state
       })
 
       // Update form state
-      formState.update((state) => {
+      formState.update(state => {
         state.values = { ...state.values, [field]: newValue }
         if (newError) {
           state.errors = { ...state.errors, [field]: newError }
@@ -150,7 +150,7 @@
         if (dataSource?.type === "query") {
           schema = {}
           const params = table.parameters || []
-          params.forEach((param) => {
+          params.forEach(param => {
             schema[param.name] = { ...param, type: "string" }
           })
         } else {

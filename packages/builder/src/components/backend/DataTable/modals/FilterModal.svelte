@@ -102,7 +102,7 @@
     return viewTable.schema[field].type === "number"
   }
 
-  const fieldChanged = (filter) => (ev) => {
+  const fieldChanged = filter => ev => {
     // reset if type changed
     if (
       filter.key &&
@@ -113,8 +113,8 @@
     }
   }
 
-  const getOptionLabel = (x) => x.name
-  const getOptionValue = (x) => x.key
+  const getOptionLabel = x => x.name
+  const getOptionValue = x => x.key
 </script>
 
 <ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">
@@ -147,7 +147,7 @@
           <Select
             bind:value={filter.value}
             options={fieldOptions(filter.key)}
-            getOptionLabel={(x) => x.toString()}
+            getOptionLabel={x => x.toString()}
           />
         {:else if filter.key && isDate(filter.key)}
           <DatePicker

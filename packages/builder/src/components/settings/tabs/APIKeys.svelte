@@ -36,7 +36,7 @@
 
 <div class="container">
   <Input
-    on:change={(e) => updateKey(["budibase", e.detail])}
+    on:change={e => updateKey(["budibase", e.detail])}
     value={keys.budibase}
     label="Budibase Cloud API Key"
   />

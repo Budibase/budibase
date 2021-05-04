@@ -24,7 +24,7 @@
     bindingDrawer.hide()
   }
 
-  const onChange = (value) => {
+  const onChange = value => {
     dispatch("change", readableToRuntimeBinding(bindings, value))
   }
 </script>
@@ -33,7 +33,7 @@
   <Input
     {label}
     value={readableValue}
-    on:change={(event) => onChange(event.detail)}
+    on:change={event => onChange(event.detail)}
     {placeholder}
   />
   <div class="icon" on:click={bindingDrawer.show}>
@@ -50,7 +50,7 @@
     slot="body"
     value={readableValue}
     close={handleClose}
-    on:update={(event) => (tempValue = event.detail)}
+    on:update={event => (tempValue = event.detail)}
     bindableProperties={bindings}
   />
 </Drawer>

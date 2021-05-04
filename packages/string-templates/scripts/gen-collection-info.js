@@ -93,8 +93,8 @@ function getCommentInfo(file, func) {
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
   docs.description = docs.description.replace(/is is/g, "is")
   const examples = docs.tags
-    .filter((el) => el.title === "example")
-    .map((el) => el.description)
+    .filter(el => el.title === "example")
+    .map(el => el.description)
   const blocks = docs.description.split("```")
   if (examples.length > 0) {
     docs.example = examples.join(" ")
@@ -130,9 +130,9 @@ function run() {
       const fnc = entry[1].toString()
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
       let args = jsDocInfo.tags
-        .filter((tag) => tag.title === "param")
+        .filter(tag => tag.title === "param")
         .map(
-          (tag) =>
+          tag =>
             tag.description &&
             tag.description.replace(/`/g, "").split(" ")[0].trim()
         )

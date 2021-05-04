@@ -7,7 +7,7 @@ export const createNotificationStore = () => {
   const _notifications = writable([], () => {
     return () => {
       // clear all the timers
-      timeoutIds.forEach((timeoutId) => {
+      timeoutIds.forEach(timeoutId => {
         clearTimeout(timeoutId)
       })
       _notifications.set([])
@@ -25,11 +25,11 @@ export const createNotificationStore = () => {
       return
     }
     let _id = id()
-    _notifications.update((state) => {
+    _notifications.update(state => {
       return [...state, { id: _id, type, message, icon }]
     })
     const timeoutId = setTimeout(() => {
-      _notifications.update((state) => {
+      _notifications.update(state => {
         return state.filter(({ id }) => id !== _id)
       })
     }, NOTIFICATION_TIMEOUT)
@@ -41,10 +41,10 @@ export const createNotificationStore = () => {
   return {
     subscribe,
     send,
-    info: (msg) => send(msg, "info", "Info"),
-    error: (msg) => send(msg, "error", "Alert"),
-    warning: (msg) => send(msg, "warning", "Alert"),
-    success: (msg) => send(msg, "success", "CheckmarkCircle"),
+    info: msg => send(msg, "info", "Info"),
+    error: msg => send(msg, "error", "Alert"),
+    warning: msg => send(msg, "warning", "Alert"),
+    success: msg => send(msg, "success", "CheckmarkCircle"),
     blockNotifications,
   }
 }

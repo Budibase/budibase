@@ -8,7 +8,7 @@ const BUCKET_NAME = ObjectStoreBuckets.APPS
 
 // can't really test this due to the downloading nature of it, wouldn't be a great test case
 /* istanbul ignore next */
-exports.downloadLibraries = async (appId) => {
+exports.downloadLibraries = async appId => {
   const LIBRARIES = ["standard-components"]
 
   const paths = {}
@@ -26,7 +26,7 @@ exports.downloadLibraries = async (appId) => {
   return paths
 }
 
-exports.newAppPublicPath = async (appId) => {
+exports.newAppPublicPath = async appId => {
   const path = join(appId, "public")
   const sourcepath = require.resolve("@budibase/client")
   const destPath = join(path, "budibase-client.js")

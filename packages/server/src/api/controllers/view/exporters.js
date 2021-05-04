@@ -1,9 +1,9 @@
 exports.csv = function (headers, rows) {
-  let csv = headers.map((key) => `"${key}"`).join(",")
+  let csv = headers.map(key => `"${key}"`).join(",")
 
   for (let row of rows) {
     csv = `${csv}\n${headers
-      .map((header) => `"${row[header]}"`.trim())
+      .map(header => `"${row[header]}"`.trim())
       .join(",")}`
   }
   return csv

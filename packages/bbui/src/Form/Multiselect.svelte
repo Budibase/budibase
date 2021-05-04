@@ -11,11 +11,11 @@
   export let error = null
   export let placeholder = null
   export let options = []
-  export let getOptionLabel = (option) => option
-  export let getOptionValue = (option) => option
+  export let getOptionLabel = option => option
+  export let getOptionValue = option => option
 
   const dispatch = createEventDispatcher()
-  const onChange = (e) => {
+  const onChange = e => {
     value = e.detail
     dispatch("change", e.detail)
   }

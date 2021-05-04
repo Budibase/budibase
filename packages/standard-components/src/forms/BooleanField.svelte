@@ -26,7 +26,7 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}
-      on:change={(e) => fieldApi.setValue(e.detail)}
+      on:change={e => fieldApi.setValue(e.detail)}
       {text}
     />
   {/if}
