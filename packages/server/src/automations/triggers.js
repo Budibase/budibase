@@ -4,8 +4,10 @@ const Queue = require("bull")
 const { setQueues, BullAdapter } = require("bull-board")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
+const { utils } = require("@budibase/auth").redis
 
-let automationQueue = new Queue("automationQueue")
+const { opts } = utils.getRedisOptions()
+let automationQueue = new Queue("automationQueue", { redis: opts })
 
 // Set up queues for bull board admin
 setQueues([new BullAdapter(automationQueue)])

@@ -28,6 +28,10 @@ module.exports = {
     setDB(pouch)
   },
   db: require("./db/utils"),
+  redis: {
+    client: require("./redis"),
+    utils: require("./redis/utils"),
+  },
   utils: {
     ...require("./utils"),
     ...require("./hashing"),
