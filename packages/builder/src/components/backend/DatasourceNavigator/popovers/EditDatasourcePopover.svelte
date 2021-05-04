@@ -1,59 +1,38 @@
 <script>
   import { goto } from "@roxi/routify"
   import { datasources } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Popover } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let datasource
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
-
-  function hideEditor() {
-    dropdown?.hide()
-  }
-
-  function showModal() {
-    hideEditor()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
-    console.log(wasSelectedSource)
-    console.log(datasource)
     await datasources.delete(datasource)
-    notifier.success("Datasource deleted")
+    notifications.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
       $goto("./datasource")
     }
-    hideEditor()
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal}
-        data-cy="delete-datasource" />
-    </DropdownContainer>
-  </DropdownMenu>
-</div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Datasource"
   onOk={deleteDatasource}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete the datasource
   <i>{datasource.name}?</i>
   This action cannot be undone.
@@ -65,9 +44,5 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 </style>

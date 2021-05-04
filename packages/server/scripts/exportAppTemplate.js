@@ -25,7 +25,7 @@ yargs
         type: "string",
       },
     },
-    async args => {
+    async (args) => {
       if (!env.isDev()) {
         throw "Only works in dev"
       }

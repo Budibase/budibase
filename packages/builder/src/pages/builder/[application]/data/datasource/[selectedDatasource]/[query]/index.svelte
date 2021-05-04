@@ -9,7 +9,7 @@
       const json = await response.json()
       config = json.query
     } catch (err) {
-      notifier.danger("Error fetching datasource configuration options.")
+      notifications.error("Error fetching datasource configuration options.")
       console.error(err)
     }
   }
@@ -33,14 +33,6 @@
 </section>
 
 <style>
-  section {
-    overflow: scroll;
-  }
-  ::-webkit-scrollbar {
-    width: 0px;
-    background: transparent; /* make scrollbar transparent */
-  }
-
   .inner {
     width: 640px;
     margin: 0 auto;

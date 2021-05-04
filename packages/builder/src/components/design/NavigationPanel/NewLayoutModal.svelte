@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import { Input, ModalContent } from "@budibase/bbui"
 
@@ -9,9 +9,9 @@
   async function save() {
     try {
       await store.actions.layouts.save({ name })
-      notifier.success(`Layout ${name} created successfully`)
+      notifications.success(`Layout ${name} created successfully`)
     } catch (err) {
-      notifier.danger(`Error creating layout ${name}.`)
+      notifications.error(`Error creating layout ${name}.`)
     }
   }
 </script>

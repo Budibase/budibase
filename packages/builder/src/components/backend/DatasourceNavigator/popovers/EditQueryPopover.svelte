@@ -1,50 +1,31 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { queries } from "stores/backend"
 
   export let query
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
-
-  function hideEditor() {
-    dropdown?.hide()
-  }
-
-  function showModal() {
-    hideEditor()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteQuery() {
     await queries.delete(query)
-    notifier.success("Query deleted")
-    hideEditor()
+    notifications.success("Query deleted")
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal}
-        data-cy="delete-datasource" />
-    </DropdownContainer>
-  </DropdownMenu>
-</div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Query"
   onOk={deleteQuery}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete this query? This action cannot be undone.
 </ConfirmDialog>
 
@@ -54,9 +35,5 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 </style>

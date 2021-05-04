@@ -1,4 +1,6 @@
 <script>
+  import { Icon } from "@budibase/bbui"
+
   export let icon
   export let withArrow = false
   export let withActions = true
@@ -22,17 +24,18 @@
   on:drop
   on:click
   ondragover="return false"
-  ondragenter="return false">
+  ondragenter="return false"
+>
   <div class="content">
     {#if withArrow}
       <div class:opened class="icon arrow">
-        <i class="ri-arrow-right-s-line" />
+        <Icon size="S" name="ChevronRight" />
       </div>
     {/if}
 
     <slot name="icon" />
     {#if icon}
-      <div class="icon"><i class={icon} /></div>
+      <div class="icon"><Icon size="S" name={icon} /></div>
     {/if}
     <div class="text">{text}</div>
     {#if withActions}
@@ -45,26 +48,21 @@
 
 <style>
   .nav-item {
+    border-radius: var(--border-radius-s);
     cursor: pointer;
     color: var(--grey-7);
-  }
-  .nav-item.border {
-    border-top: 1px solid var(--grey-1);
+    transition: background-color
+      var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
   }
   .nav-item.selected {
     background-color: var(--grey-2);
     color: var(--ink);
   }
   .nav-item:hover {
-    background-color: var(--grey-1);
+    background-color: var(--grey-3);
   }
   .nav-item:hover .actions {
-    display: flex;
     visibility: visible;
-  }
-  .nav-item:hover,
-  .nav-item.selected {
-    border-radius: var(--border-radius-s);
   }
 
   .content {
@@ -99,7 +97,7 @@
   .text {
     flex: 1 1 auto;
     font-weight: 500;
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -2,13 +2,13 @@ const csv = require("csvtojson")
 
 const VALIDATORS = {
   string: () => true,
-  number: attribute => !isNaN(Number(attribute)),
-  datetime: attribute => !isNaN(new Date(attribute).getTime()),
+  number: (attribute) => !isNaN(Number(attribute)),
+  datetime: (attribute) => !isNaN(new Date(attribute).getTime()),
 }
 
 const PARSERS = {
-  number: attribute => Number(attribute),
-  datetime: attribute => new Date(attribute).toISOString(),
+  number: (attribute) => Number(attribute),
+  datetime: (attribute) => new Date(attribute).toISOString(),
 }
 
 function parse(csvString, parsers) {
@@ -17,7 +17,7 @@ function parse(csvString, parsers) {
   const schema = {}
 
   return new Promise((resolve, reject) => {
-    result.on("header", headers => {
+    result.on("header", (headers) => {
       for (let header of headers) {
         schema[header] = {
           type: parsers[header] ? parsers[header].type : "string",
@@ -25,7 +25,7 @@ function parse(csvString, parsers) {
         }
       }
     })
-    result.subscribe(row => {
+    result.subscribe((row) => {
       // For each CSV row parse all the columns that need parsed
       for (let key in parsers) {
         if (!schema[key] || schema[key].success) {
@@ -41,7 +41,7 @@ function parse(csvString, parsers) {
         }
       }
     })
-    result.on("done", error => {
+    result.on("done", (error) => {
       if (error) {
         console.error(error)
         reject(error)

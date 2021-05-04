@@ -24,7 +24,10 @@ const addBuilderPreviewStyles = (node, styleString, componentId) => {
   if (componentId === get(builderStore).selectedComponentId) {
     const style = window.getComputedStyle(node)
     const property = style?.display === "table-row" ? "outline" : "border"
-    return styleString + `;${property}: 2px solid #4285f4 !important;`
+    return (
+      styleString +
+      `;${property}: 2px solid #4285f4 !important; border-radius: 4px !important;`
+    )
   } else {
     return styleString
   }
@@ -50,7 +53,7 @@ export const styleable = (node, styles = {}) => {
     }
 
     // Applies a style string to a DOM node
-    const applyStyles = styleString => {
+    const applyStyles = (styleString) => {
       node.style = addBuilderPreviewStyles(node, styleString, componentId)
       node.dataset.componentId = componentId
     }
@@ -67,7 +70,7 @@ export const styleable = (node, styles = {}) => {
 
     // Handler to select a component in the builder when clicking it in the
     // builder preview
-    selectComponent = event => {
+    selectComponent = (event) => {
       builderStore.actions.selectComponent(componentId)
       event.preventDefault()
       event.stopPropagation()
@@ -103,7 +106,7 @@ export const styleable = (node, styles = {}) => {
 
   return {
     // Clean up old listeners and apply new ones on update
-    update: newStyles => {
+    update: (newStyles) => {
       removeListeners()
       setupStyles(newStyles)
     },

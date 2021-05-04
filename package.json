@@ -10,8 +10,8 @@
     "eslint-plugin-svelte3": "^2.7.3",
     "kill-port": "^1.6.1",
     "lerna": "3.14.1",
-    "prettier": "^1.19.1",
-    "prettier-plugin-svelte": "^1.4.0",
+    "prettier": "^2.2.1",
+    "prettier-plugin-svelte": "^2.2.0",
     "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",
     "svelte": "^3.30.0"
@@ -38,5 +38,12 @@
     "test:e2e:ci": "lerna run cy:ci",
     "build:docker": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
     "build:docker:staging": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh staging && cd -"
+  },
+  "dependencies": {
+    "@spectrum-css/actionbutton": "^1.0.1",
+    "@spectrum-css/actiongroup": "^1.0.1",
+    "@spectrum-css/link": "^3.1.1",
+    "@spectrum-css/menu": "^3.0.1",
+    "@spectrum-css/toast": "^3.0.1"
   }
 }

@@ -9,8 +9,8 @@ import {
   makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
-export default function(tables) {
-  return tables.map(table => {
+export default function (tables) {
+  return tables.map((table) => {
     return {
       name: `${table.name} - New`,
       create: () => createScreen(table),
@@ -19,14 +19,14 @@ export default function(tables) {
   })
 }
 
-export const newRowUrl = table => sanitizeUrl(`/${table.name}/new/row`)
+export const newRowUrl = (table) => sanitizeUrl(`/${table.name}/new/row`)
 export const NEW_ROW_TEMPLATE = "NEW_ROW_TEMPLATE"
 
 function generateTitleContainer(table, formId) {
   return makeTitleContainer("New Row").addChild(makeSaveButton(table, formId))
 }
 
-const createScreen = table => {
+const createScreen = (table) => {
   const screen = new Screen()
     .component("@budibase/standard-components/container")
     .instanceName(`${table.name} - New`)
@@ -52,7 +52,7 @@ const createScreen = table => {
 
   // Add all form fields from this schema to the field group
   const datasource = { type: "table", tableId: table._id }
-  makeDatasourceFormComponents(datasource).forEach(component => {
+  makeDatasourceFormComponents(datasource).forEach((component) => {
     fieldGroup.addChild(component)
   })
 

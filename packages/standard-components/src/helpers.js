@@ -4,7 +4,7 @@
  * @param string
  * @returns {string}
  */
-export const capitalise = string => {
+export const capitalise = (string) => {
   return string.substring(0, 1).toUpperCase() + string.substring(1)
 }
 
@@ -26,7 +26,9 @@ export const cssVars = (node, props) => {
         delete props[key]
       })
 
-      Object.keys(props).forEach(name => node.style.removeProperty(`--${name}`))
+      Object.keys(props).forEach((name) =>
+        node.style.removeProperty(`--${name}`)
+      )
       props = new_props
     },
   }

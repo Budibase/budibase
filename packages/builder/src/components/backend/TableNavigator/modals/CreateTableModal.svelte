@@ -2,8 +2,8 @@
   import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import { tables } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
-  import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
+  import { Input, Label, ModalContent, Toggle, Divider } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -60,7 +60,7 @@
 
     // Create table
     const table = await tables.save(newTable)
-    notifier.success(`Table ${name} created successfully.`)
+    notifications.success(`Table ${name} created successfully.`)
     analytics.captureEvent("Table Created", { name })
 
     // Create auto screens
@@ -105,27 +105,20 @@
     <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle
-          text="Created by"
-          bind:checked={autoColumns.createdBy.enabled} />
-        <Toggle
-          text="Created at"
-          bind:checked={autoColumns.createdAt.enabled} />
-        <Toggle text="Auto ID" bind:checked={autoColumns.autoID.enabled} />
+        <Toggle text="Created by" bind:value={autoColumns.createdBy.enabled} />
+        <Toggle text="Created at" bind:value={autoColumns.createdAt.enabled} />
+        <Toggle text="Auto ID" bind:value={autoColumns.autoID.enabled} />
       </div>
       <div class="toggle-2">
-        <Toggle
-          text="Updated by"
-          bind:checked={autoColumns.updatedBy.enabled} />
-        <Toggle
-          text="Updated at"
-          bind:checked={autoColumns.updatedAt.enabled} />
+        <Toggle text="Updated by" bind:value={autoColumns.updatedBy.enabled} />
+        <Toggle text="Updated at" bind:value={autoColumns.updatedAt.enabled} />
       </div>
     </div>
+    <Divider />
   </div>
   <Toggle
-    text="Generate screens in the design section"
-    bind:checked={createAutoscreens} />
+    text="Generate screens in Design section"
+    bind:value={createAutoscreens} />
   <div>
     <Label grey extraSmall>Create Table from CSV (Optional)</Label>
     <TableDataImport bind:dataImport />
@@ -134,8 +127,7 @@
 
 <style>
   .autocolumns {
-    padding-bottom: 10px;
-    border-bottom: 3px solid var(--grey-1);
+    margin-bottom: -10px;
   }
 
   .toggles {

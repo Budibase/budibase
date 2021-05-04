@@ -2,7 +2,7 @@
   "container": {
     "name": "Container",
     "description": "This component contains things within itself",
-    "icon": "ri-layout-column-line",
+    "icon": "Sandbox",
     "hasChildren": true,
     "styleable": true,
     "transitionable": true,
@@ -10,14 +10,14 @@
   },
   "screenslot": {
     "name": "Screenslot",
-    "icon": "ri-artboard-2-line",
+    "icon": "WebPage",
     "description": "Contains your app screens",
     "styleable": true
   },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
-    "icon": "ri-share-box-line",
+    "icon": "Button",
     "styleable": true,
     "settings": [
       {
@@ -40,13 +40,13 @@
   "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
-    "icon": "ri-list-check-2",
+    "icon": "ViewList",
     "styleable": true,
     "hasChildren": true,
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -68,7 +68,7 @@
   "search": {
     "name": "Search",
     "description": "A searchable list of items.",
-    "icon": "ri-search-line",
+    "icon": "Search",
     "styleable": true,
     "hasChildren": true,
     "settings": [
@@ -102,7 +102,7 @@
   },
   "stackedlist": {
     "name": "Stacked List",
-    "icon": "ri-archive-drawer-line",
+    "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
     "styleable": true,
     "settings": [
@@ -132,7 +132,7 @@
   "card": {
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
-    "icon": "ri-layout-column-line",
+    "icon": "ViewColumn",
     "styleable": true,
     "settings": [
       {
@@ -192,7 +192,7 @@
   "text": {
     "name": "Paragraph",
     "description": "A component for displaying paragraph text.",
-    "icon": "ri-paragraph",
+    "icon": "TextParagraph",
     "styleable": true,
     "settings": [
       {
@@ -204,7 +204,7 @@
   },
   "heading": {
     "name": "Headline",
-    "icon": "ri-heading",
+    "icon": "TextBold",
     "description": "A component for displaying heading text",
     "styleable": true,
     "settings": [
@@ -225,7 +225,7 @@
   "image": {
     "name": "Image",
     "description": "A basic component for displaying images",
-    "icon": "ri-image-line",
+    "icon": "Image",
     "styleable": true,
     "settings": [
       {
@@ -238,7 +238,7 @@
   "backgroundimage": {
     "name": "Background Image",
     "description": "A background image",
-    "icon": "ri-image-line",
+    "icon": "Images",
     "styleable": true,
     "settings": [
       {
@@ -295,7 +295,7 @@
   "icon": {
     "name": "Icon",
     "description": "A basic component for displaying icons",
-    "icon": "ri-sun-fill",
+    "icon": "Bell",
     "styleable": true,
     "settings": [
       {
@@ -342,7 +342,7 @@
   "login": {
     "name": "Login Form",
     "description": "A component that automatically generates a login screen for your app.",
-    "icon": "ri-login-box-line",
+    "icon": "Login",
     "styleable": true,
     "settings": [
       {
@@ -365,7 +365,7 @@
   "navigation": {
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
-    "icon": "ri-navigation-line",
+    "icon": "BreadcrumbNavigation",
     "styleable": true,
     "hasChildren": true,
     "settings": [
@@ -379,7 +379,7 @@
   "link": {
     "name": "Link",
     "description": "A basic link component for internal and external links",
-    "icon": "ri-link",
+    "icon": "Link",
     "styleable": true,
     "settings": [
       {
@@ -408,7 +408,7 @@
   "cardhorizontal": {
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
-    "icon": "ri-layout-row-line",
+    "icon": "ViewRow",
     "styleable": true,
     "settings": [
       {
@@ -480,7 +480,7 @@
   "cardstat": {
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
-    "icon": "ri-dual-sim-2-line",
+    "icon": "Card",
     "styleable": true,
     "settings": [
       {
@@ -505,7 +505,7 @@
   },
   "embed": {
     "name": "Embed",
-    "icon": "ri-code-line",
+    "icon": "Code",
     "description": "Embed content from 3rd party sources",
     "styleable": true,
     "settings": [
@@ -519,7 +519,7 @@
   "bar": {
     "name": "Bar Chart",
     "description": "Bar chart",
-    "icon": "ri-bar-chart-line",
+    "icon": "GraphBarVertical",
     "styleable": true,
     "settings": [
       {
@@ -529,7 +529,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -619,7 +619,7 @@
   "line": {
     "name": "Line Chart",
     "description": "Line chart",
-    "icon": "ri-line-chart-line",
+    "icon": "GraphTrend",
     "styleable": true,
     "settings": [
       {
@@ -629,7 +629,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -720,7 +720,7 @@
   "area": {
     "name": "Area Chart",
     "description": "Line chart",
-    "icon": "ri-line-chart-fill",
+    "icon": "GraphAreaStacked",
     "styleable": true,
     "settings": [
       {
@@ -730,7 +730,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -833,7 +833,7 @@
   "pie": {
     "name": "Pie Chart",
     "description": "Pie chart",
-    "icon": "ri-pie-chart-line",
+    "icon": "GraphPie",
     "styleable": true,
     "settings": [
       {
@@ -843,7 +843,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -910,7 +910,7 @@
   "donut": {
     "name": "Donut Chart",
     "description": "Donut chart",
-    "icon": "ri-donut-chart-line",
+    "icon": "GraphDonut",
     "styleable": true,
     "settings": [
       {
@@ -920,7 +920,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -987,7 +987,7 @@
   "candlestick": {
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
-    "icon": "ri-stock-line",
+    "icon": "GraphBarVerticalStacked",
     "styleable": true,
     "settings": [
       {
@@ -997,7 +997,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Data",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {
@@ -1068,7 +1068,7 @@
   },
   "form": {
     "name": "Form",
-    "icon": "ri-file-text-line",
+    "icon": "Form",
     "styleable": true,
     "hasChildren": true,
     "actions": [
@@ -1133,7 +1133,7 @@
   },
   "fieldgroup": {
     "name": "Field Group",
-    "icon": "ri-layout-row-line",
+    "icon": "Group",
     "styleable": true,
     "hasChildren": true,
     "settings": [
@@ -1161,7 +1161,7 @@
   },
   "stringfield": {
     "name": "Text Field",
-    "icon": "ri-t-box-line",
+    "icon": "Text",
     "styleable": true,
     "settings": [
       {
@@ -1189,7 +1189,7 @@
   },
   "numberfield": {
     "name": "Number Field",
-    "icon": "ri-edit-box-line",
+    "icon": "123",
     "styleable": true,
     "settings": [
       {
@@ -1217,7 +1217,7 @@
   },
   "passwordfield": {
     "name": "Password Field",
-    "icon": "ri-lock-password-line",
+    "icon": "LockClosed",
     "styleable": true,
     "settings": [
       {
@@ -1245,7 +1245,7 @@
   },
   "optionsfield": {
     "name": "Options Picker",
-    "icon": "ri-file-list-line",
+    "icon": "ViewList",
     "styleable": true,
     "settings": [
       {
@@ -1274,7 +1274,7 @@
   },
   "booleanfield": {
     "name": "Checkbox",
-    "icon": "ri-checkbox-line",
+    "icon": "Checkmark",
     "styleable": true,
     "settings": [
       {
@@ -1302,7 +1302,7 @@
   },
   "longformfield": {
     "name": "Rich Text",
-    "icon": "ri-file-edit-line",
+    "icon": "TextParagraph",
     "styleable": true,
     "settings": [
       {
@@ -1331,7 +1331,7 @@
   },
   "datetimefield": {
     "name": "Date Picker",
-    "icon": "ri-calendar-line",
+    "icon": "DateInput",
     "styleable": true,
     "settings": [
       {
@@ -1365,7 +1365,7 @@
   },
   "attachmentfield": {
     "name": "Attachment",
-    "icon": "ri-image-edit-line",
+    "icon": "Attach",
     "styleable": true,
     "settings": [
       {
@@ -1388,7 +1388,7 @@
   },
   "relationshipfield": {
     "name": "Relationship Picker",
-    "icon": "ri-links-line",
+    "icon": "TaskList",
     "styleable": true,
     "settings": [
       {
@@ -1416,7 +1416,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "icon": "ri-database-2-line",
+    "icon": "Data",
     "styleable": false,
     "hasChildren": true,
     "settings": [
@@ -1476,13 +1476,13 @@
   },
   "table": {
     "name": "Table",
-    "icon": "ri-table-line",
+    "icon": "Table",
     "styleable": true,
     "hasChildren": true,
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Data Provider",
+        "label": "Provider",
         "key": "dataProvider"
       },
       {

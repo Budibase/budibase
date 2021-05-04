@@ -1,15 +1,15 @@
 <script>
-  import { createEventDispatcher, setContext } from "svelte"
+  import "@spectrum-css/modal/dist/index-vars.css"
+  import "@spectrum-css/underlay/dist/index-vars.css"
+  import { createEventDispatcher, setContext, tick } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
+
+  export let fixed = false
+
   const dispatch = createEventDispatcher()
-
-  export let padding = true
-  export let width = undefined
-  export let border = true
-
-  let visible = false
+  let visible = !!fixed
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -20,7 +20,7 @@
   }
 
   export function hide() {
-    if (!visible) {
+    if (!visible || fixed) {
       return
     }
     visible = false
@@ -32,27 +32,31 @@
     }
   }
 
+  async function focusFirstInput(node) {
+    const inputs = node.querySelectorAll("input")
+    if (inputs?.length) {
+      await tick()
+      inputs[0].focus()
+    }
+  }
+
   setContext(Context.Modal, { show, hide })
 </script>
 
 <svelte:window on:keydown={handleKey} />
 
 {#if visible}
-  <Portal target="body">
+  <Portal target=".modal-container">
     <div
-      class="overlay"
-      on:click|self={hide}
-      transition:fade={{ duration: 200 }}>
-      <div
-        class="scroll-wrapper"
-        on:click|self={hide}
-        transition:fly={{ y: 30, duration: 200 }}>
-        <div class="content-wrapper" on:click|self={hide}>
+      class="spectrum-Underlay is-open"
+      transition:fade={{ duration: 200 }}
+      on:mousedown|self={hide}>
+      <div class="modal-wrapper" on:mousedown|self={hide}>
+        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
           <div
-            class="modal"
-            class:padding
-            class:border
-            style={width ? `flex: 0 0 ${width}` : ''}>
+            use:focusFirstInput
+            class="spectrum-Modal is-open"
+            transition:fly={{ y: 30, duration: 200 }}>
             <slot />
           </div>
         </div>
@@ -62,55 +66,42 @@
 {/if}
 
 <style>
-  .overlay {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+  .spectrum-Underlay {
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.25);
     z-index: 999;
+    overflow: auto;
+    overflow-x: hidden;
   }
 
-  .scroll-wrapper {
+  .modal-wrapper {
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
+    -moz-box-pack: center;
     justify-content: center;
     align-items: flex-start;
     max-height: 100%;
   }
-
-  .content-wrapper {
+  .modal-inner-wrapper {
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
+    -moz-box-pack: center;
     justify-content: center;
     align-items: flex-start;
     width: 0;
   }
 
-  .modal {
-    background-color: var(--background);
-    display: grid;
-    align-items: stretch;
-    box-shadow: 0 0 4rem 1.5rem rgba(0, 0, 0, 0.15);
-    position: relative;
-    flex: 0 0 400px;
-    margin: 2rem 0;
-    border-radius: var(--border-radius-m);
-    gap: var(--spacing-xl);
-  }
-  .modal.padding {
-    padding: var(--spacing-xl);
-  }
-  .modal.border {
-    border: var(--border-dark);
+  .spectrum-Modal {
+    overflow: visible;
+    max-height: none;
+    margin: 40px 0;
+    transform: none;
+    --spectrum-dialog-confirm-border-radius: var(
+      --spectrum-global-dimension-size-100
+    );
   }
 </style>

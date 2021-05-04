@@ -1,9 +1,8 @@
 <script>
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications, Icon, Button, Modal, Heading } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
-  import { Button, Modal } from "@budibase/bbui"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
   let webhookModal
@@ -19,9 +18,9 @@
     automation.live = live
     automationStore.actions.save({ instanceId, automation })
     if (live) {
-      notifier.info(`Automation ${automation.name} enabled.`)
+      notifications.info(`Automation ${automation.name} enabled.`)
     } else {
-      notifier.danger(`Automation ${automation.name} disabled.`)
+      notifications.error(`Automation ${automation.name} disabled.`)
     }
   }
 
@@ -30,9 +29,11 @@
       automation: $automationStore.selectedAutomation.automation,
     })
     if (result.status === 200) {
-      notifier.success(`Automation ${automation.name} triggered successfully.`)
+      notifications.success(
+        `Automation ${automation.name} triggered successfully.`
+      )
     } else {
-      notifier.danger(`Failed to trigger automation ${automation.name}.`)
+      notifications.error(`Failed to trigger automation ${automation.name}.`)
     }
   }
 
@@ -41,37 +42,43 @@
       instanceId,
       automation,
     })
-    notifier.success(`Automation ${automation.name} saved.`)
+    notifications.success(`Automation ${automation.name} saved.`)
   }
 </script>
 
 <div class="title">
-  <h1>Setup</h1>
-  <i
-    class:highlighted={automationLive}
-    class:hoverable={automationLive}
+  <Heading size="S">Setup</Heading>
+  <Icon
+    l
+    disabled={!automationLive}
+    hoverable={automationLive}
+    name="PauseCircle"
     on:click={() => setAutomationLive(false)}
-    class="ri-stop-circle-fill" />
-  <i
-    class:highlighted={!automationLive}
-    class:hoverable={!automationLive}
+  />
+  <Icon
+    l
+    name="PlayCircle"
+    disabled={automationLive}
+    hoverable={!automationLive}
     data-cy="activate-automation"
     on:click={() => setAutomationLive(true)}
-    class="ri-play-circle-fill" />
+  />
 </div>
 {#if $automationStore.selectedBlock}
   <AutomationBlockSetup
     bind:block={$automationStore.selectedBlock}
-    {webhookModal} />
+    {webhookModal}
+  />
 {:else if $automationStore.selectedAutomation}
   <div class="block-label">{automation.name}</div>
-  <Button secondary wide on:click={testAutomation}>Test Automation</Button>
+  <Button secondary on:click={testAutomation}>Test Automation</Button>
 {/if}
 <Button
   secondary
   wide
   data-cy="save-automation-setup"
-  on:click={saveAutomation}>
+  on:click={saveAutomation}
+>
   Save Automation
 </Button>
 <Modal bind:this={webhookModal} width="30%">
@@ -86,35 +93,13 @@
     align-items: center;
     gap: var(--spacing-xs);
   }
-  .title h1 {
-    font-size: var(--font-size-m);
-    font-weight: 500;
-    margin: 0;
+  .title :global(h1) {
     flex: 1 1 auto;
-  }
-  .title i {
-    font-size: 20px;
-    color: var(--grey-5);
-  }
-  .title i.highlighted {
-    color: var(--ink);
-  }
-  .title i.hoverable:hover {
-    cursor: pointer;
-    color: var(--blue);
   }
 
   .block-label {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
     font-weight: 500;
     color: var(--grey-7);
-  }
-
-  .footer {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: stretch;
   }
 </style>

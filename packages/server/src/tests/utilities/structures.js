@@ -44,7 +44,7 @@ exports.basicAutomation = () => {
   }
 }
 
-exports.basicRow = tableId => {
+exports.basicRow = (tableId) => {
   return {
     name: "Test Contact",
     description: "original description",
@@ -78,7 +78,7 @@ exports.basicDatasource = () => {
   }
 }
 
-exports.basicQuery = datasourceId => {
+exports.basicQuery = (datasourceId) => {
   return {
     datasourceId: datasourceId,
     name: "New Query",
@@ -89,7 +89,7 @@ exports.basicQuery = datasourceId => {
   }
 }
 
-exports.basicUser = role => {
+exports.basicUser = (role) => {
   return {
     email: "bill@bill.com",
     password: "yeeooo",
@@ -105,7 +105,7 @@ exports.basicLayout = () => {
   return cloneDeep(EMPTY_LAYOUT)
 }
 
-exports.basicWebhook = automationId => {
+exports.basicWebhook = (automationId) => {
   return {
     live: true,
     name: "webhook",

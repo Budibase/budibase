@@ -24,7 +24,7 @@ class Preprocessor {
 }
 
 module.exports.processors = [
-  new Preprocessor(PreprocessorNames.SWAP_TO_DOT, statement => {
+  new Preprocessor(PreprocessorNames.SWAP_TO_DOT, (statement) => {
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
     while (startBraceIdx !== -1) {
@@ -39,7 +39,7 @@ module.exports.processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, statement => {
+  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, (statement) => {
     for (let specialCase of FUNCTION_CASES) {
       const toFind = `{ ${specialCase}`,
         replacement = `{${specialCase}`
@@ -48,7 +48,7 @@ module.exports.processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.FINALISE, statement => {
+  new Preprocessor(PreprocessorNames.FINALISE, (statement) => {
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
       insideStatement = insideStatement.slice(1)
@@ -63,7 +63,7 @@ module.exports.processors = [
         return statement
       }
     }
-    if (HelperNames().some(option => option.includes(possibleHelper))) {
+    if (HelperNames().some((option) => option.includes(possibleHelper))) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`

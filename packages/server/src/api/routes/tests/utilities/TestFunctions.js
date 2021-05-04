@@ -7,7 +7,7 @@ function Request(appId, params) {
   this.params = params
 }
 
-exports.getAllTableRows = async config => {
+exports.getAllTableRows = async (config) => {
   const req = new Request(config.appId, { tableId: config.table._id })
   await rowController.fetchTableRows(req)
   return req.body
@@ -26,7 +26,7 @@ exports.clearAllApps = async () => {
   }
 }
 
-exports.clearAllAutomations = async config => {
+exports.clearAllAutomations = async (config) => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
     await config.deleteAutomation(auto)
@@ -88,6 +88,6 @@ exports.checkPermissionsEndpoint = async ({
     .expect(403)
 }
 
-exports.getDB = config => {
+exports.getDB = (config) => {
   return new CouchDB(config.getAppId())
 }

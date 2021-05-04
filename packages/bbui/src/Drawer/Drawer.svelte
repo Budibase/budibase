@@ -1,7 +1,9 @@
 <script>
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
-  import clickOutside from "../Actions/click_outside"
+  import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Body from "../Typography/Body.svelte"
+  import Heading from "../Typography/Heading.svelte"
 
   export let title
 
@@ -35,12 +37,12 @@
     <section class="drawer" transition:slide>
       <header>
         <div class="text">
-          <div class="title">{title}</div>
-          <slot name="description" />
+          <Heading size="XS">{title}</Heading>
+          <Body size="XXS"><slot name="description" /></Body>
         </div>
-        <div class="controls">
+        <div class="buttons">
           <slot name="buttons" />
-          <i class="ri-close-fill close" on:click={hide} />
+          <ActionButton quiet icon="Close" on:click={hide} />
         </div>
       </header>
       <slot name="body" />
@@ -64,25 +66,17 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: var(--spacing-m);
+    padding: var(--spectrum-alias-item-padding-s) 0;
+  }
+  header :global(*) + :global(*) {
+    margin: 0 var(--spectrum-alias-grid-baseline);
   }
 
-  .controls {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-
-  .close {
-    font-size: var(--font-size-xl);
-    cursor: pointer;
-  }
-  .title {
-    font-weight: bold;
-    margin-right: var(--spacing-m);
-  }
   .text {
     display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left: var(--spectrum-alias-item-padding-s);
   }
 </style>

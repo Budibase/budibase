@@ -52,7 +52,7 @@ exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 
-exports.getQueryIndex = viewName => {
+exports.getQueryIndex = (viewName) => {
   return `database/${viewName}`
 }
 
@@ -135,14 +135,14 @@ exports.getUserMetadataParams = (userId = null, otherProps = {}) => {
  * @param {string} globalId The ID of the global user.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateUserMetadataID = globalId => {
+exports.generateUserMetadataID = (globalId) => {
   return exports.generateRowID(InternalTables.USER_METADATA, globalId)
 }
 
 /**
  * Breaks up the ID to get the global ID.
  */
-exports.getGlobalIDFromUserMetadataID = id => {
+exports.getGlobalIDFromUserMetadataID = (id) => {
   return id.split(
     `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
   )[1]
@@ -214,7 +214,7 @@ exports.getAppParams = (appId = null, otherProps = {}) => {
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-exports.generateRoleID = id => {
+exports.generateRoleID = (id) => {
   return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
 }
 
@@ -229,7 +229,7 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
  * Generates a new layout ID.
  * @returns {string} The new layout ID which the layout doc can be stored under.
  */
-exports.generateLayoutID = id => {
+exports.generateLayoutID = (id) => {
   return `${DocumentTypes.LAYOUT}${SEPARATOR}${id || newid()}`
 }
 
@@ -289,7 +289,7 @@ exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
  * Generates a new query ID.
  * @returns {string} The new query ID which the query doc can be stored under.
  */
-exports.generateQueryID = datasourceId => {
+exports.generateQueryID = (datasourceId) => {
   return `${
     DocumentTypes.QUERY
   }${SEPARATOR}${datasourceId}${SEPARATOR}${newid()}`
@@ -313,7 +313,7 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
 /**
  * This can be used with the db.allDocs to get a list of IDs
  */
-exports.getMultiIDParams = ids => {
+exports.getMultiIDParams = (ids) => {
   return {
     keys: ids,
     include_docs: true,

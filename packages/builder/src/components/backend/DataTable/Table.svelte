@@ -1,21 +1,16 @@
 <script>
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
-  import AgGrid from "@budibase/svelte-ag-grid"
+  import { Table, Modal, Heading, notifications } from "@budibase/bbui"
 
   import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
-  import {
-    getRenderer,
-    editRowRenderer,
-    userRowRenderer,
-  } from "./cells/cellRenderers"
-  import TableLoadingOverlay from "./TableLoadingOverlay"
-  import TableHeader from "./TableHeader"
-  import "@budibase/svelte-ag-grid/dist/index.css"
+  import CreateEditRow from "./modals/CreateEditRow.svelte"
+  import CreateEditUser from "./modals/CreateEditUser.svelte"
+  import CreateEditColumn from "./modals/CreateEditColumn.svelte"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+  import RoleCell from "./cells/RoleCell.svelte"
 
   export let schema = {}
   export let data = []
@@ -25,114 +20,46 @@
   export let loading = false
   export let theme = "alpine"
   export let hideAutocolumns
+  export let rowCount
 
-  let columnDefs = []
   let selectedRows = []
-
-  let options = {
-    defaultColDef: {
-      flex: 1,
-      filter: true,
-    },
-    rowSelection: allowEditing ? "multiple" : false,
-    rowMultiSelectWithClick: true,
-    suppressRowClickSelection: false,
-    suppressFieldDotNotation: true,
-    paginationAutoPageSize: true,
-    pagination: true,
-    enableRangeSelection: true,
-    popupParent: document.body,
-    components: {
-      customLoadingOverlay: TableLoadingOverlay,
-    },
-    loadingOverlayComponent: "customLoadingOverlay",
-    animateRows: true,
-  }
+  let editableColumn
+  let editableRow
+  let editRowModal
+  let editColumnModal
+  let customRenderers = []
 
   $: isUsersTable = tableId === TableNames.USERS
+  $: data && resetSelectedRows()
+  $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     if (isUsersTable) {
-      schema.email.displayFieldName = "Email"
-      schema.roleId.displayFieldName = "Role"
-      if (schema.status) {
-        schema.status.displayFieldName = "Status"
-      }
-    }
-  }
-
-  $: {
-    // Reset selection every time data changes
-    selectedRows = []
-
-    let result = []
-    if (allowEditing) {
-      result = [
+      customRenderers = [
         {
-          checkboxSelection: true,
-          lockPosition: true,
-          headerName: "Edit",
-          pinned: "left",
-          sortable: false,
-          resizable: false,
-          suppressMovable: true,
-          suppressMenu: true,
-          minWidth: 114,
-          width: 114,
-          cellRenderer: isUsersTable ? userRowRenderer : editRowRenderer,
+          column: "roleId",
+          component: RoleCell,
         },
       ]
-    }
-
-    const canEditColumn = key => {
-      if (!allowEditing) {
-        return false
-      }
-      return !(isUsersTable && UNEDITABLE_USER_FIELDS.includes(key))
-    }
-
-    for (let [key, value] of Object.entries(schema || {})) {
-      // skip autocolumns if hiding
-      if (hideAutocolumns && value.autocolumn) {
-        continue
-      }
-      let config = {
-        headerCheckboxSelection: false,
-        headerComponent: TableHeader,
-        headerComponentParams: {
-          field: schema[key],
-          editable: canEditColumn(key),
-        },
-        headerName: value.displayFieldName || key,
-        field: key,
-        sortable: true,
-        cellRenderer: getRenderer({
-          schema: schema[key],
-          editable: true,
-          isUsersTable,
-        }),
-        cellRendererParams: {
-          selectRelationship,
-        },
-        autoHeight: true,
-        resizable: true,
-        minWidth: 200,
-      }
-      // sort auto-columns to the end if they are present
-      if (value.autocolumn) {
-        result.push(config)
-      } else {
-        result.unshift(config)
+      UNEDITABLE_USER_FIELDS.forEach((field) => {
+        if (schema[field]) {
+          schema[field].editable = false
+        }
+      })
+      schema.email.displayName = "Email"
+      schema.roleId.displayName = "Role"
+      if (schema.status) {
+        schema.status.displayName = "Status"
       }
     }
-    columnDefs = result
   }
 
-  function selectRelationship(row, fieldName) {
-    if (!row?.[fieldName]?.length) {
-      return
-    }
+  const resetSelectedRows = () => {
+    selectedRows = []
+  }
+
+  const selectRelationship = ({ tableId, rowId, fieldName }) => {
     $goto(
-      `/${$params.application}/data/table/${row.tableId}/relationship/${row._id}/${fieldName}`
+      `/builder/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
     )
   }
 
@@ -141,15 +68,31 @@
       rows: selectedRows,
       type: "delete",
     })
-    data = data.filter(row => !selectedRows.includes(row))
-    notifier.success(`Successfully deleted ${selectedRows.length} rows`)
+    data = data.filter((row) => !selectedRows.includes(row))
+    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
     selectedRows = []
+  }
+
+  const editRow = (row) => {
+    editableRow = row
+    if (row) {
+      editRowModal.show()
+    }
+  }
+
+  const editColumn = (field) => {
+    editableColumn = schema?.[field]
+    if (editableColumn) {
+      editColumnModal.show()
+    }
   }
 </script>
 
 <div>
   <div class="table-title">
-    <h1>{title}</h1>
+    {#if title}
+      <Heading size="S">{title}</Heading>
+    {/if}
     {#if loading}
       <div transition:fade>
         <Spinner size="10" />
@@ -163,17 +106,30 @@
     {/if}
   </div>
 </div>
-<div class="grid-wrapper">
-  {#key columnDefs.length}
-    <AgGrid
-      {theme}
-      {options}
-      {data}
-      {columnDefs}
-      {loading}
-      on:select={({ detail }) => (selectedRows = detail)} />
-  {/key}
-</div>
+{#key tableId}
+  <Table
+    {data}
+    {schema}
+    {loading}
+    {customRenderers}
+    {rowCount}
+    bind:selectedRows
+    allowSelectRows={allowEditing}
+    allowEditRows={allowEditing}
+    allowEditColumns={allowEditing}
+    showAutoColumns={!hideAutocolumns}
+    on:editcolumn={(e) => editColumn(e.detail)}
+    on:editrow={(e) => editRow(e.detail)}
+    on:clickrelationship={(e) => selectRelationship(e.detail)}
+  />
+{/key}
+
+<Modal bind:this={editRowModal}>
+  <svelte:component this={editRowComponent} row={editableRow} />
+</Modal>
+<Modal bind:this={editColumnModal}>
+  <CreateEditColumn field={editableColumn} onClosed={editColumnModal.hide} />
+</Modal>
 
 <style>
   .table-title {
@@ -197,7 +153,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-s);
   }
   .popovers :global(button) {
     font-weight: 500;
@@ -205,109 +161,5 @@
   }
   .popovers :global(button svg) {
     margin-right: var(--spacing-xs);
-  }
-
-  .grid-wrapper {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .grid-wrapper :global(> *) {
-    flex: 1 1 auto;
-  }
-  :global(.grid-wrapper) {
-    --ag-modal-overlay-background-color: transparent;
-    --ag-border-color: var(--grey-3);
-    --ag-header-background-color: var(--grey-1);
-    --ag-odd-row-background-color: var(--grey-1);
-    --ag-row-border-color: var(--grey-3);
-    --ag-background-color: var(--background);
-    --ag-foreground-color: var(--ink);
-  }
-  :global(.ag-overlay-loading-center) {
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.05) !important;
-    border-color: var(--grey-2);
-  }
-
-  :global(.ag-menu) {
-    border: var(--border-dark) !important;
-  }
-
-  :global(.ag-popup-child) {
-    border-radius: var(--border-radius-m) !important;
-    box-shadow: none !important;
-  }
-
-  :global(.ag-header-cell-text) {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  :global(.ag-filter) {
-    background: var(--background);
-    padding: var(--spacing-s);
-    outline: none;
-    box-sizing: border-box;
-    color: var(--ink);
-    border-radius: var(--border-radius-m);
-    font-family: var(--font-sans) !important;
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  :global(.ag-menu) {
-    border: none;
-  }
-
-  :global(.ag-simple-filter-body-wrapper > *) {
-    margin-bottom: var(--spacing-m) !important;
-  }
-
-  :global(.ag-select) {
-    height: inherit !important;
-  }
-
-  :global(.ag-menu input) {
-    color: var(--ink) !important;
-    font-size: var(--font-size-xs);
-    border-radius: var(--border-radius-s) !important;
-    border: none;
-    background-color: var(--grey-2) !important;
-    padding: var(--spacing-m);
-    margin: 0;
-    outline: none;
-    font-family: var(--font-sans);
-    border: var(--border-transparent) !important;
-    transition: 0.2s all;
-  }
-  :global(.ag-menu input:focus) {
-    border: var(--border-blue) !important;
-  }
-
-  :global(.ag-picker-field-display) {
-    color: var(--ink) !important;
-    font-size: var(--font-size-xs) !important;
-    border-radius: var(--border-radius-s) !important;
-    background-color: var(--grey-2) !important;
-    font-family: var(--font-sans);
-    border: var(--border-transparent) !important;
-  }
-
-  :global(.ag-picker-field-wrapper) {
-    background: var(--grey-2) !important;
-    border: var(--border-transparent) !important;
-    padding-top: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
-  }
-
-  :global(.ag-header) {
-    height: 61px !important;
-    min-height: 61px !important;
-  }
-
-  :global(.ag-header-row) {
-    height: 60px !important;
   }
 </style>

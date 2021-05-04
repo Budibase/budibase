@@ -64,7 +64,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs }) {
+module.exports.run = async function ({ inputs }) {
   let { requestMethod, url, requestBody } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`

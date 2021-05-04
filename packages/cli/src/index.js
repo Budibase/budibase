@@ -17,6 +17,6 @@ async function init() {
   await program.parseAsync(process.argv)
 }
 
-init().catch(err => {
+init().catch((err) => {
   console.error(`Unexpected error - `, err)
 })
