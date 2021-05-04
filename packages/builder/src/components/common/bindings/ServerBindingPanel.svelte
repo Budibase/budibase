@@ -129,7 +129,7 @@
     font-family: var(--font-sans);
   }
   .text :global(textarea) {
-    min-height: 100px;
+    min-height: 150px !important;
   }
   .text :global(p) {
     margin: 0;

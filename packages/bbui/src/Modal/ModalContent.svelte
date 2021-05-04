@@ -73,6 +73,10 @@
 </div>
 
 <style>
+  .spectrum-Dialog--XL {
+    width: 1000px;
+  }
+
   .content-grid {
     display: grid;
     position: relative;
