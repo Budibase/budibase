@@ -1,26 +1,29 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { store } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownMenu, Modal, ModalContent, Input } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Modal,
+    ModalContent,
+    Input,
+  } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
 
   export let layout
 
   let confirmDeleteDialog
   let editLayoutNameModal
-  let dropdown
-  let anchor
   let name = layout.name
 
   const deleteLayout = async () => {
     try {
       await store.actions.layouts.delete(layout)
-      notifier.success(`Layout ${layout.name} deleted successfully.`)
+      notifications.success(`Layout ${layout.name} deleted successfully.`)
     } catch (err) {
-      notifier.danger(`Error deleting layout: ${err.message}`)
+      notifications.error(`Error deleting layout: ${err.message}`)
     }
   }
 
@@ -29,49 +32,36 @@
       const layoutToSave = cloneDeep(layout)
       layoutToSave.name = name
       await store.actions.layouts.save(layoutToSave)
-      notifier.success(`Layout saved successfully.`)
+      notifications.success(`Layout saved successfully.`)
     } catch (err) {
-      notifier.danger(`Error saving layout: ${err.message}`)
+      notifications.error(`Error saving layout: ${err.message}`)
     }
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={() => dropdown.show()}>
-    <i class="ri-more-line" />
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <DropdownMenu bind:this={dropdown} {anchor} align="left">
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-pencil-line"
-        title="Edit"
-        on:click={() => editLayoutNameModal.show()} />
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
-    </DropdownContainer>
-  </DropdownMenu>
-</div>
+  <MenuItem icon="Edit" on:click={editLayoutNameModal.show}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={'Are you sure you wish to delete this layout?'}
+  body={"Are you sure you wish to delete this layout?"}
   okText="Delete Layout"
-  onOk={deleteLayout} />
+  onOk={deleteLayout}
+/>
 
 <Modal bind:this={editLayoutNameModal}>
   <ModalContent
     title="Edit Layout Name"
     confirmText="Save"
     onConfirm={saveLayout}
-    disabled={!name}>
+    disabled={!name}
+  >
     <Input thin type="text" label="Name" bind:value={name} />
   </ModalContent>
 </Modal>
-
-<style>
-  .icon i {
-    font-size: 16px;
-  }
-</style>

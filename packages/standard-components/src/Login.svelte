@@ -55,7 +55,8 @@
           bind:value={email}
           type="email"
           placeholder="Email"
-          class={_inputClass} />
+          class={_inputClass}
+        />
       </div>
 
       <div class="control">
@@ -63,11 +64,12 @@
           bind:value={password}
           type="password"
           placeholder="Password"
-          class={_inputClass} />
+          class={_inputClass}
+        />
       </div>
 
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        {buttonText || 'Log In'}
+        {buttonText || "Log In"}
       </button>
     </div>
 

@@ -1,6 +1,6 @@
 const mongodb = {}
 
-mongodb.MongoClient = function() {
+mongodb.MongoClient = function () {
   this.connect = jest.fn()
   this.close = jest.fn()
   this.insertOne = jest.fn()

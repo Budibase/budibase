@@ -61,7 +61,7 @@ class CouchDBIntegration {
         include_docs: true,
         ...query.json,
       })
-      return result.rows.map(row => row.doc)
+      return result.rows.map((row) => row.doc)
     } catch (err) {
       console.error("Error querying couchDB", err)
       throw err

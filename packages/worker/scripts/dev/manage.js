@@ -16,7 +16,7 @@ async function init() {
     COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
   }
   let envFile = ""
-  Object.keys(envFileJson).forEach(key => {
+  Object.keys(envFileJson).forEach((key) => {
     envFile += `${key}=${envFileJson[key]}\n`
   })
   fs.writeFileSync(envFilePath, envFile)
@@ -32,7 +32,7 @@ command()
   .then(() => {
     console.log("Done! 🎉")
   })
-  .catch(err => {
+  .catch((err) => {
     console.error(
       "Something went wrong while managing budibase dev worker:",
       err.message

@@ -42,7 +42,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, emitter }) {
+module.exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.query == null) {
     return {
       success: false,

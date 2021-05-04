@@ -1,19 +1,12 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { FrontendTypes } from "constants"
   import ComponentTree from "./ComponentNavigationTree/ComponentTree.svelte"
   import LayoutDropdownMenu from "./ComponentNavigationTree/LayoutDropdownMenu.svelte"
   import initDragDropStore from "./ComponentNavigationTree/dragDropStore"
   import NavItem from "components/common/NavItem.svelte"
-  import { last } from "lodash/fp"
-  import { store, currentAsset, selectedComponent } from "builderStore"
-  import { writable } from "svelte/store"
+  import { store, selectedComponent } from "builderStore"
 
   export let layout
   export let border
-
-  let confirmDeleteDialog
-  let componentToDelete = ""
 
   const dragDropStore = initDragDropStore()
 
@@ -24,12 +17,13 @@
 
 <NavItem
   {border}
-  icon="ri-layout-3-line"
+  icon="ClassicGridView"
   text={layout.name}
   withArrow
   selected={$store.selectedLayoutId === layout._id}
   opened={$store.selectedLayoutId === layout._id}
-  on:click={selectLayout}>
+  on:click={selectLayout}
+>
   <LayoutDropdownMenu {layout} />
 </NavItem>
 
@@ -37,5 +31,6 @@
   <ComponentTree
     components={layout.props._children}
     currentComponent={$selectedComponent}
-    {dragDropStore} />
+    {dragDropStore}
+  />
 {/if}

@@ -1,8 +1,8 @@
 export class ApexOptionsBuilder {
   formatters = {
-    ["Default"]: val => Math.round(val * 100) / 100,
-    ["Thousands"]: val => `${Math.round(val / 1000)}K`,
-    ["Millions"]: val => `${Math.round(val / 1000000)}M`,
+    ["Default"]: (val) => Math.round(val * 100) / 100,
+    ["Thousands"]: (val) => `${Math.round(val / 1000)}K`,
+    ["Millions"]: (val) => `${Math.round(val / 1000000)}M`,
   }
   options = {
     series: [],

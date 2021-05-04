@@ -36,7 +36,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, context, emitter }) {
+module.exports.run = async function ({ inputs, appId, context, emitter }) {
   if (inputs.code == null) {
     return {
       success: false,

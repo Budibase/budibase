@@ -2,51 +2,39 @@
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let automation
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
   $: instanceId = $database._id
-
-  function showModal() {
-    dropdown.hide()
-    confirmDeleteDialog.show()
-  }
 
   async function deleteAutomation() {
     await automationStore.actions.delete({
       instanceId,
       automation,
     })
-    notifier.success("Automation deleted.")
+    notifications.success("Automation deleted.")
     $goto("../automate")
   }
 </script>
 
-<div on:click|stopPropagation>
-  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
-    <i class="ri-more-line" />
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon s hoverable name="MoreSmallList" />
   </div>
-  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={showModal} />
-    </DropdownContainer>
-  </DropdownMenu>
-</div>
+  <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
+    Delete
+  </MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
   onOk={deleteAutomation}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you wish to delete the automation
   <i>{automation.name}?</i>
   This action cannot be undone.
@@ -58,9 +46,5 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  div.icon i {
-    font-size: 16px;
   }
 </style>

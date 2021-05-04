@@ -19,17 +19,17 @@
   $: options = setUpChart(dataProvider)
 
   // Fetch data on mount
-  const setUpChart = provider => {
+  const setUpChart = (provider) => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (!provider || allCols.find(x => x == null)) {
+    if (!provider || allCols.find((x) => x == null)) {
       return null
     }
 
     // Fetch data
     const { schema, rows } = provider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row))
+    const reducer = (row) => (valid, column) => valid && row[column] != null
+    const hasAllColumns = (row) => allCols.reduce(reducer(row), true)
+    const data = rows.filter((row) => hasAllColumns(row))
     if (!schema || !data.length) {
       return null
     }
@@ -48,8 +48,8 @@
       .xType("datetime")
 
     // Add data
-    const parseDate = d => (isNaN(d) ? Date.parse(d).valueOf() : parseInt(d))
-    const chartData = data.map(row => ({
+    const parseDate = (d) => (isNaN(d) ? Date.parse(d).valueOf() : parseInt(d))
+    const chartData = data.map((row) => ({
       x: parseDate(row[dateColumn]),
       y: [row[openColumn], row[highColumn], row[lowColumn], row[closeColumn]],
     }))

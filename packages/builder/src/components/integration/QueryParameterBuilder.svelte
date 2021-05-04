@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Input, Heading, Spacer } from "@budibase/bbui"
+  import { Icon, Body, Button, Input, Heading, Layout } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -29,14 +29,14 @@
   }
 </script>
 
-<section>
+<Layout paddingX="none" gap="S">
   <div class="controls">
-    <Heading small lh>Parameters</Heading>
+    <Heading size="XS">Parameters</Heading>
     {#if !bindable}
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
-  <Body small grey>
+  <Body size="S">
     {#if !bindable}
       Parameters come in two parts: the parameter name, and a default/fallback
       value.
@@ -45,35 +45,42 @@
       values left blank.
     {/if}
   </Body>
-  <Spacer large />
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
       <Input
         placeholder="Parameter Name"
         thin
         disabled={bindable}
-        bind:value={parameter.name} />
+        bind:value={parameter.name}
+      />
       <Input
         placeholder="Default"
         thin
         disabled={bindable}
-        bind:value={parameter.default} />
+        bind:value={parameter.default}
+      />
       {#if bindable}
         <DrawerBindableInput
           title={`Query parameter "${parameter.name}"`}
           placeholder="Value"
           thin
-          on:change={evt => onBindingChange(parameter.name, evt.detail)}
-          value={runtimeToReadableBinding(bindings, customParams?.[parameter.name])}
-          {bindings} />
+          on:change={(evt) => onBindingChange(parameter.name, evt.detail)}
+          value={runtimeToReadableBinding(
+            bindings,
+            customParams?.[parameter.name]
+          )}
+          {bindings}
+        />
       {:else}
-        <i
-          class="ri-close-circle-line delete"
-          on:click={() => deleteQueryParameter(idx)} />
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => deleteQueryParameter(idx)}
+        />
       {/if}
     {/each}
   </div>
-</section>
+</Layout>
 
 <style>
   .parameters.bindable {
@@ -92,16 +99,5 @@
     grid-template-columns: 1fr 1fr 5%;
     grid-gap: 10px;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
-  }
-
-  .delete {
-    transition: all 0.2s;
-  }
-
-  .delete:hover {
-    transform: scale(1.1);
-    font-weight: 500;
-    cursor: pointer;
   }
 </style>

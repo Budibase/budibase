@@ -3,7 +3,7 @@
   import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { Button, Heading, Modal, Spacer } from "@budibase/bbui"
+  import { Button, Heading, Modal, ButtonGroup } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
   import Banner from "/assets/orange-landscape.png"
@@ -57,12 +57,11 @@
 
 <div class="container">
   <div class="header">
-    <Heading medium black>Welcome to the Budibase Beta</Heading>
-    <div class="button-group">
+    <Heading size="M">Welcome to the Budibase Beta</Heading>
+    <ButtonGroup>
       <Button secondary on:click={initiateAppImport}>Import Web App</Button>
-      <Spacer medium />
-      <Button primary on:click={modal.show}>Create New Web App</Button>
-    </div>
+      <Button cta on:click={modal.show}>Create New Web App</Button>
+    </ButtonGroup>
   </div>
 
   <div class="banner">

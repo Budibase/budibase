@@ -2,8 +2,8 @@
   import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import { tables } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
-  import { Input, Label, ModalContent, Toggle } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
+  import { Input, Label, ModalContent, Toggle, Divider } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -18,7 +18,7 @@
     ROW_LIST_TEMPLATE,
   ]
 
-  $: tableNames = $tables.list.map(table => table.name)
+  $: tableNames = $tables.list.map((table) => table.name)
 
   let modal
   let name
@@ -60,14 +60,14 @@
 
     // Create table
     const table = await tables.save(newTable)
-    notifier.success(`Table ${name} created successfully.`)
+    notifications.success(`Table ${name} created successfully.`)
     analytics.captureEvent("Table Created", { name })
 
     // Create auto screens
     if (createAutoscreens) {
       const screens = screenTemplates($store, [table])
-        .filter(template => defaultScreens.includes(template.id))
-        .map(template => template.create())
+        .filter((template) => defaultScreens.includes(template.id))
+        .map((template) => template.create())
       for (let screen of screens) {
         // Record the table that created this screen so we can link it later
         screen.autoTableId = table._id
@@ -75,7 +75,7 @@
       }
 
       // Create autolink to newly created list screen
-      const listScreen = screens.find(screen =>
+      const listScreen = screens.find((screen) =>
         screen.props._instanceName.endsWith("List")
       )
       await store.actions.components.links.save(
@@ -93,39 +93,35 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (dataImport && !dataImport.valid)}>
+  disabled={error || !name || (dataImport && !dataImport.valid)}
+>
   <Input
     data-cy="table-name-input"
     thin
     label="Table Name"
     on:input={checkValid}
     bind:value={name}
-    {error} />
+    {error}
+  />
   <div class="autocolumns">
     <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle
-          text="Created by"
-          bind:checked={autoColumns.createdBy.enabled} />
-        <Toggle
-          text="Created at"
-          bind:checked={autoColumns.createdAt.enabled} />
-        <Toggle text="Auto ID" bind:checked={autoColumns.autoID.enabled} />
+        <Toggle text="Created by" bind:value={autoColumns.createdBy.enabled} />
+        <Toggle text="Created at" bind:value={autoColumns.createdAt.enabled} />
+        <Toggle text="Auto ID" bind:value={autoColumns.autoID.enabled} />
       </div>
       <div class="toggle-2">
-        <Toggle
-          text="Updated by"
-          bind:checked={autoColumns.updatedBy.enabled} />
-        <Toggle
-          text="Updated at"
-          bind:checked={autoColumns.updatedAt.enabled} />
+        <Toggle text="Updated by" bind:value={autoColumns.updatedBy.enabled} />
+        <Toggle text="Updated at" bind:value={autoColumns.updatedAt.enabled} />
       </div>
     </div>
+    <Divider />
   </div>
   <Toggle
-    text="Generate screens in the design section"
-    bind:checked={createAutoscreens} />
+    text="Generate screens in Design section"
+    bind:value={createAutoscreens}
+  />
   <div>
     <Label grey extraSmall>Create Table from CSV (Optional)</Label>
     <TableDataImport bind:dataImport />
@@ -134,8 +130,7 @@
 
 <style>
   .autocolumns {
-    padding-bottom: 10px;
-    border-bottom: 3px solid var(--grey-1);
+    margin-bottom: -10px;
   }
 
   .toggles {

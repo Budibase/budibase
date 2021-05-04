@@ -86,20 +86,20 @@
         {#each columns as field}
           <div class="form-field">
             <Label extraSmall grey>{schema[field].name}</Label>
-            {#if schema[field].type === 'options'}
+            {#if schema[field].type === "options"}
               <Select secondary bind:value={search[field]}>
                 <option value="">Choose an option</option>
                 {#each schema[field].constraints.inclusion as opt}
                   <option>{opt}</option>
                 {/each}
               </Select>
-            {:else if schema[field].type === 'datetime'}
+            {:else if schema[field].type === "datetime"}
               <DatePicker bind:value={search[field]} />
-            {:else if schema[field].type === 'boolean'}
+            {:else if schema[field].type === "boolean"}
               <Toggle text={schema[field].name} bind:checked={search[field]} />
-            {:else if schema[field].type === 'number'}
+            {:else if schema[field].type === "number"}
               <Input type="number" bind:value={search[field]} />
-            {:else if schema[field].type === 'string'}
+            {:else if schema[field].type === "string"}
               <Input bind:value={search[field]} />
             {/if}
           </div>
@@ -111,7 +111,8 @@
           on:click={() => {
             search = {}
             bookmark = null
-          }}>
+          }}
+        >
           Reset
         </Button>
         <Button
@@ -119,7 +120,8 @@
           on:click={() => {
             bookmark = null
             fetchData(table, bookmark)
-          }}>
+          }}
+        >
           Search
         </Button>
       </div>

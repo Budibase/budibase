@@ -1,6 +1,6 @@
 <script>
   import { tables, rows } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
   import { ModalContent } from "@budibase/bbui"
@@ -12,7 +12,7 @@
 
   $: creating = row?._id == null
   $: table = row.tableId
-    ? $tables.list.find(table => table._id === row?.tableId)
+    ? $tables.list.find((table) => table._id === row?.tableId)
     : $tables.selected
   $: tableSchema = Object.entries(table?.schema ?? {})
 
@@ -33,15 +33,16 @@
       return false
     }
 
-    notifier.success("Row saved successfully.")
+    notifications.success("Row saved successfully.")
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? 'Create Row' : 'Edit Row'}
-  confirmText={creating ? 'Create Row' : 'Save Row'}
-  onConfirm={saveRow}>
+  title={creating ? "Create Row" : "Edit Row"}
+  confirmText={creating ? "Create Row" : "Save Row"}
+  onConfirm={saveRow}
+>
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
     {#if !meta.autocolumn}

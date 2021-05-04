@@ -7,7 +7,7 @@
   "search",
   {
     "name": "Form",
-    "icon": "ri-file-edit-line",
+    "icon": "Form",
     "children": [
       "form",
       "fieldgroup",
@@ -24,7 +24,7 @@
   },
   {
     "name": "Card",
-    "icon": "ri-archive-drawer-line",
+    "icon": "Card",
     "children": [
       "stackedlist",
       "card",
@@ -34,7 +34,7 @@
   },
   {
     "name": "Chart",
-    "icon": "ri-bar-chart-2-line",
+    "icon": "GraphBarVertical",
     "children": [
       "bar",
       "line",
@@ -46,7 +46,7 @@
   },
   {
     "name": "Elements",
-    "icon": "ri-paragraph",
+    "icon": "TextParagraph",
     "children": [
       "heading",
       "text",
@@ -59,7 +59,7 @@
   },
   {
     "name": "Other",
-    "icon": "ri-more-2-line",
+    "icon": "More",
     "children": [
       "screenslot",
       "navigation",

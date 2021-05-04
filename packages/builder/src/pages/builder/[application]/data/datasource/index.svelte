@@ -4,8 +4,8 @@
   import { onMount } from "svelte"
 
   onMount(async () => {
-    // navigate to first datasource in list, if not already selected
-    $datasources.list.length > 0 && $goto(`../${$datasources.list[0]._id}`)
+    // navigate to first table in list, if not already selected
+    $datasources.list.length > 0 && $goto(`./${$datasources.list[0]._id}`)
   })
 </script>
 

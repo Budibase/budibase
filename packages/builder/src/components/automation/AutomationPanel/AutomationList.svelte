@@ -20,10 +20,11 @@
   {#each $automationStore.automations as automation, idx}
     <NavItem
       border={idx > 0}
-      icon="ri-stackshare-line"
+      icon="ShareAndroid"
       text={automation.name}
       selected={automation._id === selectedAutomationId}
-      on:click={() => selectAutomation(automation)}>
+      on:click={() => selectAutomation(automation)}
+    >
       <EditAutomationPopover {automation} />
     </NavItem>
   {/each}

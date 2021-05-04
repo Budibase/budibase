@@ -8,7 +8,7 @@
 </script>
 
 <script>
-  import { DropdownMenu, Button, Input } from "@budibase/bbui"
+  import { Popover, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher, tick } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -58,7 +58,7 @@
 
   function findIconByTerm(term) {
     const r = new RegExp(`\^${term}`, "i")
-    return icons.filter(i => r.test(i))
+    return icons.filter((i) => r.test(i))
   }
 
   async function switchLetter(letter) {
@@ -72,7 +72,7 @@
   }
   async function findIconOnPage() {
     loading = true
-    const iconIdx = filteredIcons.findIndex(i => i.value === value)
+    const iconIdx = filteredIcons.findIndex((i) => i.value === value)
     if (iconIdx !== -1) {
       currentPage = Math.ceil(iconIdx / maxIconsPerPage)
     }
@@ -119,10 +119,7 @@
 <div bind:this={buttonAnchor}>
   <Button secondary small on:click={dropdown.show}>{displayValue}</Button>
 </div>
-<DropdownMenu
-  bind:this={dropdown}
-  on:open={setSelectedUI}
-  anchor={buttonAnchor}>
+<Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">
     <div class="search-area">
       <div class="alphabet-area">
@@ -130,7 +127,8 @@
           <span
             class="letter"
             class:letter-selected={letter === selectedLetter}
-            on:click={() => switchLetter(letter)}>
+            on:click={() => switchLetter(letter)}
+          >
             {letter}
           </span>
           {#if idx !== alphabet.length - 1}<span>-</span>{/if}
@@ -161,7 +159,8 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-fill`}
-              on:click={() => (value = `ri-${icon}-fill`)}>
+              on:click={() => (value = `ri-${icon}-fill`)}
+            >
               <div class="icon-preview">
                 <i class={`ri-${icon}-fill ri-xl`} />
               </div>
@@ -170,7 +169,8 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-line`}
-              on:click={() => (value = `ri-${icon}-line`)}>
+              on:click={() => (value = `ri-${icon}-line`)}
+            >
               <div class="icon-preview">
                 <i class={`ri-${icon}-line ri-xl`} />
               </div>
@@ -182,12 +182,12 @@
     {:else}
       <div class="no-icons">
         <h5>
-          {`There is no icons for this ${searchTerm ? 'search' : 'page'}`}
+          {`There is no icons for this ${searchTerm ? "search" : "page"}`}
         </h5>
       </div>
     {/if}
   </div>
-</DropdownMenu>
+</Popover>
 
 <style>
   .container {
