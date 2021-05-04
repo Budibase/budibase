@@ -39,21 +39,21 @@
     <b>{linkedTable.name}</b>
     table.
   </Label>
+{:else if schema.relationshipType === "one-to-many"}
+  <Select
+    value={linkedIds?.[0]}
+    options={rows}
+    getOptionLabel={getPrettyName}
+    getOptionValue={row => row._id}
+    on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
+    {label}
+  />
 {:else}
-  {#if schema.relationshipType === 'one-to-many'}
-    <Select
-      value={linkedIds?.[0]}
-      options={rows}
-      getOptionLabel={getPrettyName}
-      getOptionValue={row => row._id}
-      on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
-      {label} />
-  {:else}
-    <Multiselect
-      bind:value={linkedIds}
-      {label}
-      options={rows}
-      getOptionLabel={getPrettyName}
-      getOptionValue={row => row._id} />
-  {/if}
+  <Multiselect
+    bind:value={linkedIds}
+    {label}
+    options={rows}
+    getOptionLabel={getPrettyName}
+    getOptionValue={row => row._id}
+  />
 {/if}

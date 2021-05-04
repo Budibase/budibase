@@ -35,11 +35,11 @@
     route.subpaths[selectedScreen?.routing?.route] !== undefined
   $: routeOpened = routeManuallyOpened || routeSelected || hasSearchMatch
 
-  const changeScreen = (screenId) => {
+  const changeScreen = screenId => {
     store.actions.screens.select(screenId)
   }
 
-  const getAllScreens = (route) => {
+  const getAllScreens = route => {
     let screens = []
     Object.entries(route.subpaths).forEach(([route, subpath]) => {
       Object.entries(subpath.screens).forEach(([role, id]) => {
@@ -51,7 +51,7 @@
 
   const getFilteredScreens = (screens, searchString) => {
     return screens.filter(
-      (screen) => !searchString || screen.route.includes(searchString)
+      screen => !searchString || screen.route.includes(searchString)
     )
   }
 

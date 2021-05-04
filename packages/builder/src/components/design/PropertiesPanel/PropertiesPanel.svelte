@@ -57,7 +57,8 @@
         {showDisplayName}
         onChange={store.actions.components.updateProp}
         onScreenPropChange={setAssetProps}
-        assetInstance={$store.currentView !== 'component' && $currentAsset} />
+        assetInstance={$store.currentView !== "component" && $currentAsset}
+      />
     </div>
   </Tab>
   <Tab title="Design">
@@ -71,7 +72,8 @@
         {onStyleChanged}
         {onCustomStyleChanged}
         {onUpdateTransition}
-        {onResetStyles} />
+        {onResetStyles}
+      />
     </div>
   </Tab>
 </Tabs>

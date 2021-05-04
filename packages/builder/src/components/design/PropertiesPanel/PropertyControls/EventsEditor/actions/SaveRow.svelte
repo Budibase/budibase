@@ -17,12 +17,12 @@
   $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list || []
 
-  const getSchemaFields = (tableId) => {
+  const getSchemaFields = tableId => {
     const { schema } = getSchemaForDatasource({ type: "table", tableId })
     return Object.values(schema || {})
   }
 
-  const onFieldsChanged = (e) => {
+  const onFieldsChanged = e => {
     parameters.fields = e.detail
   }
 </script>
@@ -39,16 +39,16 @@
       bind:value={parameters.providerId}
       options={dataProviderComponents}
       placeholder="None"
-      getOptionLabel={(option) => option._instanceName}
-      getOptionValue={(option) => option._id}
+      getOptionLabel={option => option._instanceName}
+      getOptionValue={option => option._id}
     />
 
     <Label small>Table</Label>
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
-      getOptionLabel={(option) => option.name}
-      getOptionValue={(option) => option._id}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option._id}
     />
 
     {#if parameters.tableId}

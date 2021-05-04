@@ -16,7 +16,8 @@
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
   <link
     href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
-    rel="stylesheet" />
+    rel="stylesheet"
+  />
   <style>
     html,
     body {

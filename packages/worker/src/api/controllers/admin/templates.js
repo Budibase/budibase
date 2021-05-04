@@ -9,7 +9,7 @@ const { getTemplates } = require("../../../constants/templates")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
-exports.save = async (ctx) => {
+exports.save = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const type = ctx.params.type
   let template = ctx.request.body
@@ -30,36 +30,36 @@ exports.save = async (ctx) => {
   }
 }
 
-exports.definitions = async (ctx) => {
+exports.definitions = async ctx => {
   ctx.body = {
     purpose: TemplateMetadata,
     bindings: Object.values(TemplateBindings),
   }
 }
 
-exports.fetch = async (ctx) => {
+exports.fetch = async ctx => {
   ctx.body = await getTemplates()
 }
 
-exports.fetchByType = async (ctx) => {
+exports.fetchByType = async ctx => {
   ctx.body = await getTemplates({
     type: ctx.params.type,
   })
 }
 
-exports.fetchByOwner = async (ctx) => {
+exports.fetchByOwner = async ctx => {
   ctx.body = await getTemplates({
     ownerId: ctx.params.ownerId,
   })
 }
 
-exports.find = async (ctx) => {
+exports.find = async ctx => {
   ctx.body = await getTemplates({
     id: ctx.params.id,
   })
 }
 
-exports.destroy = async (ctx) => {
+exports.destroy = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   await db.remove(ctx.params.id, ctx.params.rev)
   ctx.message = `Template ${ctx.params.id} deleted.`

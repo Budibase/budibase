@@ -9,4 +9,5 @@
   bind:value
   options={$tables.list}
   getOptionLabel={table => table.name}
-  getOptionValue={table => table._id} />
+  getOptionValue={table => table._id}
+/>

@@ -47,9 +47,9 @@
         .test(
           "non-existing-app-name",
           "App with same name already exists. Please try another app name.",
-          (value) =>
+          value =>
             !existingAppNames.some(
-              (appName) => appName.toLowerCase() === value.toLowerCase()
+              appName => appName.toLowerCase() === value.toLowerCase()
             )
         )
     }
@@ -57,11 +57,11 @@
 
   const checkValidity = async (values, validator) => {
     const obj = object().shape(validator)
-    Object.keys(validator).forEach((key) => ($errors[key] = null))
+    Object.keys(validator).forEach(key => ($errors[key] = null))
     try {
       await obj.validate(values, { abortEarly: false })
     } catch (validationErrors) {
-      validationErrors.inner.forEach((error) => {
+      validationErrors.inner.forEach(error => {
         $errors[error.path] = capitalise(error.message)
       })
     }

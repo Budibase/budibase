@@ -53,12 +53,14 @@
   {data}
   allowEditing={true}
   bind:hideAutocolumns
-  {loading}>
+  {loading}
+>
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
     <CreateRowButton
-      title={isUsersTable ? 'Create user' : 'Create row'}
-      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow} />
+      title={isUsersTable ? "Create user" : "Create row"}
+      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow}
+    />
     <CreateViewButton />
     <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}

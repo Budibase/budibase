@@ -6,7 +6,7 @@ const FORMATS = {
 
 function processImage(file) {
   // this will overwrite the temp file
-  return jimp.read(file.path).then((img) => {
+  return jimp.read(file.path).then(img => {
     return img.resize(300, jimp.AUTO).write(file.path)
   })
 }

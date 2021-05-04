@@ -26,22 +26,21 @@
   ]
 
   let modal
-  $: selected =
-    tabs.find((t) => t.key === $params.assetType)?.title || "Screens"
+  $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
-    const { key } = tabs.find((t) => t.title === detail)
+    const { key } = tabs.find(t => t.title === detail)
     $goto(`../${key}`)
   }
 
-  const updateAccessRole = (event) => {
+  const updateAccessRole = event => {
     const role = event.detail
 
     // Select a valid screen with this new role - otherwise we'll not be
     // able to change role at all because ComponentNavigationTree will kick us
     // back the current role again because the same screen ID is still selected
     const firstValidScreenId = $allScreens.find(
-      (screen) => screen.routing.roleId === role
+      screen => screen.routing.roleId === role
     )?._id
     if (firstValidScreenId) {
       store.actions.screens.select(firstValidScreenId)
@@ -50,7 +49,7 @@
     // Otherwise clear the selected screen ID so that the first new valid screen
     // can be selected by ComponentNavigationTree
     else {
-      store.update((state) => {
+      store.update(state => {
         state.selectedScreenId = null
         return state
       })
@@ -73,8 +72,8 @@
             on:change={updateAccessRole}
             value={$selectedAccessRole}
             label="Filter by Access"
-            getOptionLabel={(role) => role.name}
-            getOptionValue={(role) => role._id}
+            getOptionLabel={role => role.name}
+            getOptionValue={role => role._id}
             options={$roles}
           />
           <Search

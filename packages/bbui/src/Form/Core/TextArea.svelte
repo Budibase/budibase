@@ -25,23 +25,28 @@
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
   class:is-disabled={disabled}
-  class:is-focused={focus}>
+  class:is-focused={focus}
+>
   {#if error}
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
   {/if}
   <textarea
     bind:this={textarea}
-    placeholder={placeholder || ''}
+    placeholder={placeholder || ""}
     class="spectrum-Textfield-input"
     {disabled}
     {id}
     on:focus={() => (focus = true)}
-    on:blur={onChange}>{value || ''}</textarea>
+    on:blur={onChange}
+  >
+    {value || ""}
+  </textarea>
 </div>
 
 <style>

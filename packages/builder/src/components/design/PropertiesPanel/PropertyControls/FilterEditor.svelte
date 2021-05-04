@@ -18,7 +18,7 @@
 
   $: schemaFields = getSchemaFields(componentInstance)
 
-  const getSchemaFields = (component) => {
+  const getSchemaFields = component => {
     const datasource = getDatasourceForProvider($currentAsset, component)
     const { schema } = getSchemaForDatasource(datasource)
     return Object.values(schema || {})
@@ -30,7 +30,7 @@
     drawer.hide()
   }
 
-  const onFieldsChanged = (event) => {
+  const onFieldsChanged = event => {
     tempValue = event.detail
   }
 </script>

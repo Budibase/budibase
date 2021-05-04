@@ -204,8 +204,8 @@ async function queueRelevantRowAutomations(event, eventType) {
 
   // filter down to the correct event type
   automations = automations.rows
-    .map((automation) => automation.doc)
-    .filter((automation) => {
+    .map(automation => automation.doc)
+    .filter(automation => {
       const trigger = automation.definition.trigger
       return trigger && trigger.event === eventType
     })

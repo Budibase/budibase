@@ -8,7 +8,8 @@
 <div
   class="topnavitemright settings"
   data-cy="settings-icon"
-  on:click={modal.show}>
+  on:click={modal.show}
+>
   <Icon hoverable name="Settings" />
 </div>
 <Modal bind:this={modal} width="600px">

@@ -73,17 +73,20 @@
 </script>
 
 <ModalContent
-  title={creating ? 'Create User' : 'Edit User'}
-  confirmText={creating ? 'Create User' : 'Save User'}
-  onConfirm={saveRow}>
+  title={creating ? "Create User" : "Edit User"}
+  confirmText={creating ? "Create User" : "Save User"}
+  onConfirm={saveRow}
+>
   <ErrorsBox {errors} />
   <RowFieldControl
-    meta={{ ...tableSchema.email, name: 'Email' }}
+    meta={{ ...tableSchema.email, name: "Email" }}
     bind:value={row.email}
-    readonly={!creating} />
+    readonly={!creating}
+  />
   <RowFieldControl
-    meta={{ name: 'password', type: 'password' }}
-    bind:value={row.password} />
+    meta={{ name: "password", type: "password" }}
+    bind:value={row.password}
+  />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
   <Select
@@ -92,13 +95,18 @@
     bind:value={row.roleId}
     options={$roles}
     getOptionLabel={role => role.name}
-    getOptionValue={role => role._id} />
+    getOptionValue={role => role._id}
+  />
   <Select
     label="Status"
     bind:value={row.status}
-    options={[{ label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }]}
+    options={[
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+    ]}
     getOptionLabel={status => status.label}
-    getOptionValue={status => status.value} />
+    getOptionValue={status => status.value}
+  />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}
       <RowFieldControl {meta} bind:value={row[key]} {creating} />

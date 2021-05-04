@@ -37,9 +37,12 @@
   {#each buttonProps as props}
     <div class="button-container">
       <FlatButton
-        selected={isMultiSelect ? value.includes(props.value) : value === props.value}
+        selected={isMultiSelect
+          ? value.includes(props.value)
+          : value === props.value}
         onClick={onButtonClicked}
-        {...props} />
+        {...props}
+      />
     </div>
   {/each}
 </div>

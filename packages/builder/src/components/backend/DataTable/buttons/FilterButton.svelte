@@ -12,7 +12,8 @@
   size="S"
   quiet
   on:click={modal.show}
-  active={view.filters?.length}>
+  active={view.filters?.length}
+>
   Filter
 </ActionButton>
 <Modal bind:this={modal}>

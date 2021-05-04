@@ -1,4 +1,4 @@
-export const hashString = (str) => {
+export const hashString = str => {
   if (!str) {
     return 0
   }

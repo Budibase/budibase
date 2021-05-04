@@ -11,7 +11,8 @@
 <div class="wrapper" use:styleable={$component.styles}>
   <div
     class="spectrum-Form"
-    class:spectrum-Form--labelsAbove={labelPosition === 'above'}>
+    class:spectrum-Form--labelsAbove={labelPosition === "above"}
+  >
     <slot />
   </div>
 </div>

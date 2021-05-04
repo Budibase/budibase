@@ -53,12 +53,14 @@
   class="spectrum-Textfield"
   class:is-invalid={!!error}
   class:is-disabled={disabled}
-  class:is-focused={focus}>
+  class:is-focused={focus}
+>
   {#if error}
     <svg
       class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
   {/if}
@@ -68,13 +70,14 @@
     {disabled}
     {readonly}
     {id}
-    value={value || ''}
-    placeholder={placeholder || ''}
+    value={value || ""}
+    placeholder={placeholder || ""}
     on:blur={onBlur}
     on:focus={onFocus}
     on:input
     {type}
-    class="spectrum-Textfield-input" />
+    class="spectrum-Textfield-input"
+  />
 </div>
 
 <style>

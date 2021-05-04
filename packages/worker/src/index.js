@@ -44,7 +44,7 @@ module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
 })
 
-process.on("uncaughtException", (err) => {
+process.on("uncaughtException", err => {
   console.error(err)
   server.close()
   server.destroy()

@@ -61,7 +61,7 @@ module.exports.make = async (inputs = {}) => {
   )
 }
 
-module.exports.get = (property) => {
+module.exports.get = property => {
   const props = fs.readFileSync(FILE_PATH, "utf8").split(property)
   if (props[0].charAt(0) === "=") {
     property = props[0]

@@ -64,7 +64,8 @@
   on:close={onClose}
   options={flatpickrOptions}
   on:change={handleChange}
-  element={`#${flatpickrId}`}>
+  element={`#${flatpickrId}`}
+>
   <div
     id={flatpickrId}
     class:is-disabled={disabled}
@@ -73,17 +74,20 @@
     class:is-focused={open}
     aria-readonly="false"
     aria-required="false"
-    aria-haspopup="true">
+    aria-haspopup="true"
+  >
     <div
       on:click={flatpickr?.open}
       class="spectrum-Textfield spectrum-InputGroup-textfield"
       class:is-disabled={disabled}
-      class:is-invalid={!!error}>
+      class:is-invalid={!!error}
+    >
       {#if !!error}
         <svg
           class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
           focusable="false"
-          aria-hidden="true">
+          aria-hidden="true"
+        >
           <use xlink:href="#spectrum-icon-18-Alert" />
         </svg>
       {/if}
@@ -94,7 +98,8 @@
         class="spectrum-Textfield-input spectrum-InputGroup-input"
         {placeholder}
         {id}
-        {value} />
+        {value}
+      />
     </div>
     <button
       type="button"
@@ -102,12 +107,14 @@
       tabindex="-1"
       {disabled}
       class:is-invalid={!!error}
-      on:click={flatpickr?.open}>
+      on:click={flatpickr?.open}
+    >
       <svg
         class="spectrum-Icon spectrum-Icon--sizeM"
         focusable="false"
         aria-hidden="true"
-        aria-label="Calendar">
+        aria-label="Calendar"
+      >
         <use xlink:href="#spectrum-icon-18-Calendar" />
       </svg>
     </button>

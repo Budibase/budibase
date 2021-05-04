@@ -8,17 +8,17 @@
   export let text = ""
 </script>
 
-{#if type === 'h1'}
+{#if type === "h1"}
   <h1 use:styleable={$component.styles}>{text}</h1>
-{:else if type === 'h2'}
+{:else if type === "h2"}
   <h2 use:styleable={$component.styles}>{text}</h2>
-{:else if type === 'h3'}
+{:else if type === "h3"}
   <h3 use:styleable={$component.styles}>{text}</h3>
-{:else if type === 'h4'}
+{:else if type === "h4"}
   <h4 use:styleable={$component.styles}>{text}</h4>
-{:else if type === 'h5'}
+{:else if type === "h5"}
   <h5 use:styleable={$component.styles}>{text}</h5>
-{:else if type === 'h6'}
+{:else if type === "h6"}
   <h6 use:styleable={$component.styles}>{text}</h6>
 {/if}
 

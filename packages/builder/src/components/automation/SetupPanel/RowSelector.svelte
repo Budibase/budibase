@@ -23,7 +23,8 @@
   bind:value={value.tableId}
   options={$tables.list}
   getOptionLabel={table => table.name}
-  getOptionValue={table => table._id} />
+  getOptionValue={table => table._id}
+/>
 
 {#if schemaFields.length}
   <div class="schema-fields">
@@ -33,15 +34,17 @@
           <Select
             label={field}
             bind:value={value[field]}
-            options={schema.constraints.inclusion} />
-        {:else if schema.type === 'string' || schema.type === 'number'}
+            options={schema.constraints.inclusion}
+          />
+        {:else if schema.type === "string" || schema.type === "number"}
           <DrawerBindableInput
             panel={AutomationBindingPanel}
             value={value[field]}
             on:change={e => (value[field] = e.detail)}
             label={field}
             type="string"
-            {bindings} />
+            {bindings}
+          />
         {/if}
       {/if}
     {/each}
