@@ -9,11 +9,11 @@
   export let labelPosition = "above"
   export let error = null
   export let options = []
-  export let getOptionLabel = (option) => extractProperty(option, "label")
-  export let getOptionValue = (option) => extractProperty(option, "value")
+  export let getOptionLabel = option => extractProperty(option, "label")
+  export let getOptionValue = option => extractProperty(option, "value")
 
   const dispatch = createEventDispatcher()
-  const onChange = (e) => {
+  const onChange = e => {
     value = e.detail
     dispatch("change", e.detail)
   }

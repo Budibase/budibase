@@ -18,7 +18,7 @@
     title="Destination URL"
     placeholder="/screen"
     value={parameters.url}
-    on:change={(value) => (parameters.url = value.detail)}
+    on:change={value => (parameters.url = value.detail)}
     {bindings}
   />
 </div>

@@ -14,9 +14,7 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if (
-      $datasources?.list.some(
-        (datasource) => datasource.name === datasourceName
-      )
+      $datasources?.list.some(datasource => datasource.name === datasourceName)
     ) {
       error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
       return

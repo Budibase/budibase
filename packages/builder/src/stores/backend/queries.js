@@ -17,13 +17,13 @@ export function createQueriesStore() {
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
-      update((state) => ({ ...state, list: json }))
+      update(state => ({ ...state, list: json }))
       return json
     },
     save: async (datasourceId, query) => {
       const _integrations = get(integrations)
       const dataSource = get(datasources).list.filter(
-        (ds) => ds._id === datasourceId
+        ds => ds._id === datasourceId
       )
       // check if readable attribute is found
       if (dataSource.length !== 0) {
@@ -39,10 +39,8 @@ export function createQueriesStore() {
         throw new Error("Failed saving query.")
       }
       const json = await response.json()
-      update((state) => {
-        const currentIdx = state.list.findIndex(
-          (query) => query._id === json._id
-        )
+      update(state => {
+        const currentIdx = state.list.findIndex(query => query._id === json._id)
 
         const queries = state.list
 
@@ -55,19 +53,19 @@ export function createQueriesStore() {
       })
       return json
     },
-    select: (query) => {
-      update((state) => ({ ...state, selected: query._id }))
-      datasources.update((state) => ({
+    select: query => {
+      update(state => ({ ...state, selected: query._id }))
+      datasources.update(state => ({
         ...state,
         selected: query.datasourceId,
       }))
     },
-    delete: async (query) => {
+    delete: async query => {
       const response = await api.delete(
         `/api/queries/${query._id}/${query._rev}`
       )
-      update((state) => {
-        state.list = state.list.filter((existing) => existing._id !== query._id)
+      update(state => {
+        state.list = state.list.filter(existing => existing._id !== query._id)
         if (state.selected === query._id) {
           state.selected = null
         }

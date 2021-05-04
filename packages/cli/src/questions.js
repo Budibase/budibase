@@ -1,6 +1,6 @@
 const inquirer = require("inquirer")
 
-exports.confirmation = async (question) => {
+exports.confirmation = async question => {
   const config = {
     type: "confirm",
     message: question,
@@ -27,7 +27,7 @@ exports.number = async (question, defaultNumber) => {
     type: "input",
     name: "number",
     message: question,
-    validate: (value) => {
+    validate: value => {
       let valid = !isNaN(parseFloat(value))
       return valid || "Please enter a number"
     },

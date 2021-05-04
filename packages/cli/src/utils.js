@@ -21,23 +21,23 @@ exports.downloadFile = async (url, filePath) => {
   })
 }
 
-exports.getHelpDescription = (string) => {
+exports.getHelpDescription = string => {
   return chalk.cyan(string)
 }
 
-exports.getSubHelpDescription = (string) => {
+exports.getSubHelpDescription = string => {
   return chalk.green(string)
 }
 
-exports.error = (error) => {
+exports.error = error => {
   return chalk.red(`Error - ${error}`)
 }
 
-exports.success = (success) => {
+exports.success = success => {
   return chalk.green(success)
 }
 
-exports.info = (info) => {
+exports.info = info => {
   return chalk.cyan(info)
 }
 
@@ -45,7 +45,7 @@ exports.logErrorToFile = (file, error) => {
   fs.writeFileSync(path.resolve(`./${file}`), `Budibase Error\n${error}`)
 }
 
-exports.parseEnv = (env) => {
+exports.parseEnv = env => {
   const lines = env.toString().split("\n")
   let result = {}
   for (const line of lines) {

@@ -15,7 +15,7 @@
   let focus = false
   let textarea
   const dispatch = createEventDispatcher()
-  const onChange = (event) => {
+  const onChange = event => {
     dispatch("change", event.target.value)
     focus = false
   }

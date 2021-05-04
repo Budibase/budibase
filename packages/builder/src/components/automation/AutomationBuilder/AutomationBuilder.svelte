@@ -6,7 +6,7 @@
   $: automation = $automationStore.selectedAutomation?.automation
 
   function onSelect(block) {
-    automationStore.update((state) => {
+    automationStore.update(state => {
       state.selectedBlock = block
       return state
     })

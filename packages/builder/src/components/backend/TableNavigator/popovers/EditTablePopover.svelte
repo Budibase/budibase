@@ -24,11 +24,9 @@
 
   function showDeleteModal() {
     const screens = $allScreens
-    templateScreens = screens.filter(
-      (screen) => screen.autoTableId === table._id
-    )
+    templateScreens = screens.filter(screen => screen.autoTableId === table._id)
     willBeDeleted = ["All table data"].concat(
-      templateScreens.map((screen) => `Screen ${screen.props._instanceName}`)
+      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
     )
     confirmDeleteDialog.show()
   }

@@ -14,7 +14,7 @@
 
   function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
-    if (fileArray.some((file) => file.size >= FILE_SIZE_LIMIT)) {
+    if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
         `Files cannot exceed ${
           FILE_SIZE_LIMIT / BYTES_IN_MB

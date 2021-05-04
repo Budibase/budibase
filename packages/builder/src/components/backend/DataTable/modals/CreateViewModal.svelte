@@ -10,7 +10,7 @@
   let name
   let field
 
-  $: views = $tables.list.flatMap((table) => Object.keys(table.views || {}))
+  $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
 
   function saveView() {
     if (views.includes(name)) {

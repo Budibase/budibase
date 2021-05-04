@@ -49,7 +49,7 @@
   let deletion
 
   $: tableOptions = $tables.list.filter(
-    (table) => table._id !== $tables.draft._id
+    table => table._id !== $tables.draft._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
@@ -60,7 +60,7 @@
     !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
     Object.keys($tables.draft?.schema ?? {}).some(
-      (key) => key !== originalName && key === field.name
+      key => key !== originalName && key === field.name
     )
 
   // used to select what different options can be displayed for column type
@@ -154,7 +154,7 @@
     if (!field || !field.tableId) {
       return null
     }
-    const linkTable = tableOptions.find((table) => table._id === field.tableId)
+    const linkTable = tableOptions.find(table => table._id === field.tableId)
     if (!linkTable) {
       return null
     }
@@ -197,8 +197,8 @@
       ...Object.values(fieldDefinitions),
       { name: "Auto Column", type: AUTO_COL },
     ]}
-    getOptionLabel={(field) => field.name}
-    getOptionValue={(field) => field.type}
+    getOptionLabel={field => field.name}
+    getOptionValue={field => field.type}
   />
 
   {#if canBeRequired || canBeDisplay}
@@ -274,8 +274,8 @@
       label="Table"
       bind:value={field.tableId}
       options={tableOptions}
-      getOptionLabel={(table) => table.name}
-      getOptionValue={(table) => table._id}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
     />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
@@ -283,8 +283,8 @@
         label="Define the relationship"
         bind:value={field.relationshipType}
         options={relationshipOptions}
-        getOptionLabel={(option) => option.name}
-        getOptionValue={(option) => option.value}
+        getOptionLabel={option => option.name}
+        getOptionValue={option => option.value}
       />
     {/if}
     <Input label={`Column name in other table`} bind:value={field.fieldName} />
@@ -292,10 +292,10 @@
     <Select
       label="Auto Column Type"
       value={field.subtype}
-      on:change={(e) => (field.subtype = e.detail)}
+      on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
-      getOptionLabel={(option) => option[1].name}
-      getOptionValue={(option) => option[0]}
+      getOptionLabel={option => option[1].name}
+      getOptionValue={option => option[0]}
     />
   {/if}
 

@@ -8,6 +8,6 @@
 <Select
   bind:value
   options={$tables.list}
-  getOptionLabel={(table) => table.name}
-  getOptionValue={(table) => table._id}
+  getOptionLabel={table => table.name}
+  getOptionValue={table => table._id}
 />

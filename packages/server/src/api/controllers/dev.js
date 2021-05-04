@@ -21,14 +21,14 @@ async function redirect(ctx, method) {
   ctx.cookies
 }
 
-exports.redirectGet = async (ctx) => {
+exports.redirectGet = async ctx => {
   await redirect(ctx, "GET")
 }
 
-exports.redirectPost = async (ctx) => {
+exports.redirectPost = async ctx => {
   await redirect(ctx, "POST")
 }
 
-exports.redirectDelete = async (ctx) => {
+exports.redirectDelete = async ctx => {
   await redirect(ctx, "DELETE")
 }

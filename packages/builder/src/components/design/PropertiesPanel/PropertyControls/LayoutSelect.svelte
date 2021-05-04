@@ -9,6 +9,6 @@
   bind:value
   on:change
   options={$store.layouts}
-  getOptionLabel={(layout) => layout.name}
-  getOptionValue={(layout) => layout._id}
+  getOptionLabel={layout => layout.name}
+  getOptionValue={layout => layout._id}
 />

@@ -56,11 +56,11 @@ async function getRoutingStructure(appId) {
   return { routes: routing.json }
 }
 
-exports.fetch = async (ctx) => {
+exports.fetch = async ctx => {
   ctx.body = await getRoutingStructure(ctx.appId)
 }
 
-exports.clientFetch = async (ctx) => {
+exports.clientFetch = async ctx => {
   const routing = await getRoutingStructure(ctx.appId)
   let roleId = ctx.user.role._id
   // builder is a special case, always return the full routing structure

@@ -8,12 +8,12 @@
   export let linkedRows = []
 
   let rows = []
-  let linkedIds = (linkedRows || [])?.map((row) => row?._id || row)
+  let linkedIds = (linkedRows || [])?.map(row => row?._id || row)
 
   $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
-  $: linkedTable = $tables.list.find((table) => table._id === linkedTableId)
+  $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
   $: fetchRows(linkedTableId)
 
   async function fetchRows(linkedTableId) {
@@ -44,8 +44,8 @@
     value={linkedIds?.[0]}
     options={rows}
     getOptionLabel={getPrettyName}
-    getOptionValue={(row) => row._id}
-    on:change={(e) => (linkedIds = e.detail ? [e.detail] : [])}
+    getOptionValue={row => row._id}
+    on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
     {label}
   />
 {:else}
@@ -54,6 +54,6 @@
     {label}
     options={rows}
     getOptionLabel={getPrettyName}
-    getOptionValue={(row) => row._id}
+    getOptionValue={row => row._id}
   />
 {/if}

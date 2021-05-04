@@ -9,14 +9,14 @@ export const getThemeStore = () => {
   const store = localStorageStore("bb-theme", initialValue)
 
   // Update theme class when store changes
-  store.subscribe((state) => {
+  store.subscribe(state => {
     // Handle any old local storage values - this can be removed after the update
     if (state.darkMode !== undefined) {
       store.set(initialValue)
       return
     }
 
-    state.options.forEach((option) => {
+    state.options.forEach(option => {
       themeElement.classList.toggle(
         `spectrum--${option}`,
         option === state.theme

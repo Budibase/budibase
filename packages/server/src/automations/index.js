@@ -9,7 +9,7 @@ let workers = workerFarm(require.resolve("./thread"))
 
 function runWorker(job) {
   return new Promise((resolve, reject) => {
-    workers(job, (err) => {
+    workers(job, err => {
       if (err) {
         reject(err)
       } else {
@@ -32,7 +32,7 @@ async function updateQuota(automation) {
  */
 module.exports.init = async function () {
   await actions.init()
-  triggers.automationQueue.process(async (job) => {
+  triggers.automationQueue.process(async job => {
     try {
       if (env.USE_QUOTAS) {
         job.data.automation.apiKey = await updateQuota(job.data.automation)

@@ -26,7 +26,7 @@ router
       br: false,
     })
   )
-  .use("/health", (ctx) => (ctx.status = 200))
+  .use("/health", ctx => (ctx.status = 200))
   .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
@@ -50,7 +50,7 @@ router.use(async (ctx, next) => {
   }
 })
 
-router.get("/health", (ctx) => (ctx.status = 200))
+router.get("/health", ctx => (ctx.status = 200))
 
 // authenticated routes
 for (let route of routes) {

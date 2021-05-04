@@ -48,7 +48,7 @@ exports.getGroupParams = (id = "", otherProps = {}) => {
  * Generates a new global user ID.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateGlobalUserID = (id) => {
+exports.generateGlobalUserID = id => {
   return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
 }
 
@@ -70,7 +70,7 @@ exports.getGlobalUserParams = (globalId, otherProps = {}) => {
  * Generates a template ID.
  * @param ownerId The owner/user of the template, this could be global or a group level.
  */
-exports.generateTemplateID = (ownerId) => {
+exports.generateTemplateID = ownerId => {
   return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${newid()}`
 }
 
@@ -132,7 +132,7 @@ const determineScopedConfig = async function (db, { type, user, group }) {
       }
     )
   )
-  const configs = response.rows.map((row) => {
+  const configs = response.rows.map(row => {
     const config = row.doc
 
     // Config is specific to a user and a group

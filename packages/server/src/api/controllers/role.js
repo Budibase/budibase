@@ -57,20 +57,20 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  let roles = body.rows.map((row) => row.doc)
+  let roles = body.rows.map(row => row.doc)
   const builtinRoles = getBuiltinRoles()
 
   // need to combine builtin with any DB record of them (for sake of permissions)
   for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
     const builtinRole = builtinRoles[builtinRoleId]
     const dbBuiltin = roles.filter(
-      (dbRole) => getExternalRoleID(dbRole._id) === builtinRoleId
+      dbRole => getExternalRoleID(dbRole._id) === builtinRoleId
     )[0]
     if (dbBuiltin == null) {
       roles.push(builtinRole)
     } else {
       // remove role and all back after combining with the builtin
-      roles = roles.filter((role) => role._id !== dbBuiltin._id)
+      roles = roles.filter(role => role._id !== dbBuiltin._id)
       dbBuiltin._id = getExternalRoleID(dbBuiltin._id)
       roles.push(Object.assign(builtinRole, dbBuiltin))
     }
@@ -116,8 +116,8 @@ exports.destroy = async function (ctx) {
         include_docs: true,
       })
     )
-  ).rows.map((row) => row.doc)
-  const usersWithRole = users.filter((user) => user.roleId === roleId)
+  ).rows.map(row => row.doc)
+  const usersWithRole = users.filter(user => user.roleId === roleId)
   if (usersWithRole.length !== 0) {
     ctx.throw(400, "Cannot delete role when it is in use.")
   }

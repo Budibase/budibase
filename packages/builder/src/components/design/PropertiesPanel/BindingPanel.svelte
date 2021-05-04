@@ -72,7 +72,7 @@
         <section>
           <Heading size="XS">Columns</Heading>
           <ul>
-            {#each context.filter((context) =>
+            {#each context.filter(context =>
               context.readableBinding.match(searchRgx)
             ) as { readableBinding }}
               <li on:click={() => addToText(readableBinding)}>
@@ -86,7 +86,7 @@
         <section>
           <Heading size="XS">Components</Heading>
           <ul>
-            {#each instance.filter((instance) =>
+            {#each instance.filter(instance =>
               instance.readableBinding.match(searchRgx)
             ) as { readableBinding }}
               <li on:click={() => addToText(readableBinding)}>
@@ -99,7 +99,7 @@
       <section>
         <Heading size="XS">Helpers</Heading>
         <ul>
-          {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+          {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
             <li on:click={() => addToText(helper.text)}>
               <div>
                 <Label extraSmall>{helper.displayText}</Label>

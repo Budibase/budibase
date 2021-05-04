@@ -11,18 +11,18 @@
   export let level = 0
   export let dragDropStore
 
-  const isScreenslot = (name) => name?.endsWith("screenslot")
+  const isScreenslot = name => name?.endsWith("screenslot")
 
-  const selectComponent = (component) => {
+  const selectComponent = component => {
     store.actions.components.select(component)
   }
 
-  const dragstart = (component) => (e) => {
+  const dragstart = component => e => {
     e.dataTransfer.dropEffect = DropEffect.MOVE
     dragDropStore.actions.dragstart(component)
   }
 
-  const dragover = (component, index) => (e) => {
+  const dragover = (component, index) => e => {
     const definition = store.actions.components.getDefinition(
       component._component
     )

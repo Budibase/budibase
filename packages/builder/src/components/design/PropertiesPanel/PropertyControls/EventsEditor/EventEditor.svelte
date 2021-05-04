@@ -21,7 +21,7 @@
   // dndzone needs an id on the array items, so this adds some temporary ones.
   $: {
     if (actions) {
-      actions.forEach((action) => {
+      actions.forEach(action => {
         if (!action.id) {
           action.id = generate()
         }
@@ -33,7 +33,7 @@
 
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find((t) => t.name === selectedAction[EVENT_TYPE_KEY]).component
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
 
   // Select the first action if we delete an action
   $: {
@@ -42,12 +42,12 @@
     }
   }
 
-  const deleteAction = (index) => {
+  const deleteAction = index => {
     actions.splice(index, 1)
     actions = actions
   }
 
-  const addAction = (actionType) => () => {
+  const addAction = actionType => () => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
@@ -60,7 +60,7 @@
     selectedAction = newAction
   }
 
-  const selectAction = (action) => () => {
+  const selectAction = action => () => {
     selectedAction = action
   }
 

@@ -27,12 +27,12 @@
     wrap: true,
   }
 
-  const handleChange = (event) => {
+  const handleChange = event => {
     const [dates] = event.detail
     dispatch("change", dates[0])
   }
 
-  const clearDateOnBackspace = (event) => {
+  const clearDateOnBackspace = event => {
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
       dispatch("change", null)
       flatpickr.close()
@@ -53,7 +53,7 @@
     // We need to blur both because the focus styling does not get properly
     // applied.
     const els = document.querySelectorAll(`#${flatpickrId} input`)
-    els.forEach((el) => el.blur())
+    els.forEach(el => el.blur())
   }
 </script>
 

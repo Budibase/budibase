@@ -4,7 +4,7 @@
 
   function group(element) {
     const buttons = Array.from(element.getElementsByTagName("button"))
-    buttons.forEach((button) => {
+    buttons.forEach(button => {
       button.classList.add("spectrum-ButtonGroup-item")
     })
   }

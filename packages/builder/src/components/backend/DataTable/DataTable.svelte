@@ -30,7 +30,7 @@
     if ($views.selected?.name?.startsWith("all_")) {
       loading = true
       const loadingTableId = $tables.selected?._id
-      api.fetchDataForView($views.selected).then((rows) => {
+      api.fetchDataForView($views.selected).then(rows => {
         loading = false
 
         // If we started a slow request then quickly change table, sometimes

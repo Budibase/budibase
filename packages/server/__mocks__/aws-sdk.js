@@ -1,6 +1,6 @@
 const aws = {}
 
-const response = (body) => () => ({ promise: () => body })
+const response = body => () => ({ promise: () => body })
 
 function DocumentClient() {
   this.put = jest.fn(response({}))
