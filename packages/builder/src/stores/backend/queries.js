@@ -55,7 +55,10 @@ export function createQueriesStore() {
     },
     select: query => {
       update(state => ({ ...state, selected: query._id }))
-      datasources.update(state => ({ ...state, selected: query.datasourceId }))
+      datasources.update(state => ({
+        ...state,
+        selected: query.datasourceId,
+      }))
     },
     delete: async query => {
       const response = await api.delete(

@@ -1,6 +1,6 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import { Input, TextArea, Button, Body } from "@budibase/bbui"
+  import { Input, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
 
   let value = ""
@@ -19,21 +19,19 @@
   <Body>
     Type
     <b>DELETE</b>
-    into the textbox, then click the following button to delete your entire web
-    app.
+    into the textbox, then click the following button to delete your entire web app.
   </Body>
   <Input
-    on:change={e => (value = e.target.value)}
-    on:input={e => (value = e.target.value)}
-    thin
+    on:change={e => (value = e.detail)}
     disabled={loading}
-    placeholder="" />
+    placeholder=""
+  />
   <div class="buttons">
     <Button
-      primary
-      disabled={value !== 'DELETE' || loading}
-      red
-      on:click={deleteApp}>
+      warning
+      disabled={value !== "DELETE" || loading}
+      on:click={deleteApp}
+    >
       Delete Entire App
     </Button>
   </div>

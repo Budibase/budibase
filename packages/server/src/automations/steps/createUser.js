@@ -58,7 +58,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
+module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   const { email, password, roleId } = inputs
   const ctx = {
     appId,

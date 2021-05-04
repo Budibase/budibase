@@ -1,13 +1,24 @@
 <script>
-  import { Input, Select } from "@budibase/bbui"
+  import { Select, Heading } from "@budibase/bbui"
+
+  export let values
+  export let errors
+  export let touched
 </script>
 
-<h2>What's your role for this app?</h2>
 <div class="container">
-  <Select label="Role" secondary name="roleId">
-    <option value="ADMIN">Admin</option>
-    <option value="POWER_USER">Power User</option>
-  </Select>
+  <Heading size="L">What's your role for this app?</Heading>
+  <Select
+    bind:value={$values.roleId}
+    label="Role"
+    options={[
+      { label: "Admin", value: "ADMIN" },
+      { label: "Power User", value: "POWER_USER" },
+    ]}
+    getOptionLabel={option => option.label}
+    getOptionValue={option => option.value}
+    error={$errors.roleId}
+  />
 </div>
 
 <style>

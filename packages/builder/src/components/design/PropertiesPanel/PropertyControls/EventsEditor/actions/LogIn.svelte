@@ -2,7 +2,7 @@
   import { Label } from "@budibase/bbui"
   import { getBindableProperties } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
 
@@ -16,13 +16,15 @@
     title="Email"
     value={parameters.email}
     on:change={value => (parameters.email = value.detail)}
-    {bindings} />
+    {bindings}
+  />
   <Label small>Password</Label>
   <DrawerBindableInput
     title="Password"
     value={parameters.password}
     on:change={value => (parameters.password = value.detail)}
-    {bindings} />
+    {bindings}
+  />
 </div>
 
 <style>

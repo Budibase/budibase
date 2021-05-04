@@ -53,7 +53,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, emitter }) {
+module.exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.rowId == null || inputs.row == null) {
     return {
       success: false,

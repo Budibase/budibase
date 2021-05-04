@@ -1,8 +1,15 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
   import { hostingStore } from "builderStore"
   import { HostingTypes } from "constants/backend"
-  import { Input, ModalContent, Toggle } from "@budibase/bbui"
+  import {
+    Heading,
+    Divider,
+    notifications,
+    Input,
+    ModalContent,
+    Toggle,
+    Body,
+  } from "@budibase/bbui"
   import ThemeEditor from "components/settings/ThemeEditor.svelte"
   import analytics from "analytics"
   import { onMount } from "svelte"
@@ -23,14 +30,14 @@
     }
     try {
       await hostingStore.actions.save(hostingInfo)
-      notifier.success(`Settings saved.`)
+      notifications.success(`Settings saved.`)
     } catch (err) {
-      notifier.danger(`Failed to update builder settings.`)
+      notifications.error(`Failed to update builder settings.`)
     }
   }
 
   function updateSelfHosting(event) {
-    if (hostingInfo.type === HostingTypes.CLOUD && event.target.checked) {
+    if (hostingInfo.type === HostingTypes.CLOUD && event.detail) {
       hostingInfo.hostingUrl = "localhost:10000"
       hostingInfo.useHttps = false
       hostingInfo.selfHostKey = "budibase"
@@ -52,42 +59,33 @@
 </script>
 
 <ModalContent title="Builder settings" confirmText="Save" onConfirm={save}>
-  <h5>Theme</h5>
+  <Heading size="XS">Theme</Heading>
   <ThemeEditor />
-  <h5>Hosting</h5>
-  <p>
+  <Divider noMargin noGrid />
+  <Heading size="XS">Hosting</Heading>
+  <Body size="S">
     This section contains settings that relate to the deployment and hosting of
     apps made in this builder.
-  </p>
+  </Body>
   <Toggle
-    thin
     text="Self hosted"
     on:change={updateSelfHosting}
-    bind:checked={selfhosted} />
+    bind:value={selfhosted}
+  />
   {#if selfhosted}
     <Input bind:value={hostingInfo.hostingUrl} label="Hosting URL" />
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
-    <Toggle thin text="HTTPS" bind:checked={hostingInfo.useHttps} />
+    <Toggle text="HTTPS" bind:value={hostingInfo.useHttps} />
   {/if}
-  <h5>Analytics</h5>
-  <p>
+  <Divider noMargin noGrid />
+  <Heading size="XS">Analytics</Heading>
+  <Body size="S">
     If you would like to send analytics that help us make budibase better,
     please let us know below.
-  </p>
+  </Body>
   <Toggle
-    thin
     text="Send Analytics To Budibase"
-    checked={!analyticsDisabled}
-    on:change={toggleAnalytics} />
+    value={!analyticsDisabled}
+    on:change={toggleAnalytics}
+  />
 </ModalContent>
-
-<style>
-  h5 {
-    margin: 0;
-    font-size: 14px;
-  }
-  p {
-    margin: 0;
-    font-size: 12px;
-  }
-</style>

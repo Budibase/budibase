@@ -1,6 +1,6 @@
 const arangodb = {}
 
-arangodb.Database = function() {
+arangodb.Database = function () {
   this.query = jest.fn(() => ({
     all: jest.fn(),
   }))

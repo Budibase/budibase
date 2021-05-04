@@ -1,10 +1,10 @@
 <script>
   import { roles } from "stores/backend"
 
-  export let roleId
+  export let value
 
-  $: role = $roles.find(role => role._id === roleId)
+  $: role = $roles.find(role => role._id === value)
   $: roleName = role?.name ?? "Unknown role"
 </script>
 
-<div>{roleName}</div>
+{roleName}

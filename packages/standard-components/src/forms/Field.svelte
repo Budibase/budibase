@@ -37,8 +37,9 @@
   <div class="spectrum-Form-item" use:styleable={$component.styles}>
     <label
       for={$fieldState?.fieldId}
-      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}>
-      {label || ''}
+      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}
+    >
+      {label || ""}
     </label>
     <div class="spectrum-Form-itemField">
       {#if !formContext}

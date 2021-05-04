@@ -10,7 +10,8 @@
         height="10"
         viewBox="0 0 12 10"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg">
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <path
           fill-rule="evenodd"
           clip-rule="evenodd"
@@ -29,7 +30,8 @@
           1.41607 3.46441 1.55132 3.52467C1.68657 3.58493 1.80829 3.67182
           1.90923 3.78014L4.98762 6.85706L10.0933 0.35187C10.1024 0.340482
           10.1122 0.329679 10.1227 0.319527H10.1212Z"
-          fill="var(--background)" />
+          fill="var(--background)"
+        />
       </svg>
     {:else}{step}{/if}
   </div>

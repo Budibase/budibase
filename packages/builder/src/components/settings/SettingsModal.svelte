@@ -1,38 +1,25 @@
 <script>
   import { General, DangerZone, APIKeys } from "./tabs"
-  import { Switcher, ModalContent } from "@budibase/bbui"
-
-  const tabs = [
-    {
-      title: "General",
-      key: "GENERAL",
-      component: General,
-    },
-    {
-      title: "API Keys",
-      key: "API_KEYS",
-      component: APIKeys,
-    },
-    {
-      title: "Danger Zone",
-      key: "DANGERZONE",
-      component: DangerZone,
-    },
-  ]
-
-  let value = "GENERAL"
-
-  $: selectedTab = tabs.find(tab => tab.key === value).component
+  import { ModalContent, Tab, Tabs } from "@budibase/bbui"
 </script>
 
 <ModalContent
   title="Settings"
   showConfirmButton={false}
-  showCancelButton={false}>
+  showCancelButton={false}
+>
   <div class="container">
-    <Switcher headings={tabs} bind:value>
-      <svelte:component this={selectedTab} />
-    </Switcher>
+    <Tabs selected="General">
+      <Tab title="General">
+        <General />
+      </Tab>
+      <Tab title="API Keys">
+        <APIKeys />
+      </Tab>
+      <Tab title="Danger Zone">
+        <DangerZone />
+      </Tab>
+    </Tabs>
   </div>
 </ModalContent>
 

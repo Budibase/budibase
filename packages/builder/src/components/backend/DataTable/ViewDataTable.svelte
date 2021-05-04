@@ -57,7 +57,9 @@
   tableId={view.tableId}
   {data}
   {loading}
-  bind:hideAutocolumns>
+  allowEditing={!view?.calculation}
+  bind:hideAutocolumns
+>
   <FilterButton {view} />
   <CalculateButton {view} />
   {#if view.calculation}

@@ -1,19 +1,22 @@
 <script>
-  import { Popover, TextButton, Icon } from "@budibase/bbui"
-  import GroupByPopover from "../popovers/GroupByPopover.svelte"
+  import { Modal, Button } from "@budibase/bbui"
+  import GroupByModal from "../modals/GroupByModal.svelte"
 
   export let view = {}
 
-  let anchor
-  let dropdown
+  let modal
 </script>
 
-<div bind:this={anchor}>
-  <TextButton text small active={!!view.groupBy} on:click={dropdown.show}>
-    <Icon name="group" />
-    Group By
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <GroupByPopover {view} onClosed={dropdown.hide} />
-</Popover>
+<Button
+  icon="Group"
+  primary
+  size="S"
+  quiet
+  active={!!view.groupBy}
+  on:click={modal.show}
+>
+  Group By
+</Button>
+<Modal bind:this={modal}>
+  <GroupByModal {view} />
+</Modal>

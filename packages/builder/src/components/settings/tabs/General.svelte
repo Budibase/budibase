@@ -63,14 +63,10 @@
         existingAppUrls.splice(urlIdx, 1)
       }
       nameValidation = {
-        name: string()
-          .required(nameError)
-          .notOneOf(existingAppNames),
+        name: string().required(nameError).notOneOf(existingAppNames),
       }
       urlValidation = {
-        url: string()
-          .required(urlError)
-          .notOneOf(existingAppUrls),
+        url: string().required(urlError).notOneOf(existingAppUrls),
       }
     } else {
       nameValidation = { name: string().required(nameError) }
@@ -80,27 +76,24 @@
 
 <div class="container">
   <Input
-    on:save={e => updateApplication({ name: e.detail })}
-    thin
-    edit
-    bind:value={$store.name}
-    bind:error={nameError}
-    label="App Name" />
-  {#if $hostingStore.hostingInfo.type === 'self'}
+    on:change={e => updateApplication({ name: e.detail })}
+    value={$store.name}
+    error={nameError}
+    label="App Name"
+  />
+  {#if $hostingStore.hostingInfo.type === "self"}
     <Input
-      on:save={e => updateApplication({ url: e.detail })}
-      thin
-      edit
-      bind:value={$store.url}
-      bind:error={urlError}
-      label="App URL" />
+      on:change={e => updateApplication({ url: e.detail })}
+      value={$store.url}
+      error={urlError}
+      label="App URL"
+    />
   {/if}
   <TextArea
-    on:save={e => updateApplication({ description: e.detail })}
-    thin
-    edit
+    on:change={e => updateApplication({ description: e.detail })}
     value={$store.description}
-    label="App Description" />
+    label="App Description"
+  />
 </div>
 
 <style>

@@ -65,23 +65,25 @@
 
 {#if !noSearchMatch}
   <NavItem
-    icon="ri-folder-line"
+    icon="FolderOutline"
     text={path}
     on:click={toggleManuallyOpened}
     opened={routeOpened}
     {border}
-    withArrow={route.subpaths} />
+    withArrow={route.subpaths}
+  />
 
   {#if routeOpened}
     {#each filteredScreens as screen (screen.id)}
       <NavItem
-        icon="ri-artboard-2-line"
+        icon="WebPage"
         indentLevel={indent || 1}
         selected={$store.selectedScreenId === screen.id}
         opened={$store.selectedScreenId === screen.id}
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
-        on:click={() => changeScreen(screen.id)}>
+        on:click={() => changeScreen(screen.id)}
+      >
         <ScreenDropdownMenu screenId={screen.id} />
       </NavItem>
       {#if selectedScreen?._id === screen.id}
@@ -89,7 +91,8 @@
           level={1}
           components={selectedScreen.props._children}
           currentComponent={$selectedComponent}
-          {dragDropStore} />
+          {dragDropStore}
+        />
       {/if}
     {/each}
   {/if}

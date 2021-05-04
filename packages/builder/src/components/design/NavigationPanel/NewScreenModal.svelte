@@ -82,8 +82,8 @@
   }
 
   const routeChanged = event => {
-    if (!event.target.value.startsWith("/")) {
-      route = "/" + event.target.value
+    if (!event.detail.startsWith("/")) {
+      route = "/" + event.detail
     }
   }
 </script>
@@ -92,24 +92,25 @@
   <Select
     label="Choose a Template"
     bind:value={templateIndex}
-    secondary
-    on:change={ev => templateChanged(ev.target.value)}>
-    {#if templates}
-      {#each templates as template, index}
-        <option value={index}>{template.name}</option>
-      {/each}
-    {/if}
-  </Select>
+    on:change={ev => templateChanged(ev.detail)}
+    options={templates}
+    placeholder={null}
+    getOptionLabel={x => x.name}
+    getOptionValue={(x, idx) => idx}
+  />
   <Input label="Name" bind:value={name} />
   <Input
     label="Url"
     error={routeError}
     bind:value={route}
-    on:change={routeChanged} />
-  <Select label="Access" bind:value={roleId} secondary>
-    {#each $roles as role}
-      <option value={role._id}>{role.name}</option>
-    {/each}
-  </Select>
-  <Toggle text="Create link in navigation bar" bind:checked={createLink} />
+    on:change={routeChanged}
+  />
+  <Select
+    label="Access"
+    bind:value={roleId}
+    options={$roles}
+    getOptionLabel={x => x.name}
+    getOptionValue={x => x._id}
+  />
+  <Toggle text="Create link in navigation bar" bind:value={createLink} />
 </ModalContent>

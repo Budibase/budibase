@@ -1,5 +1,5 @@
 <script>
-  import { Popover } from "@budibase/bbui"
+  import { Icon, Popover } from "@budibase/bbui"
   import { store } from "builderStore"
   import { onMount } from "svelte"
 
@@ -23,7 +23,7 @@
 </script>
 
 <div class="container" bind:this={iconContainer} on:click={popover.show}>
-  <i class="ri-feedback-line" class:highlight={$store.highlightFeedbackIcon} />
+  <Icon hoverable name="Feedback" />
 </div>
 <div class="iframe">
   <Popover bind:this={popover} anchor={iconContainer} align="right">
@@ -32,15 +32,6 @@
 </div>
 
 <style>
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
-  i.highlight {
-    color: var(--blue);
-    filter: drop-shadow(0 0 20px var(--blue));
-  }
-
   .container {
     cursor: pointer;
     color: var(--grey-7);
@@ -53,9 +44,6 @@
     align-items: center;
     height: 24px;
     width: 24px;
-  }
-  .container:hover i {
-    color: var(--ink);
   }
 
   .iframe :global(.menu-container) {

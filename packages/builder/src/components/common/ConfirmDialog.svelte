@@ -1,5 +1,5 @@
 <script>
-  import { Modal, ModalContent } from "@budibase/bbui"
+  import { Modal, ModalContent, Body } from "@budibase/bbui"
 
   export let title = ""
   export let body = ""
@@ -20,15 +20,9 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent onConfirm={onOk} {title} confirmText={okText} {cancelText} red>
-    <div class="body">
+    <Body size="S">
       {body}
       <slot />
-    </div>
+    </Body>
   </ModalContent>
 </Modal>
-
-<style>
-  .body {
-    font-size: var(--font-size-s);
-  }
-</style>

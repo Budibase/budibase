@@ -1,4 +1,4 @@
-export default function(url) {
+export default function (url) {
   return url
     .split("/")
     .map(part => {

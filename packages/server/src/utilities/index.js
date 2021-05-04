@@ -1,7 +1,7 @@
 const env = require("../environment")
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const CouchDB = require("../db")
-const { OBJ_STORE_DIRECTORY } = require("../constants")
+const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 
 const BB_CDN = "https://cdn.app.budi.live/assets"
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -69,4 +69,10 @@ exports.clientLibraryPath = appId => {
   } else {
     return `/api/assets/client`
   }
+}
+
+exports.attachmentsRelativeURL = attachmentKey => {
+  return exports.checkSlashesInUrl(
+    `/${ObjectStoreBuckets.APPS}/${attachmentKey}`
+  )
 }

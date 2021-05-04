@@ -29,7 +29,7 @@ exports.createLinkView = createLinkView
  * @returns {Promise<object[]>} This will return an array of the linking documents that were found
  * (if any).
  */
-exports.getLinkDocuments = async function({
+exports.getLinkDocuments = async function ({
   appId,
   tableId,
   rowId,

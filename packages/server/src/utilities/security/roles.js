@@ -16,12 +16,12 @@ function Role(id, name) {
   this.name = name
 }
 
-Role.prototype.addPermission = function(permissionId) {
+Role.prototype.addPermission = function (permissionId) {
   this.permissionId = permissionId
   return this
 }
 
-Role.prototype.addInheritance = function(inherits) {
+Role.prototype.addInheritance = function (inherits) {
   this.inherits = inherits
   return this
 }

@@ -37,6 +37,7 @@ async function init() {
     PORT: 4001,
     MINIO_URL: "http://localhost:10000/",
     COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+    REDIS_URL: "http://localhost:10000/cache/",
     WORKER_URL: "http://localhost:4002",
     JWT_SECRET: "testsecret",
     MINIO_ACCESS_KEY: "budibase",

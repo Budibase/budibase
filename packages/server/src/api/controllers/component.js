@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 
-exports.fetchAppComponentDefinitions = async function(ctx) {
+exports.fetchAppComponentDefinitions = async function (ctx) {
   const appId = ctx.params.appId || ctx.appId
   const db = new CouchDB(appId)
   const app = await db.get(appId)

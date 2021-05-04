@@ -5,6 +5,10 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
+const bullboard = require("bull-board")
+const expressApp = require("express")()
+
+expressApp.use("/bulladmin", bullboard.router)
 
 const router = new Router()
 const env = require("../environment")

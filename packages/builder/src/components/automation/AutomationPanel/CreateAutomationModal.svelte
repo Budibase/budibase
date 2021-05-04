@@ -2,8 +2,8 @@
   import { goto } from "@roxi/routify"
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
-  import { Input, ModalContent } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
+  import { Icon, Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
 
   let name
@@ -16,7 +16,7 @@
       name,
       instanceId,
     })
-    notifier.success(`Automation ${name} created.`)
+    notifications.success(`Automation ${name} created.`)
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     analytics.captureEvent("Automation Created", { name })
   }
@@ -25,17 +25,19 @@
 <ModalContent
   title="Create Automation"
   confirmText="Create"
+  size="L"
   onConfirm={createAutomation}
-  disabled={!valid}>
+  disabled={!valid}
+>
   <Input bind:value={name} label="Name" />
-  <div slot="footer">
-    <a
-      target="_blank"
-      href="https://docs.budibase.com/automate/introduction-to-automate">
-      <i class="ri-information-line" />
-      <span>Learn about automations</span>
-    </a>
-  </div>
+  <a
+    slot="footer"
+    target="_blank"
+    href="https://docs.budibase.com/automate/introduction-to-automate"
+  >
+    <Icon name="InfoOutline" />
+    <span>Learn about automations</span>
+  </a>
 </ModalContent>
 
 <style>
@@ -49,10 +51,10 @@
   }
   a span {
     text-decoration: underline;
+    margin-left: var(--spectrum-alias-item-padding-s);
   }
   i {
     font-size: 20px;
-    margin-right: var(--spacing-m);
     text-decoration: none;
   }
 </style>

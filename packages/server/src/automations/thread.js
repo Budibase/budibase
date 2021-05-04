@@ -56,6 +56,7 @@ class Orchestrator {
           appId: this._appId,
           apiKey: automation.apiKey,
           emitter: this._emitter,
+          context: this._context,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break

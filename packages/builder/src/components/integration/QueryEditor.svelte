@@ -1,6 +1,6 @@
 <script>
   import CodeMirror from "./codemirror"
-  import { Label, Spacer } from "@budibase/bbui"
+  import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { themeStore } from "builderStore"
 
@@ -132,6 +132,10 @@
 
     if (destroyed) return
 
+    CodeMirror.commands.autocomplete = function (cm) {
+      CodeMirror.showHint(cm, CodeMirror.hint.javascript)
+    }
+
     editor = CodeMirror.fromTextArea(refs.editor, opts)
 
     editor.on("change", instance => {
@@ -166,7 +170,6 @@
 
 {#if label}
   <Label small>{label}</Label>
-  <Spacer medium />
 {/if}
 <div style={`--code-mirror-height: ${editorHeight}px`}>
   <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
@@ -175,6 +178,10 @@
 <style>
   textarea {
     visibility: hidden;
+  }
+
+  div {
+    margin-top: var(--spacing-s);
   }
 
   div :global(.CodeMirror) {

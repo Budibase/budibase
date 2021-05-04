@@ -27,11 +27,11 @@ const CALCULATION_TYPES = {
 }
 
 validateJs.extend(validateJs.validators.datetime, {
-  parse: function(value) {
+  parse: function (value) {
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
-  format: function(value) {
+  format: function (value) {
     return new Date(value).toISOString()
   },
 })
@@ -54,7 +54,7 @@ async function findRow(ctx, db, tableId, rowId) {
   return row
 }
 
-exports.patch = async function(ctx) {
+exports.patch = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   let dbRow = await db.get(ctx.params.rowId)
@@ -115,7 +115,7 @@ exports.patch = async function(ctx) {
   ctx.message = `${table.name} updated successfully.`
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   let inputs = ctx.request.body
@@ -189,7 +189,7 @@ exports.save = async function(ctx) {
   ctx.message = `${table.name} saved successfully`
 }
 
-exports.fetchView = async function(ctx) {
+exports.fetchView = async function (ctx) {
   const appId = ctx.appId
   const viewName = ctx.params.viewName
 
@@ -248,7 +248,7 @@ exports.fetchView = async function(ctx) {
   }
 }
 
-exports.search = async function(ctx) {
+exports.search = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const {
@@ -287,7 +287,7 @@ exports.search = async function(ctx) {
   }
 }
 
-exports.fetchTableRows = async function(ctx) {
+exports.fetchTableRows = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
@@ -308,7 +308,7 @@ exports.fetchTableRows = async function(ctx) {
   ctx.body = await outputProcessing(appId, table, rows)
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   try {
@@ -320,7 +320,7 @@ exports.find = async function(ctx) {
   }
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const row = await db.get(ctx.params.rowId)
@@ -349,7 +349,7 @@ exports.destroy = async function(ctx) {
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
 }
 
-exports.validate = async function(ctx) {
+exports.validate = async function (ctx) {
   const errors = await validate({
     appId: ctx.appId,
     tableId: ctx.params.tableId,
@@ -380,7 +380,7 @@ async function validate({ appId, tableId, row, table }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-exports.fetchEnrichedRow = async function(ctx) {
+exports.fetchEnrichedRow = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableId = ctx.params.tableId

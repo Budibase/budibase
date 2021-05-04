@@ -10,7 +10,7 @@ const {
   getSelfHostKey,
 } = require("../../../utilities/builder/hosting")
 
-exports.preDeployment = async function() {
+exports.preDeployment = async function () {
   const url = `${await getWorkerUrl()}/api/deploy`
   try {
     const json = await fetchCredentials(url, {
@@ -37,11 +37,11 @@ exports.preDeployment = async function() {
   }
 }
 
-exports.postDeployment = async function() {
+exports.postDeployment = async function () {
   // we don't actively need to do anything after deployment in self hosting
 }
 
-exports.deploy = async function(deployment) {
+exports.deploy = async function (deployment) {
   const appId = deployment.getAppId()
   const verification = deployment.getVerification()
   // no metadata, aws has account ID in metadata
@@ -49,7 +49,7 @@ exports.deploy = async function(deployment) {
   await deployToObjectStore(appId, verification.bucket, metadata)
 }
 
-exports.replicateDb = async function(deployment) {
+exports.replicateDb = async function (deployment) {
   const appId = deployment.getAppId()
   const verification = deployment.getVerification()
   return performReplication(
