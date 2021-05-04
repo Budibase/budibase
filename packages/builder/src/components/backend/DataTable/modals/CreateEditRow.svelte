@@ -42,9 +42,10 @@
 </script>
 
 <ModalContent
-  title={creating ? 'Create Row' : 'Edit Row'}
-  confirmText={creating ? 'Create Row' : 'Save Row'}
-  onConfirm={saveRow}>
+  title={creating ? "Create Row" : "Edit Row"}
+  confirmText={creating ? "Create Row" : "Save Row"}
+  onConfirm={saveRow}
+>
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
     {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}

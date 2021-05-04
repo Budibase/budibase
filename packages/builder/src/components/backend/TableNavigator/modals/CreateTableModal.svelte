@@ -93,14 +93,16 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (dataImport && !dataImport.valid)}>
+  disabled={error || !name || (dataImport && !dataImport.valid)}
+>
   <Input
     data-cy="table-name-input"
     thin
     label="Table Name"
     on:input={checkValid}
     bind:value={name}
-    {error} />
+    {error}
+  />
   <div class="autocolumns">
     <Label extraSmall grey>Auto Columns</Label>
     <div class="toggles">
@@ -118,7 +120,8 @@
   </div>
   <Toggle
     text="Generate screens in Design section"
-    bind:value={createAutoscreens} />
+    bind:value={createAutoscreens}
+  />
   <div>
     <Label grey extraSmall>Create Table from CSV (Optional)</Label>
     <TableDataImport bind:dataImport />

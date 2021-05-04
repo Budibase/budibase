@@ -32,7 +32,8 @@
       style="--imageHeight: {imageHeight}"
       class="image"
       src={imageUrl}
-      alt="" />
+      alt=""
+    />
   {/if}
   <div class="content">
     <h2 class="heading">{heading}</h2>
@@ -40,7 +41,8 @@
     <a
       use:linkable
       style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
-      href={linkUrl || '/'}>
+      href={linkUrl || "/"}
+    >
       {linkText}
     </a>
   </div>

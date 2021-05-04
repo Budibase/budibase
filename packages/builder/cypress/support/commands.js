@@ -6,7 +6,7 @@
 //
 
 Cypress.Commands.add("login", () => {
-  cy.getCookie("budibase:auth").then((cookie) => {
+  cy.getCookie("budibase:auth").then(cookie => {
     // Already logged in
     if (cookie) return
 
@@ -20,13 +20,13 @@ Cypress.Commands.add("login", () => {
   })
 })
 
-Cypress.Commands.add("createApp", (name) => {
+Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
   cy.wait(100)
   cy.contains("Create New Web App").click()
   cy.get("body")
-    .then(($body) => {
+    .then($body => {
       if ($body.find("input[name=apiKey]").length) {
         // input was found, do something else here
         cy.get("input[name=apiKey]").type(name).should("have.value", name)
@@ -50,9 +50,9 @@ Cypress.Commands.add("createApp", (name) => {
     })
 })
 
-Cypress.Commands.add("deleteApp", (name) => {
+Cypress.Commands.add("deleteApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.get(".apps").then(($apps) => {
+  cy.get(".apps").then($apps => {
     cy.wait(1000)
     if ($apps.find(`[data-cy="app-${name}"]`).length) {
       cy.get(`[data-cy="app-${name}"]`).contains("Open").click()
@@ -78,7 +78,7 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
-Cypress.Commands.add("createTable", (tableName) => {
+Cypress.Commands.add("createTable", tableName => {
   // Enter table name
   cy.get("[data-cy=new-table]").click()
   cy.get(".spectrum-Modal").within(() => {
@@ -104,7 +104,7 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   })
 })
 
-Cypress.Commands.add("addRow", (values) => {
+Cypress.Commands.add("addRow", values => {
   cy.contains("Create row").click()
   cy.get(".spectrum-Modal").within(() => {
     for (let i = 0; i < values.length; i++) {
@@ -134,7 +134,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   }
   cy.get(`[data-cy="component-${component}"]`).click()
   cy.wait(1000)
-  cy.location().then((loc) => {
+  cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
     cy.getComponent(componentId).should("exist")
@@ -142,7 +142,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   })
 })
 
-Cypress.Commands.add("getComponent", (componentId) => {
+Cypress.Commands.add("getComponent", componentId => {
   return cy
     .get("iframe")
     .its("0.contentDocument")

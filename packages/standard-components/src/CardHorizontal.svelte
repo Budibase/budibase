@@ -23,13 +23,15 @@
 <div
   use:styleable={$component.styles}
   class="container"
-  style="--cardWidth: {cardWidth}">
+  style="--cardWidth: {cardWidth}"
+>
   {#if showImage}
     <img
       style="--imageWidth: {imageWidth}; --imageHeight: {imageHeight}"
       class="image"
       src={imageUrl}
-      alt="" />
+      alt=""
+    />
   {/if}
   <div class="content">
     <main>
@@ -40,7 +42,8 @@
       <p class="subtext">{subtext}</p>
       <a
         style="--linkColor: {linkColor}; --linkHoverColor: {linkHoverColor}"
-        href={linkUrl || '/'}>{linkText}</a>
+        href={linkUrl || "/"}>{linkText}</a
+      >
     </footer>
   </div>
 </div>

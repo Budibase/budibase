@@ -9,9 +9,7 @@
 
   let unsaved = false
 
-  $: datasource = $datasources.list.find(
-    (ds) => ds._id === $datasources.selected
-  )
+  $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {
@@ -59,9 +57,9 @@
           <Heading size="S">Configuration</Heading>
           <Button secondary on:click={saveDatasource}>Save</Button>
         </div>
-        <Body size="S"
-          >Connect your database to Budibase using the config below.</Body
-        >
+        <Body size="S">
+          Connect your database to Budibase using the config below.
+        </Body>
         <IntegrationConfigForm
           schema={integration.datasource}
           integration={datasource.config}
@@ -74,7 +72,7 @@
         <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
       </div>
       <div class="query-list">
-        {#each $queries.list.filter((query) => query.datasourceId === datasource._id) as query}
+        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
             <p class="query-name">{query.name}</p>
             <p>{capitalise(query.queryVerb)}</p>

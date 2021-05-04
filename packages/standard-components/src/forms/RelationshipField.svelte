@@ -68,7 +68,8 @@
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
-  defaultValue={[]}>
+  defaultValue={[]}
+>
   {#if fieldState}
     <svelte:component
       this={multiselect ? CoreMultiselect : CoreSelect}
@@ -79,6 +80,7 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       getOptionLabel={getDisplayName}
-      getOptionValue={option => option._id} />
+      getOptionValue={option => option._id}
+    />
   {/if}
 </Field>

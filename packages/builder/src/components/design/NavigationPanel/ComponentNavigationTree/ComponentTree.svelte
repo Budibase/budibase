@@ -54,7 +54,8 @@
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
-          style="margin-left: {(level + 1) * 16}px" />
+          style="margin-left: {(level + 1) * 16}px"
+        />
       {/if}
 
       <NavItem
@@ -63,10 +64,13 @@
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:drop={dragDropStore.actions.drop}
-        text={isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
+        text={isScreenslot(component._component)
+          ? "Screenslot"
+          : component._instanceName}
         withArrow
         indentLevel={level + 1}
-        selected={$store.selectedComponentId === component._id}>
+        selected={$store.selectedComponentId === component._id}
+      >
         <ComponentDropdownMenu {component} />
       </NavItem>
 
@@ -76,7 +80,8 @@
           {currentComponent}
           {onSelect}
           {dragDropStore}
-          level={level + 1} />
+          level={level + 1}
+        />
       {/if}
 
       {#if $dragDropStore?.targetComponent === component && ($dragDropStore.dropPosition === DropPosition.INSIDE || $dragDropStore.dropPosition === DropPosition.BELOW)}
@@ -85,7 +90,10 @@
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
-          style="margin-left: {(level + ($dragDropStore.dropPosition === DropPosition.INSIDE ? 3 : 1)) * 16}px" />
+          style="margin-left: {(level +
+            ($dragDropStore.dropPosition === DropPosition.INSIDE ? 3 : 1)) *
+            16}px"
+        />
       {/if}
     </li>
   {/each}

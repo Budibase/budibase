@@ -35,7 +35,7 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  ctx.body = enrichQueries(body.rows.map((row) => row.doc))
+  ctx.body = enrichQueries(body.rows.map(row => row.doc))
 }
 
 exports.save = async function (ctx) {

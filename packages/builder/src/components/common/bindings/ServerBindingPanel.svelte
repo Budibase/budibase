@@ -21,7 +21,6 @@
   export let value = ""
 
   let hasReadable = bindableProperties[0].readableBinding != null
-  let originalValue = value
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
@@ -34,17 +33,9 @@
   function checkValid() {
     if (hasReadable) {
       const runtime = readableToRuntimeBinding(bindableProperties, value)
-      console.log(runtime)
       validity = isValid(runtime)
     } else {
       validity = isValid(value)
-    }
-  }
-
-  export function cancel() {
-    dispatch("update", originalValue)
-    if (bindingContainer && bindingContainer.close) {
-      bindingContainer.close()
     }
   }
 </script>
@@ -59,14 +50,15 @@
       <div class="section">
         {#each categories as [categoryName, bindings]}
           <Heading size="XS">{categoryName}</Heading>
-          {#each bindings.filter((binding) =>
+          {#each bindableProperties.filter(binding =>
             binding.label.match(searchRgx)
           ) as binding}
             <div
               class="binding"
               on:click={() => {
                 value = addToText(value, getCaretPosition(), binding)
-              }}>
+              }}
+            >
               <span class="binding__label">{binding.label}</span>
               <span class="binding__type">{binding.type}</span>
               <br />
@@ -79,18 +71,19 @@
       </div>
       <div class="section">
         <Heading size="XS">Helpers</Heading>
-        {#each helpers.filter((helper) => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
+        {#each helpers.filter(helper => helper.label.match(searchRgx) || helper.description.match(searchRgx)) as helper}
           <div
             class="binding"
             on:click={() => {
-              value = addToText(value, getCaretPosition(), helper)
-            }}>
+              value = addToText(value, getCaretPosition(), helper.text)
+            }}
+          >
             <span class="binding__label">{helper.label}</span>
             <br />
             <div class="binding__description">
               {@html helper.description || ""}
             </div>
-            <pre>{helper.example || ''}</pre>
+            <pre>{helper.example || ""}</pre>
           </div>
         {/each}
       </div>
@@ -99,7 +92,6 @@
   <div class="text">
     <TextArea
       bind:getCaretPosition
-      thin
       bind:value
       placeholder="Add text, or click the objects on the left to add them to the textbox."
     />

@@ -21,7 +21,8 @@
     on:change={onChange}
     {id}
     type="checkbox"
-    class="spectrum-Switch-input" />
+    class="spectrum-Switch-input"
+  />
   <span class="spectrum-Switch-switch" />
   <label class="spectrum-Switch-label" for={id}>{text}</label>
 </div>

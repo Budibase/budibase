@@ -5,6 +5,10 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
+const bullboard = require("bull-board")
+const expressApp = require("express")()
+
+expressApp.use("/bulladmin", bullboard.router)
 
 const router = new Router()
 const env = require("../environment")
@@ -36,8 +40,8 @@ router
     }
     await next()
   })
-  .use("/health", (ctx) => (ctx.status = 200))
-  .use("/version", (ctx) => (ctx.body = pkg.version))
+  .use("/health", ctx => (ctx.status = 200))
+  .use("/version", ctx => (ctx.body = pkg.version))
   .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
   .use(currentApp)
 
@@ -58,7 +62,7 @@ router.use(async (ctx, next) => {
   }
 })
 
-router.get("/health", (ctx) => (ctx.status = 200))
+router.get("/health", ctx => (ctx.status = 200))
 
 // authenticated routes
 for (let route of mainRoutes) {

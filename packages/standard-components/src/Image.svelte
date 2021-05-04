@@ -17,4 +17,5 @@
   class={className}
   src={url}
   alt={description}
-  use:styleable={$component.styles} />
+  use:styleable={$component.styles}
+/>

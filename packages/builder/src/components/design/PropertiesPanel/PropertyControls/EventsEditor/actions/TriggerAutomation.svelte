@@ -57,7 +57,8 @@
       <input
         type="radio"
         value={AUTOMATION_STATUS.NEW}
-        bind:group={automationStatus} />
+        bind:group={automationStatus}
+      />
       <Label small>Create a new automation</Label>
     </div>
     <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
@@ -65,7 +66,8 @@
         type="radio"
         value={AUTOMATION_STATUS.EXISTING}
         bind:group={automationStatus}
-        disabled={!hasAutomations} />
+        disabled={!hasAutomations}
+      />
       <Label small grey={!hasAutomations}>Use an existing automation</Label>
     </div>
   </div>
@@ -79,11 +81,13 @@
         placeholder="Choose automation"
         options={automations}
         getOptionLabel={x => x.name}
-        getOptionValue={x => x._id} />
+        getOptionValue={x => x._id}
+      />
     {:else}
       <Input
         bind:value={parameters.newAutomationName}
-        placeholder="Enter automation name" />
+        placeholder="Enter automation name"
+      />
     {/if}
 
     {#key parameters.automationId}
@@ -91,7 +95,8 @@
         schemaFields={selectedSchema}
         parameterFields={parameters.fields}
         fieldLabel="Field"
-        on:change={onFieldsChanged} />
+        on:change={onFieldsChanged}
+      />
     {/key}
   </div>
 </div>

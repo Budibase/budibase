@@ -64,7 +64,7 @@
           title={`Query parameter "${parameter.name}"`}
           placeholder="Value"
           thin
-          on:change={(evt) => onBindingChange(parameter.name, evt.detail)}
+          on:change={evt => onBindingChange(parameter.name, evt.detail)}
           value={runtimeToReadableBinding(
             bindings,
             customParams?.[parameter.name]

@@ -77,7 +77,8 @@
   lang="en"
   dir="ltr"
   use:styleable={$component.styles}
-  class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+  class={`spectrum ${size || "spectrum--medium"} ${theme || "spectrum--light"}`}
+>
   <Table
     {data}
     {schema}
@@ -88,7 +89,8 @@
     allowSelectRows={false}
     allowEditRows={false}
     allowEditColumns={false}
-    showAutoColumns={true}>
+    showAutoColumns={true}
+  >
     <slot />
   </Table>
 </div>

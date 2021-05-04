@@ -13,7 +13,7 @@ exports.fetch = async function (ctx) {
         include_docs: true,
       })
     )
-  ).rows.map((row) => row.doc)
+  ).rows.map(row => row.doc)
 }
 
 exports.save = async function (ctx) {
@@ -38,7 +38,7 @@ exports.destroy = async function (ctx) {
 
   // Delete all queries for the datasource
   const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
-  await db.bulkDocs(rows.rows.map((row) => ({ ...row.doc, _deleted: true })))
+  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)

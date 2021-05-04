@@ -21,6 +21,7 @@
       error={$fieldState.error}
       id={$fieldState.fieldId}
       {enableTime}
-      {placeholder} />
+      {placeholder}
+    />
   {/if}
 </Field>

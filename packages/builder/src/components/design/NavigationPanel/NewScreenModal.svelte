@@ -96,18 +96,21 @@
     options={templates}
     placeholder={null}
     getOptionLabel={x => x.name}
-    getOptionValue={(x, idx) => idx} />
+    getOptionValue={(x, idx) => idx}
+  />
   <Input label="Name" bind:value={name} />
   <Input
     label="Url"
     error={routeError}
     bind:value={route}
-    on:change={routeChanged} />
+    on:change={routeChanged}
+  />
   <Select
     label="Access"
     bind:value={roleId}
     options={$roles}
     getOptionLabel={x => x.name}
-    getOptionValue={x => x._id} />
+    getOptionValue={x => x._id}
+  />
   <Toggle text="Create link in navigation bar" bind:value={createLink} />
 </ModalContent>

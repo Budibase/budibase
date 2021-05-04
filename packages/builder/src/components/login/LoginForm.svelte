@@ -43,7 +43,8 @@
     onConfirm={login}
     confirmText="Log In"
     showCancelButton={false}
-    showCloseIcon={false}>
+    showCloseIcon={false}
+  >
     <Input label="Email" bind:value={username} />
     <Input label="Password" type="password" on:change bind:value={password} />
     <div class="footer" slot="footer">

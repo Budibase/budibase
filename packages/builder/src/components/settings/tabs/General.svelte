@@ -63,14 +63,10 @@
         existingAppUrls.splice(urlIdx, 1)
       }
       nameValidation = {
-        name: string()
-          .required(nameError)
-          .notOneOf(existingAppNames),
+        name: string().required(nameError).notOneOf(existingAppNames),
       }
       urlValidation = {
-        url: string()
-          .required(urlError)
-          .notOneOf(existingAppUrls),
+        url: string().required(urlError).notOneOf(existingAppUrls),
       }
     } else {
       nameValidation = { name: string().required(nameError) }
@@ -83,18 +79,21 @@
     on:change={e => updateApplication({ name: e.detail })}
     value={$store.name}
     error={nameError}
-    label="App Name" />
-  {#if $hostingStore.hostingInfo.type === 'self'}
+    label="App Name"
+  />
+  {#if $hostingStore.hostingInfo.type === "self"}
     <Input
       on:change={e => updateApplication({ url: e.detail })}
       value={$store.url}
       error={urlError}
-      label="App URL" />
+      label="App URL"
+    />
   {/if}
   <TextArea
     on:change={e => updateApplication({ description: e.detail })}
     value={$store.description}
-    label="App Description" />
+    label="App Description"
+  />
 </div>
 
 <style>

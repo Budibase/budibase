@@ -40,8 +40,8 @@ export const createDataSourceStore = () => {
 
     // Store configs for each relevant dataSource ID
     if (dataSourceIds.length) {
-      store.update((state) => {
-        dataSourceIds.forEach((id) => {
+      store.update(state => {
+        dataSourceIds.forEach(id => {
           state.push({
             dataSourceId: id,
             instanceId,
@@ -55,22 +55,22 @@ export const createDataSourceStore = () => {
 
   // Removes all registered dataSource instances belonging to a particular
   // instance ID
-  const unregisterInstance = (instanceId) => {
-    store.update((state) => {
-      return state.filter((instance) => instance.instanceId !== instanceId)
+  const unregisterInstance = instanceId => {
+    store.update(state => {
+      return state.filter(instance => instance.instanceId !== instanceId)
     })
   }
 
   // Invalidates a specific dataSource ID by refreshing all instances
   // which depend on data from that dataSource
-  const invalidateDataSource = (dataSourceId) => {
-    const relatedInstances = get(store).filter((instance) => {
+  const invalidateDataSource = dataSourceId => {
+    const relatedInstances = get(store).filter(instance => {
       return instance.dataSourceId === dataSourceId
     })
     if (relatedInstances?.length) {
       notificationStore.blockNotifications(1000)
     }
-    relatedInstances?.forEach((instance) => {
+    relatedInstances?.forEach(instance => {
       instance.refresh()
     })
   }

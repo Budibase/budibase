@@ -15,7 +15,7 @@
   </div>
   <div class="footer">
     <Button wide error={remove} secondary={!remove} on:click>
-      <span>{remove ? 'Remove' : 'Add'}</span>
+      <span>{remove ? "Remove" : "Add"}</span>
     </Button>
   </div>
 </div>

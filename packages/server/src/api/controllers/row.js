@@ -213,7 +213,7 @@ exports.fetchView = async function (ctx) {
   })
 
   if (!calculation) {
-    response.rows = response.rows.map((row) => row.doc)
+    response.rows = response.rows.map(row => row.doc)
     let table
     try {
       table = await db.get(viewInfo.meta.tableId)
@@ -227,7 +227,7 @@ exports.fetchView = async function (ctx) {
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
-    response.rows = response.rows.map((row) => ({
+    response.rows = response.rows.map(row => ({
       group: row.key,
       field,
       ...row.value,
@@ -240,7 +240,7 @@ exports.fetchView = async function (ctx) {
     calculation === CALCULATION_TYPES.COUNT ||
     calculation === CALCULATION_TYPES.SUM
   ) {
-    ctx.body = response.rows.map((row) => ({
+    ctx.body = response.rows.map(row => ({
       group: row.key,
       field,
       value: row.value,
@@ -303,7 +303,7 @@ exports.fetchTableRows = async function (ctx) {
         include_docs: true,
       })
     )
-    rows = response.rows.map((row) => row.doc)
+    rows = response.rows.map(row => row.doc)
   }
   ctx.body = await outputProcessing(appId, table, rows)
 }
@@ -399,13 +399,13 @@ exports.fetchEnrichedRow = async function (ctx) {
   // look up the actual rows based on the ids
   const response = await db.allDocs({
     include_docs: true,
-    keys: linkVals.map((linkVal) => linkVal.id),
+    keys: linkVals.map(linkVal => linkVal.id),
   })
   // need to include the IDs in these rows for any links they may have
   let linkedRows = await outputProcessing(
     appId,
     table,
-    response.rows.map((row) => row.doc)
+    response.rows.map(row => row.doc)
   )
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
@@ -413,8 +413,8 @@ exports.fetchEnrichedRow = async function (ctx) {
     if (field.type === FieldTypes.LINK) {
       // find the links that pertain to this field, get their indexes
       const linkIndexes = linkVals
-        .filter((link) => link.fieldName === fieldName)
-        .map((link) => linkVals.indexOf(link))
+        .filter(link => link.fieldName === fieldName)
+        .map(link => linkVals.indexOf(link))
       // find the rows that the links state are linked to this field
       row[fieldName] = linkedRows.filter((linkRow, index) =>
         linkIndexes.includes(index)
@@ -430,7 +430,7 @@ async function bulkDelete(ctx) {
   const { rows } = ctx.request.body
   const db = new CouchDB(appId)
 
-  let updates = rows.map((row) =>
+  let updates = rows.map(row =>
     linkRows.updateLinks({
       appId,
       eventType: linkRows.EventType.ROW_DELETE,
@@ -441,7 +441,7 @@ async function bulkDelete(ctx) {
   // TODO remove special user case in future
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     updates = updates.concat(
-      rows.map((row) => {
+      rows.map(row => {
         ctx.params = {
           id: row._id,
         }
@@ -449,11 +449,11 @@ async function bulkDelete(ctx) {
       })
     )
   } else {
-    await db.bulkDocs(rows.map((row) => ({ ...row, _deleted: true })))
+    await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
   }
   await Promise.all(updates)
 
-  rows.forEach((row) => {
+  rows.forEach(row => {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
   })
 }

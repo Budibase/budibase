@@ -32,7 +32,7 @@ function identify(id) {
   if (!analyticsEnabled || !id) return
   if (posthogConfigured) posthog.identify(id)
   if (sentryConfigured)
-    Sentry.configureScope((scope) => {
+    Sentry.configureScope(scope => {
       scope.setUser({ id: id })
     })
 }
@@ -73,7 +73,7 @@ if (!localStorage.getItem(APP_FIRST_STARTED_KEY)) {
   localStorage.setItem(APP_FIRST_STARTED_KEY, Date.now())
 }
 
-const isFeedbackTimeElapsed = (sinceDateStr) => {
+const isFeedbackTimeElapsed = sinceDateStr => {
   const sinceDate = parseFloat(sinceDateStr)
   const feedbackMilliseconds = feedbackHours * 60 * 60 * 1000
   return Date.now() > sinceDate + feedbackMilliseconds
@@ -107,7 +107,7 @@ function highlightFeedbackIcon() {
 }
 
 // Opt In/Out
-const ifAnalyticsEnabled = (func) => () => {
+const ifAnalyticsEnabled = func => () => {
   if (analyticsEnabled && process.env.POSTHOG_TOKEN) {
     return func()
   }

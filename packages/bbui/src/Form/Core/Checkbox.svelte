@@ -17,27 +17,31 @@
 
 <label
   class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-Checkbox--emphasized"
-  class:is-invalid={!!error}>
+  class:is-invalid={!!error}
+>
   <input
     checked={value}
     {disabled}
     on:change={onChange}
     type="checkbox"
     class="spectrum-Checkbox-input"
-    {id} />
+    {id}
+  />
   <span class="spectrum-Checkbox-box">
     <svg
       class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-css-icon-Checkmark100" />
     </svg>
     <svg
       class="spectrum-Icon spectrum-UIIcon-Dash100 spectrum-Checkbox-partialCheckmark"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-css-icon-Dash100" />
     </svg>
   </span>
-  <span class="spectrum-Checkbox-label">{text || ''}</span>
+  <span class="spectrum-Checkbox-label">{text || ""}</span>
 </label>

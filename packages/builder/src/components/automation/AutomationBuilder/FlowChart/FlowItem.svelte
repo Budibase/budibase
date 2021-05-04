@@ -14,7 +14,7 @@
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
-    console.log('Running')
+    console.log("Running")
     automationStore.actions.deleteAutomationBlock(block)
   }
 </script>
@@ -22,23 +22,24 @@
 <div
   class={`block ${block.type} hoverable`}
   class:selected
-  on:click={() => onSelect(block)}>
+  on:click={() => onSelect(block)}
+>
   <header>
-    {#if block.type === 'TRIGGER'}
+    {#if block.type === "TRIGGER"}
       <Icon name="Light" />
       <span>When this happens...</span>
-    {:else if block.type === 'ACTION'}
+    {:else if block.type === "ACTION"}
       <Icon name="FlashOn" />
       <span>Do this...</span>
-    {:else if block.type === 'LOGIC'}
+    {:else if block.type === "LOGIC"}
       <Icon name="Branch2" />
       <span>Only continue if...</span>
     {/if}
     <div class="label">
-      {#if block.type === 'TRIGGER'}Trigger{:else}Step {blockIdx + 1}{/if}
+      {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
-    {#if block.type !== 'TRIGGER' || allowDeleteTrigger}
-    <div on:click|stopPropagation={deleteStep}><Icon name="Close"/></div>
+    {#if block.type !== "TRIGGER" || allowDeleteTrigger}
+      <div on:click|stopPropagation={deleteStep}><Icon name="Close" /></div>
     {/if}
   </header>
   <hr />

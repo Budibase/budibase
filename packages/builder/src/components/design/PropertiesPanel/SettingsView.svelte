@@ -80,11 +80,11 @@
     "field/link": RelationshipFieldSelect,
   }
 
-  const getControl = (type) => {
+  const getControl = type => {
     return controlMap[type]
   }
 
-  const canRenderControl = (setting) => {
+  const canRenderControl = setting => {
     const control = getControl(setting?.type)
     if (!control) {
       return false
@@ -95,7 +95,7 @@
     return true
   }
 
-  const onInstanceNameChange = (name) => {
+  const onInstanceNameChange = name => {
     onChange("_instanceName", name)
   }
 
@@ -103,13 +103,13 @@
     const form = findClosestMatchingComponent(
       $currentAsset.props,
       componentInstance._id,
-      (component) => component._component.endsWith("/form")
+      component => component._component.endsWith("/form")
     )
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)
     onChange(
       "_children",
-      fields.map((field) => field.json())
+      fields.map(field => field.json())
     )
   }
 </script>
@@ -123,7 +123,7 @@
         label={def.label}
         key={def.key}
         value={get(assetInstance, def.key)}
-        onChange={(val) => onScreenPropChange(def.key, val)}
+        onChange={val => onScreenPropChange(def.key, val)}
       />
     {/each}
   {/if}
@@ -150,7 +150,7 @@
           value={componentInstance[setting.key] ??
             componentInstance[setting.key]?.defaultValue}
           {componentInstance}
-          onChange={(val) => onChange(setting.key, val)}
+          onChange={val => onChange(setting.key, val)}
           props={{ options: setting.options, placeholder: setting.placeholder }}
         />
       {/if}

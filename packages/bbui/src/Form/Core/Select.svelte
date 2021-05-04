@@ -51,7 +51,8 @@
   {options}
   {getOptionLabel}
   {getOptionValue}
-  isPlaceholder={value == null || value === ''}
+  isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
   isOptionSelected={option => option === value}
-  onSelectOption={selectOption} />
+  onSelectOption={selectOption}
+/>

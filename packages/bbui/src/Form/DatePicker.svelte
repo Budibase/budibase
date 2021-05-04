@@ -25,5 +25,6 @@
     {value}
     {placeholder}
     {enableTime}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>
