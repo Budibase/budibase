@@ -33,22 +33,14 @@
 >
   {#if $$slots}
     <div
-      class:spectrum-FieldLabel--sizeS={s}
-      class:spectrum-FieldLabel--sizeM={m}
-      class:spectrum-FieldLabel--sizeL={l}
-      class:spectrum-FieldLabel--sizeXL={xl}
-      class="spectrum-FieldLabel spectrum-ProgressBar-label"
+      class="spectrum-FieldLabel spectrum-ProgressBar-label spectrum-FieldLabel--size{size}"
     >
       <slot />
     </div>
   {/if}
   {#if value}
     <div
-      class:spectrum-FieldLabel--sizeS={s}
-      class:spectrum-FieldLabel--sizeM={m}
-      class:spectrum-FieldLabel--sizeL={l}
-      class:spectrum-FieldLabel--sizeXL={xl}
-      class="spectrum-FieldLabel spectrum-ProgressBar-percentage"
+      class="spectrum-FieldLabel spectrum-ProgressBar-percentage spectrum-FieldLabel--size{size}"
     >
       {Math.round($progress)}%
     </div>
