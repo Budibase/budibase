@@ -31,6 +31,7 @@
   // Table state
   let height = 0
   let loaded = false
+  $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
   $: rows = data ?? []
   $: visibleRowCount = getVisibleRowCount(loaded, height, rows.length, rowCount)
@@ -50,13 +51,31 @@
     rows.length
   )
 
-  // Reset state when data chanegs
+  // Reset state when data changes
   $: data.length, reset()
   const reset = () => {
     nextScrollTop = 0
     scrollTop = 0
     clearTimeout(timeout)
     timeout = null
+  }
+
+  const fixSchema = schema => {
+    let fixedSchema = {}
+    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      if (typeof fieldSchema === "string") {
+        fixedSchema[fieldName] = {
+          type: fieldSchema,
+          name: fieldName,
+        }
+      } else {
+        fixedSchema[fieldName] = {
+          ...fieldSchema,
+          name: fieldName,
+        }
+      }
+    })
+    return fixedSchema
   }
 
   const getVisibleRowCount = (loaded, height, allRows, rowCount) => {
@@ -118,7 +137,6 @@
       if (!field || !fieldSchema) {
         return
       }
-      schema[field].name = field
       if (!fieldSchema?.autocolumn) {
         columns.push(fieldSchema)
       } else if (showAutoColumns) {
@@ -239,7 +257,11 @@
                         <svg
                           class="spectrum-Icon spectrum-Table-editIcon"
                           focusable="false"
+<<<<<<< HEAD
                           on:click={(e) => editColumn(e, field)}
+=======
+                          on:click={e => editColumn(e, field)}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
                         >
                           <use xlink:href="#spectrum-icon-18-Edit" />
                         </svg>

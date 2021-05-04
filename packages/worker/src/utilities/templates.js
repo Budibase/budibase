@@ -14,7 +14,7 @@ exports.getSettingsTemplateContext = async () => {
       include_docs: true,
     })
   )
-  let settings = response.rows.map((row) => row.doc)[0] || {}
+  let settings = response.rows.map(row => row.doc)[0] || {}
   if (!settings.platformUrl) {
     settings.platformUrl = LOCAL_URL
   }

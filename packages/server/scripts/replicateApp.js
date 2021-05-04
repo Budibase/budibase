@@ -14,7 +14,7 @@ console.log(`Replicating from ${appName} to ${remoteUrl}/${appName}`)
 
 const run = async () => {
   const allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter((dbName) => dbName.startsWith("inst_app"))
+  const appDbNames = allDbs.filter(dbName => dbName.startsWith("inst_app"))
   let apps = []
   for (let dbName of appDbNames) {
     const db = new CouchDB(dbName)
@@ -22,12 +22,12 @@ const run = async () => {
   }
   apps = await Promise.all(apps)
   const app = apps.find(
-    (a) => a.name === appName || a.name.toLowerCase() === appName
+    a => a.name === appName || a.name.toLowerCase() === appName
   )
 
   if (!app) {
     console.log(
-      `Could not find app... apps: ${apps.map((app) => app.name).join(", ")}`
+      `Could not find app... apps: ${apps.map(app => app.name).join(", ")}`
     )
     return
   }

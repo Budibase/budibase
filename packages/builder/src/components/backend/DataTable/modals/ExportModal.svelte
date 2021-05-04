@@ -32,7 +32,12 @@
     bind:value={exportFormat}
     options={FORMATS}
     placeholder={null}
+<<<<<<< HEAD
     getOptionLabel={(x) => x.name}
     getOptionValue={(x) => x.key}
+=======
+    getOptionLabel={x => x.name}
+    getOptionValue={x => x.key}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
 </ModalContent>

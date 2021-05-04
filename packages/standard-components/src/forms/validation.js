@@ -21,15 +21,11 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
     // Min / max number constraint
     if (exists(constraints.numericality?.greaterThanOrEqualTo)) {
       const min = constraints.numericality.greaterThanOrEqualTo
-      checks.push(
-        numericalConstraint((x) => x >= min, `Minimum value is ${min}`)
-      )
+      checks.push(numericalConstraint(x => x >= min, `Minimum value is ${min}`))
     }
     if (exists(constraints.numericality?.lessThanOrEqualTo)) {
       const max = constraints.numericality.lessThanOrEqualTo
-      checks.push(
-        numericalConstraint((x) => x <= max, `Maximum value is ${max}`)
-      )
+      checks.push(numericalConstraint(x => x <= max, `Maximum value is ${max}`))
     }
 
     // Inclusion constraint
@@ -50,7 +46,7 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
   }
 
   // Evaluate each constraint
-  return (value) => {
+  return value => {
     for (let check of checks) {
       const error = check(value)
       if (error) {
@@ -61,9 +57,9 @@ export const createValidatorFromConstraints = (constraints, field, table) => {
   }
 }
 
-const exists = (value) => value != null && value !== ""
+const exists = value => value != null && value !== ""
 
-const presenceConstraint = (value) => {
+const presenceConstraint = value => {
   let invalid
   if (Array.isArray(value)) {
     invalid = value.length === 0
@@ -73,14 +69,14 @@ const presenceConstraint = (value) => {
   return invalid ? "Required" : null
 }
 
-const lengthConstraint = (maxLength) => (value) => {
+const lengthConstraint = maxLength => value => {
   if (value && value.length > maxLength) {
     return `Maximum ${maxLength} characters`
   }
   return null
 }
 
-const numericalConstraint = (constraint, error) => (value) => {
+const numericalConstraint = (constraint, error) => value => {
   if (isNaN(value)) {
     return "Must be a number"
   }
@@ -91,7 +87,7 @@ const numericalConstraint = (constraint, error) => (value) => {
   return null
 }
 
-const inclusionConstraint = (options = []) => (value) => {
+const inclusionConstraint = (options = []) => value => {
   if (value == null || value === "") {
     return null
   }
@@ -103,7 +99,7 @@ const inclusionConstraint = (options = []) => (value) => {
 
 const dateConstraint = (dateString, isEarliest) => {
   const dateLimit = Date.parse(dateString)
-  return (value) => {
+  return value => {
     if (value == null || value === "") {
       return null
     }

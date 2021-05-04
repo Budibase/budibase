@@ -3,7 +3,7 @@ import rowDetailScreen from "./rowDetailScreen"
 import rowListScreen from "./rowListScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
 
-const allTemplates = (tables) => [
+const allTemplates = tables => [
   ...newRowScreen(tables),
   ...rowDetailScreen(tables),
   ...rowListScreen(tables),
@@ -18,7 +18,7 @@ const createTemplateOverride = (frontendState, create) => () => {
 }
 
 export default (frontendState, tables) => {
-  const enrichTemplate = (template) => ({
+  const enrichTemplate = template => ({
     ...template,
     create: createTemplateOverride(frontendState, template.create),
   })

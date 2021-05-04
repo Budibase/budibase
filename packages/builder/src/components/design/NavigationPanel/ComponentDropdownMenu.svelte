@@ -24,7 +24,7 @@
     if (currentIndex === 0) {
       return
     }
-    const newChildren = parent._children.filter((c) => c !== component)
+    const newChildren = parent._children.filter(c => c !== component)
     newChildren.splice(currentIndex - 1, 0, component)
     parent._children = newChildren
     store.actions.preview.saveSelected()
@@ -40,7 +40,7 @@
     if (currentIndex === parent._children.length - 1) {
       return
     }
-    const newChildren = parent._children.filter((c) => c !== component)
+    const newChildren = parent._children.filter(c => c !== component)
     newChildren.splice(currentIndex + 1, 0, component)
     parent._children = newChildren
     store.actions.preview.saveSelected()
@@ -60,7 +60,7 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = (mode) => {
+  const pasteComponent = mode => {
     // lives in store - also used by drag drop
     store.actions.components.paste(component, mode)
   }

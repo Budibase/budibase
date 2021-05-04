@@ -4,7 +4,7 @@ const { v4 } = require("uuid")
 
 const SALT_ROUNDS = env.SALT_ROUNDS || 10
 
-exports.hash = async (data) => {
+exports.hash = async data => {
   const salt = await bcrypt.genSalt(SALT_ROUNDS)
   return bcrypt.hash(data, salt)
 }

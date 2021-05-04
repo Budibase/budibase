@@ -80,8 +80,13 @@
         bind:value={parameters.automationId}
         placeholder="Choose automation"
         options={automations}
+<<<<<<< HEAD
         getOptionLabel={(x) => x.name}
         getOptionValue={(x) => x._id}
+=======
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x._id}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       />
     {:else}
       <Input

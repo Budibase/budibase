@@ -32,7 +32,11 @@
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
+<<<<<<< HEAD
           onChange={(value) => onStyleChanged(styleCategory, prop.key, value)}
+=======
+          onChange={value => onStyleChanged(styleCategory, prop.key, value)}
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
           props={getControlProps(prop)}
         />
       {/each}

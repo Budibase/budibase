@@ -156,7 +156,7 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map((row) => row.doc)
+  ctx.body = response.rows.map(row => row.doc)
 }
 
 exports.find = async function (ctx) {

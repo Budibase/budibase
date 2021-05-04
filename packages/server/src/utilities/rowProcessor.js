@@ -14,9 +14,9 @@ const TYPE_TRANSFORM_MAP = {
     "": [],
     [null]: [],
     [undefined]: undefined,
-    parse: (link) => {
+    parse: link => {
       if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map((el) => (el && el._id ? el._id : el))
+        return link.map(el => (el && el._id ? el._id : el))
       }
       if (typeof link === "string") {
         return [link]
@@ -43,13 +43,13 @@ const TYPE_TRANSFORM_MAP = {
     "": null,
     [null]: null,
     [undefined]: undefined,
-    parse: (n) => parseFloat(n),
+    parse: n => parseFloat(n),
   },
   [FieldTypes.DATETIME]: {
     "": null,
     [undefined]: undefined,
     [null]: null,
-    parse: (date) => {
+    parse: date => {
       if (date instanceof Date) {
         return date.toISOString()
       }
@@ -186,7 +186,7 @@ exports.outputProcessing = async (appId, table, rows) => {
         if (row[property] == null || row[property].length === 0) {
           continue
         }
-        row[property].forEach((attachment) => {
+        row[property].forEach(attachment => {
           attachment.url = attachmentsRelativeURL(attachment.key)
         })
       }

@@ -7,7 +7,7 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
   const app = await db.get(appId)
 
   let componentManifests = await Promise.all(
-    app.componentLibraries.map(async (library) => {
+    app.componentLibraries.map(async library => {
       let manifest = await getComponentLibraryManifest(appId, library)
 
       return {

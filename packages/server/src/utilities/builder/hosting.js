@@ -42,7 +42,7 @@ exports.getHostingInfo = async () => {
   return doc
 }
 
-exports.getAppUrl = async (appId) => {
+exports.getAppUrl = async appId => {
   const hostingInfo = await exports.getHostingInfo()
   const protocol = getProtocol(hostingInfo)
   let url

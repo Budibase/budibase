@@ -8,9 +8,9 @@
 
   export let parameters
 
-  $: query = $queries.list.find((q) => q._id === parameters.queryId)
+  $: query = $queries.list.find(q => q._id === parameters.queryId)
   $: datasource = $datasources.list.find(
-    (ds) => ds._id === parameters.datasourceId
+    ds => ds._id === parameters.datasourceId
   )
   $: bindableProperties = getBindableProperties(
     $currentAsset,
@@ -18,7 +18,7 @@
   )
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find((ds) => ds._id === query.datasourceId)
+    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
       .source
     return $integrations[source].query[query.queryVerb]
   }
@@ -29,8 +29,8 @@
   <Select
     bind:value={parameters.datasourceId}
     option={$datasources.list}
-    getOptionLabel={(source) => source.name}
-    getOptionValue={(source) => source._id}
+    getOptionLabel={source => source.name}
+    getOptionValue={source => source._id}
   />
 
   {#if parameters.datasourceId}
@@ -38,10 +38,10 @@
     <Select
       bind:value={parameters.queryId}
       options={$queries.list.filter(
-        (query) => query.datasourceId === datasource._id
+        query => query.datasourceId === datasource._id
       )}
-      getOptionLabel={(query) => query.name}
-      getOptionValue={(query) => query._id}
+      getOptionLabel={query => query.name}
+      getOptionValue={query => query._id}
     />
   {/if}
 

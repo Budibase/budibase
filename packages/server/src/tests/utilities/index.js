@@ -1,4 +1,4 @@
-exports.makePartial = (obj) => {
+exports.makePartial = obj => {
   const newObj = {}
   for (let key of Object.keys(obj)) {
     if (typeof obj[key] === "object") {

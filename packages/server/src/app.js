@@ -73,7 +73,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   await automations.init()
 })
 
-process.on("uncaughtException", (err) => {
+process.on("uncaughtException", err => {
   console.error(err)
   server.close()
   server.destroy()

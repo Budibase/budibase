@@ -43,8 +43,15 @@
     {disabled}
     {id}
     on:focus={() => (focus = true)}
+<<<<<<< HEAD
     on:blur={onChange}>{value || ""}</textarea
   >
+=======
+    on:blur={onChange}
+  >
+    {value || ""}
+  </textarea>
+>>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
 </div>
 
 <style>

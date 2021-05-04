@@ -49,7 +49,7 @@ exports.getLinkDocuments = async function ({
     let linkRows = (await db.query(getQueryIndex(ViewNames.LINK), params)).rows
     // filter to get unique entries
     const foundIds = []
-    linkRows = linkRows.filter((link) => {
+    linkRows = linkRows.filter(link => {
       // make sure anything unique is the correct key
       if (
         (tableId && link.key[0] !== tableId) ||
@@ -65,9 +65,9 @@ exports.getLinkDocuments = async function ({
     })
 
     if (includeDocs) {
-      return linkRows.map((row) => row.doc)
+      return linkRows.map(row => row.doc)
     } else {
-      return linkRows.map((row) => row.value)
+      return linkRows.map(row => row.value)
     }
   } catch (err) {
     // check if the view doesn't exist, it should for all new instances
@@ -83,18 +83,18 @@ exports.getLinkDocuments = async function ({
 
 exports.getUniqueByProp = (array, prop) => {
   return array.filter((obj, pos, arr) => {
-    return arr.map((mapObj) => mapObj[prop]).indexOf(obj[prop]) === pos
+    return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos
   })
 }
 
-exports.getLinkedTableIDs = (table) => {
+exports.getLinkedTableIDs = table => {
   return Object.values(table.schema)
-    .filter((column) => column.type === FieldTypes.LINK)
-    .map((column) => column.tableId)
+    .filter(column => column.type === FieldTypes.LINK)
+    .map(column => column.tableId)
 }
 
 exports.getLinkedTable = async (db, id, tables) => {
-  let linkedTable = tables.find((table) => table._id === id)
+  let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
     return linkedTable
   }
