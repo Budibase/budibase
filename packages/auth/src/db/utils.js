@@ -153,7 +153,9 @@ const determineScopedConfig = async function (db, { type, user, group }) {
   }
 
   // Find the config with the most granular scope based on context
-  const scopedConfig = response.rows.sort((a, b) => determineScore(a) - determineScore(b))[0]
+  const scopedConfig = response.rows.sort(
+    (a, b) => determineScore(a) - determineScore(b)
+  )[0]
 
   return scopedConfig.doc
 }

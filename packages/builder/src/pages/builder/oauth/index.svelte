@@ -6,7 +6,9 @@
     Button,
     Heading,
     Divider,
+    Label,
     notifications,
+    Layout,
     Input,
     ModalContent,
     Toggle,
@@ -71,21 +73,30 @@
   </Body>
   <Divider />
   {#if google}
-    <div class="form">
+    <Layout gap="S">
       <Heading size="S">
         <GoogleLogo />
         Google
       </Heading>
       {#each ConfigFields.Google as field}
-        <Input bind:value={google.config[field]} label={field} />
+        <div class="form-row">
+          <Label>{field}</Label>
+          <Input bind:value={google.config[field]} />
+        </div>
       {/each}
-      <Button primary on:click={() => save(google)}>Save</Button>
-    </div>
+    </Layout>
+    <Button primary on:click={() => save(google)}>Save</Button>
   {/if}
 </section>
 
 <style>
   section {
-    margin: 40px 80px;
+    margin: 60px 320px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    grid-gap: var(--spacing-l);
   }
 </style>
