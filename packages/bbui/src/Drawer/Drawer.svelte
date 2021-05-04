@@ -38,7 +38,9 @@
       <header>
         <div class="text">
           <Heading size="XS">{title}</Heading>
-          <Body size="XXS"><slot name="description" /></Body>
+          <Body size="XXS">
+            <slot name="description" />
+          </Body>
         </div>
         <div class="buttons">
           <slot name="buttons" />
