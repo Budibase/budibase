@@ -10,7 +10,7 @@
   export let disabled = false
 
   const dispatch = createEventDispatcher()
-  const onChange = (e) => {
+  const onChange = e => {
     value = e.detail
     dispatch("change", e.detail)
   }

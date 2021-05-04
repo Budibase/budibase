@@ -10,7 +10,7 @@
   $: automations = $automationStore.automations
 
   onMount(() => {
-    webhookUrls = automations.map((automation) => {
+    webhookUrls = automations.map(automation => {
       const trigger = automation.definition.trigger
       if (trigger?.stepId === "WEBHOOK" && trigger.inputs) {
         return {

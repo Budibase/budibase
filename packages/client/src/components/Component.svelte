@@ -45,7 +45,7 @@
   })
 
   // Gets the component constructor for the specified component
-  const getComponentConstructor = (component) => {
+  const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
     if (name === "screenslot" && $builderStore.previewType !== "layout") {
@@ -79,7 +79,7 @@
       componentProps = {}
       propsChanged = true
     }
-    Object.keys(enrichedProps).forEach((key) => {
+    Object.keys(enrichedProps).forEach(key => {
       if (!propsAreSame(enrichedProps[key], componentProps[key])) {
         propsChanged = true
         componentProps[key] = enrichedProps[key]

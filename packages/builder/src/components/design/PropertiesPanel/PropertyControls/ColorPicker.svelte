@@ -31,7 +31,7 @@
   }
 
   const onChange = throttle(
-    (e) => {
+    e => {
       dispatch("change", e.detail)
     },
     WAIT,

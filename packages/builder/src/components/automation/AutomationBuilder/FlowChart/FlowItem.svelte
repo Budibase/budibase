@@ -10,7 +10,7 @@
   $: selected = $automationStore.selectedBlock?.id === block.id
   $: steps =
     $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex((step) => step.id === block.id)
+  $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
@@ -39,13 +39,7 @@
       {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
     {#if block.type !== "TRIGGER" || allowDeleteTrigger}
-<<<<<<< HEAD
-      <div on:click|stopPropagation={deleteStep}>
-        <Icon name="Close" />
-      </div>
-=======
       <div on:click|stopPropagation={deleteStep}><Icon name="Close" /></div>
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     {/if}
   </header>
   <hr />

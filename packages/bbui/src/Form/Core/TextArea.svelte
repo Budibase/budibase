@@ -15,7 +15,7 @@
   let focus = false
   let textarea
   const dispatch = createEventDispatcher()
-  const onChange = (event) => {
+  const onChange = event => {
     dispatch("change", event.target.value)
     focus = false
   }
@@ -29,7 +29,8 @@
 >
   {#if error}
     <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+      class="spectrum-Icon spectrum-Icon--sizeM
+      spectrum-Textfield-validationIcon"
       focusable="false"
       aria-hidden="true"
     >
@@ -43,15 +44,10 @@
     {disabled}
     {id}
     on:focus={() => (focus = true)}
-<<<<<<< HEAD
-    on:blur={onChange}>{value || ""}</textarea
-  >
-=======
     on:blur={onChange}
   >
     {value || ""}
   </textarea>
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
 </div>
 
 <style>

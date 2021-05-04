@@ -15,7 +15,7 @@
 
   export let files = []
 
-  const handleFileTooLarge = (fileSizeLimit) => {
+  const handleFileTooLarge = fileSizeLimit => {
     notifications.warning(
       `Files cannot exceed ${
         fileSizeLimit / BYTES_IN_MB
@@ -23,7 +23,7 @@
     )
   }
 
-  const processFiles = async (fileList) => {
+  const processFiles = async fileList => {
     let data = new FormData()
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
@@ -45,7 +45,7 @@
     <CoreDropzone
       value={$fieldState.value}
       disabled={$fieldState.disabled}
-      on:change={(e) => fieldApi.setValue(e.detail)}
+      on:change={e => fieldApi.setValue(e.detail)}
       {processFiles}
       {handleFileTooLarge}
     />

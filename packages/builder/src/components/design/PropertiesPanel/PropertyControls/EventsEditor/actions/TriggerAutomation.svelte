@@ -15,8 +15,8 @@
     : AUTOMATION_STATUS.NEW
 
   $: automations = $automationStore.automations
-    .filter((a) => a.definition.trigger?.stepId === "APP")
-    .map((automation) => {
+    .filter(a => a.definition.trigger?.stepId === "APP")
+    .map(automation => {
       const schema = Object.entries(
         automation.definition.trigger.inputs.fields
       ).map(([name, type]) => ({ name, type }))
@@ -29,11 +29,11 @@
     })
   $: hasAutomations = automations && automations.length > 0
   $: selectedAutomation = automations?.find(
-    (a) => a._id === parameters?.automationId
+    a => a._id === parameters?.automationId
   )
   $: selectedSchema = selectedAutomation?.schema
 
-  const onFieldsChanged = (e) => {
+  const onFieldsChanged = e => {
     parameters.fields = e.detail
   }
 
@@ -80,13 +80,8 @@
         bind:value={parameters.automationId}
         placeholder="Choose automation"
         options={automations}
-<<<<<<< HEAD
-        getOptionLabel={(x) => x.name}
-        getOptionValue={(x) => x._id}
-=======
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       />
     {:else}
       <Input

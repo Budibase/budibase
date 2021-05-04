@@ -30,7 +30,7 @@
   export let showAllQueries
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map((m) => ({
+  $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
     type: "table",
@@ -46,9 +46,9 @@
   }, [])
   $: queries = $queriesStore.list
     .filter(
-      (query) => showAllQueries || query.queryVerb === "read" || query.readable
+      query => showAllQueries || query.queryVerb === "read" || query.readable
     )
-    .map((query) => ({
+    .map(query => ({
       label: query.name,
       name: query.name,
       tableId: query._id,
@@ -61,15 +61,15 @@
     $currentAsset,
     $store.selectedComponentId
   )
-  $: queryBindableProperties = bindableProperties.map((property) => ({
+  $: queryBindableProperties = bindableProperties.map(property => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
     path: property.readableBinding,
   }))
   $: links = bindableProperties
-    .filter((x) => x.fieldSchema?.type === "link")
-    .map((property) => {
+    .filter(x => x.fieldSchema?.type === "link")
+    .map(property => {
       return {
         providerId: property.providerId,
         label: property.readableBinding,
@@ -89,7 +89,7 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find((ds) => ds._id === query.datasourceId)
+    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
       .source
     return $integrations[source].query[query.queryVerb]
   }
@@ -121,11 +121,7 @@
           {#if value.parameters.length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
-<<<<<<< HEAD
-              parameters={queries.find((query) => query._id === value._id)
-=======
               parameters={queries.find(query => query._id === value._id)
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
                 .parameters}
               bindings={queryBindableProperties}
             />
@@ -135,11 +131,7 @@
             query={value}
             schema={fetchQueryDefinition(value)}
             datasource={$datasources.list.find(
-<<<<<<< HEAD
-              (ds) => ds._id === value.datasourceId
-=======
               ds => ds._id === value.datasourceId
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
             )}
             editable={false}
           />

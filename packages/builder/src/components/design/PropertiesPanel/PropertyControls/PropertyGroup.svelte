@@ -10,13 +10,13 @@
   export let open = false
 
   $: style = componentInstance["_styles"][styleCategory] || {}
-  $: changed = properties.some((prop) => hasPropChanged(style, prop))
+  $: changed = properties.some(prop => hasPropChanged(style, prop))
 
   const hasPropChanged = (style, prop) => {
     return style[prop.key] != null && style[prop.key] !== ""
   }
 
-  const getControlProps = (props) => {
+  const getControlProps = props => {
     const { label, key, control, ...otherProps } = props || {}
     return otherProps || {}
   }
@@ -32,11 +32,7 @@
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
-<<<<<<< HEAD
-          onChange={(value) => onStyleChanged(styleCategory, prop.key, value)}
-=======
           onChange={value => onStyleChanged(styleCategory, prop.key, value)}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
           props={getControlProps(prop)}
         />
       {/each}

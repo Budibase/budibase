@@ -20,29 +20,17 @@
 
   $: options = setUpChart(dataProvider)
 
-<<<<<<< HEAD
-  const setUpChart = (provider) => {
-    const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || allCols.find((x) => x == null)) {
-=======
   const setUpChart = provider => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
     if (!provider || allCols.find(x => x == null)) {
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       return null
     }
 
     // Fatch data
     const { schema, rows } = provider
-<<<<<<< HEAD
-    const reducer = (row) => (valid, column) => valid && row[column] != null
-    const hasAllColumns = (row) => allCols.reduce(reducer(row), true)
-    const data = rows.filter((row) => hasAllColumns(row)).slice(0, 100)
-=======
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = rows.filter(row => hasAllColumns(row)).slice(0, 100)
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     if (!schema || !data.length) {
       return null
     }
@@ -69,15 +57,9 @@
       builder = builder.xType(labelFieldType)
       useDates = labelFieldType === "datetime"
     }
-<<<<<<< HEAD
-    const series = valueColumns.map((column) => ({
-      name: column,
-      data: data.map((row) => {
-=======
     const series = valueColumns.map(column => ({
       name: column,
       data: data.map(row => {
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
         if (!useDates) {
           return row[column]
         } else {
@@ -87,11 +69,7 @@
     }))
     builder = builder.series(series)
     if (!useDates) {
-<<<<<<< HEAD
-      builder = builder.categories(data.map((row) => row[labelColumn]))
-=======
       builder = builder.categories(data.map(row => row[labelColumn]))
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     }
 
     // Build chart options

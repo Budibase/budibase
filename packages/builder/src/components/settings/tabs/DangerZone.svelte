@@ -22,7 +22,7 @@
     into the textbox, then click the following button to delete your entire web app.
   </Body>
   <Input
-    on:change={(e) => (value = e.detail)}
+    on:change={e => (value = e.detail)}
     disabled={loading}
     placeholder=""
   />

@@ -1,7 +1,7 @@
 <script>
   export let categories = []
   export let selectedCategory = {}
-  export let onClick = (category) => {}
+  export let onClick = category => {}
 </script>
 
 <div class="tabs">

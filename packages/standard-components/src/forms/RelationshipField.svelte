@@ -24,7 +24,7 @@
   $: singleValue = flatten($fieldState?.value)?.[0]
   $: multiValue = flatten($fieldState?.value) ?? []
 
-  const fetchTable = async (id) => {
+  const fetchTable = async id => {
     if (id) {
       const result = await API.fetchTableDefinition(id)
       if (!result.error) {
@@ -33,31 +33,29 @@
     }
   }
 
-  const fetchRows = async (id) => {
+  const fetchRows = async id => {
     if (id) {
       const rows = await API.fetchTableData(id)
       options = rows && !rows.error ? rows : []
     }
   }
 
-  const flatten = (values) => {
+  const flatten = values => {
     if (!values) {
       return []
     }
-    return values.map((value) =>
-      typeof value === "object" ? value._id : value
-    )
+    return values.map(value => (typeof value === "object" ? value._id : value))
   }
 
-  const getDisplayName = (row) => {
+  const getDisplayName = row => {
     return row?.[tableDefinition?.primaryDisplay || "_id"] || "-"
   }
 
-  const singleHandler = (e) => {
+  const singleHandler = e => {
     fieldApi.setValue(e.detail == null ? [] : [e.detail])
   }
 
-  const multiHandler = (e) => {
+  const multiHandler = e => {
     fieldApi.setValue(e.detail)
   }
 </script>
@@ -82,11 +80,7 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       getOptionLabel={getDisplayName}
-<<<<<<< HEAD
-      getOptionValue={(option) => option._id}
-=======
       getOptionValue={option => option._id}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     />
   {/if}
 </Field>

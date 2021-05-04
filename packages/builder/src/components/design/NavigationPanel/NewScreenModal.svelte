@@ -25,7 +25,7 @@
     }
   }
 
-  const templateChanged = (newTemplateIndex) => {
+  const templateChanged = newTemplateIndex => {
     if (newTemplateIndex === undefined) return
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
@@ -75,13 +75,13 @@
 
   const routeExists = (route, roleId) => {
     return $allScreens.some(
-      (screen) =>
+      screen =>
         screen.routing.route.toLowerCase() === route.toLowerCase() &&
         screen.routing.roleId === roleId
     )
   }
 
-  const routeChanged = (event) => {
+  const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
@@ -92,14 +92,10 @@
   <Select
     label="Choose a Template"
     bind:value={templateIndex}
-    on:change={(ev) => templateChanged(ev.detail)}
+    on:change={ev => templateChanged(ev.detail)}
     options={templates}
     placeholder={null}
-<<<<<<< HEAD
-    getOptionLabel={(x) => x.name}
-=======
     getOptionLabel={x => x.name}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
     getOptionValue={(x, idx) => idx}
   />
   <Input label="Name" bind:value={name} />
@@ -113,13 +109,8 @@
     label="Access"
     bind:value={roleId}
     options={$roles}
-<<<<<<< HEAD
-    getOptionLabel={(x) => x.name}
-    getOptionValue={(x) => x._id}
-=======
     getOptionLabel={x => x.name}
     getOptionValue={x => x._id}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
   />
   <Toggle text="Create link in navigation bar" bind:value={createLink} />
 </ModalContent>

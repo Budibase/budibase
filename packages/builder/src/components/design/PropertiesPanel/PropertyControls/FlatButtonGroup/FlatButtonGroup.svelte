@@ -6,7 +6,7 @@
   export let isMultiSelect = false
   export let value = []
   export let initialValue = ""
-  export let onChange = (selected) => {}
+  export let onChange = selected => {}
 
   onMount(() => {
     if (!value && !!initialValue) {
@@ -18,7 +18,7 @@
     let val
     if (isMultiSelect) {
       if (value.includes(v)) {
-        let idx = value.findIndex((i) => i === v)
+        let idx = value.findIndex(i => i === v)
         val = [...value].splice(idx, 1)
       } else {
         val = [...value, v]
@@ -29,7 +29,7 @@
     onChange(val)
   }
 
-  const checkSelected = (val) =>
+  const checkSelected = val =>
     isMultiSelect ? value.includes(val) : value === val
 </script>
 

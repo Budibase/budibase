@@ -31,7 +31,7 @@
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex((step) => step.id === block.id)
+    const blockIdx = allSteps.findIndex(step => step.id === block.id)
 
     // Extract all outputs from all previous steps as available bindings
     let bindings = []
@@ -71,58 +71,23 @@
           panel={AutomationBindingPanel}
           type={"email"}
           value={block.inputs[key]}
-<<<<<<< HEAD
-          on:change={(e) => (block.inputs[key] = e.detail)}
-          {bindings}
-        />
-      {:else if value.customType === "query"}
-        <QuerySelector bind:value={block.inputs[key]} />
-      {:else if value.customType === "table"}
-        <TableSelector bind:value={block.inputs[key]} />
-      {:else if value.customType === "queryParams"}
-        <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
-=======
           on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
         />
       {:else if value.customType === "table"}
         <TableSelector bind:value={block.inputs[key]} />
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       {:else if value.customType === "row"}
         <RowSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay value={block.inputs[key]} />
       {:else if value.customType === "triggerSchema"}
         <SchemaSetup bind:value={block.inputs[key]} />
-<<<<<<< HEAD
-      {:else if value.customType === "code"}
-        <CodeEditorModal>
-          <pre>{JSON.stringify(bindings, null, 2)}</pre>
-          <Label small grey>
-            Note: The result of the very last statement of this script will be
-            returned and available as the "value" property in following
-            automation blocks.
-          </Label>
-          <Editor
-            mode="javascript"
-            on:change={(e) => {
-              block.inputs[key] = e.detail.value
-            }}
-            value={block.inputs[key]}
-          />
-        </CodeEditorModal>
-=======
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
       {:else if value.type === "string" || value.type === "number"}
         <DrawerBindableInput
           panel={AutomationBindingPanel}
           type={value.customType}
           value={block.inputs[key]}
-<<<<<<< HEAD
-          on:change={(e) => (block.inputs[key] = e.detail)}
-=======
           on:change={e => (block.inputs[key] = e.detail)}
->>>>>>> 900637c221e4034babd21d69dcaa71b360a2adb2
           {bindings}
         />
       {/if}

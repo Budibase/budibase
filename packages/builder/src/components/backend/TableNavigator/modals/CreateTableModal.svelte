@@ -18,7 +18,7 @@
     ROW_LIST_TEMPLATE,
   ]
 
-  $: tableNames = $tables.list.map((table) => table.name)
+  $: tableNames = $tables.list.map(table => table.name)
 
   let modal
   let name
@@ -66,8 +66,8 @@
     // Create auto screens
     if (createAutoscreens) {
       const screens = screenTemplates($store, [table])
-        .filter((template) => defaultScreens.includes(template.id))
-        .map((template) => template.create())
+        .filter(template => defaultScreens.includes(template.id))
+        .map(template => template.create())
       for (let screen of screens) {
         // Record the table that created this screen so we can link it later
         screen.autoTableId = table._id
@@ -75,7 +75,7 @@
       }
 
       // Create autolink to newly created list screen
-      const listScreen = screens.find((screen) =>
+      const listScreen = screens.find(screen =>
         screen.props._instanceName.endsWith("List")
       )
       await store.actions.components.links.save(

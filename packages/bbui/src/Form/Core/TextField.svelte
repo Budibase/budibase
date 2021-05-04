@@ -13,7 +13,7 @@
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = (value) => {
+  const updateValue = value => {
     if (readonly) {
       return
     }
@@ -31,7 +31,7 @@
     focus = true
   }
 
-  const onBlur = (event) => {
+  const onBlur = event => {
     if (readonly) {
       return
     }
@@ -39,7 +39,7 @@
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = (event) => {
+  const updateValueOnEnter = event => {
     if (readonly) {
       return
     }

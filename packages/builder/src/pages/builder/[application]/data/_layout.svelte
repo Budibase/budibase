@@ -20,7 +20,7 @@
   let selected = $isActive("./datasource") ? "External" : "Internal"
 
   function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find((t) => t.title === detail)
+    const { key } = tabs.find(t => t.title === detail)
     if (key === "datasource") {
       $goto("./datasource")
     } else {
