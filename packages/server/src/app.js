@@ -47,8 +47,8 @@ if (electron.app && electron.app.isPackaged) {
   Sentry.init()
 
   app.on("error", (err, ctx) => {
-    Sentry.withScope(function(scope) {
-      scope.addEventProcessor(function(event) {
+    Sentry.withScope(function (scope) {
+      scope.addEventProcessor(function (event) {
         return Sentry.Handlers.parseRequest(event, ctx.request)
       })
       Sentry.captureException(err)
@@ -73,7 +73,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   await automations.init()
 })
 
-process.on("uncaughtException", err => {
+process.on("uncaughtException", (err) => {
   console.error(err)
   server.close()
   server.destroy()

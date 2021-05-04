@@ -2,14 +2,14 @@
  * Recursively searches for a specific component ID
  */
 export const findComponent = (rootComponent, id) => {
-  return searchComponentTree(rootComponent, comp => comp._id === id)
+  return searchComponentTree(rootComponent, (comp) => comp._id === id)
 }
 
 /**
  * Recursively searches for a specific component type
  */
 export const findComponentType = (rootComponent, type) => {
-  return searchComponentTree(rootComponent, comp => comp._component === type)
+  return searchComponentTree(rootComponent, (comp) => comp._component === type)
 }
 
 /**
@@ -68,7 +68,7 @@ export const findAllMatchingComponents = (rootComponent, selector) => {
   }
   let components = []
   if (rootComponent._children) {
-    rootComponent._children.forEach(child => {
+    rootComponent._children.forEach((child) => {
       components = [
         ...components,
         ...findAllMatchingComponents(child, selector),

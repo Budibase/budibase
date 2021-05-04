@@ -12,8 +12,8 @@ import {
   makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
-export default function(tables) {
-  return tables.map(table => {
+export default function (tables) {
+  return tables.map((table) => {
     return {
       name: `${table.name} - Detail`,
       create: () => createScreen(table),
@@ -23,7 +23,7 @@ export default function(tables) {
 }
 
 export const ROW_DETAIL_TEMPLATE = "ROW_DETAIL_TEMPLATE"
-export const rowDetailUrl = table => sanitizeUrl(`/${table.name}/:id`)
+export const rowDetailUrl = (table) => sanitizeUrl(`/${table.name}/:id`)
 
 function generateTitleContainer(table, title, formId, repeaterId) {
   // have to override style for this, its missing margin
@@ -77,12 +77,10 @@ function generateTitleContainer(table, title, formId, repeaterId) {
     })
     .instanceName("Delete Button")
 
-  return makeTitleContainer(title)
-    .addChild(deleteButton)
-    .addChild(saveButton)
+  return makeTitleContainer(title).addChild(deleteButton).addChild(saveButton)
 }
 
-const createScreen = table => {
+const createScreen = (table) => {
   const provider = new Component("@budibase/standard-components/dataprovider")
     .instanceName(`Data Provider`)
     .customProps({
@@ -124,7 +122,7 @@ const createScreen = table => {
 
   // Add all form fields from this schema to the field group
   const datasource = { type: "table", tableId: table._id }
-  makeDatasourceFormComponents(datasource).forEach(component => {
+  makeDatasourceFormComponents(datasource).forEach((component) => {
     fieldGroup.addChild(component)
   })
 

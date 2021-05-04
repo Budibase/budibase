@@ -11,7 +11,7 @@ const FIRST_USER_EMAIL = "test@test.com"
 const FIRST_USER_PASSWORD = "test"
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
-exports.save = async ctx => {
+exports.save = async (ctx) => {
   const db = new CouchDB(GLOBAL_DB)
   const { email, password, _id } = ctx.request.body
 
@@ -60,7 +60,7 @@ exports.save = async ctx => {
   }
 }
 
-exports.firstUser = async ctx => {
+exports.firstUser = async (ctx) => {
   ctx.request.body = {
     email: FIRST_USER_EMAIL,
     password: FIRST_USER_PASSWORD,
@@ -72,7 +72,7 @@ exports.firstUser = async ctx => {
   await exports.save(ctx)
 }
 
-exports.destroy = async ctx => {
+exports.destroy = async (ctx) => {
   const db = new CouchDB(GLOBAL_DB)
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
@@ -82,14 +82,14 @@ exports.destroy = async ctx => {
 }
 
 // called internally by app server user fetch
-exports.fetch = async ctx => {
+exports.fetch = async (ctx) => {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
     })
   )
-  const users = response.rows.map(row => row.doc)
+  const users = response.rows.map((row) => row.doc)
   // user hashed password shouldn't ever be returned
   for (let user of users) {
     if (user) {
@@ -100,7 +100,7 @@ exports.fetch = async ctx => {
 }
 
 // called internally by app server user find
-exports.find = async ctx => {
+exports.find = async (ctx) => {
   const db = new CouchDB(GLOBAL_DB)
   let user
   try {

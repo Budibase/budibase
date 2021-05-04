@@ -2,4 +2,4 @@
   import FormFieldSelect from "./FormFieldSelect.svelte"
 </script>
 
-<FormFieldSelect {...$$props} type="number" />
+<FormFieldSelect {...$$props} on:change type="number" />

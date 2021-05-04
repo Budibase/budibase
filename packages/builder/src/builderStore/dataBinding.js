@@ -34,7 +34,7 @@ export const getDataProviderComponents = (asset, componentId) => {
   path.pop()
 
   // Filter by only data provider components
-  return path.filter(component => {
+  return path.filter((component) => {
     const def = store.actions.components.getDefinition(component._component)
     return def?.context != null
   })
@@ -54,7 +54,7 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
   path.pop()
 
   // Filter by only data provider components
-  return path.filter(component => {
+  return path.filter((component) => {
     const def = store.actions.components.getDefinition(component._component)
     return def?.actions?.includes(actionType)
   })
@@ -70,7 +70,7 @@ export const getDatasourceForProvider = (asset, component) => {
   }
 
   // If this component has a dataProvider setting, go up the stack and use it
-  const dataProviderSetting = def.settings.find(setting => {
+  const dataProviderSetting = def.settings.find((setting) => {
     return setting.type === "dataProvider"
   })
   if (dataProviderSetting) {
@@ -82,7 +82,7 @@ export const getDatasourceForProvider = (asset, component) => {
 
   // Extract datasource from component instance
   const validSettingTypes = ["dataSource", "table", "schema"]
-  const datasourceSetting = def.settings.find(setting => {
+  const datasourceSetting = def.settings.find((setting) => {
     return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
@@ -112,7 +112,7 @@ const getContextBindings = (asset, componentId) => {
   let bindings = []
 
   // Create bindings for each data provider
-  dataProviders.forEach(component => {
+  dataProviders.forEach((component) => {
     const def = store.actions.components.getDefinition(component._component)
     const contextDefinition = def.context
     let schema
@@ -127,7 +127,7 @@ const getContextBindings = (asset, componentId) => {
       // Static contexts are fully defined by the components
       schema = {}
       const values = contextDefinition.values || []
-      values.forEach(value => {
+      values.forEach((value) => {
         schema[value.key] = { name: value.label, type: "string" }
       })
     } else if (contextDefinition.type === "schema") {
@@ -148,7 +148,7 @@ const getContextBindings = (asset, componentId) => {
 
     // Create bindable properties for each schema field
     const safeComponentId = makePropSafe(component._id)
-    keys.forEach(key => {
+    keys.forEach((key) => {
       const fieldSchema = schema[key]
 
       // Make safe runtime binding and replace certain bindings with a
@@ -197,7 +197,7 @@ const getUserBindings = () => {
   })
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+  keys.forEach((key) => {
     const fieldSchema = schema[key]
     // Replace certain bindings with a new property to help display components
     let runtimeBoundKey = key
@@ -224,17 +224,17 @@ const getUserBindings = () => {
 /**
  * Gets all bindable properties from URL parameters.
  */
-const getUrlBindings = asset => {
+const getUrlBindings = (asset) => {
   const url = asset?.routing?.route ?? ""
   const split = url.split("/")
   let params = []
-  split.forEach(part => {
+  split.forEach((part) => {
     if (part.startsWith(":") && part.length > 1) {
       params.push(part.replace(/:/g, "").replace(/\?/g, ""))
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  return params.map((param) => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
@@ -250,10 +250,10 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
     const { type } = datasource
     if (type === "query") {
       const queries = get(queriesStores).list
-      table = queries.find(query => query._id === datasource._id)
+      table = queries.find((query) => query._id === datasource._id)
     } else {
       const tables = get(tablesStore).list
-      table = tables.find(table => table._id === datasource.tableId)
+      table = tables.find((table) => table._id === datasource.tableId)
     }
     if (table) {
       if (type === "view") {
@@ -261,7 +261,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       } else if (type === "query" && isForm) {
         schema = {}
         const params = table.parameters || []
-        params.forEach(param => {
+        params.forEach((param) => {
           if (param?.name) {
             schema[param.name] = { ...param, type: "string" }
           }
@@ -279,7 +279,7 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
 
     // Ensure there are "name" properties for all fields
     if (schema) {
-      Object.keys(schema).forEach(field => {
+      Object.keys(schema).forEach((field) => {
         if (!schema[field].name) {
           schema[field].name = field
         }
@@ -293,14 +293,14 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-const buildFormSchema = component => {
+const buildFormSchema = (component) => {
   let schema = {}
   if (!component) {
     return schema
   }
   const def = store.actions.components.getDefinition(component._component)
   const fieldSetting = def?.settings?.find(
-    setting => setting.key === "field" && setting.type.startsWith("field/")
+    (setting) => setting.key === "field" && setting.type.startsWith("field/")
   )
   if (fieldSetting && component.field) {
     const type = fieldSetting.type.split("field/")[1]
@@ -308,7 +308,7 @@ const buildFormSchema = component => {
       schema[component.field] = { type }
     }
   }
-  component._children?.forEach(child => {
+  component._children?.forEach((child) => {
     const childSchema = buildFormSchema(child)
     schema = { ...schema, ...childSchema }
   })
@@ -339,7 +339,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     return textWithBindings
   }
   const convertFromProps = bindableProperties
-    .map(el => el[convertFrom])
+    .map((el) => el[convertFrom])
     .sort((a, b) => {
       return b.length - a.length
     })
@@ -349,7 +349,9 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     let newBoundValue = boundValue
     for (let from of convertFromProps) {
       if (newBoundValue.includes(from)) {
-        const binding = bindableProperties.find(el => el[convertFrom] === from)
+        const binding = bindableProperties.find(
+          (el) => el[convertFrom] === from
+        )
         newBoundValue = newBoundValue.replace(from, binding[convertTo])
       }
     }

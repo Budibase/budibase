@@ -46,7 +46,7 @@ async function init() {
     SELF_HOSTED: 1,
   }
   let envFile = ""
-  Object.keys(envFileJson).forEach(key => {
+  Object.keys(envFileJson).forEach((key) => {
     envFile += `${key}=${envFileJson[key]}\n`
   })
   fs.writeFileSync(envFilePath, envFile)
@@ -78,7 +78,7 @@ const managementCommand = process.argv.slice(2)[0]
 
 if (
   !managementCommand ||
-  !Object.values(Commands).some(command => managementCommand === command)
+  !Object.values(Commands).some((command) => managementCommand === command)
 ) {
   throw new Error(
     "You must supply either an 'up', 'down' or 'nuke' commmand to manage the budibase development environment."
@@ -104,7 +104,7 @@ command()
   .then(() => {
     console.log("Done! 🎉")
   })
-  .catch(err => {
+  .catch((err) => {
     console.error(
       "Something went wrong while managing budibase dev environment:",
       err.message

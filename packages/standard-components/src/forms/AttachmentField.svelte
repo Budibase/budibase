@@ -1,7 +1,7 @@
 <script>
   import Field from "./Field.svelte"
-  import Dropzone from "../attachments/Dropzone.svelte"
-  import { onMount } from "svelte"
+  import { CoreDropzone } from "@budibase/bbui"
+  import { getContext } from "svelte"
 
   export let field
   export let label
@@ -10,16 +10,25 @@
   let fieldState
   let fieldApi
 
-  // Update form value from bound value after we've mounted
-  let value
-  let mounted = false
-  $: mounted && fieldApi?.setValue(value)
+  const { API, notifications } = getContext("sdk")
+  const BYTES_IN_MB = 1000000
 
-  // Get the fields initial value after initialising
-  onMount(() => {
-    value = $fieldState?.value
-    mounted = true
-  })
+  export let files = []
+
+  const handleFileTooLarge = fileSizeLimit => {
+    notifications.warning(
+      `Files cannot exceed ${fileSizeLimit /
+        BYTES_IN_MB} MB. Please try again with smaller files.`
+    )
+  }
+
+  const processFiles = async fileList => {
+    let data = new FormData()
+    for (let i = 0; i < fileList.length; i++) {
+      data.append("file", fileList[i])
+    }
+    return await API.uploadAttachment(data)
+  }
 </script>
 
 <Field
@@ -30,16 +39,12 @@
   bind:fieldState
   bind:fieldApi
   defaultValue={[]}>
-  {#if mounted}
-    <div class:disabled={$fieldState.disabled}>
-      <Dropzone bind:files={value} />
-    </div>
+  {#if $fieldState}
+    <CoreDropzone
+      value={$fieldState.value}
+      disabled={$fieldState.disabled}
+      on:change={e => fieldApi.setValue(e.detail)}
+      {processFiles}
+      {handleFileTooLarge} />
   {/if}
 </Field>
-
-<style>
-  div.disabled :global(> *) {
-    background-color: var(--spectrum-global-color-gray-200) !important;
-    pointer-events: none !important;
-  }
-</style>

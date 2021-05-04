@@ -1,6 +1,12 @@
 <script>
-  import { Button, Label, Input, Spacer } from "@budibase/bbui"
-  import { notifier } from "builderStore/store/notifications"
+  import {
+    notifications,
+    Button,
+    Link,
+    Input,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import { auth } from "stores/backend"
 
   let username = ""
@@ -12,39 +18,51 @@
         username,
         password,
       })
-      notifier.success("Logged in successfully.")
+      notifications.success("Logged in successfully.")
     } catch (err) {
       console.error(err)
-      notifier.danger("Invalid credentials")
+      notifications.error("Invalid credentials")
     }
   }
 
   async function createTestUser() {
     try {
       await auth.firstUser()
-      notifier.success("Test user created")
+      notifications.success("Test user created")
     } catch (err) {
       console.error(err)
-      notifier.danger("Could not create test user")
+      notifications.error("Could not create test user")
     }
   }
 </script>
 
-<form on:submit|preventDefault data-cy="login-form">
-  <Spacer large />
-  <Label small>Email</Label>
-  <Input outline bind:value={username} />
-  <Spacer large />
-  <Label small>Password</Label>
-  <Input outline type="password" on:change bind:value={password} />
-  <Spacer large />
-  <Button primary on:click={login}>Login</Button>
-  <a target="_blank" href="/api/admin/auth/google">Sign In With Google</a>
-  <Button secondary on:click={createTestUser}>Create Test User</Button>
-</form>
+<Modal fixed>
+  <ModalContent
+    size="L"
+    title="Log In"
+    onConfirm={login}
+    confirmText="Log In"
+    showCancelButton={false}
+    showCloseIcon={false}>
+    <Input label="Email" bind:value={username} />
+    <Input label="Password" type="password" on:change bind:value={password} />
+    <div class="footer" slot="footer">
+      <Link target="_blank" href="/api/admin/auth/google">
+        Sign In With Google
+      </Link>
+      <Button secondary on:click={createTestUser}>Create Test User</Button>
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
-  form {
-    width: 60%;
+  .footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .footer :global(a) {
+    margin-right: var(--spectrum-global-dimension-static-size-200);
   }
 </style>

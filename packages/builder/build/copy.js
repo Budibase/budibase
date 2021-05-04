@@ -1,6 +1,6 @@
 const ncp = require("ncp").ncp
 
-ncp("./dist", "../server/builder", function(err) {
+ncp("./dist", "../server/builder", function (err) {
   if (err) {
     return console.error(err)
   }

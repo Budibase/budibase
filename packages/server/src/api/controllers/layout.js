@@ -2,7 +2,7 @@ const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const CouchDB = require("../../db")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let layout = ctx.request.body
 
@@ -21,7 +21,7 @@ exports.save = async function(ctx) {
   ctx.status = 200
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
@@ -32,7 +32,7 @@ exports.destroy = async function(ctx) {
         include_docs: true,
       })
     )
-  ).rows.map(element => element.doc.layoutId)
+  ).rows.map((element) => element.doc.layoutId)
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }

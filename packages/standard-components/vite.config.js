@@ -12,7 +12,12 @@ export default ({ mode }) => {
       },
       minify: isProduction,
     },
-    plugins: [svelte()],
+    plugins: [
+      svelte({
+        hot: !isProduction,
+        emitCss: true,
+      }),
+    ],
     resolve: {
       dedupe: ["svelte", "svelte/internal"],
     },

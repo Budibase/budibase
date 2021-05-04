@@ -50,7 +50,7 @@ exports.createHomeScreen = () => ({
   name: "home-screen",
 })
 
-exports.createLoginScreen = app => ({
+exports.createLoginScreen = (app) => ({
   description: "",
   url: "",
   layoutId: BASE_LAYOUT_PROP_IDS.PUBLIC,

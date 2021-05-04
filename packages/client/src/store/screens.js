@@ -25,12 +25,12 @@ const createScreenStore = () => {
           activeScreen = screens[0]
         } else if ($routeStore.activeRoute) {
           activeScreen = screens.find(
-            screen => screen._id === $routeStore.activeRoute.screenId
+            (screen) => screen._id === $routeStore.activeRoute.screenId
           )
         }
         if (activeScreen) {
           activeLayout = layouts.find(
-            layout => layout._id === activeScreen.layoutId
+            (layout) => layout._id === activeScreen.layoutId
           )
         }
       }

@@ -1,6 +1,6 @@
 <script>
   import { tables, rows } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
   import { ModalContent } from "@budibase/bbui"
@@ -33,7 +33,7 @@
       return false
     }
 
-    notifier.success("Row saved successfully.")
+    notifications.success("Row saved successfully.")
     rows.save(rowResponse)
   }
 </script>
