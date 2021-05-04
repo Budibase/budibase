@@ -13,7 +13,7 @@ const {
  * Links to the "check-api-key" lambda.
  * @param {object} deployment - information about the active deployment, including the appId and quota.
  */
-exports.preDeployment = async function(deployment) {
+exports.preDeployment = async function (deployment) {
   const json = await fetchCredentials(env.DEPLOYMENT_CREDENTIALS_URL, {
     apiKey: env.BUDIBASE_API_KEY,
     appId: deployment.getAppId(),
@@ -39,7 +39,7 @@ exports.preDeployment = async function(deployment) {
  * @param {object} deployment information about the active deployment, including the quota info.
  * @returns {Promise<object>} The usage has been updated against the user API key.
  */
-exports.postDeployment = async function(deployment) {
+exports.postDeployment = async function (deployment) {
   const DEPLOYMENT_SUCCESS_URL =
     env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
 
@@ -62,14 +62,14 @@ exports.postDeployment = async function(deployment) {
   return await response.json()
 }
 
-exports.deploy = async function(deployment) {
+exports.deploy = async function (deployment) {
   const appId = deployment.getAppId()
   const { bucket, accountId } = deployment.getVerification()
   const metadata = { accountId }
   await deployToObjectStore(appId, bucket, metadata)
 }
 
-exports.replicateDb = async function(deployment) {
+exports.replicateDb = async function (deployment) {
   const appId = deployment.getAppId()
   const verification = deployment.getVerification()
   return performReplication(

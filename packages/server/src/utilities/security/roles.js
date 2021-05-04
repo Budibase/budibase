@@ -16,12 +16,12 @@ function Role(id, name) {
   this.name = name
 }
 
-Role.prototype.addPermission = function(permissionId) {
+Role.prototype.addPermission = function (permissionId) {
   this.permissionId = permissionId
   return this
 }
 
-Role.prototype.addInheritance = function(inherits) {
+Role.prototype.addInheritance = function (inherits) {
   this.inherits = inherits
   return this
 }
@@ -49,15 +49,15 @@ exports.getBuiltinRoles = () => {
 }
 
 exports.BUILTIN_ROLE_ID_ARRAY = Object.values(BUILTIN_ROLES).map(
-  role => role._id
+  (role) => role._id
 )
 
 exports.BUILTIN_ROLE_NAME_ARRAY = Object.values(BUILTIN_ROLES).map(
-  role => role.name
+  (role) => role.name
 )
 
 function isBuiltin(role) {
-  return exports.BUILTIN_ROLE_ID_ARRAY.some(builtin => role.includes(builtin))
+  return exports.BUILTIN_ROLE_ID_ARRAY.some((builtin) => role.includes(builtin))
 }
 
 /**
@@ -112,7 +112,7 @@ exports.getRole = async (appId, roleId) => {
   // but can be extended by a doc stored about them (e.g. permissions)
   if (isBuiltin(roleId)) {
     role = cloneDeep(
-      Object.values(BUILTIN_ROLES).find(role => role._id === roleId)
+      Object.values(BUILTIN_ROLES).find((role) => role._id === roleId)
     )
   }
   try {
@@ -163,7 +163,7 @@ async function getAllUserRoles(appId, userRoleId) {
  */
 exports.getUserRoleHierarchy = async (appId, userRoleId) => {
   // special case, if they don't have a role then they are a public user
-  return (await getAllUserRoles(appId, userRoleId)).map(role => role._id)
+  return (await getAllUserRoles(appId, userRoleId)).map((role) => role._id)
 }
 
 /**
@@ -176,7 +176,7 @@ exports.getUserRoleHierarchy = async (appId, userRoleId) => {
 exports.getUserPermissions = async (appId, userRoleId) => {
   const rolesHierarchy = await getAllUserRoles(appId, userRoleId)
   const basePermissions = [
-    ...new Set(rolesHierarchy.map(role => role.permissionId)),
+    ...new Set(rolesHierarchy.map((role) => role.permissionId)),
   ]
   const permissions = {}
   for (let role of rolesHierarchy) {
@@ -245,7 +245,7 @@ class AccessController {
 /**
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
-exports.getDBRoleID = roleId => {
+exports.getDBRoleID = (roleId) => {
   if (roleId.startsWith(DocumentTypes.ROLE)) {
     return roleId
   }
@@ -255,7 +255,7 @@ exports.getDBRoleID = roleId => {
 /**
  * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
  */
-exports.getExternalRoleID = roleId => {
+exports.getExternalRoleID = (roleId) => {
   // for built in roles we want to remove the DB role ID element (role_)
   if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
     return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]

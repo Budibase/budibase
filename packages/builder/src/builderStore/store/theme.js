@@ -3,35 +3,25 @@ import { localStorageStore } from "./localStorage"
 export const getThemeStore = () => {
   const themeElement = document.documentElement
   const initialValue = {
-    darkMode: true,
-    hue: 208,
-    saturation: 9,
-    lightness: 16,
+    theme: "darkest",
+    options: ["lightest", "light", "dark", "darkest"],
   }
-
   const store = localStorageStore("bb-theme", initialValue)
 
-  // Sets a CSS variable on the root document element
-  function setCSSVariable(prop, value) {
-    themeElement.style.setProperty(prop, value)
-  }
+  // Update theme class when store changes
+  store.subscribe((state) => {
+    // Handle any old local storage values - this can be removed after the update
+    if (state.darkMode !== undefined) {
+      store.set(initialValue)
+      return
+    }
 
-  // Resets the custom theme to the default dark theme.
-  // The reset option is only available when dark theme is on, which is why it
-  // sets dark mode to true here
-  store.reset = () => {
-    store.set({
-      ...initialValue,
-      darkMode: true,
+    state.options.forEach((option) => {
+      themeElement.classList.toggle(
+        `spectrum--${option}`,
+        option === state.theme
+      )
     })
-  }
-
-  // Update theme when store changes
-  store.subscribe(theme => {
-    themeElement.classList[theme.darkMode ? "add" : "remove"]("dark")
-    setCSSVariable("--theme-hue", Math.round(theme.hue))
-    setCSSVariable("--theme-saturation", `${Math.round(theme.saturation)}%`)
-    setCSSVariable("--theme-brightness", `${Math.round(theme.lightness)}%`)
   })
 
   return store

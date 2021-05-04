@@ -1,13 +1,13 @@
 const CouchDB = require("../../db")
 const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 
-exports.fetchAppComponentDefinitions = async function(ctx) {
+exports.fetchAppComponentDefinitions = async function (ctx) {
   const appId = ctx.params.appId || ctx.appId
   const db = new CouchDB(appId)
   const app = await db.get(appId)
 
   let componentManifests = await Promise.all(
-    app.componentLibraries.map(async library => {
+    app.componentLibraries.map(async (library) => {
       let manifest = await getComponentLibraryManifest(appId, library)
 
       return {

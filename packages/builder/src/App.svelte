@@ -3,8 +3,8 @@
   import { Router } from "@roxi/routify"
   import { routes } from "../.routify/routes"
   import { initialise } from "builderStore"
-  import NotificationDisplay from "components/common/Notification/NotificationDisplay.svelte"
-
+  import { NotificationDisplay } from "@budibase/bbui"
+  
   onMount(async () => {
     await initialise()
   })
@@ -14,3 +14,10 @@
 
 <NotificationDisplay />
 <Router {routes} {config} />
+<div class="modal-container" />
+
+<style>
+  .modal-container {
+    position: absolute;
+  }
+</style>

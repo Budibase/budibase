@@ -41,11 +41,11 @@
     on:change={event => onChange(event.target.value)}
     {placeholder} />
   <div class="icon" on:click={bindingModal.show}>
-    <Icon name="lightning" />
+    <Icon size="S" name="FlashOn" />
   </div>
 </div>
-<Modal bind:this={bindingModal} width="50%">
-  <ModalContent {title} onConfirm={saveBinding} bind:disabled={invalid}>
+<Modal bind:this={bindingModal}>
+  <ModalContent {title} onConfirm={saveBinding} bind:disabled={invalid} size="XL">
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
@@ -66,24 +66,31 @@
   }
 
   .icon {
-    right: 2px;
-    bottom: 2px;
+    right: 1px;
+    bottom: 1px;
     position: absolute;
+    justify-content: center;
     align-items: center;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
-    padding-left: 7px;
-    border-left: 1px solid var(--grey-4);
-    background-color: var(--grey-2);
-    border-top-right-radius: var(--border-radius-m);
-    border-bottom-right-radius: var(--border-radius-m);
-    color: var(--grey-7);
-    font-size: 14px;
-    height: 40px;
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
+    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+    var(--spectrum-global-animation-duration-100, 130ms),
+    box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+    border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
 
   .icon:hover {
-    color: var(--ink);
     cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

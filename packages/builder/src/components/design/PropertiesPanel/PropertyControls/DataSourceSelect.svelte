@@ -2,11 +2,13 @@
   import { getBindableProperties } from "builderStore/dataBinding"
   import {
     Button,
-    Icon,
-    DropdownMenu,
-    Spacer,
+    Popover,
+    Divider,
+    Select,
+    Layout,
     Heading,
     Drawer,
+    DrawerContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
@@ -15,7 +17,7 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
 
@@ -27,6 +29,7 @@
   export let otherSources
   export let showAllQueries
 
+  $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
@@ -92,92 +95,75 @@
   }
 </script>
 
-<div class="container">
-  <div
-    class="dropdownbutton"
-    bind:this={anchorRight}
-    on:click={dropdownRight.show}>
-    <span>{value?.label ?? 'Choose option'}</span>
-    <Icon name="arrowdown" />
-  </div>
+<div class="container" bind:this={anchorRight}>
+  <Select
+    readonly
+    value={text}
+    options={[text]}
+    on:click={dropdownRight.show} />
   {#if value?.type === 'query'}
     <i class="ri-settings-5-line" on:click={drawer.show} />
     <Drawer title={'Query Parameters'} bind:this={drawer}>
-      <div slot="buttons">
-        <Button
-          blue
-          thin
-          on:click={() => {
-            notifier.success('Query parameters saved.')
-            handleSelected(value)
-            drawer.hide()
-          }}>
-          Save
-        </Button>
-      </div>
-      <div class="drawer-contents" slot="body">
-        {#if value.parameters.length > 0}
-          <ParameterBuilder
-            bind:customParams={value.queryParams}
-            parameters={queries.find(query => query._id === value._id).parameters}
-            bindings={queryBindableProperties} />
-        {/if}
-        <!--        <Spacer large />-->
-        <IntegrationQueryEditor
-          height={200}
-          query={value}
-          schema={fetchQueryDefinition(value)}
-          datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
-          editable={false} />
-        <Spacer large />
-      </div>
+      <Button
+        slot="buttons"
+        cta
+        on:click={() => {
+          notifications.success('Query parameters saved.')
+          handleSelected(value)
+          drawer.hide()
+        }}>
+        Save
+      </Button>
+      <DrawerContent slot="body">
+        <Layout>
+          {#if value.parameters.length > 0}
+            <ParameterBuilder
+              bind:customParams={value.queryParams}
+              parameters={queries.find(query => query._id === value._id).parameters}
+              bindings={queryBindableProperties} />
+          {/if}
+          <IntegrationQueryEditor
+            height={200}
+            query={value}
+            schema={fetchQueryDefinition(value)}
+            datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
+            editable={false} />
+        </Layout>
+      </DrawerContent>
     </Drawer>
   {/if}
 </div>
-<DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
+<Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading extraSmall>Tables</Heading>
+      <Heading size="XS">Tables</Heading>
     </div>
     <ul>
       {#each tables as table}
-        <li
-          class:selected={value === table}
-          on:click={() => handleSelected(table)}>
-          {table.label}
-        </li>
+        <li on:click={() => handleSelected(table)}>{table.label}</li>
       {/each}
     </ul>
-    <hr />
+    <Divider size="S" />
     <div class="title">
-      <Heading extraSmall>Views</Heading>
+      <Heading size="XS">Views</Heading>
     </div>
     <ul>
       {#each views as view}
-        <li
-          class:selected={value === view}
-          on:click={() => handleSelected(view)}>
-          {view.label}
-        </li>
+        <li on:click={() => handleSelected(view)}>{view.label}</li>
       {/each}
     </ul>
-    <hr />
+    <Divider size="S" />
     <div class="title">
-      <Heading extraSmall>Relationships</Heading>
+      <Heading size="XS">Relationships</Heading>
     </div>
     <ul>
       {#each links as link}
-        <li
-          class:selected={value === link}
-          on:click={() => handleSelected(link)}>
-          {link.label}
-        </li>
+        <li on:click={() => handleSelected(link)}>{link.label}</li>
       {/each}
     </ul>
-
-    <hr />
+    <Divider size="S" />
     <div class="title">
-      <Heading extraSmall>Queries</Heading>
+      <Heading size="XS">Queries</Heading>
     </div>
     <ul>
       {#each queries as query}
@@ -190,22 +176,18 @@
     </ul>
 
     {#if otherSources?.length}
-      <hr />
+      <Divider size="S" />
       <div class="title">
-        <Heading extraSmall>Other</Heading>
+        <Heading size="XS">Other</Heading>
       </div>
       <ul>
         {#each otherSources as source}
-          <li
-            class:selected={value === source}
-            on:click={() => handleSelected(source)}>
-            {source.label}
-          </li>
+          <li on:click={() => handleSelected(source)}>{source.label}</li>
         {/each}
       </ul>
     {/if}
   </div>
-</DropdownMenu>
+</Popover>
 
 <style>
   .container {
@@ -214,33 +196,8 @@
     justify-content: flex-start;
     align-items: center;
   }
-
-  .dropdownbutton {
-    background-color: var(--grey-2);
-    border: var(--border-transparent);
-    padding: var(--spacing-s) var(--spacing-m);
-    border-radius: var(--border-radius-m);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    overflow: hidden;
+  .container :global(:first-child) {
     flex: 1 1 auto;
-  }
-  .dropdownbutton:hover {
-    cursor: pointer;
-    background-color: var(--grey-3);
-  }
-  .dropdownbutton span {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    flex: 1 1 auto;
-    text-align: left;
-    font-size: var(--font-size-xs);
-  }
-  .dropdownbutton :global(svg) {
-    margin: -4px 0;
   }
 
   .dropdown {
@@ -248,11 +205,7 @@
     z-index: 99999999;
   }
   .title {
-    padding: 0 var(--spacing-m) var(--spacing-xs) var(--spacing-m);
-  }
-
-  hr {
-    margin: var(--spacing-m) 0 var(--spacing-xl) 0;
+    padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);
   }
 
   ul {
@@ -265,15 +218,15 @@
     cursor: pointer;
     margin: 0px;
     padding: var(--spacing-s) var(--spacing-m);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-m);
   }
 
   .selected {
-    background-color: var(--grey-4);
+    color: var(--spectrum-global-color-blue-600);
   }
 
   li:hover {
-    background-color: var(--grey-4);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .drawer-contents {

@@ -19,7 +19,7 @@ This custom can be used to display toast messages. It has 5 different methods: `
 
 
 <View name="danger">
-  <button on:click={() => notifications.danger('This is a danger!')}>Danger</button>
+  <button on:click={() => notifications.error('This is a danger!')}>Danger</button>
 </View>
 <View name="warning">
   <button on:click={() => notifications.warning('This is a warning!')}>Warning</button>

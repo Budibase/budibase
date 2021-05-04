@@ -35,11 +35,11 @@
     route.subpaths[selectedScreen?.routing?.route] !== undefined
   $: routeOpened = routeManuallyOpened || routeSelected || hasSearchMatch
 
-  const changeScreen = screenId => {
+  const changeScreen = (screenId) => {
     store.actions.screens.select(screenId)
   }
 
-  const getAllScreens = route => {
+  const getAllScreens = (route) => {
     let screens = []
     Object.entries(route.subpaths).forEach(([route, subpath]) => {
       Object.entries(subpath.screens).forEach(([role, id]) => {
@@ -51,7 +51,7 @@
 
   const getFilteredScreens = (screens, searchString) => {
     return screens.filter(
-      screen => !searchString || screen.route.includes(searchString)
+      (screen) => !searchString || screen.route.includes(searchString)
     )
   }
 
@@ -65,23 +65,25 @@
 
 {#if !noSearchMatch}
   <NavItem
-    icon="ri-folder-line"
+    icon="FolderOutline"
     text={path}
     on:click={toggleManuallyOpened}
     opened={routeOpened}
     {border}
-    withArrow={route.subpaths} />
+    withArrow={route.subpaths}
+  />
 
   {#if routeOpened}
     {#each filteredScreens as screen (screen.id)}
       <NavItem
-        icon="ri-artboard-2-line"
+        icon="WebPage"
         indentLevel={indent || 1}
         selected={$store.selectedScreenId === screen.id}
         opened={$store.selectedScreenId === screen.id}
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
-        on:click={() => changeScreen(screen.id)}>
+        on:click={() => changeScreen(screen.id)}
+      >
         <ScreenDropdownMenu screenId={screen.id} />
       </NavItem>
       {#if selectedScreen?._id === screen.id}
@@ -89,7 +91,8 @@
           level={1}
           components={selectedScreen.props._children}
           currentComponent={$selectedComponent}
-          {dragDropStore} />
+          {dragDropStore}
+        />
       {/if}
     {/each}
   {/if}

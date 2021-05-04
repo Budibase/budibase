@@ -1,20 +1,15 @@
 <script>
-  import { TextButton, Icon, Popover } from "@budibase/bbui"
-  import api from "builderStore/api"
-  import ExportPopover from "../popovers/ExportPopover.svelte"
+  import { ActionButton, Modal } from "@budibase/bbui"
+  import ExportModal from "../modals/ExportModal.svelte"
 
   export let view
 
-  let anchor
-  let dropdown
+  let modal
 </script>
 
-<div bind:this={anchor}>
-  <TextButton text small on:click={dropdown.show}>
-    <Icon name="download" />
-    Export
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <ExportPopover {view} onClosed={dropdown.hide} />
-</Popover>
+<ActionButton icon="Download" size="S" quiet on:click={modal.show}>
+  Export
+</ActionButton>
+<Modal bind:this={modal}>
+  <ExportModal {view} />
+</Modal>

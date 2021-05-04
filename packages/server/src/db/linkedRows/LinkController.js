@@ -194,11 +194,11 @@ class LinkController {
       if (field.type === FieldTypes.LINK && rowField != null) {
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
-          linkDoc =>
+          (linkDoc) =>
             linkDoc.doc1.fieldName === fieldName ||
             linkDoc.doc2.fieldName === fieldName
         )
-        const linkDocIds = thisFieldLinkDocs.map(linkDoc => {
+        const linkDocIds = thisFieldLinkDocs.map((linkDoc) => {
           return linkDoc.doc1.rowId === row._id
             ? linkDoc.doc2.rowId
             : linkDoc.doc1.rowId
@@ -218,7 +218,7 @@ class LinkController {
                 rowId: linkId,
                 includeDocs: IncludeDocs.EXCLUDE,
               })
-            ).filter(link => link.id !== row._id)
+            ).filter((link) => link.id !== row._id)
 
             // The 1 side of 1:N is already related to something else
             // You must remove the existing relationship
@@ -251,12 +251,12 @@ class LinkController {
         }
         // find the docs that need to be deleted
         let toDeleteDocs = thisFieldLinkDocs
-          .filter(doc => {
+          .filter((doc) => {
             let correctDoc =
               doc.doc1.fieldName === fieldName ? doc.doc2 : doc.doc1
             return rowField.indexOf(correctDoc.rowId) === -1
           })
-          .map(doc => {
+          .map((doc) => {
             return { ...doc, _deleted: true }
           })
         // now add the docs to be deleted to the bulk operation
@@ -282,7 +282,7 @@ class LinkController {
     if (linkDocs.length === 0) {
       return null
     }
-    const toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocs.map((doc) => {
       return {
         ...doc,
         _deleted: true,
@@ -301,7 +301,7 @@ class LinkController {
     let oldTable = this._oldTable
     let field = oldTable.schema[fieldName]
     const linkDocs = await this.getTableLinkDocs()
-    let toDelete = linkDocs.filter(linkDoc => {
+    let toDelete = linkDocs.filter((linkDoc) => {
       let correctFieldName =
         linkDoc.doc1.tableId === oldTable._id
           ? linkDoc.doc1.fieldName
@@ -309,7 +309,7 @@ class LinkController {
       return correctFieldName === fieldName
     })
     await this._db.bulkDocs(
-      toDelete.map(doc => {
+      toDelete.map((doc) => {
         return {
           ...doc,
           _deleted: true,
@@ -434,7 +434,7 @@ class LinkController {
       return null
     }
     // get link docs for this table and configure for deletion
-    const toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocs.map((doc) => {
       return {
         ...doc,
         _deleted: true,

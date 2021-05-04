@@ -21,17 +21,17 @@ exports.WebhookType = {
   AUTOMATION: "automation",
 }
 
-exports.fetch = async ctx => {
+exports.fetch = async (ctx) => {
   const db = new CouchDB(ctx.appId)
   const response = await db.allDocs(
     getWebhookParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map(row => row.doc)
+  ctx.body = response.rows.map((row) => row.doc)
 }
 
-exports.save = async ctx => {
+exports.save = async (ctx) => {
   const db = new CouchDB(ctx.appId)
   const webhook = ctx.request.body
   webhook.appId = ctx.appId
@@ -50,12 +50,12 @@ exports.save = async ctx => {
   }
 }
 
-exports.destroy = async ctx => {
+exports.destroy = async (ctx) => {
   const db = new CouchDB(ctx.appId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 
-exports.buildSchema = async ctx => {
+exports.buildSchema = async (ctx) => {
   const db = new CouchDB(ctx.params.instance)
   const webhook = await db.get(ctx.params.id)
   webhook.bodySchema = toJsonSchema(ctx.request.body)
@@ -75,7 +75,7 @@ exports.buildSchema = async ctx => {
   ctx.body = await db.put(webhook)
 }
 
-exports.trigger = async ctx => {
+exports.trigger = async (ctx) => {
   const db = new CouchDB(ctx.params.instance)
   const webhook = await db.get(ctx.params.id)
   // validate against the schema

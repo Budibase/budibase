@@ -9,22 +9,22 @@ const {
 const { FieldTypes } = require("../../../constants")
 const { TableSaveFunctions } = require("./utils")
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = body.rows.map(row => row.doc)
+  ctx.body = body.rows.map((row) => row.doc)
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const { dataImport, ...rest } = ctx.request.body
@@ -126,7 +126,7 @@ exports.save = async function(ctx) {
   ctx.body = tableToSave
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableToDelete = await db.get(ctx.params.tableId)
@@ -137,7 +137,7 @@ exports.destroy = async function(ctx) {
       include_docs: true,
     })
   )
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  await db.bulkDocs(rows.rows.map((row) => ({ ...row.doc, _deleted: true })))
 
   // update linked rows
   await linkRows.updateLinks({
@@ -152,7 +152,7 @@ exports.destroy = async function(ctx) {
   // remove table search index
   const currentIndexes = await db.getIndexes()
   const existingIndex = currentIndexes.indexes.find(
-    existing => existing.name === `search:${ctx.params.tableId}`
+    (existing) => existing.name === `search:${ctx.params.tableId}`
   )
   if (existingIndex) {
     await db.deleteIndex(existingIndex)
@@ -164,7 +164,7 @@ exports.destroy = async function(ctx) {
   ctx.body = { message: `Table ${ctx.params.tableId} deleted.` }
 }
 
-exports.validateCSVSchema = async function(ctx) {
+exports.validateCSVSchema = async function (ctx) {
   const { csvString, schema = {} } = ctx.request.body
   const result = await csvParser.parse(csvString, schema)
   ctx.body = { schema: result }

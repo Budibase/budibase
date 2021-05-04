@@ -1,9 +1,7 @@
 <script>
-  import { TextButton } from "@budibase/bbui"
-  import { Heading } from "@budibase/bbui"
-  import { Spacer } from "@budibase/bbui"
-  import api from "builderStore/api"
-  import { notifier } from "builderStore/store/notifications"
+  import { goto } from "@roxi/routify"
+  import { ActionButton, Heading } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import download from "downloadjs"
 
@@ -17,10 +15,10 @@
       download(
         `/api/backups/export?appId=${_id}&appname=${encodeURIComponent(name)}`
       )
-      notifier.success("App Export Complete.")
+      notifications.success("App Export Complete.")
     } catch (err) {
       console.error(err)
-      notifier.danger("App Export Failed.")
+      notifications.error("App Export Failed.")
     } finally {
       appExportLoading = false
     }
@@ -28,17 +26,18 @@
 </script>
 
 <div class="apps-card">
-  <Heading small black>{name}</Heading>
-  <Spacer medium />
+  <Heading size="S">{name}</Heading>
   <div class="card-footer" data-cy={`app-${name}`}>
-    <TextButton text medium blue href="/builder/{_id}">
+    <ActionButton on:click={() => $goto(`/builder/${_id}`)}>
       Open
       {name}
       →
-    </TextButton>
+    </ActionButton>
     {#if appExportLoading}
       <Spinner size="10" />
-    {:else}<i class="ri-folder-download-line" on:click={exportApp} />{/if}
+    {:else}
+      <ActionButton icon="Download" quiet />
+    {/if}
   </div>
 </div>
 
@@ -58,6 +57,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    margin-top: var(--spacing-m);
   }
 
   i {
