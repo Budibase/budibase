@@ -39,30 +39,21 @@
     <b>{linkedTable.name}</b>
     table.
   </Label>
+{:else if schema.relationshipType === "one-to-many"}
+  <Select
+    value={linkedIds?.[0]}
+    options={rows}
+    getOptionLabel={getPrettyName}
+    getOptionValue={row => row._id}
+    on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
+    {label}
+  />
 {:else}
-  {#if schema.relationshipType === 'one-to-many'}
-    <Select
-      thin
-      secondary
-      on:change={e => (linkedIds = e.target.value ? [e.target.value] : [])}
-      name={label}
-      {label}>
-      <option value="">Choose an option</option>
-      {#each rows as row}
-        <option selected={row._id === linkedIds[0]} value={row._id}>
-          {getPrettyName(row)}
-        </option>
-      {/each}
-    </Select>
-  {:else}
-    <Multiselect
-      secondary
-      bind:value={linkedIds}
-      {label}
-      placeholder="Choose some options">
-      {#each rows as row}
-        <option value={row._id}>{getPrettyName(row)}</option>
-      {/each}
-    </Multiselect>
-  {/if}
+  <Multiselect
+    bind:value={linkedIds}
+    {label}
+    options={rows}
+    getOptionLabel={getPrettyName}
+    getOptionValue={row => row._id}
+  />
 {/if}

@@ -1,16 +1,12 @@
 <script>
   import { goto } from "@roxi/routify"
   import { store, allScreens } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DropdownMenu, Modal, ModalContent } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let screenId
 
   let confirmDeleteDialog
-  let dropdown
-  let anchor
 
   $: screen = $allScreens.find(screen => screen._id === screenId)
 
@@ -20,35 +16,24 @@
       store.actions.routing.fetch()
       confirmDeleteDialog.hide()
       $goto("../")
-      notifier.success("Deleted screen successfully.")
+      notifications.success("Deleted screen successfully.")
     } catch (err) {
-      notifier.danger("Error deleting screen")
+      notifications.error("Error deleting screen")
     }
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={() => dropdown.show()}>
-    <i class="ri-more-line" />
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <DropdownMenu bind:this={dropdown} {anchor} align="left">
-    <DropdownContainer>
-      <DropdownItem
-        icon="ri-delete-bin-line"
-        title="Delete"
-        on:click={() => confirmDeleteDialog.show()} />
-    </DropdownContainer>
-  </DropdownMenu>
-</div>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+</ActionMenu>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={'Are you sure you wish to delete this screen?'}
+  body={"Are you sure you wish to delete this screen?"}
   okText="Delete Screen"
-  onOk={deleteScreen} />
-
-<style>
-  .icon i {
-    font-size: 16px;
-  }
-</style>
+  onOk={deleteScreen}
+/>

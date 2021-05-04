@@ -1,4 +1,4 @@
-exports.csv = function(headers, rows) {
+exports.csv = function (headers, rows) {
   let csv = headers.map(key => `"${key}"`).join(",")
 
   for (let row of rows) {
@@ -9,6 +9,6 @@ exports.csv = function(headers, rows) {
   return csv
 }
 
-exports.json = function(headers, rows) {
+exports.json = function (headers, rows) {
   return JSON.stringify(rows, undefined, 2)
 }

@@ -11,7 +11,7 @@ let BUILTIN_DEFINITIONS = {
   FILTER: filter.definition,
 }
 
-module.exports.getLogic = function(logicName) {
+module.exports.getLogic = function (logicName) {
   if (BUILTIN_LOGIC[logicName] != null) {
     return BUILTIN_LOGIC[logicName]
   }

@@ -3,14 +3,15 @@
     Input,
     Button,
     Label,
-    TextButton,
     Select,
     Toggle,
-    Radio,
+    RadioGroup,
+    DatePicker,
+    ModalContent,
+    Context,
   } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
-
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -18,17 +19,20 @@
     RelationshipTypes,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import ValuesList from "components/common/ValuesList.svelte"
-  import DatePicker from "components/common/DatePicker.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
+  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import { getBindings } from "components/backend/DataTable/formula"
+  import { getContext } from "svelte"
 
-  const AUTO_COL = "auto"
+  const AUTO_TYPE = "auto"
+  const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
+  const { hide } = getContext(Context.Modal)
 
-  export let onClosed
   export let field = {
     type: "string",
     constraints: fieldDefinitions.STRING.constraints,
@@ -56,23 +60,28 @@
       UNEDITABLE_USER_FIELDS.includes(field.name)) ||
     (originalName && field.type === LINK_TYPE)
   $: invalid =
+    !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft.schema).some(
-      key => key === field.name && key !== originalName
+    Object.keys($tables.draft?.schema ?? {}).some(
+      key => key !== originalName && key === field.name
     )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
     field.type !== LINK_TYPE &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
-    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_COL
+    field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
+    field.type !== FORMULA_TYPE
+  $: canBeDisplay =
+    field.type !== LINK_TYPE &&
+    field.type !== AUTO_TYPE &&
+    field.type !== FORMULA_TYPE
   $: canBeRequired =
-    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_COL
+    field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
 
   async function saveColumn() {
-    if (field.type === AUTO_COL) {
+    if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
     tables.saveField({
@@ -81,46 +90,45 @@
       primaryDisplay,
       indexes,
     })
-    onClosed()
   }
 
   function deleteColumn() {
     if (field.name === $tables.selected.primaryDisplay) {
-      notifier.danger("You cannot delete the display column")
+      notifications.error("You cannot delete the display column")
     } else {
       tables.deleteField(field)
-      notifier.success(`Column ${field.name} deleted.`)
-      onClosed()
+      notifications.success(`Column ${field.name} deleted.`)
+      hide()
     }
   }
 
   function handleTypeChange(event) {
-    const definition = fieldDefinitions[event.target.value.toUpperCase()]
-    if (!definition) {
-      return
-    }
     // remove any extra fields that may not be related to this type
     delete field.autocolumn
     delete field.subtype
     delete field.tableId
     delete field.relationshipType
-    // add in defaults and initial definition
-    field.type = definition.type
-    field.constraints = definition.constraints
-    // default relationships many to many
+
+    // Add in defaults and initial definition
+    const definition = fieldDefinitions[event.detail?.toUpperCase()]
+    if (definition?.constraints) {
+      field.constraints = definition.constraints
+    }
+
+    // Default relationships many to many
     if (field.type === LINK_TYPE) {
       field.relationshipType = RelationshipTypes.MANY_TO_MANY
     }
   }
 
   function onChangeRequired(e) {
-    const req = e.target.checked
+    const req = e.detail
     field.constraints.presence = req ? { allowEmpty: false } : false
     required = req
   }
 
   function onChangePrimaryDisplay(e) {
-    const isPrimary = e.target.checked
+    const isPrimary = e.detail
     // primary display is always required
     if (isPrimary) {
       field.constraints.presence = { allowEmpty: false }
@@ -128,11 +136,11 @@
   }
 
   function onChangePrimaryIndex(e) {
-    indexes = e.target.checked ? [field.name] : []
+    indexes = e.detail ? [field.name] : []
   }
 
   function onChangeSecondaryIndex(e) {
-    if (e.target.checked) {
+    if (e.detail) {
       indexes[1] = field.name
     } else {
       indexes = indexes.slice(0, 1)
@@ -179,176 +187,145 @@
   }
 </script>
 
-<div class="actions" class:hidden={deletion}>
-  <Input label="Name" thin bind:value={field.name} disabled={uneditable} />
+<ModalContent
+  title={originalName ? "Edit Column" : "Create Column"}
+  confirmText="Save Column"
+  onConfirm={saveColumn}
+  disabled={invalid}
+>
+  <Input label="Name" bind:value={field.name} disabled={uneditable} />
 
   <Select
     disabled={originalName}
-    secondary
-    thin
     label="Type"
+    bind:value={field.type}
     on:change={handleTypeChange}
-    bind:value={field.type}>
-    {#each Object.values(fieldDefinitions) as field}
-      <option value={field.type}>{field.name}</option>
-    {/each}
-    <option value={AUTO_COL}>Auto Column</option>
-  </Select>
+    options={[
+      ...Object.values(fieldDefinitions),
+      { name: "Auto Column", type: AUTO_TYPE },
+    ]}
+    getOptionLabel={field => field.name}
+    getOptionValue={field => field.type}
+  />
 
-  {#if canBeRequired}
-    <Toggle
-      checked={required}
-      on:change={onChangeRequired}
-      disabled={primaryDisplay}
-      thin
-      text="Required" />
+  {#if canBeRequired || canBeDisplay}
+    <div>
+      {#if canBeRequired}
+        <Toggle
+          value={required}
+          on:change={onChangeRequired}
+          disabled={primaryDisplay}
+          thin
+          text="Required"
+        />
+      {/if}
+      {#if canBeDisplay}
+        <Toggle
+          bind:value={primaryDisplay}
+          on:change={onChangePrimaryDisplay}
+          thin
+          text="Use as table display column"
+        />
+      {/if}
+    </div>
   {/if}
 
-  {#if canBeDisplay}
-    <Toggle
-      bind:checked={primaryDisplay}
-      on:change={onChangePrimaryDisplay}
-      thin
-      text="Use as table display column" />
-
-    <Label grey small>Search Indexes</Label>
-  {/if}
   {#if canBeSearched}
-    <Toggle
-      checked={indexes[0] === field.name}
-      disabled={indexes[1] === field.name}
-      on:change={onChangePrimaryIndex}
-      thin
-      text="Primary" />
-    <Toggle
-      checked={indexes[1] === field.name}
-      disabled={!indexes[0] || indexes[0] === field.name}
-      on:change={onChangeSecondaryIndex}
-      thin
-      text="Secondary" />
+    <div>
+      <Label grey small>Search Indexes</Label>
+      <Toggle
+        value={indexes[0] === field.name}
+        disabled={indexes[1] === field.name}
+        on:change={onChangePrimaryIndex}
+        text="Primary"
+      />
+      <Toggle
+        value={indexes[1] === field.name}
+        disabled={!indexes[0] || indexes[0] === field.name}
+        on:change={onChangeSecondaryIndex}
+        text="Secondary"
+      />
+    </div>
   {/if}
 
-  {#if field.type === 'string'}
+  {#if field.type === "string"}
     <Input
-      thin
       type="number"
       label="Max Length"
-      bind:value={field.constraints.length.maximum} />
-  {:else if field.type === 'options'}
+      bind:value={field.constraints.length.maximum}
+    />
+  {:else if field.type === "options"}
     <ValuesList
       label="Options (one per line)"
-      bind:values={field.constraints.inclusion} />
-  {:else if field.type === 'datetime'}
+      bind:values={field.constraints.inclusion}
+    />
+  {:else if field.type === "datetime"}
     <DatePicker
       label="Earliest"
-      bind:value={field.constraints.datetime.earliest} />
+      bind:value={field.constraints.datetime.earliest}
+    />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
-  {:else if field.type === 'number'}
+  {:else if field.type === "number"}
     <Input
-      thin
       type="number"
       label="Min Value"
-      bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
+      bind:value={field.constraints.numericality.greaterThanOrEqualTo}
+    />
     <Input
-      thin
       type="number"
       label="Max Value"
-      bind:value={field.constraints.numericality.lessThanOrEqualTo} />
-  {:else if field.type === 'link'}
-    <Select label="Table" thin secondary bind:value={field.tableId}>
-      <option value="">Choose an option</option>
-      {#each tableOptions as table}
-        <option value={table._id}>{table.name}</option>
-      {/each}
-    </Select>
+      bind:value={field.constraints.numericality.lessThanOrEqualTo}
+    />
+  {:else if field.type === "link"}
+    <Select
+      label="Table"
+      bind:value={field.tableId}
+      options={tableOptions}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
+    />
     {#if relationshipOptions && relationshipOptions.length > 0}
-      <div>
-        <Label grey extraSmall>Define the relationship</Label>
-        <div class="radio-buttons">
-          {#each relationshipOptions as { value, name, alt }}
-            <Radio
-              disabled={originalName}
-              name="Relationship type"
-              {value}
-              bind:group={field.relationshipType}>
-              <div class="radio-button-labels" title={alt}>
-                <label for={value}>{name.split('→')[0]}</label>
-                <label class="rel-type-center" for={value}>→</label>
-                <label for={value}>{name.split('→')[1]}</label>
-              </div>
-            </Radio>
-          {/each}
-        </div>
-      </div>
+      <RadioGroup
+        disabled={originalName}
+        label="Define the relationship"
+        bind:value={field.relationshipType}
+        options={relationshipOptions}
+        getOptionLabel={option => option.name}
+        getOptionValue={option => option.value}
+      />
     {/if}
-    <Input
-      label={`Column Name in Other Table`}
-      thin
-      bind:value={field.fieldName} />
-  {:else if field.type === AUTO_COL}
-    <Select label="Auto Column Type" thin secondary bind:value={field.subtype}>
-      <option value="">Choose a subtype</option>
-      {#each Object.entries(getAutoColumnInformation()) as [subtype, info]}
-        <option value={subtype}>{info.name}</option>
-      {/each}
-    </Select>
+    <Input label={`Column name in other table`} bind:value={field.fieldName} />
+  {:else if field.type === FORMULA_TYPE}
+    <ModalBindableInput
+      title="Handlebars Formula"
+      label="Formula"
+      value={field.formula}
+      on:change={e => (field.formula = e.detail)}
+      bindings={getBindings({ table })}
+      serverSide="true"
+    />
+  {:else if field.type === AUTO_TYPE}
+    <Select
+      label="Auto Column Type"
+      value={field.subtype}
+      on:change={e => (field.subtype = e.detail)}
+      options={Object.entries(getAutoColumnInformation())}
+      getOptionLabel={option => option[1].name}
+      getOptionValue={option => option[0]}
+    />
   {/if}
-  <footer class="create-column-options">
+
+  <div slot="footer">
     {#if !uneditable && originalName != null}
-      <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
+      <Button warning text on:click={confirmDelete}>Delete</Button>
     {/if}
-    <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveColumn} bind:disabled={invalid}>
-      Save Column
-    </Button>
-  </footer>
-</div>
+  </div>
+</ModalContent>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion" />
-
-<style>
-  .radio-buttons {
-    gap: var(--spacing-m);
-    font-size: var(--font-size-xs);
-  }
-
-  .radio-buttons :global(> *) {
-    margin-top: var(--spacing-s);
-    width: 100%;
-  }
-
-  .actions {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    min-width: 400px;
-  }
-
-  footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-
-  :global(.create-column-options button:first-child) {
-    margin-right: auto;
-  }
-
-  .rel-type-center {
-    font-weight: 500;
-    color: var(--grey-6);
-    margin-right: 4px;
-    margin-left: 4px;
-    padding: 1px 3px 1px 3px;
-    background: var(--grey-3);
-    border-radius: 2px;
-  }
-
-  .radio-button-labels {
-    margin-top: 2px;
-  }
-</style>
+  title="Confirm Deletion"
+/>

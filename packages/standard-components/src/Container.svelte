@@ -7,6 +7,7 @@
 
 <div
   in:transition={{ type: $component.transition }}
-  use:styleable={$component.styles}>
+  use:styleable={$component.styles}
+>
   <slot />
 </div>

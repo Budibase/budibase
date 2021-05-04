@@ -29,7 +29,7 @@ exports.createLinkView = async appId => {
   const db = new CouchDB(appId)
   const designDoc = await db.get("_design/database")
   const view = {
-    map: function(doc) {
+    map: function (doc) {
       // everything in this must remain constant as its going to Pouch, no external variables
       if (doc.type === "link") {
         let doc1 = doc.doc1
@@ -93,7 +93,7 @@ exports.createAllSearchIndex = async appId => {
   await searchIndex(
     appId,
     SearchIndexes.ROWS,
-    function(doc) {
+    function (doc) {
       function idx(input, prev) {
         for (let key of Object.keys(input)) {
           const idxKey = prev != null ? `${prev}.${key}` : key

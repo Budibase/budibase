@@ -108,16 +108,16 @@ async function updatePermissionOnRole(
   })
 }
 
-exports.fetchBuiltin = function(ctx) {
+exports.fetchBuiltin = function (ctx) {
   ctx.body = Object.values(getBuiltinPermissions())
 }
 
-exports.fetchLevels = function(ctx) {
+exports.fetchLevels = function (ctx) {
   // for now only provide the read/write perms externally
   ctx.body = SUPPORTED_LEVELS
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const roles = await getAllDBRoles(db)
   let permissions = {}
@@ -144,7 +144,7 @@ exports.fetch = async function(ctx) {
   ctx.body = finalPermissions
 }
 
-exports.getResourcePerms = async function(ctx) {
+exports.getResourcePerms = async function (ctx) {
   const resourceId = ctx.params.resourceId
   const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
@@ -169,7 +169,7 @@ exports.getResourcePerms = async function(ctx) {
   ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
 }
 
-exports.addPermission = async function(ctx) {
+exports.addPermission = async function (ctx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
@@ -177,7 +177,7 @@ exports.addPermission = async function(ctx) {
   )
 }
 
-exports.removePermission = async function(ctx) {
+exports.removePermission = async function (ctx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,

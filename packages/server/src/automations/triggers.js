@@ -1,10 +1,14 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
+const Queue = require("bull")
+const { setQueues, BullAdapter } = require("bull-board")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 
-let automationQueue = new InMemoryQueue("automationQueue")
+let automationQueue = new Queue("automationQueue")
+
+// Set up queues for bull board admin
+setQueues([new BullAdapter(automationQueue)])
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
@@ -224,7 +228,7 @@ async function queueRelevantRowAutomations(event, eventType) {
   }
 }
 
-emitter.on("row:save", async function(event) {
+emitter.on("row:save", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -232,7 +236,7 @@ emitter.on("row:save", async function(event) {
   await queueRelevantRowAutomations(event, "row:save")
 })
 
-emitter.on("row:update", async function(event) {
+emitter.on("row:update", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -240,7 +244,7 @@ emitter.on("row:update", async function(event) {
   await queueRelevantRowAutomations(event, "row:update")
 })
 
-emitter.on("row:delete", async function(event) {
+emitter.on("row:delete", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -281,7 +285,7 @@ async function fillRowOutput(automation, params) {
   return params
 }
 
-module.exports.externalTrigger = async function(automation, params) {
+module.exports.externalTrigger = async function (automation, params) {
   // TODO: replace this with allowing user in builder to input values in future
   if (automation.definition != null && automation.definition.trigger != null) {
     if (automation.definition.trigger.inputs.tableId != null) {

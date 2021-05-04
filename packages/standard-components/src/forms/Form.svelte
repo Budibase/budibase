@@ -1,5 +1,4 @@
 <script>
-  import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import { setContext, getContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
@@ -98,13 +97,11 @@
 
       const newValue = value == null ? defaultValue : value
       const newError = validate ? validate(newValue) : null
-      const newValid = !newError
 
       // Update field state
       fieldState.update(state => {
         state.value = newValue
         state.error = newError
-        state.valid = newValid
         return state
       })
 
@@ -120,7 +117,7 @@
         return state
       })
 
-      return newValid
+      return !newError
     }
     return {
       setValue,
@@ -138,7 +135,6 @@
       fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
-      valid: true,
       disabled: fieldDisabled,
     })
   }
@@ -171,12 +167,16 @@
 
 <Provider
   {actions}
-  data={{ ...$formState.values, tableId: dataSource?.tableId }}>
+  data={{ ...$formState.values, tableId: dataSource?.tableId }}
+>
   <div
     lang="en"
     dir="ltr"
     use:styleable={$component.styles}
-    class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+    class={`spectrum ${size || "spectrum--medium"} ${
+      theme || "spectrum--light"
+    }`}
+  >
     {#if loaded}
       <slot />
     {/if}

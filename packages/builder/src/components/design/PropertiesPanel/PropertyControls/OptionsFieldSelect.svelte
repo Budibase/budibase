@@ -2,4 +2,4 @@
   import FormFieldSelect from "./FormFieldSelect.svelte"
 </script>
 
-<FormFieldSelect {...$$props} type="options" />
+<FormFieldSelect {...$$props} on:change type="options" />

@@ -15,7 +15,7 @@
     $store.selectedComponentId
   )
   $: schemaFields = getSchemaFields(parameters?.tableId)
-  $: tableOptions = $tables || []
+  $: tableOptions = $tables.list || []
 
   const getSchemaFields = tableId => {
     const { schema } = getSchemaForDatasource({ type: "table", tableId })
@@ -28,33 +28,35 @@
 </script>
 
 <div class="root">
-  <Body small grey>
+  <Body size="S">
     Choosing a Data Source will automatically use the data it provides, but it's
     optional.<br />
     You can always add or override fields manually.
   </Body>
   <div class="fields">
     <Label small>Data Source</Label>
-    <Select thin secondary bind:value={parameters.providerId}>
-      <option value="">None</option>
-      {#each dataProviderComponents as provider}
-        <option value={provider._id}>{provider._instanceName}</option>
-      {/each}
-    </Select>
+    <Select
+      bind:value={parameters.providerId}
+      options={dataProviderComponents}
+      placeholder="None"
+      getOptionLabel={option => option._instanceName}
+      getOptionValue={option => option._id}
+    />
 
     <Label small>Table</Label>
-    <Select thin secondary bind:value={parameters.tableId}>
-      <option value="" />
-      {#each tableOptions as table}
-        <option value={table._id}>{table.name}</option>
-      {/each}
-    </Select>
+    <Select
+      bind:value={parameters.tableId}
+      options={tableOptions}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option._id}
+    />
 
     {#if parameters.tableId}
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
-        on:change={onFieldsChanged} />
+        on:change={onFieldsChanged}
+      />
     {/if}
   </div>
 </div>
@@ -74,7 +76,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     grid-template-columns: auto 1fr auto 1fr auto;
-    align-items: baseline;
+    align-items: center;
   }
 
   .fields :global(> div:nth-child(2)),

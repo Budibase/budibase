@@ -1,8 +1,16 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Button, DropdownMenu, Spacer } from "@budibase/bbui"
+  import {
+    Icon,
+    Button,
+    Layout,
+    DrawerContent,
+    ActionMenu,
+    MenuItem,
+  } from "@budibase/bbui"
   import actionTypes from "./actions"
+  import { generate } from "shortid"
 
   const flipDurationMs = 150
 
@@ -11,14 +19,16 @@
   export let actions
 
   // dndzone needs an id on the array items, so this adds some temporary ones.
-  if (actions) {
-    actions = actions.map((action, i) => {
-      return { ...action, id: i }
-    })
+  $: {
+    if (actions) {
+      actions.forEach(action => {
+        if (!action.id) {
+          action.id = generate()
+        }
+      })
+    }
   }
 
-  let addActionButton
-  let addActionDropdown
   let selectedAction = actions?.length ? actions[0] : null
 
   $: selectedActionComponent =
@@ -41,14 +51,13 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
-      id: actions ? actions.length + 1 : 0,
+      id: generate(),
     }
     if (!actions) {
       actions = []
     }
     actions = [...actions, newAction]
     selectedAction = newAction
-    addActionDropdown.hide()
   }
 
   const selectAction = action => () => {
@@ -63,77 +72,77 @@
   }
 </script>
 
-<div class="actions-container">
-  <div class="actions-list">
-    <div>
-      <div bind:this={addActionButton}>
-        <Button wide secondary on:click={addActionDropdown.show}>
-          Add Action
-        </Button>
-        <Spacer small />
-      </div>
-      <DropdownMenu
-        bind:this={addActionDropdown}
-        anchor={addActionButton}
-        align="right">
-        <div class="available-actions-container">
-          {#each actionTypes as actionType}
-            <div class="available-action" on:click={addAction(actionType)}>
-              <span>{actionType.name}</span>
+<DrawerContent>
+  <div class="actions-list" slot="sidebar">
+    <Layout>
+      <ActionMenu>
+        <Button slot="control" secondary>Add Action</Button>
+        {#each actionTypes as actionType}
+          <MenuItem on:click={addAction(actionType)}>
+            {actionType.name}
+          </MenuItem>
+        {/each}
+      </ActionMenu>
+
+      {#if actions && actions.length > 0}
+        <div
+          class="action-dnd-container"
+          use:dndzone={{
+            items: actions,
+            flipDurationMs,
+            dropTargetStyle: { outline: "none" },
+          }}
+          on:consider={handleDndConsider}
+          on:finalize={handleDndFinalize}
+        >
+          {#each actions as action, index (action.id)}
+            <div
+              class="action-container"
+              animate:flip={{ duration: flipDurationMs }}
+            >
+              <div
+                class="action-header"
+                class:selected={action === selectedAction}
+                on:click={selectAction(action)}
+              >
+                {index + 1}.
+                {action[EVENT_TYPE_KEY]}
+              </div>
+              <div
+                on:click={() => deleteAction(index)}
+                style="margin-left: auto;"
+              >
+                <Icon size="S" hoverable name="Close" />
+              </div>
             </div>
           {/each}
         </div>
-      </DropdownMenu>
-    </div>
-
-    {#if actions && actions.length > 0}
-      <div
-        class="action-dnd-container"
-        use:dndzone={{ items: actions, flipDurationMs, dropTargetStyle: { outline: 'none' } }}
-        on:consider={handleDndConsider}
-        on:finalize={handleDndFinalize}>
-        {#each actions as action, index (action.id)}
-          <div
-            class="action-container"
-            animate:flip={{ duration: flipDurationMs }}>
-            <div
-              class="action-header"
-              class:selected={action === selectedAction}
-              on:click={selectAction(action)}>
-              {index + 1}.
-              {action[EVENT_TYPE_KEY]}
-            </div>
-            <i
-              class="ri-close-fill"
-              style="margin-left: auto;"
-              on:click={() => deleteAction(index)} />
-          </div>
-        {/each}
-      </div>
-    {/if}
+      {/if}
+    </Layout>
   </div>
-  <div class="action-config">
+  <Layout>
     {#if selectedAction}
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}
-          parameters={selectedAction.parameters} />
+          parameters={selectedAction.parameters}
+        />
       </div>
     {/if}
-  </div>
-</div>
+  </Layout>
+</DrawerContent>
 
 <style>
   .action-header {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-top: var(--spacing-m);
+    margin-top: var(--spacing-s);
   }
 
   .action-header {
     margin-bottom: var(--spacing-m);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-7);
     font-weight: 500;
   }
@@ -144,29 +153,14 @@
     color: var(--ink);
   }
 
-  .actions-list {
-    border-right: var(--border-light);
-    padding: var(--spacing-l);
-  }
-
   .available-action {
     padding: var(--spacing-s);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     cursor: pointer;
   }
 
   .available-action:hover {
     background: var(--grey-2);
-  }
-
-  .actions-container {
-    height: 40vh;
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-auto-flow: column;
-    min-height: 0;
-    padding-top: 0;
-    overflow-y: auto;
   }
 
   .action-container {
@@ -176,10 +170,6 @@
   }
   .action-container:last-child {
     border-bottom: none;
-  }
-
-  .selected-action-container {
-    padding: var(--spacing-l);
   }
 
   i:hover {

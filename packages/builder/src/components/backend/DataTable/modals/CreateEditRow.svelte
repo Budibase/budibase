@@ -1,10 +1,13 @@
 <script>
   import { tables, rows } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
   import { ModalContent } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { FIELDS } from "constants/backend"
+
+  const FORMULA_TYPE = FIELDS.FORMULA.type
 
   export let row = {}
 
@@ -33,18 +36,19 @@
       return false
     }
 
-    notifier.success("Row saved successfully.")
+    notifications.success("Row saved successfully.")
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? 'Create Row' : 'Edit Row'}
-  confirmText={creating ? 'Create Row' : 'Save Row'}
-  onConfirm={saveRow}>
+  title={creating ? "Create Row" : "Edit Row"}
+  confirmText={creating ? "Create Row" : "Save Row"}
+  onConfirm={saveRow}
+>
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
-    {#if !meta.autocolumn}
+    {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
       <div>
         <RowFieldControl {meta} bind:value={row[key]} />
       </div>

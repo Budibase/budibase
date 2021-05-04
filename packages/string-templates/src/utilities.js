@@ -13,10 +13,7 @@ module.exports.swapStrings = (string, start, length, swap) => {
 
 // removes null and undefined
 module.exports.removeNull = obj => {
-  obj = _(obj)
-    .omitBy(_.isUndefined)
-    .omitBy(_.isNull)
-    .value()
+  obj = _(obj).omitBy(_.isUndefined).omitBy(_.isNull).value()
   for (let [key, value] of Object.entries(obj)) {
     // only objects
     if (typeof value === "object" && !Array.isArray(value)) {

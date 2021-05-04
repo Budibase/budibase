@@ -10,7 +10,7 @@ function Routing() {
   this.json = {}
 }
 
-Routing.prototype.getTopLevel = function(fullpath) {
+Routing.prototype.getTopLevel = function (fullpath) {
   if (fullpath.charAt(0) !== URL_SEPARATOR) {
     fullpath = URL_SEPARATOR + fullpath
   }
@@ -18,7 +18,7 @@ Routing.prototype.getTopLevel = function(fullpath) {
   return URL_SEPARATOR + fullpath.split(URL_SEPARATOR)[1]
 }
 
-Routing.prototype.getScreensProp = function(fullpath) {
+Routing.prototype.getScreensProp = function (fullpath) {
   const topLevel = this.getTopLevel(fullpath)
   if (!this.json[topLevel]) {
     this.json[topLevel] = {
@@ -33,7 +33,7 @@ Routing.prototype.getScreensProp = function(fullpath) {
   return this.json[topLevel].subpaths[fullpath].screens
 }
 
-Routing.prototype.addScreenId = function(fullpath, roleId, screenId) {
+Routing.prototype.addScreenId = function (fullpath, roleId, screenId) {
   this.getScreensProp(fullpath)[roleId] = screenId
 }
 

@@ -13,7 +13,7 @@ const {
 } = require("../../utilities/workerRequests")
 const { getFullUser } = require("../../utilities/users")
 
-exports.fetchMetadata = async function(ctx) {
+exports.fetchMetadata = async function (ctx) {
   const database = new CouchDB(ctx.appId)
   const global = await getGlobalUsers(ctx, ctx.appId)
   const metadata = (
@@ -38,7 +38,7 @@ exports.fetchMetadata = async function(ctx) {
   ctx.body = users
 }
 
-exports.createMetadata = async function(ctx) {
+exports.createMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const { roleId } = ctx.request.body
@@ -70,7 +70,7 @@ exports.createMetadata = async function(ctx) {
   }
 }
 
-exports.updateSelfMetadata = async function(ctx) {
+exports.updateSelfMetadata = async function (ctx) {
   // overwrite the ID with current users
   ctx.request.body._id = ctx.user._id
   // make sure no stale rev
@@ -78,7 +78,7 @@ exports.updateSelfMetadata = async function(ctx) {
   await exports.updateMetadata(ctx)
 }
 
-exports.updateMetadata = async function(ctx) {
+exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = ctx.request.body
@@ -88,13 +88,14 @@ exports.updateMetadata = async function(ctx) {
   })
   const metadata = {
     ...globalUser,
+    tableId: InternalTables.USER_METADATA,
     _id: user._id || generateUserMetadataID(globalUser._id),
     _rev: user._rev,
   }
   ctx.body = await db.put(metadata)
 }
 
-exports.destroyMetadata = async function(ctx) {
+exports.destroyMetadata = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   await deleteGlobalUser(ctx, getGlobalIDFromUserMetadataID(ctx.params.id))
   try {
@@ -108,6 +109,6 @@ exports.destroyMetadata = async function(ctx) {
   }
 }
 
-exports.findMetadata = async function(ctx) {
+exports.findMetadata = async function (ctx) {
   ctx.body = await getFullUser(ctx, ctx.params.id)
 }

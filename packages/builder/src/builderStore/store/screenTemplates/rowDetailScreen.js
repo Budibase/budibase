@@ -12,7 +12,7 @@ import {
   makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
-export default function(tables) {
+export default function (tables) {
   return tables.map(table => {
     return {
       name: `${table.name} - Detail`,
@@ -77,9 +77,7 @@ function generateTitleContainer(table, title, formId, repeaterId) {
     })
     .instanceName("Delete Button")
 
-  return makeTitleContainer(title)
-    .addChild(deleteButton)
-    .addChild(saveButton)
+  return makeTitleContainer(title).addChild(deleteButton).addChild(saveButton)
 }
 
 const createScreen = table => {

@@ -3,6 +3,8 @@ const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
 const createUser = require("./steps/createUser")
+const executeScript = require("./steps/executeScript")
+const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
 const env = require("../environment")
 const Sentry = require("@sentry/node")
@@ -18,6 +20,8 @@ const BUILTIN_ACTIONS = {
   DELETE_ROW: deleteRow.run,
   CREATE_USER: createUser.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
+  EXECUTE_SCRIPT: executeScript.run,
+  EXECUTE_QUERY: executeQuery.run,
 }
 const BUILTIN_DEFINITIONS = {
   SEND_EMAIL: sendEmail.definition,
@@ -26,6 +30,8 @@ const BUILTIN_DEFINITIONS = {
   DELETE_ROW: deleteRow.definition,
   CREATE_USER: createUser.definition,
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
+  EXECUTE_SCRIPT: executeScript.definition,
+  EXECUTE_QUERY: executeQuery.definition,
 }
 
 let MANIFEST = null
@@ -36,7 +42,7 @@ function buildBundleName(pkgName, version) {
 }
 
 /* istanbul ignore next */
-module.exports.getAction = async function(actionName) {
+module.exports.getAction = async function (actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
   }
@@ -53,7 +59,7 @@ module.exports.getAction = async function(actionName) {
   return getExternalAutomationStep(pkg.stepId, pkg.version, bundleName)
 }
 
-module.exports.init = async function() {
+module.exports.init = async function () {
   try {
     MANIFEST = await automationInit()
     module.exports.DEFINITIONS =

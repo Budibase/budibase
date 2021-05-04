@@ -44,7 +44,7 @@
 
   .title,
   .subtitle {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 
   .title {

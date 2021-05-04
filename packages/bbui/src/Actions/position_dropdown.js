@@ -18,10 +18,10 @@ export default function positionDropdown(element, { anchor, align }) {
     if (spaceAbove > spaceBelow) {
       positionSide = "bottom"
       maxHeight = spaceAbove - 20
-      y = window.innerHeight - spaceAbove
+      y = window.innerHeight - spaceAbove + 5
     } else {
       positionSide = "top"
-      y = bottom
+      y = bottom + 5
       maxHeight = spaceBelow - 20
     }
 

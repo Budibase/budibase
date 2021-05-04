@@ -1,32 +1,24 @@
 <script>
-  import { Label, DropdownMenu } from "@budibase/bbui"
+  import { Icon, Label, Modal, ModalContent } from "@budibase/bbui"
   import ThemeEditor from "./ThemeEditor.svelte"
 
-  let anchor
-  let popover
+  let modal
 </script>
 
-<div class="topnavitemright" on:click={popover.show} bind:this={anchor}>
-  <i class="ri-paint-fill" />
+<div class="topnavitemright" on:click={modal.show}>
+  <Icon hoverable name="ColorFill" />
 </div>
-<div class="dropdown">
-  <DropdownMenu bind:this={popover} {anchor} align="right">
-    <div class="content">
-      <Label extraSmall grey>Theme</Label>
-      <ThemeEditor />
-    </div>
-  </DropdownMenu>
-</div>
+<Modal bind:this={modal}>
+  <ModalContent
+    title="Builder Theme"
+    confirmText="Done"
+    showCancelButton={false}
+  >
+    <ThemeEditor />
+  </ModalContent>
+</Modal>
 
 <style>
-  .dropdown {
-    z-index: 2;
-  }
-
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
@@ -39,12 +31,5 @@
     align-items: center;
     height: 24px;
     width: 24px;
-  }
-  .topnavitemright:hover i {
-    color: var(--ink);
-  }
-
-  .content {
-    padding: var(--spacing-xl);
   }
 </style>

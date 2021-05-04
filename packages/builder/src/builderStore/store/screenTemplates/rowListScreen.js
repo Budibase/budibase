@@ -4,7 +4,7 @@ import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 import { makePropSafe } from "@budibase/string-templates"
 
-export default function(tables) {
+export default function (tables) {
   return tables.map(table => {
     return {
       name: `${table.name} - List`,
@@ -87,7 +87,7 @@ const createScreen = table => {
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
       theme: "spectrum--lightest",
       showAutoColumns: false,
-      quiet: false,
+      quiet: true,
       size: "spectrum--medium",
       rowCount: 8,
     })

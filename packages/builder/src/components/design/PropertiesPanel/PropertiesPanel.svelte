@@ -1,6 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
+  import { Tabs, Tab } from "@budibase/bbui"
   import { FrontendTypes } from "constants"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -44,47 +45,48 @@
   }
 </script>
 
-<CategoryTab
-  onClick={category => (selectedCategory = category)}
-  {categories}
-  {selectedCategory} />
-
-{#if definition && definition.name}
-  <div class="instance-name">{definition.name}</div>
-{/if}
-
-<div class="component-props-container">
-  {#if selectedCategory.value === 'design'}
-    <DesignView
-      componentInstance={$selectedComponent}
-      componentDefinition={definition}
-      {onStyleChanged}
-      {onCustomStyleChanged}
-      {onUpdateTransition}
-      {onResetStyles} />
-  {:else if selectedCategory.value === 'settings'}
-    <SettingsView
-      componentInstance={$selectedComponent}
-      componentDefinition={definition}
-      {showDisplayName}
-      onChange={store.actions.components.updateProp}
-      onScreenPropChange={setAssetProps}
-      assetInstance={$store.currentView !== 'component' && $currentAsset} />
-  {/if}
-</div>
+<Tabs selected="Settings">
+  <Tab title="Settings">
+    <div class="tab-content-padding">
+      {#if definition && definition.name}
+        <div class="instance-name">{definition.name}</div>
+      {/if}
+      <SettingsView
+        componentInstance={$selectedComponent}
+        componentDefinition={definition}
+        {showDisplayName}
+        onChange={store.actions.components.updateProp}
+        onScreenPropChange={setAssetProps}
+        assetInstance={$store.currentView !== "component" && $currentAsset}
+      />
+    </div>
+  </Tab>
+  <Tab title="Design">
+    <div class="tab-content-padding">
+      {#if definition && definition.name}
+        <div class="instance-name">{definition.name}</div>
+      {/if}
+      <DesignView
+        componentInstance={$selectedComponent}
+        componentDefinition={definition}
+        {onStyleChanged}
+        {onCustomStyleChanged}
+        {onUpdateTransition}
+        {onResetStyles}
+      />
+    </div>
+  </Tab>
+</Tabs>
 
 <style>
-  .component-props-container {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    margin-left: -20px;
-    margin-right: -20px;
-    padding: 0 20px;
+  .tab-content-padding {
+    padding: 0 var(--spacing-xl);
   }
 
   .instance-name {
-    font-size: var(--font-size-xs);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    margin-bottom: var(--spacing-m);
+    margin-top: var(--spacing-xs);
     font-weight: 500;
     color: var(--grey-7);
   }

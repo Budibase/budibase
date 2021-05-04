@@ -5,6 +5,7 @@ const fetch = require("node-fetch")
 const PouchDB = require("../../../db")
 const CouchDB = require("pouchdb")
 const { upload } = require("../../../utilities/fileSystem")
+const { attachmentsRelativeURL } = require("../../../utilities")
 
 // TODO: everything in this file is to be removed
 
@@ -21,7 +22,7 @@ function walkDir(dirPath, callback) {
   }
 }
 
-exports.fetchCredentials = async function(url, body) {
+exports.fetchCredentials = async function (url, body) {
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
@@ -42,7 +43,7 @@ exports.fetchCredentials = async function(url, body) {
   return json
 }
 
-exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
+exports.prepareUpload = async function ({ s3Key, bucket, metadata, file }) {
   const response = await upload({
     bucket,
     metadata,
@@ -51,22 +52,23 @@ exports.prepareUpload = async function({ s3Key, bucket, metadata, file }) {
     type: file.type,
   })
 
+  // don't store a URL, work this out on the way out as the URL could change
   return {
     size: file.size,
     name: file.name,
+    url: attachmentsRelativeURL(response.Key),
     extension: [...file.name.split(".")].pop(),
-    url: response.Location,
     key: response.Key,
   }
 }
 
-exports.deployToObjectStore = async function(appId, bucket, metadata) {
+exports.deployToObjectStore = async function (appId, bucket, metadata) {
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
   let uploads = []
 
   // Upload HTML, CSS and JS for each page of the web app
-  walkDir(appAssetsPath, function(filePath) {
+  walkDir(appAssetsPath, function (filePath) {
     const filePathParts = filePath.split("/")
     const appAssetUpload = exports.prepareUpload({
       bucket,
@@ -120,7 +122,7 @@ exports.performReplication = (appId, session, dbUrl) => {
     const local = new PouchDB(appId)
 
     const remote = new CouchDB(`${dbUrl}/${appId}`, {
-      fetch: function(url, opts) {
+      fetch: function (url, opts) {
         opts.headers.set("Cookie", `${session};`)
         return CouchDB.fetch(url, opts)
       },

@@ -6,6 +6,24 @@
     name,
     type,
   }))
+  const typeOptions = [
+    {
+      label: "Text",
+      value: "string",
+    },
+    {
+      label: "Number",
+      value: "number",
+    },
+    {
+      label: "Boolean",
+      value: "boolean",
+    },
+    {
+      label: "DateTime",
+      value: "datetime",
+    },
+  ]
 
   function addField() {
     const newValue = { ...value }
@@ -22,7 +40,7 @@
   const fieldNameChanged = originalName => e => {
     // reconstruct using fieldsArray, so field order is preserved
     let entries = [...fieldsArray]
-    const newName = e.target.value
+    const newName = e.detail
     if (newName) {
       entries.find(f => f.name === originalName).name = newName
     } else {
@@ -36,7 +54,9 @@
 </script>
 
 <div class="root">
-  <div class="add-field"><i class="ri-add-line" on:click={addField} /></div>
+  <div class="add-field">
+    <i class="ri-add-line" on:click={addField} />
+  </div>
   <div class="spacer" />
   {#each fieldsArray as field}
     <div class="field">
@@ -44,21 +64,17 @@
         value={field.name}
         secondary
         placeholder="Enter field name"
-        on:change={fieldNameChanged(field.name)} />
+        on:change={fieldNameChanged(field.name)}
+      />
       <Select
-        secondary
-        extraThin
         value={field.type}
-        on:blur={e => (value[field.name] = e.target.value)}>
-        <option>string</option>
-        <option>number</option>
-        <option>boolean</option>
-        <option>datetime</option>
-      </Select>
-
+        on:change={e => (value[field.name] = e.target.value)}
+        options={typeOptions}
+      />
       <i
         class="remove-field ri-delete-bin-line"
-        on:click={() => removeField(field.name)} />
+        on:click={() => removeField(field.name)}
+      />
     </div>
   {/each}
 </div>

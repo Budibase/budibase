@@ -13,6 +13,7 @@ exports.FieldTypes = {
   DATETIME: "datetime",
   ATTACHMENT: "attachment",
   LINK: "link",
+  FORMULA: "formula",
   AUTO: "auto",
 }
 

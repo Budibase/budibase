@@ -13,6 +13,6 @@ exports.compare = async (data, encrypted) => {
   return bcrypt.compare(data, encrypted)
 }
 
-exports.newid = function() {
+exports.newid = function () {
   return v4().replace(/-/g, "")
 }

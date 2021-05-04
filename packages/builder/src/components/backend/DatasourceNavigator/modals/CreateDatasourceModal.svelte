@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { datasources } from "stores/backend"
-  import { notifier } from "builderStore/store/notifications"
+  import { notifications } from "@budibase/bbui"
   import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import analytics from "analytics"
@@ -31,7 +31,7 @@
       source: type,
       config,
     })
-    notifier.success(`Datasource ${name} created successfully.`)
+    notifications.success(`Datasource ${name} created successfully.`)
     analytics.captureEvent("Datasource Created", { name })
 
     // Navigate to new datasource
@@ -41,16 +41,18 @@
 
 <ModalContent
   title="Create Datasource"
+  size="L"
   confirmText="Create"
   onConfirm={saveDatasource}
-  disabled={error || !name}>
+  disabled={error || !name}
+>
   <Input
     data-cy="datasource-name-input"
-    thin
     label="Datasource Name"
     on:input={checkValid}
     bind:value={name}
-    {error} />
-  <Label grey extraSmall>Source</Label>
+    {error}
+  />
+  <Label>Datasource Type</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

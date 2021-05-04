@@ -16,7 +16,7 @@ const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 export const getBindableProperties = (asset, componentId) => {
   const contextBindings = getContextBindings(asset, componentId)
   const userBindings = getUserBindings()
-  const urlBindings = getUrlBindings(asset, componentId)
+  const urlBindings = getUrlBindings(asset)
   return [...contextBindings, ...userBindings, ...urlBindings]
 }
 
@@ -277,14 +277,23 @@ export const getSchemaForDatasource = (datasource, isForm = false) => {
       schema["_rev"] = { type: "string" }
     }
 
-    // Ensure there are "name" properties for all fields
-    if (schema) {
-      Object.keys(schema).forEach(field => {
-        if (!schema[field].name) {
-          schema[field].name = field
+    // Ensure there are "name" properties for all fields and that field schema
+    // are objects
+    let fixedSchema = {}
+    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      if (typeof fieldSchema === "string") {
+        fixedSchema[fieldName] = {
+          type: fieldSchema,
+          name: fieldName,
         }
-      })
-    }
+      } else {
+        fixedSchema[fieldName] = {
+          ...fieldSchema,
+          name: fieldName,
+        }
+      }
+    })
+    schema = fixedSchema
   }
   return { schema, table }
 }
@@ -330,6 +339,29 @@ export function removeBindings(obj) {
 }
 
 /**
+ * When converting from readable to runtime it can sometimes add too many square brackets,
+ * this makes sure that doesn't happen.
+ */
+function shouldReplaceBinding(currentValue, from, convertTo) {
+  if (!currentValue?.includes(from)) {
+    return false
+  }
+  if (convertTo === "readableBinding") {
+    return true
+  }
+  // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
+  // this makes sure it is detected
+  const noSpaces = currentValue.replace(/\s+/g, "")
+  const fromNoSpaces = from.replace(/\s+/g, "")
+  const invalids = [
+    `[${fromNoSpaces}]`,
+    `"${fromNoSpaces}"`,
+    `'${fromNoSpaces}'`,
+  ]
+  return !invalids.find(invalid => noSpaces?.includes(invalid))
+}
+
+/**
  * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
 function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
@@ -348,7 +380,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
   for (let boundValue of boundValues) {
     let newBoundValue = boundValue
     for (let from of convertFromProps) {
-      if (newBoundValue.includes(from)) {
+      if (shouldReplaceBinding(newBoundValue, from, convertTo)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
         newBoundValue = newBoundValue.replace(from, binding[convertTo])
       }
