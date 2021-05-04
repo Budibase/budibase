@@ -121,8 +121,13 @@
 
 <style>
   .main {
-    padding: var(--spacing-m)
+    padding: var(--spacing-m);
   }
+
+  .main :global(textarea) {
+    min-height: 150px !important;
+  }
+
   section {
     display: grid;
     grid-gap: var(--spacing-s);
