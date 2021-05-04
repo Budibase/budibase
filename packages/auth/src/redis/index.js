@@ -1,9 +1,6 @@
 const Redis = require("ioredis")
-const env = require("../environment")
-const { addDbPrefix, removeDbPrefix } = require("./utils")
+const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
 
-const CONNECT_TIMEOUT_MS = 10000
-const SLOT_REFRESH_MS = 2000
 const CLUSTERED = false
 
 let CLIENT
@@ -15,21 +12,10 @@ let CLIENT
  */
 function init() {
   return new Promise((resolve, reject) => {
-    const [host, port] = env.REDIS_URL.split(":")
-    const opts = {
-      connectTimeout: CONNECT_TIMEOUT_MS,
-    }
+    const { opts, host, port } = getRedisOptions(CLUSTERED)
     if (CLUSTERED) {
-      opts.redisOptions = {}
-      opts.redisOptions.tls = {}
-      opts.redisOptions.password = env.REDIS_PASSWORD
-      opts.slotsRefreshTimeout = SLOT_REFRESH_MS
-      opts.dnsLookup = (address, callback) => callback(null, address)
-      CLIENT = new Redis.Cluster([{ port, host }])
+      CLIENT = new Redis.Cluster([{ host, port }], opts)
     } else {
-      opts.password = env.REDIS_PASSWORD
-      opts.port = port
-      opts.host = host
       CLIENT = new Redis(opts)
     }
     CLIENT.on("end", err => {
