@@ -8,7 +8,7 @@
 
   let confirmDeleteDialog
 
-  $: screen = $allScreens.find((screen) => screen._id === screenId)
+  $: screen = $allScreens.find(screen => screen._id === screenId)
 
   const deleteScreen = () => {
     try {

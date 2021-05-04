@@ -44,23 +44,22 @@
   })
 
   function id() {
-    return (
-      "_" +
-      Math.random()
-        .toString(36)
-        .substr(2, 9)
-    )
+    return "_" + Math.random().toString(36).substr(2, 9)
   }
 </script>
 
 <div
   bind:this={container}
-  class="selected-border spectrum-Tabs spectrum-Tabs--{vertical ? 'vertical' : 'horizontal'}">
+  class="selected-border spectrum-Tabs spectrum-Tabs--{vertical
+    ? 'vertical'
+    : 'horizontal'}"
+>
   <slot />
   {#if $tab.info}
     <div
       class="spectrum-Tabs-selectionIndicator indicator-transition"
-      style="width: {width}; height: {height}; left: {left}; top: {top};" />
+      style="width: {width}; height: {height}; left: {left}; top: {top};"
+    />
   {/if}
 </div>
 

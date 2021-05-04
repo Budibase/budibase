@@ -19,18 +19,19 @@
   <Body>
     Type
     <b>DELETE</b>
-    into the textbox, then click the following button to delete your entire web
-    app.
+    into the textbox, then click the following button to delete your entire web app.
   </Body>
   <Input
     on:change={e => (value = e.detail)}
     disabled={loading}
-    placeholder="" />
+    placeholder=""
+  />
   <div class="buttons">
     <Button
       warning
-      disabled={value !== 'DELETE' || loading}
-      on:click={deleteApp}>
+      disabled={value !== "DELETE" || loading}
+      on:click={deleteApp}
+    >
       Delete Entire App
     </Button>
   </div>

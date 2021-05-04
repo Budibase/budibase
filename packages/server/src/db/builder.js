@@ -27,7 +27,7 @@ exports.getBuilderMainDoc = async () => {
   }
 }
 
-exports.setBuilderMainDoc = async (doc) => {
+exports.setBuilderMainDoc = async doc => {
   if (!env.SELF_HOSTED) {
     throw SELF_HOST_ERR
   }

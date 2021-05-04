@@ -34,7 +34,8 @@
     {label}
     value={readableValue}
     on:change={event => onChange(event.detail)}
-    {placeholder} />
+    {placeholder}
+  />
   <div class="icon" on:click={bindingDrawer.show}>
     <Icon size="S" name="FlashOn" />
   </div>
@@ -45,12 +46,13 @@
   </svelte:fragment>
   <Button cta slot="buttons" on:click={handleClose}>Save</Button>
   <svelte:component
-    slot="body"
     this={panel}
+    slot="body"
     value={readableValue}
     close={handleClose}
     on:update={event => (tempValue = event.detail)}
-    bindableProperties={bindings} />
+    bindableProperties={bindings}
+  />
 </Drawer>
 
 <style>

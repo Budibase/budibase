@@ -10,4 +10,5 @@
   on:change
   options={$roles}
   getOptionLabel={role => role.name}
-  getOptionValue={role => role._id} />
+  getOptionValue={role => role._id}
+/>

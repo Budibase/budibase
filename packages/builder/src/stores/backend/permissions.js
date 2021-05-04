@@ -6,7 +6,7 @@ export function createPermissionStore() {
 
   return {
     subscribe,
-    forResource: async (resourceId) => {
+    forResource: async resourceId => {
       const response = await api.get(`/api/permission/${resourceId}`)
       const json = await response.json()
       return json

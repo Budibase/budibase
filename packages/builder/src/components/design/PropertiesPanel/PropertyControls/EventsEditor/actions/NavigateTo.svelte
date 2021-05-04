@@ -19,7 +19,8 @@
     placeholder="/screen"
     value={parameters.url}
     on:change={value => (parameters.url = value.detail)}
-    {bindings} />
+    {bindings}
+  />
 </div>
 
 <style>

@@ -13,7 +13,7 @@
 
   onMount(() => {
     const interval = setInterval(() => {
-      store.update((state) => {
+      store.update(state => {
         state.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
         return state
       })

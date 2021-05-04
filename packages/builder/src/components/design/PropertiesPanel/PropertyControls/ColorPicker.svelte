@@ -12,7 +12,7 @@
     let timeout = null
     let initialCall = true
 
-    return function() {
+    return function () {
       const callNow = immediate && initialCall
       const next = () => {
         callback.apply(this, arguments)
@@ -39,4 +39,4 @@
   )
 </script>
 
-<Colorpicker value={value || '#C4C4C4'} on:change={onChange} />
+<Colorpicker value={value || "#C4C4C4"} on:change={onChange} />

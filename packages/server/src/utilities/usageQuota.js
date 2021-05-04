@@ -49,7 +49,7 @@ exports.Properties = {
   AUTOMATION: "automationRuns",
 }
 
-exports.getAPIKey = async (appId) => {
+exports.getAPIKey = async appId => {
   if (!env.USE_QUOTAS) {
     return { apiKey: null }
   }

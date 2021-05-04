@@ -84,8 +84,9 @@
 
 <ModalContent
   title="Edit Roles"
-  confirmText={isCreating ? 'Create' : 'Save'}
-  onConfirm={saveRole}>
+  confirmText={isCreating ? "Create" : "Save"}
+  onConfirm={saveRole}
+>
   {#if errors.length}
     <ErrorsBox {errors} />
   {/if}
@@ -98,26 +99,30 @@
     options={$roles}
     placeholder="Create new role"
     getOptionValue={role => role._id}
-    getOptionLabel={role => role.name} />
+    getOptionLabel={role => role.name}
+  />
   {#if selectedRole}
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      disabled={builtInRoles.includes(selectedRole.name)} />
+      disabled={builtInRoles.includes(selectedRole.name)}
+    />
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
       options={otherRoles}
       getOptionValue={role => role._id}
       getOptionLabel={role => role.name}
-      placeholder="None" />
+      placeholder="None"
+    />
     <Select
       label="Base Permissions"
       bind:value={selectedRole.permissionId}
       options={basePermissions}
       getOptionValue={x => x._id}
       getOptionLabel={x => x.name}
-      placeholder="Choose permissions" />
+      placeholder="Choose permissions"
+    />
   {/if}
   <div slot="footer">
     {#if !isCreating}

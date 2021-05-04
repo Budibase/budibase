@@ -33,7 +33,7 @@
     { label: "Datetime", value: "DATETIME" },
   ]
 
-  $: datasource = $datasources.list.find((ds) => ds._id === query.datasourceId)
+  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fields.reduce(
     (acc, next) => ({
       ...acc,
@@ -89,7 +89,7 @@
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
-      fields = json.schemaFields.map((field) => ({
+      fields = json.schemaFields.map(field => ({
         name: field,
         type: "STRING",
       }))
@@ -126,7 +126,7 @@
         <Select
           bind:value={query.queryVerb}
           options={Object.keys(queryConfig)}
-          getOptionLabel={(verb) =>
+          getOptionLabel={verb =>
             queryConfig[verb]?.displayName || capitalise(verb)}
         />
       </div>

@@ -4,7 +4,7 @@ export const Cookies = {
 }
 
 export function getCookie(cookieName) {
-  return document.cookie.split(";").some((cookie) => {
+  return document.cookie.split(";").some(cookie => {
     return cookie.trim().startsWith(`${cookieName}=`)
   })
 }

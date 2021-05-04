@@ -25,5 +25,6 @@
     {disabled}
     {value}
     {placeholder}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>

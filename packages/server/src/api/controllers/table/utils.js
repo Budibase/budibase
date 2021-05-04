@@ -16,7 +16,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
   let deletedColumns = []
   if (oldTable && oldTable.schema && updatedTable.schema) {
     deletedColumns = Object.keys(oldTable.schema).filter(
-      (colName) => updatedTable.schema[colName] == null
+      colName => updatedTable.schema[colName] == null
     )
   }
   // check for renaming of columns or deleted columns
@@ -31,7 +31,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
         doc[rename.updated] = doc[rename.old]
         delete doc[rename.old]
       } else if (deletedColumns.length !== 0) {
-        deletedColumns.forEach((colName) => delete doc[colName])
+        deletedColumns.forEach(colName => delete doc[colName])
       }
       return doc
     })
@@ -102,12 +102,12 @@ exports.handleSearchIndexes = async (appId, table) => {
     const indexName = `search:${table._id}`
 
     const existingIndex = currentIndexes.indexes.find(
-      (existing) => existing.name === indexName
+      existing => existing.name === indexName
     )
 
     if (existingIndex) {
       const currentFields = existingIndex.def.fields.map(
-        (field) => Object.keys(field)[0]
+        field => Object.keys(field)[0]
       )
 
       // if index fields have changed, delete the original index
@@ -138,7 +138,7 @@ exports.handleSearchIndexes = async (appId, table) => {
   return table
 }
 
-exports.checkStaticTables = (table) => {
+exports.checkStaticTables = table => {
   // check user schema has all required elements
   if (table._id === InternalTables.USER_METADATA) {
     for (let [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {

@@ -7,7 +7,7 @@
 {#if hasErrors}
   <div class="container">
     {#each errors as error}
-      <div class="error">{error.dataPath || ''} {error.message}</div>
+      <div class="error">{error.dataPath || ""} {error.message}</div>
     {/each}
   </div>
 {/if}

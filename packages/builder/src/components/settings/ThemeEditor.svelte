@@ -8,4 +8,5 @@
   options={$themeStore.options}
   bind:value={$themeStore.theme}
   placeholder={null}
-  getOptionLabel={capitalise} />
+  getOptionLabel={capitalise}
+/>

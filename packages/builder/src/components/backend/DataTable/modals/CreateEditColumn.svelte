@@ -181,10 +181,11 @@
 </script>
 
 <ModalContent
-  title={originalName ? 'Edit Column' : 'Create Column'}
+  title={originalName ? "Edit Column" : "Create Column"}
   confirmText="Save Column"
   onConfirm={saveColumn}
-  disabled={invalid}>
+  disabled={invalid}
+>
   <Input label="Name" bind:value={field.name} disabled={uneditable} />
 
   <Select
@@ -192,9 +193,13 @@
     label="Type"
     bind:value={field.type}
     on:change={handleTypeChange}
-    options={[...Object.values(fieldDefinitions), { name: 'Auto Column', type: AUTO_COL }]}
+    options={[
+      ...Object.values(fieldDefinitions),
+      { name: "Auto Column", type: AUTO_COL },
+    ]}
     getOptionLabel={field => field.name}
-    getOptionValue={field => field.type} />
+    getOptionValue={field => field.type}
+  />
 
   {#if canBeRequired || canBeDisplay}
     <div>
@@ -204,14 +209,16 @@
           on:change={onChangeRequired}
           disabled={primaryDisplay}
           thin
-          text="Required" />
+          text="Required"
+        />
       {/if}
       {#if canBeDisplay}
         <Toggle
           bind:value={primaryDisplay}
           on:change={onChangePrimaryDisplay}
           thin
-          text="Use as table display column" />
+          text="Use as table display column"
+        />
       {/if}
     </div>
   {/if}
@@ -223,45 +230,53 @@
         value={indexes[0] === field.name}
         disabled={indexes[1] === field.name}
         on:change={onChangePrimaryIndex}
-        text="Primary" />
+        text="Primary"
+      />
       <Toggle
         value={indexes[1] === field.name}
         disabled={!indexes[0] || indexes[0] === field.name}
         on:change={onChangeSecondaryIndex}
-        text="Secondary" />
+        text="Secondary"
+      />
     </div>
   {/if}
 
-  {#if field.type === 'string'}
+  {#if field.type === "string"}
     <Input
       type="number"
       label="Max Length"
-      bind:value={field.constraints.length.maximum} />
-  {:else if field.type === 'options'}
+      bind:value={field.constraints.length.maximum}
+    />
+  {:else if field.type === "options"}
     <ValuesList
       label="Options (one per line)"
-      bind:values={field.constraints.inclusion} />
-  {:else if field.type === 'datetime'}
+      bind:values={field.constraints.inclusion}
+    />
+  {:else if field.type === "datetime"}
     <DatePicker
       label="Earliest"
-      bind:value={field.constraints.datetime.earliest} />
+      bind:value={field.constraints.datetime.earliest}
+    />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
-  {:else if field.type === 'number'}
+  {:else if field.type === "number"}
     <Input
       type="number"
       label="Min Value"
-      bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
+      bind:value={field.constraints.numericality.greaterThanOrEqualTo}
+    />
     <Input
       type="number"
       label="Max Value"
-      bind:value={field.constraints.numericality.lessThanOrEqualTo} />
-  {:else if field.type === 'link'}
+      bind:value={field.constraints.numericality.lessThanOrEqualTo}
+    />
+  {:else if field.type === "link"}
     <Select
       label="Table"
       bind:value={field.tableId}
       options={tableOptions}
       getOptionLabel={table => table.name}
-      getOptionValue={table => table._id} />
+      getOptionValue={table => table._id}
+    />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
         disabled={originalName}
@@ -269,7 +284,8 @@
         bind:value={field.relationshipType}
         options={relationshipOptions}
         getOptionLabel={option => option.name}
-        getOptionValue={option => option.value} />
+        getOptionValue={option => option.value}
+      />
     {/if}
     <Input label={`Column name in other table`} bind:value={field.fieldName} />
   {:else if field.type === AUTO_COL}
@@ -279,7 +295,8 @@
       on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
       getOptionLabel={option => option[1].name}
-      getOptionValue={option => option[0]} />
+      getOptionValue={option => option[0]}
+    />
   {/if}
 
   <div slot="footer">
@@ -294,4 +311,5 @@
   okText="Delete Column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion" />
+  title="Confirm Deletion"
+/>

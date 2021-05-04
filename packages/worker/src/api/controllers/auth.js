@@ -34,7 +34,7 @@ exports.authenticate = async (ctx, next) => {
   })(ctx, next)
 }
 
-exports.logout = async (ctx) => {
+exports.logout = async ctx => {
   clearCookie(ctx, Cookies.Auth)
   ctx.body = { message: "User logged out" }
 }

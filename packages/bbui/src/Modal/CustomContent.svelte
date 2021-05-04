@@ -17,7 +17,7 @@
 <div on:click={increment}>
   Click me
   {remaining}
-  more time{remaining === 1 ? '' : 's'}
+  more time{remaining === 1 ? "" : "s"}
   to close this modal!
 </div>
 

@@ -43,7 +43,7 @@ async function getLayouts(db) {
         include_docs: true,
       })
     )
-  ).rows.map((row) => row.doc)
+  ).rows.map(row => row.doc)
 }
 
 async function getScreens(db) {
@@ -53,7 +53,7 @@ async function getScreens(db) {
         include_docs: true,
       })
     )
-  ).rows.map((row) => row.doc)
+  ).rows.map(row => row.doc)
 }
 
 function getUserRoleId(ctx) {

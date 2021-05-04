@@ -38,5 +38,6 @@
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}
-    on:click />
+    on:click
+  />
 </Field>

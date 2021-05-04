@@ -18,4 +18,5 @@
   on:change
   options={providers}
   getOptionLabel={component => component._instanceName}
-  getOptionValue={component => `{{ literal ${makePropSafe(component._id)} }}`} />
+  getOptionValue={component => `{{ literal ${makePropSafe(component._id)} }}`}
+/>

@@ -10,8 +10,9 @@
 
 <label
   for={forId}
-  class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${className}`}>
-  {label || ''}
+  class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${className}`}
+>
+  {label || ""}
 </label>
 
 <style>
