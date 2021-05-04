@@ -43,7 +43,7 @@ exports.uploadFile = async function (ctx) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  const uploads = files.map(async (file) => {
+  const uploads = files.map(async file => {
     const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`

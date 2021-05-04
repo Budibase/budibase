@@ -12,7 +12,7 @@ const createBuilderStore = () => {
   }
   const store = writable(initialState)
   const actions = {
-    selectComponent: (id) => {
+    selectComponent: id => {
       if (id) {
         window.dispatchEvent(
           new CustomEvent("bb-select-component", { detail: id })

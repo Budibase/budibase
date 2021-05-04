@@ -18,7 +18,7 @@ export const fetchRow = async ({ tableId, rowId }) => {
 /**
  * Creates a row in a table.
  */
-export const saveRow = async (row) => {
+export const saveRow = async row => {
   if (!row?.tableId) {
     return
   }
@@ -39,7 +39,7 @@ export const saveRow = async (row) => {
 /**
  * Updates a row in a table.
  */
-export const updateRow = async (row) => {
+export const updateRow = async row => {
   if (!row?.tableId || !row?._id) {
     return
   }
@@ -115,15 +115,15 @@ export const enrichRows = async (rows, tableId) => {
     const schema = tableDefinition && tableDefinition.schema
     if (schema) {
       const keys = Object.keys(schema)
-      rows.forEach((row) => {
+      rows.forEach(row => {
         for (let key of keys) {
           const type = schema[key].type
           if (type === "link") {
             // Enrich row a string join of relationship fields
             row[`${key}_text`] =
               row[key]
-                ?.map((option) => option?.primaryDisplay)
-                .filter((option) => !!option)
+                ?.map(option => option?.primaryDisplay)
+                .filter(option => !!option)
                 .join(", ") || ""
           } else if (type === "attachment") {
             // Enrich row with the first image URL for any attachment fields

@@ -17,8 +17,9 @@
 
   const handleFileTooLarge = fileSizeLimit => {
     notifications.warning(
-      `Files cannot exceed ${fileSizeLimit /
-        BYTES_IN_MB} MB. Please try again with smaller files.`
+      `Files cannot exceed ${
+        fileSizeLimit / BYTES_IN_MB
+      } MB. Please try again with smaller files.`
     )
   }
 
@@ -38,13 +39,15 @@
   type="attachment"
   bind:fieldState
   bind:fieldApi
-  defaultValue={[]}>
+  defaultValue={[]}
+>
   {#if $fieldState}
     <CoreDropzone
       value={$fieldState.value}
       disabled={$fieldState.disabled}
       on:change={e => fieldApi.setValue(e.detail)}
       {processFiles}
-      {handleFileTooLarge} />
+      {handleFileTooLarge}
+    />
   {/if}
 </Field>

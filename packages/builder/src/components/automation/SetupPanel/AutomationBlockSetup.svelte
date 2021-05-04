@@ -54,40 +54,43 @@
   {#each inputs as [key, value]}
     <div class="block-field">
       <Label>{value.title}</Label>
-      {#if value.type === 'string' && value.enum}
+      {#if value.type === "string" && value.enum}
         <Select
           bind:value={block.inputs[key]}
           options={value.enum}
-          getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)} />
-      {:else if value.customType === 'password'}
+          getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
+        />
+      {:else if value.customType === "password"}
         <Input type="password" bind:value={block.inputs[key]} />
-      {:else if value.customType === 'email'}
+      {:else if value.customType === "email"}
         <DrawerBindableInput
           panel={AutomationBindingPanel}
-          type={'email'}
+          type={"email"}
           value={block.inputs[key]}
           on:change={e => (block.inputs[key] = e.detail)}
-          {bindings} />
-      {:else if value.customType === 'table'}
+          {bindings}
+        />
+      {:else if value.customType === "table"}
         <TableSelector bind:value={block.inputs[key]} />
-      {:else if value.customType === 'row'}
+      {:else if value.customType === "row"}
         <RowSelector bind:value={block.inputs[key]} {bindings} />
-      {:else if value.customType === 'webhookUrl'}
+      {:else if value.customType === "webhookUrl"}
         <WebhookDisplay value={block.inputs[key]} />
-      {:else if value.customType === 'triggerSchema'}
+      {:else if value.customType === "triggerSchema"}
         <SchemaSetup bind:value={block.inputs[key]} />
-      {:else if value.type === 'string' || value.type === 'number'}
+      {:else if value.type === "string" || value.type === "number"}
         <DrawerBindableInput
           panel={AutomationBindingPanel}
           type={value.customType}
           value={block.inputs[key]}
           on:change={e => (block.inputs[key] = e.detail)}
-          {bindings} />
+          {bindings}
+        />
       {/if}
     </div>
   {/each}
 </div>
-{#if stepId === 'WEBHOOK'}
+{#if stepId === "WEBHOOK"}
   <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
 

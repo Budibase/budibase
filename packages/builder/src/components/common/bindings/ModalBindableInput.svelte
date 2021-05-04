@@ -39,13 +39,19 @@
     {thin}
     value={readableValue}
     on:change={event => onChange(event.target.value)}
-    {placeholder} />
+    {placeholder}
+  />
   <div class="icon" on:click={bindingModal.show}>
     <Icon size="S" name="FlashOn" />
   </div>
 </div>
 <Modal bind:this={bindingModal}>
-  <ModalContent {title} onConfirm={saveBinding} bind:disabled={invalid} size="XL">
+  <ModalContent
+    {title}
+    onConfirm={saveBinding}
+    bind:disabled={invalid}
+    size="XL"
+  >
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
@@ -55,7 +61,8 @@
       value={readableValue}
       bind:validity
       on:update={event => (tempValue = event.detail)}
-      bindableProperties={bindings} />
+      bindableProperties={bindings}
+    />
   </ModalContent>
 </Modal>
 
@@ -81,9 +88,9 @@
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
     transition: background-color
-    var(--spectrum-global-animation-duration-100, 130ms),
-    box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-    border-color var(--spectrum-global-animation-duration-100, 130ms);
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
 

@@ -21,5 +21,6 @@
   <ManageAccessModal
     {resourceId}
     levels={$permissions}
-    permissions={resourcePermissions} />
+    permissions={resourcePermissions}
+  />
 </Modal>

@@ -11,7 +11,8 @@
   class:indented
   class:selected
   on:click
-  class={className}>
+  class={className}
+>
   <i class={icon} />
   <span>{title}</span>
   <slot />

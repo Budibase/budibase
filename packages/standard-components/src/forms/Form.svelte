@@ -167,12 +167,16 @@
 
 <Provider
   {actions}
-  data={{ ...$formState.values, tableId: dataSource?.tableId }}>
+  data={{ ...$formState.values, tableId: dataSource?.tableId }}
+>
   <div
     lang="en"
     dir="ltr"
     use:styleable={$component.styles}
-    class={`spectrum ${size || 'spectrum--medium'} ${theme || 'spectrum--light'}`}>
+    class={`spectrum ${size || "spectrum--medium"} ${
+      theme || "spectrum--light"
+    }`}
+  >
     {#if loaded}
       <slot />
     {/if}

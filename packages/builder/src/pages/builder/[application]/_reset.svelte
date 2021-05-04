@@ -60,7 +60,8 @@
           <img
             src={Logo}
             alt="budibase icon"
-            on:click={() => $goto(`/builder/`)} />
+            on:click={() => $goto(`/builder/`)}
+          />
         </button>
 
         <div class="tabs">
@@ -70,7 +71,8 @@
                 quiet
                 selected={$isActive(path)}
                 on:click={topItemNavigate(path)}
-                title={capitalise(title)} />
+                title={capitalise(title)}
+              />
             {/each}
           </Tabs>
         </div>
@@ -84,7 +86,8 @@
         <div class="topnavitemright">
           <a
             target="_blank"
-            href="https://github.com/Budibase/budibase/discussions">
+            href="https://github.com/Budibase/budibase/discussions"
+          >
             <i class="ri-github-fill" />
           </a>
         </div>
@@ -93,7 +96,8 @@
           secondary
           on:click={() => {
             window.open(`/${application}`)
-          }}>
+          }}
+        >
           Preview
         </Button>
       </div>
@@ -101,7 +105,8 @@
     <div class="beta">
       <Button
         secondary
-        href="https://github.com/Budibase/budibase/discussions/categories/ideas">
+        href="https://github.com/Budibase/budibase/discussions/categories/ideas"
+      >
         Request feature
       </Button>
     </div>

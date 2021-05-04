@@ -13,7 +13,8 @@
   size="S"
   quiet
   active={!!view.groupBy}
-  on:click={modal.show}>
+  on:click={modal.show}
+>
   Group By
 </Button>
 <Modal bind:this={modal}>

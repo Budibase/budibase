@@ -10,17 +10,17 @@ export function createViewsStore() {
 
   return {
     subscribe,
-    select: async (view) => {
-      update((state) => ({
+    select: async view => {
+      update(state => ({
         ...state,
         selected: view,
       }))
     },
-    delete: async (view) => {
+    delete: async view => {
       await api.delete(`/api/views/${view}`)
       await tables.fetch()
     },
-    save: async (view) => {
+    save: async view => {
       const response = await api.post(`/api/views`, view)
       const json = await response.json()
 
@@ -30,14 +30,14 @@ export function createViewsStore() {
       }
 
       const viewTable = get(tables).list.find(
-        (table) => table._id === view.tableId
+        table => table._id === view.tableId
       )
 
       if (view.originalName) delete viewTable.views[view.originalName]
       viewTable.views[view.name] = viewMeta
       await tables.save(viewTable)
 
-      update((state) => ({ ...state, selected: viewMeta }))
+      update(state => ({ ...state, selected: viewMeta }))
     },
   }
 }

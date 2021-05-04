@@ -54,7 +54,9 @@
 </script>
 
 <div class="root">
-  <div class="add-field"><i class="ri-add-line" on:click={addField} /></div>
+  <div class="add-field">
+    <i class="ri-add-line" on:click={addField} />
+  </div>
   <div class="spacer" />
   {#each fieldsArray as field}
     <div class="field">
@@ -62,14 +64,17 @@
         value={field.name}
         secondary
         placeholder="Enter field name"
-        on:change={fieldNameChanged(field.name)} />
+        on:change={fieldNameChanged(field.name)}
+      />
       <Select
         value={field.type}
         on:change={e => (value[field.name] = e.target.value)}
-        options={typeOptions} />
+        options={typeOptions}
+      />
       <i
         class="remove-field ri-delete-bin-line"
-        on:click={() => removeField(field.name)} />
+        on:click={() => removeField(field.name)}
+      />
     </div>
   {/each}
 </div>

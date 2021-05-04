@@ -7,7 +7,7 @@ let cache = {}
 /**
  * Handler for API errors.
  */
-const handleError = (error) => {
+const handleError = error => {
   return { error }
 }
 
@@ -61,7 +61,7 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
  * Future invocation for this URL will return the cached result instead of
  * hitting the server again.
  */
-const makeCachedApiCall = async (params) => {
+const makeCachedApiCall = async params => {
   const identifier = params.url
   if (!identifier) {
     return null
@@ -76,7 +76,7 @@ const makeCachedApiCall = async (params) => {
 /**
  * Constructs an API call function for a particular HTTP method.
  */
-const requestApiCall = (method) => async (params) => {
+const requestApiCall = method => async params => {
   const { url, cache = false } = params
   const fixedUrl = `/${url}`.replace("//", "/")
   const enrichedParams = { ...params, method, url: fixedUrl }

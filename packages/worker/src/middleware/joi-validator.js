@@ -19,10 +19,10 @@ function validate(schema, property) {
   }
 }
 
-module.exports.body = (schema) => {
+module.exports.body = schema => {
   return validate(schema, "body")
 }
 
-module.exports.params = (schema) => {
+module.exports.params = schema => {
   return validate(schema, "params")
 }

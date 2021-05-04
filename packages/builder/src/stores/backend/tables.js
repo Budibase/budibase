@@ -10,17 +10,17 @@ export function createTablesStore() {
   async function fetch() {
     const tablesResponse = await api.get(`/api/tables`)
     const tables = await tablesResponse.json()
-    update((state) => ({ ...state, list: tables }))
+    update(state => ({ ...state, list: tables }))
   }
 
   async function select(table) {
     if (!table) {
-      update((state) => ({
+      update(state => ({
         ...state,
         selected: {},
       }))
     } else {
-      update((state) => ({
+      update(state => ({
         ...state,
         selected: table,
         draft: cloneDeep(table),
@@ -31,7 +31,7 @@ export function createTablesStore() {
 
   async function save(table) {
     const updatedTable = cloneDeep(table)
-    const oldTable = get(store).list.filter((t) => t._id === table._id)[0]
+    const oldTable = get(store).list.filter(t => t._id === table._id)[0]
 
     const fieldNames = []
     // update any renamed schema keys to reflect their names
@@ -78,16 +78,16 @@ export function createTablesStore() {
         draft: {},
       })
     },
-    delete: async (table) => {
+    delete: async table => {
       await api.delete(`/api/tables/${table._id}/${table._rev}`)
-      update((state) => ({
+      update(state => ({
         ...state,
-        list: state.list.filter((existing) => existing._id !== table._id),
+        list: state.list.filter(existing => existing._id !== table._id),
         selected: {},
       }))
     },
     saveField: ({ originalName, field, primaryDisplay = false, indexes }) => {
-      update((state) => {
+      update(state => {
         // delete the original if renaming
         // need to handle if the column had no name, empty string
         if (originalName || originalName === "") {
@@ -115,8 +115,8 @@ export function createTablesStore() {
         return state
       })
     },
-    deleteField: (field) => {
-      update((state) => {
+    deleteField: field => {
+      update(state => {
         delete state.draft.schema[field.name]
         save(state.draft)
         return state

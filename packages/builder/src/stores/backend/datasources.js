@@ -21,19 +21,19 @@ export function createDatasourcesStore() {
     fetch: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()
-      update((state) => ({ ...state, list: json }))
+      update(state => ({ ...state, list: json }))
       return json
     },
-    select: async (datasourceId) => {
-      update((state) => ({ ...state, selected: datasourceId }))
-      queries.update((state) => ({ ...state, selected: null }))
+    select: async datasourceId => {
+      update(state => ({ ...state, selected: datasourceId }))
+      queries.update(state => ({ ...state, selected: null }))
     },
-    save: async (datasource) => {
+    save: async datasource => {
       const response = await api.post("/api/datasources", datasource)
       const json = await response.json()
 
-      update((state) => {
-        const currentIdx = state.list.findIndex((ds) => ds._id === json._id)
+      update(state => {
+        const currentIdx = state.list.findIndex(ds => ds._id === json._id)
 
         const sources = state.list
 
@@ -47,13 +47,13 @@ export function createDatasourcesStore() {
       })
       return json
     },
-    delete: async (datasource) => {
+    delete: async datasource => {
       const response = await api.delete(
         `/api/datasources/${datasource._id}/${datasource._rev}`
       )
-      update((state) => {
+      update(state => {
         const sources = state.list.filter(
-          (existing) => existing._id !== datasource._id
+          existing => existing._id !== datasource._id
         )
         return { list: sources, selected: null }
       })

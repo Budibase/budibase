@@ -27,5 +27,6 @@
     {fileSizeLimit}
     {processFiles}
     {handleFileTooLarge}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>

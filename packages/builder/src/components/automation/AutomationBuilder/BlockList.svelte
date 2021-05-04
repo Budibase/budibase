@@ -63,13 +63,14 @@
 
 <div class="tab-container">
   {#each tabs as tab, idx}
-  <div bind:this={anchors[idx]}>
-    <ActionButton
-      quiet
-      size="S"
-      icon={tab.icon}
-      disabled={tab.disabled}
-      on:click={tab.disabled ? null : () => onChangeTab(idx)}>
+    <div bind:this={anchors[idx]}>
+      <ActionButton
+        quiet
+        size="S"
+        icon={tab.icon}
+        disabled={tab.disabled}
+        on:click={tab.disabled ? null : () => onChangeTab(idx)}
+      >
         {tab.label}
       </ActionButton>
     </div>
@@ -79,14 +80,16 @@
   on:close={() => (selectedIndex = null)}
   bind:this={popover}
   {anchor}
-  align="left">
+  align="left"
+>
   <DropdownContainer>
     {#each blocks as [stepId, blockDefinition]}
       <DropdownItem
         icon={blockDefinition.icon}
         title={blockDefinition.name}
         subtitle={blockDefinition.description}
-        on:click={() => addBlockToAutomation(stepId, blockDefinition)} />
+        on:click={() => addBlockToAutomation(stepId, blockDefinition)}
+      />
     {/each}
   </DropdownContainer>
 </Popover>

@@ -37,6 +37,7 @@ async function init() {
     PORT: 4001,
     MINIO_URL: "http://localhost:10000/",
     COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+    REDIS_URL: "http://localhost:10000/cache/",
     WORKER_URL: "http://localhost:4002",
     JWT_SECRET: "testsecret",
     MINIO_ACCESS_KEY: "budibase",
@@ -46,7 +47,7 @@ async function init() {
     SELF_HOSTED: 1,
   }
   let envFile = ""
-  Object.keys(envFileJson).forEach((key) => {
+  Object.keys(envFileJson).forEach(key => {
     envFile += `${key}=${envFileJson[key]}\n`
   })
   fs.writeFileSync(envFilePath, envFile)
@@ -78,7 +79,7 @@ const managementCommand = process.argv.slice(2)[0]
 
 if (
   !managementCommand ||
-  !Object.values(Commands).some((command) => managementCommand === command)
+  !Object.values(Commands).some(command => managementCommand === command)
 ) {
   throw new Error(
     "You must supply either an 'up', 'down' or 'nuke' commmand to manage the budibase development environment."
@@ -104,7 +105,7 @@ command()
   .then(() => {
     console.log("Done! 🎉")
   })
-  .catch((err) => {
+  .catch(err => {
     console.error(
       "Something went wrong while managing budibase dev environment:",
       err.message

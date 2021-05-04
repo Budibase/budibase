@@ -111,19 +111,20 @@
         <article class="deployment">
           <div class="deployment-info">
             <span class="deploy-date">
-              {formatDate(deployment.updatedAt, 'fullDate')}
+              {formatDate(deployment.updatedAt, "fullDate")}
             </span>
             <span class="deploy-time">
-              {formatDate(deployment.updatedAt, 'timeOnly')}
+              {formatDate(deployment.updatedAt, "timeOnly")}
             </span>
           </div>
           <div class="deployment-right">
-            {#if deployment.status.toLowerCase() === 'pending'}
+            {#if deployment.status.toLowerCase() === "pending"}
               <Spinner size="10" />
             {/if}
             <div
               on:click={() => showErrorReasonModal(deployment.err)}
-              class={`deployment-status ${deployment.status}`}>
+              class={`deployment-status ${deployment.status}`}
+            >
               <span>
                 {deployment.status}
                 {#if deployment.status === DeploymentStatus.FAILURE}
@@ -144,7 +145,8 @@
   <ModalContent
     title="Deployment Error"
     confirmText="OK"
-    showCancelButton={false}>
+    showCancelButton={false}
+  >
     {errorReason}
   </ModalContent>
 </Modal>

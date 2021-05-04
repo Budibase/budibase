@@ -15,8 +15,8 @@ const CURRENTLY_SUPPORTED_LEVELS = [
   PermissionLevels.READ,
 ]
 
-exports.getPermissionType = (resourceId) => {
-  const docType = Object.values(DocumentTypes).filter((docType) =>
+exports.getPermissionType = resourceId => {
+  const docType = Object.values(DocumentTypes).filter(docType =>
     resourceId.startsWith(docType)
   )[0]
   switch (docType) {
@@ -41,7 +41,7 @@ exports.getPermissionType = (resourceId) => {
  * @param resourceId
  * @returns {{}}
  */
-exports.getBasePermissions = (resourceId) => {
+exports.getBasePermissions = resourceId => {
   const type = exports.getPermissionType(resourceId)
   const permissions = {}
   for (let [roleId, role] of Object.entries(getBuiltinRoles())) {
@@ -49,7 +49,7 @@ exports.getBasePermissions = (resourceId) => {
       continue
     }
     const perms = getBuiltinPermissionByID(role.permissionId)
-    const typedPermission = perms.permissions.find((perm) => perm.type === type)
+    const typedPermission = perms.permissions.find(perm => perm.type === type)
     if (
       typedPermission &&
       CURRENTLY_SUPPORTED_LEVELS.indexOf(typedPermission.level) !== -1

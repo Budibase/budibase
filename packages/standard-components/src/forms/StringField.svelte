@@ -16,9 +16,10 @@
   {label}
   {field}
   {disabled}
-  type={type === 'number' ? 'number' : 'string'}
+  type={type === "number" ? "number" : "string"}
   bind:fieldState
-  bind:fieldApi>
+  bind:fieldApi
+>
   {#if fieldState}
     <CoreTextField
       value={$fieldState.value}
@@ -27,6 +28,7 @@
       error={$fieldState.error}
       id={$fieldState.fieldId}
       {placeholder}
-      {type} />
+      {type}
+    />
   {/if}
 </Field>

@@ -119,10 +119,7 @@
 <div bind:this={buttonAnchor}>
   <Button secondary small on:click={dropdown.show}>{displayValue}</Button>
 </div>
-<Popover
-  bind:this={dropdown}
-  on:open={setSelectedUI}
-  anchor={buttonAnchor}>
+<Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">
     <div class="search-area">
       <div class="alphabet-area">
@@ -130,7 +127,8 @@
           <span
             class="letter"
             class:letter-selected={letter === selectedLetter}
-            on:click={() => switchLetter(letter)}>
+            on:click={() => switchLetter(letter)}
+          >
             {letter}
           </span>
           {#if idx !== alphabet.length - 1}<span>-</span>{/if}
@@ -161,7 +159,8 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-fill`}
-              on:click={() => (value = `ri-${icon}-fill`)}>
+              on:click={() => (value = `ri-${icon}-fill`)}
+            >
               <div class="icon-preview">
                 <i class={`ri-${icon}-fill ri-xl`} />
               </div>
@@ -170,7 +169,8 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-line`}
-              on:click={() => (value = `ri-${icon}-line`)}>
+              on:click={() => (value = `ri-${icon}-line`)}
+            >
               <div class="icon-preview">
                 <i class={`ri-${icon}-line ri-xl`} />
               </div>
@@ -182,7 +182,7 @@
     {:else}
       <div class="no-icons">
         <h5>
-          {`There is no icons for this ${searchTerm ? 'search' : 'page'}`}
+          {`There is no icons for this ${searchTerm ? "search" : "page"}`}
         </h5>
       </div>
     {/if}

@@ -1,10 +1,14 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
+const Queue = require("bull")
+const { setQueues, BullAdapter } = require("bull-board")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 
-let automationQueue = new InMemoryQueue("automationQueue")
+let automationQueue = new Queue("automationQueue")
+
+// Set up queues for bull board admin
+setQueues([new BullAdapter(automationQueue)])
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
@@ -204,8 +208,8 @@ async function queueRelevantRowAutomations(event, eventType) {
 
   // filter down to the correct event type
   automations = automations.rows
-    .map((automation) => automation.doc)
-    .filter((automation) => {
+    .map(automation => automation.doc)
+    .filter(automation => {
       const trigger = automation.definition.trigger
       return trigger && trigger.event === eventType
     })
