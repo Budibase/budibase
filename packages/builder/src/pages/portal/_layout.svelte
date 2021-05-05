@@ -1,5 +1,5 @@
 <script>
-  import { isActive } from "@roxi/routify"
+  import { isActive, url } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     Icon,
@@ -30,7 +30,7 @@
     { title: "Drafts", href: "/portal/drafts" },
     { title: "Users", href: "/portal/users", heading: "Manage" },
     { title: "Groups", href: "/portal/groups" },
-    { title: "Auth", href: "/portal/auth" },
+    { title: "Auth", href: "/portal/oauth" },
     { title: "Email", href: "/portal/email" },
     { title: "General", href: "/portal/general", heading: "Settings" },
     { title: "Theming", href: "/portal/theming" },
@@ -53,7 +53,9 @@
       <div class="menu">
         <Navigation>
           {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+            <Item selected={$isActive(href)} href={$url(href)} {heading}>
+              {title}
+            </Item>
           {/each}
         </Navigation>
       </div>
