@@ -61,6 +61,17 @@ exports.save = async ctx => {
 }
 
 exports.adminUser = async ctx => {
+  const db = new CouchDB(GLOBAL_DB)
+  const response = await db.allDocs(
+    getGlobalUserParams(null, {
+      include_docs: true,
+    })
+  )
+
+  if (response.rows.some(row => row.doc.admin)) {
+    ctx.throw(403, "You cannot initialise once an admin user has been created.")
+  }
+
   const { email, password } = ctx.request.body
   ctx.request.body = {
     email: email,
