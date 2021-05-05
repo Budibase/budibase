@@ -20,7 +20,7 @@
     </h2>
   {/if}
   <a
-    target={external ? "_blank" : "_self"}
+    target={external ? "_blank" : ""}
     {href}
     class="spectrum-SideNav-itemLink"
     aria-current="page"
