@@ -9,17 +9,34 @@
     Input,
     Toggle,
     Dropzone,
+    notifications,
   } from "@budibase/bbui"
   import { organisation } from "stores/portal"
+  import analytics from "analytics"
+  let analyticsDisabled = analytics.disabled()
+
+  function toggleAnalytics() {
+    if (analyticsDisabled) {
+      analytics.optIn()
+    } else {
+      analytics.optOut()
+    }
+  }
+
+  let loading = false
 
   let company = $organisation?.company
   let logoUrl = $organisation.logoUrl
 
   async function saveConfig() {
+    loading = true
     const res = await organisation.save({ ...$organisation, company })
-    console.log(res)
-    await organisation.init()
-    console.log($organisation)
+    if (res.status === 200) {
+      notifications.success("General settings saved.")
+    } else {
+      notifications.danger("Error when saving settings.")
+    }
+    loading = false
   }
 </script>
 
@@ -61,12 +78,16 @@
       <div class="fields">
         <div class="field">
           <Label>Send Analytics to Budibase</Label>
-          <Toggle text="" />
+          <Toggle
+            text=""
+            bind:value={analyticsDisabled}
+            on:change={toggleAnalytics}
+          />
         </div>
       </div>
     </div>
     <div class="save">
-      <Button on:click={saveConfig} cta>Save</Button>
+      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
     </div>
   </Layout>
 </div>
