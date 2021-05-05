@@ -1,9 +1,5 @@
 <script>
-<<<<<<< HEAD
-  import { isActive, url, goto } from "@roxi/routify"
-=======
   import { isActive, url } from "@roxi/routify"
->>>>>>> next
   import { onMount } from "svelte"
   import {
     Icon,
