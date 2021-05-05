@@ -1,9 +1,12 @@
-const Redis = require("ioredis")
+const env = require("../environment")
+// ioredis mock is all in memory
+const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
 const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
 
 const CLUSTERED = false
 
-let CLIENT
+// for testing just generate the client once
+let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
 
 /**
  * Inits the system, will error if unable to connect to redis cluster (may take up to 10 seconds) otherwise
@@ -12,6 +15,10 @@ let CLIENT
  */
 function init() {
   return new Promise((resolve, reject) => {
+    // testing uses a single in memory client
+    if (env.isTest()) {
+      return resolve(CLIENT)
+    }
     // if a connection existed, close it and re-create it
     if (CLIENT) {
       CLIENT.disconnect()
@@ -108,7 +115,12 @@ class RedisWrapper {
     if (response != null && response.key) {
       response.key = key
     }
-    return JSON.parse(response)
+    // if its not an object just return the response
+    try {
+      return JSON.parse(response)
+    } catch (err) {
+      return response
+    }
   }
 
   async store(key, value, expirySeconds = null) {

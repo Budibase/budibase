@@ -11,7 +11,7 @@ function isTest() {
 }
 
 let LOADED = false
-if (!LOADED && isDev()) {
+if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
   LOADED = true
 }
