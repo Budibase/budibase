@@ -1,7 +1,16 @@
 const { Client, utils } = require("@budibase/auth").redis
 const { newid } = require("@budibase/auth").utils
 
-const EXPIRE_TOKEN_SECONDS = 3600
+function getExpirySecondsForDB(db) {
+  switch (db) {
+    case utils.Databases.PW_RESETS:
+      // a hour
+      return 3600
+    case utils.Databases.INVITATIONS:
+      // a day
+      return 86400
+  }
+}
 
 async function getClient(db) {
   return await new Client(db).init()
@@ -10,9 +19,22 @@ async function getClient(db) {
 async function writeACode(db, value) {
   const client = await getClient(db)
   const code = newid()
-  await client.store(code, value, EXPIRE_TOKEN_SECONDS)
+  await client.store(code, value, getExpirySecondsForDB(db))
   client.finish()
   return code
+}
+
+async function getACode(db, code, deleteCode = true) {
+  const client = await getClient(db)
+  const value = await client.get(code)
+  if (!value) {
+    throw "Invalid code."
+  }
+  if (deleteCode) {
+    await client.delete(code)
+  }
+  client.finish()
+  return value
 }
 
 /**
@@ -28,17 +50,15 @@ exports.getResetPasswordCode = async userId => {
 /**
  * Given a reset code this will lookup to redis, check if the code is valid and delete if required.
  * @param {string} resetCode The code provided via the email link.
- * @param {boolean} deleteCode If the code is used/finished with this will delete it.
+ * @param {boolean} deleteCode If the code is used/finished with this will delete it - defaults to true.
  * @return {Promise<string>} returns the user ID if it is found
  */
-exports.checkResetPasswordCode = async (resetCode, deleteCode = false) => {
-  const client = await getClient(utils.Databases.PW_RESETS)
-  const userId = await client.get(resetCode)
-  if (deleteCode) {
-    await client.delete(resetCode)
+exports.checkResetPasswordCode = async (resetCode, deleteCode = true) => {
+  try {
+    return getACode(utils.Databases.PW_RESETS, resetCode, deleteCode)
+  } catch (err) {
+    throw "Provided information is not valid, cannot reset password - please try again."
   }
-  client.finish()
-  return userId
 }
 
 /**
@@ -48,4 +68,18 @@ exports.checkResetPasswordCode = async (resetCode, deleteCode = false) => {
  */
 exports.getInviteCode = async email => {
   return writeACode(utils.Databases.INVITATIONS, email)
+}
+
+/**
+ * Checks that the provided invite code is valid - will return the email address of user that was invited.
+ * @param {string} inviteCode the invite code that was provided as part of the link.
+ * @param {boolean} deleteCode whether or not the code should be deleted after retrieval - defaults to true.
+ * @return {Promise<string>} If the code is valid then an email address will be returned.
+ */
+exports.checkInviteCode = async (inviteCode, deleteCode = true) => {
+  try {
+    return getACode(utils.Databases.INVITATIONS, inviteCode, deleteCode)
+  } catch (err) {
+    throw "Invitation is not valid or has expired, please request a new one."
+  }
 }

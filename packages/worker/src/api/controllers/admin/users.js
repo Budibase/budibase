@@ -6,6 +6,7 @@ const {
 } = require("@budibase/auth").db
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus } = require("../../../constants")
+const { checkResetPasswordCode, checkInviteCode } = require("../../../utilities/redis")
 
 const FIRST_USER_EMAIL = "test@test.com"
 const FIRST_USER_PASSWORD = "test"
@@ -42,7 +43,7 @@ exports.save = async ctx => {
     user.status = UserStatus.ACTIVE
   }
   try {
-    const response = await db.post({
+    const response = await db.put({
       password: hashedPassword,
       ...user,
     })
@@ -120,4 +121,21 @@ exports.find = async ctx => {
     delete user.password
   }
   ctx.body = user
+}
+
+exports.invite = async ctx => {
+
+}
+
+exports.inviteAccept = async ctx => {
+  const { inviteCode } = ctx.request.body
+  const email = await checkInviteCode(inviteCode)
+  if (!email) {
+    throw "Unable to create new user, invitation invalid."
+  }
+  // redirect the request
+  delete ctx.request.body.inviteCode
+  ctx.request.body.email = email
+  // this will flesh out the body response
+  await exports.save(ctx)
 }

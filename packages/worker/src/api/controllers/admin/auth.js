@@ -1,11 +1,12 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
-const { Configs } = require("../../../constants")
+const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { clearCookie, getGlobalUserByEmail } = authPkg.utils
+const { clearCookie, getGlobalUserByEmail, hash } = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
+const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
@@ -50,18 +51,36 @@ exports.reset = async ctx => {
   }
   try {
     const user = await getGlobalUserByEmail(email)
-    sendEmail()
+    await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, { user })
   } catch (err) {
     // don't throw any kind of error to the user, this might give away something
   }
   ctx.body = {
-    message: "If user exists an email has been sent.",
+    message: "Please check your email for a reset link.",
+  }
+}
+
+/**
+ * Perform the user password update if the provided reset code is valid.
+ */
+exports.resetUpdate = async ctx => {
+  const { resetCode, password } = ctx.request.body
+  const userId = await checkResetPasswordCode(resetCode)
+  if (!userId) {
+    throw "Cannot reset password."
+  }
+  const db = new CouchDB(GLOBAL_DB)
+  const user = await db.get(userId)
+  user.password = await hash(password)
+  await db.put(user)
+  ctx.body = {
+    message: "password reset successfully.",
   }
 }
 
 exports.logout = async ctx => {
   clearCookie(ctx, Cookies.Auth)
-  ctx.body = { message: "User logged out" }
+  ctx.body = { message: "User logged out." }
 }
 
 /**
