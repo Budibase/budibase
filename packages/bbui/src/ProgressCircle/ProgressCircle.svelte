@@ -9,21 +9,21 @@
 
   export let value = false
   export let minValue = 0
-  export let maxValue = 0
+  export let maxValue = 100
 
   let subMask1Style
   let subMask2Style
-  if (!value) {
+  if (value) {
     let percentage = ((value - minValue) / (maxValue - minValue)) * 100
     let angle
     if (percentage > 0 && percentage <= 50) {
       angle = -180 + (percentage / 50) * 180
-      subMask1Style = `rotate(${angle}deg)`
-      subMask2Style = "rotate(-180deg)"
+      subMask1Style = `transform: rotate(${angle}deg);`
+      subMask2Style = "transform: rotate(-180deg);"
     } else if (percentage > 50) {
       angle = -180 + ((percentage - 50) / 50) * 180
-      subMask1Style = "rotate(0deg)"
-      subMask2Style = `rotate(${angle}deg)`
+      subMask1Style = "transform: rotate(0deg);"
+      subMask2Style = `transform: rotate(${angle}deg);`
     }
   }
 
@@ -34,6 +34,7 @@
   class:spectrum-ProgressBar--indeterminate={!value}
   class:spectrum-ProgressCircle--small={small}
   class:spectrum-ProgressCircle--large={large}
+  class:spectrum-ProgressCircle--overBackground={overBackground}
   class="spectrum-ProgressCircle"
 >
   <div class="spectrum-ProgressCircle-track" />
