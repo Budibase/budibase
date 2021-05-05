@@ -3,12 +3,24 @@
     Layout,
     Heading,
     Body,
+    Button,
     Divider,
     Label,
     Input,
     Toggle,
     Dropzone,
   } from "@budibase/bbui"
+  import { organisation } from "stores/portal"
+
+  let company = $organisation?.company
+  let logoUrl = $organisation.logoUrl
+
+  async function saveConfig() {
+    const res = await organisation.save({ ...$organisation, company })
+    console.log(res)
+    await organisation.init()
+    console.log($organisation)
+  }
 </script>
 
 <div class="container">
@@ -29,14 +41,14 @@
       <div class="fields">
         <div class="field">
           <Label>Organization name</Label>
-          <Input />
+          <Input thin bind:value={company} />
         </div>
-        <div class="field">
+        <!-- <div class="field">
           <Label>Logo</Label>
           <div class="file">
             <Dropzone />
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
     <Divider size="S" />
@@ -46,10 +58,15 @@
         >If you would like to send analytics that help us make Budibase better,
         please let us know below.</Body
       >
-      <div class="field">
-        <Label>Send Analytics to Budibase</Label>
-        <Toggle text="" />
+      <div class="fields">
+        <div class="field">
+          <Label>Send Analytics to Budibase</Label>
+          <Toggle text="" />
+        </div>
       </div>
+    </div>
+    <div class="save">
+      <Button on:click={saveConfig} cta>Save</Button>
     </div>
   </Layout>
 </div>
@@ -58,6 +75,7 @@
   .fields {
     display: grid;
     grid-gap: var(--spacing-m);
+    margin-top: var(--spacing-xl);
   }
   .field {
     display: grid;
@@ -68,5 +86,8 @@
   }
   .intro {
     display: grid;
+  }
+  .save {
+    margin-left: auto;
   }
 </style>

@@ -1,5 +1,5 @@
 <script>
-  import { isActive, url } from "@roxi/routify"
+  import { isActive, url, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     Icon,
@@ -10,15 +10,12 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
+  import { organisation } from "stores/portal"
+  organisation.init()
 
-  let orgName, orgLogo, onBoardingProgress, user
+  let onBoardingProgress, user
 
   async function getInfo() {
-    // fetch orgInfo
-    orgName = "ACME Inc."
-    orgLogo = "https://via.placeholder.com/150"
-
-    // set onBoardingProgress
     onBoardingProgress = 20
     user = { name: "John Doe" }
   }
@@ -43,8 +40,11 @@
     <div class="nav">
       <div class="branding">
         <div class="name">
-          <img src={orgLogo} alt="Logotype" />
-          <span>{orgName}</span>
+          <img
+            src={$organisation?.logoUrl || "https://via.placeholder.com/50"}
+            alt="Logotype"
+          />
+          <span>{$organisation?.company}</span>
         </div>
         <div class="onboarding">
           <ProgressCircle size="S" value={onBoardingProgress} />
@@ -88,6 +88,7 @@
   }
   .branding {
     display: grid;
+    grid-gap: var(--spacing-s);
     grid-template-columns: auto auto;
     justify-content: space-between;
     align-items: center;
@@ -126,5 +127,9 @@
   img {
     width: 32px;
     height: 32px;
+  }
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
