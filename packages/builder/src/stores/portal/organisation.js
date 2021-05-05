@@ -3,32 +3,34 @@ import api from "builderStore/api"
 
 export function createOrganisationStore() {
     const { subscribe, set } = writable({})
+
+    async function init() {
+      try {
+        const response = await api.get(`/api/admin/configs/settings`)
+        const json = await response.json()
+        set(json)
+      } catch (error) {
+        set({
+          platformUrl: '',
+          logoUrl: '',
+          docsUrl: '',
+          company: ''
+        })
+      }
+    }
   
     return {
       subscribe,
       save: async config => {
         try {
-          const res = await api.post('/api/admin/configs', { type: 'settings', config})
-          return await res.json()
+          await api.post('/api/admin/configs', { type: 'settings', config})
+          await init()
+          return { status: 200 }
         } catch (error) {
-          console.error(error)
+          return { error }
         }
       },
-      init: async () => {
-        try {
-          const response = await api.get(`/api/admin/configs/settings`)
-          const json = await response.json()
-          set(json)
-          // set(json)
-        } catch (error) {
-          set({
-            platformUrl: '',
-            logoUrl: '',
-            docsUrl: '',
-            company: ''
-          })
-        }
-      },
+      init
     }
   }
 
