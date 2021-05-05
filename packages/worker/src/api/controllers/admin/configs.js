@@ -4,9 +4,14 @@ const {
   StaticDatabases,
   getConfigParams,
   determineScopedConfig,
+  getGlobalUserParams,
 } = require("@budibase/auth").db
+const fetch = require("node-fetch")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
+const env = require("../../../environment")
+
+const APP_PREFIX = "app_"
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -94,6 +99,43 @@ exports.destroy = async function (ctx) {
   try {
     await db.remove(id, rev)
     ctx.body = { message: "Config deleted successfully" }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
+exports.configChecklist = async function(ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+
+  try {
+    // TODO: Watch get started video
+
+    // Apps exist
+    if (env.COUCH_DB_URL) {
+      allDbs = await (await fetch(`${env.COUCH_DB_URL}/_all_dbs`)).json()
+    } else {
+      allDbs = await CouchDB.allDbs()
+    }
+    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+
+    // They have set up SMTP
+    const smtpConfig = await determineScopedConfig(db, {
+      type: Configs.SMTP
+    })
+
+    // They have set up an admin user
+    const users = await db.allDocs(
+      getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+    const adminUser = users.rows.some(row => row.doc.admin)
+
+    ctx.body = { 
+      apps: appDbNames.length,
+      smtp: !!smtpConfig,
+      adminUser
+    }
   } catch (err) {
     ctx.throw(err.status, err)
   }
