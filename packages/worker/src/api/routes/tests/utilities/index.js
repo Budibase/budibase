@@ -35,7 +35,7 @@ exports.emailMock = () => {
   const nodemailer = require("nodemailer")
   nodemailer.createTransport.mockReturnValue({
     sendMail: sendMailMock,
-    verify: jest.fn()
+    verify: jest.fn(),
   })
   return sendMailMock
 }
