@@ -16,11 +16,14 @@
   {#if $auth.user}
     <div class="root">
       <div class="ui-nav">
-        <div class="home-logo"><img src={Logo} alt="Budibase icon" /></div>
+        <div class="home-logo">
+          <img src={Logo} alt="Budibase icon" />
+        </div>
         <div class="nav-section">
           <div class="nav-top">
             <Navigation>
               <Item href="/builder/" icon="Apps" selected>Apps</Item>
+              <Item href="/builder/oauth/" icon="OAuth" selected>OAuth</Item>
               <Item external href="https://portal.budi.live/" icon="Servers">
                 Hosting
               </Item>
