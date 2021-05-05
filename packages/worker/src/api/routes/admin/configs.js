@@ -68,7 +68,11 @@ function buildConfigGetValidation() {
 router
   .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
   .delete("/api/admin/configs/:id", controller.destroy)
-  .get("/api/admin/configs/all/:type", buildConfigGetValidation(), controller.fetch)
+  .get(
+    "/api/admin/configs/all/:type",
+    buildConfigGetValidation(),
+    controller.fetch
+  )
   .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
 
 module.exports = router
