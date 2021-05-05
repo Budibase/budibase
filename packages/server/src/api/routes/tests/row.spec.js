@@ -402,14 +402,16 @@ describe("/rows", () => {
         name: "test",
         description: "test",
         attachment: [{
-          url: "/test/thing",
+          key: `/assets/${config.getAppId()}/attachment/test/thing.csv`,
         }],
         tableId: table._id,
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
         const enriched = await outputProcessing(config.getAppId(), table, [row])
-        expect(enriched[0].attachment[0].url).toBe(`/app-assets/assets/${config.getAppId()}/test/thing`)
+        expect(enriched[0].attachment[0].url).toBe(
+          `/prod-budi-app-assets/assets/${config.getAppId()}/attachment/test/thing.csv`
+        )
       })
     })
   })

@@ -15,5 +15,8 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "ioredis-mock": "^5.5.5"
   }
 }

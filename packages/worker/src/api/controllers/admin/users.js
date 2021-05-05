@@ -126,7 +126,7 @@ exports.find = async ctx => {
 
 exports.invite = async ctx => {
   const { email } = ctx.request.body
-  const existing = await getGlobalUserByEmail(FIRST_USER_EMAIL)
+  const existing = await getGlobalUserByEmail(email)
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
