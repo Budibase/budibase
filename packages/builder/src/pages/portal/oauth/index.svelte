@@ -58,7 +58,7 @@
   })
 </script>
 
-<section class="container">
+<section>
   <header>
     <Heading size="M">OAuth</Heading>
     <Body size="S">
