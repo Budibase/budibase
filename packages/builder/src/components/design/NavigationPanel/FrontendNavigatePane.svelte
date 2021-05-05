@@ -120,10 +120,6 @@
     top: var(--spacing-l);
     right: var(--spacing-xl);
   }
-  .title i:hover {
-    cursor: pointer;
-    color: var(--blue);
-  }
 
   .role-select {
     display: flex;
