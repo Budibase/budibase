@@ -65,6 +65,7 @@ router
   .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
   .delete("/api/admin/configs/:id", controller.destroy)
   .get("/api/admin/configs", controller.fetch)
+  .get("/api/admin/configs/checklist", controller.configChecklist)
   .get("/api/admin/configs/:type", controller.find)
 
 module.exports = router

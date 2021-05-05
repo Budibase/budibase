@@ -70,8 +70,4 @@
   .config-form {
     margin-bottom: 42px;
   }
-
-  header {
-    margin-bottom: 42px;
-  }
 </style>
