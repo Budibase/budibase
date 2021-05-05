@@ -24,7 +24,11 @@
     style="width: var({sizes.get(size)}); height: var({sizes.get(size)});"
   />
 {:else}
-  <div style="width: var({sizes.get(size)}); height: var({sizes.get(size)});">
+  <div
+    style="width: var({sizes.get(size)}); height: var({sizes.get(
+      size
+    )}); font-size: calc(var({sizes.get(size)}) / 2)"
+  >
     {initials}
   </div>
 {/if}
@@ -42,5 +46,6 @@
       rgba(53, 199, 86, 1) 47%
     );
     border-radius: 50%;
+    overflow: hidden;
   }
 </style>
