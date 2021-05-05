@@ -132,7 +132,7 @@ exports.invite = async ctx => {
   }
   await sendEmail(email, EmailTemplatePurpose.INVITATION)
   ctx.body = {
-    message: "Invitation has been sent."
+    message: "Invitation has been sent.",
   }
 }
 
