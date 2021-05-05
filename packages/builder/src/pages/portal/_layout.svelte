@@ -1,5 +1,5 @@
 <script>
-  import { isActive } from "@roxi/routify"
+  import { isActive, url } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     Icon,
@@ -26,13 +26,13 @@
   onMount(getInfo)
 
   let menu = [
-    { title: "Apps", href: "/portal" },
+    { title: "Apps", href: "/portal/" },
     { title: "Drafts", href: "/portal/drafts" },
     { title: "Users", href: "/portal/users", heading: "Manage" },
     { title: "Groups", href: "/portal/groups" },
     { title: "Auth", href: "/portal/auth" },
     { title: "Email", href: "/portal/email" },
-    { title: "General", href: "/portal/general", heading: "Settings" },
+    { title: "General", href: "/portal/settings/general", heading: "Settings" },
     { title: "Theming", href: "/portal/theming" },
     { title: "Account", href: "/portal/account" },
   ]
@@ -53,7 +53,9 @@
       <div class="menu">
         <Navigation>
           {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+            <Item selected={$isActive($url(href))} {href} {heading}
+              >{title}</Item
+            >
           {/each}
         </Navigation>
       </div>
@@ -98,7 +100,11 @@
     align-items: center;
   }
   .content {
-    padding: var(--spacing-m);
+    display: grid;
+    padding: calc(var(--spacing-xl) * 2) var(--spacing-m) var(--spacing-m)
+      var(--spacing-m);
+    max-width: 80ch;
+    margin: 0 auto;
   }
   .avatar {
     display: grid;
