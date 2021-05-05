@@ -30,7 +30,7 @@ describe("/api/admin/users", () => {
     expect(sendMailMock).toHaveBeenCalled()
     const emailCall = sendMailMock.mock.calls[0][0]
     // after this URL there should be a code
-    const parts = emailCall.html.split("http://localhost:10000/invite/")
+    const parts = emailCall.html.split("http://localhost:10000/invite?code=")
     code = parts[1].split("\"")[0]
     expect(code).toBeDefined()
   })
