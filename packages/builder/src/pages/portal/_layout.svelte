@@ -1,5 +1,5 @@
 <script>
-  import { isActive, url } from "@roxi/routify"
+  import { isActive, url, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     Icon,
@@ -11,7 +11,10 @@
     SideNavigationItem as Item,
   } from "@budibase/bbui"
 
-  let orgName, orgLogo, onBoardingProgress, user
+  let orgName
+  let orgLogo
+  let onBoardingProgress
+  let user
 
   async function getInfo() {
     // fetch orgInfo
@@ -21,6 +24,10 @@
     // set onBoardingProgress
     onBoardingProgress = 20
     user = { name: "John Doe" }
+
+    if (onBoardingProgress < 21) {
+      $goto("../admin")
+    }
   }
 
   onMount(getInfo)
@@ -53,9 +60,7 @@
       <div class="menu">
         <Navigation>
           {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} href={$url(href)} {heading}>
-              {title}
-            </Item>
+            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
           {/each}
         </Navigation>
       </div>

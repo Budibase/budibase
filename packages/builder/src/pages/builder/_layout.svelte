@@ -23,7 +23,6 @@
           <div class="nav-top">
             <Navigation>
               <Item href="/builder/" icon="Apps" selected>Apps</Item>
-              <Item href="/builder/oauth/" icon="OAuth" selected>OAuth</Item>
               <Item external href="https://portal.budi.live/" icon="Servers">
                 Hosting
               </Item>
@@ -33,15 +32,13 @@
               <Item
                 external
                 href="https://github.com/Budibase/budibase/discussions"
-                icon="PeopleGroup"
-              >
+                icon="PeopleGroup">
                 Community
               </Item>
               <Item
                 external
                 href="https://github.com/Budibase/budibase/issues/new/choose"
-                icon="Bug"
-              >
+                icon="Bug">
                 Raise an issue
               </Item>
             </Navigation>
