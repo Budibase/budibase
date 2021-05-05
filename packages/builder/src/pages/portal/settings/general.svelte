@@ -25,11 +25,12 @@
 
   let loading = false
 
-  let company = $organisation?.company
-  let logoUrl = $organisation.logoUrl
+  $: company = $organisation?.company
+  $: logoUrl = $organisation.logoUrl
 
   async function saveConfig() {
     loading = true
+    await toggleAnalytics()
     const res = await organisation.save({ ...$organisation, company })
     if (res.status === 200) {
       notifications.success("General settings saved.")
@@ -78,11 +79,7 @@
       <div class="fields">
         <div class="field">
           <Label>Send Analytics to Budibase</Label>
-          <Toggle
-            text=""
-            bind:value={analyticsDisabled}
-            on:change={toggleAnalytics}
-          />
+          <Toggle text="" value={!analyticsDisabled} />
         </div>
       </div>
     </div>
