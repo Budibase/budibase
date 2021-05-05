@@ -4,7 +4,7 @@ const { newid } = require("@budibase/auth").utils
 const EXPIRE_TOKEN_SECONDS = 3600
 
 async function getClient(db) {
-  return await (new Client(db)).init()
+  return await new Client(db).init()
 }
 
 async function writeACode(db, value) {
