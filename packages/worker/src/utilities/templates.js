@@ -35,13 +35,13 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       context[TemplateBindings.RESET_CODE] = code
       context[TemplateBindings.RESET_URL] = checkSlashesInUrl(
-        `${URL}/reset/${code}`
+        `${URL}/reset?code=${code}`
       )
       break
     case EmailTemplatePurpose.INVITATION:
       context[TemplateBindings.INVITE_CODE] = code
       context[TemplateBindings.REGISTRATION_URL] = checkSlashesInUrl(
-        `${URL}/invite/${code}`
+        `${URL}/invite?code=${code}`
       )
       break
   }
