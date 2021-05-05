@@ -48,7 +48,7 @@ exports.save = async function (ctx) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams(undefined, {
+    getConfigParams({ type: ctx.params.type }, {
       include_docs: true,
     })
   )
@@ -61,11 +61,10 @@ exports.fetch = async function (ctx) {
  */
 exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const userId = ctx.params.user && ctx.params.user._id
 
-  const { group } = ctx.query
-  if (group) {
-    const group = await db.get(group)
+  const { userId, groupId } = ctx.query
+  if (groupId && userId) {
+    const group = await db.get(groupId)
     const userInGroup = group.users.some(groupUser => groupUser === userId)
     if (!ctx.user.admin && !userInGroup) {
       ctx.throw(400, `User is not in specified group: ${group}.`)
@@ -77,7 +76,7 @@ exports.find = async function (ctx) {
     const scopedConfig = await determineScopedConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group,
+      group: groupId,
     })
 
     if (scopedConfig) {
