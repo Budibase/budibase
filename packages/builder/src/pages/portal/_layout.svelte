@@ -9,7 +9,7 @@
     SideNavigationItem as Item,
   } from "@budibase/bbui"
 
-  let orgName, orgLogo, onBoardingProgress
+  let orgName, orgLogo, onBoardingProgress, user
 
   async function getInfo() {
     // fetch orgInfo
@@ -18,6 +18,7 @@
 
     // set onBoardingProgress
     onBoardingProgress = 20
+    user = { name: "John Doe" }
   }
 
   onMount(getInfo)
@@ -54,7 +55,7 @@
     <div class="toolbar">
       <Search />
       <div class="avatar">
-        <Avatar url="https://via.placeholder.com/150" />
+        <Avatar size="XL" name="John Doe" />
       </div>
     </div>
     <div class="content">
