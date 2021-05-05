@@ -46,6 +46,10 @@ router
   .delete("/api/admin/users/:id", controller.destroy)
   .get("/api/admin/users/:id", controller.find)
   .post("/api/admin/users/invite", buildInviteValidation(), controller.invite)
-  .post("/api/admin/users/invite/accept", buildInviteAcceptValidation(), controller.inviteAccept)
+  .post(
+    "/api/admin/users/invite/accept",
+    buildInviteAcceptValidation(),
+    controller.inviteAccept
+  )
 
 module.exports = router

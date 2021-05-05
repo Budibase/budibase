@@ -47,7 +47,10 @@ exports.reset = async ctx => {
   const { email } = ctx.request.body
   const configured = await isEmailConfigured()
   if (!configured) {
-    ctx.throw(400, "Please contact your platform administrator, SMTP is not configured.")
+    ctx.throw(
+      400,
+      "Please contact your platform administrator, SMTP is not configured."
+    )
   }
   try {
     const user = await getGlobalUserByEmail(email)
