@@ -12,6 +12,11 @@ let CLIENT
  */
 function init() {
   return new Promise((resolve, reject) => {
+    // if a connection existed, close it and re-create it
+    if (CLIENT) {
+      CLIENT.disconnect()
+      CLIENT = null
+    }
     const { opts, host, port } = getRedisOptions(CLUSTERED)
     if (CLUSTERED) {
       CLIENT = new Redis.Cluster([{ host, port }], opts)
@@ -76,6 +81,10 @@ class RedisWrapper {
   async init() {
     this._client = await init()
     return this
+  }
+
+  async finish() {
+    this._client.disconnect()
   }
 
   async scan() {

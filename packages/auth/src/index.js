@@ -29,7 +29,7 @@ module.exports = {
   },
   db: require("./db/utils"),
   redis: {
-    client: require("./redis"),
+    Client: require("./redis"),
     utils: require("./redis/utils"),
   },
   utils: {
