@@ -55,7 +55,7 @@ exports.reset = async ctx => {
     // don't throw any kind of error to the user, this might give away something
   }
   ctx.body = {
-    message: "If user exists an email has been sent."
+    message: "If user exists an email has been sent.",
   }
 }
 

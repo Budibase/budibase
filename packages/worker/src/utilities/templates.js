@@ -1,6 +1,11 @@
 const CouchDB = require("../db")
 const { getConfigParams, StaticDatabases } = require("@budibase/auth").db
-const { Configs, TemplateBindings, LOGO_URL, EmailTemplatePurpose } = require("../constants")
+const {
+  Configs,
+  TemplateBindings,
+  LOGO_URL,
+  EmailTemplatePurpose,
+} = require("../constants")
 const { checkSlashesInUrl } = require("./index")
 const env = require("../environment")
 
