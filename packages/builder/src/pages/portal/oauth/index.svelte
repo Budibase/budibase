@@ -91,10 +91,6 @@
 </section>
 
 <style>
-  section {
-    margin: 60px 320px;
-  }
-
   .config-form {
     margin-top: 42px;
     margin-bottom: 42px;
