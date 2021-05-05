@@ -12,14 +12,11 @@ const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const { type, config } = ctx.request.body
-  const { group, user } = config
-  // insert the type into the doc
-  config.type = type
+  const { type, group, user, config } = ctx.request.body
 
   // Config does not exist yet
-  if (!config._id) {
-    config._id = generateConfigID({
+  if (!ctx.request.body._id) {
+    ctx.request.body._id = generateConfigID({
       type,
       group,
       user,
@@ -34,7 +31,7 @@ exports.save = async function (ctx) {
   }
 
   try {
-    const response = await db.put(config)
+    const response = await db.put(ctx.request.body)
     ctx.body = {
       type,
       _id: response.id,
