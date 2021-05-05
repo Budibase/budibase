@@ -48,9 +48,12 @@ exports.save = async function (ctx) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams({ type: ctx.params.type }, {
-      include_docs: true,
-    })
+    getConfigParams(
+      { type: ctx.params.type },
+      {
+        include_docs: true,
+      }
+    )
   )
   ctx.body = response.rows.map(row => row.doc)
 }
