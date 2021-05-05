@@ -44,6 +44,9 @@ function googleValidation() {
 function buildConfigSaveValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
+    _id: Joi.string(),
+    _rev: Joi.string(),
+    group: Joi.string(),
     type: Joi.string().valid(...Object.values(Configs)).required(),
     config: Joi.alternatives()
       .conditional("type", {
