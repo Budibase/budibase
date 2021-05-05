@@ -60,12 +60,16 @@ exports.save = async ctx => {
   }
 }
 
-exports.firstUser = async ctx => {
+exports.adminUser = async ctx => {
+  const { email, password } = ctx.request.body
   ctx.request.body = {
-    email: FIRST_USER_EMAIL,
-    password: FIRST_USER_PASSWORD,
+    email: email,
+    password: password,
     roles: {},
     builder: {
+      global: true,
+    },
+    admin: {
       global: true,
     },
   }

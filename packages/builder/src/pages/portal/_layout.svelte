@@ -10,6 +10,7 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
+  import api from "builderStore/api"
 
   let orgName
   let orgLogo
@@ -22,12 +23,8 @@
     orgLogo = "https://via.placeholder.com/150"
 
     // set onBoardingProgress
-    onBoardingProgress = 20
-    user = { name: "John Doe" }
 
-    if (onBoardingProgress < 21) {
-      $goto("../admin")
-    }
+    user = { name: "John Doe" }
   }
 
   onMount(getInfo)
