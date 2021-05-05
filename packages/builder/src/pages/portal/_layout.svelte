@@ -1,6 +1,8 @@
 <script>
+  import { isActive } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
+    Icon,
     Avatar,
     Search,
     Layout,
@@ -22,6 +24,18 @@
   }
 
   onMount(getInfo)
+
+  let menu = [
+    { title: "Apps", href: "/portal" },
+    { title: "Drafts", href: "/portal/drafts" },
+    { title: "Users", href: "/portal/users", heading: "Manage" },
+    { title: "Groups", href: "/portal/groups" },
+    { title: "Auth", href: "/portal/auth" },
+    { title: "Email", href: "/portal/email" },
+    { title: "General", href: "/portal/general", heading: "Settings" },
+    { title: "Theming", href: "/portal/theming" },
+    { title: "Account", href: "/portal/account" },
+  ]
 </script>
 
 <div class="container">
@@ -38,15 +52,9 @@
       </div>
       <div class="menu">
         <Navigation>
-          <Item>Apps</Item>
-          <Item>Drafts</Item>
-          <Item heading="Manage">Users</Item>
-          <Item>Groups</Item>
-          <Item>Auth</Item>
-          <Item>Email</Item>
-          <Item heading="Settings">General</Item>
-          <Item>Theming</Item>
-          <Item>Account</Item>
+          {#each menu as { title, href, heading }}
+            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+          {/each}
         </Navigation>
       </div>
     </div>
@@ -55,7 +63,8 @@
     <div class="toolbar">
       <Search />
       <div class="avatar">
-        <Avatar size="XL" name="John Doe" />
+        <Avatar size="M" name="John Doe" />
+        <Icon size="XL" name="ChevronDown" />
       </div>
     </div>
     <div class="content">
@@ -90,6 +99,16 @@
   }
   .content {
     padding: var(--spacing-m);
+  }
+  .avatar {
+    display: grid;
+    grid-template-columns: auto auto;
+    place-items: center;
+    grid-gap: var(--spacing-xs);
+  }
+  .avatar:hover {
+    cursor: pointer;
+    filter: brightness(110%);
   }
   .toolbar {
     border-bottom: 2px solid var(--spectrum-alias-background-color-primary);
