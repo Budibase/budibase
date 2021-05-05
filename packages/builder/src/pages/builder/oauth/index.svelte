@@ -1,6 +1,4 @@
 <script>
-  import { hostingStore } from "builderStore"
-  import { HostingTypes } from "constants/backend"
   import GoogleLogo from "./logos/Google.svelte"
   import {
     Button,
@@ -10,12 +8,8 @@
     notifications,
     Layout,
     Input,
-    ModalContent,
-    Toggle,
     Body,
   } from "@budibase/bbui"
-  import ThemeEditor from "components/settings/ThemeEditor.svelte"
-  import analytics from "analytics"
   import { onMount } from "svelte"
   import api from "builderStore/api"
 
@@ -37,9 +31,9 @@
       const response = await api.post(`/api/admin/configs`, doc)
       const json = await response.json()
       if (response.status !== 200) throw new Error(json.message)
-
       google._rev = json._rev
       google._id = json._id
+
       notifications.success(`Settings saved.`)
     } catch (err) {
       notifications.error(`Failed to update OAuth settings. ${err}`)
@@ -55,7 +49,7 @@
 
     if (!googleDoc._id) {
       google = {
-        type: "google",
+        type: ConfigTypes.Google,
         config: {},
       }
     } else {
