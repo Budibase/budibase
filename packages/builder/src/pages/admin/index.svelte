@@ -8,26 +8,21 @@
     Input,
     Body,
   } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import api from "builderStore/api"
 
   let adminUser = {}
 
-  async function save(doc) {
+  async function save() {
     try {
       // Save the admin user
-      const response = await api.post(`/api/admin/users`, {
-        email: adminUser.email,
-        password: adminUser.password,
-        roles: {},
-        admin: {
-          global: true,
-        },
-      })
+      const response = await api.post(`/api/admin/users/init`, adminUser)
 
       const json = await response.json()
       if (response.status !== 200) throw new Error(json.message)
       notifications.success(`Admin user created.`)
+      $goto("../portal")
     } catch (err) {
       notifications.error(`Failed to create admin user.`)
     }
