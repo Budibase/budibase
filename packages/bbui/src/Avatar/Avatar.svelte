@@ -12,7 +12,12 @@
   export let size = "M"
   export let url = ""
   export let disabled = false
-  export let initials = "KA"
+  export let name = "John Doe"
+
+  function getInitials(name) {
+    let parts = name.split(" ")
+    return parts.map((name) => name[0]).join("")
+  }
 </script>
 
 {#if url}
@@ -25,11 +30,12 @@
   />
 {:else}
   <div
+    class:is-disabled={disabled}
     style="width: var({sizes.get(size)}); height: var({sizes.get(
       size
     )}); font-size: calc(var({sizes.get(size)}) / 2)"
   >
-    {initials}
+    {getInitials(name)}
   </div>
 {/if}
 
@@ -38,7 +44,7 @@
     color: white;
     display: grid;
     place-items: center;
-    font-weight: bold;
+    font-weight: 500;
     background: rgb(63, 94, 251);
     background: linear-gradient(
       155deg,
@@ -47,5 +53,6 @@
     );
     border-radius: 50%;
     overflow: hidden;
+    user-select: none;
   }
 </style>
