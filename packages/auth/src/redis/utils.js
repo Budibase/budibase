@@ -6,6 +6,7 @@ const SEPARATOR = "-"
 
 exports.Databases = {
   PW_RESETS: "pwReset",
+  INVITATIONS: "invitation",
 }
 
 exports.getRedisOptions = (clustered = false) => {

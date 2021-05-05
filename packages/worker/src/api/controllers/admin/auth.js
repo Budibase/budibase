@@ -2,7 +2,7 @@ const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { Configs } = require("../../../constants")
 const CouchDB = require("../../../db")
-const { sendEmail } = require("../../../utilities/email")
+const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { clearCookie, getGlobalUserByEmail } = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
@@ -44,14 +44,19 @@ exports.authenticate = async (ctx, next) => {
  */
 exports.reset = async ctx => {
   const { email } = ctx.request.body
+  const configured = await isEmailConfigured()
+  if (!configured) {
+    throw "Please contact your platform administrator, SMTP is not configured."
+  }
   try {
-    const user = getGlobalUserByEmail(email)
-    if (user) {
-    }
+    const user = await getGlobalUserByEmail(email)
+    sendEmail()
   } catch (err) {
     // don't throw any kind of error to the user, this might give away something
   }
-  ctx.body = {}
+  ctx.body = {
+    message: "If user exists an email has been sent."
+  }
 }
 
 exports.logout = async ctx => {
