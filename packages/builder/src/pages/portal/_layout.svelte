@@ -9,15 +9,18 @@
     SideNavigationItem as Item,
   } from "@budibase/bbui"
 
-  let orgName, orgLogo
+  let orgName, orgLogo, onBoardingProgress
 
-  async function getOrgInfo() {
+  async function getInfo() {
     // fetch orgInfo
     orgName = "ACME Inc."
-    orgLogo = "https://via.placeholder.com/32"
+    orgLogo = "https://via.placeholder.com/150"
+
+    // set onBoardingProgress
+    onBoardingProgress = 20
   }
 
-  onMount(getOrgInfo)
+  onMount(getInfo)
 </script>
 
 <div class="container">
@@ -29,7 +32,7 @@
           <span>{orgName}</span>
         </div>
         <div class="onboarding">
-          <ProgressCircle />
+          <ProgressCircle size="S" value={onBoardingProgress} />
         </div>
       </div>
       <div class="menu">
@@ -51,7 +54,7 @@
     <div class="toolbar">
       <Search />
       <div class="avatar">
-        <Avatar />
+        <Avatar url="https://via.placeholder.com/150" />
       </div>
     </div>
     <div class="content">
@@ -75,6 +78,14 @@
     display: grid;
     grid-template-columns: auto auto;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+  }
+  .name {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-gap: var(--spacing-m);
+    align-items: center;
   }
   .content {
     padding: var(--spacing-m);
@@ -85,5 +96,9 @@
     grid-template-columns: 250px auto;
     justify-content: space-between;
     padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+  }
+  img {
+    width: 32px;
+    height: 32px;
   }
 </style>
