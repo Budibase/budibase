@@ -116,8 +116,8 @@ exports.isEmailConfigured = async (groupId = null) => {
  * send an email using it.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
- * @param {string|null} groupId If finer grain controls being used then this will lookup config for group.
- * @param {object|null} if sending to an existing user the object can be provided, this is used in the context.
+ * @param {string|undefined} groupId If finer grain controls being used then this will lookup config for group.
+ * @param {object|undefined} user if sending to an existing user the object can be provided, this is used in the context.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
@@ -125,7 +125,7 @@ exports.sendEmail = async (email, purpose, { groupId, user }) => {
   const db = new CouchDB(GLOBAL_DB)
   const config = await getSmtpConfiguration(db, groupId)
   if (!config) {
-    throw "Unable to find SMTP configuration"
+    throw "Unable to find SMTP configuration."
   }
   const transport = createSMTPTransport(config)
   const message = {

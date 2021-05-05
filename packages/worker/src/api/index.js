@@ -4,9 +4,13 @@ const zlib = require("zlib")
 const { routes } = require("./routes")
 const { buildAuthMiddleware } = require("@budibase/auth").auth
 
-const NO_AUTH_ENDPOINTS = [
+const PUBLIC_ENDPOINTS = [
   {
     route: "/api/admin/users/first",
+    method: "POST",
+  },
+  {
+    route: "/api/admin/users/invite/accept",
     method: "POST",
   },
   {
@@ -21,10 +25,13 @@ const NO_AUTH_ENDPOINTS = [
     route: "/api/admin/auth/google/callback",
     method: "GET",
   },
+  {
+    route: "/api/admin/auth/reset",
+    method: "POST",
+  },
 ]
 
 const router = new Router()
-
 router
   .use(
     compress({
@@ -39,7 +46,7 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
-  .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
+  .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (!ctx.isAuthenticated) {
