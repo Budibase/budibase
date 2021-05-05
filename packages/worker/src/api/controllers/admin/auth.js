@@ -47,7 +47,7 @@ exports.reset = async ctx => {
   const { email } = ctx.request.body
   const configured = await isEmailConfigured()
   if (!configured) {
-    throw "Please contact your platform administrator, SMTP is not configured."
+    ctx.throw(400, "Please contact your platform administrator, SMTP is not configured.")
   }
   try {
     const user = await getGlobalUserByEmail(email)
@@ -65,16 +65,17 @@ exports.reset = async ctx => {
  */
 exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
-  const userId = await checkResetPasswordCode(resetCode)
-  if (!userId) {
-    throw "Cannot reset password."
-  }
-  const db = new CouchDB(GLOBAL_DB)
-  const user = await db.get(userId)
-  user.password = await hash(password)
-  await db.put(user)
-  ctx.body = {
-    message: "password reset successfully.",
+  try {
+    const userId = await checkResetPasswordCode(resetCode)
+    const db = new CouchDB(GLOBAL_DB)
+    const user = await db.get(userId)
+    user.password = await hash(password)
+    await db.put(user)
+    ctx.body = {
+      message: "password reset successfully.",
+    }
+  } catch (err) {
+    ctx.throw(400, "Cannot reset password.")
   }
 }
 

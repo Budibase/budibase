@@ -121,7 +121,7 @@ exports.isEmailConfigured = async (groupId = null) => {
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
-exports.sendEmail = async (email, purpose, { groupId, user }) => {
+exports.sendEmail = async (email, purpose, { groupId, user } = {}) => {
   const db = new CouchDB(GLOBAL_DB)
   const config = await getSmtpConfiguration(db, groupId)
   if (!config) {
