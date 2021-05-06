@@ -31,21 +31,20 @@
 
 <section>
   <div class="container">
-    <header>
+    <Layout gap="XS">
+      <img src="https://i.imgur.com/ZKyklgF.png" />
+    </Layout>
+    <Layout gap="XS">
       <Heading size="M">Create an admin user</Heading>
-      <Body size="S">The admin user has access to everything in budibase.</Body>
-    </header>
-    <div class="config-form">
-      <Layout gap="S">
-        <Input label="email" bind:value={adminUser.email} />
-        <Input
-          label="password"
-          type="password"
-          bind:value={adminUser.password}
-        />
-        <Button cta on:click={save}>Create super admin user</Button>
-      </Layout>
-    </div>
+      <Body size="M">The admin user has access to everything in budibase.</Body>
+    </Layout>
+    <Layout gap="XS">
+      <Input label="Email" bind:value={adminUser.email} />
+      <Input label="Password" type="password" bind:value={adminUser.password} />
+    </Layout>
+    <Layout gap="S">
+      <Button cta on:click={save}>Create super admin user</Button>
+    </Layout>
   </div>
 </section>
 
@@ -56,14 +55,19 @@
     justify-content: center;
     height: 100%;
   }
-
-  header {
-    text-align: center;
-    width: 80%;
+  .container {
     margin: 0 auto;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
-
-  .config-form {
-    margin-bottom: 42px;
+  .container :global(p, h1) {
+    text-align: center;
+  }
+  img {
+    width: 40px;
+    margin: 0 auto;
   }
 </style>
