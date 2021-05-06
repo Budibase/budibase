@@ -44,6 +44,9 @@
     padding-top: var(--spacing-l);
     padding-bottom: var(--spacing-l);
   }
+  .gap-XS {
+    grid-gap: var(--spacing-s);
+  }
   .gap-S {
     grid-gap: var(--spectrum-alias-grid-gutter-xsmall);
   }

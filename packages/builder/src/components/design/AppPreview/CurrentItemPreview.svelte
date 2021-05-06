@@ -3,7 +3,7 @@
   import { store, currentAsset, selectedComponent } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
-  import { FrontendTypes } from "../../../constants"
+  import { FrontendTypes } from "constants"
 
   let iframe
   let layout
@@ -82,7 +82,8 @@
     style="height: 100%; width: 100%"
     title="componentPreview"
     bind:this={iframe}
-    srcdoc={template} />
+    srcdoc={template}
+  />
 </div>
 
 <style>

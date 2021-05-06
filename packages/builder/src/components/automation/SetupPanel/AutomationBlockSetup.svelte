@@ -7,6 +7,10 @@
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import CodeEditorModal from "./CodeEditorModal.svelte"
+  import QuerySelector from "./QuerySelector.svelte"
+  import QueryParamSelector from "./QueryParamSelector.svelte"
+  import Editor from "components/integration/QueryEditor.svelte"
 
   export let block
   export let webhookModal
@@ -70,6 +74,10 @@
           on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
         />
+      {:else if value.customType === 'query'}
+        <QuerySelector bind:value={block.inputs[key]} />
+      {:else if value.customType === 'queryParams'}
+        <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === "table"}
         <TableSelector bind:value={block.inputs[key]} />
       {:else if value.customType === "row"}
@@ -78,6 +86,17 @@
         <WebhookDisplay value={block.inputs[key]} />
       {:else if value.customType === "triggerSchema"}
         <SchemaSetup bind:value={block.inputs[key]} />
+      {:else if value.customType === "code"}
+        <CodeEditorModal>
+          <pre>{JSON.stringify(bindings, null, 2)}</pre>
+          <Editor
+            mode="javascript"
+            on:change={e => { 
+              block.inputs[key] = e.detail.value
+            }}
+            value={block.inputs[key]}
+          />
+        </CodeEditorModal>
       {:else if value.type === "string" || value.type === "number"}
         <DrawerBindableInput
           panel={AutomationBindingPanel}
