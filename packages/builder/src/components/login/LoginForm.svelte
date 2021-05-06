@@ -18,7 +18,7 @@
         username,
         password,
       })
-      notifications.success("Logged in successfully.")
+      notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {
       console.error(err)

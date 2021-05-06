@@ -8,12 +8,11 @@
 
   onMount(async () => {
     await admin.init()
+    await auth.checkAuth()
     if (!$admin?.checklist?.adminUser) {
       $goto("./admin")
-    } else {
-      await auth.checkAuth()
-      checked = true
     }
+    checked = true
   })
 
   $: {
@@ -23,6 +22,6 @@
   }
 </script>
 
-{#if $admin.checklist}
+{#if checked}
   <slot />
 {/if}
