@@ -80,7 +80,7 @@
           <Icon size="XL" name="ChevronDown" />
         </div>
         <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
-          Settings
+          Old settings
         </MenuItem>
         <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
       </ActionMenu>
