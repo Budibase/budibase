@@ -2,7 +2,11 @@
   import { isActive, url, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
+    ActionMenu,
+    Checkbox,
+    MenuItem,
     Icon,
+    Heading,
     Avatar,
     Search,
     Layout,
@@ -11,13 +15,13 @@
     SideNavigationItem as Item,
   } from "@budibase/bbui"
   import api from "builderStore/api"
-  import { organisation } from "stores/portal"
+  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
+  import { organisation, admin } from "stores/portal"
 
   organisation.init()
 
   let orgName
   let orgLogo
-  let onBoardingProgress
   let user
 
   async function getInfo() {
@@ -55,7 +59,7 @@
           <span>{$organisation?.company}</span>
         </div>
         <div class="onboarding">
-          <ProgressCircle size="S" value={onBoardingProgress} />
+          <ConfigChecklist />
         </div>
       </div>
       <div class="menu">

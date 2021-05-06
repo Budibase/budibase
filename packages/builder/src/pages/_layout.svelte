@@ -5,7 +5,7 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
-  import { auth } from "stores/backend"
+  import { admin } from "stores/portal"
   import LoginForm from "components/login/LoginForm.svelte"
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
   import LogoutButton from "components/start/LogoutButton.svelte"
@@ -14,21 +14,16 @@
 
   let checklist
 
-  async function fetchConfigChecklist() {
-    const response = await api.get("/api/admin/configs/checklist")
-    return await response.json()
-  }
-
   onMount(async () => {
-    const response = await fetchConfigChecklist()
-    if (!response.adminUser) {
+    await admin.init()
+    if (!$admin?.checklist?.adminUser) {
       $goto("./admin")
+    } else {
+      $goto("./portal")
     }
-
-    checklist = response
   })
 </script>
 
-{#if checklist}
+{#if $admin.checklist}
   <slot />
 {/if}
