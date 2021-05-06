@@ -1,6 +1,5 @@
 <script>
   import api from "builderStore/api"
-  import AppList from "components/start/AppList.svelte"
   import { get } from "builderStore/api"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button, Heading, Modal, ButtonGroup } from "@budibase/bbui"
@@ -72,8 +71,6 @@
   </div>
 
   <!-- <TemplateList onSelect={selectTemplate} /> -->
-
-  <AppList />
 </div>
 
 <Modal bind:this={modal} padding={false} width="600px" on:hide={closeModal}>

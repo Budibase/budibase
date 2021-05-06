@@ -1,27 +1,58 @@
 <script>
-  import { Heading, Layout } from "@budibase/bbui"
+  import {
+    Heading,
+    Layout,
+    Button,
+    ActionButton,
+    ActionGroup,
+    Select,
+  } from "@budibase/bbui"
+  import AppList from "components/start/AppList.svelte"
+
+  let layout = "grid"
 </script>
 
 <Layout noPadding>
-  <div>
+  <div class="title">
     <Heading>Apps</Heading>
+    <Button primary>Create new app</Button>
   </div>
-  <div class="appList">
-    {#each new Array(10) as _}
-      <div class="app" />
-    {/each}
+  <div class="filter">
+    <div class="select">
+      <Select quiet placeholder="Filter by groups" />
+    </div>
+    <ActionGroup>
+      <ActionButton
+        on:click={() => (layout = "grid")}
+        selected={layout === "grid"}
+        quiet
+        icon="ClassicGridView"
+      />
+      <ActionButton
+        on:click={() => (layout = "table")}
+        selected={layout === "table"}
+        quiet
+        icon="ViewRow"
+      />
+    </ActionGroup>
   </div>
+  {#if layout === "grid"}
+    <AppList />
+  {:else}
+    Table
+  {/if}
 </Layout>
 
 <style>
-  .appList {
-    display: grid;
-    grid-gap: 50px;
-    grid-template-columns: repeat(auto-fill, 300px);
+  .title,
+  .filter {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
-  .app {
-    height: 130px;
-    border-radius: 4px;
-    background-color: var(--spectrum-global-color-gray-200);
+
+  .select {
+    width: 110px;
   }
 </style>

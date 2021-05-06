@@ -10,8 +10,11 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import { organisation, apps } from "stores/portal"
   organisation.init()
+  apps.load()
+
+  console.log("loading")
 
   let onBoardingProgress, user
 
