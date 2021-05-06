@@ -3,7 +3,6 @@ const {
   generateConfigID,
   StaticDatabases,
   getConfigParams,
-  determineScopedConfig,
   getGlobalUserParams,
   getScopedFullConfig,
 } = require("@budibase/auth").db
@@ -123,7 +122,7 @@ exports.configChecklist = async function (ctx) {
     const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
 
     // They have set up SMTP
-    const smtpConfig = await determineScopedConfig(db, {
+    const smtpConfig = await getScopedFullConfig(db, {
       type: Configs.SMTP,
     })
 
