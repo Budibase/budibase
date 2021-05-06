@@ -3,7 +3,7 @@ const {
   generateConfigID,
   StaticDatabases,
   getConfigParams,
-  determineScopedConfig,
+  getScopedFullConfig,
 } = require("@budibase/auth").db
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
@@ -45,9 +45,12 @@ exports.save = async function (ctx) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams(undefined, {
-      include_docs: true,
-    })
+    getConfigParams(
+      { type: ctx.params.type },
+      {
+        include_docs: true,
+      }
+    )
   )
   ctx.body = response.rows.map(row => row.doc)
 }
@@ -58,11 +61,10 @@ exports.fetch = async function (ctx) {
  */
 exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const userId = ctx.params.user && ctx.params.user._id
 
-  const { group } = ctx.query
-  if (group) {
-    const group = await db.get(group)
+  const { userId, groupId } = ctx.query
+  if (groupId && userId) {
+    const group = await db.get(groupId)
     const userInGroup = group.users.some(groupUser => groupUser === userId)
     if (!ctx.user.admin && !userInGroup) {
       ctx.throw(400, `User is not in specified group: ${group}.`)
@@ -71,10 +73,10 @@ exports.find = async function (ctx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await determineScopedConfig(db, {
+    const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group,
+      group: groupId,
     })
 
     if (scopedConfig) {

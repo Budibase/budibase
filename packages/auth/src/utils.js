@@ -105,6 +105,12 @@ exports.isClient = ctx => {
   return ctx.headers["x-budibase-type"] === "client"
 }
 
+/**
+ * Given an email address this will use a view to search through
+ * all the users to find one with this email address.
+ * @param {string} email the email to lookup the user by.
+ * @return {Promise<object|null>}
+ */
 exports.getGlobalUserByEmail = async email => {
   const db = getDB(StaticDatabases.GLOBAL.name)
   try {

@@ -5,7 +5,9 @@ const {
   StaticDatabases,
 } = require("@budibase/auth").db
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
-const { UserStatus } = require("../../../constants")
+const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
+const { checkInviteCode } = require("../../../utilities/redis")
+const { sendEmail } = require("../../../utilities/email")
 
 const FIRST_USER_EMAIL = "test@test.com"
 const FIRST_USER_PASSWORD = "test"
@@ -42,7 +44,7 @@ exports.save = async ctx => {
     user.status = UserStatus.ACTIVE
   }
   try {
-    const response = await db.post({
+    const response = await db.put({
       password: hashedPassword,
       ...user,
     })
@@ -61,7 +63,14 @@ exports.save = async ctx => {
 }
 
 exports.firstUser = async ctx => {
+  const existing = await getGlobalUserByEmail(FIRST_USER_EMAIL)
+  const params = {}
+  if (existing) {
+    params._id = existing._id
+    params._rev = existing._rev
+  }
   ctx.request.body = {
+    ...params,
     email: FIRST_USER_EMAIL,
     password: FIRST_USER_PASSWORD,
     roles: {},
@@ -113,4 +122,30 @@ exports.find = async ctx => {
     delete user.password
   }
   ctx.body = user
+}
+
+exports.invite = async ctx => {
+  const { email } = ctx.request.body
+  const existing = await getGlobalUserByEmail(email)
+  if (existing) {
+    ctx.throw(400, "Email address already in use.")
+  }
+  await sendEmail(email, EmailTemplatePurpose.INVITATION)
+  ctx.body = {
+    message: "Invitation has been sent.",
+  }
+}
+
+exports.inviteAccept = async ctx => {
+  const { inviteCode } = ctx.request.body
+  try {
+    const email = await checkInviteCode(inviteCode)
+    // redirect the request
+    delete ctx.request.body.inviteCode
+    ctx.request.body.email = email
+    // this will flesh out the body response
+    await exports.save(ctx)
+  } catch (err) {
+    ctx.throw(400, "Unable to create new user, invitation invalid.")
+  }
 }
