@@ -3,7 +3,7 @@ const configRoutes = require("./admin/configs")
 const groupRoutes = require("./admin/groups")
 const templateRoutes = require("./admin/templates")
 const emailRoutes = require("./admin/email")
-const authRoutes = require("./auth")
+const authRoutes = require("./admin/auth")
 const appRoutes = require("./app")
 
 exports.routes = [

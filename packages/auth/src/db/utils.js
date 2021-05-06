@@ -123,7 +123,7 @@ const getConfigParams = ({ type, group, user }, otherProps = {}) => {
  * @param {Object} scopes - the type, group and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
-const determineScopedConfig = async function (db, { type, user, group }) {
+const getScopedFullConfig = async function (db, { type, user, group }) {
   const response = await db.allDocs(
     getConfigParams(
       { type, user, group },
@@ -160,6 +160,12 @@ const determineScopedConfig = async function (db, { type, user, group }) {
   return scopedConfig.doc
 }
 
+async function getScopedConfig(db, params) {
+  const configDoc = await getScopedFullConfig(db, params)
+  return configDoc && configDoc.config ? configDoc.config : configDoc
+}
+
+exports.getScopedConfig = getScopedConfig
 exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams
-exports.determineScopedConfig = determineScopedConfig
+exports.getScopedFullConfig = getScopedFullConfig
