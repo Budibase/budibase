@@ -7,9 +7,8 @@ const zlib = require("zlib")
 const { promisify } = require("util")
 const { join } = require("path")
 const fs = require("fs")
-const { budibaseTempDir } = require("../budibaseDir")
-const env = require("../../environment")
-const { ObjectStoreBuckets } = require("../../constants")
+const env = require("../environment")
+const { budibaseTempDir, ObjectStoreBuckets } = require("./utils")
 const uuid = require("uuid/v4")
 
 const streamPipeline = promisify(stream.pipeline)
@@ -54,12 +53,10 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
  * @constructor
  */
 exports.ObjectStore = bucket => {
-  if (env.SELF_HOSTED) {
-    AWS.config.update({
-      accessKeyId: env.MINIO_ACCESS_KEY,
-      secretAccessKey: env.MINIO_SECRET_KEY,
-    })
-  }
+  AWS.config.update({
+    accessKeyId: env.MINIO_ACCESS_KEY,
+    secretAccessKey: env.MINIO_SECRET_KEY,
+  })
   const config = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
