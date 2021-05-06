@@ -60,7 +60,7 @@
           <img
             src={Logo}
             alt="budibase icon"
-            on:click={() => $goto(`/builder/`)}
+            on:click={() => $goto(`../../portal/`)}
           />
         </button>
 
