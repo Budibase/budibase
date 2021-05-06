@@ -4,6 +4,7 @@ const supertest = require("supertest")
 const { jwt } = require("@budibase/auth").auth
 const { Cookies } = require("@budibase/auth").constants
 const { Configs, LOGO_URL } = require("../../../../constants")
+const { getGlobalUserByEmail } = require("@budibase/auth").utils
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -53,6 +54,12 @@ class TestConfiguration {
     )
   }
 
+  async end() {
+    if (this.server) {
+      await this.server.close()
+    }
+  }
+
   defaultHeaders() {
     const user = {
       _id: "us_uuid1",
@@ -63,6 +70,25 @@ class TestConfiguration {
       Accept: "application/json",
       Cookie: [`${Cookies.Auth}=${authToken}`],
     }
+  }
+
+  async getUser(email) {
+    return getGlobalUserByEmail(email)
+  }
+
+  async createUser(email = "test@test.com", password = "test") {
+    const user = await this.getUser(email)
+    if (user) {
+      return user
+    }
+    await this._req(
+      {
+        email,
+        password,
+      },
+      null,
+      controllers.users.save
+    )
   }
 
   async deleteConfig(type) {
