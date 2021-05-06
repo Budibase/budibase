@@ -37,7 +37,7 @@
   <div class="preview" use:gradient />
   <div class="title">
     <Link href={`/builder/${_id}`}>
-      <Heading size="S">
+      <Heading size="XS">
         {name}
       </Heading>
     </Link>
@@ -47,8 +47,9 @@
     </ActionMenu>
   </div>
   <div class="status">
-    <Body noPadding>Edited {Math.floor(1 + Math.random() * 10)} months ago</Body
-    >
+    <Body noPadding size="S">
+      Edited {Math.floor(1 + Math.random() * 10)} months ago
+    </Body>
     {#if Math.random() > 0.5}
       <Icon name="LockClosed" />
     {/if}
