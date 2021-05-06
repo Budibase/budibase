@@ -7,8 +7,6 @@ const {
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus } = require("../../../constants")
 
-const FIRST_USER_EMAIL = "test@test.com"
-const FIRST_USER_PASSWORD = "test"
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async ctx => {

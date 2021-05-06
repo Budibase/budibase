@@ -41,7 +41,8 @@
         <Input
           label="password"
           type="password"
-          bind:value={adminUser.password} />
+          bind:value={adminUser.password}
+        />
         <Button cta on:click={save}>Create super admin user</Button>
       </Layout>
     </div>

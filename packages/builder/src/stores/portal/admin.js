@@ -11,15 +11,18 @@ export function createAdminStore() {
 
       const onboardingSteps = Object.keys(json)
 
-      const stepsComplete = onboardingSteps.reduce((score, step) => score + Number(!!json[step]), 0)
+      const stepsComplete = onboardingSteps.reduce(
+        (score, step) => score + Number(!!json[step]),
+        0
+      )
 
       set({
         checklist: json,
-        onboardingProgress: stepsComplete / onboardingSteps.length * 100   
+        onboardingProgress: (stepsComplete / onboardingSteps.length) * 100,
       })
     } catch (err) {
       set({
-        checklist: null
+        checklist: null,
       })
     }
   }
