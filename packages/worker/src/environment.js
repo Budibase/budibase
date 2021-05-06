@@ -11,7 +11,7 @@ function isTest() {
 }
 
 let LOADED = false
-if (!LOADED && isDev()) {
+if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
   LOADED = true
 }
@@ -26,6 +26,8 @@ module.exports = {
   LOG_LEVEL: process.env.LOG_LEVEL,
   JWT_SECRET: process.env.JWT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
+  REDIS_URL: process.env.REDIS_URL,
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   /* TODO: to remove - once deployment removed */
   SELF_HOST_KEY: process.env.SELF_HOST_KEY,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USERNAME,

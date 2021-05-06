@@ -57,8 +57,15 @@ function buildConfigSaveValidation() {
           { is: Configs.GOOGLE, then: googleValidation() }
         ],
       }),
-    }),
+    }).required(),
   )
+}
+
+function buildConfigGetValidation() {
+  // prettier-ignore
+  return joiValidator.params(Joi.object({
+    type: Joi.string().valid(...Object.values(Configs)).required()
+  }).unknown(true).required())
 }
 
 router
@@ -66,6 +73,11 @@ router
   .delete("/api/admin/configs/:id", controller.destroy)
   .get("/api/admin/configs", controller.fetch)
   .get("/api/admin/configs/checklist", controller.configChecklist)
-  .get("/api/admin/configs/:type", controller.find)
+  .get(
+    "/api/admin/configs/all/:type",
+    buildConfigGetValidation(),
+    controller.fetch
+  )
+  .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
 
 module.exports = router

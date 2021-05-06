@@ -9,6 +9,7 @@
     Layout,
     Input,
     Body,
+    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
@@ -58,7 +59,7 @@
   })
 </script>
 
-<section>
+<Page>
   <header>
     <Heading size="M">OAuth</Heading>
     <Body size="S">
@@ -88,7 +89,7 @@
     </div>
     <Divider />
   {/if}
-</section>
+</Page>
 
 <style>
   .config-form {

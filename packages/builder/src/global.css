@@ -13,8 +13,8 @@ html, body {
 body {
     --background: var(--spectrum-alias-background-color-primary);
     --background-alt: var(--spectrum-alias-background-color-secondary);
-    --border-light: 1px solid var(--spectrum-global-color-gray-200);
-    --border-dark: 1px solid var(--spectrum-global-color-gray-300);
+    --border-light: 1px solid var(--spectrum-global-color-gray-300);
+    --border-dark: 1px solid var(--spectrum-global-color-gray-400);
     --ink: var(--spectrum-alias-text-color);
     --grey-1: var(--spectrum-global-color-gray-100);
     --grey-2: var(--spectrum-global-color-gray-200);
