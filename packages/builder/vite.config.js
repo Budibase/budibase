@@ -56,6 +56,10 @@ export default ({ mode }) => {
           find: "actions",
           replacement: path.resolve("./src/actions"),
         },
+        {
+          find: "helpers",
+          replacement: path.resolve("./src/helpers"),
+        },
       ],
     },
   }
