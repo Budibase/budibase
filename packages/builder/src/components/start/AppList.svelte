@@ -1,50 +1,25 @@
 <script>
+  import { onMount } from "svelte"
   import AppCard from "./AppCard.svelte"
-  import { Heading, Divider } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import { get } from "builderStore/api"
+  import { apps } from "stores/portal"
 
-  let promise = getApps()
-
-  async function getApps() {
-    const res = await get("/api/applications")
-    const json = await res.json()
-
-    if (res.ok) {
-      return json
-    } else {
-      throw new Error(json)
-    }
-  }
+  onMount(apps.load)
 </script>
 
-<div class="root">
-  <Heading size="M">Your Apps</Heading>
-  <Divider size="M" />
-  {#await promise}
-    <div class="spinner-container">
-      <Spinner size="30" />
-    </div>
-  {:then apps}
-    <div class="apps">
-      {#each apps as app}
-        <AppCard {...app} />
-      {/each}
-    </div>
-  {:catch err}
-    <h1 style="color:red">{err}</h1>
-  {/await}
-</div>
+{#if $apps.length}
+  <div class="appList">
+    {#each $apps as app}
+      <AppCard {...app} />
+    {/each}
+  </div>
+{:else}
+  <div>No apps</div>
+{/if}
 
 <style>
-  .root {
-    margin-top: 10px;
-  }
-  .apps {
-    margin-top: var(--layout-m);
+  .appList {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    grid-gap: var(--layout-s);
-    justify-content: start;
+    grid-gap: 50px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 </style>

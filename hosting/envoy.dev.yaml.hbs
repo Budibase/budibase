@@ -16,6 +16,11 @@ static_resources:
             - name: local_services
               domains: ["*"]
               routes:
+              # special case to redirect specifically the route path
+              # to the builder, if this were a prefix then it would break minio
+              - match: { path: "/" }
+                redirect: { path_redirect: "/app/" }
+
               - match: { prefix: "/db/" }
                 route:
                   cluster: couchdb-service
@@ -33,15 +38,19 @@ static_resources:
                 route:
                   cluster: server-dev
 
-              - match: { prefix: "/" }
+              - match: { path: "/" }
                 route:
                   cluster: builder-dev
 
-              - match: { prefix: "/builder" }
+              - match: { prefix: "/app/" }
                 route:
                   cluster: builder-dev
-                  prefix_rewrite: "/builder/"
- 
+
+              - match: { prefix: "/app" }
+                route:
+                  cluster: builder-dev
+                  prefix_rewrite: "/app/"
+
               # minio is on the default route because this works
               # best, minio + AWS SDK doesn't handle path proxy
               - match: { prefix: "/" }

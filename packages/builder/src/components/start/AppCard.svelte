@@ -1,11 +1,19 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { ActionButton, Heading } from "@budibase/bbui"
-  import { notifications } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
+  import {
+    Heading,
+    Icon,
+    Body,
+    Layout,
+    ActionMenu,
+    MenuItem,
+    Link,
+    notifications,
+  } from "@budibase/bbui"
   import download from "downloadjs"
+  import { gradient } from "actions"
 
-  export let name, _id
+  export let name
+  export let _id
 
   let appExportLoading = false
 
@@ -15,58 +23,60 @@
       download(
         `/api/backups/export?appId=${_id}&appname=${encodeURIComponent(name)}`
       )
-      notifications.success("App Export Complete.")
+      notifications.success("App export complete")
     } catch (err) {
       console.error(err)
-      notifications.error("App Export Failed.")
+      notifications.error("App export failed")
     } finally {
       appExportLoading = false
     }
   }
 </script>
 
-<div class="apps-card">
-  <Heading size="S">{name}</Heading>
-  <div class="card-footer" data-cy={`app-${name}`}>
-    <ActionButton on:click={() => $goto(`/builder/${_id}`)}>
-      Open
-      {name}
-      →
-    </ActionButton>
-    {#if appExportLoading}
-      <Spinner size="10" />
-    {:else}
-      <ActionButton icon="Download" quiet />
+<Layout noPadding gap="XS">
+  <div class="preview" use:gradient />
+  <div class="title">
+    <Link href={`/app/builder/${_id}`}>
+      <Heading size="XS">
+        {name}
+      </Heading>
+    </Link>
+    <ActionMenu>
+      <Icon slot="control" name="More" hoverable />
+      <MenuItem on:click={exportApp} icon="Download">Export</MenuItem>
+    </ActionMenu>
+  </div>
+  <div class="status">
+    <Body noPadding size="S">
+      Edited {Math.floor(1 + Math.random() * 10)} months ago
+    </Body>
+    {#if Math.random() > 0.5}
+      <Icon name="LockClosed" />
     {/if}
   </div>
-</div>
+</Layout>
 
 <style>
-  .apps-card {
-    background-color: var(--background);
-    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl)
-      var(--spacing-xl);
-    max-width: 300px;
-    max-height: 150px;
-    border-radius: var(--border-radius-m);
-    border: var(--border-dark);
+  .preview {
+    height: 135px;
+    border-radius: var(--border-radius-s);
+    margin-bottom: var(--spacing-s);
   }
 
-  .card-footer {
+  .title,
+  .status {
     display: flex;
     flex-direction: row;
-    align-items: center;
     justify-content: space-between;
-    margin-top: var(--spacing-m);
+    align-items: center;
   }
 
-  i {
-    font-size: var(--font-size-l);
+  .title :global(a) {
+    text-decoration: none;
+  }
+  .title :global(h1:hover) {
+    color: var(--spectrum-global-color-blue-600);
     cursor: pointer;
-    transition: 0.2s all;
-  }
-
-  i:hover {
-    color: var(--blue);
+    transition: color 130ms ease;
   }
 </style>
