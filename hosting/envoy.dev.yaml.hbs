@@ -37,6 +37,10 @@ static_resources:
                 route:
                   cluster: builder-dev
 
+              - match: { prefix: "/app/" }
+                route:
+                  cluster: builder-dev
+
               - match: { prefix: "/app" }
                 route:
                   cluster: builder-dev
