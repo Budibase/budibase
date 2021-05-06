@@ -34,10 +34,14 @@
     <Layout gap="XS">
       <img src="https://i.imgur.com/ZKyklgF.png" />
     </Layout>
-    <Layout gap="XS">
-      <Heading size="M">Create an admin user</Heading>
-      <Body size="M">The admin user has access to everything in budibase.</Body>
-    </Layout>
+    <div class="center">
+      <Layout gap="XS">
+        <Heading size="M">Create an admin user</Heading>
+        <Body size="M"
+          >The admin user has access to everything in Budibase.</Body
+        >
+      </Layout>
+    </div>
     <Layout gap="XS">
       <Input label="Email" bind:value={adminUser.email} />
       <Input label="Password" type="password" bind:value={adminUser.password} />
@@ -63,7 +67,7 @@
     justify-content: flex-start;
     align-items: stretch;
   }
-  .container :global(p, h1) {
+  .center {
     text-align: center;
   }
   img {
