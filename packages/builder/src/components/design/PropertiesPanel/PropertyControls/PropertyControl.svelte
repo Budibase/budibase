@@ -7,7 +7,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
-  import { capitalise } from "../../../../helpers"
+  import { capitalise } from "helpers"
 
   export let label = ""
   export let bindable = true
