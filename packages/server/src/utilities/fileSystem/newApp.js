@@ -1,7 +1,7 @@
 const packageJson = require("../../../package.json")
 const { join } = require("path")
 const { ObjectStoreBuckets } = require("../../constants")
-const { streamUpload, downloadTarball } = require("./utilities")
+const { streamUpload, downloadTarball } = require("@budibase/auth").objectStore
 const fs = require("fs")
 
 const BUCKET_NAME = ObjectStoreBuckets.APPS

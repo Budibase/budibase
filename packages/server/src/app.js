@@ -4,7 +4,6 @@ const CouchDB = require("./db")
 require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
-const electron = require("electron")
 const koaBody = require("koa-body")
 const logger = require("koa-pino-logger")
 const http = require("http")
@@ -42,7 +41,7 @@ app.context.auth = {}
 // api routes
 app.use(api.routes())
 
-if (electron.app && electron.app.isPackaged) {
+if (env.isProd()) {
   env._set("NODE_ENV", "production")
   Sentry.init()
 
