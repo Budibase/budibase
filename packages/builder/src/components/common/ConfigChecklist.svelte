@@ -30,14 +30,14 @@
     <ProgressCircle size="S" value={$admin.onboardingProgress} />
   </div>
   <MenuItem disabled>
-    <header>
+    <header class="item">
       <Heading size="XXS">Get Started Checklist</Heading>
       <ProgressCircle size="S" value={$admin.onboardingProgress} />
     </header>
   </MenuItem>
   {#each Object.keys($admin.checklist) as checklistItem, idx}
     <MenuItem>
-      <div class="checklist-item">
+      <div class="item">
         <span>{idx + 1}. {MESSAGES[checklistItem]}</span>
         <Checkbox value={!!$admin.checklist[checklistItem]} />
       </div>
@@ -46,15 +46,9 @@
 </ActionMenu>
 
 <style>
-  header {
+  .item {
     display: grid;
     align-items: center;
-    grid-template-columns: 90% 10%;
-  }
-
-  .checklist-item {
-    display: grid;
-    align-items: center;
-    grid-template-columns: 90% 10%;
+    grid-template-columns: 200px 20px;
   }
 </style>
