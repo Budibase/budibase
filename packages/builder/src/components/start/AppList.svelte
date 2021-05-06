@@ -13,13 +13,13 @@
     {/each}
   </div>
 {:else}
-  <div>No apps</div>
+  <div>No apps found.</div>
 {/if}
 
 <style>
   .appList {
     display: grid;
     grid-gap: 50px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 </style>

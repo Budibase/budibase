@@ -65,7 +65,7 @@
   {#if layout === "grid"}
     <AppList />
   {:else}
-    Table
+    Table view.
   {/if}
 </Layout>
 <Modal

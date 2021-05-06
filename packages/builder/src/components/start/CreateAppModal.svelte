@@ -112,7 +112,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      $goto(`./${appJson._id}`)
+      $goto(`/app/builder/${appJson._id}/design`)
     } catch (error) {
       console.error(error)
       notifications.error(error)
