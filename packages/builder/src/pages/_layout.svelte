@@ -12,7 +12,6 @@
   import Logo from "/assets/budibase-logo.svg"
   import api from "builderStore/api"
 
-  let modal
   let checklist
 
   async function fetchConfigChecklist() {
