@@ -8,7 +8,7 @@
 
 <p
   class:noPadding
-  class="spectrum-Body class:spectrum-Body--size{size}"
+  class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
 >
   <slot />
