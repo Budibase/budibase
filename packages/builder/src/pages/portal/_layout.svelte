@@ -23,7 +23,7 @@
   onMount(getInfo)
 
   let menu = [
-    { title: "Apps", href: "/portal/" },
+    { title: "Apps", href: "/portal/apps" },
     { title: "Drafts", href: "/portal/drafts" },
     { title: "Users", href: "/portal/users", heading: "Manage" },
     { title: "Groups", href: "/portal/groups" },
@@ -36,15 +36,15 @@
 </script>
 
 <div class="container">
-  <Layout>
-    <div class="nav">
+  <div class="nav">
+    <Layout paddingX="L" paddingY="L">
       <div class="branding">
         <div class="name">
           <img
-            src={$organisation?.logoUrl || "https://via.placeholder.com/50"}
+            src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
             alt="Logotype"
           />
-          <span>{$organisation?.company}</span>
+          <span>{$organisation?.company || "Budibase"}</span>
         </div>
         <div class="onboarding">
           <ProgressCircle size="S" value={onBoardingProgress} />
@@ -59,17 +59,17 @@
           {/each}
         </Navigation>
       </div>
-    </div>
-  </Layout>
+    </Layout>
+  </div>
   <div class="main">
     <div class="toolbar">
-      <Search />
+      <Search placeholder="Global search" />
       <div class="avatar">
         <Avatar size="M" name="John Doe" />
         <Icon size="XL" name="ChevronDown" />
       </div>
     </div>
-    <div class="content">
+    <div>
       <slot />
     </div>
   </div>
@@ -81,10 +81,13 @@
     display: grid;
     grid-template-columns: 250px 1fr;
   }
+  .nav {
+    background: var(--background);
+    border-right: var(--border-light);
+  }
   .main {
     display: grid;
     grid-template-rows: auto 1fr;
-    border-left: 2px solid var(--spectrum-alias-background-color-primary);
   }
   .branding {
     display: grid;
@@ -92,20 +95,12 @@
     grid-template-columns: auto auto;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
   }
   .name {
     display: grid;
     grid-template-columns: auto auto;
     grid-gap: var(--spacing-m);
     align-items: center;
-  }
-  .content {
-    display: grid;
-    padding: calc(var(--spacing-xl) * 2) var(--spacing-m) var(--spacing-m)
-      var(--spacing-m);
-    max-width: 80ch;
-    margin: 0 auto;
   }
   .avatar {
     display: grid;
@@ -118,18 +113,20 @@
     filter: brightness(110%);
   }
   .toolbar {
-    border-bottom: 2px solid var(--spectrum-alias-background-color-primary);
+    background: var(--background);
+    border-bottom: var(--border-light);
     display: grid;
     grid-template-columns: 250px auto;
     justify-content: space-between;
     padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
   }
   img {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
   span {
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 500;
   }
 </style>
