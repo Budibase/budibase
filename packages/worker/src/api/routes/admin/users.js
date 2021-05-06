@@ -42,7 +42,7 @@ function buildInviteAcceptValidation() {
 router
   .post("/api/admin/users", buildUserSaveValidation(), controller.save)
   .get("/api/admin/users", controller.fetch)
-  .post("/api/admin/users/first", controller.firstUser)
+  .post("/api/admin/users/init", controller.adminUser)
   .delete("/api/admin/users/:id", controller.destroy)
   .get("/api/admin/users/:id", controller.find)
   .post("/api/admin/users/invite", buildInviteValidation(), controller.invite)
