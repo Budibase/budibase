@@ -5,20 +5,16 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
-const bullboard = require("bull-board")
-const expressApp = require("express")()
-
-expressApp.use("/bulladmin", bullboard.router)
-
-const router = new Router()
 const env = require("../environment")
 
-const NO_AUTH_ENDPOINTS = [
-  "/health",
-  "/version",
-  "webhooks/trigger",
-  "webhooks/schema",
-]
+if (!env.isTest()) {
+  const bullboard = require("bull-board")
+  const expressApp = require("express")()
+
+  expressApp.use("/bulladmin", bullboard.router)
+}
+
+const router = new Router()
 
 router
   .use(
@@ -42,7 +38,11 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
-  .use(buildAuthMiddleware(NO_AUTH_ENDPOINTS))
+  .use(
+    buildAuthMiddleware(null, {
+      publicAllowed: true,
+    })
+  )
   .use(currentApp)
 
 // error handling middleware
