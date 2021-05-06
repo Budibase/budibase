@@ -14,8 +14,10 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
+  import LoginForm from "components/login/LoginForm.svelte"
   import api from "builderStore/api"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
+  import { auth } from "stores/backend"
   import { organisation, admin } from "stores/portal"
 
   organisation.init()
@@ -47,43 +49,52 @@
   ]
 </script>
 
-<div class="container">
-  <div class="nav">
-    <Layout paddingX="L" paddingY="L">
-      <div class="branding">
-        <div class="name">
-          <img
-            src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
-            alt="Logotype"
-          />
-          <span>{$organisation?.company || "Budibase"}</span>
-        </div>
-        <div class="onboarding">
-          <ConfigChecklist />
-        </div>
+{#if $auth}
+  {#if $auth.user}
+    <div class="container">
+      <div class="nav">
+        <Layout paddingX="L" paddingY="L">
+          <div class="branding">
+            <div class="name">
+              <img
+                src={$organisation?.logoUrl ||
+                  "https://i.imgur.com/ZKyklgF.png"}
+                alt="Logotype"
+              />
+              <span>{$organisation?.company || "Budibase"}</span>
+            </div>
+            <div class="onboarding">
+              <ConfigChecklist />
+            </div>
+          </div>
+          <div class="menu">
+            <Navigation>
+              {#each menu as { title, href, heading }}
+                <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+              {/each}
+            </Navigation>
+          </div>
+        </Layout>
       </div>
-      <div class="menu">
-        <Navigation>
-          {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
-          {/each}
-        </Navigation>
-      </div>
-    </Layout>
-  </div>
-  <div class="main">
-    <div class="toolbar">
-      <Search placeholder="Global search" />
-      <div class="avatar">
-        <Avatar size="M" name="John Doe" />
-        <Icon size="XL" name="ChevronDown" />
+      <div class="main">
+        <div class="toolbar">
+          <Search placeholder="Global search" />
+          <div class="avatar">
+            <Avatar size="M" name="John Doe" />
+            <Icon size="XL" name="ChevronDown" />
+          </div>
+        </div>
+        <div class="content">
+          <slot />
+        </div>
       </div>
     </div>
-    <div>
-      <slot />
-    </div>
-  </div>
-</div>
+  {:else}
+    <section class="login">
+      <LoginForm />
+    </section>
+  {/if}
+{/if}
 
 <style>
   .container {

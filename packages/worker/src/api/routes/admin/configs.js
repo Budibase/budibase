@@ -17,7 +17,7 @@ function smtpValidation() {
     auth: Joi.object({
       type: Joi.string().valid("login", "oauth2", null),
       user: Joi.string().required(),
-      pass: Joi.string().valid("", null),
+      pass: Joi.string().allow("", null),
     }).optional(),
   }).unknown(true)
 }
