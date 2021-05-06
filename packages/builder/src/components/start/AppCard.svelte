@@ -60,7 +60,7 @@
   .preview {
     height: 135px;
     border-radius: var(--border-radius-s);
-    margin-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-s);
   }
 
   .title,
