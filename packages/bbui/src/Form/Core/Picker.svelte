@@ -19,6 +19,7 @@
   export let getOptionValue = option => option
   export let open = false
   export let readonly = false
+  export let quiet = false
 
   const dispatch = createEventDispatcher()
   const onClick = e => {
@@ -33,6 +34,7 @@
 <button
   {id}
   class="spectrum-Picker spectrum-Picker--sizeM"
+  class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-invalid={!!error}
   class:is-open={open}
