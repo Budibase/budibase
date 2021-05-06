@@ -1,5 +1,5 @@
 <script>
-  import { isActive } from "@roxi/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     Icon,
@@ -11,6 +11,8 @@
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, apps } from "stores/portal"
+  import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
+  import LogoutButton from "components/start/LogoutButton.svelte"
 
   organisation.init()
   apps.load()
@@ -45,7 +47,7 @@
   <div class="nav">
     <Layout paddingX="L" paddingY="L">
       <div class="branding">
-        <div class="name">
+        <div class="name" on:click={() => $goto("./apps")}>
           <img
             src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
             alt="Logotype"
@@ -62,6 +64,8 @@
             <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
           {/each}
         </Navigation>
+        <BuilderSettingsButton />
+        <LogoutButton />
       </div>
     </Layout>
   </div>
@@ -105,6 +109,9 @@
     grid-template-columns: auto auto;
     grid-gap: var(--spacing-m);
     align-items: center;
+  }
+  .name:hover {
+    cursor: pointer;
   }
   .avatar {
     display: grid;
