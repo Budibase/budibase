@@ -3,10 +3,15 @@ const {
   generateConfigID,
   StaticDatabases,
   getConfigParams,
-  determineScopedConfig,
+  getGlobalUserParams,
+  getScopedFullConfig,
 } = require("@budibase/auth").db
+const fetch = require("node-fetch")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
+const env = require("../../../environment")
+
+const APP_PREFIX = "app_"
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -45,9 +50,12 @@ exports.save = async function (ctx) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams(undefined, {
-      include_docs: true,
-    })
+    getConfigParams(
+      { type: ctx.params.type },
+      {
+        include_docs: true,
+      }
+    )
   )
   ctx.body = response.rows.map(row => row.doc)
 }
@@ -58,11 +66,10 @@ exports.fetch = async function (ctx) {
  */
 exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const userId = ctx.params.user && ctx.params.user._id
 
-  const { group } = ctx.query
-  if (group) {
-    const group = await db.get(group)
+  const { userId, groupId } = ctx.query
+  if (groupId && userId) {
+    const group = await db.get(groupId)
     const userInGroup = group.users.some(groupUser => groupUser === userId)
     if (!ctx.user.admin && !userInGroup) {
       ctx.throw(400, `User is not in specified group: ${group}.`)
@@ -71,10 +78,10 @@ exports.find = async function (ctx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await determineScopedConfig(db, {
+    const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group,
+      group: groupId,
     })
 
     if (scopedConfig) {
@@ -94,6 +101,44 @@ exports.destroy = async function (ctx) {
   try {
     await db.remove(id, rev)
     ctx.body = { message: "Config deleted successfully" }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
+exports.configChecklist = async function (ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+
+  try {
+    // TODO: Watch get started video
+
+    // Apps exist
+    let allDbs
+    if (env.COUCH_DB_URL) {
+      allDbs = await (await fetch(`${env.COUCH_DB_URL}/_all_dbs`)).json()
+    } else {
+      allDbs = await CouchDB.allDbs()
+    }
+    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+
+    // They have set up SMTP
+    const smtpConfig = await getScopedFullConfig(db, {
+      type: Configs.SMTP,
+    })
+
+    // They have set up an admin user
+    const users = await db.allDocs(
+      getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+    const adminUser = users.rows.some(row => row.doc.admin)
+
+    ctx.body = {
+      apps: appDbNames.length,
+      smtp: !!smtpConfig,
+      adminUser,
+    }
   } catch (err) {
     ctx.throw(err.status, err)
   }
