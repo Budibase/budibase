@@ -1,5 +1,5 @@
 const CouchDB = require("../db")
-const { determineScopedConfig, StaticDatabases } = require("@budibase/auth").db
+const { getScopedConfig, StaticDatabases } = require("@budibase/auth").db
 const {
   Configs,
   TemplateBindings,
@@ -15,7 +15,7 @@ const BASE_COMPANY = "Budibase"
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
   const db = new CouchDB(StaticDatabases.GLOBAL.name)
   // TODO: use more granular settings in the future if required
-  const settings = await determineScopedConfig(db, { type: Configs.SETTINGS })
+  const settings = await getScopedConfig(db, { type: Configs.SETTINGS })
   if (!settings.platformUrl) {
     settings.platformUrl = LOCAL_URL
   }
