@@ -10,15 +10,12 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
+  import { organisation } from "stores/portal"
+  organisation.init()
 
-  let orgName, orgLogo, onBoardingProgress, user
+  let onBoardingProgress, user
 
   async function getInfo() {
-    // fetch orgInfo
-    orgName = "ACME Inc."
-    orgLogo = "https://via.placeholder.com/150"
-
-    // set onBoardingProgress
     onBoardingProgress = 20
     user = { name: "John Doe" }
   }
@@ -26,13 +23,13 @@
   onMount(getInfo)
 
   let menu = [
-    { title: "Apps", href: "/portal" },
+    { title: "Apps", href: "/portal/" },
     { title: "Drafts", href: "/portal/drafts" },
     { title: "Users", href: "/portal/users", heading: "Manage" },
     { title: "Groups", href: "/portal/groups" },
     { title: "Auth", href: "/portal/oauth" },
     { title: "Email", href: "/portal/email" },
-    { title: "General", href: "/portal/general", heading: "Settings" },
+    { title: "General", href: "/portal/settings/general", heading: "Settings" },
     { title: "Theming", href: "/portal/theming" },
     { title: "Account", href: "/portal/account" },
   ]
@@ -43,8 +40,11 @@
     <div class="nav">
       <div class="branding">
         <div class="name">
-          <img src={orgLogo} alt="Logotype" />
-          <span>{orgName}</span>
+          <img
+            src={$organisation?.logoUrl || "https://via.placeholder.com/50"}
+            alt="Logotype"
+          />
+          <span>{$organisation?.company}</span>
         </div>
         <div class="onboarding">
           <ProgressCircle size="S" value={onBoardingProgress} />
@@ -88,6 +88,7 @@
   }
   .branding {
     display: grid;
+    grid-gap: var(--spacing-s);
     grid-template-columns: auto auto;
     justify-content: space-between;
     align-items: center;
@@ -100,7 +101,11 @@
     align-items: center;
   }
   .content {
-    padding: var(--spacing-m);
+    display: grid;
+    padding: calc(var(--spacing-xl) * 2) var(--spacing-m) var(--spacing-m)
+      var(--spacing-m);
+    max-width: 80ch;
+    margin: 0 auto;
   }
   .avatar {
     display: grid;
@@ -122,5 +127,9 @@
   img {
     width: 32px;
     height: 32px;
+  }
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

@@ -58,7 +58,7 @@
   })
 </script>
 
-<section class="container">
+<section>
   <header>
     <Heading size="M">OAuth</Heading>
     <Body size="S">
@@ -91,10 +91,6 @@
 </section>
 
 <style>
-  section {
-    margin: 60px 320px;
-  }
-
   .config-form {
     margin-top: 42px;
     margin-bottom: 42px;
