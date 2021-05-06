@@ -21,7 +21,6 @@ static_resources:
                   cluster: app-service
                   prefix_rewrite: "/"
 
-              # special case for presenting our static self hosting page
               - match: { path: "/" }
                 route:
                   cluster: app-service
