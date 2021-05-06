@@ -8,11 +8,14 @@
     Layout,
     SideNavigation as Navigation,
     SideNavigationItem as Item,
+    ActionMenu,
+    MenuItem,
+    Modal,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, apps } from "stores/portal"
-  import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
-  import LogoutButton from "components/start/LogoutButton.svelte"
+  import { auth } from "stores/backend"
+  import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
 
   organisation.init()
   apps.load()
@@ -20,6 +23,7 @@
   let orgName
   let orgLogo
   let user
+  let oldSettingsModal
 
   async function getInfo() {
     // fetch orgInfo
@@ -64,24 +68,31 @@
             <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
           {/each}
         </Navigation>
-        <BuilderSettingsButton />
-        <LogoutButton />
       </div>
     </Layout>
   </div>
   <div class="main">
     <div class="toolbar">
       <Search placeholder="Global search" />
-      <div class="avatar">
-        <Avatar size="M" name="John Doe" />
-        <Icon size="XL" name="ChevronDown" />
-      </div>
+      <ActionMenu align="right">
+        <div slot="control" class="avatar">
+          <Avatar size="M" name="John Doe" />
+          <Icon size="XL" name="ChevronDown" />
+        </div>
+        <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
+          Settings
+        </MenuItem>
+        <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+      </ActionMenu>
     </div>
     <div>
       <slot />
     </div>
   </div>
 </div>
+<Modal bind:this={oldSettingsModal} width="30%">
+  <BuilderSettingsModal />
+</Modal>
 
 <style>
   .container {
@@ -130,6 +141,7 @@
     grid-template-columns: 250px auto;
     justify-content: space-between;
     padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+    align-items: center;
   }
   img {
     width: 28px;
