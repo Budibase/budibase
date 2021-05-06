@@ -162,7 +162,7 @@ class TestConfiguration {
     await this._req(
       {
         email: "testuser@test.com",
-        password: "test@test.com"
+        password: "test@test.com",
       },
       null,
       controllers.users.adminUser

@@ -104,13 +104,14 @@ exports.destroy = async function (ctx) {
   }
 }
 
-exports.configChecklist = async function(ctx) {
+exports.configChecklist = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
 
   try {
     // TODO: Watch get started video
 
     // Apps exist
+    let allDbs
     if (env.COUCH_DB_URL) {
       allDbs = await (await fetch(`${env.COUCH_DB_URL}/_all_dbs`)).json()
     } else {
@@ -120,7 +121,7 @@ exports.configChecklist = async function(ctx) {
 
     // They have set up SMTP
     const smtpConfig = await determineScopedConfig(db, {
-      type: Configs.SMTP
+      type: Configs.SMTP,
     })
 
     // They have set up an admin user
@@ -131,10 +132,10 @@ exports.configChecklist = async function(ctx) {
     )
     const adminUser = users.rows.some(row => row.doc.admin)
 
-    ctx.body = { 
+    ctx.body = {
       apps: appDbNames.length,
       smtp: !!smtpConfig,
-      adminUser
+      adminUser,
     }
   } catch (err) {
     ctx.throw(err.status, err)
