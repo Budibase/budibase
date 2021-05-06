@@ -1,8 +1,12 @@
 <script>
-  import { isActive, url } from "@roxi/routify"
+  import { isActive, url, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
+    ActionMenu,
+    Checkbox,
+    MenuItem,
     Icon,
+    Heading,
     Avatar,
     Search,
     Layout,
@@ -10,13 +14,21 @@
     SideNavigation as Navigation,
     SideNavigationItem as Item,
   } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import api from "builderStore/api"
+  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
+  import { organisation, admin } from "stores/portal"
+
   organisation.init()
 
-  let onBoardingProgress, user
+  let orgName
+  let orgLogo
+  let user
 
   async function getInfo() {
-    onBoardingProgress = 20
+    // fetch orgInfo
+    orgName = "ACME Inc."
+    orgLogo = "https://via.placeholder.com/150"
+
     user = { name: "John Doe" }
   }
 
@@ -47,15 +59,13 @@
           <span>{$organisation?.company || "Budibase"}</span>
         </div>
         <div class="onboarding">
-          <ProgressCircle size="S" value={onBoardingProgress} />
+          <ConfigChecklist />
         </div>
       </div>
       <div class="menu">
         <Navigation>
           {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} href={$url(href)} {heading}>
-              {title}
-            </Item>
+            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
           {/each}
         </Navigation>
       </div>

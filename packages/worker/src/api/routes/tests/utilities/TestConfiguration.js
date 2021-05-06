@@ -131,6 +131,22 @@ class TestConfiguration {
     )
   }
 
+  async saveOAuthConfig() {
+    await this.deleteConfig(Configs.GOOGLE)
+    await this._req(
+      {
+        type: Configs.GOOGLE,
+        config: {
+          callbackURL: "http://somecallbackurl",
+          clientID: "clientId",
+          clientSecret: "clientSecret",
+        },
+      },
+      null,
+      controllers.config.save
+    )
+  }
+
   async saveSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
     await this._req(
@@ -165,6 +181,17 @@ class TestConfiguration {
       },
       null,
       controllers.config.save
+    )
+  }
+
+  async saveAdminUser() {
+    await this._req(
+      {
+        email: "testuser@test.com",
+        password: "test@test.com",
+      },
+      null,
+      controllers.users.adminUser
     )
   }
 }

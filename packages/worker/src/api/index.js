@@ -6,7 +6,7 @@ const { buildAuthMiddleware } = require("@budibase/auth").auth
 
 const PUBLIC_ENDPOINTS = [
   {
-    route: "/api/admin/users/first",
+    route: "/api/admin/users/init",
     method: "POST",
   },
   {
@@ -28,6 +28,10 @@ const PUBLIC_ENDPOINTS = [
   {
     route: "/api/admin/auth/reset",
     method: "POST",
+  },
+  {
+    route: "/api/admin/configs/checklist",
+    method: "GET",
   },
 ]
 
