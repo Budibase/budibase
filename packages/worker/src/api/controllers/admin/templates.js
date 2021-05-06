@@ -1,5 +1,5 @@
 const { generateTemplateID, StaticDatabases } = require("@budibase/auth").db
-const { CouchDB } = require("../../../db")
+const CouchDB = require("../../../db")
 const {
   TemplateMetadata,
   TemplateBindings,

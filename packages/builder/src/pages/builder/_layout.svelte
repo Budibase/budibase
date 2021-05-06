@@ -12,55 +12,47 @@
   let modal
 </script>
 
-{#if $auth}
-  {#if $auth.user}
-    <div class="root">
-      <div class="ui-nav">
-        <div class="home-logo">
-          <img src={Logo} alt="Budibase icon" />
-        </div>
-        <div class="nav-section">
-          <div class="nav-top">
-            <Navigation>
-              <Item href="/builder/" icon="Apps" selected>Apps</Item>
-              <Item external href="https://portal.budi.live/" icon="Servers">
-                Hosting
-              </Item>
-              <Item external href="https://docs.budibase.com/" icon="Book">
-                Documentation
-              </Item>
-              <Item
-                external
-                href="https://github.com/Budibase/budibase/discussions"
-                icon="PeopleGroup"
-              >
-                Community
-              </Item>
-              <Item
-                external
-                href="https://github.com/Budibase/budibase/issues/new/choose"
-                icon="Bug"
-              >
-                Raise an issue
-              </Item>
-            </Navigation>
-          </div>
-          <div class="nav-bottom">
-            <BuilderSettingsButton />
-            <LogoutButton />
-          </div>
-        </div>
+<div class="root">
+  <div class="ui-nav">
+    <div class="home-logo">
+      <img src={Logo} alt="Budibase icon" />
+    </div>
+    <div class="nav-section">
+      <div class="nav-top">
+        <Navigation>
+          <Item href="/builder/" icon="Apps" selected>Apps</Item>
+          <Item external href="https://portal.budi.live/" icon="Servers">
+            Hosting
+          </Item>
+          <Item external href="https://docs.budibase.com/" icon="Book">
+            Documentation
+          </Item>
+          <Item
+            external
+            href="https://github.com/Budibase/budibase/discussions"
+            icon="PeopleGroup"
+          >
+            Community
+          </Item>
+          <Item
+            external
+            href="https://github.com/Budibase/budibase/issues/new/choose"
+            icon="Bug"
+          >
+            Raise an issue
+          </Item>
+        </Navigation>
       </div>
-      <div class="main">
-        <slot />
+      <div class="nav-bottom">
+        <BuilderSettingsButton />
+        <LogoutButton />
       </div>
     </div>
-  {:else}
-    <section class="login">
-      <LoginForm />
-    </section>
-  {/if}
-{/if}
+  </div>
+  <div class="main">
+    <slot />
+  </div>
+</div>
 
 <style>
   .root {
