@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer")
 const CouchDB = require("../db")
-const { StaticDatabases, determineScopedConfig } = require("@budibase/auth").db
+const { StaticDatabases, getScopedConfig } = require("@budibase/auth").db
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
@@ -97,7 +97,7 @@ async function getSmtpConfiguration(db, groupId = null) {
   if (groupId) {
     params.group = groupId
   }
-  return determineScopedConfig(db, params)
+  return getScopedConfig(db, params)
 }
 
 /**

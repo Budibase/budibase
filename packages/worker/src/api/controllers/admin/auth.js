@@ -93,7 +93,7 @@ exports.logout = async ctx => {
  */
 exports.googlePreAuth = async (ctx, next) => {
   const db = new CouchDB(GLOBAL_DB)
-  const config = await authPkg.db.determineScopedConfig(db, {
+  const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     group: ctx.query.group,
   })
@@ -107,7 +107,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const db = new CouchDB(GLOBAL_DB)
 
-  const config = await authPkg.db.determineScopedConfig(db, {
+  const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     group: ctx.query.group,
   })

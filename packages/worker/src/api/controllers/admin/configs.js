@@ -3,7 +3,7 @@ const {
   generateConfigID,
   StaticDatabases,
   getConfigParams,
-  determineScopedConfig,
+  getScopedFullConfig,
 } = require("@budibase/auth").db
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
@@ -16,7 +16,7 @@ exports.save = async function (ctx) {
 
   // Config does not exist yet
   if (!ctx.request.body._id) {
-    config._id = generateConfigID({
+    ctx.request.body._id = generateConfigID({
       type,
       group,
       user,
@@ -31,7 +31,7 @@ exports.save = async function (ctx) {
   }
 
   try {
-    const response = await db.put(config)
+    const response = await db.put(ctx.request.body)
     ctx.body = {
       type,
       _id: response.id,
@@ -73,7 +73,7 @@ exports.find = async function (ctx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await determineScopedConfig(db, {
+    const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
       group: groupId,
