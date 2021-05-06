@@ -12,10 +12,6 @@ const api = require("./api")
 
 const app = new Koa()
 
-if (!env.SELF_HOSTED) {
-  throw "Currently this service only supports use in self hosting"
-}
-
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 

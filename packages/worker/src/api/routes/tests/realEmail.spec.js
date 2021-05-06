@@ -16,11 +16,13 @@ describe("/api/admin/email", () => {
   async function sendRealEmail(purpose) {
     await config.saveEtherealSmtpConfig()
     await config.saveSettingsConfig()
+    const user = await config.getUser("test@test.com")
     const res = await request
       .post(`/api/admin/email/send`)
       .send({
         email: "test@test.com",
         purpose,
+        userId: user._id,
       })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -55,6 +57,6 @@ describe("/api/admin/email", () => {
   })
 
   it("should be able to send a password recovery email", async () => {
-    const res = await sendRealEmail(EmailTemplatePurpose.PASSWORD_RECOVERY)
+    await sendRealEmail(EmailTemplatePurpose.PASSWORD_RECOVERY)
   })
 })
