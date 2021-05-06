@@ -8,7 +8,7 @@
     Body,
     ModalContent,
   } from "@budibase/bbui"
-  import { capitalise } from "../../../../helpers"
+  import { capitalise } from "helpers"
 
   export let resourceId
   export let permissions
