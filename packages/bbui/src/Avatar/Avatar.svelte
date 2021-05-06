@@ -45,12 +45,7 @@
     display: grid;
     place-items: center;
     font-weight: 500;
-    background: rgb(63, 94, 251);
-    background: linear-gradient(
-      155deg,
-      rgba(63, 94, 251, 1) 0%,
-      rgba(53, 199, 86, 1) 47%
-    );
+    background: #3aab87;
     border-radius: 50%;
     overflow: hidden;
     user-select: none;
