@@ -1,16 +1,16 @@
 <script>
   import AppCard from "./AppCard.svelte"
   import { apps } from "stores/portal"
+
+  export let exportApp
 </script>
 
 {#if $apps.length}
   <div class="appList">
     {#each $apps as app}
-      <AppCard {...app} />
+      <AppCard {exportApp} {app} />
     {/each}
   </div>
-{:else}
-  <div>No apps found.</div>
 {/if}
 
 <style>

@@ -9,6 +9,7 @@
     Select,
     Modal,
     Page,
+    notifications,
   } from "@budibase/bbui"
   import AppGridView from "components/start/AppGridView.svelte"
   import AppTableView from "components/start/AppTableView.svelte"
@@ -17,12 +18,13 @@
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { apps } from "stores/portal"
+  import download from "downloadjs"
 
   let layout = "grid"
   let modal
   let template
 
-  async function checkKeys() {
+  const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
     const keys = await response.json()
     if (keys.userId) {
@@ -30,9 +32,23 @@
     }
   }
 
-  function initiateAppImport() {
+  const initiateAppImport = () => {
     template = { fromFile: true }
     modal.show()
+  }
+
+  const exportApp = app => {
+    try {
+      download(
+        `/api/backups/export?appId=${app._id}&appname=${encodeURIComponent(
+          app.name
+        )}`
+      )
+      notifications.success("App export complete")
+    } catch (err) {
+      console.error(err)
+      notifications.error("App export failed")
+    }
   }
 
   onMount(() => {
@@ -70,9 +86,9 @@
       </ActionGroup>
     </div>
     {#if layout === "grid"}
-      <AppGridView />
+      <AppGridView {exportApp} />
     {:else}
-      <AppTableView />
+      <AppTableView {exportApp} />
     {/if}
   </Layout>
 </Page>
