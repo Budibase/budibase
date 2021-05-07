@@ -4,24 +4,30 @@
   import { auth } from "stores/backend"
   import { admin } from "stores/portal"
 
-  let checked = false
+  let loaded = false
+  $: hasAdminUser = !!$admin?.checklist?.adminUser
 
   onMount(async () => {
     await admin.init()
     await auth.checkAuth()
-    if (!$admin?.checklist?.adminUser) {
-      $goto("./admin")
-    }
-    checked = true
+    loaded = true
   })
 
+  // Force creation of an admin user if one doesn't exist
   $: {
-    if (checked && !$auth.user) {
+    if (loaded && !hasAdminUser) {
+      $goto("./admin")
+    }
+  }
+
+  // Redirect to log in at any time if the user isn't authenticated
+  $: {
+    if (loaded && hasAdminUser && !$auth.user) {
       $goto("./auth/login")
     }
   }
 </script>
 
-{#if checked}
+{#if loaded}
   <slot />
 {/if}

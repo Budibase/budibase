@@ -36,7 +36,7 @@
 <Layout noPadding gap="XS">
   <div class="preview" use:gradient />
   <div class="title">
-    <Link href={`/app/builder/${_id}`}>
+    <Link href={`/builder/app/${_id}`}>
       <Heading size="XS">
         {name}
       </Heading>

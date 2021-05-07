@@ -2,15 +2,14 @@
   import {
     Button,
     Heading,
-    Label,
     notifications,
     Layout,
     Input,
     Body,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { onMount } from "svelte"
   import api from "builderStore/api"
+  import { admin } from "stores/portal"
 
   let adminUser = {}
 
@@ -18,13 +17,15 @@
     try {
       // Save the admin user
       const response = await api.post(`/api/admin/users/init`, adminUser)
-
       const json = await response.json()
-      if (response.status !== 200) throw new Error(json.message)
-      notifications.success(`Admin user created.`)
+      if (response.status !== 200) {
+        throw new Error(json.message)
+      }
+      notifications.success(`Admin user created`)
+      await admin.init()
       $goto("../portal")
     } catch (err) {
-      notifications.error(`Failed to create admin user.`)
+      notifications.error(`Failed to create admin user`)
     }
   }
 </script>
