@@ -35,19 +35,19 @@
   onMount(getInfo)
 
   let menu = [
-    { title: "Apps", href: "/app/portal/apps" },
-    { title: "Drafts", href: "/app/portal/drafts" },
-    { title: "Users", href: "/app/portal/users", heading: "Manage" },
-    { title: "Groups", href: "/app/portal/groups" },
-    { title: "Auth", href: "/app/portal/oauth" },
-    { title: "Email", href: "/app/portal/email" },
+    { title: "Apps", href: "/builder/portal/apps" },
+    { title: "Drafts", href: "/builder/portal/drafts" },
+    { title: "Users", href: "/builder/portal/users", heading: "Manage" },
+    { title: "Groups", href: "/builder/portal/groups" },
+    { title: "Auth", href: "/builder/portal/oauth" },
+    { title: "Email", href: "/builder/portal/email" },
     {
       title: "General",
-      href: "/app/portal/settings/general",
+      href: "/builder/portal/settings/general",
       heading: "Settings",
     },
-    { title: "Theming", href: "/app/portal/theming" },
-    { title: "Account", href: "/app/portal/account" },
+    { title: "Theming", href: "/builder/portal/theming" },
+    { title: "Account", href: "/builder/portal/account" },
   ]
 </script>
 

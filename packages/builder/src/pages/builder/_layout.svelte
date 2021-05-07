@@ -11,12 +11,14 @@
     await admin.init()
     await auth.checkAuth()
     loaded = true
+  })
 
-    // Force creation of an admin user if one doesn't exist
-    if (!hasAdminUser) {
+  // Force creation of an admin user if one doesn't exist
+  $: {
+    if (loaded && !hasAdminUser) {
       $goto("./admin")
     }
-  })
+  }
 
   // Redirect to log in at any time if the user isn't authenticated
   $: {
