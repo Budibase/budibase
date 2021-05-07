@@ -6,9 +6,9 @@
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
-  import { isActive, goto, layout, params } from "@roxi/routify"
+  import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "/assets/bb-logo.svg"
-  import { capitalise } from "../../../helpers"
+  import { capitalise } from "helpers"
 
   // Get Package and set store
   export let application
@@ -60,7 +60,7 @@
           <img
             src={Logo}
             alt="budibase icon"
-            on:click={() => $goto(`/builder/`)}
+            on:click={() => $goto(`../../portal/`)}
           />
         </button>
 

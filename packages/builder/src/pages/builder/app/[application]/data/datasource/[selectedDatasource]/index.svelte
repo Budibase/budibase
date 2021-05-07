@@ -5,7 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { capitalise } from "../../../../../../helpers"
+  import { capitalise } from "helpers"
 
   let unsaved = false
 

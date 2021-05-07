@@ -6,7 +6,7 @@ import path from "path"
 export default ({ mode }) => {
   const isProduction = mode === "production"
   return {
-    base: "/",
+    base: "/builder/",
     build: {
       minify: isProduction,
       outDir: "../server/builder",
@@ -51,6 +51,14 @@ export default ({ mode }) => {
         {
           find: "analytics",
           replacement: path.resolve("./src/analytics"),
+        },
+        {
+          find: "actions",
+          replacement: path.resolve("./src/actions"),
+        },
+        {
+          find: "helpers",
+          replacement: path.resolve("./src/helpers"),
         },
       ],
     },

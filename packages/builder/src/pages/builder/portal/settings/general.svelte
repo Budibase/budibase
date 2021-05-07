@@ -45,12 +45,12 @@
   <Layout noPadding>
     <div class="intro">
       <Heading size="M">General</Heading>
-      <Body
-        >Lorem ipsum, dolor sit amet consectetur adipisicing elit. Hic vero, aut
+      <Body>
+        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Hic vero, aut
         culpa provident sunt ratione! Voluptas doloremque, dicta nisi velit
         perspiciatis, ratione vel blanditiis totam, nam voluptate repellat
-        aperiam fuga!</Body
-      >
+        aperiam fuga!
+      </Body>
     </div>
     <Divider size="S" />
     <div class="information">
@@ -58,7 +58,7 @@
       <Body>Here you can update your logo and organization name.</Body>
       <div class="fields">
         <div class="field">
-          <Label>Organization name</Label>
+          <Label size="L">Organization name</Label>
           <Input thin bind:value={company} />
         </div>
         <!-- <div class="field">
@@ -72,13 +72,13 @@
     <Divider size="S" />
     <div class="analytics">
       <Heading size="S">Analytics</Heading>
-      <Body
-        >If you would like to send analytics that help us make Budibase better,
-        please let us know below.</Body
-      >
+      <Body>
+        If you would like to send analytics that help us make Budibase better,
+        please let us know below.
+      </Body>
       <div class="fields">
         <div class="field">
-          <Label>Send Analytics to Budibase</Label>
+          <Label size="L">Send Analytics to Budibase</Label>
           <Toggle text="" value={!analyticsDisabled} />
         </div>
       </div>
@@ -97,7 +97,8 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 32% 1fr;
+    align-items: center;
   }
   .file {
     max-width: 30ch;

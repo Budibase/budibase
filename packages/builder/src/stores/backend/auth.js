@@ -1,28 +1,25 @@
 import { writable } from "svelte/store"
 import api from "../../builderStore/api"
 
-async function checkAuth() {
-  const response = await api.get("/api/self")
-  const user = await response.json()
-  if (response.status === 200) return user
-
-  return null
-}
-
 export function createAuthStore() {
-  const { subscribe, set } = writable(null)
-
-  checkAuth()
-    .then(user => set({ user }))
-    .catch(() => set({ user: null }))
+  const store = writable({ user: null })
 
   return {
-    subscribe,
+    subscribe: store.subscribe,
+    checkAuth: async () => {
+      const response = await api.get("/api/self")
+      const user = await response.json()
+      if (response.status === 200) {
+        store.update(state => ({ ...state, user }))
+      } else {
+        store.update(state => ({ ...state, user: null }))
+      }
+    },
     login: async creds => {
       const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
       if (response.status === 200) {
-        set({ user: json.user })
+        store.update(state => ({ ...state, user: json.user }))
       } else {
         throw "Invalid credentials"
       }
@@ -34,19 +31,12 @@ export function createAuthStore() {
         throw "Unable to create logout"
       }
       await response.json()
-      set({ user: null })
+      store.update(state => ({ ...state, user: null }))
     },
     createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
       if (response.status !== 200) {
         throw "Unable to create user"
-      }
-      await response.json()
-    },
-    firstUser: async () => {
-      const response = await api.post(`/api/admin/users/first`)
-      if (response.status !== 200) {
-        throw "Unable to create test user"
       }
       await response.json()
     },
