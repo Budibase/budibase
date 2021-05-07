@@ -4,16 +4,12 @@ const env = require("../environment")
 const Queue = env.isTest()
   ? require("../utilities/queue/inMemoryQueue")
   : require("bull")
-const { setQueues, BullAdapter } = require("bull-board")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 const { utils } = require("@budibase/auth").redis
 
 const { opts } = utils.getRedisOptions()
 let automationQueue = new Queue("automationQueue", { redis: opts })
-
-// Set up queues for bull board admin
-setQueues([new BullAdapter(automationQueue)])
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
@@ -310,6 +306,9 @@ module.exports.externalTrigger = async function (automation, params) {
   automationQueue.add({ automation, event: params })
 }
 
+module.exports.getQueues = () => {
+  return [ automationQueue ]
+}
 module.exports.fillRowOutput = fillRowOutput
 module.exports.automationQueue = automationQueue
 
