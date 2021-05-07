@@ -1,7 +1,7 @@
 <script>
   import { Input, Select, DatePicker, Toggle, TextArea } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
-  import { capitalise } from "../../../helpers"
+  import { capitalise } from "helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
   export let defaultValue

@@ -3,11 +3,20 @@
 
   export let size = "M"
   export let serif = false
+  export let noPadding = false
 </script>
 
 <p
-  class="spectrum-Body class:spectrum-Body--size{size}"
+  class:noPadding
+  class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
 >
   <slot />
 </p>
+
+<style>
+  .noPadding {
+    padding: 0;
+    margin: 0;
+  }
+</style>

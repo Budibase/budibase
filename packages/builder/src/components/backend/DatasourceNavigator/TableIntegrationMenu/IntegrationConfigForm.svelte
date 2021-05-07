@@ -1,7 +1,7 @@
 <script>
   import { Label, Input, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { capitalise } from "../../../../helpers"
+  import { capitalise } from "helpers"
 
   export let integration
   export let schema

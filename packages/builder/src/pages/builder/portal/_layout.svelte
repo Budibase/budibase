@@ -1,49 +1,53 @@
 <script>
-  import { isActive, url, goto } from "@roxi/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
-    ActionMenu,
-    Checkbox,
-    MenuItem,
     Icon,
-    Heading,
     Avatar,
     Search,
     Layout,
-    ProgressCircle,
     SideNavigation as Navigation,
     SideNavigationItem as Item,
+    ActionMenu,
+    MenuItem,
+    Modal,
   } from "@budibase/bbui"
-  import api from "builderStore/api"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, admin } from "stores/portal"
+  import { organisation, apps } from "stores/portal"
+  import { auth } from "stores/backend"
+  import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
 
   organisation.init()
+  apps.load()
 
   let orgName
   let orgLogo
   let user
+  let oldSettingsModal
 
   async function getInfo() {
     // fetch orgInfo
     orgName = "ACME Inc."
     orgLogo = "https://via.placeholder.com/150"
-
     user = { name: "John Doe" }
   }
 
   onMount(getInfo)
 
   let menu = [
-    { title: "Apps", href: "/portal/apps" },
-    { title: "Drafts", href: "/portal/drafts" },
-    { title: "Users", href: "/portal/manage/users", heading: "Manage" },
-    { title: "Groups", href: "/portal/manage/groups" },
-    { title: "Auth", href: "/portal/manage/auth" },
-    { title: "Email", href: "/portal/manage/email" },
-    { title: "General", href: "/portal/settings/general", heading: "Settings" },
-    { title: "Theming", href: "/portal/theming" },
-    { title: "Account", href: "/portal/account" },
+    { title: "Apps", href: "/builder/portal/apps" },
+    { title: "Drafts", href: "/builder/portal/drafts" },
+    { title: "Users", href: "/builder/portal/manage/users", heading: "Manage" },
+    { title: "Groups", href: "/builder/portal/manage/groups" },
+    { title: "Auth", href: "/builder/portal/manage/auth" },
+    { title: "Email", href: "/builder/portal/manage/email" },
+    {
+      title: "General",
+      href: "/builder/portal/settings/general",
+      heading: "Settings",
+    },
+    { title: "Theming", href: "/builder/portal/theming" },
+    { title: "Account", href: "/builder/portal/account" },
   ]
 </script>
 
@@ -51,7 +55,7 @@
   <div class="nav">
     <Layout paddingX="L" paddingY="L">
       <div class="branding">
-        <div class="name">
+        <div class="name" on:click={() => $goto("./apps")}>
           <img
             src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
             alt="Logotype"
@@ -74,30 +78,42 @@
   <div class="main">
     <div class="toolbar">
       <Search placeholder="Global search" />
-      <div class="avatar">
-        <Avatar size="M" name="John Doe" />
-        <Icon size="XL" name="ChevronDown" />
-      </div>
+      <ActionMenu align="right">
+        <div slot="control" class="avatar">
+          <Avatar size="M" name="John Doe" />
+          <Icon size="XL" name="ChevronDown" />
+        </div>
+        <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
+          Old settings
+        </MenuItem>
+        <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+      </ActionMenu>
     </div>
-    <div>
+    <div class="content">
       <slot />
     </div>
   </div>
 </div>
+<Modal bind:this={oldSettingsModal} width="30%">
+  <BuilderSettingsModal />
+</Modal>
 
 <style>
   .container {
-    min-height: 100vh;
+    height: 100%;
     display: grid;
     grid-template-columns: 250px 1fr;
+    align-items: stretch;
   }
   .nav {
     background: var(--background);
     border-right: var(--border-light);
+    overflow: auto;
   }
   .main {
     display: grid;
     grid-template-rows: auto 1fr;
+    overflow: hidden;
   }
   .branding {
     display: grid;
@@ -111,6 +127,9 @@
     grid-template-columns: auto auto;
     grid-gap: var(--spacing-m);
     align-items: center;
+  }
+  .name:hover {
+    cursor: pointer;
   }
   .avatar {
     display: grid;
@@ -129,6 +148,7 @@
     grid-template-columns: 250px auto;
     justify-content: space-between;
     padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+    align-items: center;
   }
   img {
     width: 28px;
@@ -138,5 +158,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
+  }
+  .content {
+    overflow: auto;
   }
 </style>
