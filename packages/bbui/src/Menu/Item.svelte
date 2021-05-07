@@ -27,7 +27,7 @@
 >
   {#if icon}
     <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Menu-itemIcon"
+      class="spectrum-Icon spectrum-Icon--sizeS spectrum-Menu-itemIcon"
       focusable="false"
       aria-hidden="true"
       aria-label={icon}
@@ -37,3 +37,9 @@
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
 </li>
+
+<style>
+  .spectrum-Menu-itemIcon {
+    align-self: center;
+  }
+</style>
