@@ -307,7 +307,7 @@ module.exports.externalTrigger = async function (automation, params) {
 }
 
 module.exports.getQueues = () => {
-  return [ automationQueue ]
+  return [automationQueue]
 }
 module.exports.fillRowOutput = fillRowOutput
 module.exports.automationQueue = automationQueue
