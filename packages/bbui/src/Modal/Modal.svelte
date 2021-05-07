@@ -49,7 +49,7 @@
   <Portal target=".modal-container">
     <div
       class="spectrum-Underlay is-open"
-      transition:fade={{ duration: 200 }}
+      transition:fade|local={{ duration: 200 }}
       on:mousedown|self={hide}
     >
       <div class="modal-wrapper" on:mousedown|self={hide}>
@@ -57,7 +57,7 @@
           <div
             use:focusFirstInput
             class="spectrum-Modal is-open"
-            transition:fly={{ y: 30, duration: 200 }}
+            transition:fly|local={{ y: 30, duration: 200 }}
           >
             <slot />
           </div>
