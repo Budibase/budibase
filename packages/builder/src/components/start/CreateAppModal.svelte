@@ -112,7 +112,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      $goto(`/app/builder/${appJson._id}`)
+      window.location = `/builder/app/${appJson._id}`
     } catch (error) {
       console.error(error)
       notifications.error(error)
