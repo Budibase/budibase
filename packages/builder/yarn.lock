@@ -1194,10 +1194,10 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@roxi/routify@2.15.1":
-  version "2.15.1"
-  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.15.1.tgz#cbd5eafedfee7f04b154173dccd7474c177acb4f"
-  integrity sha512-IRdoaPSfP09EwWtB+tpbHgH6ejYtowale24rgfpxRQhFNyTUK4jYXclvx3XkUD1NSupSgl1kDAsWSiRSG0WvkQ==
+"@roxi/routify@2.18.0":
+  version "2.18.0"
+  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.18.0.tgz#8f88bedd936312d0dbe44cbc11ab179b1f938ec2"
+  integrity sha512-MVB50HN+VQWLzfjLplcBjsSBvwOiExKOmht2DuWR3WQ60JxQi9pSejkB06tFVkFKNXz2X5iYtKDqKBTdae/gRg==
   dependencies:
     "@roxi/ssr" "^0.2.1"
     "@types/node" ">=4.2.0 < 13"

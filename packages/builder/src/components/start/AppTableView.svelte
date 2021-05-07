@@ -1,9 +1,7 @@
 <script>
-  import { onMount } from "svelte"
   import AppCard from "./AppCard.svelte"
   import { apps } from "stores/portal"
-
-  onMount(apps.load)
+  import { Table } from "@budibase/bbui"
 </script>
 
 {#if $apps.length}
