@@ -12,6 +12,7 @@ const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
+const bullboard = require("./automations/bullboard")
 
 const app = new Koa()
 
@@ -35,6 +36,19 @@ app.use(
   })
 )
 
+if (!env.isTest()) {
+  const bullApp = bullboard.init()
+  app.use(async (ctx, next) => {
+    if (ctx.path.startsWith(bullboard.pathPrefix)) {
+      ctx.status = 200
+      ctx.respond = false
+      bullApp(ctx.req, ctx.res)
+    } else {
+      await next()
+    }
+  })
+}
+
 app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
@@ -54,6 +68,7 @@ if (env.isProd()) {
     })
   })
 }
+
 
 const server = http.createServer(app.callback())
 destroyable(server)
