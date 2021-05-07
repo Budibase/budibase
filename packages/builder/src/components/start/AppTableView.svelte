@@ -74,7 +74,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 5px;
+    padding: 0 var(--spacing-s);
   }
   .preview {
     height: 40px;
