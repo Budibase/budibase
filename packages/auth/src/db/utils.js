@@ -157,7 +157,7 @@ const getScopedFullConfig = async function (db, { type, user, group }) {
     (a, b) => determineScore(a) - determineScore(b)
   )[0]
 
-  return scopedConfig.doc
+  return scopedConfig && scopedConfig.doc
 }
 
 async function getScopedConfig(db, params) {

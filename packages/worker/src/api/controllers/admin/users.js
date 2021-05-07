@@ -9,8 +9,6 @@ const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
 
-const FIRST_USER_EMAIL = "test@test.com"
-const FIRST_USER_PASSWORD = "test"
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async ctx => {
@@ -62,19 +60,27 @@ exports.save = async ctx => {
   }
 }
 
-exports.firstUser = async ctx => {
-  const existing = await getGlobalUserByEmail(FIRST_USER_EMAIL)
-  const params = {}
-  if (existing) {
-    params._id = existing._id
-    params._rev = existing._rev
+exports.adminUser = async ctx => {
+  const db = new CouchDB(GLOBAL_DB)
+  const response = await db.allDocs(
+    getGlobalUserParams(null, {
+      include_docs: true,
+    })
+  )
+
+  if (response.rows.some(row => row.doc.admin)) {
+    ctx.throw(403, "You cannot initialise once an admin user has been created.")
   }
+
+  const { email, password } = ctx.request.body
   ctx.request.body = {
-    ...params,
-    email: FIRST_USER_EMAIL,
-    password: FIRST_USER_PASSWORD,
+    email: email,
+    password: password,
     roles: {},
     builder: {
+      global: true,
+    },
+    admin: {
       global: true,
     },
   }
