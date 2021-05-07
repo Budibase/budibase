@@ -16,5 +16,5 @@ export function fetchData (url) {
 	
 	get()
 	
-	return [store, get]
+	return {subscribe: store.subscribe, refresh: get}
 }
