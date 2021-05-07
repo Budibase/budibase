@@ -8,12 +8,15 @@
     ButtonGroup,
     Select,
     Modal,
+    Page,
   } from "@budibase/bbui"
-  import AppList from "components/start/AppList.svelte"
+  import AppGridView from "components/start/AppGridView.svelte"
+  import AppTableView from "components/start/AppTableView.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import api from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
+  import { apps } from "stores/portal"
 
   let layout = "grid"
   let modal
@@ -32,42 +35,47 @@
     modal.show()
   }
 
-  onMount(checkKeys)
+  onMount(() => {
+    checkKeys()
+    apps.load()
+  })
 </script>
 
-<Layout noPadding>
-  <div class="title">
-    <Heading>Apps</Heading>
-    <ButtonGroup>
-      <Button secondary on:click={initiateAppImport}>Import app</Button>
-      <Button cta on:click={modal.show}>Create new app</Button>
-    </ButtonGroup>
-  </div>
-  <div class="filter">
-    <div class="select">
-      <Select quiet placeholder="Filter by groups" />
+<Page wide>
+  <Layout noPadding>
+    <div class="title">
+      <Heading>Apps</Heading>
+      <ButtonGroup>
+        <Button secondary on:click={initiateAppImport}>Import app</Button>
+        <Button cta on:click={modal.show}>Create new app</Button>
+      </ButtonGroup>
     </div>
-    <ActionGroup>
-      <ActionButton
-        on:click={() => (layout = "grid")}
-        selected={layout === "grid"}
-        quiet
-        icon="ClassicGridView"
-      />
-      <ActionButton
-        on:click={() => (layout = "table")}
-        selected={layout === "table"}
-        quiet
-        icon="ViewRow"
-      />
-    </ActionGroup>
-  </div>
-  {#if layout === "grid"}
-    <AppList />
-  {:else}
-    Table view.
-  {/if}
-</Layout>
+    <div class="filter">
+      <div class="select">
+        <Select quiet placeholder="Filter by groups" />
+      </div>
+      <ActionGroup>
+        <ActionButton
+          on:click={() => (layout = "grid")}
+          selected={layout === "grid"}
+          quiet
+          icon="ClassicGridView"
+        />
+        <ActionButton
+          on:click={() => (layout = "table")}
+          selected={layout === "table"}
+          quiet
+          icon="ViewRow"
+        />
+      </ActionGroup>
+    </div>
+    {#if layout === "grid"}
+      <AppGridView />
+    {:else}
+      <AppTableView />
+    {/if}
+  </Layout>
+</Page>
 <Modal
   bind:this={modal}
   padding={false}

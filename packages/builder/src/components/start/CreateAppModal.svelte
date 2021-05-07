@@ -7,7 +7,6 @@
   import Spinner from "components/common/Spinner.svelte"
   import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
-  import { goto } from "@roxi/routify"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
