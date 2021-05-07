@@ -89,7 +89,7 @@
         <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
       </ActionMenu>
     </div>
-    <div>
+    <div class="content">
       <slot />
     </div>
   </div>
@@ -100,17 +100,20 @@
 
 <style>
   .container {
-    min-height: 100vh;
+    height: 100%;
     display: grid;
     grid-template-columns: 250px 1fr;
+    align-items: stretch;
   }
   .nav {
     background: var(--background);
     border-right: var(--border-light);
+    overflow: auto;
   }
   .main {
     display: grid;
     grid-template-rows: auto 1fr;
+    overflow: hidden;
   }
   .branding {
     display: grid;
@@ -155,5 +158,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
+  }
+  .content {
+    overflow: auto;
   }
 </style>
