@@ -44,7 +44,7 @@
           Locked by you
         {/if}
       </div>
-      <div class="actions">
+      <div>
         <Button on:click={() => openApp(app)} size="S" secondary>Open</Button>
         <ActionMenu align="right">
           <Icon hoverable slot="control" name="More" />
@@ -71,6 +71,10 @@
     align-items: center;
     gap: var(--spacing-xl);
     grid-template-columns: auto 1fr;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 5px;
   }
   .preview {
     height: 40px;
@@ -98,8 +102,5 @@
   }
   .status--open {
     background-color: var(--spectrum-global-color-green-600);
-  }
-  .actions {
-    padding-right: 10px;
   }
 </style>
