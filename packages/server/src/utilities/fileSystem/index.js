@@ -12,7 +12,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
-} = require("@budibase/auth").objectStore
+} = require("./utilities")
 const { downloadLibraries, newAppPublicPath } = require("./newApp")
 const download = require("download")
 const env = require("../../environment")
