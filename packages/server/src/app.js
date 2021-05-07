@@ -69,7 +69,6 @@ if (env.isProd()) {
   })
 }
 
-
 const server = http.createServer(app.callback())
 destroyable(server)
 
