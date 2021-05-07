@@ -9,7 +9,7 @@ const { join } = require("path")
 const fs = require("fs")
 const env = require("../environment")
 const { budibaseTempDir, ObjectStoreBuckets } = require("./utils")
-const uuid = require("uuid/v4")
+const { v4 } = require("uuid")
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -44,7 +44,7 @@ function publicPolicy(bucketName) {
   }
 }
 
-const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS]
+const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS, ObjectStoreBuckets.GLOBAL]
 
 /**
  * Gets a connection to the object store using the S3 SDK.
@@ -173,7 +173,7 @@ exports.retrieve = async (bucket, filepath) => {
  */
 exports.retrieveToTmp = async (bucket, filepath) => {
   const data = await exports.retrieve(bucket, filepath)
-  const outputPath = join(budibaseTempDir(), uuid())
+  const outputPath = join(budibaseTempDir(), v4())
   fs.writeFileSync(outputPath, data)
   return outputPath
 }

@@ -5,6 +5,7 @@ exports.ObjectStoreBuckets = {
   BACKUPS: "backups",
   APPS: "prod-budi-app-assets",
   TEMPLATES: "templates",
+  GLOBAL: "global",
 }
 
 exports.budibaseTempDir = function () {
