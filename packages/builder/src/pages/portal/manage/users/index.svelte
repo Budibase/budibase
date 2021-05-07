@@ -9,7 +9,22 @@
     Table,
     Label,
     Layout,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
+  import AddUserModal from "./_components/AddUserModal.svelte"
+  import { users } from "stores/portal"
+
+  users.init()
+
+  const schema = {
+    email: {},
+    status: {},
+    // access: {},
+    // group: {}
+  }
+
+  export let modal
 </script>
 
 <Layout>
@@ -31,13 +46,21 @@
     </div>
     <div class="buttons">
       <ButtonGroup>
-        <Button secondary>Import users</Button>
-        <Button overBackground>Add user</Button>
+        <Button tooltip="Coming soon." disabled secondary>Import users</Button>
+        <Button overBackground on:click={modal.show}>Add user</Button>
       </ButtonGroup>
     </div>
-    <Table schema />
+    <Table
+      {schema}
+      data={$users}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+    />
   </div>
 </Layout>
+
+<Modal bind:this={modal}><AddUserModal /></Modal>
 
 <style>
   .users {

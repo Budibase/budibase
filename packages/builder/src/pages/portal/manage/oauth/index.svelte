@@ -1,5 +1,5 @@
 <script>
-  import GoogleLogo from "./logos/Google.svelte"
+  import GoogleLogo from "./_logos/Google.svelte"
   import {
     Button,
     Heading,
