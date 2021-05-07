@@ -5,7 +5,7 @@
     Divider,
     Button,
     ButtonGroup,
-    Combobox,
+    Input,
     Table,
     Label,
     Layout,
@@ -24,6 +24,9 @@
     // group: {}
   }
 
+  let search
+  $: filteredUsers = $users.filter(user => user.email.includes(search || ""))
+
   export let modal
 </script>
 
@@ -41,8 +44,8 @@
   <div class="users">
     <Heading size="S">Users</Heading>
     <div class="field">
-      <Label>Search / filter</Label>
-      <Combobox placeholder="" />
+      <Label size="L">Search / filter</Label>
+      <Input bind:value={search} placeholder="" />
     </div>
     <div class="buttons">
       <ButtonGroup>
@@ -52,7 +55,7 @@
     </div>
     <Table
       {schema}
-      data={$users}
+      data={filteredUsers || $users}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
@@ -68,6 +71,7 @@
   }
   .field {
     display: flex;
+    align-items: center;
     flex-direction: row;
     grid-gap: var(--spacing-m);
     margin: var(--spacing-xl) 0;
