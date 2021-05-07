@@ -65,6 +65,7 @@
 
 <Modal bind:this={deleteUserModal}>
   <ModalContent
+    warning
     title="Delete User"
     confirmText="Delete user"
     cancelText="Cancel"
