@@ -17,31 +17,37 @@
   let appExportLoading = false
 </script>
 
-<Layout noPadding gap="XS">
-  <div class="preview" use:gradient />
-  <div class="title">
-    <Link href={$url(`../../app/${app._id}`)}>
-      <Heading size="XS">
-        {app.name}
-      </Heading>
-    </Link>
-    <ActionMenu>
-      <Icon slot="control" name="More" hoverable />
-      <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem
-      >
-    </ActionMenu>
-  </div>
-  <div class="status">
-    <Body noPadding size="S">
-      Edited {Math.floor(1 + Math.random() * 10)} months ago
-    </Body>
-    {#if Math.random() > 0.5}
-      <Icon name="LockClosed" />
-    {/if}
-  </div>
-</Layout>
+<div class="wrapper">
+  <Layout noPadding gap="XS" alignContent="start">
+    <div class="preview" use:gradient />
+    <div class="title">
+      <Link href={$url(`../../app/${app._id}`)}>
+        <Heading size="XS">
+          {app.name}
+        </Heading>
+      </Link>
+      <ActionMenu align="right">
+        <Icon slot="control" name="More" hoverable />
+        <MenuItem on:click={() => exportApp(app)} icon="Download"
+          >Export</MenuItem
+        >
+      </ActionMenu>
+    </div>
+    <div class="status">
+      <Body noPadding size="S">
+        Edited {Math.floor(1 + Math.random() * 10)} months ago
+      </Body>
+      {#if Math.random() > 0.5}
+        <Icon name="LockClosed" />
+      {/if}
+    </div>
+  </Layout>
+</div>
 
 <style>
+  .wrapper {
+    overflow: hidden;
+  }
   .preview {
     height: 135px;
     border-radius: var(--border-radius-s);
@@ -58,6 +64,15 @@
 
   .title :global(a) {
     text-decoration: none;
+    flex: 1 1 auto;
+    width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: var(--spacing-m);
+  }
+  .title :global(h1) {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .title :global(h1:hover) {
     color: var(--spectrum-global-color-blue-600);
