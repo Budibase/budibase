@@ -32,6 +32,10 @@ module.exports = {
     Client: require("./redis"),
     utils: require("./redis/utils"),
   },
+  objectStore: {
+    ...require("./objectStore"),
+    ...require("./objectStore/utils"),
+  },
   utils: {
     ...require("./utils"),
     ...require("./hashing"),

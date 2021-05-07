@@ -10,6 +10,7 @@ const fetch = require("node-fetch")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const env = require("../../../environment")
+const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
 
 const APP_PREFIX = "app_"
 
@@ -91,6 +92,46 @@ exports.find = async function (ctx) {
     }
   } catch (err) {
     ctx.throw(err.status, err)
+  }
+}
+
+exports.upload = async function (ctx) {
+  if (ctx.request.files == null || ctx.request.files.file.length > 1) {
+    ctx.throw(400, "One file must be uploaded.")
+  }
+  const file = ctx.request.files.file
+  const { type, name } = ctx.params
+
+  const fileExtension = [...file.name.split(".")].pop()
+  // filenames converted to UUIDs so they are unique
+  const processedFileName = `${name}.${fileExtension}`
+
+  const bucket = ObjectStoreBuckets.GLOBAL
+  const key = `${type}/${processedFileName}`
+  await upload({
+    bucket,
+    filename: key,
+    path: file.path,
+    type: file.type,
+  })
+
+  // add to configuration structure
+  // TODO: right now this only does a global level
+  const db = new CouchDB(GLOBAL_DB)
+  let config = await getScopedFullConfig(db, { type })
+  if (!config) {
+    config = {
+      _id: generateConfigID({ type }),
+    }
+  }
+  const url = `/${bucket}/${key}`
+  config[`${name}Url`] = url
+  // write back to db with url updated
+  await db.put(config)
+
+  ctx.body = {
+    message: "File has been uploaded and url stored to config.",
+    url,
   }
 }
 
