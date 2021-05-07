@@ -10,9 +10,9 @@
     Label,
     Layout,
     Modal,
-    ModalContent,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
+  import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
 
   users.init()
@@ -27,7 +27,13 @@
   let search
   $: filteredUsers = $users.filter(user => user.email.includes(search || ""))
 
-  export let modal
+  let userModal
+  let basicOnboardingModal
+
+  function openBasicOnboardingModal() {
+    userModal.hide()
+    basicOnboardingModal.show()
+  }
 </script>
 
 <Layout>
@@ -49,8 +55,8 @@
     </div>
     <div class="buttons">
       <ButtonGroup>
-        <Button tooltip="Coming soon." disabled secondary>Import users</Button>
-        <Button overBackground on:click={modal.show}>Add user</Button>
+        <Button disabled secondary>Import users</Button>
+        <Button overBackground on:click={userModal.show}>Add user</Button>
       </ButtonGroup>
     </div>
     <Table
@@ -63,7 +69,10 @@
   </div>
 </Layout>
 
-<Modal bind:this={modal}><AddUserModal /></Modal>
+<Modal bind:this={userModal}
+  ><AddUserModal on:basic={openBasicOnboardingModal} /></Modal
+>
+<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal /></Modal>
 
 <style>
   .users {
