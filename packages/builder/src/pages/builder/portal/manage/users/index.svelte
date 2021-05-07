@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@roxi/routify"
   import {
     Heading,
     Body,
@@ -60,6 +61,7 @@
       </ButtonGroup>
     </div>
     <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
       data={filteredUsers || $users}
       allowEditColumns={false}
