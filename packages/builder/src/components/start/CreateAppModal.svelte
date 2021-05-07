@@ -13,6 +13,7 @@
   import { onMount } from "svelte"
   import Logo from "/assets/bb-logo.svg"
   import { capitalise } from "../../helpers"
+  import { goto } from "@roxi/routify"
 
   export let template
 
@@ -111,7 +112,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      window.location = `/builder/app/${appJson._id}`
+      $goto(`/builder/app/${appJson._id}`)
     } catch (error) {
       console.error(error)
       notifications.error(error)

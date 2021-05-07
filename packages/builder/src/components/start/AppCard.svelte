@@ -7,43 +7,28 @@
     ActionMenu,
     MenuItem,
     Link,
-    notifications,
   } from "@budibase/bbui"
-  import download from "downloadjs"
   import { gradient } from "actions"
+  import { url } from "@roxi/routify"
 
-  export let name
-  export let _id
+  export let app
+  export let exportApp
 
   let appExportLoading = false
-
-  async function exportApp() {
-    appExportLoading = true
-    try {
-      download(
-        `/api/backups/export?appId=${_id}&appname=${encodeURIComponent(name)}`
-      )
-      notifications.success("App export complete")
-    } catch (err) {
-      console.error(err)
-      notifications.error("App export failed")
-    } finally {
-      appExportLoading = false
-    }
-  }
 </script>
 
 <Layout noPadding gap="XS">
   <div class="preview" use:gradient />
   <div class="title">
-    <Link href={`/builder/app/${_id}`}>
+    <Link href={$url(`../../app/${app._id}`)}>
       <Heading size="XS">
-        {name}
+        {app.name}
       </Heading>
     </Link>
     <ActionMenu>
       <Icon slot="control" name="More" hoverable />
-      <MenuItem on:click={exportApp} icon="Download">Export</MenuItem>
+      <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem
+      >
     </ActionMenu>
   </div>
   <div class="status">
