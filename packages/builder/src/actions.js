@@ -2,8 +2,8 @@ export const gradient = (node, config = {}) => {
   const defaultConfig = {
     points: 10,
     saturation: 0.8,
-    lightness: 0.75,
-    softness: 0.8,
+    lightness: 0.7,
+    softness: 0.9,
   }
 
   // Applies a gradient background
