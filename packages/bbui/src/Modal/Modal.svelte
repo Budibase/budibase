@@ -49,7 +49,7 @@
 <!-- These svelte if statements need to be defined like this. -->
 <!-- The modal transitions do not work if nested inside more than one "if" -->
 {#if visible && inline}
-  <div use:focusFirstInput class="spectrum-Modal is-open">
+  <div use:focusFirstInput class="spectrum-Modal inline is-open">
     <slot />
   </div>
 {:else if visible}
@@ -105,6 +105,7 @@
   }
 
   .spectrum-Modal {
+    background: var(--background);
     overflow: visible;
     max-height: none;
     margin: 40px 0;
@@ -112,5 +113,8 @@
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
+  }
+  :global(.spectrum--lightest .spectrum-Modal.inline) {
+    border: var(--border-light);
   }
 </style>
