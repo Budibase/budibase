@@ -9,7 +9,8 @@
 <p
   class:noPadding
   class="spectrum-Body spectrum-Body--size{size}"
-  class:spectrum-Body--serif={serif}>
+  class:spectrum-Body--serif={serif}
+>
   <slot />
 </p>
 

@@ -132,7 +132,7 @@
 
     if (destroyed) return
 
-    CodeMirror.commands.autocomplete = function(cm) {
+    CodeMirror.commands.autocomplete = function (cm) {
       CodeMirror.showHint(cm, CodeMirror.hint.javascript)
     }
 

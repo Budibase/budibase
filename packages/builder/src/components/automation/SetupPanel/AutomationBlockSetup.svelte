@@ -74,9 +74,9 @@
           on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
         />
-      {:else if value.customType === 'query'}
+      {:else if value.customType === "query"}
         <QuerySelector bind:value={block.inputs[key]} />
-      {:else if value.customType === 'queryParams'}
+      {:else if value.customType === "queryParams"}
         <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === "table"}
         <TableSelector bind:value={block.inputs[key]} />
@@ -91,7 +91,7 @@
           <pre>{JSON.stringify(bindings, null, 2)}</pre>
           <Editor
             mode="javascript"
-            on:change={e => { 
+            on:change={e => {
               block.inputs[key] = e.detail.value
             }}
             value={block.inputs[key]}
