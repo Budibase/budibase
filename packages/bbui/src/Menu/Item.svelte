@@ -37,3 +37,9 @@
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
 </li>
+
+<style>
+  .spectrum-Menu-itemIcon {
+    align-self: center;
+  }
+</style>
