@@ -24,7 +24,7 @@
   const touched = writable({})
   const validator = {
     name: string().required("Your application must have a name"),
-    file: mixed().required("Please choose a file to import"),
+    file: template ? mixed().required("Please choose a file to import") : null,
   }
 
   let submitting = false
