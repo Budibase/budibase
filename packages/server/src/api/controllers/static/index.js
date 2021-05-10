@@ -95,10 +95,14 @@ exports.serveComponentLibrary = async function (ctx) {
   if (env.isDev() || env.isTest()) {
     const componentLibraryPath = join(
       budibaseTempDir(),
-      decodeURI(ctx.query.library),
+      appId,
+      "node_modules",
+      "@budibase",
+      "standard-components",
+      "package",
       "dist"
     )
-    return send(ctx, "/awsDeploy.js", { root: componentLibraryPath })
+    return send(ctx, "/index.js", { root: componentLibraryPath })
   }
   const db = new CouchDB(appId)
   const appInfo = await db.get(appId)
