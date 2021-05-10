@@ -4,6 +4,8 @@
     Heading,
     Divider,
     Label,
+    Modal,
+    ModalContent,
     notifications,
     Layout,
     Input,
@@ -24,6 +26,7 @@
   let templateIdx = 0
   let templateDefinition
   let templates = []
+  let htmlModal
 
   $: templateTypes = templates.map((template, idx) => ({
     label: template.purpose,
@@ -154,19 +157,19 @@
       </Body>
       <div class="template-controls">
         <Select bind:value={templateIdx} options={templateTypes} />
-        <Button cta on:click={saveTemplate}>Save</Button>
+        <Button primary on:click={htmlModal.show}>Edit HTML</Button>
       </div>
-      {#if selectedTemplate}
-        {#key templateIdx}
-          <Editor
-            mode="handlebars"
-            on:change={e => {
-              selectedTemplate.contents = e.detail.value
-            }}
-            value={selectedTemplate.contents} />
-          {/key}
-      {/if}
     </div>
+    <Modal bind:this={htmlModal}>
+    <ModalContent title="Edit Template HTML" onConfirm={saveTemplate} size="XL">
+      <Editor
+        mode="handlebars"
+        on:change={e => {
+          selectedTemplate.contents = e.detail.value
+        }}
+        value={selectedTemplate.contents} />
+    </ModalContent>
+    </Modal>
   {/if}
 </Page>
 
