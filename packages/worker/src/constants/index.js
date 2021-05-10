@@ -40,7 +40,7 @@ const TemplateBindings = {
   LOGO_URL: "logoUrl",
   STYLES: "styles",
   BODY: "body",
-  REGISTRATION_URL: "registrationUrl",
+  INVITE_URL: "inviteUrl",
   EMAIL: "email",
   RESET_URL: "resetUrl",
   USER: "user",
@@ -63,7 +63,7 @@ const TemplateMetadata = {
     {
       name: "Base Format",
       purpose: EmailTemplatePurpose.BASE,
-      bindings: ["company", "registrationUrl"],
+      bindings: ["company", "inviteUrl"],
     },
     {
       name: "Password Recovery",
