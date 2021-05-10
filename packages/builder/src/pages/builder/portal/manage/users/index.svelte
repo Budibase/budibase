@@ -11,6 +11,7 @@
     Label,
     Layout,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
@@ -25,15 +26,22 @@
     // group: {}
   }
 
+  let onboardingOptions = ["Email onboarding", "Basic onboarding"]
+  let selectedOnboardingOption = onboardingOptions[0]
   let search
+  let email
   $: filteredUsers = $users.filter(user => user.email.includes(search || ""))
 
-  let userModal
+  let createUserModal
   let basicOnboardingModal
 
-  function openBasicOnboardingModal() {
-    userModal.hide()
-    basicOnboardingModal.show()
+  function createUserFlow() {
+    if (selectedOnboardingOption === onboardingOptions[0]) {
+      notifications.success("Email sent.")
+    } else {
+      createUserModal.hide()
+      basicOnboardingModal.show()
+    }
   }
 </script>
 
@@ -57,7 +65,7 @@
     <div class="buttons">
       <ButtonGroup>
         <Button disabled secondary>Import users</Button>
-        <Button overBackground on:click={userModal.show}>Add user</Button>
+        <Button overBackground on:click={createUserModal.show}>Add user</Button>
       </ButtonGroup>
     </div>
     <Table
@@ -71,10 +79,16 @@
   </div>
 </Layout>
 
-<Modal bind:this={userModal}
-  ><AddUserModal on:basic={openBasicOnboardingModal} /></Modal
+<Modal bind:this={createUserModal}
+  ><AddUserModal
+    options={onboardingOptions}
+    onConfirm={createUserFlow}
+    disabled={!email}
+    bind:selected={selectedOnboardingOption}
+    bind:email
+  /></Modal
 >
-<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal /></Modal>
+<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
   .users {
