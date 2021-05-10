@@ -13,8 +13,7 @@
 
   export let app
   export let exportApp
-
-  let appExportLoading = false
+  export let deleteApp
 </script>
 
 <div class="wrapper">
@@ -28,9 +27,12 @@
       </Link>
       <ActionMenu align="right">
         <Icon slot="control" name="More" hoverable />
-        <MenuItem on:click={() => exportApp(app)} icon="Download"
-          >Export</MenuItem
-        >
+        <MenuItem on:click={() => exportApp(app)} icon="Download">
+          Export
+        </MenuItem>
+        <MenuItem on:click={() => deleteApp(app)} icon="Delete">
+          Delete
+        </MenuItem>
       </ActionMenu>
     </div>
     <div class="status">
