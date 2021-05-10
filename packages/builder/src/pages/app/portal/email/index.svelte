@@ -13,6 +13,7 @@
     Select,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import Editor from "components/integration/QueryEditor.svelte"
   import api from "builderStore/api"
 
   const ConfigTypes = {
@@ -156,7 +157,14 @@
         <Button cta on:click={saveTemplate}>Save</Button>
       </div>
       {#if selectedTemplate}
-        <TextArea bind:value={selectedTemplate.contents} />
+        {#key templateIdx}
+          <Editor
+            mode="handlebars"
+            on:change={e => {
+              selectedTemplate.contents = e.detail.value
+            }}
+            value={selectedTemplate.contents} />
+          {/key}
       {/if}
     </div>
   {/if}
