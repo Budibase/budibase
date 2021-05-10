@@ -191,7 +191,7 @@
   }
 
   .select {
-    width: 110px;
+    width: 120px;
   }
 
   .appGrid {
