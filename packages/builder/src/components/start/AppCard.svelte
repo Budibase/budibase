@@ -18,7 +18,7 @@
 
 <div class="wrapper">
   <Layout noPadding gap="XS" alignContent="start">
-    <div class="preview" use:gradient />
+    <div class="preview" use:gradient={{ seed: app.name }} />
     <div class="title">
       <Link href={$url(`../../app/${app._id}`)}>
         <Heading size="XS">

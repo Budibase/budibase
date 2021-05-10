@@ -18,7 +18,7 @@
 </script>
 
 <div class="title" class:last>
-  <div class="preview" use:gradient />
+  <div class="preview" use:gradient={{ seed: app.name }} />
   <Link href={$url(`../../app/${app._id}`)}>
     <Heading size="XS">
       {app.name}
