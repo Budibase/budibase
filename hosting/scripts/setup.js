@@ -15,22 +15,20 @@ function execute(command) {
   })
 }
 
-async function commandExistsUnix (command) {
+async function commandExistsUnix(command) {
   const unixCmd = `command -v ${command} 2>/dev/null && { echo >&1 ${command}; exit 0; }`
   return execute(command)
 }
 
-async function commandExistsWindows (command) {
+async function commandExistsWindows(command) {
   if (/[\x00-\x1f<>:"|?*]/.test(command)) {
     return false
   }
   return execute(`where ${command}`)
 }
 
-function commandExists (command) {
-  return windows
-    ? commandExistsWindows(command)
-    : commandExistsUnix(command)
+function commandExists(command) {
+  return windows ? commandExistsWindows(command) : commandExistsUnix(command)
 }
 
 async function init() {
@@ -41,18 +39,23 @@ async function init() {
     return
   }
   if (mac) {
-    console.log("Please install docker by visiting: https://docs.docker.com/docker-for-mac/install/")
+    console.log(
+      "Please install docker by visiting: https://docs.docker.com/docker-for-mac/install/"
+    )
   } else if (windows) {
-    console.log("Please install docker by visiting: https://docs.docker.com/docker-for-windows/install/")
+    console.log(
+      "Please install docker by visiting: https://docs.docker.com/docker-for-windows/install/"
+    )
   } else if (linux) {
     console.log("Beginning automated linux installation.")
     await execute(`./hosting/scripts/linux/get-docker.sh`)
     await execute(`./hosting/scripts/linux/get-docker-compose.sh`)
   } else {
-    console.error("Platform unknown - please look online for information about installing docker for our OS.")
+    console.error(
+      "Platform unknown - please look online for information about installing docker for our OS."
+    )
   }
   console.log("Once installation complete please re-run the setup script.")
   process.exit(-1)
 }
 init()
-
