@@ -41,7 +41,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
       break
     case EmailTemplatePurpose.INVITATION:
       context[TemplateBindings.INVITE_CODE] = code
-      context[TemplateBindings.REGISTRATION_URL] = checkSlashesInUrl(
+      context[TemplateBindings.INVITE_URL] = checkSlashesInUrl(
         `${URL}/invite?code=${code}`
       )
       break
