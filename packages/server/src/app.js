@@ -4,7 +4,6 @@ const CouchDB = require("./db")
 require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
-const electron = require("electron")
 const koaBody = require("koa-body")
 const logger = require("koa-pino-logger")
 const http = require("http")
@@ -13,6 +12,7 @@ const eventEmitter = require("./events")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
+const bullboard = require("./automations/bullboard")
 
 const app = new Koa()
 
@@ -36,13 +36,26 @@ app.use(
   })
 )
 
+if (!env.isTest()) {
+  const bullApp = bullboard.init()
+  app.use(async (ctx, next) => {
+    if (ctx.path.startsWith(bullboard.pathPrefix)) {
+      ctx.status = 200
+      ctx.respond = false
+      bullApp(ctx.req, ctx.res)
+    } else {
+      await next()
+    }
+  })
+}
+
 app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
 // api routes
 app.use(api.routes())
 
-if (electron.app && electron.app.isPackaged) {
+if (env.isProd()) {
   env._set("NODE_ENV", "production")
   Sentry.init()
 

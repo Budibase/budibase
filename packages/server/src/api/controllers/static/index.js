@@ -4,6 +4,7 @@ const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
+const { ObjectStoreBuckets } = require("../../../constants")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
@@ -15,7 +16,6 @@ const {
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-// const fileProcessor = require("../../../utilities/fileSystem/processor")
 const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 
 async function checkForSelfHostedURL(ctx) {
@@ -48,17 +48,10 @@ exports.uploadFile = async function (ctx) {
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-    // need to handle image processing
-    // TODO either offer this as an option, or don't do it at all
-    // await fileProcessor.process({
-    //   ...file,
-    //   extension: fileExtension,
-    // })
-
     return prepareUpload({
       file,
       s3Key: `assets/${ctx.appId}/attachments/${processedFileName}`,
-      bucket: "prod-budi-app-assets",
+      bucket: ObjectStoreBuckets.APPS,
     })
   })
 

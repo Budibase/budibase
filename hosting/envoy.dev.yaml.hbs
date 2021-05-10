@@ -38,6 +38,9 @@ static_resources:
                 route:
                   cluster: server-dev
 
+              # the below three cases are needed to make sure
+              # all traffic prefixed for the builder is passed through
+              # correctly.
               - match: { path: "/" }
                 route:
                   cluster: builder-dev
