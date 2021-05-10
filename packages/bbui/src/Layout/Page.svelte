@@ -18,6 +18,7 @@
   .wide {
     max-width: none;
     margin: 0;
-    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2)
+      calc(var(--spacing-xl) * 2) calc(var(--spacing-xl) * 2);
   }
 </style>

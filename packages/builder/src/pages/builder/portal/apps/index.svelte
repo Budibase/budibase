@@ -85,10 +85,14 @@
         />
       </ActionGroup>
     </div>
-    {#if layout === "grid"}
-      <AppGridView {exportApp} />
+    {#if $apps.length}
+      {#if layout === "grid"}
+        <AppGridView {exportApp} />
+      {:else}
+        <AppTableView {exportApp} />
+      {/if}
     {:else}
-      <AppTableView {exportApp} />
+      <div>No apps.</div>
     {/if}
   </Layout>
 </Page>
