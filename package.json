@@ -17,6 +17,7 @@
     "svelte": "^3.37.0"
   },
   "scripts": {
+    "setup": "./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna link && lerna bootstrap",
     "build": "lerna run build",
     "initialise": "lerna run initialise",
