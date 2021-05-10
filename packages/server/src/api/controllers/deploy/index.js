@@ -1,9 +1,6 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const {
-  getHostingInfo,
-  HostingTypes,
-} = require("../../../utilities/builder/hosting")
+const deploymentService = require("./selfDeploy")
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {
@@ -11,9 +8,6 @@ const DeploymentStatus = {
   PENDING: "PENDING",
   FAILURE: "FAILURE",
 }
-
-// default to AWS deployment, this will be updated before use (if required)
-let deploymentService = require("./awsDeploy")
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(deployments) {
@@ -122,12 +116,6 @@ exports.deploymentProgress = async function (ctx) {
 }
 
 exports.deployApp = async function (ctx) {
-  // start by checking whether to deploy local or to cloud
-  const hostingInfo = await getHostingInfo()
-  deploymentService =
-    hostingInfo.type === HostingTypes.CLOUD
-      ? require("./awsDeploy")
-      : require("./selfDeploy")
   let deployment = new Deployment(ctx.appId)
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeLocalDeploymentHistory(deployment)
