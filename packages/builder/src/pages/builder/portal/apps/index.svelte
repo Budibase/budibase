@@ -8,8 +8,10 @@
     ButtonGroup,
     Select,
     Modal,
+    ModalContent,
     Page,
     notifications,
+    Body,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import api, { del } from "builderStore/api"
@@ -27,6 +29,8 @@
   let appToDelete
   let creationModal
   let deletionModal
+  let creatingApp = false
+  let loaded = false
 
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
@@ -36,9 +40,20 @@
     }
   }
 
+  const initiateAppCreation = () => {
+    creationModal.show()
+    creatingApp = true
+  }
+
   const initiateAppImport = () => {
     template = { fromFile: true }
     creationModal.show()
+    creatingApp = true
+  }
+
+  const stopAppCreation = () => {
+    template = null
+    creatingApp = false
   }
 
   const openApp = app => {
@@ -73,41 +88,42 @@
     appToDelete = null
   }
 
-  onMount(() => {
+  onMount(async () => {
     checkKeys()
-    apps.load()
+    await apps.load()
+    loaded = true
   })
 </script>
 
 <Page wide>
-  <Layout noPadding>
-    <div class="title">
-      <Heading>Apps</Heading>
-      <ButtonGroup>
-        <Button secondary on:click={initiateAppImport}>Import app</Button>
-        <Button cta on:click={creationModal.show}>Create new app</Button>
-      </ButtonGroup>
-    </div>
-    <div class="filter">
-      <div class="select">
-        <Select quiet placeholder="Filter by groups" />
+  {#if $apps.length}
+    <Layout noPadding>
+      <div class="title">
+        <Heading>Apps</Heading>
+        <ButtonGroup>
+          <Button secondary on:click={initiateAppImport}>Import app</Button>
+          <Button cta on:click={initiateAppCreation}>Create new app</Button>
+        </ButtonGroup>
       </div>
-      <ActionGroup>
-        <ActionButton
-          on:click={() => (layout = "grid")}
-          selected={layout === "grid"}
-          quiet
-          icon="ClassicGridView"
-        />
-        <ActionButton
-          on:click={() => (layout = "table")}
-          selected={layout === "table"}
-          quiet
-          icon="ViewRow"
-        />
-      </ActionGroup>
-    </div>
-    {#if $apps.length}
+      <div class="filter">
+        <div class="select">
+          <Select quiet placeholder="Filter by groups" />
+        </div>
+        <ActionGroup>
+          <ActionButton
+            on:click={() => (layout = "grid")}
+            selected={layout === "grid"}
+            quiet
+            icon="ClassicGridView"
+          />
+          <ActionButton
+            on:click={() => (layout = "table")}
+            selected={layout === "table"}
+            quiet
+            icon="ViewRow"
+          />
+        </ActionGroup>
+      </div>
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
@@ -123,16 +139,36 @@
           />
         {/each}
       </div>
-    {:else}
-      <div>No apps.</div>
-    {/if}
-  </Layout>
+    </Layout>
+  {/if}
+  {#if !$apps.length && !creatingApp && loaded}
+    <div class="empty-wrapper">
+      <Modal inline>
+        <ModalContent
+          title="Create your first app"
+          confirmText="Create app"
+          showCancelButton={false}
+          showCloseIcon={false}
+          onConfirm={initiateAppCreation}
+          size="M"
+        >
+          <div slot="footer">
+            <Button on:click={initiateAppImport} secondary>Import app</Button>
+          </div>
+          <Body size="S">
+            The purpose of the Budibase builder is to help you build beautiful,
+            powerful applications quickly and easily.
+          </Body>
+        </ModalContent>
+      </Modal>
+    </div>
+  {/if}
 </Page>
 <Modal
   bind:this={creationModal}
   padding={false}
   width="600px"
-  on:hide={() => (template = null)}
+  on:hide={stopAppCreation}
 >
   <CreateAppModal {template} />
 </Modal>
@@ -182,5 +218,14 @@
   }
   .appTable :global(> div:not(.last)) {
     border-bottom: var(--border-light);
+  }
+
+  .empty-wrapper {
+    flex: 1 1 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 </style>

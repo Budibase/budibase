@@ -31,7 +31,6 @@
 
   onMount(() => {
     organisation.init()
-    apps.load()
     getInfo()
   })
 
@@ -162,5 +161,7 @@
   }
   .content {
     overflow: auto;
+    display: grid;
+    grid-template-rows: 1fr;
   }
 </style>
