@@ -1,20 +1,19 @@
 <script>
   import { Body, Input, Select, ModalContent } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
-  const onChange = ({ detail }) => {
-    if (detail === options[1]) dispatch("basic")
-  }
-
-  const options = ["Email onboarding", "Basic onboarding"]
-  let selected = options[0]
+  export let options
+  export let selected
+  export let email = ""
+  export let onConfirm
+  export let disabled
 </script>
 
 <ModalContent
+  {onConfirm}
   size="M"
   title="Add new user options"
   confirmText="Add user"
+  confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
 >
@@ -26,9 +25,13 @@
   <Select
     placeholder={null}
     bind:value={selected}
-    on:change={onChange}
     {options}
     label="Add new user via:"
   />
-  <Input label="Email" />
+  <Input
+    type="email"
+    bind:value={email}
+    placeholder="john@doe.com"
+    label="Email"
+  />
 </ModalContent>
