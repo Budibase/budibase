@@ -161,14 +161,19 @@
       </div>
     </div>
     <Modal bind:this={htmlModal}>
-    <ModalContent title="Edit Template HTML" onConfirm={saveTemplate} size="XL">
-      <Editor
-        mode="handlebars"
-        on:change={e => {
-          selectedTemplate.contents = e.detail.value
-        }}
-        value={selectedTemplate.contents} />
-    </ModalContent>
+      <ModalContent
+        title="Edit Template HTML"
+        onConfirm={saveTemplate}
+        size="XL"
+      >
+        <Editor
+          mode="handlebars"
+          on:change={e => {
+            selectedTemplate.contents = e.detail.value
+          }}
+          value={selectedTemplate.contents}
+        />
+      </ModalContent>
     </Modal>
   {/if}
 </Page>
