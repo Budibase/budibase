@@ -17,6 +17,10 @@ exports.Configs = {
   GOOGLE: "google",
 }
 
+exports.ConfigUploads = {
+  LOGO: "logo",
+}
+
 const TemplateTypes = {
   EMAIL: "email",
 }
