@@ -7,9 +7,10 @@
   import Context from "../context"
 
   export let fixed = false
+  export let inline = false
 
   const dispatch = createEventDispatcher()
-  let visible = !!fixed
+  let visible = fixed || inline
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -20,7 +21,7 @@
   }
 
   export function hide() {
-    if (!visible || fixed) {
+    if (!visible || fixed || inline) {
       return
     }
     visible = false
@@ -45,7 +46,13 @@
 
 <svelte:window on:keydown={handleKey} />
 
-{#if visible}
+<!-- These svelte if statements need to be defined like this. -->
+<!-- The modal transitions do not work if nested inside more than one "if" -->
+{#if visible && inline}
+  <div use:focusFirstInput class="spectrum-Modal is-open">
+    <slot />
+  </div>
+{:else if visible}
   <Portal target=".modal-container">
     <div
       class="spectrum-Underlay is-open"
