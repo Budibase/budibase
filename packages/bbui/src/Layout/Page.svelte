@@ -8,8 +8,10 @@
 
 <style>
   div {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
     max-width: 80ch;
     margin: 0 auto;
     padding: calc(var(--spacing-xl) * 2);
