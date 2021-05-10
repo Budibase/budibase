@@ -14,7 +14,7 @@
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
-  import { capitalise } from "../../helpers"
+  import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
 
   export let template

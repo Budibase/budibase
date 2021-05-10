@@ -11,18 +11,22 @@
     Page,
     notifications,
   } from "@budibase/bbui"
-  import AppGridView from "components/start/AppGridView.svelte"
-  import AppTableView from "components/start/AppTableView.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import api from "builderStore/api"
+  import api, { del } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { apps } from "stores/portal"
   import download from "downloadjs"
+  import { goto } from "@roxi/routify"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import AppCard from "components/start/AppCard.svelte"
+  import AppRow from "components/start/AppRow.svelte"
 
   let layout = "grid"
-  let modal
   let template
+  let appToDelete
+  let creationModal
+  let deletionModal
 
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
@@ -34,7 +38,11 @@
 
   const initiateAppImport = () => {
     template = { fromFile: true }
-    modal.show()
+    creationModal.show()
+  }
+
+  const openApp = app => {
+    $goto(`../../app/${app._id}`)
   }
 
   const exportApp = app => {
@@ -51,6 +59,20 @@
     }
   }
 
+  const deleteApp = app => {
+    appToDelete = app
+    deletionModal.show()
+  }
+
+  const confirmDeleteApp = async () => {
+    if (!appToDelete) {
+      return
+    }
+    await del(`/api/applications/${appToDelete?._id}`)
+    await apps.load()
+    appToDelete = null
+  }
+
   onMount(() => {
     checkKeys()
     apps.load()
@@ -63,7 +85,7 @@
       <Heading>Apps</Heading>
       <ButtonGroup>
         <Button secondary on:click={initiateAppImport}>Import app</Button>
-        <Button cta on:click={modal.show}>Create new app</Button>
+        <Button cta on:click={creationModal.show}>Create new app</Button>
       </ButtonGroup>
     </div>
     <div class="filter">
@@ -86,24 +108,42 @@
       </ActionGroup>
     </div>
     {#if $apps.length}
-      {#if layout === "grid"}
-        <AppGridView {exportApp} />
-      {:else}
-        <AppTableView {exportApp} />
-      {/if}
+      <div
+        class:appGrid={layout === "grid"}
+        class:appTable={layout === "table"}
+      >
+        {#each $apps as app, idx}
+          <svelte:component
+            this={layout === "grid" ? AppCard : AppRow}
+            {app}
+            {openApp}
+            {exportApp}
+            {deleteApp}
+            last={idx === $apps.length - 1}
+          />
+        {/each}
+      </div>
     {:else}
       <div>No apps.</div>
     {/if}
   </Layout>
 </Page>
 <Modal
-  bind:this={modal}
+  bind:this={creationModal}
   padding={false}
   width="600px"
   on:hide={() => (template = null)}
 >
   <CreateAppModal {template} />
 </Modal>
+<ConfirmDialog
+  bind:this={deletionModal}
+  title="Confirm deletion"
+  okText="Delete app"
+  onOk={confirmDeleteApp}
+>
+  Are you sure you want to delete the app <b>{appToDelete?.name}</b>?
+</ConfirmDialog>
 
 <style>
   .title,
@@ -116,5 +156,31 @@
 
   .select {
     width: 110px;
+  }
+
+  .appGrid {
+    display: grid;
+    grid-gap: 50px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  .appTable {
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    align-items: center;
+  }
+  .appTable :global(> div) {
+    height: 70px;
+    display: grid;
+    align-items: center;
+    gap: var(--spacing-xl);
+    grid-template-columns: auto 1fr;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 var(--spacing-s);
+  }
+  .appTable :global(> div:not(.last)) {
+    border-bottom: var(--border-light);
   }
 </style>

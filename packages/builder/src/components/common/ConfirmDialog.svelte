@@ -7,6 +7,7 @@
   export let cancelText = "Cancel"
   export let onOk = undefined
   export let onCancel = undefined
+  export let warning = true
 
   let modal
 
@@ -19,7 +20,13 @@
 </script>
 
 <Modal bind:this={modal} on:hide={onCancel}>
-  <ModalContent onConfirm={onOk} {title} confirmText={okText} {cancelText} red>
+  <ModalContent
+    onConfirm={onOk}
+    {title}
+    confirmText={okText}
+    {cancelText}
+    {warning}
+  >
     <Body size="S">
       {body}
       <slot />
