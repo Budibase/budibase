@@ -11,7 +11,6 @@ const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
-  const type = ctx.params.type
   let template = ctx.request.body
   if (!template.ownerId) {
     template.ownerId = GLOBAL_OWNER
@@ -20,10 +19,7 @@ exports.save = async ctx => {
     template._id = generateTemplateID(template.ownerId)
   }
 
-  const response = await db.put({
-    ...template,
-    type,
-  })
+  const response = await db.put(template)
   ctx.body = {
     ...template,
     _rev: response.rev,
