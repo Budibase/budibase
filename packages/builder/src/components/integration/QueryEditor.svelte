@@ -117,7 +117,7 @@
       readOnly,
       autoCloseBrackets: true,
       autoCloseTags: true,
-      theme: $themeStore.darkMode ? THEMES.DARK : THEMES.LIGHT,
+      theme: THEMES.DARK,
     }
 
     if (!tab)
@@ -132,7 +132,7 @@
 
     if (destroyed) return
 
-    CodeMirror.commands.autocomplete = function (cm) {
+    CodeMirror.commands.autocomplete = function(cm) {
       CodeMirror.showHint(cm, CodeMirror.hint.javascript)
     }
 

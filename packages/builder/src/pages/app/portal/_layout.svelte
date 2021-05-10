@@ -89,7 +89,7 @@
         <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
       </ActionMenu>
     </div>
-    <div>
+    <div class="content">
       <slot />
     </div>
   </div>
@@ -155,5 +155,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
+  }
+
+  .content {
+    height: 100vh;
+    overflow-y: auto;
   }
 </style>
