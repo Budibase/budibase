@@ -112,7 +112,7 @@
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each $apps as app, idx}
+        {#each $apps as app, idx (app._id)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
             {app}
