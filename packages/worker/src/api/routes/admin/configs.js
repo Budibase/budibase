@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../../controllers/admin/configs")
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
-const { Configs } = require("../../../constants")
+const { Configs, ConfigUploads } = require("../../../constants")
 
 const router = Router()
 
@@ -61,6 +61,14 @@ function buildConfigSaveValidation() {
   )
 }
 
+function buildUploadValidation() {
+  // prettier-ignore
+  return joiValidator.params(Joi.object({
+    type: Joi.string().valid(...Object.values(Configs)).required(),
+    name: Joi.string().valid(...Object.values(ConfigUploads)).required(),
+  }).required())
+}
+
 function buildConfigGetValidation() {
   // prettier-ignore
   return joiValidator.params(Joi.object({
@@ -79,5 +87,10 @@ router
     controller.fetch
   )
   .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
+  .post(
+    "/api/admin/configs/upload/:type/:name",
+    buildUploadValidation(),
+    controller.upload
+  )
 
 module.exports = router

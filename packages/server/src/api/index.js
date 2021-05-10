@@ -7,13 +7,6 @@ const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 
-if (!env.isTest()) {
-  const bullboard = require("bull-board")
-  const expressApp = require("express")()
-
-  expressApp.use("/bulladmin", bullboard.router)
-}
-
 const router = new Router()
 
 router
