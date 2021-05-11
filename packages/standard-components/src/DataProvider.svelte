@@ -24,7 +24,7 @@
   let pageNumber = 0
 
   $: internalTable = dataSource?.type === "table"
-  $: query = dataSource?.type === "table" ? buildLuceneQuery(filter) : null
+  $: query = internalTable ? buildLuceneQuery(filter) : null
   $: hasNextPage = bookmarks[pageNumber + 1] != null
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
@@ -34,8 +34,8 @@
     if (internalTable) {
       rows = allRows
     } else {
-      rows = sortRows(allRows, sortColumn, sortOrder)
-      rows = limitRows(rows, limit)
+      const sortedRows = sortRows(allRows, sortColumn, sortOrder)
+      rows = limitRows(sortedRows, limit)
     }
   }
   $: actions = [
@@ -213,7 +213,7 @@
   }
 
   const nextPage = async () => {
-    if (!hasNextPage) {
+    if (!hasNextPage || !internalTable) {
       return
     }
     const res = await API.searchTable({
@@ -244,7 +244,7 @@
   }
 
   const prevPage = async () => {
-    if (!hasPrevPage) {
+    if (!hasPrevPage || !internalTable) {
       return
     }
     const res = await API.searchTable({
