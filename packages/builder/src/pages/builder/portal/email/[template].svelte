@@ -123,6 +123,8 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
+    margin-bottom: var(--spacing-l);
+    margin-top: var(--spacing-l);
   }
 
   .preview {
