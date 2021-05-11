@@ -8,7 +8,6 @@
     Layout,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import {} from "@budibase/bbui"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
