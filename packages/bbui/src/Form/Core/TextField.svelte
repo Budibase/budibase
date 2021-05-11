@@ -37,6 +37,7 @@
     }
     focus = false
     updateValue(event.target.value)
+    dispatch("blur")
   }
 
   const updateValueOnEnter = event => {
