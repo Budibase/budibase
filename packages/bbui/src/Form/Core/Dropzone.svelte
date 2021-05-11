@@ -15,6 +15,8 @@
   export let fileSizeLimit = BYTES_IN_MB * 20
   export let processFiles = null
   export let handleFileTooLarge = null
+  export let gallery = true
+  export let error = null
 
   const dispatch = createEventDispatcher()
   const imageExtensions = [
@@ -52,6 +54,8 @@
       const newValue = [...value, ...processedFiles]
       dispatch("change", newValue)
       selectedImageIdx = newValue.length - 1
+    } else {
+      dispatch("change", fileList)
     }
   }
 
@@ -94,47 +98,68 @@
 
 <div class="container">
   {#if selectedImage}
-    <div class="gallery">
-      <div class="title">
-        <div class="filename">{selectedImage.name}</div>
-        <div class="filesize">
-          {#if selectedImage.size <= BYTES_IN_MB}
-            {`${selectedImage.size / BYTES_IN_KB} KB`}
-          {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
+    {#if gallery}
+      <div class="gallery">
+        <div class="title">
+          <div class="filename">{selectedImage.name}</div>
+          <div class="filesize">
+            {#if selectedImage.size <= BYTES_IN_MB}
+              {`${selectedImage.size / BYTES_IN_KB} KB`}
+            {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
+          </div>
+          {#if !disabled}
+            <div class="delete-button" on:click={removeFile}>
+              <Icon name="Close" />
+            </div>
+          {/if}
         </div>
-        {#if !disabled}
-          <div class="delete-button" on:click={removeFile}>
-            <Icon name="Close" />
+        {#if isImage}
+          <img alt="preview" src={selectedImage.url} />
+        {:else}
+          <div class="placeholder">
+            <div class="extension">{selectedImage.extension}</div>
+            <div>Preview not supported</div>
           </div>
         {/if}
-      </div>
-      {#if isImage}
-        <img alt="preview" src={selectedImage.url} />
-      {:else}
-        <div class="placeholder">
-          <div class="extension">{selectedImage.extension}</div>
-          <div>Preview not supported</div>
+        <div
+          class="nav left"
+          class:visible={selectedImageIdx > 0}
+          on:click={navigateLeft}
+        >
+          <Icon name="ChevronLeft" />
         </div>
-      {/if}
-      <div
-        class="nav left"
-        class:visible={selectedImageIdx > 0}
-        on:click={navigateLeft}
-      >
-        <Icon name="ChevronLeft" />
+        <div
+          class="nav right"
+          class:visible={selectedImageIdx < fileCount - 1}
+          on:click={navigateRight}
+        >
+          <Icon name="ChevronRight" />
+        </div>
+        <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
       </div>
-      <div
-        class="nav right"
-        class:visible={selectedImageIdx < fileCount - 1}
-        on:click={navigateRight}
-      >
-        <Icon name="ChevronRight" />
-      </div>
-      <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
-    </div>
+    {:else if value?.length}
+      {#each value as file}
+        <div class="gallery">
+          <div class="title">
+            <div class="filename">{file.name}</div>
+            <div class="filesize">
+              {#if file.size <= BYTES_IN_MB}
+                {`${file.size / BYTES_IN_KB} KB`}
+              {:else}{`${file.size / BYTES_IN_MB} MB`}{/if}
+            </div>
+            {#if !disabled}
+              <div class="delete-button" on:click={removeFile}>
+                <Icon name="Close" />
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    {/if}
   {/if}
   <div
     class="spectrum-Dropzone"
+    class:is-invalid={!!error}
     class:disabled
     role="region"
     tabindex="0"
@@ -245,6 +270,9 @@
   .spectrum-Dropzone {
     user-select: none;
   }
+  .spectrum-Dropzone.is-invalid {
+    border-color: var(--spectrum-global-color-red-400);
+  }
   input[type="file"] {
     display: none;
   }
@@ -276,7 +304,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: stretch;
+    align-items: center;
   }
   .filename {
     flex: 1 1 auto;
@@ -331,6 +359,7 @@
   .delete-button {
     transition: all 0.3s;
     margin-left: 10px;
+    display: flex;
   }
   .delete-button i {
     font-size: 2em;

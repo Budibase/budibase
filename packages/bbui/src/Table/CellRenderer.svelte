@@ -23,7 +23,7 @@
   }
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
-  $: renderer = customRenderer?.component ?? typeMap[type]
+  $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
 </script>
 
 {#if renderer && (customRenderer || (value != null && value !== ""))}
