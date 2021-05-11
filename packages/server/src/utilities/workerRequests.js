@@ -19,12 +19,14 @@ function request(ctx, request) {
   if (!request.headers) {
     request.headers = {}
   }
-  if (request.body) {
+  if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
     request.body =
       typeof request.body === "object"
         ? JSON.stringify(request.body)
         : request.body
+  } else {
+    delete request.body
   }
   if (ctx && ctx.headers) {
     request.headers.cookie = ctx.headers.cookie

@@ -67,4 +67,7 @@ for (let route of mainRoutes) {
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
+// add a redirect for when hitting server directly
+router.redirect("/", "/builder")
+
 module.exports = router
