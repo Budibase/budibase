@@ -17,9 +17,6 @@
   import { auth } from "stores/backend"
   import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
 
-  organisation.init()
-  apps.load()
-
   let orgName
   let orgLogo
   let user
@@ -32,7 +29,10 @@
     user = { name: "John Doe" }
   }
 
-  onMount(getInfo)
+  onMount(() => {
+    organisation.init()
+    getInfo()
+  })
 
   let menu = [
     { title: "Apps", href: "/builder/portal/apps" },
@@ -161,5 +161,7 @@
   }
   .content {
     overflow: auto;
+    display: grid;
+    grid-template-rows: 1fr;
   }
 </style>

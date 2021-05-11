@@ -92,6 +92,16 @@ then `cd ` into your local copy.
 
 ### 3.  Install and Build
 
+To develop the Budibase platform you'll need [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
+
+#### Quick method
+
+`yarn setup` will check that all necessary components are installed and setup the repo for usage.
+
+#### Manual method
+
+The following commands can be executed to manually get Budibase up and running (assuming Docker/Docker Compose has been installed).
+
 `yarn` to install project dependencies
 
 `yarn bootstrap` will install all budibase modules and symlink them together using lerna.
@@ -112,9 +122,16 @@ To run the budibase server and builder in dev mode (i.e. with live reloading):
 
 1. Open a new console
 2. `yarn dev` (from root)
-3. Access the builder on http://localhost:4001/_builder/
+3. Access the builder on http://localhost:10000/builder
 
 This will enable watch mode for both the builder app, server, client library and any component libraries.
+
+### 5. Cleanup
+
+If you wish to delete all the apps created in development and reset the environment then run the following:
+
+1. `yarn nuke:docker` will wipe all the Budibase services
+2. `yarn dev` will restart all the services
 
 ## Data Storage
 
