@@ -8,7 +8,7 @@
     Body,
     ModalContent,
   } from "@budibase/bbui"
-  import { capitalise } from "../../../../helpers"
+  import { capitalise } from "helpers"
 
   export let resourceId
   export let permissions
@@ -30,7 +30,7 @@
 </script>
 
 <ModalContent title="Manage Access" showCancelButton={false} confirmText="Done">
-  <Body s>Specify the minimum access level role for this data.</Body>
+  <Body size="S">Specify the minimum access level role for this data.</Body>
   <div class="row">
     <Label extraSmall grey>Level</Label>
     <Label extraSmall grey>Role</Label>
@@ -38,10 +38,10 @@
       <Input value={capitalise(level)} disabled />
       <Select
         value={permissions[level]}
-        on:change={(e) => changePermission(level, e.detail)}
+        on:change={e => changePermission(level, e.detail)}
         options={$roles}
-        getOptionLabel={(x) => x.name}
-        getOptionValue={(x) => x._id}
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x._id}
       />
     {/each}
   </div>

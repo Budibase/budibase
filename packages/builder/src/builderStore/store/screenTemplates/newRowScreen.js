@@ -9,7 +9,7 @@ import {
   makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
-export default function(tables) {
+export default function (tables) {
   return tables.map(table => {
     return {
       name: `${table.name} - New`,

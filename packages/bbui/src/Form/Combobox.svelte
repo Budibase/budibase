@@ -35,5 +35,6 @@
     {placeholder}
     {getOptionLabel}
     {getOptionValue}
-    on:change={onChange} />
+    on:change={onChange}
+  />
 </Field>

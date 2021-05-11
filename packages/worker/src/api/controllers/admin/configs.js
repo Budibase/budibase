@@ -3,23 +3,26 @@ const {
   generateConfigID,
   StaticDatabases,
   getConfigParams,
-  determineScopedConfig,
+  getGlobalUserParams,
+  getScopedFullConfig,
 } = require("@budibase/auth").db
+const fetch = require("node-fetch")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
+const env = require("../../../environment")
+const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
+
+const APP_PREFIX = "app_"
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const { type, config } = ctx.request.body
-  const { group, user } = config
-  // insert the type into the doc
-  config.type = type
+  const { type, group, user, config } = ctx.request.body
 
   // Config does not exist yet
-  if (!config._id) {
-    config._id = generateConfigID({
+  if (!ctx.request.body._id) {
+    ctx.request.body._id = generateConfigID({
       type,
       group,
       user,
@@ -34,7 +37,7 @@ exports.save = async function(ctx) {
   }
 
   try {
-    const response = await db.put(config)
+    const response = await db.put(ctx.request.body)
     ctx.body = {
       type,
       _id: response.id,
@@ -45,12 +48,15 @@ exports.save = async function(ctx) {
   }
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getConfigParams(undefined, {
-      include_docs: true,
-    })
+    getConfigParams(
+      { type: ctx.params.type },
+      {
+        include_docs: true,
+      }
+    )
   )
   ctx.body = response.rows.map(row => row.doc)
 }
@@ -59,13 +65,12 @@ exports.fetch = async function(ctx) {
  * Gets the most granular config for a particular configuration type.
  * The hierarchy is type -> group -> user.
  */
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const userId = ctx.params.user && ctx.params.user._id
 
-  const { group } = ctx.query
-  if (group) {
-    const group = await db.get(group)
+  const { userId, groupId } = ctx.query
+  if (groupId && userId) {
+    const group = await db.get(groupId)
     const userInGroup = group.users.some(groupUser => groupUser === userId)
     if (!ctx.user.admin && !userInGroup) {
       ctx.throw(400, `User is not in specified group: ${group}.`)
@@ -74,10 +79,10 @@ exports.find = async function(ctx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await determineScopedConfig(db, {
+    const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group,
+      group: groupId,
     })
 
     if (scopedConfig) {
@@ -90,13 +95,91 @@ exports.find = async function(ctx) {
   }
 }
 
-exports.destroy = async function(ctx) {
+exports.upload = async function (ctx) {
+  if (ctx.request.files == null || ctx.request.files.file.length > 1) {
+    ctx.throw(400, "One file must be uploaded.")
+  }
+  const file = ctx.request.files.file
+  const { type, name } = ctx.params
+
+  const fileExtension = [...file.name.split(".")].pop()
+  // filenames converted to UUIDs so they are unique
+  const processedFileName = `${name}.${fileExtension}`
+
+  const bucket = ObjectStoreBuckets.GLOBAL
+  const key = `${type}/${processedFileName}`
+  await upload({
+    bucket,
+    filename: key,
+    path: file.path,
+    type: file.type,
+  })
+
+  // add to configuration structure
+  // TODO: right now this only does a global level
+  const db = new CouchDB(GLOBAL_DB)
+  let config = await getScopedFullConfig(db, { type })
+  if (!config) {
+    config = {
+      _id: generateConfigID({ type }),
+    }
+  }
+  const url = `/${bucket}/${key}`
+  config[`${name}Url`] = url
+  // write back to db with url updated
+  await db.put(config)
+
+  ctx.body = {
+    message: "File has been uploaded and url stored to config.",
+    url,
+  }
+}
+
+exports.destroy = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const { id, rev } = ctx.params
 
   try {
     await db.remove(id, rev)
     ctx.body = { message: "Config deleted successfully" }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
+exports.configChecklist = async function (ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+
+  try {
+    // TODO: Watch get started video
+
+    // Apps exist
+    let allDbs
+    if (env.COUCH_DB_URL) {
+      allDbs = await (await fetch(`${env.COUCH_DB_URL}/_all_dbs`)).json()
+    } else {
+      allDbs = await CouchDB.allDbs()
+    }
+    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+
+    // They have set up SMTP
+    const smtpConfig = await getScopedFullConfig(db, {
+      type: Configs.SMTP,
+    })
+
+    // They have set up an admin user
+    const users = await db.allDocs(
+      getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+    const adminUser = users.rows.some(row => row.doc.admin)
+
+    ctx.body = {
+      apps: appDbNames.length,
+      smtp: !!smtpConfig,
+      adminUser,
+    }
   } catch (err) {
     ctx.throw(err.status, err)
   }

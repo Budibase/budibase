@@ -78,4 +78,5 @@
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
-  onSelectOption={toggleOption} />
+  onSelectOption={toggleOption}
+/>

@@ -12,9 +12,7 @@ Cypress.Commands.add("login", () => {
 
     cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
     cy.contains("Create Test User").click()
-    cy.get("input")
-      .first()
-      .type("test@test.com")
+    cy.get("input").first().type("test@test.com")
 
     cy.get('input[type="password"]').type("test")
 
@@ -31,29 +29,17 @@ Cypress.Commands.add("createApp", name => {
     .then($body => {
       if ($body.find("input[name=apiKey]").length) {
         // input was found, do something else here
-        cy.get("input[name=apiKey]")
-          .type(name)
-          .should("have.value", name)
+        cy.get("input[name=apiKey]").type(name).should("have.value", name)
         cy.contains("Next").click()
       }
     })
     .then(() => {
       cy.get(".spectrum-Modal")
         .within(() => {
-          cy.get("input")
-            .eq(0)
-            .type(name)
-            .should("have.value", name)
-            .blur()
+          cy.get("input").eq(0).type(name).should("have.value", name).blur()
           cy.contains("Next").click()
-          cy.get("input")
-            .eq(1)
-            .type("test@test.com")
-            .blur()
-          cy.get("input")
-            .eq(2)
-            .type("test")
-            .blur()
+          cy.get("input").eq(1).type("test@test.com").blur()
+          cy.get("input").eq(2).type("test").blur()
           cy.contains("Submit").click()
         })
         .then(() => {
@@ -69,15 +55,11 @@ Cypress.Commands.add("deleteApp", name => {
   cy.get(".apps").then($apps => {
     cy.wait(1000)
     if ($apps.find(`[data-cy="app-${name}"]`).length) {
-      cy.get(`[data-cy="app-${name}"]`)
-        .contains("Open")
-        .click()
+      cy.get(`[data-cy="app-${name}"]`).contains("Open").click()
       cy.get("[data-cy=settings-icon]").click()
       cy.get(".spectrum-Dialog").within(() => {
         cy.contains("Danger Zone").click()
-        cy.get("input")
-          .type("DELETE")
-          .blur()
+        cy.get("input").type("DELETE").blur()
         cy.contains("Delete Entire App").click()
       })
     }
@@ -100,13 +82,8 @@ Cypress.Commands.add("createTable", tableName => {
   // Enter table name
   cy.get("[data-cy=new-table]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input")
-      .first()
-      .type(tableName)
-      .blur()
-    cy.get(".spectrum-ButtonGroup")
-      .contains("Create")
-      .click()
+    cy.get("input").first().type(tableName).blur()
+    cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
   cy.contains(tableName).should("be.visible")
 })
@@ -118,10 +95,7 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
 
   // Configure column
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input")
-      .first()
-      .type(columnName)
-      .blur()
+    cy.get("input").first().type(columnName).blur()
 
     // Unset table display column
     cy.contains("display column").click({ force: true })
@@ -134,14 +108,9 @@ Cypress.Commands.add("addRow", values => {
   cy.contains("Create row").click()
   cy.get(".spectrum-Modal").within(() => {
     for (let i = 0; i < values.length; i++) {
-      cy.get("input")
-        .eq(i)
-        .type(values[i])
-        .blur()
+      cy.get("input").eq(i).type(values[i]).blur()
     }
-    cy.get(".spectrum-ButtonGroup")
-      .contains("Create")
-      .click()
+    cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
 })
 
@@ -150,22 +119,12 @@ Cypress.Commands.add("createUser", (email, password, role) => {
   cy.contains("Users").click()
   cy.contains("Create user").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input")
-      .first()
-      .type(email)
-      .blur()
-    cy.get("input")
-      .eq(1)
-      .type(password)
-      .blur()
-    cy.get("select")
-      .first()
-      .select(role)
+    cy.get("input").first().type(email).blur()
+    cy.get("input").eq(1).type(password).blur()
+    cy.get("select").first().select(role)
 
     // Save
-    cy.get(".spectrum-ButtonGroup")
-      .contains("Create User")
-      .click()
+    cy.get(".spectrum-ButtonGroup").contains("Create User").click()
   })
 })
 
@@ -201,15 +160,9 @@ Cypress.Commands.add("navigateToFrontend", () => {
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get("[data-cy=new-screen]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input")
-      .eq(0)
-      .type(screenName)
-      .blur()
+    cy.get("input").eq(0).type(screenName).blur()
     if (route) {
-      cy.get("input")
-        .eq(1)
-        .type(route)
-        .blur()
+      cy.get("input").eq(1).type(route).blur()
     }
     cy.contains("Create Screen").click()
   })

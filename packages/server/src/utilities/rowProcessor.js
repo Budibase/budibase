@@ -1,7 +1,7 @@
-const { ObjectStoreBuckets } = require("../constants")
 const linkRows = require("../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../constants")
+const { processStringSync } = require("@budibase/string-templates")
 const { attachmentsRelativeURL } = require("./index")
 
 const BASE_AUTO_ID = 1
@@ -30,6 +30,11 @@ const TYPE_TRANSFORM_MAP = {
     [undefined]: undefined,
   },
   [FieldTypes.STRING]: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  [FieldTypes.FORMULA]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
@@ -119,6 +124,41 @@ function processAutoColumn(user, table, row) {
 }
 
 /**
+ * Given a set of rows and the table they came from this function will sort by auto ID or a custom
+ * method if provided (not implemented yet).
+ */
+function sortRows(table, rows) {
+  // sort based on auto ID (if found)
+  let autoIDColumn = Object.entries(table.schema).find(
+    schema => schema[1].subtype === AutoFieldSubTypes.AUTO_ID
+  )
+  // get the column name, this is the first element in the array (Object.entries)
+  autoIDColumn = autoIDColumn && autoIDColumn.length ? autoIDColumn[0] : null
+  if (autoIDColumn) {
+    // sort in ascending order
+    rows.sort((a, b) => a[autoIDColumn] - b[autoIDColumn])
+  }
+  return rows
+}
+
+/**
+ * Looks through the rows provided and finds formulas - which it then processes.
+ */
+function processFormulas(table, rows) {
+  for (let [column, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.FORMULA) {
+      continue
+    }
+    // iterate through rows and process formula
+    rows = rows.map(row => ({
+      ...row,
+      [column]: processStringSync(schema.formula, row),
+    }))
+  }
+  return rows
+}
+
+/**
  * This will coerce a value to the correct types based on the type transform map
  * @param {object} row The value to coerce
  * @param {object} type The type fo coerce to
@@ -173,16 +213,18 @@ exports.outputProcessing = async (appId, table, rows) => {
     rows = [rows]
     wasArray = false
   }
+  // sort by auto ID
+  rows = sortRows(table, rows)
   // attach any linked row information
-  const outputRows = await linkRows.attachLinkedPrimaryDisplay(
-    appId,
-    table,
-    rows
-  )
+  let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
+
+  // process formulas
+  enriched = processFormulas(table, enriched)
+
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
-      for (let row of outputRows) {
+      for (let row of enriched) {
         if (row[property] == null || row[property].length === 0) {
           continue
         }
@@ -192,5 +234,6 @@ exports.outputProcessing = async (appId, table, rows) => {
       }
     }
   }
-  return wasArray ? outputRows : outputRows[0]
+  enriched = await linkRows.squashLinksToPrimaryDisplay(appId, table, enriched)
+  return wasArray ? enriched : enriched[0]
 }

@@ -21,7 +21,6 @@ static_resources:
                   cluster: app-service
                   prefix_rewrite: "/"
 
-              # special case for presenting our static self hosting page
               - match: { path: "/" }
                 route:
                   cluster: app-service
@@ -39,11 +38,6 @@ static_resources:
               - match: { prefix: "/worker/" }
                 route: 
                   cluster: worker-service
-                  prefix_rewrite: "/"
-
-              - match: { prefix: "/cache/" }
-                route:
-                  cluster: redis-service
                   prefix_rewrite: "/"
 
               - match: { prefix: "/db/" }
@@ -116,19 +110,4 @@ static_resources:
               socket_address:
                 address: couchdb-service
                 port_value: 5984
-
-  - name: redis-service
-    connect_timeout: 0.25s
-    type: strict_dns
-    lb_policy: round_robin
-    load_assignment:
-      cluster_name: redis-service
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                address: redis-service
-                port_value: 6379
-
 

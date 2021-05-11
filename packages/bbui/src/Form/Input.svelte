@@ -29,5 +29,7 @@
     {type}
     on:change={onChange}
     on:click
-    on:input />
+    on:input
+    on:blur
+  />
 </Field>

@@ -22,8 +22,9 @@
   bind:this={modal}
   okText="Delete"
   onOk={confirmDeletion}
-  title="Confirm Deletion">
+  title="Confirm Deletion"
+>
   Are you sure you want to delete
   {selectedRows.length}
-  row{selectedRows.length > 1 ? 's' : ''}?
+  row{selectedRows.length > 1 ? "s" : ""}?
 </ConfirmDialog>

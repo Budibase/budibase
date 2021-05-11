@@ -31,6 +31,7 @@
 <ModalContent
   title="Create View"
   confirmText="Create View"
-  onConfirm={saveView}>
+  onConfirm={saveView}
+>
   <Input label="View Name" thin bind:value={name} />
 </ModalContent>

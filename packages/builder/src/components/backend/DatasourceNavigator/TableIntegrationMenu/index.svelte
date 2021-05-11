@@ -39,12 +39,14 @@
       <div
         class="integration hoverable"
         class:selected={integration.type === integrationType}
-        on:click={() => selectIntegration(integrationType)}>
+        on:click={() => selectIntegration(integrationType)}
+      >
         <svelte:component
           this={ICONS[integrationType]}
           height="50"
-          width="50"/>
-        <Body xs>{integrationType}</Body>
+          width="50"
+        />
+        <Body size="XS">{integrationType}</Body>
       </div>
     {/each}
   </div>
@@ -53,7 +55,7 @@
 <style>
   .integration-list {
     display: grid;
-    grid-template-columns: repeat( auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 

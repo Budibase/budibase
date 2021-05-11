@@ -33,7 +33,7 @@
     { label: "Datetime", value: "DATETIME" },
   ]
 
-  $: datasource = $datasources.list.find((ds) => ds._id === query.datasourceId)
+  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fields.reduce(
     (acc, next) => ({
       ...acc,
@@ -89,7 +89,7 @@
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
-      fields = json.schemaFields.map((field) => ({
+      fields = json.schemaFields.map(field => ({
         name: field,
         type: "STRING",
       }))
@@ -112,9 +112,9 @@
 </script>
 
 <Layout gap="S" noPadding>
-  <Heading m>Query {integrationInfo?.friendlyName}</Heading>
+  <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
   <Divider />
-  <Heading s>Config</Heading>
+  <Heading size="S">Config</Heading>
   <div class="config">
     <div class="config-field">
       <Label>Query Name</Label>
@@ -126,7 +126,7 @@
         <Select
           bind:value={query.queryVerb}
           options={Object.keys(queryConfig)}
-          getOptionLabel={(verb) =>
+          getOptionLabel={verb =>
             queryConfig[verb]?.displayName || capitalise(verb)}
         />
       </div>
@@ -136,8 +136,8 @@
   {#if shouldShowQueryConfig}
     <Divider />
     <div class="config">
-      <Heading s>Fields</Heading>
-      <Body s>Fill in the fields specific to this query.</Body>
+      <Heading size="S">Fields</Heading>
+      <Body size="S">Fill in the fields specific to this query.</Body>
       <IntegrationQueryEditor
         {datasource}
         {query}
@@ -148,7 +148,7 @@
       <Divider />
     </div>
     <div class="viewer-controls">
-      <Heading s>Results</Heading>
+      <Heading size="S">Results</Heading>
       <ButtonGroup>
         <Button
           cta
@@ -160,7 +160,7 @@
         <Button secondary on:click={previewQuery}>Run Query</Button>
       </ButtonGroup>
     </div>
-    <Body s>
+    <Body size="S">
       Below, you can preview the results from your query and change the schema.
     </Body>
     <section class="viewer">

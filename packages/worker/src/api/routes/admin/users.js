@@ -21,14 +21,35 @@ function buildUserSaveValidation() {
       .pattern(/.*/, Joi.string())
       .required()
       .unknown(true)
-  }).required().unknown(true).optional())
+  }).required().unknown(true))
+}
+
+function buildInviteValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    email: Joi.string().required(),
+  }).required())
+}
+
+function buildInviteAcceptValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    inviteCode: Joi.string().required(),
+    password: Joi.string().required(),
+  }).required().unknown(true))
 }
 
 router
   .post("/api/admin/users", buildUserSaveValidation(), controller.save)
   .get("/api/admin/users", controller.fetch)
-  .post("/api/admin/users/first", controller.firstUser)
+  .post("/api/admin/users/init", controller.adminUser)
   .delete("/api/admin/users/:id", controller.destroy)
   .get("/api/admin/users/:id", controller.find)
+  .post("/api/admin/users/invite", buildInviteValidation(), controller.invite)
+  .post(
+    "/api/admin/users/invite/accept",
+    buildInviteAcceptValidation(),
+    controller.inviteAccept
+  )
 
 module.exports = router

@@ -43,14 +43,16 @@
   title="Calculate"
   confirmText="Save"
   onConfirm={saveView}
-  disabled={!view.field}>
+  disabled={!view.field}
+>
   <div class="input-group-row">
     <Label>The</Label>
     <Select
       bind:value={view.calculation}
       options={CALCULATIONS}
       getOptionLabel={x => x.name}
-      getOptionValue={x => x.key} />
+      getOptionValue={x => x.key}
+    />
     {#if view.calculation}
       <Label>Of</Label>
       <Select bind:value={view.field} options={fields} />

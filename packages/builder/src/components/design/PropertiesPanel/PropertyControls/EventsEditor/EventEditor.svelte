@@ -1,7 +1,14 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Icon, Button, Popover, Layout, DrawerContent } from "@budibase/bbui"
+  import {
+    Icon,
+    Button,
+    Layout,
+    DrawerContent,
+    ActionMenu,
+    MenuItem,
+  } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
 
@@ -14,7 +21,7 @@
   // dndzone needs an id on the array items, so this adds some temporary ones.
   $: {
     if (actions) {
-      actions.forEach((action) => {
+      actions.forEach(action => {
         if (!action.id) {
           action.id = generate()
         }
@@ -22,13 +29,11 @@
     }
   }
 
-  let addActionButton
-  let addActionDropdown
   let selectedAction = actions?.length ? actions[0] : null
 
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find((t) => t.name === selectedAction[EVENT_TYPE_KEY]).component
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
 
   // Select the first action if we delete an action
   $: {
@@ -37,12 +42,12 @@
     }
   }
 
-  const deleteAction = (index) => {
+  const deleteAction = index => {
     actions.splice(index, 1)
     actions = actions
   }
 
-  const addAction = (actionType) => () => {
+  const addAction = actionType => () => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
@@ -53,10 +58,9 @@
     }
     actions = [...actions, newAction]
     selectedAction = newAction
-    addActionDropdown.hide()
   }
 
-  const selectAction = (action) => () => {
+  const selectAction = action => () => {
     selectedAction = action
   }
 
@@ -71,24 +75,14 @@
 <DrawerContent>
   <div class="actions-list" slot="sidebar">
     <Layout>
-      <div bind:this={addActionButton}>
-        <Button wide secondary on:click={addActionDropdown.show}>
-          Add Action
-        </Button>
-      </div>
-      <Popover
-        bind:this={addActionDropdown}
-        anchor={addActionButton}
-        align="right"
-      >
-        <div class="available-actions-container">
-          {#each actionTypes as actionType}
-            <div class="available-action" on:click={addAction(actionType)}>
-              <span>{actionType.name}</span>
-            </div>
-          {/each}
-        </div>
-      </Popover>
+      <ActionMenu>
+        <Button slot="control" secondary>Add Action</Button>
+        {#each actionTypes as actionType}
+          <MenuItem on:click={addAction(actionType)}>
+            {actionType.name}
+          </MenuItem>
+        {/each}
+      </ActionMenu>
 
       {#if actions && actions.length > 0}
         <div
@@ -148,7 +142,7 @@
 
   .action-header {
     margin-bottom: var(--spacing-m);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-7);
     font-weight: 500;
   }
@@ -161,7 +155,7 @@
 
   .available-action {
     padding: var(--spacing-s);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     cursor: pointer;
   }
 

@@ -9,7 +9,8 @@
     <li
       data-cy={category.name}
       on:click={() => onClick(category)}
-      class:active={selectedCategory === category}>
+      class:active={selectedCategory === category}
+    >
       {category.name}
     </li>
   {/each}

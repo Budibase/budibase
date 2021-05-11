@@ -1,10 +1,15 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
+const env = require("../environment")
+const Queue = env.isTest()
+  ? require("../utilities/queue/inMemoryQueue")
+  : require("bull")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
+const { utils } = require("@budibase/auth").redis
 
-let automationQueue = new InMemoryQueue("automationQueue")
+const { opts } = utils.getRedisOptions()
+let automationQueue = new Queue("automationQueue", { redis: opts })
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
@@ -224,7 +229,7 @@ async function queueRelevantRowAutomations(event, eventType) {
   }
 }
 
-emitter.on("row:save", async function(event) {
+emitter.on("row:save", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -232,7 +237,7 @@ emitter.on("row:save", async function(event) {
   await queueRelevantRowAutomations(event, "row:save")
 })
 
-emitter.on("row:update", async function(event) {
+emitter.on("row:update", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -240,7 +245,7 @@ emitter.on("row:update", async function(event) {
   await queueRelevantRowAutomations(event, "row:update")
 })
 
-emitter.on("row:delete", async function(event) {
+emitter.on("row:delete", async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
@@ -281,7 +286,7 @@ async function fillRowOutput(automation, params) {
   return params
 }
 
-module.exports.externalTrigger = async function(automation, params) {
+module.exports.externalTrigger = async function (automation, params) {
   // TODO: replace this with allowing user in builder to input values in future
   if (automation.definition != null && automation.definition.trigger != null) {
     if (automation.definition.trigger.inputs.tableId != null) {
@@ -301,6 +306,9 @@ module.exports.externalTrigger = async function(automation, params) {
   automationQueue.add({ automation, event: params })
 }
 
+module.exports.getQueues = () => {
+  return [automationQueue]
+}
 module.exports.fillRowOutput = fillRowOutput
 module.exports.automationQueue = automationQueue
 

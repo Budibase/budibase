@@ -10,4 +10,5 @@
   on:change
   options={$store.layouts}
   getOptionLabel={layout => layout.name}
-  getOptionValue={layout => layout._id} />
+  getOptionValue={layout => layout._id}
+/>

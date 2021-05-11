@@ -33,7 +33,9 @@
   {/each}
 </div>
 {#if !readOnly}
-  <div><Button secondary thin outline on:click={addEntry}>Add</Button></div>
+  <div>
+    <Button secondary thin outline on:click={addEntry}>Add</Button>
+  </div>
 {/if}
 
 <style>

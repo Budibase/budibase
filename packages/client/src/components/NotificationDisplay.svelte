@@ -19,7 +19,8 @@
       animate:flip
       class="toast"
       style="background: {themes[notification.type]};"
-      transition:fly={{ y: -30 }}>
+      transition:fly={{ y: -30 }}
+    >
       <div class="content">{notification.message}</div>
       {#if notification.icon}<i class={notification.icon} />{/if}
     </div>

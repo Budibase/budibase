@@ -22,18 +22,19 @@
   }
 </script>
 
-<DetailSummary name={`${name}${changed ? ' *' : ''}`} on:open show={open} thin>
+<DetailSummary name={`${name}${changed ? " *" : ""}`} on:open show={open} thin>
   {#if open}
     <div>
       {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
         <PropertyControl
           bindable={false}
-          label={`${prop.label}${hasPropChanged(style, prop) ? ' *' : ''}`}
+          label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
           onChange={value => onStyleChanged(styleCategory, prop.key, value)}
-          props={getControlProps(prop)} />
+          props={getControlProps(prop)}
+        />
       {/each}
     </div>
   {/if}

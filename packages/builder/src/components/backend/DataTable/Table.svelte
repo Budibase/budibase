@@ -59,7 +59,7 @@
 
   const selectRelationship = ({ tableId, rowId, fieldName }) => {
     $goto(
-      `/builder/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
+      `/builder/app/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
     )
   }
 
@@ -91,7 +91,7 @@
 <div>
   <div class="table-title">
     {#if title}
-      <Heading s>{title}</Heading>
+      <Heading size="S">{title}</Heading>
     {/if}
     {#if loading}
       <div transition:fade>
@@ -120,7 +120,8 @@
     showAutoColumns={!hideAutocolumns}
     on:editcolumn={e => editColumn(e.detail)}
     on:editrow={e => editRow(e.detail)}
-    on:clickrelationship={e => selectRelationship(e.detail)} />
+    on:clickrelationship={e => selectRelationship(e.detail)}
+  />
 {/key}
 
 <Modal bind:this={editRowModal}>

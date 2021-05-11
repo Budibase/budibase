@@ -53,4 +53,5 @@
   body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
   okText="Delete View"
   onOk={deleteView}
-  title="Confirm Deletion" />
+  title="Confirm Deletion"
+/>

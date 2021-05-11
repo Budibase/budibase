@@ -15,7 +15,7 @@ exports.options = {}
  * @param {*} done - callback from passport to return user information and errors
  * @returns The authenticated user, or errors if they occur
  */
-exports.authenticate = async function(email, password, done) {
+exports.authenticate = async function (email, password, done) {
   if (!email) return done(null, false, "Email Required.")
   if (!password) return done(null, false, "Password Required.")
 

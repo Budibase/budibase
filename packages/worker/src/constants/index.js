@@ -17,6 +17,10 @@ exports.Configs = {
   GOOGLE: "google",
 }
 
+exports.ConfigUploads = {
+  LOGO: "logo",
+}
+
 const TemplateTypes = {
   EMAIL: "email",
 }
@@ -45,6 +49,8 @@ const TemplateBindings = {
   LOGIN_URL: "loginUrl",
   CURRENT_YEAR: "currentYear",
   CURRENT_DATE: "currentDate",
+  RESET_CODE: "resetCode",
+  INVITE_CODE: "inviteCode",
 }
 
 const TemplateMetadata = {

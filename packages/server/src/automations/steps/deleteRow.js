@@ -50,7 +50,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, appId, apiKey, emitter }) {
+module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   if (inputs.id == null || inputs.revision == null) {
     return {
       success: false,

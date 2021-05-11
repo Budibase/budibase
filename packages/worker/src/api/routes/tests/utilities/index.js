@@ -7,9 +7,9 @@ exports.beforeAll = () => {
   request = config.getRequest()
 }
 
-exports.afterAll = () => {
+exports.afterAll = async () => {
   if (config) {
-    config.end()
+    await config.end()
   }
   request = null
   config = null
@@ -27,4 +27,15 @@ exports.getConfig = () => {
     exports.beforeAll()
   }
   return config
+}
+
+exports.emailMock = () => {
+  // mock the email system
+  const sendMailMock = jest.fn()
+  const nodemailer = require("nodemailer")
+  nodemailer.createTransport.mockReturnValue({
+    sendMail: sendMailMock,
+    verify: jest.fn(),
+  })
+  return sendMailMock
 }

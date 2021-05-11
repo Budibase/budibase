@@ -6,8 +6,8 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/design/PropertiesPanel/BindingPanel.svelte"
-  import { capitalise } from "../../../../helpers"
+  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import { capitalise } from "helpers"
 
   export let label = ""
   export let bindable = true
@@ -80,27 +80,32 @@
       onChange={handleChange}
       {type}
       {...props}
-      name={key} />
+      name={key}
+    />
   </div>
-  {#if bindable && !key.startsWith('_') && type === 'text'}
+  {#if bindable && !key.startsWith("_") && type === "text"}
     <div
       class="icon"
       data-cy={`${key}-binding-button`}
-      on:click={bindingDrawer.show}>
+      on:click={bindingDrawer.show}
+    >
       <Icon size="S" name="FlashOn" />
     </div>
     <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
       <svelte:fragment slot="description">
-          Add the objects on the left to enrich your text.
+        Add the objects on the left to enrich your text.
       </svelte:fragment>
-      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>Save</Button>
+      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}
+        >Save</Button
+      >
       <BindingPanel
         slot="body"
         bind:valid
         value={safeValue}
         close={handleClose}
         on:update={e => (temporaryBindableValue = e.detail)}
-        {bindableProperties} />
+        {bindableProperties}
+      />
     </Drawer>
   {/if}
 </div>

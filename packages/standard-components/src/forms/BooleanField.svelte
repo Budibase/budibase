@@ -18,7 +18,8 @@
   type="boolean"
   bind:fieldState
   bind:fieldApi
-  defaultValue={false}>
+  defaultValue={false}
+>
   {#if fieldState}
     <CoreCheckbox
       value={$fieldState.value}
@@ -26,6 +27,7 @@
       error={$fieldState.error}
       id={$fieldState.fieldId}
       on:change={e => fieldApi.setValue(e.detail)}
-      {text} />
+      {text}
+    />
   {/if}
 </Field>

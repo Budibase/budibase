@@ -4,6 +4,7 @@ const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
+const { ObjectStoreBuckets } = require("../../../constants")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
@@ -15,7 +16,6 @@ const {
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const fileProcessor = require("../../../utilities/fileSystem/processor")
 const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 
 async function checkForSelfHostedURL(ctx) {
@@ -32,12 +32,12 @@ async function checkForSelfHostedURL(ctx) {
 // this was the version before we started versioning the component library
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
-exports.serveBuilder = async function(ctx) {
+exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
-exports.uploadFile = async function(ctx) {
+exports.uploadFile = async function (ctx) {
   let files =
     ctx.request.files.file.length > 1
       ? Array.from(ctx.request.files.file)
@@ -48,24 +48,17 @@ exports.uploadFile = async function(ctx) {
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-    // need to handle image processing
-    // TODO either offer this as an option, or don't do it at all
-    // await fileProcessor.process({
-    //   ...file,
-    //   extension: fileExtension,
-    // })
-
     return prepareUpload({
       file,
       s3Key: `assets/${ctx.appId}/attachments/${processedFileName}`,
-      bucket: "prod-budi-app-assets",
+      bucket: ObjectStoreBuckets.APPS,
     })
   })
 
   ctx.body = await Promise.all(uploads)
 }
 
-exports.serveApp = async function(ctx) {
+exports.serveApp = async function (ctx) {
   let appId = ctx.params.appId
   if (env.SELF_HOSTED) {
     appId = await checkForSelfHostedURL(ctx)
@@ -90,13 +83,13 @@ exports.serveApp = async function(ctx) {
   })
 }
 
-exports.serveClientLibrary = async function(ctx) {
+exports.serveClientLibrary = async function (ctx) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
 }
 
-exports.serveComponentLibrary = async function(ctx) {
+exports.serveComponentLibrary = async function (ctx) {
   const appId = ctx.query.appId || ctx.appId
 
   if (env.isDev() || env.isTest()) {

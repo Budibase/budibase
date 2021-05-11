@@ -13,7 +13,7 @@
   // this means that we can submit using the Builder's posthog setup
   window.addEventListener(
     "message",
-    function(ev) {
+    function (ev) {
       if (ev.origin !== feedbackUrl) return
 
       if (ev.data.type === "loaded") {

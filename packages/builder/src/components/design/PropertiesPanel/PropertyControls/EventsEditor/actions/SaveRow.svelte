@@ -28,7 +28,7 @@
 </script>
 
 <div class="root">
-  <Body s>
+  <Body size="S">
     Choosing a Data Source will automatically use the data it provides, but it's
     optional.<br />
     You can always add or override fields manually.
@@ -40,20 +40,23 @@
       options={dataProviderComponents}
       placeholder="None"
       getOptionLabel={option => option._instanceName}
-      getOptionValue={option => option._id} />
+      getOptionValue={option => option._id}
+    />
 
     <Label small>Table</Label>
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
       getOptionLabel={option => option.name}
-      getOptionValue={option => option._id} />
+      getOptionValue={option => option._id}
+    />
 
     {#if parameters.tableId}
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
-        on:change={onFieldsChanged} />
+        on:change={onFieldsChanged}
+      />
     {/if}
   </div>
 </div>

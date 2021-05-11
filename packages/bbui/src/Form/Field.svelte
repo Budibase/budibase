@@ -8,7 +8,7 @@
   export let error = null
 </script>
 
-<div class="spectrum-Form-item" class:above={labelPosition === 'above'}>
+<div class="spectrum-Form-item" class:above={labelPosition === "above"}>
   {#if label}
     <FieldLabel forId={id} {label} position={labelPosition} />
   {/if}

@@ -47,25 +47,28 @@
 </script>
 
 <div class="title">
-  <Heading s>Setup</Heading>
+  <Heading size="S">Setup</Heading>
   <Icon
     l
     disabled={!automationLive}
     hoverable={automationLive}
     name="PauseCircle"
-    on:click={() => setAutomationLive(false)} />
+    on:click={() => setAutomationLive(false)}
+  />
   <Icon
     l
     name="PlayCircle"
     disabled={automationLive}
     hoverable={!automationLive}
     data-cy="activate-automation"
-    on:click={() => setAutomationLive(true)} />
+    on:click={() => setAutomationLive(true)}
+  />
 </div>
 {#if $automationStore.selectedBlock}
   <AutomationBlockSetup
     bind:block={$automationStore.selectedBlock}
-    {webhookModal} />
+    {webhookModal}
+  />
 {:else if $automationStore.selectedAutomation}
   <div class="block-label">{automation.name}</div>
   <Button secondary on:click={testAutomation}>Test Automation</Button>
@@ -74,7 +77,8 @@
   secondary
   wide
   data-cy="save-automation-setup"
-  on:click={saveAutomation}>
+  on:click={saveAutomation}
+>
   Save Automation
 </Button>
 <Modal bind:this={webhookModal} width="30%">
