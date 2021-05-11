@@ -2,6 +2,7 @@ const { Cookies } = require("../constants")
 const database = require("../db")
 const { getCookie, clearCookie } = require("../utils")
 const { StaticDatabases } = require("../db/utils")
+const env = require("../environment")
 
 const PARAM_REGEX = /\/:(.*?)\//g
 
@@ -35,10 +36,14 @@ module.exports = (noAuthPatterns = [], opts) => {
       return next()
     }
     try {
+      const apiKey = ctx.request.headers["x-budibase-api-key"]
       // check the actual user is authenticated first
       const authCookie = getCookie(ctx, Cookies.Auth)
 
-      if (authCookie) {
+      // this is an internal request, no user made it
+      if (apiKey && apiKey === env.INTERNAL_KEY) {
+        ctx.isAuthenticated = true
+      } else if (authCookie) {
         try {
           const db = database.getDB(StaticDatabases.GLOBAL.name)
           const user = await db.get(authCookie.userId)

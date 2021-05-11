@@ -27,7 +27,6 @@ const TemplateTypes = {
 
 const EmailTemplatePurpose = {
   BASE: "base",
-  STYLES: "styles",
   PASSWORD_RECOVERY: "password_recovery",
   INVITATION: "invitation",
   WELCOME: "welcome",
@@ -80,10 +79,6 @@ const TemplateBindings = {
 const TemplateMetadata = {
   [TemplateTypes.EMAIL]: [
     {
-      name: "Styling",
-      purpose: EmailTemplatePurpose.STYLES,
-    },
-    {
       name: "Base Format",
       purpose: EmailTemplatePurpose.BASE,
       bindings: [
@@ -132,6 +127,12 @@ const TemplateMetadata = {
     {
       name: "Custom",
       purpose: EmailTemplatePurpose.CUSTOM,
+      bindings: [
+        {
+          name: "contents",
+          description: "Custom content body.",
+        },
+      ],
     },
   ],
 }

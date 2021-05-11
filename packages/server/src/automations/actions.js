@@ -1,4 +1,4 @@
-const sendEmail = require("./steps/sendEmail")
+const sendEmail = require("./steps/sendgridEmail")
 const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
