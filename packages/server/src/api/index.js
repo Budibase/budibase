@@ -7,13 +7,6 @@ const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 
-if (!env.isTest()) {
-  const bullboard = require("bull-board")
-  const expressApp = require("express")()
-
-  expressApp.use("/bulladmin", bullboard.router)
-}
-
 const router = new Router()
 
 router
@@ -73,5 +66,8 @@ for (let route of mainRoutes) {
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
+
+// add a redirect for when hitting server directly
+router.redirect("/", "/builder")
 
 module.exports = router
