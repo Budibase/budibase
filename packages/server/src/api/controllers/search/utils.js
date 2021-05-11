@@ -39,7 +39,6 @@ function buildSearchUrl({
   if (bookmark) {
     url += `&bookmark=${bookmark}`
   }
-  console.log(url)
   return checkSlashesInUrl(url)
 }
 
@@ -142,13 +141,12 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        if (isNaN(value.low) || value.low == null || value.low === "") {
+        if (value.low == null || value.low === "") {
           return null
         }
-        if (isNaN(value.high) || value.high == null || value.high === "") {
+        if (value.high == null || value.high === "") {
           return null
         }
-        console.log(value)
         return `${key}:[${value.low} TO ${value.high}]`
       })
     }

@@ -43,8 +43,6 @@
   const onChange = e => {
     selectOption(e.target.value)
   }
-
-  $: console.log(disabled)
 </script>
 
 <div
