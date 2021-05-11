@@ -29,6 +29,7 @@ describe("/api/admin/email", () => {
       .expect(200)
     expect(res.body.message).toBeDefined()
     const testUrl = nodemailer.getTestMessageUrl(res.body)
+    console.log(`${purpose} URL: ${testUrl}`)
     expect(testUrl).toBeDefined()
     const response = await fetch(testUrl)
     const text = await response.text()
