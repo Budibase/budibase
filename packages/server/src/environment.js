@@ -34,7 +34,7 @@ module.exports = {
   USE_QUOTAS: process.env.USE_QUOTAS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-  INTERNAL_KEY: process.env.INTERNAL_KEY,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,

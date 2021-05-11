@@ -41,7 +41,7 @@ module.exports = (noAuthPatterns = [], opts) => {
       const authCookie = getCookie(ctx, Cookies.Auth)
 
       // this is an internal request, no user made it
-      if (apiKey && apiKey === env.INTERNAL_KEY) {
+      if (apiKey && apiKey === env.INTERNAL_API_KEY) {
         ctx.isAuthenticated = true
       } else if (authCookie) {
         try {
