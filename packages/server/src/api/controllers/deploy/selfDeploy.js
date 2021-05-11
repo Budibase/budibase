@@ -1,7 +1,4 @@
-const {
-  deployToObjectStore,
-  performReplication,
-} = require("./utils")
+const { deployToObjectStore, performReplication } = require("./utils")
 
 exports.deploy = async function (deployment) {
   const appId = deployment.getAppId()
