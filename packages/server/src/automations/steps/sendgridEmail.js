@@ -1,5 +1,5 @@
 module.exports.definition = {
-  description: "Send an email",
+  description: "Send an email using SendGrid",
   tagline: "Send email to {{inputs.to}}",
   icon: "ri-mail-open-line",
   name: "Send Email (SendGrid)",

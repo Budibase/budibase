@@ -34,17 +34,29 @@ function request(ctx, request) {
 
 exports.request = request
 
-exports.sendSmtpEmail = async (to, from, contents) => {
+exports.sendSmtpEmail = async (to, from, subject, contents) => {
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
     request(null, {
       method: "POST",
       headers: {
         "x-budibase-api-key": env.INTERNAL_KEY,
       },
-      body: {},
+      body: {
+        email: to,
+        from,
+        contents,
+        subject,
+        purpose: "custom",
+      },
     })
   )
+
+  const json = await response.json()
+  if (json.status !== 200 && response.status !== 200) {
+    throw "Unable to send email."
+  }
+  return json
 }
 
 exports.getDeployedApps = async ctx => {
