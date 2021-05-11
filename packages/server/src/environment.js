@@ -34,6 +34,7 @@ module.exports = {
   USE_QUOTAS: process.env.USE_QUOTAS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  INTERNAL_KEY: process.env.INTERNAL_KEY,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
@@ -53,7 +54,6 @@ module.exports = {
   BUDIBASE_API_KEY: process.env.BUDIBASE_API_KEY,
   USERID_API_KEY: process.env.USERID_API_KEY,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
-  HOSTING_KEY: process.env.HOSTING_KEY,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
