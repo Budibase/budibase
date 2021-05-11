@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
 import api from "builderStore/api"
 
-export function fetchData (url) {
+export default function (url) {
 	const store = writable({status: 'LOADING', data: {}, error: {}})
 	
 	async function get() {

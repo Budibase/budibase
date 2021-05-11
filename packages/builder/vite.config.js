@@ -57,10 +57,6 @@ export default ({ mode }) => {
           replacement: path.resolve("./src/actions"),
         },
         {
-          find: "helperStores",
-          replacement: path.resolve("./src/helperStores"),
-        },
-        {
           find: "helpers",
           replacement: path.resolve("./src/helpers"),
         },
