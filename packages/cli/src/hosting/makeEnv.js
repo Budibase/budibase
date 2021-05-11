@@ -6,13 +6,10 @@ const randomString = require("randomstring")
 
 const FILE_PATH = path.resolve("./.env")
 
-function getContents(port, hostingKey) {
+function getContents(port) {
   return `
 # Use the main port in the builder for your self hosting URL, e.g. localhost:10000
 MAIN_PORT=${port}
-
-# Use this password when configuring your self hosting settings
-HOSTING_KEY=${hostingKey}
 
 # This section contains all secrets pertaining to the system
 JWT_SECRET=${randomString.generate()}
@@ -21,6 +18,7 @@ MINIO_SECRET_KEY=${randomString.generate()}
 COUCH_DB_PASSWORD=${randomString.generate()}
 COUCH_DB_USER=${randomString.generate()}
 REDIS_PASSWORD=${randomString.generate()}
+INTERNAL_KEY=${randomString.generate()}
 
 # This section contains variables that do not need to be altered under normal circumstances
 APP_PORT=4002
@@ -33,7 +31,6 @@ BUDIBASE_ENVIRONMENT=PRODUCTION`
 
 module.exports.filePath = FILE_PATH
 module.exports.ConfigMap = {
-  HOSTING_KEY: "key",
   MAIN_PORT: "port",
 }
 module.exports.QUICK_CONFIG = {
@@ -42,18 +39,13 @@ module.exports.QUICK_CONFIG = {
 }
 
 module.exports.make = async (inputs = {}) => {
-  const hostingKey =
-    inputs.key ||
-    (await string(
-      "Please input the password you'd like to use as your hosting key: "
-    ))
   const hostingPort =
     inputs.port ||
     (await number(
       "Please enter the port on which you want your installation to run: ",
       10000
     ))
-  const fileContents = getContents(hostingPort, hostingKey)
+  const fileContents = getContents(hostingPort)
   fs.writeFileSync(FILE_PATH, fileContents)
   console.log(
     success(

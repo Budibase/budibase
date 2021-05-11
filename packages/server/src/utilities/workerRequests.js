@@ -26,13 +26,26 @@ function request(ctx, request) {
         ? JSON.stringify(request.body)
         : request.body
   }
-  if (ctx.headers) {
+  if (ctx && ctx.headers) {
     request.headers.cookie = ctx.headers.cookie
   }
   return request
 }
 
 exports.request = request
+
+exports.sendSmtpEmail = async (to, from, contents) => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + `/api/`),
+    request(null, {
+      method: "POST",
+      headers: {
+        "x-budibase-api-key": env.INTERNAL_KEY,
+      },
+      body: {},
+    })
+  )
+}
 
 exports.getDeployedApps = async ctx => {
   if (!env.SELF_HOSTED) {

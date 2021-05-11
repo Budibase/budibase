@@ -54,16 +54,14 @@ async function buildEmail(purpose, email, user) {
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`
   }
-  let [base, styles, body] = await Promise.all([
+  let [base, body] = await Promise.all([
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
-    getTemplateByPurpose(TYPE, EmailTemplatePurpose.STYLES),
     getTemplateByPurpose(TYPE, purpose),
   ])
-  if (!base || !styles || !body) {
+  if (!base || !body) {
     throw "Unable to build email, missing base components"
   }
   base = base.contents
-  styles = styles.contents
   body = body.contents
 
   // if there is a link code needed this will retrieve it
@@ -75,11 +73,9 @@ async function buildEmail(purpose, email, user) {
   }
 
   body = await processString(body, context)
-  styles = await processString(styles, context)
   // this should now be the complete email HTML
   return processString(base, {
     ...context,
-    styles,
     body,
   })
 }
@@ -117,11 +113,17 @@ exports.isEmailConfigured = async (groupId = null) => {
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
  * @param {string|undefined} groupId If finer grain controls being used then this will lookup config for group.
- * @param {object|undefined} user if sending to an existing user the object can be provided, this is used in the context.
+ * @param {object|undefined} user If sending to an existing user the object can be provided, this is used in the context.
+ * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
+ * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
-exports.sendEmail = async (email, purpose, { groupId, user } = {}) => {
+exports.sendEmail = async (
+  email,
+  purpose,
+  { groupId, user, from, contents } = {}
+) => {
   const db = new CouchDB(GLOBAL_DB)
   const config = await getSmtpConfiguration(db, groupId)
   if (!config) {
@@ -129,7 +131,7 @@ exports.sendEmail = async (email, purpose, { groupId, user } = {}) => {
   }
   const transport = createSMTPTransport(config)
   const message = {
-    from: config.from,
+    from: from || config.from,
     subject: config.subject,
     to: email,
     html: await buildEmail(purpose, email, user),
