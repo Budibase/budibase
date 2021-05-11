@@ -1,12 +1,28 @@
 const { QueryBuilder, buildSearchUrl, search } = require("./utils")
 
-exports.rowSearch = async (ctx) => {
+exports.rowSearch = async ctx => {
   const appId = ctx.appId
   const { tableId } = ctx.params
-  const { bookmark, query, raw, limit, sort, sortOrder } = ctx.request.body
+  const {
+    bookmark,
+    query,
+    raw,
+    limit,
+    sort,
+    sortOrder,
+    sortType,
+  } = ctx.request.body
   let url
   if (query) {
-    url = new QueryBuilder(appId, query, bookmark, limit, sort, sortOrder)
+    url = new QueryBuilder(
+      appId,
+      query,
+      bookmark,
+      limit,
+      sort,
+      sortOrder,
+      sortType
+    )
       .addTable(tableId)
       .complete()
   } else if (raw) {

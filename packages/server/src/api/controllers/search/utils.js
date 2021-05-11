@@ -12,6 +12,7 @@ const fetch = require("node-fetch")
  * @param {number} limit The number of entries to return per query.
  * @param {string} sort The column to sort by.
  * @param {string} sortOrder The order to sort by. "ascending" or "descending".
+ * @param {string} sortType The type of sort to perform. "string" or "number".
  * @param {boolean} excludeDocs By default full rows are returned, if required this can be disabled.
  * @return {string} The URL which a GET can be performed on to receive results.
  */
@@ -21,18 +22,19 @@ function buildSearchUrl({
   bookmark,
   sort,
   sortOrder,
+  sortType,
   excludeDocs,
   limit = 50,
 }) {
   let url = `${env.COUCH_DB_URL}/${appId}/_design/database/_search`
   url += `/${SearchIndexes.ROWS}?q=${query}`
-  url += `&limit=${limit}`
+  url += `&limit=${Math.min(limit, 200)}`
   if (!excludeDocs) {
     url += "&include_docs=true"
   }
   if (sort) {
     const orderChar = sortOrder === "descending" ? "-" : ""
-    url += `&sort="${orderChar}${sort.replace(/ /, "_")}<string>"`
+    url += `&sort="${orderChar}${sort.replace(/ /, "_")}<${sortType}>"`
   }
   if (bookmark) {
     url += `&bookmark=${bookmark}`
@@ -41,12 +43,12 @@ function buildSearchUrl({
   return checkSlashesInUrl(url)
 }
 
-const luceneEscape = (value) => {
+const luceneEscape = value => {
   return `${value}`.replace(/[ #+\-&|!(){}\[\]^"~*?:\\]/g, "\\$&")
 }
 
 class QueryBuilder {
-  constructor(appId, base, bookmark, limit, sort, sortOrder) {
+  constructor(appId, base, bookmark, limit, sort, sortOrder, sortType) {
     this.appId = appId
     this.query = {
       string: {},
@@ -62,6 +64,7 @@ class QueryBuilder {
     this.limit = limit || 50
     this.sort = sort
     this.sortOrder = sortOrder || "ascending"
+    this.sortType = sortType || "string"
   }
 
   setLimit(limit) {
@@ -165,10 +168,10 @@ class QueryBuilder {
       })
     }
     if (this.query.empty) {
-      build(this.query.empty, (key) => `!${key}:["" TO *]`)
+      build(this.query.empty, key => `!${key}:["" TO *]`)
     }
     if (this.query.notEmpty) {
-      build(this.query.notEmpty, (key) => `${key}:["" TO *]`)
+      build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
     if (rawQuery) {
       output = output.length === 0 ? rawQuery : `&${rawQuery}`
@@ -180,11 +183,12 @@ class QueryBuilder {
       limit: this.limit,
       sort: this.sort,
       sortOrder: this.sortOrder,
+      sortType: this.sortType,
     })
   }
 }
 
-exports.search = async (query) => {
+exports.search = async query => {
   const response = await fetch(query, {
     method: "GET",
   })
@@ -193,7 +197,7 @@ exports.search = async (query) => {
     rows: [],
   }
   if (json.rows != null && json.rows.length > 0) {
-    output.rows = json.rows.map((row) => row.doc)
+    output.rows = json.rows.map(row => row.doc)
   }
   if (json.bookmark) {
     output.bookmark = json.bookmark

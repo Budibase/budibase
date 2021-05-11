@@ -18,17 +18,26 @@
 
   // Provider state
   let rows = []
+  let allRows = []
   let schema = {}
   let bookmarks = [null]
   let pageNumber = 0
 
+  $: internalTable = dataSource?.type === "table"
   $: query = dataSource?.type === "table" ? buildLuceneQuery(filter) : null
   $: hasNextPage = bookmarks[pageNumber + 1] != null
   $: hasPrevPage = pageNumber > 0
-  $: fetchData(dataSource, query, limit, sortColumn, sortOrder)
-  // $: sortedRows = sortRows(filteredRows, sortColumn, sortOrder)
-  // $: rows = limitRows(sortedRows, limit)
   $: getSchema(dataSource)
+  $: sortType = getSortType(schema, sortColumn)
+  $: fetchData(dataSource, query, limit, sortColumn, sortOrder, sortType)
+  $: {
+    if (internalTable) {
+      rows = allRows
+    } else {
+      rows = sortRows(allRows, sortColumn, sortOrder)
+      rows = limitRows(rows, limit)
+    }
+  }
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -55,7 +64,15 @@
     hasPrevPage,
   }
 
-  const buildLuceneQuery = (filter) => {
+  const getSortType = (schema, sortColumn) => {
+    if (!schema || !sortColumn || !schema[sortColumn]) {
+      return "string"
+    }
+    const type = schema?.[sortColumn]?.type
+    return type === "number" ? "number" : "string"
+  }
+
+  const buildLuceneQuery = filter => {
     let query = {
       string: {},
       fuzzy: {},
@@ -66,7 +83,7 @@
       notEmpty: {},
     }
     if (Array.isArray(filter)) {
-      filter.forEach((expression) => {
+      filter.forEach(expression => {
         if (expression.operator.startsWith("range")) {
           let range = {
             low: Number.MIN_SAFE_INTEGER,
@@ -86,7 +103,14 @@
     return query
   }
 
-  const fetchData = async (dataSource, query, limit, sortColumn, sortOrder) => {
+  const fetchData = async (
+    dataSource,
+    query,
+    limit,
+    sortColumn,
+    sortOrder,
+    sortType
+  ) => {
     loading = true
     if (dataSource?.type === "table") {
       const res = await API.searchTable({
@@ -95,9 +119,10 @@
         limit,
         sort: sortColumn,
         sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+        sortType,
       })
       pageNumber = 0
-      rows = res.rows
+      allRows = res.rows
 
       // Check we have next data
       const next = await API.searchTable({
@@ -107,6 +132,7 @@
         bookmark: res.bookmark,
         sort: sortColumn,
         sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+        sortType,
       })
       if (next.rows?.length) {
         bookmarks = [null, res.bookmark]
@@ -115,7 +141,7 @@
       }
     } else {
       const rows = await API.fetchDatasource(dataSource)
-      rows = inMemoryFilterRows(rows, filter)
+      allRows = inMemoryFilterRows(rows, filter)
     }
     loading = false
     loaded = true
@@ -123,9 +149,9 @@
 
   const inMemoryFilterRows = (rows, filter) => {
     let filteredData = [...rows]
-    Object.entries(filter).forEach(([field, value]) => {
+    Object.entries(filter || {}).forEach(([field, value]) => {
       if (value != null && value !== "") {
-        filteredData = filteredData.filter((row) => {
+        filteredData = filteredData.filter(row => {
           return row[field] === value
         })
       }
@@ -156,7 +182,7 @@
     return rows.slice(0, numLimit)
   }
 
-  const getSchema = async (dataSource) => {
+  const getSchema = async dataSource => {
     if (dataSource?.schema) {
       schema = dataSource.schema
     } else if (dataSource?.tableId) {
@@ -196,9 +222,10 @@
       limit,
       sort: sortColumn,
       sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      sortType,
     })
     pageNumber++
-    rows = res.rows
+    allRows = res.rows
 
     // Check we have next data
     const next = await API.searchTable({
@@ -208,6 +235,7 @@
       bookmark: res.bookmark,
       sort: sortColumn,
       sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      sortType,
     })
     if (next.rows?.length) {
       bookmarks[pageNumber + 1] = res.bookmark
@@ -225,9 +253,10 @@
       limit,
       sort: sortColumn,
       sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      sortType,
     })
     pageNumber--
-    rows = res.rows
+    allRows = res.rows
   }
 </script>
 

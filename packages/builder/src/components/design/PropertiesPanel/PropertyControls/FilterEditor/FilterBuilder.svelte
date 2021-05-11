@@ -9,7 +9,7 @@
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
   import { createEventDispatcher } from "svelte"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
   const dispatch = createEventDispatcher()
@@ -159,35 +159,44 @@
         bind:value={expression.field}
         options={fieldOptions}
         on:change={e => onFieldChange(expression, e.detail)}
-        placeholder="Column" />
+        placeholder="Column"
+      />
       <Select
         disabled={!expression.field}
         options={getValidOperatorsForType(expression.type)}
         bind:value={expression.operator}
         on:change={e => onOperatorChange(expression, e.detail)}
-        placeholder={null} />
-      {#if ['string', 'longform', 'number'].includes(expression.type)}
+        placeholder={null}
+      />
+      {#if ["string", "longform", "number"].includes(expression.type)}
         <DrawerBindableInput
           disabled={expression.noValue}
           title={`Value for "${expression.field}"`}
           value={expression.value}
           placeholder="Value"
           bindings={bindableProperties}
-          on:change={event => (expression.value = event.detail)} />
-      {:else if expression.type === 'options'}
+          on:change={event => (expression.value = event.detail)}
+        />
+      {:else if expression.type === "options"}
         <Combobox
           disabled={expression.noValue}
           options={getFieldOptions(expression.field)}
-          bind:value={expression.value} />
-      {:else if expression.type === 'boolean'}
+          bind:value={expression.value}
+        />
+      {:else if expression.type === "boolean"}
         <Combobox
           disabled
-          options={[{ label: 'True', value: true }, { label: 'False', value: false }]}
-          bind:value={expression.value} />
-      {:else if expression.type === 'datetime'}
+          options={[
+            { label: "True", value: true },
+            { label: "False", value: false },
+          ]}
+          bind:value={expression.value}
+        />
+      {:else if expression.type === "datetime"}
         <DatePicker
           disabled={expression.noValue}
-          bind:value={expression.value} />
+          bind:value={expression.value}
+        />
       {:else}
         <DrawerBindableInput disabled />
       {/if}
@@ -196,7 +205,8 @@
         size="S"
         quiet
         icon="Close"
-        on:click={() => removeField(expression.id)} />
+        on:click={() => removeField(expression.id)}
+      />
     {/each}
   </div>
 {/if}
