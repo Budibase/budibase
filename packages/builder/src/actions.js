@@ -5,6 +5,7 @@ export const gradient = (node, config = {}) => {
     lightness: 0.7,
     softness: 0.9,
     seed: null,
+    version: null,
   }
 
   // Applies a gradient background
@@ -15,6 +16,7 @@ export const gradient = (node, config = {}) => {
     }
     const { saturation, lightness, softness, points } = config
     const seed = config.seed || Math.random().toString(32).substring(2)
+    const version = config.version ?? 0
 
     // Hash function which returns a fixed hash between specified limits
     // for a given seed and a given version
@@ -69,10 +71,10 @@ export const gradient = (node, config = {}) => {
       )
     }
 
-    let css = `opacity:0.9;background:${randomHSL(seed, 0, 0.7)};`
+    let css = `opacity:0.9;background:${randomHSL(seed, version, 0.7)};`
     css += "background-image:"
     for (let i = 0; i < points - 1; i++) {
-      css += `${randomGradientPoint(seed, i)},`
+      css += `${randomGradientPoint(seed, version + i)},`
     }
     css += `${randomGradientPoint(seed, points)};`
     node.style = css

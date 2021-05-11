@@ -83,20 +83,21 @@
       notEmpty: {},
     }
     if (Array.isArray(filter)) {
-      filter.forEach(expression => {
-        if (expression.operator.startsWith("range")) {
-          let range = {
-            low: Number.MIN_SAFE_INTEGER,
-            high: Number.MAX_SAFE_INTEGER,
+      filter.forEach(({ operator, field, type, value }) => {
+        if (operator.startsWith("range")) {
+          if (!query.range[field]) {
+            query.range[field] = {
+              low: type === "number" ? Number.MIN_SAFE_INTEGER : "0000",
+              high: type === "number" ? Number.MAX_SAFE_INTEGER : "9999",
+            }
           }
-          if (expression.operator === "rangeLow") {
-            range.low = expression.value
-          } else if (expression.operator === "rangeHigh") {
-            range.high = expression.value
+          if (operator === "rangeLow") {
+            query.range[field].low = value
+          } else if (operator === "rangeHigh") {
+            query.range[field].high = value
           }
-          query.range[expression.field] = range
-        } else if (query[expression.operator]) {
-          query[expression.operator][expression.field] = expression.value
+        } else if (query[operator]) {
+          query[operator][field] = value
         }
       })
     }

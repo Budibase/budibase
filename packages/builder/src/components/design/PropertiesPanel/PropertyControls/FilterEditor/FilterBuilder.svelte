@@ -5,6 +5,7 @@
     Button,
     Select,
     Combobox,
+    Input,
   } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
@@ -68,6 +69,7 @@
         field: null,
         operator: OperatorOptions.Equals.value,
         value: null,
+        valueType: "Value",
       },
     ]
   }
@@ -168,7 +170,13 @@
         on:change={e => onOperatorChange(expression, e.detail)}
         placeholder={null}
       />
-      {#if ["string", "longform", "number"].includes(expression.type)}
+      <Select
+        disabled={expression.noValue || !expression.field}
+        options={["Value", "Binding"]}
+        bind:value={expression.valueType}
+        placeholder={null}
+      />
+      {#if expression.valueType === "Binding"}
         <DrawerBindableInput
           disabled={expression.noValue}
           title={`Value for "${expression.field}"`}
@@ -177,6 +185,8 @@
           bindings={bindableProperties}
           on:change={event => (expression.value = event.detail)}
         />
+      {:else if ["string", "longform", "number"].includes(expression.type)}
+        <Input disabled={expression.noValue} bind:value={expression.value} />
       {:else if expression.type === "options"}
         <Combobox
           disabled={expression.noValue}
@@ -222,6 +232,6 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 120px 1fr auto;
+    grid-template-columns: 1fr 120px 120px 1fr auto;
   }
 </style>
