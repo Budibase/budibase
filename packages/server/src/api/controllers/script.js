@@ -19,6 +19,6 @@ exports.execute = async function (ctx) {
   ctx.body = executor.execute()
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   ctx.throw(501, "Not currently implemented")
 }
