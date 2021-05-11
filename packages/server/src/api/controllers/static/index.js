@@ -8,7 +8,7 @@ const { ObjectStoreBuckets } = require("../../../constants")
 const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
-const { getDeployedApps } = require("../../../utilities/builder/hosting")
+const { getDeployedApps } = require("../../../utilities/workerRequests")
 const CouchDB = require("../../../db")
 const {
   loadHandlebarsFile,

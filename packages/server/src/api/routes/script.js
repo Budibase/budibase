@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../controllers/hosting")
+const controller = require("../controllers/script")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/security/permissions")
 

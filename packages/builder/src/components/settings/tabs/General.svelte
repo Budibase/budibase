@@ -49,27 +49,22 @@
   onMount(async () => {
     const nameError = "Your application must have a name.",
       urlError = "Your application must have a URL."
-    let hostingInfo = await hostingStore.actions.fetch()
-    if (hostingInfo.type === "self") {
-      await hostingStore.actions.fetchDeployedApps()
-      const existingAppNames = get(hostingStore).deployedAppNames
-      const existingAppUrls = get(hostingStore).deployedAppUrls
-      const nameIdx = existingAppNames.indexOf(get(store).name)
-      const urlIdx = existingAppUrls.indexOf(get(store).url)
-      if (nameIdx !== -1) {
-        existingAppNames.splice(nameIdx, 1)
-      }
-      if (urlIdx !== -1) {
-        existingAppUrls.splice(urlIdx, 1)
-      }
-      nameValidation = {
-        name: string().required(nameError).notOneOf(existingAppNames),
-      }
-      urlValidation = {
-        url: string().required(urlError).notOneOf(existingAppUrls),
-      }
-    } else {
-      nameValidation = { name: string().required(nameError) }
+    await hostingStore.actions.fetchDeployedApps()
+    const existingAppNames = get(hostingStore).deployedAppNames
+    const existingAppUrls = get(hostingStore).deployedAppUrls
+    const nameIdx = existingAppNames.indexOf(get(store).name)
+    const urlIdx = existingAppUrls.indexOf(get(store).url)
+    if (nameIdx !== -1) {
+      existingAppNames.splice(nameIdx, 1)
+    }
+    if (urlIdx !== -1) {
+      existingAppUrls.splice(urlIdx, 1)
+    }
+    nameValidation = {
+      name: string().required(nameError).notOneOf(existingAppNames),
+    }
+    urlValidation = {
+      url: string().required(urlError).notOneOf(existingAppUrls),
     }
   })
 </script>
@@ -81,14 +76,12 @@
     error={nameError}
     label="App Name"
   />
-  {#if $hostingStore.hostingInfo.type === "self"}
-    <Input
-      on:change={e => updateApplication({ url: e.detail })}
-      value={$store.url}
-      error={urlError}
-      label="App URL"
-    />
-  {/if}
+  <Input
+    on:change={e => updateApplication({ url: e.detail })}
+    value={$store.url}
+    error={urlError}
+    label="App URL"
+  />
   <TextArea
     on:change={e => updateApplication({ description: e.detail })}
     value={$store.description}
