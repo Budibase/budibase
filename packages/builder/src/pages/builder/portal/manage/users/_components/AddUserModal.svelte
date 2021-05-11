@@ -1,11 +1,13 @@
 <script>
   import { Body, Input, Select, ModalContent } from "@budibase/bbui"
+  import { createValidationStore, emailValidator } from "helpers/validation"
 
   export let options
   export let selected
-  export let email = ""
   export let onConfirm
   export let disabled
+
+  const [email, emailError] = createValidationStore("", emailValidator)
 </script>
 
 <ModalContent
@@ -30,7 +32,8 @@
   />
   <Input
     type="email"
-    bind:value={email}
+    bind:value={$email}
+    error={$emailError}
     placeholder="john@doe.com"
     label="Email"
   />
