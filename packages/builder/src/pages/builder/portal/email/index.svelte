@@ -34,7 +34,7 @@
   const templateSchema = {
     purpose: {
       displayName: "Email",
-      editable: false
+      editable: false,
     },
   }
 

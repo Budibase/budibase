@@ -83,25 +83,26 @@
           value={selectedTemplate.contents}
         />
         <div class="bindings-editor">
-  <Detail size="L">Bindings</Detail>
-  <Tabs selected={selectedBindingTab}>
-    <Tab title="Template">
-      <TemplateBindings
-        title="Template Bindings"
-        bindings={templateBindings}
-        onBindingClick={setTemplateBinding}
-      />
-    </Tab>
-    <Tab title="Common">
-      <TemplateBindings
-        title="Common Bindings"
-        bindings={$email.definitions.bindings.common}
-        onBindingClick={setTemplateBinding}
-      />
-    </Tab>
-    </Tabs>
+          <Detail size="L">Bindings</Detail>
+          <Tabs selected={selectedBindingTab}>
+            <Tab title="Template">
+              <TemplateBindings
+                title="Template Bindings"
+                bindings={templateBindings}
+                onBindingClick={setTemplateBinding}
+              />
+            </Tab>
+            <Tab title="Common">
+              <TemplateBindings
+                title="Common Bindings"
+                bindings={$email.definitions.bindings.common}
+                onBindingClick={setTemplateBinding}
+              />
+            </Tab>
+          </Tabs>
         </div>
-    </Tab>
+      </div></Tab
+    >
     <Tab title="Preview">
       <div class="preview" transition:fade>
         {@html selectedTemplate.contents}
@@ -136,5 +137,4 @@
     margin-bottom: var(--spacing-xl);
     cursor: pointer;
   }
-
 </style>

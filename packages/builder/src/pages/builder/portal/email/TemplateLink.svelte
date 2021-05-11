@@ -1,8 +1,6 @@
 <script>
   import { url } from "@roxi/routify"
-  import {
-    Link,
-  } from "@budibase/bbui"
+  import { Link } from "@budibase/bbui"
   import { roles } from "stores/backend"
 
   export let value

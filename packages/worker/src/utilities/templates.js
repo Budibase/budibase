@@ -15,7 +15,7 @@ const BASE_COMPANY = "Budibase"
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
   const db = new CouchDB(StaticDatabases.GLOBAL.name)
   // TODO: use more granular settings in the future if required
-  let settings = await getScopedConfig(db, { type: Configs.SETTINGS }) || {}
+  let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
   if (!settings || !settings.platformUrl) {
     settings.platformUrl = LOCAL_URL
   }
