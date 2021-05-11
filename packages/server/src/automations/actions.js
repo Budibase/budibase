@@ -1,4 +1,5 @@
-const sendEmail = require("./steps/sendgridEmail")
+const sendgridEmail = require("./steps/sendgridEmail")
+const sendSmtpEmail = require("./steps/sendSmtpEmail")
 const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
@@ -14,7 +15,8 @@ const {
 } = require("../utilities/fileSystem")
 
 const BUILTIN_ACTIONS = {
-  SEND_EMAIL: sendEmail.run,
+  SEND_EMAIL: sendgridEmail.run,
+  SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
   DELETE_ROW: deleteRow.run,
@@ -24,7 +26,8 @@ const BUILTIN_ACTIONS = {
   EXECUTE_QUERY: executeQuery.run,
 }
 const BUILTIN_DEFINITIONS = {
-  SEND_EMAIL: sendEmail.definition,
+  SEND_EMAIL: sendgridEmail.definition,
+  SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,
   DELETE_ROW: deleteRow.definition,
