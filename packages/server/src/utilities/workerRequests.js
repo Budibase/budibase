@@ -42,7 +42,7 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
     request(null, {
       method: "POST",
       headers: {
-        "x-budibase-api-key": env.INTERNAL_KEY,
+        "x-budibase-api-key": env.INTERNAL_API_KEY,
       },
       body: {
         email: to,

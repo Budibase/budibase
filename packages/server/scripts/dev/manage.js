@@ -39,7 +39,7 @@ async function init() {
     COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
     REDIS_URL: "localhost:6379",
     WORKER_URL: "http://localhost:4002",
-    INTERNAL_KEY: "budibase",
+    INTERNAL_API_KEY: "budibase",
     JWT_SECRET: "testsecret",
     REDIS_PASSWORD: "budibase",
     MINIO_ACCESS_KEY: "budibase",
