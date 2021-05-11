@@ -5,7 +5,6 @@ const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { ObjectStoreBuckets } = require("../../../constants")
-const { prepareUpload } = require("../deploy/utils")
 const { processString } = require("@budibase/string-templates")
 const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/workerRequests")
@@ -17,6 +16,27 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
+const { upload } = require("../../../utilities/fileSystem")
+const { attachmentsRelativeURL } = require("../../../utilities")
+
+async function prepareUpload({ s3Key, bucket, metadata, file }) {
+  const response = await upload({
+    bucket,
+    metadata,
+    filename: s3Key,
+    path: file.path,
+    type: file.type,
+  })
+
+  // don't store a URL, work this out on the way out as the URL could change
+  return {
+    size: file.size,
+    name: file.name,
+    url: attachmentsRelativeURL(response.Key),
+    extension: [...file.name.split(".")].pop(),
+    key: response.Key,
+  }
+}
 
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL

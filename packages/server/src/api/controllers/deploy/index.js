@@ -1,6 +1,5 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const deploymentService = require("./selfDeploy")
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {
@@ -56,16 +55,8 @@ async function storeLocalDeploymentHistory(deployment) {
 }
 
 async function deployApp(deployment) {
-  const appId = deployment.getAppId()
   try {
-    console.log(`Uploading assets for appID ${appId}..`)
-
-    await deploymentService.deploy(deployment)
-
-    // replicate the DB to the main couchDB cluster
-    console.log("Replicating local PouchDB to CouchDB..")
-    await deploymentService.replicateDb(deployment)
-
+    // TODO: DB replication was here but wasn't accurate to new system
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)
   } catch (err) {
