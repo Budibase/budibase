@@ -37,9 +37,6 @@ function request(ctx, request) {
 exports.request = request
 
 exports.getDeployedApps = async ctx => {
-  if (!env.SELF_HOSTED) {
-    throw "Can only check apps for self hosted environments"
-  }
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),

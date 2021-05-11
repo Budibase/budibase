@@ -1,41 +1,19 @@
 const CouchDB = require("../../db")
-const {
-  getHostingInfo,
-  getDeployedApps,
-  HostingTypes,
-  getAppUrl,
-} = require("../../utilities/builder/hosting")
-const { StaticDatabases } = require("../../db/utils")
-
-exports.fetchInfo = async ctx => {
-  ctx.body = {
-    types: Object.values(HostingTypes),
-  }
-}
-
-exports.save = async ctx => {
-  const db = new CouchDB(StaticDatabases.BUILDER_HOSTING.name)
-  const { type } = ctx.request.body
-  if (type === HostingTypes.CLOUD && ctx.request.body._rev) {
-    ctx.body = await db.remove({
-      ...ctx.request.body,
-      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
-    })
-  } else {
-    ctx.body = await db.put({
-      ...ctx.request.body,
-      _id: StaticDatabases.BUILDER_HOSTING.baseDoc,
-    })
-  }
-}
-
-exports.fetch = async ctx => {
-  ctx.body = await getHostingInfo()
-}
+const { getDeployedApps } = require("../../utilities/workerRequests")
+const { getScopedConfig } = require("@budibase/auth").db
+const { Configs } = require("@budibase/auth").constants
+const { checkSlashesInUrl } = require("../../utilities")
 
 exports.fetchUrls = async ctx => {
+  const appId = ctx.appId
+  const db = new CouchDB(appId)
+  const settings = await getScopedConfig(db, { type: Configs.SETTINGS })
+  let appUrl = "http://localhost:10000/app"
+  if (settings && settings["platformUrl"]) {
+    appUrl = checkSlashesInUrl(`${settings["platformUrl"]}/app`)
+  }
   ctx.body = {
-    app: await getAppUrl(ctx.appId),
+    app: appUrl,
   }
 }
 

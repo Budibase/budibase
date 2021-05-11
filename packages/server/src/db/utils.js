@@ -8,11 +8,6 @@ const StaticDatabases = {
     name: "builder-db",
     baseDoc: "builder-doc",
   },
-  // TODO: needs removed
-  BUILDER_HOSTING: {
-    name: "builder-config-db",
-    baseDoc: "hosting-doc",
-  },
 }
 
 const DocumentTypes = {

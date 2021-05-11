@@ -7,8 +7,6 @@
   import Spinner from "components/common/Spinner.svelte"
   import { Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
-  import { goto } from "@roxi/routify"
-  import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
@@ -38,21 +36,18 @@
   $: checkValidity($values, validators[$currentStep])
 
   onMount(async () => {
-    const hostingInfo = await hostingStore.actions.fetch()
-    if (hostingInfo.type === "self") {
-      await hostingStore.actions.fetchDeployedApps()
-      const existingAppNames = svelteGet(hostingStore).deployedAppNames
-      validators[0].applicationName = string()
-        .required("Your application must have a name.")
-        .test(
-          "non-existing-app-name",
-          "App with same name already exists. Please try another app name.",
-          value =>
-            !existingAppNames.some(
-              appName => appName.toLowerCase() === value.toLowerCase()
-            )
-        )
-    }
+    await hostingStore.actions.fetchDeployedApps()
+    const existingAppNames = svelteGet(hostingStore).deployedAppNames
+    validators[0].applicationName = string()
+      .required("Your application must have a name.")
+      .test(
+        "non-existing-app-name",
+        "App with same name already exists. Please try another app name.",
+        value =>
+          !existingAppNames.some(
+            appName => appName.toLowerCase() === value.toLowerCase()
+          )
+      )
   })
 
   const checkValidity = async (values, validator) => {

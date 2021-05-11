@@ -58,11 +58,6 @@ async function storeLocalDeploymentHistory(deployment) {
 async function deployApp(deployment) {
   const appId = deployment.getAppId()
   try {
-    await deployment.init()
-    deployment.setVerification(
-      await deploymentService.preDeployment(deployment)
-    )
-
     console.log(`Uploading assets for appID ${appId}..`)
 
     await deploymentService.deploy(deployment)
@@ -70,8 +65,6 @@ async function deployApp(deployment) {
     // replicate the DB to the main couchDB cluster
     console.log("Replicating local PouchDB to CouchDB..")
     await deploymentService.replicateDb(deployment)
-
-    await deploymentService.postDeployment(deployment)
 
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)
