@@ -38,12 +38,12 @@
   }
 </script>
 
-<Button secondary wide on:click={drawer.show}>Define Filters</Button>
+<Button secondary on:click={drawer.show}>Define Filters</Button>
 <Drawer bind:this={drawer} title="Filtering">
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <DrawerContent slot="body">
     <Layout>
-      <Body s>
+      <Body size="S">
         {#if !Object.keys(tempValue || {}).length}
           Add your first filter column.
         {:else}

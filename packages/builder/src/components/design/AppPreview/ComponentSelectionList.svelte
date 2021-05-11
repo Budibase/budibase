@@ -49,7 +49,8 @@
         size="S"
         slot="control"
         dataCy={`category-${item.name}`}
-        on:click={() => onItemChosen(item)}>
+        on:click={() => onItemChosen(item)}
+      >
         <div class="buttonContent">
           {item.name}
           {#if item.isCategory}
@@ -62,7 +63,8 @@
           <MenuItem
             dataCy={`component-${item.name}`}
             icon={item.icon}
-            on:click={() => onItemChosen(item)}>
+            on:click={() => onItemChosen(item)}
+          >
             {item.name}
           </MenuItem>
         {/if}

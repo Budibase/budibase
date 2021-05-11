@@ -37,10 +37,10 @@ const run = async () => {
 
   instanceDb.replicate
     .to(remoteDb)
-    .on("complete", function() {
+    .on("complete", function () {
       console.log("SUCCESS!")
     })
-    .on("error", function(err) {
+    .on("error", function (err) {
       console.log(`FAILED: ${err}`)
     })
 }

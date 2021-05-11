@@ -123,7 +123,8 @@
         label={def.label}
         key={def.key}
         value={get(assetInstance, def.key)}
-        onChange={val => onScreenPropChange(def.key, val)} />
+        onChange={val => onScreenPropChange(def.key, val)}
+      />
     {/each}
   {/if}
 
@@ -134,7 +135,8 @@
       label="Name"
       key="_instanceName"
       value={componentInstance._instanceName}
-      onChange={onInstanceNameChange} />
+      onChange={onInstanceNameChange}
+    />
   {/if}
 
   {#if settings && settings.length > 0}
@@ -145,10 +147,12 @@
           control={getControl(setting.type)}
           label={setting.label}
           key={setting.key}
-          value={componentInstance[setting.key] ?? componentInstance[setting.key]?.defaultValue}
+          value={componentInstance[setting.key] ??
+            componentInstance[setting.key]?.defaultValue}
           {componentInstance}
           onChange={val => onChange(setting.key, val)}
-          props={{ options: setting.options, placeholder: setting.placeholder }} />
+          props={{ options: setting.options, placeholder: setting.placeholder }}
+        />
       {/if}
     {/each}
   {:else}
@@ -157,10 +161,12 @@
     </div>
   {/if}
 
-  {#if componentDefinition?.component?.endsWith('/fieldgroup')}
-    <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
-      Update Form Fields
-    </Button>
+  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
+    <div class="buttonWrapper">
+      <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
+        Update Form Fields
+      </Button>
+    </div>
   {/if}
 </div>
 <ConfirmDialog
@@ -168,7 +174,8 @@
   body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to update this Field Group?`}
   okText="Update"
   onOk={resetFormFields}
-  title="Confirm Form Field Update" />
+  title="Confirm Form Field Update"
+/>
 
 <style>
   .settings-view-container {
@@ -182,5 +189,10 @@
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spacing-m);
     color: var(--grey-6);
+  }
+  .buttonWrapper {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
   }
 </style>

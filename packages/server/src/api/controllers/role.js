@@ -50,7 +50,7 @@ async function updateRolesOnUserTable(db, roleId, updateOption) {
   }
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const body = await db.allDocs(
     getRoleParams(null, {
@@ -78,11 +78,11 @@ exports.fetch = async function(ctx) {
   ctx.body = roles
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   ctx.body = await getRole(ctx.appId, ctx.params.roleId)
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let { _id, name, inherits, permissionId } = ctx.request.body
   if (!_id) {
@@ -103,7 +103,7 @@ exports.save = async function(ctx) {
   ctx.message = `Role '${role.name}' created successfully.`
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const roleId = ctx.params.roleId
   if (isBuiltin(roleId)) {

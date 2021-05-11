@@ -51,12 +51,14 @@
   class="spectrum-InputGroup"
   class:is-focused={open || focus}
   class:is-invalid={!!error}
-  class:is-disabled={disabled}>
+  class:is-disabled={disabled}
+>
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
     class:is-invalid={!!error}
     class:is-disabled={disabled}
-    class:is-focused={open || focus}>
+    class:is-focused={open || focus}
+  >
     <input
       type="text"
       on:focus={() => (focus = true)}
@@ -65,18 +67,21 @@
       {value}
       {disabled}
       {placeholder}
-      class="spectrum-Textfield-input spectrum-InputGroup-input" />
+      class="spectrum-Textfield-input spectrum-InputGroup-input"
+    />
   </div>
   <button
     class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
     tabindex="-1"
     aria-haspopup="true"
     {disabled}
-    on:click={() => (open = true)}>
+    on:click={() => (open = true)}
+  >
     <svg
       class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon spectrum-InputGroup-icon"
       focusable="false"
-      aria-hidden="true">
+      aria-hidden="true"
+    >
       <use xlink:href="#spectrum-css-icon-Chevron100" />
     </svg>
   </button>
@@ -84,7 +89,8 @@
     <div class="overlay" on:mousedown|self={() => (open = false)} />
     <div
       transition:fly={{ y: -20, duration: 200 }}
-      class="spectrum-Popover spectrum-Popover--bottom is-open">
+      class="spectrum-Popover spectrum-Popover--bottom is-open"
+    >
       <ul class="spectrum-Menu" role="listbox">
         {#if options && Array.isArray(options)}
           {#each options as option}
@@ -94,13 +100,16 @@
               role="option"
               aria-selected="true"
               tabindex="0"
-              on:click={() => selectOption(getOptionValue(option))}>
-              <span
-                class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span>
+              on:click={() => selectOption(getOptionValue(option))}
+            >
+              <span class="spectrum-Menu-itemLabel"
+                >{getOptionLabel(option)}</span
+              >
               <svg
                 class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
                 focusable="false"
-                aria-hidden="true">
+                aria-hidden="true"
+              >
                 <use xlink:href="#spectrum-css-icon-Checkmark100" />
               </svg>
             </li>

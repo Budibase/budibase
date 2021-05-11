@@ -7,9 +7,10 @@
   import Context from "../context"
 
   export let fixed = false
+  export let inline = false
 
   const dispatch = createEventDispatcher()
-  let visible = !!fixed
+  let visible = fixed || inline
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -20,7 +21,7 @@
   }
 
   export function hide() {
-    if (!visible || fixed) {
+    if (!visible || fixed || inline) {
       return
     }
     visible = false
@@ -45,18 +46,26 @@
 
 <svelte:window on:keydown={handleKey} />
 
-{#if visible}
+<!-- These svelte if statements need to be defined like this. -->
+<!-- The modal transitions do not work if nested inside more than one "if" -->
+{#if visible && inline}
+  <div use:focusFirstInput class="spectrum-Modal inline is-open">
+    <slot />
+  </div>
+{:else if visible}
   <Portal target=".modal-container">
     <div
       class="spectrum-Underlay is-open"
-      transition:fade={{ duration: 200 }}
-      on:mousedown|self={hide}>
+      transition:fade|local={{ duration: 200 }}
+      on:mousedown|self={hide}
+    >
       <div class="modal-wrapper" on:mousedown|self={hide}>
         <div class="modal-inner-wrapper" on:mousedown|self={hide}>
           <div
             use:focusFirstInput
             class="spectrum-Modal is-open"
-            transition:fly={{ y: 30, duration: 200 }}>
+            transition:fly|local={{ y: 30, duration: 200 }}
+          >
             <slot />
           </div>
         </div>
@@ -96,6 +105,7 @@
   }
 
   .spectrum-Modal {
+    background: var(--background);
     overflow: visible;
     max-height: none;
     margin: 40px 0;
@@ -103,5 +113,8 @@
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
+  }
+  :global(.spectrum--lightest .spectrum-Modal.inline) {
+    border: var(--border-light);
   }
 </style>

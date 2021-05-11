@@ -1,6 +1,6 @@
 const elastic = {}
 
-elastic.Client = function() {
+elastic.Client = function () {
   this.index = jest.fn().mockResolvedValue({ body: [] })
   this.search = jest.fn().mockResolvedValue({
     body: {

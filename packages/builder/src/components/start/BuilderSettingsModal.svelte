@@ -59,31 +59,33 @@
 </script>
 
 <ModalContent title="Builder settings" confirmText="Save" onConfirm={save}>
-  <Heading xs>Theme</Heading>
+  <Heading size="XS">Theme</Heading>
   <ThemeEditor />
   <Divider noMargin noGrid />
-  <Heading xs>Hosting</Heading>
-  <Body s>
+  <Heading size="XS">Hosting</Heading>
+  <Body size="S">
     This section contains settings that relate to the deployment and hosting of
     apps made in this builder.
   </Body>
   <Toggle
     text="Self hosted"
     on:change={updateSelfHosting}
-    bind:value={selfhosted} />
+    bind:value={selfhosted}
+  />
   {#if selfhosted}
     <Input bind:value={hostingInfo.hostingUrl} label="Hosting URL" />
     <Input bind:value={hostingInfo.selfHostKey} label="Hosting Key" />
     <Toggle text="HTTPS" bind:value={hostingInfo.useHttps} />
   {/if}
   <Divider noMargin noGrid />
-  <Heading xs>Analytics</Heading>
-  <Body s>
+  <Heading size="XS">Analytics</Heading>
+  <Body size="S">
     If you would like to send analytics that help us make budibase better,
     please let us know below.
   </Body>
   <Toggle
     text="Send Analytics To Budibase"
     value={!analyticsDisabled}
-    on:change={toggleAnalytics} />
+    on:change={toggleAnalytics}
+  />
 </ModalContent>

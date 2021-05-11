@@ -10,6 +10,7 @@ const {
 } = require("./linkUtils")
 const { flatten } = require("lodash")
 const CouchDB = require("../../db")
+const { FieldTypes } = require("../../constants")
 const { getMultiIDParams } = require("../../db/utils")
 
 /**
@@ -68,7 +69,7 @@ async function getLinksForRows(appId, rows) {
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
-exports.updateLinks = async function({
+exports.updateLinks = async function ({
   eventType,
   appId,
   row,
@@ -141,14 +142,14 @@ exports.attachLinkIDs = async (appId, rows) => {
 }
 
 /**
- * Given information about the table we can extract the display name from the linked rows, this
- * is what we do for showing the display name of each linked row when in a table format.
+ * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
+ * This is required for formula fields, this may only be utilised internally (for now).
  * @param {string} appId The app in which the tables/rows/links exist.
  * @param {object} table The table from which the rows originated.
- * @param {array<object>} rows The rows which are to be enriched with the linked display names/IDs.
- * @returns {Promise<Array>} The enriched rows after having display names/IDs attached to the linked fields.
+ * @param {array<object>} rows The rows which are to be enriched.
+ * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
  */
-exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
+exports.attachFullLinkedDocs = async (appId, table, rows) => {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -161,7 +162,6 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
   const linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
     row => row.doc
   )
-  // will populate this as we find them
   const linkedTables = []
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
@@ -175,13 +175,44 @@ exports.attachLinkedPrimaryDisplay = async (appId, table, rows) => {
       if (!linkedRow || !linkedTable) {
         continue
       }
-      const obj = { _id: linkedRow._id }
-      // if we know the display column, add it
-      if (linkedRow[linkedTable.primaryDisplay] != null) {
-        obj.primaryDisplay = linkedRow[linkedTable.primaryDisplay]
-      }
-      row[link.fieldName].push(obj)
+      row[link.fieldName].push(linkedRow)
     }
   }
   return rows
+}
+
+/**
+ * This function will take the given enriched rows and squash the links to only contain the primary display field.
+ * @param {string} appId The app in which the tables/rows/links exist.
+ * @param {object} table The table from which the rows originated.
+ * @param {array<object>} enriched The pre-enriched rows (full docs) which are to be squashed.
+ * @returns {Promise<Array>} The rows after having their links squashed to only contain the ID and primary display.
+ */
+exports.squashLinksToPrimaryDisplay = async (appId, table, enriched) => {
+  const db = new CouchDB(appId)
+  // will populate this as we find them
+  const linkedTables = []
+  for (let [column, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.LINK) {
+      continue
+    }
+    for (let row of enriched) {
+      if (!row[column] || !row[column].length) {
+        continue
+      }
+      const newLinks = []
+      for (let link of row[column]) {
+        const linkTblId = link.tableId || getRelatedTableForField(table, column)
+        // this only fetches the table if its not already in array
+        const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
+        const obj = { _id: link._id }
+        if (link[linkedTable.primaryDisplay]) {
+          obj.primaryDisplay = link[linkedTable.primaryDisplay]
+        }
+        newLinks.push(obj)
+      }
+      row[column] = newLinks
+    }
+  }
+  return enriched
 }

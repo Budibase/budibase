@@ -13,6 +13,7 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
+  export let quiet = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +30,7 @@
 
 <Field {label} {labelPosition} {error}>
   <Select
+    {quiet}
     {error}
     {disabled}
     {readonly}
@@ -38,5 +40,6 @@
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}
-    on:click />
+    on:click
+  />
 </Field>

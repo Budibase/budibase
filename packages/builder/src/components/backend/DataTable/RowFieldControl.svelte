@@ -1,7 +1,7 @@
 <script>
   import { Input, Select, DatePicker, Toggle, TextArea } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
-  import { capitalise } from "../../../helpers"
+  import { capitalise } from "helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
 
   export let defaultValue
@@ -13,21 +13,22 @@
   $: label = capitalise(meta.name)
 </script>
 
-{#if type === 'options'}
+{#if type === "options"}
   <Select
     {label}
     data-cy="{meta.name}-select"
     bind:value
-    options={meta.constraints.inclusion} />
-{:else if type === 'datetime'}
+    options={meta.constraints.inclusion}
+  />
+{:else if type === "datetime"}
   <DatePicker {label} bind:value />
-{:else if type === 'attachment'}
+{:else if type === "attachment"}
   <Dropzone {label} bind:value />
-{:else if type === 'boolean'}
+{:else if type === "boolean"}
   <Toggle text={label} bind:checked={value} data-cy="{meta.name}-input" />
-{:else if type === 'link'}
+{:else if type === "link"}
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />
-{:else if type === 'longform'}
+{:else if type === "longform"}
   <TextArea {label} bind:value />
 {:else}
   <Input
@@ -35,5 +36,6 @@
     data-cy="{meta.name}-input"
     {type}
     bind:value
-    disabled={readonly} />
+    disabled={readonly}
+  />
 {/if}

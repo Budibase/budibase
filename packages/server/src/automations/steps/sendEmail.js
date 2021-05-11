@@ -48,7 +48,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs }) {
+module.exports.run = async function ({ inputs }) {
   const sgMail = require("@sendgrid/mail")
   sgMail.setApiKey(inputs.apiKey)
   const msg = {

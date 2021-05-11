@@ -4,6 +4,7 @@
   import Menu from "../Menu/Menu.svelte"
 
   export let disabled = false
+  export let align = "left"
 
   let anchor
   let dropdown
@@ -31,7 +32,7 @@
 <div use:getAnchor on:click={openMenu}>
   <slot name="control" />
 </div>
-<Popover bind:this={dropdown} {anchor} align="left">
+<Popover bind:this={dropdown} {anchor} {align}>
   <Menu>
     <slot />
   </Menu>

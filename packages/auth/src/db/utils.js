@@ -123,7 +123,7 @@ const getConfigParams = ({ type, group, user }, otherProps = {}) => {
  * @param {Object} scopes - the type, group and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
-const determineScopedConfig = async function(db, { type, user, group }) {
+const getScopedFullConfig = async function (db, { type, user, group }) {
   const response = await db.allDocs(
     getConfigParams(
       { type, user, group },
@@ -132,31 +132,40 @@ const determineScopedConfig = async function(db, { type, user, group }) {
       }
     )
   )
-  const configs = response.rows.map(row => {
+
+  function determineScore(row) {
     const config = row.doc
 
     // Config is specific to a user and a group
     if (config._id.includes(generateConfigID({ type, user, group }))) {
-      config.score = 4
+      return 4
     } else if (config._id.includes(generateConfigID({ type, user }))) {
       // Config is specific to a user only
-      config.score = 3
+      return 3
     } else if (config._id.includes(generateConfigID({ type, group }))) {
       // Config is specific to a group only
-      config.score = 2
+      return 2
     } else if (config._id.includes(generateConfigID({ type }))) {
       // Config is specific to a type only
-      config.score = 1
+      return 1
     }
-    return config
-  })
+    return 0
+  }
 
   // Find the config with the most granular scope based on context
-  const scopedConfig = configs.sort((a, b) => b.score - a.score)[0]
+  const scopedConfig = response.rows.sort(
+    (a, b) => determineScore(a) - determineScore(b)
+  )[0]
 
-  return scopedConfig
+  return scopedConfig && scopedConfig.doc
 }
 
+async function getScopedConfig(db, params) {
+  const configDoc = await getScopedFullConfig(db, params)
+  return configDoc && configDoc.config ? configDoc.config : configDoc
+}
+
+exports.getScopedConfig = getScopedConfig
 exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams
-exports.determineScopedConfig = determineScopedConfig
+exports.getScopedFullConfig = getScopedFullConfig

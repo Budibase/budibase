@@ -166,12 +166,23 @@
       schema = {}
     }
 
-    // Ensure all schema fields have a name property
-    Object.entries(schema).forEach(([key, value]) => {
-      if (!value.name) {
-        value.name = key
+    // Ensure there are "name" properties for all fields and that field schema
+    // are objects
+    let fixedSchema = {}
+    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      if (typeof fieldSchema === "string") {
+        fixedSchema[fieldName] = {
+          type: fieldSchema,
+          name: fieldName,
+        }
+      } else {
+        fixedSchema[fieldName] = {
+          ...fieldSchema,
+          name: fieldName,
+        }
       }
     })
+    schema = fixedSchema
   }
 
   const nextPage = async () => {

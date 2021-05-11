@@ -53,18 +53,21 @@
             {onStyleChanged}
             {componentInstance}
             open={currentGroup === groupName}
-            on:open={() => (currentGroup = groupName)} />
+            on:open={() => (currentGroup = groupName)}
+          />
         {/each}
         <DetailSummary
-          name={`Custom Styles${componentInstance._styles.custom ? ' *' : ''}`}
-          on:open={() => (currentGroup = 'custom')}
-          show={currentGroup === 'custom'}
-          thin>
+          name={`Custom Styles${componentInstance._styles.custom ? " *" : ""}`}
+          on:open={() => (currentGroup = "custom")}
+          show={currentGroup === "custom"}
+          thin
+        >
           <div class="custom-styles">
             <TextArea
               value={componentInstance._styles.custom}
               on:change={event => onCustomStyleChanged(event.detail)}
-              placeholder="Enter some CSS..." />
+              placeholder="Enter some CSS..."
+            />
           </div>
         </DetailSummary>
         <Button secondary wide on:click={onResetStyles}>Reset Styles</Button>
@@ -83,7 +86,8 @@
         name="transition"
         label="Transition"
         options={transitions}
-        getOptionLabel={capitalize} />
+        getOptionLabel={capitalize}
+      />
     </div>
   {/if}
 </div>

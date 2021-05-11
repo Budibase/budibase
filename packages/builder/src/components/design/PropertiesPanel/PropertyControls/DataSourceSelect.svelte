@@ -100,18 +100,20 @@
     readonly
     value={text}
     options={[text]}
-    on:click={dropdownRight.show} />
-  {#if value?.type === 'query'}
+    on:click={dropdownRight.show}
+  />
+  {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={'Query Parameters'} bind:this={drawer}>
+    <Drawer title={"Query Parameters"} bind:this={drawer}>
       <Button
         slot="buttons"
         cta
         on:click={() => {
-          notifications.success('Query parameters saved.')
+          notifications.success("Query parameters saved.")
           handleSelected(value)
           drawer.hide()
-        }}>
+        }}
+      >
         Save
       </Button>
       <DrawerContent slot="body">
@@ -119,15 +121,20 @@
           {#if value.parameters.length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
-              parameters={queries.find(query => query._id === value._id).parameters}
-              bindings={queryBindableProperties} />
+              parameters={queries.find(query => query._id === value._id)
+                .parameters}
+              bindings={queryBindableProperties}
+            />
           {/if}
           <IntegrationQueryEditor
             height={200}
             query={value}
             schema={fetchQueryDefinition(value)}
-            datasource={$datasources.list.find(ds => ds._id === value.datasourceId)}
-            editable={false} />
+            datasource={$datasources.list.find(
+              ds => ds._id === value.datasourceId
+            )}
+            editable={false}
+          />
         </Layout>
       </DrawerContent>
     </Drawer>
@@ -136,7 +143,7 @@
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading xs h3>Tables</Heading>
+      <Heading size="XS">Tables</Heading>
     </div>
     <ul>
       {#each tables as table}
@@ -145,7 +152,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Views</Heading>
+      <Heading size="XS">Views</Heading>
     </div>
     <ul>
       {#each views as view}
@@ -154,7 +161,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Relationships</Heading>
+      <Heading size="XS">Relationships</Heading>
     </div>
     <ul>
       {#each links as link}
@@ -163,13 +170,14 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading xs h3>Queries</Heading>
+      <Heading size="XS">Queries</Heading>
     </div>
     <ul>
       {#each queries as query}
         <li
           class:selected={value === query}
-          on:click={() => handleSelected(query)}>
+          on:click={() => handleSelected(query)}
+        >
           {query.label}
         </li>
       {/each}
@@ -178,7 +186,7 @@
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">
-        <Heading extraSmall>Other</Heading>
+        <Heading size="XS">Other</Heading>
       </div>
       <ul>
         {#each otherSources as source}

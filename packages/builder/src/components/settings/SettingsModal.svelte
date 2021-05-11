@@ -6,7 +6,8 @@
 <ModalContent
   title="Settings"
   showConfirmButton={false}
-  showCancelButton={false}>
+  showCancelButton={false}
+>
   <div class="container">
     <Tabs selected="General">
       <Tab title="General">

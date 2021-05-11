@@ -134,10 +134,7 @@ function run() {
         .map(
           tag =>
             tag.description &&
-            tag.description
-              .replace(/`/g, "")
-              .split(" ")[0]
-              .trim()
+            tag.description.replace(/`/g, "").split(" ")[0].trim()
         )
       collectionInfo[name] = fixSpecialCases(name, {
         args,

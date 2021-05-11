@@ -27,7 +27,7 @@ function formatResponse(resp) {
   return resp
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   const body = await db.allDocs(
@@ -38,7 +38,7 @@ exports.fetch = async function(ctx) {
   ctx.body = enrichQueries(body.rows.map(row => row.doc))
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const query = ctx.request.body
 
@@ -89,7 +89,7 @@ async function enrichQueryFields(fields, parameters) {
   return enrichedQuery
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
@@ -101,7 +101,7 @@ exports.find = async function(ctx) {
   ctx.body = query
 }
 
-exports.preview = async function(ctx) {
+exports.preview = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   const datasource = await db.get(ctx.request.body.datasourceId)
@@ -129,7 +129,7 @@ exports.preview = async function(ctx) {
   }
 }
 
-exports.execute = async function(ctx) {
+exports.execute = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   const query = await db.get(ctx.params.queryId)
@@ -152,7 +152,7 @@ exports.execute = async function(ctx) {
   )
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`

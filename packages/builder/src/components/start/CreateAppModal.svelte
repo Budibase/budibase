@@ -1,58 +1,50 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import { notifications, Heading, Button } from "@budibase/bbui"
+  import {
+    notifications,
+    Input,
+    ModalContent,
+    Dropzone,
+    Body,
+    Checkbox,
+  } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
-  import { string, object } from "yup"
+  import { string, mixed, object } from "yup"
   import api, { get } from "builderStore/api"
-  import Spinner from "components/common/Spinner.svelte"
-  import { Info, User } from "./Steps"
-  import Indicator from "./Indicator.svelte"
-  import { goto } from "@roxi/routify"
-  import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
-  import Logo from "/assets/bb-logo.svg"
-  import { capitalise } from "../../helpers"
+  import { capitalise } from "helpers"
+  import { goto } from "@roxi/routify"
 
   export let template
 
-  const currentStep = writable(0)
-  const values = writable({ roleId: "ADMIN" })
+  const values = writable({ name: null })
   const errors = writable({})
   const touched = writable({})
-  const steps = [Info, User]
-  let validators = [
-    {
-      applicationName: string().required("Your application must have a name"),
-    },
-    {
-      roleId: string()
-        .nullable()
-        .required("You need to select a role for this app"),
-    },
-  ]
+  const validator = {
+    name: string().required("Your application must have a name"),
+    file: template ? mixed().required("Please choose a file to import") : null,
+  }
 
   let submitting = false
   let valid = false
-  $: checkValidity($values, validators[$currentStep])
+  $: checkValidity($values, validator)
 
   onMount(async () => {
-    const hostingInfo = await hostingStore.actions.fetch()
-    if (hostingInfo.type === "self") {
-      await hostingStore.actions.fetchDeployedApps()
-      const existingAppNames = svelteGet(hostingStore).deployedAppNames
-      validators[0].applicationName = string()
-        .required("Your application must have a name.")
-        .test(
-          "non-existing-app-name",
-          "App with same name already exists. Please try another app name.",
-          value =>
-            !existingAppNames.some(
-              appName => appName.toLowerCase() === value.toLowerCase()
-            )
-        )
-    }
+    await hostingStore.actions.fetchDeployedApps()
+    const existingAppNames = svelteGet(hostingStore).deployedAppNames
+    validator.name = string()
+      .required("Your application must have a name")
+      .test(
+        "non-existing-app-name",
+        "Another app with the same name already exists",
+        value => {
+          return !existingAppNames.some(
+            appName => appName.toLowerCase() === value.toLowerCase()
+          )
+        }
+      )
   })
 
   const checkValidity = async (values, validator) => {
@@ -70,15 +62,24 @@
 
   async function createNewApp() {
     submitting = true
+
+    // Check a template exists if we are important
+    if (template && !$values.file) {
+      $errors.file = "Please choose a file to import"
+      valid = false
+      submitting = false
+      return false
+    }
+
     try {
       // Create form data to create app
       let data = new FormData()
-      data.append("name", $values.applicationName)
+      data.append("name", $values.name)
       data.append("useTemplate", template != null)
       if (template) {
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
-        data.append("templateFile", template.file)
+        data.append("templateFile", $values.file)
       }
 
       // Create App
@@ -89,7 +90,7 @@
       }
 
       analytics.captureEvent("App Created", {
-        name: $values.applicationName,
+        name: $values.name,
         appId: appJson._id,
         template,
       })
@@ -112,7 +113,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      $goto(`./${appJson._id}`)
+      $goto(`/builder/app/${appJson._id}`)
     } catch (error) {
       console.error(error)
       notifications.error(error)
@@ -121,126 +122,33 @@
   }
 </script>
 
-<div class="container">
-  <div class="sidebar">
-    <img src={Logo} alt="budibase icon" />
-    <div class="steps">
-      {#each steps as component, i}
-        <Indicator
-          active={$currentStep === i}
-          done={i < $currentStep}
-          step={i + 1} />
-      {/each}
-    </div>
-  </div>
-  <div class="body">
-    <div class="heading">
-      <Heading h2 l>Get started with Budibase</Heading>
-    </div>
-    <div class="step">
-      {#each steps as component, i (i)}
-        <div class:hidden={$currentStep !== i}>
-          <svelte:component
-            this={component}
-            {template}
-            {values}
-            {errors}
-            {touched} />
-        </div>
-      {/each}
-    </div>
-    <div class="footer">
-      {#if $currentStep > 0}
-        <Button medium secondary on:click={() => $currentStep--}>Back</Button>
-      {/if}
-      {#if $currentStep < steps.length - 1}
-        <Button medium cta on:click={() => $currentStep++} disabled={!valid}>
-          Next
-        </Button>
-      {/if}
-      {#if $currentStep === steps.length - 1}
-        <Button
-          medium
-          cta
-          on:click={createNewApp}
-          disabled={!valid || submitting}>
-          {submitting ? 'Loading...' : 'Submit'}
-        </Button>
-      {/if}
-    </div>
-  </div>
-  {#if submitting}
-    <div in:fade class="spinner-container">
-      <Spinner />
-      <span class="spinner-text">Creating your app...</span>
-    </div>
+<ModalContent
+  title={template ? "Import app" : "Create new app"}
+  confirmText={template ? "Import app" : "Create app"}
+  onConfirm={createNewApp}
+  disabled={!valid}
+>
+  {#if template}
+    <Dropzone
+      error={$touched.file && $errors.file}
+      gallery={false}
+      label="File to import"
+      value={[$values.file]}
+      on:change={e => {
+        $values.file = e.detail?.[0]
+        $touched.file = true
+      }}
+    />
   {/if}
-</div>
-
-<style>
-  .container {
-    min-height: 600px;
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    position: relative;
-  }
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    padding: 40px 0;
-    background: var(--grey-1);
-  }
-  .steps {
-    flex: 1 1 auto;
-    display: grid;
-    border-bottom-left-radius: 0.5rem;
-    border-top-left-radius: 0.5rem;
-    grid-gap: 30px;
-    align-content: center;
-  }
-  .heading {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  .body {
-    padding: 40px 60px 40px 60px;
-    display: grid;
-    align-items: center;
-    grid-template-rows: auto 1fr auto;
-  }
-  .footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 15px;
-  }
-  .spinner-container {
-    background: var(--background);
-    position: absolute;
-    border-radius: 5px;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    grid-gap: 50px;
-  }
-  .spinner-text {
-    font-size: 2em;
-  }
-
-  .hidden {
-    display: none;
-  }
-  img {
-    height: 40px;
-    margin-bottom: 20px;
-  }
-</style>
+  <Body size="S">
+    Give your new app a name, and choose which groups have access (paid plans
+    only).
+  </Body>
+  <Input
+    bind:value={$values.name}
+    error={$touched.name && $errors.name}
+    on:blur={() => ($touched.name = true)}
+    label="Name"
+  />
+  <Checkbox label="Group access" disabled value={true} text="All users" />
+</ModalContent>

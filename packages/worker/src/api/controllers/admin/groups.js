@@ -7,7 +7,7 @@ const {
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const groupDoc = ctx.request.body
 
@@ -27,7 +27,7 @@ exports.save = async function(ctx) {
   }
 }
 
-exports.fetch = async function(ctx) {
+exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
     getGroupParams(undefined, {
@@ -37,7 +37,7 @@ exports.fetch = async function(ctx) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   try {
     ctx.body = await db.get(ctx.params.id)
@@ -46,7 +46,7 @@ exports.find = async function(ctx) {
   }
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const { id, rev } = ctx.params
 

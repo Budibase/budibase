@@ -11,6 +11,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let readonly = false
+  export let quiet = false
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -43,6 +44,7 @@
 <Picker
   on:click
   bind:open
+  {quiet}
   {id}
   {error}
   {disabled}
@@ -51,7 +53,8 @@
   {options}
   {getOptionLabel}
   {getOptionValue}
-  isPlaceholder={value == null || value === ''}
+  isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
   isOptionSelected={option => option === value}
-  onSelectOption={selectOption} />
+  onSelectOption={selectOption}
+/>

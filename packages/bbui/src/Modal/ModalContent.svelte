@@ -7,7 +7,7 @@
   import Context from "../context"
 
   export let title = undefined
-  export let size = "small"
+  export let size = "S"
   export let cancelText = "Cancel"
   export let confirmText = "Confirm"
   export let showCancelButton = true
@@ -30,11 +30,16 @@
 </script>
 
 <div
-  class="spectrum-Dialog spectrum-Dialog--{size}"
+  class="spectrum-Dialog"
+  class:spectrum-Dialog--small={size === "S"}
+  class:spectrum-Dialog--medium={size === "M"}
+  class:spectrum-Dialog--large={size === "L"}
+  class:spectrum-Dialog--extraLarge={size === "XL"}
   style="position: relative;"
   role="dialog"
   tabindex="-1"
-  aria-modal="true">
+  aria-modal="true"
+>
   <div class="spectrum-Dialog-grid">
     <h1 class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader">
       {title}
@@ -47,7 +52,8 @@
     </section>
     {#if showCancelButton || showConfirmButton}
       <div
-        class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter">
+        class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
+      >
         <slot name="footer" />
         {#if showCancelButton}
           <Button group secondary on:click={hide}>{cancelText}</Button>
@@ -58,7 +64,8 @@
             cta
             {...$$restProps}
             disabled={confirmDisabled}
-            on:click={confirm}>
+            on:click={confirm}
+          >
             {confirmText}
           </Button>
         {/if}
@@ -73,6 +80,10 @@
 </div>
 
 <style>
+  .spectrum-Dialog--extraLarge {
+    width: 1000px;
+  }
+
   .content-grid {
     display: grid;
     position: relative;

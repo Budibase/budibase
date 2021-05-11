@@ -41,16 +41,18 @@
 
 <ModalContent
   title="Create Datasource"
-  size="large"
+  size="L"
   confirmText="Create"
   onConfirm={saveDatasource}
-  disabled={error || !name}>
+  disabled={error || !name}
+>
   <Input
     data-cy="datasource-name-input"
     label="Datasource Name"
     on:input={checkValid}
     bind:value={name}
-    {error} />
+    {error}
+  />
   <Label>Datasource Type</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

@@ -273,6 +273,19 @@ describe("test the comparison helpers", () => {
   })
 })
 
+describe("Test the object/array helper", () => {
+  it("should allow plucking from an array of objects", async () => {
+    const context = {
+      items: [
+        { price: 20 },
+        { price: 30 },
+      ]
+    }
+    const output = await processString("{{ literal ( sum ( pluck items 'price' ) ) }}", context)
+    expect(output).toBe(50)
+  })
+})
+
 describe("Test the literal helper", () => {
   it("should allow use of the literal specifier for a number", async () => {
     const output = await processString(`{{literal a}}`, {

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
 
   export let imageUrl = ""
@@ -13,7 +13,7 @@
 </script>
 
 <div class="container" use:styleable={$component.styles}>
-  <a href={destinationUrl}>
+  <a use:linkable href={destinationUrl}>
     <div class="stackedlist">
       {#if showImage}
         <div class="image-block">

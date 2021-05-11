@@ -51,8 +51,8 @@
   }
 </script>
 
-<Button primary on:click={drawer.show}>Define Actions</Button>
-<Drawer bind:this={drawer} title={'Actions'}>
+<Button secondary on:click={drawer.show}>Define Actions</Button>
+<Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.
   </svelte:fragment>

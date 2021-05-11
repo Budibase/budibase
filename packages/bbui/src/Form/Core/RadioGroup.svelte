@@ -21,14 +21,16 @@
       <div
         title={getOptionLabel(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
-        class:is-invalid={!!error}>
+        class:is-invalid={!!error}
+      >
         <input
           on:change={onChange}
           bind:group={value}
           value={getOptionValue(option)}
           type="radio"
           class="spectrum-Radio-input"
-          {disabled} />
+          {disabled}
+        />
         <span class="spectrum-Radio-button" />
         <label class="spectrum-Radio-label">{getOptionLabel(option)}</label>
       </div>

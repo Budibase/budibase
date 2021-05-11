@@ -4,7 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import DrawerBindableInput from "components/common/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let bindable = true
   export let parameters = []
@@ -31,12 +31,12 @@
 
 <Layout paddingX="none" gap="S">
   <div class="controls">
-    <Heading s>Parameters</Heading>
+    <Heading size="XS">Parameters</Heading>
     {#if !bindable}
       <Button secondary on:click={newQueryParameter}>Add Param</Button>
     {/if}
   </div>
-  <Body s>
+  <Body size="S">
     {#if !bindable}
       Parameters come in two parts: the parameter name, and a default/fallback
       value.
@@ -64,7 +64,7 @@
           title={`Query parameter "${parameter.name}"`}
           placeholder="Value"
           thin
-          on:change={(evt) => onBindingChange(parameter.name, evt.detail)}
+          on:change={evt => onBindingChange(parameter.name, evt.detail)}
           value={runtimeToReadableBinding(
             bindings,
             customParams?.[parameter.name]

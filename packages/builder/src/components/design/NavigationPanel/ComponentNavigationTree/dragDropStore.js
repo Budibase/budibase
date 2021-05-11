@@ -13,7 +13,7 @@ export const DropPosition = {
   INSIDE: "inside",
 }
 
-export default function() {
+export default function () {
   const store = writable({})
 
   store.actions = {

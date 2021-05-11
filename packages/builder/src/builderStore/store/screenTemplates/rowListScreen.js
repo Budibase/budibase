@@ -4,7 +4,7 @@ import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 import { makePropSafe } from "@budibase/string-templates"
 
-export default function(tables) {
+export default function (tables) {
   return tables.map(table => {
     return {
       name: `${table.name} - List`,

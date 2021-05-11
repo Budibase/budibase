@@ -132,9 +132,13 @@
 
     if (destroyed) return
 
+    CodeMirror.commands.autocomplete = function (cm) {
+      CodeMirror.showHint(cm, CodeMirror.hint.javascript)
+    }
+
     editor = CodeMirror.fromTextArea(refs.editor, opts)
 
-    editor.on("change", (instance) => {
+    editor.on("change", instance => {
       if (!updating_externally) {
         const value = instance.getValue()
         dispatch("change", { value })
@@ -160,7 +164,7 @@
   }
 
   function sleep(ms) {
-    return new Promise((fulfil) => setTimeout(fulfil, ms))
+    return new Promise(fulfil => setTimeout(fulfil, ms))
   }
 </script>
 

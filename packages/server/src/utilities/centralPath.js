@@ -8,7 +8,7 @@ const path = require("path")
  * @param args Any number of string arguments to add to a path
  * @returns {string} The final path ready to use
  */
-exports.join = function(...args) {
+exports.join = function (...args) {
   return path.join(...args)
 }
 
@@ -17,6 +17,6 @@ exports.join = function(...args) {
  * @param args Any number of string arguments to add to a path
  * @returns {string} The final path ready to use
  */
-exports.resolve = function(...args) {
+exports.resolve = function (...args) {
   return path.resolve(...args)
 }

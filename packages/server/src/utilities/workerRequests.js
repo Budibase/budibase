@@ -19,12 +19,14 @@ function request(ctx, request) {
   if (!request.headers) {
     request.headers = {}
   }
-  if (request.body) {
+  if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
     request.body =
       typeof request.body === "object"
         ? JSON.stringify(request.body)
         : request.body
+  } else {
+    delete request.body
   }
   if (ctx.headers) {
     request.headers.cookie = ctx.headers.cookie
@@ -122,12 +124,15 @@ exports.saveGlobalUser = async (ctx, appId, body) => {
   if (json.status !== 200 && response.status !== 200) {
     ctx.throw(400, "Unable to save global user.")
   }
-  delete body.email
   delete body.password
-  delete body.roleId
-  delete body.status
   delete body.roles
   delete body.builder
+  // TODO: for now these have been left in as they are
+  // TODO: pretty important to keeping relationships working
+  // TODO: however if user metadata is changed this should be removed
+  // delete body.email
+  // delete body.roleId
+  // delete body.status
   return {
     ...body,
     _id: json._id,

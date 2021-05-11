@@ -1,7 +1,7 @@
 <script>
+  import { goto } from "@roxi/routify"
   import {
     notifications,
-    Button,
     Link,
     Input,
     Modal,
@@ -18,39 +18,30 @@
         username,
         password,
       })
-      notifications.success("Logged in successfully.")
+      notifications.success("Logged in successfully")
+      $goto("../portal")
     } catch (err) {
       console.error(err)
       notifications.error("Invalid credentials")
-    }
-  }
-
-  async function createTestUser() {
-    try {
-      await auth.firstUser()
-      notifications.success("Test user created")
-    } catch (err) {
-      console.error(err)
-      notifications.error("Could not create test user")
     }
   }
 </script>
 
 <Modal fixed>
   <ModalContent
-    size="L"
+    size="M"
     title="Log In"
     onConfirm={login}
     confirmText="Log In"
     showCancelButton={false}
-    showCloseIcon={false}>
+    showCloseIcon={false}
+  >
     <Input label="Email" bind:value={username} />
     <Input label="Password" type="password" on:change bind:value={password} />
     <div class="footer" slot="footer">
       <Link target="_blank" href="/api/admin/auth/google">
         Sign In With Google
       </Link>
-      <Button secondary on:click={createTestUser}>Create Test User</Button>
     </div>
   </ModalContent>
 </Modal>
