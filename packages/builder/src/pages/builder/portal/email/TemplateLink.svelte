@@ -1,12 +1,10 @@
 <script>
-  import { url } from "@roxi/routify"
-  import { Link } from "@budibase/bbui"
-  import { roles } from "stores/backend"
+  import { goto } from "@roxi/routify"
 
   export let value
 </script>
 
-<Link quiet href={$url(`./${value}`)}><span>{value}</span></Link>
+<span on:click={() => $goto(`./${value}`)}>{value}</span>
 
 <style>
   span {

@@ -1,4 +1,4 @@
-const { string, number } = require("../questions")
+const { number } = require("../questions")
 const { success } = require("../utils")
 const fs = require("fs")
 const path = require("path")
