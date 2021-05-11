@@ -23,11 +23,24 @@ module.exports.removeNull = obj => {
   return obj
 }
 
-module.exports.addConstants = obj => {
+module.exports.updateContext = obj => {
   if (obj.now == null) {
-    obj.now = new Date()
+    obj.now = (new Date()).toISOString()
   }
-  return obj
+  function recurse(obj) {
+    for (let key of Object.keys(obj)) {
+      if (!obj[key]) {
+        continue
+      }
+      if (obj[key] instanceof Date) {
+        obj[key] = obj[key].toISOString()
+      } else if (typeof obj[key] === "object") {
+        obj[key] = recurse(obj[key])
+      }
+    }
+    return obj
+  }
+  return recurse(obj)
 }
 
 module.exports.removeHandlebarsStatements = string => {

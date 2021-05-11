@@ -107,6 +107,12 @@ describe("check the utility functions", () => {
     const property = makePropSafe("thing")
     expect(property).toEqual("[thing]")
   })
+
+  it("should be able to handle an input date object", async () => {
+    const date = new Date()
+    const output = await processString("{{ dateObj }}", { dateObj: date })
+    expect(date.toISOString()).toEqual(output)
+  })
 })
 
 describe("check manifest", () => {
