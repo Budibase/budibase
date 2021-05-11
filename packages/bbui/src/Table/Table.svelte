@@ -214,7 +214,7 @@
     >
       <div style={contentStyle}>
         <table class="spectrum-Table" class:spectrum-Table--quiet={quiet}>
-          {#if sortedRows?.length}
+          {#if fields.length}
             <thead class="spectrum-Table-head">
               <tr>
                 {#if showEditColumn}
@@ -269,7 +269,7 @@
             </thead>
           {/if}
           <tbody class="spectrum-Table-body">
-            {#if sortedRows?.length}
+            {#if sortedRows?.length && fields.length}
               {#each sortedRows as row, idx}
                 <tr
                   on:click={() => dispatch("click", row)}
@@ -317,15 +317,25 @@
                 </tr>
               {/each}
             {:else}
-              <div class="placeholder">
-                <svg
-                  class="spectrum-Icon spectrum-Icon--sizeXXL"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
-                <div>No rows found</div>
-              </div>
+              <tr class="placeholder-row">
+                {#if showEditColumn}
+                  <td class="placeholder-offset" />
+                {/if}
+                {#each fields as field}
+                  <td />
+                {/each}
+                <div class="placeholder" class:has-fields={fields.length > 0}>
+                  <div class="placeholder-content">
+                    <svg
+                      class="spectrum-Icon spectrum-Icon--sizeXXL"
+                      focusable="false"
+                    >
+                      <use xlink:href="#spectrum-icon-18-Table" />
+                    </svg>
+                    <div>No rows found</div>
+                  </div>
+                </div>
+              </tr>
             {/if}
           </tbody>
         </table>
@@ -348,7 +358,7 @@
     overflow: auto;
   }
   .container.quiet {
-    border: none !important;
+    border: none;
   }
   table {
     width: 100%;
@@ -382,7 +392,7 @@
     z-index: 2;
     background-color: var(--spectrum-alias-background-color-secondary);
     border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
   }
   .spectrum-Table-headCell-content {
     white-space: nowrap;
@@ -397,7 +407,34 @@
     text-overflow: ellipsis;
   }
 
+  .placeholder-row {
+    position: relative;
+    height: 150px;
+  }
+  .placeholder-row td {
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+  .placeholder-offset {
+    width: 1px;
+  }
   .placeholder {
+    top: 0;
+    height: 100%;
+    left: 0;
+    width: 100%;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  .placeholder.has-fields {
+    top: var(--header-height);
+    height: calc(100% - var(--header-height));
+  }
+
+  .placeholder-content {
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -408,12 +445,13 @@
       var(--spectrum-alias-text-color)
     );
   }
-  .placeholder div {
+  .placeholder-content div {
     margin-top: 10px;
     font-size: var(
       --spectrum-table-cell-text-size,
       var(--spectrum-alias-font-size-default)
     );
+    text-align: center;
   }
 
   tbody {
@@ -432,17 +470,17 @@
   td {
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom: none !important;
+    border-bottom: none;
     border-top: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
-    border-radius: 0 !important;
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    border-radius: 0;
   }
   tr:first-child td {
-    border-top: none !important;
+    border-top: none;
   }
   tr:last-child td {
     border-bottom: 1px solid
-      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid)) !important;
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
   }
   td.spectrum-Table-cell--divider {
     width: 1px;
