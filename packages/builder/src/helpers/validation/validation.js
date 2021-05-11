@@ -1,9 +1,16 @@
 import { writable, derived } from 'svelte/store'
 
 export function createValidationStore(initialValue, ...validators) {
+	let touched = false
 	
 	const value = writable(initialValue || '') 
-	const error = derived(value, $v => validate($v, validators))
+	const error = derived(value, $v => {
+		if (touched) {
+			return validate($v, validators)
+		} else {
+			touched = true
+		}
+	})
 	
 	return [value, error]
 }
