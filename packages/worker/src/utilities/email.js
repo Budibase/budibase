@@ -141,7 +141,7 @@ exports.sendEmail = async (
   { groupId, user, from, contents, subject } = {}
 ) => {
   const db = new CouchDB(GLOBAL_DB)
-  let config = await getSmtpConfiguration(db, groupId) || {}
+  let config = (await getSmtpConfiguration(db, groupId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }
