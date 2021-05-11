@@ -20,7 +20,8 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
   }
   const URL = settings.platformUrl
   const context = {
-    [TemplateBindings.LOGO_URL]: settings.logoUrl || LOGO_URL,
+    [TemplateBindings.LOGO_URL]:
+      checkSlashesInUrl(`${URL}/${settings.logoUrl}`) || LOGO_URL,
     [TemplateBindings.PLATFORM_URL]: URL,
     [TemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
     [TemplateBindings.DOCS_URL]:

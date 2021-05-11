@@ -14,7 +14,7 @@
     getBindableProperties,
     readableToRuntimeBinding,
   } from "builderStore/dataBinding"
-  import { currentAsset, store } from "../../../builderStore"
+  import { currentAsset, store } from "builderStore"
   import { handlebarsCompletions } from "constants/completions"
   import { addToText } from "./utils"
 

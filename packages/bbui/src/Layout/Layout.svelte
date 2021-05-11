@@ -5,9 +5,11 @@
   export let noPadding = false
   export let gap = "M"
   export let noGap = false
+  export let alignContent = "normal"
 </script>
 
 <div
+  style="align-content:{alignContent};"
   class:horizontal
   class="container paddingX-{!noPadding && paddingX} paddingY-{!noPadding &&
     paddingY} gap-{!noGap && gap}"
@@ -43,6 +45,9 @@
   .paddingY-L {
     padding-top: var(--spacing-l);
     padding-bottom: var(--spacing-l);
+  }
+  .gap-XS {
+    grid-gap: var(--spacing-s);
   }
   .gap-S {
     grid-gap: var(--spectrum-alias-grid-gutter-xsmall);

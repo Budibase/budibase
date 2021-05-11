@@ -2,7 +2,7 @@ import { writable } from "svelte/store"
 import api from "builderStore/api"
 
 export function createUsersStore() {
-  const { subscribe, set } = writable({})
+  const { subscribe, set } = writable([])
 
   async function init() {
     try {

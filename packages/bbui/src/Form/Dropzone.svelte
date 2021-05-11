@@ -11,6 +11,7 @@
   export let fileSizeLimit = undefined
   export let processFiles = undefined
   export let handleFileTooLarge = undefined
+  export let gallery = true
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -27,6 +28,7 @@
     {fileSizeLimit}
     {processFiles}
     {handleFileTooLarge}
+    {gallery}
     on:change={onChange}
   />
 </Field>

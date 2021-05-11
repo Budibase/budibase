@@ -1,22 +1,12 @@
 <script>
-  import { isActive, url, goto } from "@roxi/routify"
-  import { onMount } from "svelte"
   import {
     ActionMenu,
     Checkbox,
-    Body,
     MenuItem,
-    Icon,
     Heading,
-    Avatar,
-    Search,
-    Layout,
     ProgressCircle,
-    SideNavigation as Navigation,
-    SideNavigationItem as Item,
   } from "@budibase/bbui"
-  import api from "builderStore/api"
-  import { organisation, admin } from "stores/portal"
+  import { admin } from "stores/portal"
 
   const MESSAGES = {
     apps: "Create your first app",

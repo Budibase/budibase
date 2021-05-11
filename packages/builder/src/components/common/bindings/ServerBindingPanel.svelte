@@ -10,7 +10,7 @@
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
-  import { readableToRuntimeBinding } from "../../../builderStore/dataBinding"
+  import { readableToRuntimeBinding } from "builderStore/dataBinding"
   import { addToText } from "./utils"
 
   const dispatch = createEventDispatcher()
