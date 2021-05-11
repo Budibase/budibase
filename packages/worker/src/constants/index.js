@@ -27,7 +27,6 @@ const TemplateTypes = {
 
 const EmailTemplatePurpose = {
   BASE: "base",
-  STYLES: "styles",
   PASSWORD_RECOVERY: "password_recovery",
   INVITATION: "invitation",
   WELCOME: "welcome",
@@ -38,7 +37,6 @@ const TemplateBindings = {
   PLATFORM_URL: "platformUrl",
   COMPANY: "company",
   LOGO_URL: "logoUrl",
-  STYLES: "styles",
   BODY: "body",
   INVITE_URL: "inviteUrl",
   EMAIL: "email",
@@ -51,15 +49,11 @@ const TemplateBindings = {
   CURRENT_DATE: "currentDate",
   RESET_CODE: "resetCode",
   INVITE_CODE: "inviteCode",
+  CONTENTS: "contents",
 }
 
 const TemplateMetadata = {
   [TemplateTypes.EMAIL]: [
-    {
-      name: "Styling",
-      purpose: EmailTemplatePurpose.STYLES,
-      bindings: ["url", "company", "companyUrl", "styles", "body"],
-    },
     {
       name: "Base Format",
       purpose: EmailTemplatePurpose.BASE,
@@ -76,6 +70,7 @@ const TemplateMetadata = {
     {
       name: "Custom",
       purpose: EmailTemplatePurpose.CUSTOM,
+      bindings: ["contents"],
     },
   ],
 }

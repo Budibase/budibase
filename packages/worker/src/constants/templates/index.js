@@ -17,10 +17,10 @@ exports.EmailTemplates = {
     join(__dirname, "invitation.hbs")
   ),
   [EmailTemplatePurpose.BASE]: readStaticFile(join(__dirname, "base.hbs")),
-  [EmailTemplatePurpose.STYLES]: readStaticFile(join(__dirname, "style.hbs")),
   [EmailTemplatePurpose.WELCOME]: readStaticFile(
     join(__dirname, "welcome.hbs")
   ),
+  [EmailTemplatePurpose.CUSTOM]: readStaticFile(join(__dirname, "custom.hbs")),
 }
 
 exports.addBaseTemplates = (templates, type = null) => {
