@@ -1,22 +1,24 @@
 import { writable } from "svelte/store"
 import api from "builderStore/api"
 
+const FALLBACK_CONFIG = {
+  platformUrl: "",
+  logoUrl: "",
+  docsUrl: "",
+  company: "",
+}
+
 export function createOrganisationStore() {
   const { subscribe, set } = writable({})
 
   async function init() {
-    try {
       const response = await api.get(`/api/admin/configs/settings`)
       const json = await response.json()
-      set(json)
-    } catch (error) {
-      set({
-        platformUrl: "",
-        logoUrl: "",
-        docsUrl: "",
-        company: "",
-      })
-    }
+      if (json.status === 400) {
+        set({ config: FALLBACK_CONFIG})
+      } else {
+        set(json)
+      }
   }
 
   return {
@@ -27,7 +29,7 @@ export function createOrganisationStore() {
         await init()
         return { status: 200 }
       } catch (error) {
-        return { error }
+        return { status: error }
       }
     },
     init,
