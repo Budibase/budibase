@@ -12,7 +12,7 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import { fetchData } from "helperStores"
+  import { fetchData } from "helpers"
 
   export let userId
   let deleteUserModal
