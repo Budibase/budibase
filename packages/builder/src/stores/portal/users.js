@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
 import api from "builderStore/api"
+import { update } from "lodash"
 
 export function createUsersStore() {
   const { subscribe, set } = writable([])
@@ -31,7 +32,7 @@ export function createUsersStore() {
 
   async function del(id) {
     const response = await api.delete(`/api/admin/users/${id}`)
-    init()
+    update(users => (users.filter(user => user._id !== id)))
     return await response.json()
   }
 
