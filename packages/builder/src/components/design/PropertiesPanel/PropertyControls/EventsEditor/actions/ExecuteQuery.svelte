@@ -55,5 +55,6 @@
     height={200}
     {query}
     schema={fetchQueryDefinition(query)}
-    editable={false} />
+    editable={false}
+    {datasource} />
 {/if}
