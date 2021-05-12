@@ -13,6 +13,10 @@ if (env.isDev() || env.isTest()) {
     .delete("/api/admin/:devPath(.*)", controller.redirectDelete)
 }
 
-router.delete("/api/dev/:appId/lock", authorized(BUILDER), controller.removeLock)
+router.delete(
+  "/api/dev/:appId/lock",
+  authorized(BUILDER),
+  controller.removeLock
+)
 
 module.exports = router
