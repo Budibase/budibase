@@ -1558,5 +1558,18 @@
     "context": {
       "type": "schema"
     }
+  },
+  "pagination": {
+    "name": "Pagination Control",
+    "icon": "",
+    "styleable": true,
+    "hasChildren": "false",
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProviderId"
+      }
+    ]
   }
 }

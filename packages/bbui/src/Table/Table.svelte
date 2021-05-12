@@ -345,7 +345,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-secondary);
+    background-color: var(--spectrum-alias-background-color-default);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -389,7 +389,7 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--spectrum-alias-background-color-secondary);
+    background-color: var(--spectrum-alias-background-color-default);
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
   }
@@ -461,10 +461,6 @@
   }
   tbody tr.hidden {
     height: calc(var(--row-height) + 1px);
-  }
-  tbody tr.offset {
-    background-color: red;
-    display: block;
   }
   td {
     padding-top: 0;
