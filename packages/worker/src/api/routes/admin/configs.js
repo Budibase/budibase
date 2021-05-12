@@ -25,9 +25,9 @@ function smtpValidation() {
 function settingValidation() {
   // prettier-ignore
   return Joi.object({
-    platformUrl: Joi.string(),
-    logoUrl: Joi.string(),
-    docsUrl: Joi.string(),
+    platformUrl: Joi.string().optional(),
+    logoUrl: Joi.string().optional(),
+    docsUrl: Joi.string().optional(),
     company: Joi.string().required(),
   }).unknown(true)
 }
@@ -44,9 +44,9 @@ function googleValidation() {
 function buildConfigSaveValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    _id: Joi.string(),
-    _rev: Joi.string(),
-    group: Joi.string(),
+    _id: Joi.string().optional(),
+    _rev: Joi.string().optional(),
+    group: Joi.string().optional(),
     type: Joi.string().valid(...Object.values(Configs)).required(),
     config: Joi.alternatives()
       .conditional("type", {
