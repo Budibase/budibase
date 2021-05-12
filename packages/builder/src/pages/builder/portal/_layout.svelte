@@ -1,6 +1,5 @@
 <script>
   import { isActive, goto } from "@roxi/routify"
-  import { onMount } from "svelte"
   import {
     Icon,
     Avatar,
@@ -13,26 +12,13 @@
     Modal,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, apps } from "stores/portal"
+  import { organisation } from "stores/portal"
   import { auth } from "stores/backend"
   import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
 
-  let orgName
-  let orgLogo
-  let user
   let oldSettingsModal
 
-  async function getInfo() {
-    // fetch orgInfo
-    orgName = "ACME Inc."
-    orgLogo = "https://via.placeholder.com/150"
-    user = { name: "John Doe" }
-  }
-
-  onMount(() => {
-    organisation.init()
-    getInfo()
-  })
+  organisation.init()
 
   let menu = [
     { title: "Apps", href: "/builder/portal/apps" },
