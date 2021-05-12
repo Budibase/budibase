@@ -25,6 +25,13 @@ export function createUsersStore() {
 
   async function create({ email, password }) {
     const response = await api.post("/api/admin/users", { email, password, roles: {} })
+    init()
+    return await response.json()
+  }
+
+  async function del(id) {
+    const response = await api.delete(`/api/admin/users/${id}`)
+    init()
     return await response.json()
   }
 
@@ -42,6 +49,7 @@ export function createUsersStore() {
     init,
     invite,
     create,
+    del
   }
 }
 

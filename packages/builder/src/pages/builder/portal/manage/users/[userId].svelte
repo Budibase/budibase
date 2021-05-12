@@ -11,13 +11,25 @@
     Input,
     Modal,
     ModalContent,
+    notifications,
   } from "@budibase/bbui"
   import { fetchData } from "helpers"
+  import { users } from "stores/portal"
 
   export let userId
   let deleteUserModal
 
   const request = fetchData(`/api/admin/users/${userId}`)
+
+  async function deleteUser() {
+    const res = await users.del(userId)
+    if (res.message) {
+      notifications.success(res.message)
+      $goto("./")
+    } else {
+      notifications.error("Failed to delete user.")
+    }
+  }
 </script>
 
 <Layout noPadding gap="XS">
@@ -66,6 +78,7 @@
 <Modal bind:this={deleteUserModal}>
   <ModalContent
     warning
+    onConfirm={deleteUser}
     title="Delete User"
     confirmText="Delete user"
     cancelText="Cancel"
