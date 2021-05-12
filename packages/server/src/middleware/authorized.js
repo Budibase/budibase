@@ -24,7 +24,7 @@ async function checkDevAppLocks(ctx) {
   }
   // get the user which is currently using the dev app
   const userId = getGlobalIDFromUserMetadataID(ctx.user._id)
-  if (!await doesUserHaveLock(appId, userId)) {
+  if (!(await doesUserHaveLock(appId, userId))) {
     ctx.throw(403, "User does not hold app lock.")
   }
 
