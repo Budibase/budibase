@@ -147,7 +147,5 @@
   }
   .content {
     overflow: auto;
-    display: grid;
-    grid-template-rows: 1fr;
   }
 </style>
