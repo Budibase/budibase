@@ -1,5 +1,5 @@
 <script>
-  import { Home as Link } from "@budibase/bbui"
+  import { Home as Link, Button } from "@budibase/bbui"
   import {
     AppsIcon,
     HostingIcon,
@@ -10,7 +10,27 @@
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
 
   let modal
+  $: deprecationWarning = true
 </script>
+
+{#if deprecationWarning}
+<div class="deprecation-root">
+  
+  <div class="deprecation-inner">
+    <div class="deprecation-text">
+      From the 25th of May, Budibase is moving to a self-hosted web experience in the browser. We will cease development on the current Electron based desktop builder.
+    </div>
+
+    <div class="deprecation-close">
+      <a href="https://github.com/Budibase/budibase/discussions/1487" target="_blank">read more</a>
+      <Button secondary small on:click={() => deprecationWarning = false}>
+        Close
+      </Button>
+    </div>
+  </div>
+  
+</div>
+{/if}
 
 <div class="root">
   <div class="ui-nav">
@@ -49,6 +69,36 @@
 </div>
 
 <style>
+
+  .deprecation-root {
+    padding: 20px;
+    background-color: var(--red);
+    display: flex;
+    justify-content: center;
+  }
+
+  .deprecation-inner {
+    display: flex;
+    max-width: 900px;
+    align-items: center;
+  }
+
+  .deprecation-text {
+    flex: 1 1 auto;
+    color: white;
+    font-size: 1.1em;
+    text-align: center;
+  }
+
+  .deprecation-close {
+    padding-left: 20px;
+    flex: 0 0 auto;
+  }
+
+  .deprecation-close > a {
+    margin-right: 20px;
+  }
+
   .root {
     display: grid;
     grid-template-columns: 260px 1fr;
