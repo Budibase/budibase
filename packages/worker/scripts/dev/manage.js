@@ -8,6 +8,7 @@ async function init() {
     SELF_HOSTED: 1,
     PORT: 4002,
     JWT_SECRET: "testsecret",
+    INTERNAL_API_KEY: "budibase",
     MINIO_ACCESS_KEY: "budibase",
     MINIO_SECRET_KEY: "budibase",
     COUCH_DB_USER: "budibase",

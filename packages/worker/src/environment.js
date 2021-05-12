@@ -28,8 +28,8 @@ module.exports = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   /* TODO: to remove - once deployment removed */
-  SELF_HOST_KEY: process.env.SELF_HOST_KEY,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USERNAME,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   _set(key, value) {
