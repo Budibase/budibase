@@ -11,7 +11,6 @@
     Label,
     Layout,
     Modal,
-    notifications,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
@@ -22,12 +21,11 @@
   const schema = {
     email: {},
     status: {},
+    builder: {},
     // access: {},
     // group: {}
   }
 
-  let onboardingOptions = ["Email onboarding", "Basic onboarding"]
-  let selectedOnboardingOption = onboardingOptions[0]
   let search
   let email
   $: filteredUsers = $users.filter(user => user.email.includes(search || ""))
@@ -35,13 +33,9 @@
   let createUserModal
   let basicOnboardingModal
 
-  function createUserFlow() {
-    if (selectedOnboardingOption === onboardingOptions[0]) {
-      notifications.success("Email sent.")
-    } else {
-      createUserModal.hide()
-      basicOnboardingModal.show()
-    }
+  function openBasicOnoboardingModal() {
+    createUserModal.hide()
+    basicOnboardingModal.show()
   }
 </script>
 
@@ -80,13 +74,7 @@
 </Layout>
 
 <Modal bind:this={createUserModal}
-  ><AddUserModal
-    options={onboardingOptions}
-    onConfirm={createUserFlow}
-    disabled={!email}
-    bind:selected={selectedOnboardingOption}
-    bind:email
-  /></Modal
+  ><AddUserModal on:change={openBasicOnoboardingModal} /></Modal
 >
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 

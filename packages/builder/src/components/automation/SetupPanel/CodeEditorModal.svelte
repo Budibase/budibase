@@ -11,8 +11,9 @@
   }
 </script>
 
-<Modal bind:this={modal} width="60%">
+<Modal bind:this={modal}>
   <ModalContent
+    size="XL"
     title="Edit Code"
     showConfirmButton={false}
     showCancelButton={false}

@@ -91,7 +91,7 @@
         </div>
       {/each}
       <div>
-        <Button primary on:click={() => save(google)}>Save</Button>
+        <Button cta on:click={() => save(google)}>Save</Button>
       </div>
       <Divider />
     {/if}
