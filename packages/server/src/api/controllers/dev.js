@@ -2,6 +2,8 @@ const fetch = require("node-fetch")
 const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
+const { getGlobalIDFromUserMetadataID } = require("../../db/utils")
+const { clearLock } = require("../../utilities/redis")
 
 async function redirect(ctx, method) {
   const { devPath } = ctx.params
@@ -31,4 +33,17 @@ exports.redirectPost = async ctx => {
 
 exports.redirectDelete = async ctx => {
   await redirect(ctx, "DELETE")
+}
+
+exports.removeLock = async ctx => {
+  const { appId } = ctx.params
+  const globalUserId = getGlobalIDFromUserMetadataID(ctx.user._id)
+  try {
+    await clearLock(appId, globalUserId)
+  } catch (err) {
+    ctx.throw(400, "Unable to remove lock.")
+  }
+  ctx.body = {
+    message: "Lock removed successfully."
+  }
 }
