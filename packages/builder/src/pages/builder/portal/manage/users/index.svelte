@@ -21,6 +21,7 @@
   const schema = {
     email: {},
     status: {},
+    builder: {},
     // access: {},
     // group: {}
   }

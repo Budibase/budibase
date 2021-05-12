@@ -1,4 +1,5 @@
 <script>
+  import { object, string } from "yup"
   import {
     Layout,
     Heading,
@@ -12,6 +13,7 @@
     notifications,
   } from "@budibase/bbui"
   import { organisation } from "stores/portal"
+  import { api } from "builderStore/api"
   import analytics from "analytics"
   let analyticsDisabled = analytics.disabled()
 
@@ -25,13 +27,26 @@
 
   let loading = false
 
-  $: company = $organisation?.company
-  $: logoUrl = $organisation.logoUrl
+  let company
+  let logoUrl
+  let file
+
+  async function uploadLogo() {
+    let data = new FormData()
+    data.append("files", file)
+
+    const res = await api.post("/api/admin/configs/upload/settings/logo")
+  }
 
   async function saveConfig() {
     loading = true
     await toggleAnalytics()
-    const res = await organisation.save({ ...$organisation, company })
+    console.log("company", company)
+    const res = await organisation.save({
+      company: company || $organisation?.config?.company,
+      // logoUrl,
+      // platformUrl,
+    })
     if (res.status === 200) {
       notifications.success("General settings saved.")
     } else {
@@ -59,14 +74,40 @@
       <div class="fields">
         <div class="field">
           <Label size="L">Organization name</Label>
-          <Input thin bind:value={company} />
+          <Input
+            thin
+            value={$organisation?.config?.company}
+            on:change={e => (company = e.detail)}
+          />
         </div>
-        <!-- <div class="field">
-          <Label>Logo</Label>
+        <div class="field logo">
+          <Label size="L">Logo</Label>
           <div class="file">
-            <Dropzone />
+            <Dropzone
+              label="Select Image"
+              value={[file]}
+              on:change={e => {
+                file = e.detail?.[0]
+              }}
+            />
           </div>
-        </div> -->
+        </div>
+      </div>
+    </div>
+    <Divider size="S" />
+    <div class="analytics">
+      <Heading size="S">Platform</Heading>
+      <Body>Here you can set up general platform settings.</Body>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Platform URL</Label>
+          <Input
+            thin
+            value={$organisation?.config?.platformUrl ||
+              "http://localhost:10000"}
+            on:change={e => (company = e.detail)}
+          />
+        </div>
       </div>
     </div>
     <Divider size="S" />
@@ -102,6 +143,9 @@
   }
   .file {
     max-width: 30ch;
+  }
+  .logo {
+    align-items: start;
   }
   .intro {
     display: grid;
