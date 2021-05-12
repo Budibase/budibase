@@ -17,9 +17,13 @@
   const [email, error, touched] = createValidationStore("", emailValidator)
 
   async function createUserFlow() {
-    const response = await users.invite(email)
-    console.log(response)
-    notifications.success("Email sent.")
+    const res = await users.invite($email)
+    console.log(res)
+    if (res.status) {
+      notifications.error(res.message)
+    } else {
+      notifications.success(res.message)
+    }
   }
 </script>
 

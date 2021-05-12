@@ -6,22 +6,14 @@ export function createUsersStore() {
   const { subscribe, set } = writable([])
 
   async function init() {
-    try {
-      const response = await api.get(`/api/admin/users`)
-      const json = await response.json()
-      set(json)
-    } catch (error) {
-      console.log(error)
-    }
+    const response = await api.get(`/api/admin/users`)
+    const json = await response.json()
+    set(json)
   }
 
   async function invite(email) {
-    try {
       const response = await api.post(`/api/admin/users/invite`, { email })
       return await response.json()
-    } catch (error) {
-      return error
-    }
   }
 
   async function create({ email, password }) {
