@@ -7,6 +7,7 @@ const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
 const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
 
+const TEST_MODE = false
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const TYPE = TemplateTypes.EMAIL
 
@@ -14,18 +15,32 @@ const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.INVITATION,
   EmailTemplatePurpose.PASSWORD_RECOVERY,
   EmailTemplatePurpose.WELCOME,
+  EmailTemplatePurpose.CUSTOM,
 ]
 
 function createSMTPTransport(config) {
-  const options = {
-    port: config.port,
-    host: config.host,
-    secure: config.secure || false,
-    auth: config.auth,
-  }
-  if (config.selfSigned) {
-    options.tls = {
-      rejectUnauthorized: false,
+  let options
+  if (!TEST_MODE) {
+    options = {
+      port: config.port,
+      host: config.host,
+      secure: config.secure || false,
+      auth: config.auth,
+    }
+    if (config.selfSigned) {
+      options.tls = {
+        rejectUnauthorized: false,
+      }
+    }
+  } else {
+    options = {
+      port: 587,
+      host: "smtp.ethereal.email",
+      secure: false,
+      auth: {
+        user: "don.bahringer@ethereal.email",
+        pass: "yCKSH8rWyUPbnhGYk9",
+      },
     }
   }
   return nodemailer.createTransport(options)
@@ -46,40 +61,36 @@ async function getLinkCode(purpose, email, user) {
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
  * @param {string} purpose the purpose of the email being built, e.g. invitation, password reset.
  * @param {string} email the address which it is being sent to for contextual purposes.
- * @param {object|null} user If being sent to an existing user then the object can be provided for context.
+ * @param {object} context the context which is being used for building the email (hbs context).
+ * @param {object|null} user if being sent to an existing user then the object can be provided for context.
+ * @param {string|null} contents if using a custom template can supply contents for context.
  * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
  */
-async function buildEmail(purpose, email, user) {
+async function buildEmail(purpose, email, context, { user, contents } = {}) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`
   }
-  let [base, styles, body] = await Promise.all([
+  let [base, body] = await Promise.all([
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
-    getTemplateByPurpose(TYPE, EmailTemplatePurpose.STYLES),
     getTemplateByPurpose(TYPE, purpose),
   ])
-  if (!base || !styles || !body) {
+  if (!base || !body) {
     throw "Unable to build email, missing base components"
   }
   base = base.contents
-  styles = styles.contents
   body = body.contents
-
-  // if there is a link code needed this will retrieve it
-  const code = await getLinkCode(purpose, email, user)
-  const context = {
-    ...(await getSettingsTemplateContext(purpose, code)),
+  context = {
+    ...context,
+    contents,
     email,
     user: user || {},
   }
 
   body = await processString(body, context)
-  styles = await processString(styles, context)
   // this should now be the complete email HTML
   return processString(base, {
     ...context,
-    styles,
     body,
   })
 }
@@ -117,24 +128,38 @@ exports.isEmailConfigured = async (groupId = null) => {
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
  * @param {string|undefined} groupId If finer grain controls being used then this will lookup config for group.
- * @param {object|undefined} user if sending to an existing user the object can be provided, this is used in the context.
+ * @param {object|undefined} user If sending to an existing user the object can be provided, this is used in the context.
+ * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
+ * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
+ * @param {string|undefined} subject A custom subject can be specified if the config one is not desired.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
-exports.sendEmail = async (email, purpose, { groupId, user } = {}) => {
+exports.sendEmail = async (
+  email,
+  purpose,
+  { groupId, user, from, contents, subject } = {}
+) => {
   const db = new CouchDB(GLOBAL_DB)
-  const config = await getSmtpConfiguration(db, groupId)
-  if (!config) {
+  let config = (await getSmtpConfiguration(db, groupId)) || {}
+  if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }
   const transport = createSMTPTransport(config)
+  // if there is a link code needed this will retrieve it
+  const code = await getLinkCode(purpose, email, user)
+  const context = await getSettingsTemplateContext(purpose, code)
   const message = {
-    from: config.from,
-    subject: config.subject,
+    from: from || config.from,
+    subject: await processString(subject || config.subject, context),
     to: email,
-    html: await buildEmail(purpose, email, user),
+    html: await buildEmail(purpose, email, context, { user, contents }),
   }
-  return transport.sendMail(message)
+  const response = await transport.sendMail(message)
+  if (TEST_MODE) {
+    console.log("Test email URL: " + nodemailer.getTestMessageUrl(response))
+  }
+  return response
 }
 
 /**

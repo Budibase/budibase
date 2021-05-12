@@ -15,8 +15,8 @@ const BASE_COMPANY = "Budibase"
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
   const db = new CouchDB(StaticDatabases.GLOBAL.name)
   // TODO: use more granular settings in the future if required
-  const settings = await getScopedConfig(db, { type: Configs.SETTINGS })
-  if (!settings.platformUrl) {
+  let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
+  if (!settings || !settings.platformUrl) {
     settings.platformUrl = LOCAL_URL
   }
   const URL = settings.platformUrl
@@ -41,7 +41,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
       break
     case EmailTemplatePurpose.INVITATION:
       context[TemplateBindings.INVITE_CODE] = code
-      context[TemplateBindings.REGISTRATION_URL] = checkSlashesInUrl(
+      context[TemplateBindings.INVITE_URL] = checkSlashesInUrl(
         `${URL}/invite?code=${code}`
       )
       break
