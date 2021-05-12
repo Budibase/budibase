@@ -25,9 +25,9 @@ function smtpValidation() {
 function settingValidation() {
   // prettier-ignore
   return Joi.object({
-    platformUrl: Joi.string().valid("", null),
-    logoUrl: Joi.string().valid("", null),
-    docsUrl: Joi.string().valid("", null),
+    platformUrl: Joi.string(),
+    logoUrl: Joi.string(),
+    docsUrl: Joi.string(),
     company: Joi.string().required(),
   }).unknown(true)
 }
