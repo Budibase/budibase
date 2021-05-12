@@ -187,5 +187,6 @@
   div {
     padding: 20px;
     position: relative;
+    background-color: var(--spectrum-alias-background-color-secondary);
   }
 </style>
