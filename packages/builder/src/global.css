@@ -6,13 +6,9 @@ html, body {
     min-height: 100%;
 }
 
-.spectrum--light {
-    /*--spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-75);*/
-}
-
 body {
     --background: var(--spectrum-alias-background-color-primary);
-    --background-alt: var(--spectrum-alias-background-color-default);
+    --background-alt: var(--spectrum-alias-background-color-secondary);
     --border-light: 1px solid var(--spectrum-global-color-gray-300);
     --border-dark: 1px solid var(--spectrum-global-color-gray-400);
     --ink: var(--spectrum-alias-text-color);
