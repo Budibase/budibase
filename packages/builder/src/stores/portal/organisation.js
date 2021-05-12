@@ -1,37 +1,40 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import api from "builderStore/api"
 
 const FALLBACK_CONFIG = {
   platformUrl: "",
   logoUrl: "",
   docsUrl: "",
-  company: "",
+  company: "http://localhost:10000",
 }
 
 export function createOrganisationStore() {
-  const { subscribe, set } = writable({})
+  const store = writable({})
+  const { subscribe, set } = store
 
   async function init() {
-      const response = await api.get(`/api/admin/configs/settings`)
-      const json = await response.json()
-      if (json.status === 400) {
-        set({ config: FALLBACK_CONFIG})
-      } else {
-        set(json)
-      }
+    const res = await api.get(`/api/admin/configs/settings`)
+    const json = await res.json()
+
+    if (json.status === 400) {
+      set(FALLBACK_CONFIG)
+    } else {
+      set({...json.config, _rev: json._rev})
+    }
+  }
+
+  async function save(config) {
+    const res = await api.post("/api/admin/configs", { type: "settings", config, _rev: get(store)._rev } )
+    const json = await res.json()
+    console.log(json)
+    await init()
+    return { status: 200 }
   }
 
   return {
     subscribe,
-    save: async config => {
-      try {
-        await api.post("/api/admin/configs", { type: "settings", config })
-        await init()
-        return { status: 200 }
-      } catch (error) {
-        return { status: error }
-      }
-    },
+    set,
+    save,
     init,
   }
 }
