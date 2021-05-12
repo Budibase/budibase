@@ -1,4 +1,6 @@
 const { QueryBuilder, buildSearchUrl, search } = require("./utils")
+const CouchDB = require("../../../db")
+const { outputProcessing } = require("../../../utilities/rowProcessor")
 
 exports.rowSearch = async ctx => {
   const appId = ctx.appId
@@ -12,6 +14,8 @@ exports.rowSearch = async ctx => {
     sortOrder,
     sortType,
   } = ctx.request.body
+  const db = new CouchDB(appId)
+
   let url
   if (query) {
     url = new QueryBuilder(
@@ -32,5 +36,10 @@ exports.rowSearch = async ctx => {
       bookmark,
     })
   }
-  ctx.body = await search(url)
+  const response = await search(url)
+  const table = await db.get(tableId)
+  ctx.body = {
+    rows: await outputProcessing(appId, table, response.rows),
+    bookmark: response.bookmark,
+  }
 }
