@@ -117,7 +117,7 @@
       readOnly,
       autoCloseBrackets: true,
       autoCloseTags: true,
-      theme: THEMES.DARK,
+      theme: $themeStore.theme.includes("light") ? THEMES.LIGHT : THEMES.DARK,
     }
 
     if (!tab)
