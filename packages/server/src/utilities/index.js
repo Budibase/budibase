@@ -1,10 +1,9 @@
 const env = require("../environment")
-const { DocumentTypes, SEPARATOR } = require("../db/utils")
+const { APP_PREFIX } = require("../db/utils")
 const CouchDB = require("../db")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 
 const BB_CDN = "https://cdn.app.budi.live/assets"
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 

@@ -4,6 +4,8 @@ const {
   doesHaveResourcePermission,
   doesHaveBasePermission,
 } = require("../utilities/security/permissions")
+const { APP_DEV_PREFIX, getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { doesUserHaveLock, updateLock } = require("../utilities/redis")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
@@ -12,6 +14,23 @@ function hasResource(ctx) {
 const WEBHOOK_ENDPOINTS = new RegExp(
   ["webhooks/trigger", "webhooks/schema"].join("|")
 )
+
+async function checkDevAppLocks(ctx) {
+  const appId = ctx.appId
+
+  // not a development app, don't need to do anything
+  if (!appId.startsWith(APP_DEV_PREFIX)) {
+    return
+  }
+  // get the user which is currently using the dev app
+  const userId = getGlobalIDFromUserMetadataID(ctx.user._id)
+  if (!await doesUserHaveLock(appId, userId)) {
+    ctx.throw(403, "User does not hold app lock.")
+  }
+
+  // they do have lock, update it
+  await updateLock(appId, userId)
+}
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // webhooks don't need authentication, each webhook unique
@@ -23,8 +42,14 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     return ctx.throw(403, "No user info found")
   }
 
-  const isAuthed = ctx.isAuthenticated
+  const builderCall = permType === PermissionTypes.BUILDER
 
+  // this makes sure that builder calls abide by dev locks
+  if (builderCall) {
+    await checkDevAppLocks(ctx)
+  }
+
+  const isAuthed = ctx.isAuthenticated
   const { basePermissions, permissions } = await getUserPermissions(
     ctx.appId,
     ctx.roleId
@@ -35,7 +60,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
   if (isBuilder) {
     return next()
-  } else if (permType === PermissionTypes.BUILDER && !isBuilder) {
+  } else if (builderCall && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
 
