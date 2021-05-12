@@ -10,8 +10,11 @@ function buildEmailSendValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     email: Joi.string().email(),
+    purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
     groupId: Joi.string().allow("", null),
-    purpose: Joi.string().allow(...Object.values(EmailTemplatePurpose)),
+    fromt: Joi.string().allow("", null),
+    contents: Joi.string().allow("", null),
+    subject: Joi.string().allow("", null),
   }).required().unknown(true))
 }
 

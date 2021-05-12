@@ -8,10 +8,10 @@
 </h1>
 
 <h3 align="center">
-  Build custom business tools in minutes and on your own infrastructure
+  Construye herramientas empresariales personalizadas en cuestión de minutos y en su propia infraestructura.
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship custom business apps in minutes and on their own infrastructure.
+  Budibase es una plataforma de código bajo de código abierto, que ayuda a desarrolladores y profesionales de TI a crear, automatizar y enviar aplicaciones empresariales personalizadas en cuestión de minutos y en su propia infraestructura
 </p>
 
 <h3 align="center">

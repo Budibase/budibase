@@ -1,8 +1,8 @@
 <script>
   import { queries } from "stores/backend"
   import { Select } from "@budibase/bbui"
-  import DrawerBindableInput from "../../common/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "./AutomationBindingPanel.svelte"
+  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
   export let value
   export let bindings
@@ -13,7 +13,6 @@
   // Ensure any nullish queryId values get set to empty string so
   // that the select works
   $: if (value?.queryId == null) value = { queryId: "" }
-  $: console.log("daValuz", value)
 </script>
 
 <div class="block-field">

@@ -1194,10 +1194,10 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@roxi/routify@2.15.1":
-  version "2.15.1"
-  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.15.1.tgz#cbd5eafedfee7f04b154173dccd7474c177acb4f"
-  integrity sha512-IRdoaPSfP09EwWtB+tpbHgH6ejYtowale24rgfpxRQhFNyTUK4jYXclvx3XkUD1NSupSgl1kDAsWSiRSG0WvkQ==
+"@roxi/routify@2.18.0":
+  version "2.18.0"
+  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.18.0.tgz#8f88bedd936312d0dbe44cbc11ab179b1f938ec2"
+  integrity sha512-MVB50HN+VQWLzfjLplcBjsSBvwOiExKOmht2DuWR3WQ60JxQi9pSejkB06tFVkFKNXz2X5iYtKDqKBTdae/gRg==
   dependencies:
     "@roxi/ssr" "^0.2.1"
     "@types/node" ">=4.2.0 < 13"
@@ -5821,7 +5821,7 @@ svelte-portal@0.1.0:
   resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-0.1.0.tgz#cc2821cc84b05ed5814e0218dcdfcbebc53c1742"
   integrity sha512-kef+ksXVKun224mRxat+DdO4C+cGHla+fEcZfnBAvoZocwiaceOfhf5azHYOPXSSB1igWVFTEOF3CDENPnuWxg==
 
-svelte@^3.37.0:
+svelte@^3.38.2:
   version "3.38.2"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.38.2.tgz#55e5c681f793ae349b5cc2fe58e5782af4275ef5"
   integrity sha512-q5Dq0/QHh4BLJyEVWGe7Cej5NWs040LWjMbicBGZ+3qpFWJ1YObRmUDZKbbovddLC9WW7THTj3kYbTOFmU9fbg==
