@@ -15,6 +15,11 @@
 </p>
 
 <style>
+  p {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+  }
+
   .noPadding {
     padding: 0;
     margin: 0;

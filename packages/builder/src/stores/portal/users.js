@@ -1,31 +1,44 @@
 import { writable } from "svelte/store"
 import api from "builderStore/api"
+import { update } from "lodash"
 
 export function createUsersStore() {
   const { subscribe, set } = writable([])
 
   async function init() {
-    try {
-      const response = await api.get(`/api/admin/users`)
-      const json = await response.json()
-      set(json)
-    } catch (error) {
-      console.log(error)
-    }
+    const response = await api.get(`/api/admin/users`)
+    const json = await response.json()
+    set(json)
+  }
+
+  async function invite(email) {
+      const response = await api.post(`/api/admin/users/invite`, { email })
+      return await response.json()
+  }
+  async function acceptInvite(inviteCode, password) {
+      const response = await api.post("/api/admin/users/invite/accept", { inviteCode, password })
+      return await response.json()
+  }
+
+  async function create({ email, password }) {
+    const response = await api.post("/api/admin/users", { email, password, roles: {} })
+    init()
+    return await response.json()
+  }
+
+  async function del(id) {
+    const response = await api.delete(`/api/admin/users/${id}`)
+    update(users => (users.filter(user => user._id !== id)))
+    return await response.json()
   }
 
   return {
     subscribe,
-    // save: async config => {
-    //   try {
-    //     await api.post("/api/admin/configs", { type: "settings", config })
-    //     await init()
-    //     return { status: 200 }
-    //   } catch (error) {
-    //     return { error }
-    //   }
-    // },
     init,
+    invite,
+    acceptInvite,
+    create,
+    del
   }
 }
 

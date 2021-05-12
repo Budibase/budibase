@@ -1,20 +1,40 @@
 <script>
-  import { Body, Input, Select, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    Input,
+    Select,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
+  import { createValidationStore, emailValidator } from "helpers/validation"
+  import { users } from "stores/portal"
 
-  export let options
-  export let selected
-  export let email = ""
-  export let onConfirm
   export let disabled
+
+  const options = ["Email onboarding", "Basic onboarding"]
+  let selected = options[0]
+
+  const [email, error, touched] = createValidationStore("", emailValidator)
+
+  async function createUserFlow() {
+    const res = await users.invite($email)
+    console.log(res)
+    if (res.status) {
+      notifications.error(res.message)
+    } else {
+      notifications.success(res.message)
+    }
+  }
 </script>
 
 <ModalContent
-  {onConfirm}
+  onConfirm={createUserFlow}
   size="M"
   title="Add new user options"
   confirmText="Add user"
   confirmDisabled={disabled}
   cancelText="Cancel"
+  disabled={$error}
   showCloseIcon={false}
 >
   <Body noPadding
@@ -25,12 +45,14 @@
   <Select
     placeholder={null}
     bind:value={selected}
+    on:change
     {options}
     label="Add new user via:"
   />
   <Input
     type="email"
-    bind:value={email}
+    bind:value={$email}
+    error={$touched && $error}
     placeholder="john@doe.com"
     label="Email"
   />
