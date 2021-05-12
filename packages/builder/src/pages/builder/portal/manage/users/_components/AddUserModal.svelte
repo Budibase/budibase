@@ -1,5 +1,11 @@
 <script>
-  import { Body, Input, Select, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    Input,
+    Select,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
 
@@ -24,7 +30,7 @@
   confirmText="Add user"
   confirmDisabled={disabled}
   cancelText="Cancel"
-  disabled={!$touched && !$error}
+  disabled={$error}
   showCloseIcon={false}
 >
   <Body noPadding
