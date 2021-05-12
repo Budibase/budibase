@@ -25,9 +25,6 @@
   }
 
   let loading = false
-
-  let company
-  let logoUrl
   let file
 
   async function uploadLogo() {
@@ -41,19 +38,18 @@
   async function saveConfig() {
     loading = true
     await toggleAnalytics()
-    const res = await uploadLogo()
-    console.log(res)
-    // console.log("company", company)
-    // const res = await organisation.save({
-    //   company: company || $organisation?.config?.company,
-    //   // logoUrl,
-    //   // platformUrl,
-    // })
-    // if (res.status === 200) {
-    //   notifications.success("General settings saved.")
-    // } else {
-    //   notifications.danger("Error when saving settings.")
-    // }
+    if (file) {
+      await uploadLogo()
+    }
+    const res = await organisation.save({
+      company: $organisation.company,
+      platformUrl: $organisation.platformUrl,
+    })
+    if (res.status === 200) {
+      notifications.success("Settings saved.")
+    } else {
+      notifications.error(res.message)
+    }
     loading = false
   }
 </script>
@@ -76,18 +72,13 @@
       <div class="fields">
         <div class="field">
           <Label size="L">Organization name</Label>
-          <Input
-            thin
-            value={$organisation?.config?.company}
-            on:change={e => (company = e.detail)}
-          />
+          <Input thin bind:value={$organisation.company} />
         </div>
         <div class="field logo">
           <Label size="L">Logo</Label>
           <div class="file">
             <Dropzone
               value={[file]}
-              gallery={false}
               on:change={e => {
                 file = e.detail?.[0]
               }}
@@ -103,12 +94,7 @@
       <div class="fields">
         <div class="field">
           <Label size="L">Platform URL</Label>
-          <Input
-            thin
-            value={$organisation?.config?.platformUrl ||
-              "http://localhost:10000"}
-            on:change={e => (company = e.detail)}
-          />
+          <Input thin bind:value={$organisation.platformUrl} />
         </div>
       </div>
     </div>
