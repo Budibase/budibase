@@ -17,6 +17,7 @@ const DocumentTypes = {
   AUTOMATION: "au",
   LINK: "li",
   APP: "app",
+  APP_DEV: "app_dev",
   ROLE: "role",
   WEBHOOK: "wh",
   INSTANCE: "inst",
@@ -39,6 +40,8 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
+exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
+exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
@@ -138,9 +141,11 @@ exports.generateUserMetadataID = globalId => {
  * Breaks up the ID to get the global ID.
  */
 exports.getGlobalIDFromUserMetadataID = id => {
-  return id.split(
-    `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-  )[1]
+  const prefix = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+  if (!id.includes(prefix)) {
+    return id
+  }
+  return id.split(prefix)[1]
 }
 
 /**
@@ -199,10 +204,13 @@ exports.generateAppID = () => {
 }
 
 /**
- * Gets parameters for retrieving apps, this is a utility function for the getDocParams function.
+ * Generates a development app ID from a real app ID.
+ * @returns {string} the dev app ID which can be used for dev database.
  */
-exports.getAppParams = (appId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.APP, appId, otherProps)
+exports.generateDevAppID = appId => {
+  const prefix = `${DocumentTypes.APP}${SEPARATOR}`
+  const uuid = appId.split(prefix)[1]
+  return `${DocumentTypes.APP_DEV}${SEPARATOR}${uuid}`
 }
 
 /**
