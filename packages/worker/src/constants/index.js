@@ -27,7 +27,6 @@ const TemplateTypes = {
 
 const EmailTemplatePurpose = {
   BASE: "base",
-  STYLES: "styles",
   PASSWORD_RECOVERY: "password_recovery",
   INVITATION: "invitation",
   WELCOME: "welcome",
@@ -35,47 +34,105 @@ const EmailTemplatePurpose = {
 }
 
 const TemplateBindings = {
-  PLATFORM_URL: "platformUrl",
-  COMPANY: "company",
-  LOGO_URL: "logoUrl",
-  STYLES: "styles",
-  BODY: "body",
-  REGISTRATION_URL: "registrationUrl",
-  EMAIL: "email",
-  RESET_URL: "resetUrl",
-  USER: "user",
-  REQUEST: "request",
-  DOCS_URL: "docsUrl",
-  LOGIN_URL: "loginUrl",
-  CURRENT_YEAR: "currentYear",
-  CURRENT_DATE: "currentDate",
-  RESET_CODE: "resetCode",
-  INVITE_CODE: "inviteCode",
+  PLATFORM_URL: {
+    name: "platformUrl",
+    description: "The URL used to access the budibase platform",
+  },
+  COMPANY: {
+    name: "company",
+    description: "The name of your organization",
+  },
+  LOGO_URL: {
+    name: "logoUrl",
+    description: "The URL of your organizations logo.",
+  },
+  EMAIL: {
+    name: "email",
+    description: "The recipients email address.",
+  },
+  USER: {
+    name: "user",
+    description: "The recipients user object.",
+  },
+  REQUEST: {
+    name: "request",
+    description: "Additional request metadata.",
+  },
+  DOCS_URL: {
+    name: "docsUrl",
+    description: "Organization documentation URL.",
+  },
+  LOGIN_URL: {
+    name: "loginUrl",
+    description: "The URL used to log into the organization budibase instance.",
+  },
+  CURRENT_YEAR: {
+    name: "currentYear",
+    description: "The current year.",
+  },
+  CURRENT_DATE: {
+    name: "currentDate",
+    description: "The current date.",
+  },
 }
 
 const TemplateMetadata = {
   [TemplateTypes.EMAIL]: [
     {
-      name: "Styling",
-      purpose: EmailTemplatePurpose.STYLES,
-      bindings: ["url", "company", "companyUrl", "styles", "body"],
-    },
-    {
       name: "Base Format",
       purpose: EmailTemplatePurpose.BASE,
-      bindings: ["company", "registrationUrl"],
+      bindings: [
+        {
+          name: "body",
+          description: "The main body of another email template.",
+        },
+        {
+          name: "styles",
+          description: "The contents of the Styling email template.",
+        },
+      ],
     },
     {
       name: "Password Recovery",
       purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
+      bindings: [
+        {
+          name: "resetUrl",
+          description:
+            "The URL the recipient must click to reset their password.",
+        },
+        {
+          name: "resetCode",
+          description:
+            "The temporary password reset code used in the recipients password reset URL.",
+        },
+      ],
     },
     {
       name: "New User Invitation",
       purpose: EmailTemplatePurpose.INVITATION,
+      bindings: [
+        {
+          name: "inviteUrl",
+          description:
+            "The URL the recipient must click to accept the invitation and activate their account.",
+        },
+        {
+          name: "inviteCode",
+          description:
+            "The temporary invite code used in the recipients invitation URL.",
+        },
+      ],
     },
     {
       name: "Custom",
       purpose: EmailTemplatePurpose.CUSTOM,
+      bindings: [
+        {
+          name: "contents",
+          description: "Custom content body.",
+        },
+      ],
     },
   ],
 }

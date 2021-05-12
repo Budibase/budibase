@@ -28,13 +28,38 @@ function request(ctx, request) {
   } else {
     delete request.body
   }
-  if (ctx.headers) {
+  if (ctx && ctx.headers) {
     request.headers.cookie = ctx.headers.cookie
   }
   return request
 }
 
 exports.request = request
+
+exports.sendSmtpEmail = async (to, from, subject, contents) => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
+    request(null, {
+      method: "POST",
+      headers: {
+        "x-budibase-api-key": env.INTERNAL_API_KEY,
+      },
+      body: {
+        email: to,
+        from,
+        contents,
+        subject,
+        purpose: "custom",
+      },
+    })
+  )
+
+  const json = await response.json()
+  if (json.status !== 200 && response.status !== 200) {
+    throw "Unable to send email."
+  }
+  return json
+}
 
 exports.getDeployedApps = async ctx => {
   if (!env.SELF_HOSTED) {
