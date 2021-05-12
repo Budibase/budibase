@@ -71,7 +71,7 @@ exports.getGlobalUserParams = (globalId, otherProps = {}) => {
  * @param ownerId The owner/user of the template, this could be global or a group level.
  */
 exports.generateTemplateID = ownerId => {
-  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${newid()}`
+  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
 /**

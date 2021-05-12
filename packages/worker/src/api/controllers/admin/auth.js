@@ -54,7 +54,10 @@ exports.reset = async ctx => {
   }
   try {
     const user = await getGlobalUserByEmail(email)
-    await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, { user })
+    await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
+      user,
+      subject: "{{ company }} platform password reset",
+    })
   } catch (err) {
     // don't throw any kind of error to the user, this might give away something
   }
