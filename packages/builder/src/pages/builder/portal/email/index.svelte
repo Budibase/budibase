@@ -157,7 +157,6 @@
     </div>
     <Table
       {customRenderers}
-      on:editrow={evt => $goto(`./${evt.detail.purpose}`)}
       data={$email.templates}
       schema={templateSchema}
       {loading}
