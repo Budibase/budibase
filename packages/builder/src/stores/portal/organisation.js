@@ -26,7 +26,9 @@ export function createOrganisationStore() {
   async function save(config) {
     const res = await api.post("/api/admin/configs", { type: "settings", config, _rev: get(store)._rev } )
     const json = await res.json()
-    console.log(json)
+    if (json.status) {
+      return json
+    }
     await init()
     return { status: 200 }
   }
