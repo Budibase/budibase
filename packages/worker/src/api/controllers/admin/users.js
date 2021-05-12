@@ -136,7 +136,9 @@ exports.invite = async ctx => {
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
-  await sendEmail(email, EmailTemplatePurpose.INVITATION)
+  await sendEmail(email, EmailTemplatePurpose.INVITATION, {
+    subject: "{{ company }} platform invitation",
+  })
   ctx.body = {
     message: "Invitation has been sent.",
   }

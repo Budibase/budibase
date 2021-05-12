@@ -30,5 +30,6 @@
     on:change={onChange}
     on:click
     on:input
+    on:blur
   />
 </Field>

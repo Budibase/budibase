@@ -5,9 +5,11 @@
   export let noPadding = false
   export let gap = "M"
   export let noGap = false
+  export let alignContent = "normal"
 </script>
 
 <div
+  style="align-content:{alignContent};"
   class:horizontal
   class="container paddingX-{!noPadding && paddingX} paddingY-{!noPadding &&
     paddingY} gap-{!noGap && gap}"
