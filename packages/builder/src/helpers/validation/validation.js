@@ -8,7 +8,7 @@ export function createValidationStore(initialValue, ...validators) {
 	const touchedStore = derived(value, () => {
 		if (!touched) {
 			touched = true
-			return
+			return false
 		} 
 		return touched
 	})

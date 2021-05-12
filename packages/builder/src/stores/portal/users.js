@@ -14,6 +14,20 @@ export function createUsersStore() {
     }
   }
 
+  async function invite(email) {
+    try {
+      const response = await api.post(`/api/admin/users/invite`, { email })
+      return await response.json()
+    } catch (error) {
+      return error
+    }
+  }
+
+  async function create({ email, password }) {
+    const response = await api.post("/api/admin/users", { email, password, roles: {} })
+    return await response.json()
+  }
+
   return {
     subscribe,
     // save: async config => {
@@ -26,6 +40,8 @@ export function createUsersStore() {
     //   }
     // },
     init,
+    invite,
+    create,
   }
 }
 
