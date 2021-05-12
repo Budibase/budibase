@@ -15,5 +15,6 @@ module.exports = {
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   MINIO_URL: process.env.MINIO_URL,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   isTest,
 }
