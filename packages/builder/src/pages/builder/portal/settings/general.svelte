@@ -1,5 +1,4 @@
 <script>
-  import { object, string } from "yup"
   import {
     Layout,
     Heading,
@@ -13,7 +12,7 @@
     notifications,
   } from "@budibase/bbui"
   import { organisation } from "stores/portal"
-  import { api } from "builderStore/api"
+  import { post } from "builderStore/api"
   import analytics from "analytics"
   let analyticsDisabled = analytics.disabled()
 
@@ -33,25 +32,28 @@
 
   async function uploadLogo() {
     let data = new FormData()
-    data.append("files", file)
+    data.append("file", file)
 
-    const res = await api.post("/api/admin/configs/upload/settings/logo")
+    const res = await post("/api/admin/configs/upload/settings/logo", data, {})
+    return await res.json()
   }
 
   async function saveConfig() {
     loading = true
     await toggleAnalytics()
-    console.log("company", company)
-    const res = await organisation.save({
-      company: company || $organisation?.config?.company,
-      // logoUrl,
-      // platformUrl,
-    })
-    if (res.status === 200) {
-      notifications.success("General settings saved.")
-    } else {
-      notifications.danger("Error when saving settings.")
-    }
+    const res = await uploadLogo()
+    console.log(res)
+    // console.log("company", company)
+    // const res = await organisation.save({
+    //   company: company || $organisation?.config?.company,
+    //   // logoUrl,
+    //   // platformUrl,
+    // })
+    // if (res.status === 200) {
+    //   notifications.success("General settings saved.")
+    // } else {
+    //   notifications.danger("Error when saving settings.")
+    // }
     loading = false
   }
 </script>
@@ -84,8 +86,8 @@
           <Label size="L">Logo</Label>
           <div class="file">
             <Dropzone
-              label="Select Image"
               value={[file]}
+              gallery={false}
               on:change={e => {
                 file = e.detail?.[0]
               }}
