@@ -21,9 +21,6 @@
       )
       .join("")
   }
-
-  $: console.log("Error: ", $error)
-  $: console.log("Touched: ", $touched)
 </script>
 
 <ModalContent
