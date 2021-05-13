@@ -110,7 +110,7 @@
       </div>
       <div class="filter">
         <div class="select">
-          <Select 
+          <Select
             bind:value={appStatus}
             options={[
               { label: "Deployed", value: "deployed" },

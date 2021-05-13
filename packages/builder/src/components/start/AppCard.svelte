@@ -22,7 +22,8 @@
     <div class="title">
       <Link href={$url(`../../app/${app._id}`)}>
         <Heading size="XS">
-          {app._id} {app.name}
+          {app._id}
+          {app.name}
         </Heading>
       </Link>
       <ActionMenu align="right">
