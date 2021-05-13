@@ -43,6 +43,6 @@ exports.removeLock = async ctx => {
     ctx.throw(400, `Unable to remove lock. ${err}`)
   }
   ctx.body = {
-    message: "Lock removed successfully.",
+    message: "Lock released successfully.",
   }
 }

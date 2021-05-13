@@ -50,5 +50,5 @@ exports.clearLock = async (devAppId, user) => {
   if (value._id !== userId) {
     throw "User does not hold lock, cannot clear it."
   }
-  await devAppClient.delete(devAppClient)
+  await devAppClient.delete(devAppId)
 }
