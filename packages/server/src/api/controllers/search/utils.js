@@ -3,51 +3,12 @@ const { checkSlashesInUrl } = require("../../../utilities")
 const env = require("../../../environment")
 const fetch = require("node-fetch")
 
-/**
- * Given a set of inputs this will generate the URL which is to be sent to the search proxy in CouchDB.
- * @param {string} appId The ID of the app which we will be searching within.
- * @param {string} query The lucene query string which is to be used for searching.
- * @param {string|null} bookmark If there were more than the limit specified can send the bookmark that was
- * returned with query for next set of search results.
- * @param {number} limit The number of entries to return per query.
- * @param {string} sort The column to sort by.
- * @param {string} sortOrder The order to sort by. "ascending" or "descending".
- * @param {string} sortType The type of sort to perform. "string" or "number".
- * @param {boolean} excludeDocs By default full rows are returned, if required this can be disabled.
- * @return {string} The URL which a GET can be performed on to receive results.
- */
-function buildSearchUrl({
-  appId,
-  query,
-  bookmark,
-  sort,
-  sortOrder,
-  sortType,
-  excludeDocs,
-  limit = 50,
-}) {
-  let url = `${env.COUCH_DB_URL}/${appId}/_design/database/_search`
-  url += `/${SearchIndexes.ROWS}?q=${query}`
-  url += `&limit=${Math.min(limit, 200)}`
-  if (!excludeDocs) {
-    url += "&include_docs=true"
-  }
-  if (sort) {
-    const orderChar = sortOrder === "descending" ? "-" : ""
-    url += `&sort="${orderChar}${sort.replace(/ /, "_")}<${sortType}>"`
-  }
-  if (bookmark) {
-    url += `&bookmark=${bookmark}`
-  }
-  return checkSlashesInUrl(url)
-}
-
 const luceneEscape = value => {
   return `${value}`.replace(/[ #+\-&|!(){}\[\]^"~*?:\\]/g, "\\$&")
 }
 
 class QueryBuilder {
-  constructor(appId, base, bookmark, limit, sort, sortOrder, sortType) {
+  constructor(appId, base) {
     this.appId = appId
     this.query = {
       string: {},
@@ -59,15 +20,33 @@ class QueryBuilder {
       notEmpty: {},
       ...base,
     }
-    this.bookmark = bookmark
-    this.limit = limit || 50
-    this.sort = sort
-    this.sortOrder = sortOrder || "ascending"
-    this.sortType = sortType || "string"
+    this.limit = 50
+    this.sortOrder = "ascending"
+    this.sortType = "string"
+  }
+
+  setTable(tableId) {
+    this.query.equal.tableId = tableId
+    return this
   }
 
   setLimit(limit) {
     this.limit = limit
+    return this
+  }
+
+  setSort(sort) {
+    this.sort = sort
+    return this
+  }
+
+  setSortOrder(sortOrder) {
+    this.sortOrder = sortOrder
+    return this
+  }
+
+  setSortType(sortType) {
+    this.sortType = sortType
     return this
   }
 
@@ -114,12 +93,7 @@ class QueryBuilder {
     return this
   }
 
-  addTable(tableId) {
-    this.query.equal.tableId = tableId
-    return this
-  }
-
-  complete(rawQuery = null) {
+  buildSearchURL(excludeDocs = false) {
     let output = "*:*"
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
@@ -171,22 +145,28 @@ class QueryBuilder {
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
-    if (rawQuery) {
-      output = output.length === 0 ? rawQuery : `&${rawQuery}`
+
+    let url = `${env.COUCH_DB_URL}/${this.appId}/_design/database/_search`
+    url += `/${SearchIndexes.ROWS}?q=${output}`
+    url += `&limit=${Math.min(this.limit, 200)}`
+    if (!excludeDocs) {
+      url += "&include_docs=true"
     }
-    return buildSearchUrl({
-      appId: this.appId,
-      query: output,
-      bookmark: this.bookmark,
-      limit: this.limit,
-      sort: this.sort,
-      sortOrder: this.sortOrder,
-      sortType: this.sortType,
-    })
+    if (this.sort) {
+      const orderChar = this.sortOrder === "descending" ? "-" : ""
+      url += `&sort="${orderChar}${this.sort.replace(/ /, "_")}<${
+        this.sortType
+      }>"`
+    }
+    if (this.bookmark) {
+      url += `&bookmark=${this.bookmark}`
+    }
+    console.log(url)
+    return checkSlashesInUrl(url)
   }
 }
 
-exports.search = async query => {
+const runQuery = async query => {
   const response = await fetch(query, {
     method: "GET",
   })
@@ -203,5 +183,101 @@ exports.search = async query => {
   return output
 }
 
-exports.QueryBuilder = QueryBuilder
-exports.buildSearchUrl = buildSearchUrl
+const recursiveSearch = async (
+  appId,
+  query,
+  tableId,
+  sort,
+  sortOrder,
+  sortType,
+  limit,
+  bookmark,
+  rows
+) => {
+  if (rows.length >= limit) {
+    return rows
+  }
+  const pageSize = rows.length > limit - 200 ? limit - rows.length : 200
+  const url = new QueryBuilder(appId, query)
+    .setTable(tableId)
+    .setBookmark(bookmark)
+    .setLimit(pageSize)
+    .setSort(sort)
+    .setSortOrder(sortOrder)
+    .setSortType(sortType)
+    .buildSearchURL()
+  const page = await runQuery(url)
+  if (!page.rows.length) {
+    return rows
+  }
+  if (page.rows.length < 200) {
+    return [...rows, ...page.rows]
+  }
+  return await recursiveSearch(
+    appId,
+    query,
+    tableId,
+    sort,
+    sortOrder,
+    sortType,
+    limit,
+    page.bookmark,
+    [...rows, ...page.rows]
+  )
+}
+
+exports.paginatedSearch = async (
+  appId,
+  query,
+  tableId,
+  sort,
+  sortOrder,
+  sortType,
+  limit,
+  bookmark
+) => {
+  if (limit == null || isNaN(limit) || limit < 0) {
+    limit = 50
+  }
+  const builder = new QueryBuilder(appId, query)
+    .setTable(tableId)
+    .setSort(sort)
+    .setSortOrder(sortOrder)
+    .setSortType(sortType)
+    .setBookmark(bookmark)
+    .setLimit(limit)
+  const searchUrl = builder.buildSearchURL()
+  const nextUrl = builder.setLimit(1).buildSearchURL()
+  const searchResults = await runQuery(searchUrl)
+  const nextResults = await runQuery(nextUrl)
+  return {
+    ...searchResults,
+    hasNextPage: nextResults.rows && nextResults.rows.length > 0,
+  }
+}
+
+exports.fullSearch = async (
+  appId,
+  query,
+  tableId,
+  sort,
+  sortOrder,
+  sortType,
+  limit
+) => {
+  if (limit == null || isNaN(limit) || limit < 0) {
+    limit = 1000
+  }
+  const rows = await recursiveSearch(
+    appId,
+    query,
+    tableId,
+    sort,
+    sortOrder,
+    sortType,
+    Math.min(limit, 1000),
+    null,
+    []
+  )
+  return { rows }
+}

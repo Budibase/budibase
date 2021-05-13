@@ -18,24 +18,6 @@ export const fetchTableData = async tableId => {
 }
 
 /**
- * Perform a mango query against an internal table
- * @param {String} tableId - id of the table to search
- * @param {Object} search - Mango Compliant search object
- * @param {Object} pagination - the pagination controls
- */
-export const searchTableData = async ({ tableId, search, pagination }) => {
-  const output = await API.post({
-    url: `/api/${tableId}/rows/search`,
-    body: {
-      query: search,
-      pagination,
-    },
-  })
-  output.rows = await enrichRows(output.rows, tableId)
-  return output
-}
-
-/**
  * Searches a table using Lucene.
  */
 export const searchTable = async ({
@@ -47,6 +29,7 @@ export const searchTable = async ({
   sort,
   sortOrder,
   sortType,
+  paginate,
 }) => {
   if (!tableId || (!query && !raw)) {
     return
@@ -61,10 +44,11 @@ export const searchTable = async ({
       sort,
       sortOrder,
       sortType,
+      paginate,
     },
   })
   return {
+    ...res,
     rows: await enrichRows(res?.rows, tableId),
-    bookmark: res.bookmark,
   }
 }
