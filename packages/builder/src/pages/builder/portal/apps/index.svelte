@@ -26,7 +26,7 @@
   import { AppStatus } from "constants"
 
   let layout = "grid"
-  let appStatus = "deployed"
+  let appStatus = AppStatus.PUBLISHED
   let template
   let appToDelete
   let creationModal
@@ -95,6 +95,7 @@
     await del(`/api/applications/${appToDelete?._id}`)
     await apps.load()
     appToDelete = null
+    notifications.success("App deleted successfully.")
   }
 
   const releaseLock = async appId => {
@@ -131,8 +132,8 @@
         <Select
           bind:value={appStatus}
           options={[
-            { label: "Deployed", value: "deployed" },
-            { label: "In Development", value: "dev" },
+            { label: "Published", value: AppStatus.PUBLISHED },
+            { label: "In Development", value: AppStatus.DEV },
           ]}
         />
       </div>
@@ -159,6 +160,7 @@
         {#each $apps as app, idx (app._id)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
+            deletable={appStatus === AppStatus.PUBLISHED}
             {releaseLock}
             {app}
             {openApp}

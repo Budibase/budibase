@@ -18,6 +18,7 @@
   export let openApp
   export let deleteApp
   export let releaseLock
+  export let deletable
 </script>
 
 <div class="wrapper">
@@ -34,9 +35,11 @@
         <MenuItem on:click={() => exportApp(app)} icon="Download">
           Export
         </MenuItem>
-        <MenuItem on:click={() => deleteApp(app)} icon="Delete">
+        {#if deletable}
+          <MenuItem on:click={() => deleteApp(app)} icon="Delete">
           Delete
         </MenuItem>
+        {/if}
         {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
           <MenuItem on:click={() => releaseLock(app._id)} icon="LockOpen">
             Release Lock

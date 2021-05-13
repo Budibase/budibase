@@ -11,47 +11,9 @@ class Replication {
     this.target = getDB(target)
   }
 
-  sync(opts) {
-    return new Promise((resolve, reject) => {
-      this.source
-        .sync(this.target, opts)
-        .on("change", function (info) {
-          // handle change
-        })
-        .on("paused", function (err) {
-          // replication paused (e.g. replication up to date, user went offline)
-        })
-        .on("active", function () {
-          // replicate resumed (e.g. new changes replicating, user went back online)
-        })
-        .on("denied", function (err) {
-          // a document failed to replicate (e.g. due to permissions)
-          return reject(
-            new Error(`Denied: Document failed to replicate ${err}`)
-          )
-        })
-        .on("complete", function (info) {
-          return resolve(info)
-        })
-        .on("error", function (err) {
-          return reject(new Error(`Replication Error: ${err}`))
-        })
-    })
-  }
-
-  replicate() {
-    return new Promise((resolve, reject) => {
-      this.replication = this.source.replicate
-        .to(this.target)
-        // .on("change", function (info) {
-        //   // handle change
-        // })
-        // .on("paused", function (err) {
-        //   // replication paused (e.g. replication up to date, user went offline)
-        // })
-        // .on("active", function () {
-        //   // replicate resumed (e.g. new changes replicating, user went back online)
-        // })
+  promisify(operation, opts = {}) {
+    return new Promise(resolve => {
+      operation(this.target, opts)
         .on("denied", function (err) {
           // a document failed to replicate (e.g. due to permissions)
           throw new Error(`Denied: Document failed to replicate ${err}`)
@@ -63,6 +25,40 @@ class Replication {
           throw new Error(`Replication Error: ${err}`)
         })
     })
+  }
+
+  /**
+   * Two way replication operation, intended to be promise based.
+   * @param {Object} opts - PouchDB replication options
+   */
+  sync(opts) {
+    this.replication = this.promisify(this.source.sync, opts)
+    return this.replication
+  }
+
+  /**
+   * One way replication operation, intended to be promise based.
+   * @param {Object} opts - PouchDB replication options
+   */
+  replicate(opts) {
+    this.replication = this.promisify(this.source.replicate.to, opts)
+    return this.replication
+  }
+
+  /**
+   * Set up an ongoing live sync between 2 CouchDB databases.
+   * @param {Object} opts - PouchDB replication options
+   */
+  subscribe(opts = {}) {
+    this.replication = this.source.replicate
+      .to(this.target, {
+        live: true,
+        retry: true,
+        ...opts,
+      })
+      .on("error", function (err) {
+        throw new Error(`Replication Error: ${err}`)
+      })
   }
 
   async rollback() {
