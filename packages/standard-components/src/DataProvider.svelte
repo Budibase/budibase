@@ -54,25 +54,8 @@
       callback: () => fetchData(dataSource),
       metadata: { dataSource },
     },
-    {
-      type: ActionTypes.NextPage,
-      callback: () => nextPage(),
-    },
-    {
-      type: ActionTypes.PrevPage,
-      callback: () => prevPage(),
-    },
   ]
-  $: dataContext = {
-    rows,
-    schema,
-    rowsLength: rows.length,
-    loading,
-    loaded,
-    pageNumber: pageNumber + 1,
-    hasNextPage,
-    hasPrevPage,
-  }
+  $: dataContext = { rows, schema, rowsLength: rows.length }
 
   const getSortType = (schema, sortColumn) => {
     if (!schema || !sortColumn || !schema[sortColumn]) {
