@@ -3,10 +3,20 @@ const { checkSlashesInUrl } = require("../../../utilities")
 const env = require("../../../environment")
 const fetch = require("node-fetch")
 
+/**
+ * Escapes any characters in a string which lucene searches require to be
+ * escaped.
+ * @param value The value to escape
+ * @returns {string}
+ */
 const luceneEscape = value => {
   return `${value}`.replace(/[ #+\-&|!(){}\[\]^"~*?:\\]/g, "\\$&")
 }
 
+/**
+ * Class to build lucene query URLs.
+ * Optionally takes a base lucene query object.
+ */
 class QueryBuilder {
   constructor(appId, base) {
     this.appId = appId
@@ -105,6 +115,7 @@ class QueryBuilder {
       }
     }
 
+    // Construct the actual lucene search query string from JSON structure
     if (this.query.string) {
       build(this.query.string, (key, value) => {
         return value ? `${key}:${luceneEscape(value.toLowerCase())}*` : null
@@ -146,6 +157,7 @@ class QueryBuilder {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
 
+    // Build the full search URL
     let url = `${env.COUCH_DB_URL}/${this.appId}/_design/database/_search`
     url += `/${SearchIndexes.ROWS}?q=${output}`
     url += `&limit=${Math.min(this.limit, 200)}`
@@ -161,11 +173,18 @@ class QueryBuilder {
     if (this.bookmark) {
       url += `&bookmark=${this.bookmark}`
     }
+
     console.log(url)
+    // Fix any double slashes in the URL
     return checkSlashesInUrl(url)
   }
 }
 
+/**
+ * Executes a lucene search query.
+ * @param query The query URL
+ * @returns {Promise<{rows: []}>}
+ */
 const runQuery = async query => {
   const response = await fetch(query, {
     method: "GET",
@@ -183,6 +202,22 @@ const runQuery = async query => {
   return output
 }
 
+/**
+ * Gets round the fixed limit of 200 results from a query by fetching as many
+ * pages as required and concatenating the results. This recursively operates
+ * until enough results have been found.
+ * @param appId {string} The app ID to search
+ * @param query {object} The JSON query structure
+ * @param tableId {string} The table ID to search
+ * @param sort {string} The sort column
+ * @param sortOrder {string} The sort order ("ascending" or "descending")
+ * @param sortType {string} Whether to treat sortable values as strings or
+ * numbers. ("string" or "number")
+ * @param limit {number} The number of results to fetch
+ * @param bookmark {string|null} Current bookmark in the recursive search
+ * @param rows {array|null} Current results in the recursive search
+ * @returns {Promise<*[]|*>}
+ */
 const recursiveSearch = async (
   appId,
   query,
@@ -191,8 +226,8 @@ const recursiveSearch = async (
   sortOrder,
   sortType,
   limit,
-  bookmark,
-  rows
+  bookmark = null,
+  rows = []
 ) => {
   if (rows.length >= limit) {
     return rows
@@ -226,6 +261,21 @@ const recursiveSearch = async (
   )
 }
 
+/**
+ * Performs a paginated search. A bookmark will be returned to allow the next
+ * page to be fetched. There is a max limit off 200 results per page in a
+ * paginated search.
+ * @param appId {string} The app ID to search
+ * @param query {object} The JSON query structure
+ * @param tableId {string} The table ID to search
+ * @param sort {string} The sort column
+ * @param sortOrder {string} The sort order ("ascending" or "descending")
+ * @param sortType {string} Whether to treat sortable values as strings or
+ * numbers. ("string" or "number")
+ * @param limit {number} The desired page size
+ * @param bookmark {string} The bookmark to resume from
+ * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
+ */
 exports.paginatedSearch = async (
   appId,
   query,
@@ -239,6 +289,7 @@ exports.paginatedSearch = async (
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
   }
+  limit = Math.min(limit, 200)
   const builder = new QueryBuilder(appId, query)
     .setTable(tableId)
     .setSort(sort)
@@ -249,17 +300,36 @@ exports.paginatedSearch = async (
     .setLimit(limit)
     .buildSearchURL()
   const searchResults = await runQuery(searchUrl)
+
+  // Try fetching 1 row in the next page to see if another page of results
+  // exists or not
   const nextUrl = builder
     .setBookmark(searchResults.bookmark)
     .setLimit(1)
     .buildSearchURL()
   const nextResults = await runQuery(nextUrl)
+
   return {
     ...searchResults,
     hasNextPage: nextResults.rows && nextResults.rows.length > 0,
   }
 }
 
+/**
+ * Performs a full search, fetching multiple pages if required to return the
+ * desired amount of results. There is a limit of 1000 results to avoid
+ * heavy performance hits, and to avoid client components breaking from
+ * handling too much data.
+ * @param appId {string} The app ID to search
+ * @param query {object} The JSON query structure
+ * @param tableId {string} The table ID to search
+ * @param sort {string} The sort column
+ * @param sortOrder {string} The sort order ("ascending" or "descending")
+ * @param sortType {string} Whether to treat sortable values as strings or
+ * numbers. ("string" or "number")
+ * @param limit {number} The desired number of results
+ * @returns {Promise<{rows: *}>}
+ */
 exports.fullSearch = async (
   appId,
   query,
@@ -272,6 +342,7 @@ exports.fullSearch = async (
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000
   }
+  limit = Math.min(limit, 1000)
   const rows = await recursiveSearch(
     appId,
     query,
@@ -279,9 +350,7 @@ exports.fullSearch = async (
     sort,
     sortOrder,
     sortType,
-    Math.min(limit, 1000),
-    null,
-    []
+    limit
   )
   return { rows }
 }
