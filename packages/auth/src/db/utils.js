@@ -1,4 +1,5 @@
 const { newid } = require("../hashing")
+const Replication = require("./Replication")
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -165,6 +166,7 @@ async function getScopedConfig(db, params) {
   return configDoc && configDoc.config ? configDoc.config : configDoc
 }
 
+exports.Replication = Replication
 exports.getScopedConfig = getScopedConfig
 exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams

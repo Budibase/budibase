@@ -15,11 +15,9 @@
   $: appId = $store.appId
 
   async function deployApp() {
-    const DEPLOY_URL = `/api/deploy`
-
     try {
       notifications.info(`Deployment started. Please wait.`)
-      const response = await api.post(DEPLOY_URL)
+      const response = await api.post("/api/deploy")
       const json = await response.json()
       if (response.status !== 200) {
         throw new Error()

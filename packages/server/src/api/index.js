@@ -37,7 +37,7 @@ router
     })
   )
   .use(currentApp)
-  .use(development)
+// .use(development)
 
 // error handling middleware
 router.use(async (ctx, next) => {

@@ -1,5 +1,6 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
+const { Replication } = require("@budibase/auth").db
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {
@@ -56,7 +57,24 @@ async function storeLocalDeploymentHistory(deployment) {
 
 async function deployApp(deployment) {
   try {
-    // TODO: DB replication was here but wasn't accurate to new system
+    const deployTarget = deployment.appId.replace("_dev", "")
+
+    const replication = new Replication({
+      source: deployment.appId,
+      target: deployTarget,
+    })
+
+    await replication.replicate()
+
+    // Strip the _dev prefix and update the appID document in the new DB
+    const db = new PouchDB(deployTarget)
+    const appDoc = await db.get(deployment.appId)
+    await db.remove(appDoc)
+    appDoc._id = deployTarget
+    delete appDoc._rev
+    appDoc.instance._id = deployTarget
+    await db.put(appDoc)
+
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)
   } catch (err) {
