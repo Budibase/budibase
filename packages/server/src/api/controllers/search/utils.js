@@ -166,9 +166,8 @@ class QueryBuilder {
     }
     if (this.sort) {
       const orderChar = this.sortOrder === "descending" ? "-" : ""
-      url += `&sort="${orderChar}${this.sort.replace(/ /, "_")}<${
-        this.sortType
-      }>"`
+      url += `&sort="${orderChar}${this.sort.replace(/ /, "_")}`
+      url += `<${this.sortType}>"`
     }
     if (this.bookmark) {
       url += `&bookmark=${this.bookmark}`

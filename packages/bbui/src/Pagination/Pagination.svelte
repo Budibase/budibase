@@ -47,6 +47,7 @@
 <style>
   .spectrum-Pagination-counter {
     margin-left: 0;
+    user-select: none;
   }
   .is-disabled:hover {
     cursor: initial;
