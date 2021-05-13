@@ -144,8 +144,8 @@ class RedisWrapper {
 
   async clear() {
     const db = this._db
-    let items = await this.scan(db)
-    await Promise.all(items.map(obj => this.delete(db, obj.key)))
+    let items = await this.scan()
+    await Promise.all(items.map(obj => this.delete(obj.key)))
   }
 }
 
