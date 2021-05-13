@@ -16,7 +16,7 @@ if (env.isDev() || env.isTest()) {
 router.delete(
   "/api/dev/:appId/lock",
   authorized(BUILDER),
-  controller.removeLock
+  controller.clearLock
 )
 
 module.exports = router
