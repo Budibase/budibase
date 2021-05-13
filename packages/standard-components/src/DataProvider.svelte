@@ -1,11 +1,13 @@
 <script>
   import { getContext } from "svelte"
+  import { ProgressCircle, Pagination } from "@budibase/bbui"
 
   export let dataSource
   export let filter
   export let sortColumn
   export let sortOrder
-  export let limit = 50
+  export let limit
+  export let paginate
 
   const { API, styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
@@ -29,7 +31,15 @@
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
   $: sortType = getSortType(schema, sortColumn)
-  $: fetchData(dataSource, query, limit, sortColumn, sortOrder, sortType)
+  $: fetchData(
+    dataSource,
+    query,
+    limit,
+    sortColumn,
+    sortOrder,
+    sortType,
+    paginate
+  )
   $: {
     if (internalTable) {
       rows = allRows
@@ -110,8 +120,10 @@
     limit,
     sortColumn,
     sortOrder,
-    sortType
+    sortType,
+    paginate
   ) => {
+    console.log("FETCH")
     loading = true
     if (dataSource?.type === "table") {
       const res = await API.searchTable({
@@ -121,21 +133,11 @@
         sort: sortColumn,
         sortOrder: sortOrder?.toLowerCase() ?? "ascending",
         sortType,
+        paginate,
       })
       pageNumber = 0
       allRows = res.rows
-
-      // Check we have next data
-      const next = await API.searchTable({
-        tableId: dataSource.tableId,
-        query,
-        limit: 1,
-        bookmark: res.bookmark,
-        sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase() ?? "ascending",
-        sortType,
-      })
-      if (next.rows?.length) {
+      if (res.hasNextPage) {
         bookmarks = [null, res.bookmark]
       } else {
         bookmarks = [null]
@@ -224,21 +226,11 @@
       sort: sortColumn,
       sortOrder: sortOrder?.toLowerCase() ?? "ascending",
       sortType,
+      paginate: true,
     })
     pageNumber++
     allRows = res.rows
-
-    // Check we have next data
-    const next = await API.searchTable({
-      tableId: dataSource.tableId,
-      query,
-      limit: 1,
-      bookmark: res.bookmark,
-      sort: sortColumn,
-      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
-      sortType,
-    })
-    if (next.rows?.length) {
+    if (res.hasNextPage) {
       bookmarks[pageNumber + 1] = res.bookmark
     }
   }
@@ -255,14 +247,55 @@
       sort: sortColumn,
       sortOrder: sortOrder?.toLowerCase() ?? "ascending",
       sortType,
+      paginate: true,
     })
     pageNumber--
     allRows = res.rows
   }
 </script>
 
-<div use:styleable={$component.styles}>
+<div use:styleable={$component.styles} class="container">
   <Provider {actions} data={dataContext}>
-    <slot />
+    {#if !loaded && loading}
+      <div class="loading">
+        <ProgressCircle />
+      </div>
+    {:else}
+      <slot />
+      {#if paginate}
+        <div class="pagination">
+          <Pagination
+            page={pageNumber + 1}
+            {hasPrevPage}
+            {hasNextPage}
+            goToPrevPage={prevPage}
+            goToNextPage={nextPage}
+          />
+        </div>
+      {/if}
+    {/if}
   </Provider>
 </div>
+
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .loading {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+  }
+  .pagination {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: var(--spacing-xl);
+  }
+</style>

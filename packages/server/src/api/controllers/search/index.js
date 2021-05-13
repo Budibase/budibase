@@ -1,4 +1,4 @@
-const { QueryBuilder, buildSearchUrl, search } = require("./utils")
+const { fullSearch, paginatedSearch } = require("./utils")
 const CouchDB = require("../../../db")
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 
@@ -8,38 +8,45 @@ exports.rowSearch = async ctx => {
   const {
     bookmark,
     query,
-    raw,
     limit,
     sort,
     sortOrder,
     sortType,
+    paginate,
   } = ctx.request.body
   const db = new CouchDB(appId)
 
-  let url
-  if (query) {
-    url = new QueryBuilder(
+  let response
+  const start = Date.now()
+  if (paginate) {
+    response = await paginatedSearch(
       appId,
       query,
-      bookmark,
-      limit,
+      tableId,
       sort,
       sortOrder,
-      sortType
+      sortType,
+      limit,
+      bookmark
     )
-      .addTable(tableId)
-      .complete()
-  } else if (raw) {
-    url = buildSearchUrl({
+  } else {
+    response = await fullSearch(
       appId,
-      query: raw,
-      bookmark,
-    })
+      query,
+      tableId,
+      sort,
+      sortOrder,
+      sortType,
+      limit
+    )
   }
-  const response = await search(url)
-  const table = await db.get(tableId)
-  ctx.body = {
-    rows: await outputProcessing(appId, table, response.rows),
-    bookmark: response.bookmark,
+  const end = Date.now()
+  console.log("Time: " + (end - start) / 1000 + " ms")
+
+  if (response.rows && response.rows.length) {
+    const table = await db.get(tableId)
+    response.rows = await outputProcessing(appId, table, response.rows)
   }
+
+  ctx.body = response
 }
