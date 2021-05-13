@@ -10,6 +10,7 @@
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
   import { url } from "@roxi/routify"
+  import { auth } from "stores/backend"
 
   export let app
   export let openApp
@@ -17,6 +18,7 @@
   export let deleteApp
   export let last
   export let appStatus
+  export let releaseLock
 
   let href =
     appStatus === AppStatus.DEV ? $url(`../../app/${app._id}`) : `/${app._id}`
@@ -49,6 +51,11 @@
     <Icon hoverable slot="control" name="More" />
     <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
     <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+    {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
+      <MenuItem on:click={() => releaseLock(app._id)} icon="LockOpen">
+        Release Lock
+      </MenuItem>
+    {/if}
   </ActionMenu>
 </div>
 
