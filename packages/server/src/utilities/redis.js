@@ -32,9 +32,11 @@ exports.getAllLocks = async () => {
 
 exports.updateLock = async (devAppId, user) => {
   // make sure always global user ID
+  const globalId = getGlobalIDFromUserMetadataID(user._id)
   const inputUser = {
     ...user,
-    _id: getGlobalIDFromUserMetadataID(user._id),
+    userId: globalId,
+    _id: globalId,
   }
   await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
 }

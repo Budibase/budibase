@@ -138,6 +138,9 @@ exports.fetch = async function (ctx) {
       const lock = locks.find(lock => lock.appId === app._id)
       if (lock) {
         app.lockedBy = lock.user
+      } else {
+        // make sure its definitely not present
+        delete app.lockedBy
       }
     }
   }
@@ -221,6 +224,12 @@ exports.update = async function (ctx) {
 
   const data = ctx.request.body
   const newData = { ...application, ...data, url }
+
+  // the locked by property is attached by server but generated from
+  // Redis, shouldn't ever store it
+  if (newData.lockedBy) {
+    delete newData.lockedBy
+  }
 
   const response = await db.put(newData)
   data._rev = response.rev
