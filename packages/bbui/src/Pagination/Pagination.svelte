@@ -1,5 +1,7 @@
 <script>
   import "@spectrum-css/pagination/dist/index-vars.css"
+  import "@spectrum-css/actionbutton/dist/index-vars.css"
+  import "@spectrum-css/typography/dist/index-vars.css"
 
   export let page
   export let goToPrevPage
@@ -9,7 +11,7 @@
 </script>
 
 <nav class="spectrum-Pagination spectrum-Pagination--explicit">
-  <a
+  <div
     href="#"
     class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet spectrum-Pagination-prevButton"
     on:click={hasPrevPage ? goToPrevPage : null}
@@ -23,11 +25,11 @@
     >
       <use xlink:href="#spectrum-css-icon-Chevron100" />
     </svg>
-  </a>
+  </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
     Page {page}
   </span>
-  <a
+  <div
     href="#"
     class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet spectrum-Pagination-nextButton"
     on:click={hasNextPage ? goToNextPage : null}
@@ -41,7 +43,7 @@
     >
       <use xlink:href="#spectrum-css-icon-Chevron100" />
     </svg>
-  </a>
+  </div>
 </nav>
 
 <style>
