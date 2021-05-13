@@ -93,46 +93,46 @@
 
   onMount(async () => {
     checkKeys()
-    await apps.load()
+    await apps.load(appStatus)
     loaded = true
   })
 </script>
 
 <Page wide>
-  {#if $apps.length}
-    <Layout noPadding>
-      <div class="title">
-        <Heading>Apps</Heading>
-        <ButtonGroup>
-          <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create new app</Button>
-        </ButtonGroup>
+  <Layout noPadding>
+    <div class="title">
+      <Heading>Apps</Heading>
+      <ButtonGroup>
+        <Button secondary on:click={initiateAppImport}>Import app</Button>
+        <Button cta on:click={initiateAppCreation}>Create new app</Button>
+      </ButtonGroup>
+    </div>
+    <div class="filter">
+      <div class="select">
+        <Select
+          bind:value={appStatus}
+          options={[
+            { label: "Deployed", value: "deployed" },
+            { label: "In Development", value: "dev" },
+          ]}
+        />
       </div>
-      <div class="filter">
-        <div class="select">
-          <Select 
-            bind:value={appStatus}
-            options={[
-              { label: "Deployed", value: "deployed" },
-              { label: "In Development", value: "dev" },
-            ]}
-          />
-        </div>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => (layout = "grid")}
-            selected={layout === "grid"}
-            quiet
-            icon="ClassicGridView"
-          />
-          <ActionButton
-            on:click={() => (layout = "table")}
-            selected={layout === "table"}
-            quiet
-            icon="ViewRow"
-          />
-        </ActionGroup>
-      </div>
+      <ActionGroup>
+        <ActionButton
+          on:click={() => (layout = "grid")}
+          selected={layout === "grid"}
+          quiet
+          icon="ClassicGridView"
+        />
+        <ActionButton
+          on:click={() => (layout = "table")}
+          selected={layout === "table"}
+          quiet
+          icon="ViewRow"
+        />
+      </ActionGroup>
+    </div>
+    {#if $apps.length}
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
@@ -140,6 +140,7 @@
         {#each $apps as app, idx (app._id)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
+            {appStatus}
             {app}
             {openApp}
             {exportApp}
@@ -148,8 +149,8 @@
           />
         {/each}
       </div>
-    </Layout>
-  {/if}
+    {/if}
+  </Layout>
   {#if !$apps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
