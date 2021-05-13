@@ -173,7 +173,6 @@ class QueryBuilder {
       url += `&bookmark=${this.bookmark}`
     }
 
-    console.log(url)
     // Fix any double slashes in the URL
     return checkSlashesInUrl(url)
   }

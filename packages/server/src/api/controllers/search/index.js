@@ -5,6 +5,7 @@ const { outputProcessing } = require("../../../utilities/rowProcessor")
 exports.rowSearch = async ctx => {
   const appId = ctx.appId
   const { tableId } = ctx.params
+  const db = new CouchDB(appId)
   const {
     bookmark,
     query,
@@ -14,10 +15,8 @@ exports.rowSearch = async ctx => {
     sortType,
     paginate,
   } = ctx.request.body
-  const db = new CouchDB(appId)
 
   let response
-  const start = Date.now()
   if (paginate) {
     response = await paginatedSearch(
       appId,
@@ -40,9 +39,8 @@ exports.rowSearch = async ctx => {
       limit
     )
   }
-  const end = Date.now()
-  console.log("Time: " + (end - start) / 1000 + " ms")
 
+  // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     const table = await db.get(tableId)
     response.rows = await outputProcessing(appId, table, response.rows)
