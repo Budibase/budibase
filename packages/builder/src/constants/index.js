@@ -11,7 +11,7 @@ export const FrontendTypes = {
 
 export const AppStatus = {
   DEV: "dev",
-  DEPLOYED: "deployed"
+  PUBLISHED: "published"
 }
 
 // fields on the user table that cannot be edited
