@@ -37,9 +37,8 @@ exports.redirectDelete = async ctx => {
 
 exports.removeLock = async ctx => {
   const { appId } = ctx.params
-  const globalUserId = getGlobalIDFromUserMetadataID(ctx.user._id)
   try {
-    await clearLock(appId, globalUserId)
+    await clearLock(appId, ctx.user)
   } catch (err) {
     ctx.throw(400, "Unable to remove lock.")
   }

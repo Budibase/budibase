@@ -4,7 +4,7 @@ const {
   doesHaveResourcePermission,
   doesHaveBasePermission,
 } = require("../utilities/security/permissions")
-const { APP_DEV_PREFIX, getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { APP_DEV_PREFIX } = require("../db/utils")
 const { doesUserHaveLock, updateLock } = require("../utilities/redis")
 
 function hasResource(ctx) {
@@ -19,17 +19,15 @@ async function checkDevAppLocks(ctx) {
   const appId = ctx.appId
 
   // not a development app, don't need to do anything
-  if (!appId.startsWith(APP_DEV_PREFIX)) {
+  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return
   }
-  // get the user which is currently using the dev app
-  const userId = getGlobalIDFromUserMetadataID(ctx.user._id)
-  if (!(await doesUserHaveLock(appId, userId))) {
+  if (!(await doesUserHaveLock(appId, ctx.user))) {
     ctx.throw(403, "User does not hold app lock.")
   }
 
   // they do have lock, update it
-  await updateLock(appId, userId)
+  await updateLock(appId, ctx.user)
 }
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
