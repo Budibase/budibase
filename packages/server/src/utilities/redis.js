@@ -1,4 +1,5 @@
 const { Client, utils } = require("@budibase/auth").redis
+const { getGlobalIDFromUserMetadataID } = require("../db/utils")
 
 const APP_DEV_LOCK_SECONDS = 600
 const DB_NAME = utils.Databases.DEV_LOCKS
@@ -10,20 +11,40 @@ exports.init = async () => {
   devAppClient = await new Client(DB_NAME).init()
 }
 
-exports.doesUserHaveLock = async (devAppId, userId) => {
+exports.doesUserHaveLock = async (devAppId, user) => {
   const value = await devAppClient.get(devAppId)
-  return value == null || value === userId
+  if (!value) {
+    return true
+  }
+  // make sure both IDs are global
+  const expected = getGlobalIDFromUserMetadataID(value._id)
+  const userId = getGlobalIDFromUserMetadataID(user._id)
+  return expected === userId
 }
 
-exports.updateLock = async (devAppId, userId) => {
-  await devAppClient.store(devAppId, userId, APP_DEV_LOCK_SECONDS)
+exports.getAllLocks = async () => {
+  const locks = await devAppClient.scan()
+  return locks.map(lock => ({
+    appId: lock.key,
+    user: lock.value,
+  }))
 }
 
-exports.clearLock = async (devAppId, userId) => {
+exports.updateLock = async (devAppId, user) => {
+  // make sure always global user ID
+  const inputUser = {
+    ...user,
+    _id: getGlobalIDFromUserMetadataID(user._id),
+  }
+  await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
+}
+
+exports.clearLock = async (devAppId, user) => {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return
   }
+  const userId = getGlobalIDFromUserMetadataID(user._id)
   if (value !== userId) {
     throw "User does not hold lock, cannot clear it."
   }

@@ -35,6 +35,7 @@ const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const { getDeployedApps } = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
+const { getAllLocks } = require("../../utilities/redis")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -122,15 +123,23 @@ async function createInstance(template) {
 exports.fetch = async function (ctx) {
   let apps = await getAllApps()
 
-  const appStatus = ctx.query.status
-  if (appStatus) {
-    apps = apps.filter(app => {
-      if (appStatus === AppStatus.DEV) {
-        return app._id.startsWith(DocumentTypes.APP_DEV)
-      }
+  const isDev = ctx.query.status === AppStatus.DEV
+  apps = apps.filter(app => {
+    if (isDev) {
+      return app._id.startsWith(DocumentTypes.APP_DEV)
+    }
+    return !app._id.startsWith(DocumentTypes.APP_DEV)
+  })
 
-      return !app._id.startsWith(DocumentTypes.APP_DEV)
-    })
+  // get the locks for all the dev apps
+  if (isDev) {
+    const locks = await getAllLocks()
+    for (let app of apps) {
+      const lock = locks.find(lock => lock.appId === app._id)
+      if (lock) {
+        app.lockedBy = lock.user
+      }
+    }
   }
 
   ctx.body = apps
