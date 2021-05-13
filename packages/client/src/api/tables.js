@@ -23,7 +23,6 @@ export const fetchTableData = async tableId => {
 export const searchTable = async ({
   tableId,
   query,
-  raw,
   bookmark,
   limit,
   sort,
@@ -31,14 +30,15 @@ export const searchTable = async ({
   sortType,
   paginate,
 }) => {
-  if (!tableId || (!query && !raw)) {
-    return
+  if (!tableId || !query) {
+    return {
+      rows: [],
+    }
   }
   const res = await API.post({
     url: `/api/search/${tableId}/rows`,
     body: {
       query,
-      raw,
       bookmark,
       limit,
       sort,
