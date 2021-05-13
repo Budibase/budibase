@@ -37,7 +37,7 @@
   <img src={Rocket} alt="Rocket flying through sky" />
   <div>
     <Heading size="M">It's time to shine!</Heading>
-    <Button size="XL" cta medium on:click={deployApp}>Deploy App</Button>
+    <Button size="XL" cta medium on:click={deployApp}>Publish App</Button>
   </div>
 </section>
 <Modal bind:this={feedbackModal}>
