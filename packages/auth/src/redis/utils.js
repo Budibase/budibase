@@ -32,6 +32,9 @@ exports.getRedisOptions = (clustered = false) => {
 }
 
 exports.addDbPrefix = (db, key) => {
+  if (key.includes(db)) {
+    return key
+  }
   return `${db}${SEPARATOR}${key}`
 }
 

@@ -41,9 +41,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   }
 
   const builderCall = permType === PermissionTypes.BUILDER
-
+  const referer = ctx.headers["referer"]
+  const editingApp = referer ? referer.includes(ctx.appId) : false
   // this makes sure that builder calls abide by dev locks
-  if (builderCall) {
+  if (builderCall && editingApp) {
     await checkDevAppLocks(ctx)
   }
 

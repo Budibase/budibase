@@ -2,7 +2,6 @@ const fetch = require("node-fetch")
 const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
-const { getGlobalIDFromUserMetadataID } = require("../../db/utils")
 const { clearLock } = require("../../utilities/redis")
 
 async function redirect(ctx, method) {
@@ -35,7 +34,7 @@ exports.redirectDelete = async ctx => {
   await redirect(ctx, "DELETE")
 }
 
-exports.removeLock = async ctx => {
+exports.clearLock = async ctx => {
   const { appId } = ctx.params
   try {
     await clearLock(appId, ctx.user)
