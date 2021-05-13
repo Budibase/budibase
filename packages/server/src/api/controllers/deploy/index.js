@@ -57,23 +57,29 @@ async function storeLocalDeploymentHistory(deployment) {
 
 async function deployApp(deployment) {
   try {
-    const deployTarget = deployment.appId.replace("_dev", "")
+    const productionAppId = deployment.appId.replace("_dev", "")
 
     const replication = new Replication({
       source: deployment.appId,
-      target: deployTarget,
+      target: productionAppId,
     })
 
     await replication.replicate()
 
     // Strip the _dev prefix and update the appID document in the new DB
-    const db = new PouchDB(deployTarget)
+    const db = new PouchDB(productionAppId)
     const appDoc = await db.get(deployment.appId)
-    await db.remove(appDoc)
-    appDoc._id = deployTarget
+    appDoc._id = productionAppId
     delete appDoc._rev
-    appDoc.instance._id = deployTarget
+    appDoc.instance._id = productionAppId
     await db.put(appDoc)
+
+    // Set up live sync between the live and dev instances
+    const liveReplication = new Replication({
+      source: productionAppId,
+      target: deployment.appId,
+    })
+    liveReplication.subscribe()
 
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)

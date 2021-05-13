@@ -95,6 +95,7 @@
     await del(`/api/applications/${appToDelete?._id}`)
     await apps.load()
     appToDelete = null
+    notifications.success("App deleted successfully.")
   }
 
   const releaseLock = async appId => {
@@ -159,6 +160,7 @@
         {#each $apps as app, idx (app._id)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
+            deletable={appStatus === AppStatus.DEPLOYED}
             {releaseLock}
             {app}
             {openApp}
