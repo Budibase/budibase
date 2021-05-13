@@ -114,7 +114,6 @@
     sortType,
     paginate
   ) => {
-    console.log("FETCH")
     loading = true
     if (dataSource?.type === "table") {
       const res = await API.searchTable({
@@ -248,7 +247,7 @@
 
 <div use:styleable={$component.styles} class="container">
   <Provider {actions} data={dataContext}>
-    {#if !loaded && loading}
+    {#if !loaded}
       <div class="loading">
         <ProgressCircle />
       </div>
