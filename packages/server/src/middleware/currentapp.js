@@ -31,9 +31,8 @@ module.exports = async (ctx, next) => {
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user._id)
     updateCookie = true
     appId = requestAppId
-    if (globalUser.roles && globalUser.roles[requestAppId]) {
-      roleId = globalUser.roles[requestAppId]
-    }
+    // retrieving global user gets the right role
+    roleId = globalUser.roleId
   } else if (appCookie != null) {
     appId = appCookie.appId
     roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
