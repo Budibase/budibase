@@ -47,7 +47,7 @@ exports.clearLock = async (devAppId, user) => {
     return
   }
   const userId = getGlobalIDFromUserMetadataID(user._id)
-  if (value !== userId) {
+  if (value._id !== userId) {
     throw "User does not hold lock, cannot clear it."
   }
   await devAppClient.delete(devAppClient)
