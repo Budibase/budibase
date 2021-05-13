@@ -94,3 +94,9 @@
     <slot />
   </Table>
 </div>
+
+<style>
+  div {
+    background-color: var(--spectrum-alias-background-color-secondary);
+  }
+</style>
