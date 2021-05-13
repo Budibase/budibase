@@ -25,12 +25,15 @@
   import AppRow from "components/start/AppRow.svelte"
 
   let layout = "grid"
+  let appStatus = "deployed"
   let template
   let appToDelete
   let creationModal
   let deletionModal
   let creatingApp = false
   let loaded = false
+
+  $: appStatus && apps.load(appStatus)
 
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
@@ -107,7 +110,13 @@
       </div>
       <div class="filter">
         <div class="select">
-          <Select quiet placeholder="Filter by groups" />
+          <Select 
+            bind:value={appStatus}
+            options={[
+              { label: "Deployed", value: "deployed" },
+              { label: "In Development", value: "dev" },
+            ]}
+          />
         </div>
         <ActionGroup>
           <ActionButton

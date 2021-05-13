@@ -10,6 +10,11 @@ const StaticDatabases = {
   },
 }
 
+const AppStatus = {
+  DEV: "dev",
+  DEPLOYED: "deployed",
+}
+
 const DocumentTypes = {
   TABLE: "ta",
   ROW: "ro",
@@ -49,6 +54,7 @@ exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
+exports.AppStatus = AppStatus
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`

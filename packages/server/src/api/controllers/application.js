@@ -16,6 +16,9 @@ const {
   getLayoutParams,
   getScreenParams,
   generateScreenID,
+  generateDevAppID,
+  DocumentTypes,
+  AppStatus,
 } = require("../../db/utils")
 const {
   BUILTIN_ROLE_IDS,
@@ -84,7 +87,10 @@ async function getAppUrlIfNotInUse(ctx) {
 }
 
 async function createInstance(template) {
-  const appId = generateAppID()
+  // TODO: Do we need the normal app ID?
+  const baseAppId = generateAppID()
+  const appId = generateDevAppID(baseAppId)
+
   const db = new CouchDB(appId)
   await db.put({
     _id: "_design/database",
@@ -114,7 +120,20 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function (ctx) {
-  ctx.body = await getAllApps()
+  let apps = await getAllApps()
+
+  const appStatus = ctx.query.status
+  if (appStatus) {
+    apps = apps.filter(app => {
+      if (appStatus === AppStatus.DEV) {
+        return app._id.startsWith(DocumentTypes.APP_DEV)
+      }
+
+      return !app._id.startsWith(DocumentTypes.APP_DEV)
+    })
+  }
+
+  ctx.body = apps
 }
 
 exports.fetchAppDefinition = async function (ctx) {
