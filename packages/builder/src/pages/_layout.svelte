@@ -1,5 +1,5 @@
 <script>
-  import { Home as Link } from "@budibase/bbui"
+  import { Home as Link, Button } from "@budibase/bbui"
   import {
     AppsIcon,
     HostingIcon,
@@ -10,7 +10,30 @@
   import BuilderSettingsButton from "components/start/BuilderSettingsButton.svelte"
 
   let modal
+  $: deprecationWarning = true
 </script>
+
+{#if deprecationWarning}
+<div class="deprecation-root">
+  
+  <div class="deprecation-inner">
+    <div class="deprecation-text">
+      From the 25th of May, Budibase is moving to a self-hosted web experience in the browser.<br/> 
+      We will cease development on the current Electron based desktop builder.
+    </div>
+
+    <div class="deprecation-actions">
+
+      <a href="https://github.com/Budibase/budibase/discussions/1487" target="_blank">read more</a>
+
+      <button on:click={() => deprecationWarning = false}>
+        Close
+      </button>
+    </div>
+  </div>
+  
+</div>
+{/if}
 
 <div class="root">
   <div class="ui-nav">
@@ -49,6 +72,77 @@
 </div>
 
 <style>
+
+  .deprecation-root {
+    padding: 20px;
+    background-color: var(--yellow-light);
+    display: flex;
+    justify-content: center;
+  }
+
+  .deprecation-inner {
+    display: flex;
+    max-width: 900px;
+    align-items: center;
+  }
+
+  .deprecation-text {
+    flex: 1 1 auto;
+    color: black;
+    text-align: center;
+  }
+
+  .deprecation-actions {
+    flex: 0 0 auto;
+    padding-left: 40px;
+  }
+
+  .deprecation-actions > a {
+    color: white;
+    border-color: black;
+    background-color: black;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-m);
+    font-family: var(--font-sans);
+    cursor: pointer;
+    font-weight: 600;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: var(--border-radius-s);
+    transition: all 0.2s ease 0s;
+    display: inline-flex;
+    text-rendering: optimizeLegibility;
+    text-decoration: none;
+    min-width: auto;
+    outline: none;
+    font-feature-settings: "case" 1, "rlig" 1, "calt" 0;
+    -webkit-box-align: center;
+    user-select: none;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .deprecation-actions > a:hover {
+    background-color: white;
+    color: black;
+  }
+
+  .deprecation-actions > button {
+    border-style: none;
+    background-color: rgba(0,0,0,0);
+    color: rgb(117, 117, 117);
+    cursor: pointer;
+    margin-left: 10px;
+  }
+
+  .deprecation-actions > button:hover {
+    color: black;
+  }
+
   .root {
     display: grid;
     grid-template-columns: 260px 1fr;
