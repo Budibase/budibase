@@ -40,7 +40,7 @@ exports.removeLock = async ctx => {
   try {
     await clearLock(appId, ctx.user)
   } catch (err) {
-    ctx.throw(400, "Unable to remove lock.")
+    ctx.throw(400, `Unable to remove lock. ${err}`)
   }
   ctx.body = {
     message: "Lock removed successfully.",
