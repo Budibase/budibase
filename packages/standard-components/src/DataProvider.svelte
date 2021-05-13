@@ -17,6 +17,7 @@
 
   // Loading flag for the initial load
   let loaded = false
+  let schemaLoaded = false
 
   // Provider state
   let rows = []
@@ -31,16 +32,23 @@
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
   $: sortType = getSortType(schema, sortColumn)
-  $: fetchData(
-    dataSource,
-    query,
-    limit,
-    sortColumn,
-    sortOrder,
-    sortType,
-    paginate
-  )
   $: {
+    // Wait until schema loads before loading data, so that we can determine
+    // the correct sort type first time
+    if (schemaLoaded) {
+      fetchData(
+        dataSource,
+        query,
+        limit,
+        sortColumn,
+        sortOrder,
+        sortType,
+        paginate
+      )
+    }
+  }
+  $: {
+    // Sort and limit rows in memory when we aren't searching internal tables
     if (internalTable) {
       rows = allRows
     } else {
@@ -195,6 +203,7 @@
       }
     })
     schema = fixedSchema
+    schemaLoaded = true
   }
 
   const nextPage = async () => {
