@@ -91,6 +91,7 @@
     if (!appToDelete) {
       return
     }
+
     await del(`/api/applications/${appToDelete?._id}`)
     await apps.load()
     appToDelete = null
@@ -100,7 +101,7 @@
     try {
       const response = await del(`/api/dev/${appId}/lock`)
       const json = await response.json()
-      if (json.status !== 200) throw json.message
+      if (response.status !== 200) throw json.message
 
       notifications.success("Lock released")
       await apps.load(appStatus)
