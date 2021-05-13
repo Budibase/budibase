@@ -17,17 +17,12 @@
   export let exportApp
   export let deleteApp
   export let last
-  export let appStatus
   export let releaseLock
-
-  let href =
-    appStatus === AppStatus.DEV ? $url(`../../app/${app._id}`) : `/${app._id}`
-  let target = appStatus === AppStatus.DEV ? "_self" : "_target"
 </script>
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link {href} {target}>
+  <Link on:click={openApp}>
     <Heading size="XS">
       {app.name}
     </Heading>
