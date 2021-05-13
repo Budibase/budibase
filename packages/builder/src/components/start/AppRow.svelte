@@ -8,6 +8,7 @@
     MenuItem,
     Link,
   } from "@budibase/bbui"
+  import { AppStatus } from "constants"
   import { url } from "@roxi/routify"
 
   export let app
@@ -15,11 +16,16 @@
   export let exportApp
   export let deleteApp
   export let last
+  export let appStatus
+
+  let href =
+    appStatus === AppStatus.DEV ? $url(`../../app/${app._id}`) : `/${app._id}`
+  let target = appStatus === AppStatus.DEV ? "_self" : "_target"
 </script>
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link href={$url(`../../app/${app._id}`)}>
+  <Link {href} {target}>
     <Heading size="XS">
       {app.name}
     </Heading>
@@ -29,15 +35,12 @@
   Edited {Math.round(Math.random() * 10 + 1)} months ago
 </div>
 <div class:last>
-  {#if Math.random() < 0.33}
+  {#if app.lockedBy}
+    <div class="status status--locked-you" />
+    Locked by {app.lockedBy.email}
+  {:else}
     <div class="status status--open" />
     Open
-  {:else if Math.random() < 0.33}
-    <div class="status status--locked-other" />
-    Locked by Will Wheaton
-  {:else}
-    <div class="status status--locked-you" />
-    Locked by you
   {/if}
 </div>
 <div class:last>

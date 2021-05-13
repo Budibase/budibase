@@ -9,20 +9,29 @@
     Link,
   } from "@budibase/bbui"
   import { gradient } from "actions"
+  import { AppStatus } from "constants"
   import { url } from "@roxi/routify"
 
   export let app
   export let exportApp
   export let deleteApp
+  export let appStatus
+
+  let href =
+    appStatus === AppStatus.DEV ? $url(`../../app/${app._id}`) : `/${app._id}`
+  let target = appStatus === AppStatus.DEV ? "_self" : "_target"
 </script>
 
 <div class="wrapper">
   <Layout noPadding gap="XS" alignContent="start">
     <div class="preview" use:gradient={{ seed: app.name }} />
     <div class="title">
-      <Link href={$url(`../../app/${app._id}`)}>
+      <Link {href} {target}>
         <Heading size="XS">
+<<<<<<< HEAD
           {app._id}
+=======
+>>>>>>> c3e1b1d30235b8945424cf59a41e112f92942dc6
           {app.name}
         </Heading>
       </Link>
@@ -34,13 +43,14 @@
         <MenuItem on:click={() => deleteApp(app)} icon="Delete">
           Delete
         </MenuItem>
+        <MenuItem on:click={() => deleteApp(app)} icon="Code">Develop</MenuItem>
       </ActionMenu>
     </div>
     <div class="status">
       <Body noPadding size="S">
         Edited {Math.floor(1 + Math.random() * 10)} months ago
       </Body>
-      {#if Math.random() > 0.5}
+      {#if appStatus === AppStatus.DEV && app.lockedBy}
         <Icon name="LockClosed" />
       {/if}
     </div>

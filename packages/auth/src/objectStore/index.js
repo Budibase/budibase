@@ -10,6 +10,7 @@ const fs = require("fs")
 const env = require("../environment")
 const { budibaseTempDir, ObjectStoreBuckets } = require("./utils")
 const { v4 } = require("uuid")
+const { APP_PREFIX, APP_DEV_PREFIX } = require("../db/utils")
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -27,6 +28,16 @@ const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.css,
   CONTENT_TYPE_MAP.js,
 ]
+
+// does normal sanitization and then swaps dev apps to apps
+function sanitizeKey(input) {
+  return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
+}
+
+// simply handles the dev app to app conversion
+function sanitizeBucket(input) {
+  return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
+}
 
 function publicPolicy(bucketName) {
   return {
@@ -61,7 +72,7 @@ exports.ObjectStore = bucket => {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     params: {
-      Bucket: bucket,
+      Bucket: sanitizeBucket(bucket),
     },
   }
   if (env.MINIO_URL) {
@@ -75,6 +86,7 @@ exports.ObjectStore = bucket => {
  * if it does not exist then it will create it.
  */
 exports.makeSureBucketExists = async (client, bucketName) => {
+  bucketName = sanitizeBucket(bucketName)
   try {
     await client
       .headBucket({
@@ -114,16 +126,16 @@ exports.makeSureBucketExists = async (client, bucketName) => {
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).
  */
-exports.upload = async ({ bucket, filename, path, type, metadata }) => {
+exports.upload = async ({ bucket: bucketName, filename, path, type, metadata }) => {
   const extension = [...filename.split(".")].pop()
   const fileBytes = fs.readFileSync(path)
 
-  const objectStore = exports.ObjectStore(bucket)
-  await exports.makeSureBucketExists(objectStore, bucket)
+  const objectStore = exports.ObjectStore(bucketName)
+  await exports.makeSureBucketExists(objectStore, bucketName)
 
   const config = {
     // windows file paths need to be converted to forward slashes for s3
-    Key: sanitize(filename).replace(/\\/g, "/"),
+    Key: sanitizeKey(filename),
     Body: fileBytes,
     ContentType: type || CONTENT_TYPE_MAP[extension.toLowerCase()],
   }
@@ -137,13 +149,13 @@ exports.upload = async ({ bucket, filename, path, type, metadata }) => {
  * Similar to the upload function but can be used to send a file stream
  * through to the object store.
  */
-exports.streamUpload = async (bucket, filename, stream) => {
-  const objectStore = exports.ObjectStore(bucket)
-  await exports.makeSureBucketExists(objectStore, bucket)
+exports.streamUpload = async (bucketName, filename, stream) => {
+  const objectStore = exports.ObjectStore(bucketName)
+  await exports.makeSureBucketExists(objectStore, bucketName)
 
   const params = {
-    Bucket: bucket,
-    Key: sanitize(filename).replace(/\\/g, "/"),
+    Bucket: sanitizeBucket(bucketName),
+    Key: sanitizeKey(filename),
     Body: stream,
   }
   return objectStore.upload(params).promise()
@@ -153,11 +165,11 @@ exports.streamUpload = async (bucket, filename, stream) => {
  * retrieves the contents of a file from the object store, if it is a known content type it
  * will be converted, otherwise it will be returned as a buffer stream.
  */
-exports.retrieve = async (bucket, filepath) => {
-  const objectStore = exports.ObjectStore(bucket)
+exports.retrieve = async (bucketName, filepath) => {
+  const objectStore = exports.ObjectStore(bucketName)
   const params = {
-    Bucket: bucket,
-    Key: sanitize(filepath).replace(/\\/g, "/"),
+    Bucket: sanitizeBucket(bucketName),
+    Key: sanitizeKey(filepath),
   }
   const response = await objectStore.getObject(params).promise()
   // currently these are all strings
@@ -171,17 +183,21 @@ exports.retrieve = async (bucket, filepath) => {
 /**
  * Same as retrieval function but puts to a temporary file.
  */
-exports.retrieveToTmp = async (bucket, filepath) => {
-  const data = await exports.retrieve(bucket, filepath)
+exports.retrieveToTmp = async (bucketName, filepath) => {
+  bucketName = sanitizeBucket(bucketName)
+  filepath = sanitizeKey(filepath)
+  const data = await exports.retrieve(bucketName, filepath)
   const outputPath = join(budibaseTempDir(), v4())
   fs.writeFileSync(outputPath, data)
   return outputPath
 }
 
-exports.deleteFolder = async (bucket, folder) => {
-  const client = exports.ObjectStore(bucket)
+exports.deleteFolder = async (bucketName, folder) => {
+  bucketName = sanitizeBucket(bucketName)
+  folder = sanitizeKey(folder)
+  const client = exports.ObjectStore(bucketName)
   const listParams = {
-    Bucket: bucket,
+    Bucket: bucketName,
     Prefix: folder,
   }
 
@@ -190,7 +206,7 @@ exports.deleteFolder = async (bucket, folder) => {
     return
   }
   const deleteParams = {
-    Bucket: bucket,
+    Bucket: bucketName,
     Delete: {
       Objects: [],
     },
@@ -203,28 +219,31 @@ exports.deleteFolder = async (bucket, folder) => {
   response = await client.deleteObjects(deleteParams).promise()
   // can only empty 1000 items at once
   if (response.Deleted.length === 1000) {
-    return exports.deleteFolder(bucket, folder)
+    return exports.deleteFolder(bucketName, folder)
   }
 }
 
-exports.uploadDirectory = async (bucket, localPath, bucketPath) => {
+exports.uploadDirectory = async (bucketName, localPath, bucketPath) => {
+  bucketName = sanitizeBucket(bucketName)
   let uploads = []
   const files = fs.readdirSync(localPath, { withFileTypes: true })
   for (let file of files) {
-    const path = join(bucketPath, file.name)
+    const path = sanitizeKey(join(bucketPath, file.name))
     const local = join(localPath, file.name)
     if (file.isDirectory()) {
-      uploads.push(exports.uploadDirectory(bucket, local, path))
+      uploads.push(exports.uploadDirectory(bucketName, local, path))
     } else {
       uploads.push(
-        exports.streamUpload(bucket, path, fs.createReadStream(local))
+        exports.streamUpload(bucketName, path, fs.createReadStream(local))
       )
     }
   }
   await Promise.all(uploads)
 }
 
-exports.downloadTarball = async (url, bucket, path) => {
+exports.downloadTarball = async (url, bucketName, path) => {
+  bucketName = sanitizeBucket(bucketName)
+  path = sanitizeKey(path)
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
@@ -233,7 +252,7 @@ exports.downloadTarball = async (url, bucket, path) => {
   const tmpPath = join(budibaseTempDir(), path)
   await streamPipeline(response.body, zlib.Unzip(), tar.extract(tmpPath))
   if (!env.isTest()) {
-    await exports.uploadDirectory(bucket, tmpPath, path)
+    await exports.uploadDirectory(bucketName, tmpPath, path)
   }
   // return the temporary path incase there is a use for it
   return tmpPath

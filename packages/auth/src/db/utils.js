@@ -1,6 +1,9 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
 
+const UNICODE_MAX = "\ufff0"
+const SEPARATOR = "_"
+
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
 }
@@ -13,17 +16,16 @@ exports.StaticDatabases = {
 
 const DocumentTypes = {
   USER: "us",
-  APP: "app",
   GROUP: "group",
   CONFIG: "config",
   TEMPLATE: "template",
+  APP: "app",
+  APP_DEV: "app_dev",
 }
 
 exports.DocumentTypes = DocumentTypes
-
-const UNICODE_MAX = "\ufff0"
-const SEPARATOR = "_"
-
+exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
+exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
 /**

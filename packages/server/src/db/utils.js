@@ -1,7 +1,12 @@
 const newid = require("./newid")
+const {
+  DocumentTypes: CoreDocTypes,
+  APP_DEV_PREFIX,
+  APP_PREFIX,
+  SEPARATOR,
+} = require("@budibase/auth").db
 
 const UNICODE_MAX = "\ufff0"
-const SEPARATOR = "_"
 
 const StaticDatabases = {
   BUILDER: {
@@ -16,13 +21,13 @@ const AppStatus = {
 }
 
 const DocumentTypes = {
+  APP: CoreDocTypes.APP,
+  APP_DEV: CoreDocTypes.APP_DEV,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
   AUTOMATION: "au",
   LINK: "li",
-  APP: "app",
-  APP_DEV: "app_dev",
   ROLE: "role",
   WEBHOOK: "wh",
   INSTANCE: "inst",
@@ -45,8 +50,8 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
-exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
-exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
+exports.APP_PREFIX = APP_PREFIX
+exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
