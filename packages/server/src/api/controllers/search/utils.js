@@ -244,11 +244,15 @@ exports.paginatedSearch = async (
     .setSort(sort)
     .setSortOrder(sortOrder)
     .setSortType(sortType)
+  const searchUrl = builder
     .setBookmark(bookmark)
     .setLimit(limit)
-  const searchUrl = builder.buildSearchURL()
-  const nextUrl = builder.setLimit(1).buildSearchURL()
+    .buildSearchURL()
   const searchResults = await runQuery(searchUrl)
+  const nextUrl = builder
+    .setBookmark(searchResults.bookmark)
+    .setLimit(1)
+    .buildSearchURL()
   const nextResults = await runQuery(nextUrl)
   return {
     ...searchResults,
