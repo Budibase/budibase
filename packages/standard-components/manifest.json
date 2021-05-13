@@ -1384,7 +1384,6 @@
     "icon": "Data",
     "styleable": false,
     "hasChildren": true,
-    "actions": ["NextPage", "PrevPage"],
     "settings": [
       {
         "type": "dataSource",
