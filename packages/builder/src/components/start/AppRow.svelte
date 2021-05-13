@@ -16,13 +16,14 @@
   export let openApp
   export let exportApp
   export let deleteApp
-  export let last
   export let releaseLock
+  export let last
+  export let deletable
 </script>
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link on:click={openApp}>
+  <Link on:click={() => openApp(app)}>
     <Heading size="XS">
       {app.name}
     </Heading>
@@ -45,7 +46,9 @@
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
-    <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+    {#if deletable}
+      <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+    {/if}
     {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
       <MenuItem on:click={() => releaseLock(app._id)} icon="LockOpen">
         Release Lock
