@@ -1,5 +1,5 @@
 <script>
-  import { General, DangerZone, APIKeys } from "./tabs"
+  import { General, DangerZone } from "./tabs"
   import { ModalContent, Tab, Tabs } from "@budibase/bbui"
 </script>
 
@@ -13,9 +13,9 @@
       <Tab title="General">
         <General />
       </Tab>
-      <Tab title="API Keys">
+      <!-- <Tab title="API Keys">
         <APIKeys />
-      </Tab>
+      </Tab> -->
       <Tab title="Danger Zone">
         <DangerZone />
       </Tab>
