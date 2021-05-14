@@ -147,7 +147,9 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
 exports.getAllApps = async (devApps = false) => {
   const CouchDB = getCouch()
   let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => dbName.startsWith(exports.APP_PREFIX))
+  const appDbNames = allDbs.filter(dbName =>
+    dbName.startsWith(exports.APP_PREFIX)
+  )
   const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
   if (appPromises.length === 0) {
     return []
