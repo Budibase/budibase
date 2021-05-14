@@ -20,10 +20,7 @@ const {
   DocumentTypes,
   AppStatus,
 } = require("../../db/utils")
-const {
-  BUILTIN_ROLE_IDS,
-  AccessController,
-} = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const {
   createHomeScreen,

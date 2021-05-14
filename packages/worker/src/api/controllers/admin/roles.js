@@ -19,6 +19,6 @@ exports.fetch = async ctx => {
 exports.find = async ctx => {
   const appId = ctx.params.appId
   ctx.body = {
-    roles: await getAllRoles(appId)
+    roles: await getAllRoles(appId),
   }
 }
