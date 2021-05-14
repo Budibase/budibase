@@ -21,7 +21,7 @@ export function createUsersStore() {
   }
 
   async function create({ email, password }) {
-    const response = await api.post("/api/admin/users", { email, password, roles: {} })
+    const response = await api.post("/api/admin/users", { email, password, builder: { global: true}, roles: {} })
     init()
     return await response.json()
   }
@@ -32,12 +32,21 @@ export function createUsersStore() {
     return await response.json()
   }
 
+  async function updateRoles(data) {
+    console.log(data)
+    // const res = await api.post(`/api/admin/users`, data)
+    // console.log(await res.json())
+    // update(users => (users.filter(user => user._id !== id)))
+    // return await response.json()
+  }
+
   return {
     subscribe,
     init,
     invite,
     acceptInvite,
     create,
+    updateRoles,
     del
   }
 }
