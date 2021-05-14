@@ -1,9 +1,6 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const {
-  getHostingInfo,
-  HostingTypes,
-} = require("../../../utilities/builder/hosting")
+const { Replication } = require("@budibase/auth/db")
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {
@@ -11,9 +8,6 @@ const DeploymentStatus = {
   PENDING: "PENDING",
   FAILURE: "FAILURE",
 }
-
-// default to AWS deployment, this will be updated before use (if required)
-let deploymentService = require("./awsDeploy")
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(deployments) {
@@ -62,22 +56,30 @@ async function storeLocalDeploymentHistory(deployment) {
 }
 
 async function deployApp(deployment) {
-  const appId = deployment.getAppId()
   try {
-    await deployment.init()
-    deployment.setVerification(
-      await deploymentService.preDeployment(deployment)
-    )
+    const productionAppId = deployment.appId.replace("_dev", "")
 
-    console.log(`Uploading assets for appID ${appId}..`)
+    const replication = new Replication({
+      source: deployment.appId,
+      target: productionAppId,
+    })
 
-    await deploymentService.deploy(deployment)
+    await replication.replicate()
 
-    // replicate the DB to the main couchDB cluster
-    console.log("Replicating local PouchDB to CouchDB..")
-    await deploymentService.replicateDb(deployment)
+    // Strip the _dev prefix and update the appID document in the new DB
+    const db = new PouchDB(productionAppId)
+    const appDoc = await db.get(deployment.appId)
+    appDoc._id = productionAppId
+    delete appDoc._rev
+    appDoc.instance._id = productionAppId
+    await db.put(appDoc)
 
-    await deploymentService.postDeployment(deployment)
+    // Set up live sync between the live and dev instances
+    const liveReplication = new Replication({
+      source: productionAppId,
+      target: deployment.appId,
+    })
+    liveReplication.subscribe()
 
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeLocalDeploymentHistory(deployment)
@@ -122,12 +124,6 @@ exports.deploymentProgress = async function (ctx) {
 }
 
 exports.deployApp = async function (ctx) {
-  // start by checking whether to deploy local or to cloud
-  const hostingInfo = await getHostingInfo()
-  deploymentService =
-    hostingInfo.type === HostingTypes.CLOUD
-      ? require("./awsDeploy")
-      : require("./selfDeploy")
   let deployment = new Deployment(ctx.appId)
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeLocalDeploymentHistory(deployment)

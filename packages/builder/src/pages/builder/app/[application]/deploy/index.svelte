@@ -1,6 +1,6 @@
 <script>
   import { Button, Modal, notifications, Heading } from "@budibase/bbui"
-  import { store, hostingStore } from "builderStore"
+  import { store } from "builderStore"
   import api from "builderStore/api"
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
@@ -15,41 +15,18 @@
   $: appId = $store.appId
 
   async function deployApp() {
-    // Must have cloud or self host API key to deploy
-    if (!$hostingStore.hostingInfo?.selfHostKey) {
-      const response = await api.get(`/api/keys/`)
-      const userKeys = await response.json()
-      if (!userKeys.budibase) {
-        notifications.error(
-          "No budibase API Keys configured. You must set either a self hosted or cloud API key to deploy your budibase app."
-        )
-        return
-      }
-    }
-
-    const DEPLOY_URL = `/api/deploy`
-
     try {
       notifications.info(`Deployment started. Please wait.`)
-      const response = await api.post(DEPLOY_URL)
+      const response = await api.post("/api/deploy")
       const json = await response.json()
       if (response.status !== 200) {
         throw new Error()
       }
 
-      analytics.captureEvent("Deployed App", {
-        appId,
-        hostingType: $hostingStore.hostingInfo?.type,
-      })
-
       if (analytics.requestFeedbackOnDeploy()) {
         feedbackModal.show()
       }
     } catch (err) {
-      analytics.captureEvent("Deploy App Failed", {
-        appId,
-        hostingType: $hostingStore.hostingInfo?.type,
-      })
       analytics.captureException(err)
       notifications.error("Deployment unsuccessful. Please try again later.")
     }
@@ -60,7 +37,7 @@
   <img src={Rocket} alt="Rocket flying through sky" />
   <div>
     <Heading size="M">It's time to shine!</Heading>
-    <Button size="XL" cta medium on:click={deployApp}>Deploy App</Button>
+    <Button size="XL" cta medium on:click={deployApp}>Publish App</Button>
   </div>
 </section>
 <Modal bind:this={feedbackModal}>

@@ -1,3 +1,5 @@
+const { Configs } = require("@budibase/auth").constants
+
 exports.LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
 
@@ -10,12 +12,7 @@ exports.Groups = {
   ALL_USERS: "all_users",
 }
 
-exports.Configs = {
-  SETTINGS: "settings",
-  ACCOUNT: "account",
-  SMTP: "smtp",
-  GOOGLE: "google",
-}
+exports.Configs = Configs
 
 exports.ConfigUploads = {
   LOGO: "logo",

@@ -6,7 +6,7 @@ const {
   BUILDER,
   PermissionLevels,
   PermissionTypes,
-} = require("../../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const joiValidator = require("../../middleware/joi-validator")
 const Joi = require("joi")
 

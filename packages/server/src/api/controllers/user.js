@@ -5,7 +5,7 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const { getRole } = require("../../utilities/security/roles")
+const { getRole, BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const {
   getGlobalUsers,
   saveGlobalUser,
@@ -73,6 +73,9 @@ exports.createMetadata = async function (ctx) {
 exports.updateSelfMetadata = async function (ctx) {
   // overwrite the ID with current users
   ctx.request.body._id = ctx.user._id
+  if (ctx.user.builder && ctx.user.builder.global) {
+    ctx.request.body.roleId = BUILTIN_ROLE_IDS.ADMIN
+  }
   // make sure no stale rev
   delete ctx.request.body._rev
   await exports.updateMetadata(ctx)

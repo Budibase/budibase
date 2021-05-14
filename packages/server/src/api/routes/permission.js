@@ -4,7 +4,7 @@ const authorized = require("../../middleware/authorized")
 const {
   BUILDER,
   PermissionLevels,
-} = require("../../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const Joi = require("joi")
 const joiValidator = require("../../middleware/joi-validator")
 
