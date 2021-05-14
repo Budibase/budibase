@@ -1381,6 +1381,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
+    "info": "Pagination can only be used with data sources that are tables.",
     "icon": "Data",
     "styleable": false,
     "hasChildren": true,
