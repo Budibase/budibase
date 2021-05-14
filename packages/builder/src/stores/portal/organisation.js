@@ -19,12 +19,16 @@ export function createOrganisationStore() {
     if (json.status === 400) {
       set(FALLBACK_CONFIG)
     } else {
-      set({...json.config, _rev: json._rev})
+      set({ ...json.config, _rev: json._rev })
     }
   }
 
   async function save(config) {
-    const res = await api.post("/api/admin/configs", { type: "settings", config, _rev: get(store)._rev } )
+    const res = await api.post("/api/admin/configs", {
+      type: "settings",
+      config,
+      _rev: get(store)._rev,
+    })
     const json = await res.json()
     if (json.status) {
       return json
