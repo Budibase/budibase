@@ -1,7 +1,7 @@
 const { getDB } = require("../db")
 const { cloneDeep } = require("lodash/fp")
 const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
-const { generateRoleID, DocumentTypes, SEPARATOR } = require("../db/utils")
+const { generateRoleID, getRoleParams, DocumentTypes, SEPARATOR } = require("../db/utils")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -10,6 +10,14 @@ const BUILTIN_IDS = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
 }
+
+// exclude internal roles like builder
+const EXTERNAL_BUILTIN_ROLE_IDS = [
+  BUILTIN_IDS.ADMIN,
+  BUILTIN_IDS.POWER,
+  BUILTIN_IDS.BASIC,
+  BUILTIN_IDS.PUBLIC,
+]
 
 function Role(id, name) {
   this._id = id
@@ -190,6 +198,39 @@ exports.getUserPermissions = async (appId, userRoleId) => {
     basePermissions,
     permissions,
   }
+}
+
+/**
+ * Given an app ID this will retrieve all of the roles that are currently within that app.
+ * @param {string} appId The ID of the app to retrieve the roles from.
+ * @return {Promise<object[]>} An array of the role objects that were found.
+ */
+exports.getAllRoles = async appId => {
+  const db = getDB(appId)
+  const body = await db.allDocs(
+    getRoleParams(null, {
+      include_docs: true,
+    })
+  )
+  let roles = body.rows.map(row => row.doc)
+  const builtinRoles = exports.getBuiltinRoles()
+
+  // need to combine builtin with any DB record of them (for sake of permissions)
+  for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
+    const builtinRole = builtinRoles[builtinRoleId]
+    const dbBuiltin = roles.filter(
+      dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
+    )[0]
+    if (dbBuiltin == null) {
+      roles.push(builtinRole)
+    } else {
+      // remove role and all back after combining with the builtin
+      roles = roles.filter(role => role._id !== dbBuiltin._id)
+      dbBuiltin._id = exports.getExternalRoleID(dbBuiltin._id)
+      roles.push(Object.assign(builtinRole, dbBuiltin))
+    }
+  }
+  return roles
 }
 
 class AccessController {

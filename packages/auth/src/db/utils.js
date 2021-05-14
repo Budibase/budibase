@@ -1,5 +1,6 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
+const { getCouch } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
@@ -134,6 +135,34 @@ exports.generateRoleID = id => {
  */
 exports.getRoleParams = (roleId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
+}
+
+/**
+ * Lots of different points in the system need to find the full list of apps, this will
+ * enumerate the entire CouchDB cluster and get the list of databases (every app).
+ * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
+ * different users/companies apps as there is no security around it - all apps are returned.
+ * @return {Promise<object[]>} returns the app information document stored in each app database.
+ */
+exports.getAllApps = async (devApps = false) => {
+  const CouchDB = getCouch()
+  let allDbs = await CouchDB.allDbs()
+  const appDbNames = allDbs.filter(dbName => dbName.startsWith(exports.APP_PREFIX))
+  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
+  if (appPromises.length === 0) {
+    return []
+  } else {
+    const response = await Promise.allSettled(appPromises)
+    const apps = response
+      .filter(result => result.status === "fulfilled")
+      .map(({ value }) => value)
+    return apps.filter(app => {
+      if (devApps) {
+        return app._id.startsWith(exports.APP_DEV_PREFIX)
+      }
+      return !app._id.startsWith(exports.APP_DEV_PREFIX)
+    })
+  }
 }
 
 /**
