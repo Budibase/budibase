@@ -59,10 +59,9 @@
     <div class="intro">
       <Heading size="M">General</Heading>
       <Body>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Hic vero, aut
-        culpa provident sunt ratione! Voluptas doloremque, dicta nisi velit
-        perspiciatis, ratione vel blanditiis totam, nam voluptate repellat
-        aperiam fuga!
+        General is the place where you edit your organisation name, logo. You
+        can also configure your platform URL as well as turn on or off
+        analytics.
       </Body>
     </div>
     <Divider size="S" />
