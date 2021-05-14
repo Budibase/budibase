@@ -65,7 +65,7 @@
 - **连接数据库或直接开始** Budibase从多个来源（包括MongoDB，CouchDB，PostgreSQL，mySQL，Airtable，Google Sheets，S3，DyanmoDB或REST API）提取数据。与其他平台不同，使用Budibase可以从头开始，创建没有数据源的业务应用程序。[新的数据源需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 - **使用强大的预制组件设计和构建应用程序** Budibase开箱即用，具有精美设计，功能强大的组件，您可以使用它们像构建基块来构建UI。我们还提供了许多您最喜欢的CSS样式选项，因此您可以发挥更多的创意。[新的组件需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 - **自动化流程，与其他工具集成，并连接到Webhooks** 通过自动化手动流程和工作流来节省时间。从连接到Webhook，到自动发送电子邮件，只需告诉Budibase要做些什么，然后让它为您工作。您可以[在此处](https://github.com/Budibase/automations)轻松地[为Budibase创建新的自动化，](https://github.com/Budibase/automations)或[在此处](https://github.com/Budibase/automations)[新的集成需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
-- **云托管和自我托管** 用户可以自行托管（请参见下文），或使用Budibase托管其应用。目前，我们的云托管产品仅限于免费套餐，但我们的目标是在将来进行更改。对于大量使用，我们建议用户进行自我托管。
+- **云托管和自我托管** 用户可以自行托管（请参见下文），或使用Budibase托管其应用。目前，我们的云托管产品仅限于免费套餐，但我们会在将来进行更改。对于大量使用，我们建议用户进行自我托管。
 
 <p align="center">
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
