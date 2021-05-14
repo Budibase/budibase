@@ -10,7 +10,7 @@
   在您自己的设施上快速构建应用
 </h3>
 <p align="center">
-  Budibase是一个开放源代码的低代码平台，可帮助开发人员和IT专业人员在几分钟内在自己的设施上构建，自动化和交付自定义业务应用。
+  Budibase是一个开放源代码的低代码平台，可帮助开发人员和IT专业人员在几分钟内在自己的设施上构建、自动化和交付部署定制业务应用。
 </p>
 
 
@@ -134,7 +134,7 @@ Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们
 
 ### 不知道从哪里开始？
 
-[首次发行项目](https://github.com/Budibase/budibase/projects/22)是[一个](https://github.com/Budibase/budibase/projects/22)开始做出贡献的好地方。
+[第一次提出Issue](https://github.com/Budibase/budibase/projects/22)是一个开始做出贡献的好地方。
 
 ### 存储库的组织方式
 
@@ -144,7 +144,7 @@ Budibase是由lerna管理的项目。Lerna管理budibase软件包的构建和发
 - [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client)-在浏览器中运行的模块，负责读取JSON定义并从中创建生动的Web应用程序。
 - [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server)-budibase服务器。该Koa应用程序负责为构建器和budibase应用程序提供JS服务，并提供与数据库和文件系统交互的API。
 
-有关更多信息，请参见[CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
+有关更多信息，请参见[CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
 ## 📝 开源协议
 
