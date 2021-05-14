@@ -10,14 +10,27 @@
     Label,
     Input,
     Modal,
+    Table,
     ModalContent,
     notifications,
   } from "@budibase/bbui"
   import { fetchData } from "helpers"
-  import { users } from "stores/portal"
+  import { users, apps } from "stores/portal"
+
+  import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
 
   export let userId
   let deleteUserModal
+  let editRolesModal
+
+  const roleSchema = {
+    name: { displayName: "App" },
+    roles: {},
+  }
+
+  // Here we need to merge the Apps list and the roles response to get something that makes sense for the table
+  $: appList = $apps.map(app => ({ ...app, roles: ["READ"] }))
+  let selectedApp
 
   const request = fetchData(`/api/admin/users/${userId}`)
 
@@ -29,6 +42,11 @@
     } else {
       notifications.error("Failed to delete user.")
     }
+  }
+
+  async function openUpdateRolesModal({ detail }) {
+    selectedApp = detail
+    editRolesModal.show()
   }
 </script>
 
@@ -64,6 +82,18 @@
     </div>
   </div>
   <Divider size="S" />
+  <div class="roles">
+    <Heading size="S">Configure roles</Heading>
+    <Table
+      on:click={openUpdateRolesModal}
+      schema={roleSchema}
+      data={appList}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+    />
+  </div>
+  <Divider size="S" />
   <div class="delete">
     <Layout gap="S" noPadding
       ><Heading size="S">Delete user</Heading>
@@ -90,6 +120,9 @@
     >
   </ModalContent>
 </Modal>
+<Modal bind:this={editRolesModal}>
+  <UpdateRolesModal app={selectedApp} user={$request.data} />
+</Modal>
 
 <style>
   .fields {
@@ -107,6 +140,9 @@
   }
   .general {
     position: relative;
+    margin: var(--spacing-xl) 0;
+  }
+  .roles {
     margin: var(--spacing-xl) 0;
   }
   .delete {
