@@ -1,7 +1,7 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { BUILTIN_ROLE_IDS } = require("./security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 
 function getAppRole(appId, user) {
   if (!user.roles) {
@@ -62,9 +62,6 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
 }
 
 exports.getDeployedApps = async ctx => {
-  if (!env.SELF_HOSTED) {
-    throw "Can only check apps for self hosted environments"
-  }
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),

@@ -14,7 +14,7 @@ exports.getAllTableRows = async config => {
 }
 
 exports.clearAllApps = async () => {
-  const req = {}
+  const req = { query: { status: "dev"} }
   await appController.fetch(req)
   const apps = req.body
   if (!apps || apps.length <= 0) {

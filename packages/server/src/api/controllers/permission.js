@@ -3,19 +3,19 @@ const {
   PermissionLevels,
   isPermissionLevelHigherThanRead,
   higherPermission,
-} = require("../../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const {
   isBuiltin,
   getDBRoleID,
   getExternalRoleID,
   getBuiltinRoles,
-} = require("../../utilities/security/roles")
+} = require("@budibase/auth/roles")
 const { getRoleParams } = require("../../db/utils")
 const CouchDB = require("../../db")
 const {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
-} = require("../../utilities/security/utilities")
+} = require("../../utilities/security")
 
 const PermissionUpdateType = {
   REMOVE: "remove",

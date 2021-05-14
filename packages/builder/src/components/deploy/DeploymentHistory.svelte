@@ -36,8 +36,7 @@
   let errorReason
   let poll
   let deployments = []
-  let urlComponent =
-    $hostingStore.hostingInfo.type === "self" ? $store.url : `/${appId}`
+  let urlComponent = $store.url || `/${appId}`
   let deploymentUrl = `${$hostingStore.appUrl}${urlComponent}`
 
   const formatDate = (date, format) =>

@@ -16,11 +16,14 @@ const {
   getLayoutParams,
   getScreenParams,
   generateScreenID,
+  generateDevAppID,
+  DocumentTypes,
+  AppStatus,
 } = require("../../db/utils")
 const {
   BUILTIN_ROLE_IDS,
   AccessController,
-} = require("../../utilities/security/roles")
+} = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const {
   createHomeScreen,
@@ -30,8 +33,9 @@ const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const { getDeployedApps } = require("../../utilities/builder/hosting")
+const { getDeployedApps } = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
+const { getAllLocks } = require("../../utilities/redis")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -84,7 +88,10 @@ async function getAppUrlIfNotInUse(ctx) {
 }
 
 async function createInstance(template) {
-  const appId = generateAppID()
+  // TODO: Do we need the normal app ID?
+  const baseAppId = generateAppID()
+  const appId = generateDevAppID(baseAppId)
+
   const db = new CouchDB(appId)
   await db.put({
     _id: "_design/database",
@@ -114,7 +121,24 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function (ctx) {
-  ctx.body = await getAllApps()
+  const isDev = ctx.query && ctx.query.status === AppStatus.DEV
+  const apps = await getAllApps(isDev)
+
+  // get the locks for all the dev apps
+  if (isDev) {
+    const locks = await getAllLocks()
+    for (let app of apps) {
+      const lock = locks.find(lock => lock.appId === app._id)
+      if (lock) {
+        app.lockedBy = lock.user
+      } else {
+        // make sure its definitely not present
+        delete app.lockedBy
+      }
+    }
+  }
+
+  ctx.body = apps
 }
 
 exports.fetchAppDefinition = async function (ctx) {
@@ -193,6 +217,12 @@ exports.update = async function (ctx) {
 
   const data = ctx.request.body
   const newData = { ...application, ...data, url }
+
+  // the locked by property is attached by server but generated from
+  // Redis, shouldn't ever store it
+  if (newData.lockedBy) {
+    delete newData.lockedBy
+  }
 
   const response = await db.put(newData)
   data._rev = response.rev

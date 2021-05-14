@@ -1,12 +1,12 @@
 const Router = require("@koa/router")
 const queryController = require("../controllers/query")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/security/permissions")
 const Joi = require("joi")
 const {
   PermissionLevels,
   PermissionTypes,
-} = require("../../utilities/security/permissions")
+  BUILDER,
+} = require("@budibase/auth/permissions")
 const joiValidator = require("../../middleware/joi-validator")
 const {
   bodyResource,

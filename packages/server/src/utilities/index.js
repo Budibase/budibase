@@ -1,35 +1,15 @@
 const env = require("../environment")
-const { DocumentTypes, SEPARATOR } = require("../db/utils")
+const { APP_PREFIX } = require("../db/utils")
 const CouchDB = require("../db")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
+const { getAllApps } = require("@budibase/auth/db")
 
 const BB_CDN = "https://cdn.app.budi.live/assets"
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
-
-/**
- * Lots of different points in the app need to find the full list of apps, this will
- * enumerate the entire CouchDB cluster and get the list of databases (every app).
- * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
- * different users/companies apps as there is no security around it - all apps are returned.
- * @return {Promise<object[]>} returns the app information document stored in each app database.
- */
-exports.getAllApps = async () => {
-  let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
-  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
-  if (appPromises.length === 0) {
-    return []
-  } else {
-    const response = await Promise.allSettled(appPromises)
-    return response
-      .filter(result => result.status === "fulfilled")
-      .map(({ value }) => value)
-  }
-}
+exports.getAllApps = getAllApps
 
 /**
  * Makes sure that a URL has the correct number of slashes, while maintaining the

@@ -1,28 +1,36 @@
 const newid = require("./newid")
+const {
+  DocumentTypes: CoreDocTypes,
+  getRoleParams,
+  generateRoleID,
+  APP_DEV_PREFIX,
+  APP_PREFIX,
+  SEPARATOR,
+} = require("@budibase/auth/db")
 
 const UNICODE_MAX = "\ufff0"
-const SEPARATOR = "_"
 
 const StaticDatabases = {
   BUILDER: {
     name: "builder-db",
     baseDoc: "builder-doc",
   },
-  // TODO: needs removed
-  BUILDER_HOSTING: {
-    name: "builder-config-db",
-    baseDoc: "hosting-doc",
-  },
+}
+
+const AppStatus = {
+  DEV: "dev",
+  DEPLOYED: "PUBLISHED",
 }
 
 const DocumentTypes = {
+  APP: CoreDocTypes.APP,
+  APP_DEV: CoreDocTypes.APP_DEV,
+  ROLE: CoreDocTypes.ROLE,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
   AUTOMATION: "au",
   LINK: "li",
-  APP: "app",
-  ROLE: "role",
   WEBHOOK: "wh",
   INSTANCE: "inst",
   LAYOUT: "layout",
@@ -44,6 +52,8 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
+exports.APP_PREFIX = APP_PREFIX
+exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.StaticDatabases = StaticDatabases
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
@@ -51,6 +61,10 @@ exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
+exports.AppStatus = AppStatus
+
+exports.generateRoleID = generateRoleID
+exports.getRoleParams = getRoleParams
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`
@@ -143,9 +157,11 @@ exports.generateUserMetadataID = globalId => {
  * Breaks up the ID to get the global ID.
  */
 exports.getGlobalIDFromUserMetadataID = id => {
-  return id.split(
-    `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-  )[1]
+  const prefix = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+  if (!id.includes(prefix)) {
+    return id
+  }
+  return id.split(prefix)[1]
 }
 
 /**
@@ -204,25 +220,13 @@ exports.generateAppID = () => {
 }
 
 /**
- * Gets parameters for retrieving apps, this is a utility function for the getDocParams function.
+ * Generates a development app ID from a real app ID.
+ * @returns {string} the dev app ID which can be used for dev database.
  */
-exports.getAppParams = (appId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.APP, appId, otherProps)
-}
-
-/**
- * Generates a new role ID.
- * @returns {string} The new role ID which the role doc can be stored under.
- */
-exports.generateRoleID = id => {
-  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
-}
-
-/**
- * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
- */
-exports.getRoleParams = (roleId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
+exports.generateDevAppID = appId => {
+  const prefix = `${DocumentTypes.APP}${SEPARATOR}`
+  const uuid = appId.split(prefix)[1]
+  return `${DocumentTypes.APP_DEV}${SEPARATOR}${uuid}`
 }
 
 /**
