@@ -1,7 +1,12 @@
 const { getDB } = require("../db")
 const { cloneDeep } = require("lodash/fp")
 const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
-const { generateRoleID, getRoleParams, DocumentTypes, SEPARATOR } = require("../db/utils")
+const {
+  generateRoleID,
+  getRoleParams,
+  DocumentTypes,
+  SEPARATOR,
+} = require("../db/utils")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -153,7 +158,7 @@ async function getAllUserRoles(appId, userRoleId) {
     currentRole &&
     currentRole.inherits &&
     roleIds.indexOf(currentRole.inherits) === -1
-    ) {
+  ) {
     roleIds.push(currentRole.inherits)
     currentRole = await exports.getRole(appId, currentRole.inherits)
     roles.push(currentRole)
