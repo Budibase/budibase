@@ -126,7 +126,7 @@ Budibase[文档](https://docs.budibase.com/)位于[此处](https://docs.budibase
 
 ## ❗ 行为守则
 
-Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们[**的行为准则**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。
+Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们的[**行为准则**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。
 
 ## 🙌 为Budibase贡献
 
