@@ -25,7 +25,7 @@
 
   const roleSchema = {
     name: { displayName: "App" },
-    roles: {},
+    roles: { type: "options" },
   }
 
   // Here we need to merge the Apps list and the roles response to get something that makes sense for the table

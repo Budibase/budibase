@@ -1,5 +1,10 @@
 <script>
-  import { Body, Multiselect, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    Multiselect,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import { users } from "stores/portal"
 
   export let app
@@ -10,7 +15,7 @@
 
   function updateUserRoles() {
     users.updateRoles({ ...user, roles: { ...user.roles, [app._id]: roles } })
-    console.log("updating roles!")
+    notifications.success("Roles updated")
   }
 </script>
 
@@ -23,7 +28,7 @@
   showCloseIcon={false}
 >
   <Body noPadding
-    >Select the roles that this user should use for the {app.name}.</Body
+    >Update {user.email}'s roles for <strong>{app.name}</strong>.</Body
   >
   <Multiselect
     placeholder={null}
