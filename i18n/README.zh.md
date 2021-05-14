@@ -106,7 +106,7 @@ Budibase构建器在Mac，PC和Linux上的Electron中运行。请按照以下步
 
 ## 🤖 自托管
 
-Budibase希望确保任何人都可以使用我们开发的工具，并且我们知道很多人需要能够在自己的系统上托管他们制作的应用程序-这就是为什么我们决定尝试使自托管变得如此简单的原因可能的！
+Budibase希望确保任何人都可以使用我们开发的工具，并且我们知道很多人需要能够在自己的系统上托管他们制作的应用程序——这就是为什么我们决定尝试使自托管服务变得如此简单的原因！
 
 当前，您可以使用Docker或Digital Ocean托管您的应用程序。可以在[此处](https://docs.budibase.com/self-hosting/introduction-to-self-hosting)找到有关自我托管的文档。
 
