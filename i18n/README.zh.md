@@ -50,7 +50,7 @@
   <span> · </span>
   <a href="https://github.com/Budibase/budibase/issues">报告bug</a>
   <span> · </span>
-  Support: <a href="https://github.com/Budibase/budibase/discussions">讨论</a>
+  支持: <a href="https://github.com/Budibase/budibase/discussions">讨论区</a>
   <span> & </span>
   <a href="https://discord.gg/rCYayfe">Discord</a>
 </h3>
