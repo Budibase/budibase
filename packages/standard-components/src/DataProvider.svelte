@@ -253,7 +253,7 @@
       </div>
     {:else}
       <slot />
-      {#if paginate}
+      {#if paginate && internalTable}
         <div class="pagination">
           <Pagination
             page={pageNumber + 1}
