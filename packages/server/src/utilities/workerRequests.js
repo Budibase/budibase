@@ -1,7 +1,7 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { BUILTIN_ROLE_IDS } = require("./security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 
 function getAppRole(appId, user) {
   if (!user.roles) {

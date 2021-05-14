@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { UserStatus } = require("@budibase/auth").constants
 const { ObjectStoreBuckets } = require("@budibase/auth").objectStore
 

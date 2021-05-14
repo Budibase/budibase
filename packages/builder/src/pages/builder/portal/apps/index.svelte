@@ -64,7 +64,7 @@
     if (appStatus === AppStatus.DEV) {
       $goto(`../../app/${app._id}`)
     } else {
-      window.open(`/${app._id}`, '_blank');
+      window.open(`/${app._id}`, "_blank")
     }
   }
 

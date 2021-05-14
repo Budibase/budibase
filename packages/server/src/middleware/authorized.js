@@ -1,9 +1,9 @@
-const { getUserPermissions } = require("../utilities/security/roles")
+const { getUserPermissions } = require("@budibase/auth/roles")
 const {
   PermissionTypes,
   doesHaveResourcePermission,
   doesHaveBasePermission,
-} = require("../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const { APP_DEV_PREFIX } = require("../db/utils")
 const { doesUserHaveLock, updateLock } = require("../utilities/redis")
 

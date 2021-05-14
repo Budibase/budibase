@@ -1,4 +1,4 @@
-const { Client, utils } = require("@budibase/auth").redis
+const { Client, utils } = require("@budibase/auth/redis")
 const { newid } = require("@budibase/auth").utils
 
 function getExpirySecondsForDB(db) {

@@ -1,6 +1,6 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication } = require("@budibase/auth").db
+const { Replication } = require("@budibase/auth/db")
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {

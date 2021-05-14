@@ -1,7 +1,7 @@
-const CouchDB = require("../../db")
+const { getDB } = require("../db")
 const { cloneDeep } = require("lodash/fp")
 const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
-const { generateRoleID, DocumentTypes, SEPARATOR } = require("../../db/utils")
+const { generateRoleID, DocumentTypes, SEPARATOR } = require("../db/utils")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -116,7 +116,7 @@ exports.getRole = async (appId, roleId) => {
     )
   }
   try {
-    const db = new CouchDB(appId)
+    const db = getDB(appId)
     const dbRole = await db.get(exports.getDBRoleID(roleId))
     role = Object.assign(role, dbRole)
     // finalise the ID
@@ -145,7 +145,7 @@ async function getAllUserRoles(appId, userRoleId) {
     currentRole &&
     currentRole.inherits &&
     roleIds.indexOf(currentRole.inherits) === -1
-  ) {
+    ) {
     roleIds.push(currentRole.inherits)
     currentRole = await exports.getRole(appId, currentRole.inherits)
     roles.push(currentRole)

@@ -5,7 +5,7 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const { getRole, BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
+const { getRole, BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const {
   getGlobalUsers,
   saveGlobalUser,

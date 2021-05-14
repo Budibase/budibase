@@ -1,4 +1,4 @@
-const roles = require("../../utilities/security/roles")
+const roles = require("@budibase/auth/roles")
 const userController = require("../../api/controllers/user")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
