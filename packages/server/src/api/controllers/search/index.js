@@ -7,6 +7,7 @@ exports.rowSearch = async ctx => {
   const { tableId } = ctx.params
   const db = new CouchDB(appId)
   const { paginate, query, ...params } = ctx.request.body
+  params.tableId = tableId
 
   let response
   if (paginate) {
