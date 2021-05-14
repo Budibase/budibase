@@ -117,7 +117,7 @@ Budibase希望确保任何人都可以使用我们开发的工具，并且我们
 
 Budibase[文档](https://docs.budibase.com/)位于[此处](https://docs.budibase.com/)。
 
-您还可以按照有关[如何使用Budibase构建CRM](https://docs.budibase.com/tutorial/tutorial-introduction)的快速教程进行[操作](https://docs.budibase.com/tutorial/tutorial-introduction)https://docs.budibase.com/tutorial/tutorial-introduction)
+您还可以按照有关[如何使用Budibase构建CRM](https://docs.budibase.com/tutorial/tutorial-introduction)的快速教程进行[操作](https://docs.budibase.com/tutorial/tutorial-introduction)
 
 
 ## 路线图
@@ -126,7 +126,7 @@ Budibase[文档](https://docs.budibase.com/)位于[此处](https://docs.budibase
 
 ## ❗ 行为守则
 
-Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们[**的行为准则**]请阅读(https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。
+Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们[**的行为准则**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。
 
 ## 🙌 为Budibase贡献
 
