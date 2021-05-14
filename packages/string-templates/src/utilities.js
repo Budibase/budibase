@@ -25,7 +25,7 @@ module.exports.removeNull = obj => {
 
 module.exports.updateContext = obj => {
   if (obj.now == null) {
-    obj.now = (new Date()).toISOString()
+    obj.now = new Date().toISOString()
   }
   function recurse(obj) {
     for (let key of Object.keys(obj)) {
