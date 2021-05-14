@@ -57,12 +57,12 @@
 
 
 
-## ✨ 特征
+## ✨ 功能
 当其他平台选择闭源路线时，我们决定采用开放源代码。当其他平台选择云服务时，我们决定提供本地构建器提供更好的开发体验。我们喜欢在Budibase上做不同的事情。
 
 - **构建和发布真实的软件** 与其他平台不同，使用Budibase可以构建和交付单页应用程序。Budibase应用程序具有增强的性能，并且可以进行响应式设计，从而为您的用户提供出色的体验。
 - **开源且可扩展** Budibase是开源的。Builder使用AGPLv3许可，Server使用GPLv3，Client使用MPL。这会让您充满信心，Budibase将永远存在。您还可以针对Budibase进行修改或对其进行分叉，并根据需要进行更改，以提供开发人员友好的体验。
-- **加载数据或从头开始** Budibase从多个来源（包括MongoDB，CouchDB，PostgreSQL，mySQL，Airtable，Google Sheets，S3，DyanmoDB或REST API）提取数据。与其他平台不同，使用Budibase可以从头开始，创建没有数据源的业务应用程序。[新的数据源需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
+- **连接数据库或直接开始** Budibase从多个来源（包括MongoDB，CouchDB，PostgreSQL，mySQL，Airtable，Google Sheets，S3，DyanmoDB或REST API）提取数据。与其他平台不同，使用Budibase可以从头开始，创建没有数据源的业务应用程序。[新的数据源需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 - **使用强大的预制组件设计和构建应用程序** Budibase开箱即用，具有精美设计，功能强大的组件，您可以使用它们像构建基块来构建UI。我们还提供了许多您最喜欢的CSS样式选项，因此您可以发挥更多的创意。[新的组件需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 - **自动化流程，与其他工具集成，并连接到Webhooks** 通过自动化手动流程和工作流来节省时间。从连接到Webhook，到自动发送电子邮件，只需告诉Budibase要做些什么，然后让它为您工作。您可以[在此处](https://github.com/Budibase/automations)轻松地[为Budibase创建新的自动化，](https://github.com/Budibase/automations)或[在此处](https://github.com/Budibase/automations)[新的集成需求](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 - **云托管和自我托管** 用户可以自行托管（请参见下文），或使用Budibase托管其应用。目前，我们的云托管产品仅限于免费套餐，但我们的目标是在将来进行更改。对于大量使用，我们建议用户进行自我托管。
@@ -78,7 +78,7 @@
 - [x] 公开测试：任何人都可以[注册并使用Budibase](https://portal.budi.live/signup)
 - [ ] 正式发布
 
-关注此存储库的“release”以获取主要更新的通知，并给我们一个star～。
+关注此存储库的“release”以获取主要更新的通知，并给我们一个star~。
 
 <p align="center">
   <img src="https://i.imgur.com/cJpgqm8.png">
