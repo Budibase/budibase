@@ -121,16 +121,16 @@ Budibase[文档](https://docs.budibase.com/)位于[此处](https://docs.budibase
 
 
 ## 路线图
-查看我们的公共路线图。如果您想讨论路线图上的某些项目，请与Discord或通过Github进行讨论
+查看我们的[公共路线图](https://github.com/Budibase/budibase/projects/10)。如果您想讨论路线图上的某些项目，请与[Discord](https://discord.gg/rCYayfe)或通过Github进行[讨论](https://github.com/Budibase/budibase/discussions)
 
 
 ## ❗ 行为守则
 
-Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们[**的行为准则**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。请阅读。
+Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们希望Budibase社区中的每个人都遵守我们[**的行为准则**]请阅读(https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)。
 
 ## 🙌 为Budibase贡献
 
-从打开错误报告到创建拉取请求：每一个贡献都将受到赞赏和欢迎。如果您打算实施一项新功能或更改API，请先创建一个问题。这样我们可以确保您的工作没有白费。
+从错误报告到PR请求：每一个贡献都将受到赞赏和欢迎。如果您打算实施一项新功能或更改API，请先创建一个Issue。这样我们可以确保您的工作没有白费。
 
 ### 不知道从哪里开始？
 
@@ -138,11 +138,11 @@ Budibase致力于为每个人提供热情，多样且无烦恼的体验。我们
 
 ### 存储库的组织方式
 
-Budibase是由lerna管理的monorepo。Lerna管理budibase软件包的构建和发布。在较高的层次上，这里是构成Budibase的软件包。
+Budibase是由lerna管理的项目。Lerna管理budibase软件包的构建和发布。在较高的层次上，这里是构成Budibase的软件包。
 
-- [包/构建器](https://github.com/Budibase/budibase/tree/HEAD/packages/builder)-包含budibase构建器客户端苗条应用程序的代码。
-- [包/客户端](https://github.com/Budibase/budibase/tree/HEAD/packages/client)-在浏览器中运行的模块，负责读取JSON定义并从中创建生动的Web应用程序。
-- [包/服务器](https://github.com/Budibase/budibase/tree/HEAD/packages/server)-budibase服务器。该Koa应用程序负责为构建器和budibase应用程序提供JS服务，并提供与数据库和文件系统交互的API。
+- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder)-包含budibase构建器客户端苗条应用程序的代码。
+- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client)-在浏览器中运行的模块，负责读取JSON定义并从中创建生动的Web应用程序。
+- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server)-budibase服务器。该Koa应用程序负责为构建器和budibase应用程序提供JS服务，并提供与数据库和文件系统交互的API。
 
 有关更多信息，请参见[CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
