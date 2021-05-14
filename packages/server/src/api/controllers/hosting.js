@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const { getDeployedApps } = require("../../utilities/workerRequests")
-const { getScopedConfig } = require("@budibase/auth").db
+const { getScopedConfig } = require("@budibase/auth/db")
 const { Configs } = require("@budibase/auth").constants
 const { checkSlashesInUrl } = require("../../utilities")
 

@@ -1,6 +1,14 @@
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 
+jest.mock("../../../utilities/redis", () => ({
+  init: jest.fn(),
+  getAllLocks: () => {
+    return []
+  },
+  updateLock: jest.fn(),
+}))
+
 describe("/applications", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -40,7 +48,7 @@ describe("/applications", () => {
       await config.createApp(request, "app2")
 
       const res = await request
-        .get("/api/applications")
+        .get("/api/applications?status=dev")
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)

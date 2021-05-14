@@ -23,7 +23,7 @@ const {
 const {
   BUILTIN_ROLE_IDS,
   AccessController,
-} = require("../../utilities/security/roles")
+} = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const {
   createHomeScreen,
@@ -123,7 +123,7 @@ async function createInstance(template) {
 exports.fetch = async function (ctx) {
   let apps = await getAllApps()
 
-  const isDev = ctx.query.status === AppStatus.DEV
+  const isDev = ctx.query && ctx.query.status === AppStatus.DEV
   apps = apps.filter(app => {
     if (isDev) {
       return app._id.startsWith(DocumentTypes.APP_DEV)

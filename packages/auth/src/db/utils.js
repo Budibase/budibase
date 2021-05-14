@@ -21,12 +21,36 @@ const DocumentTypes = {
   TEMPLATE: "template",
   APP: "app",
   APP_DEV: "app_dev",
+  ROLE: "role",
 }
 
 exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
 exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
+
+/**
+ * If creating DB allDocs/query params with only a single top level ID this can be used, this
+ * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
+ * More complex cases such as link docs and rows which have multiple levels of IDs that their
+ * ID consists of need their own functions to build the allDocs parameters.
+ * @param {string} docType The type of document which input params are being built for, e.g. user,
+ * link, app, table and so on.
+ * @param {string|null} docId The ID of the document minus its type - this is only needed if looking
+ * for a singular document.
+ * @param {object} otherProps Add any other properties onto the request, e.g. include_docs.
+ * @returns {object} Parameters which can then be used with an allDocs request.
+ */
+function getDocParams(docType, docId = null, otherProps = {}) {
+  if (docId == null) {
+    docId = ""
+  }
+  return {
+    ...otherProps,
+    startkey: `${docType}${SEPARATOR}${docId}`,
+    endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
+  }
+}
 
 /**
  * Generates a new group ID.
@@ -95,6 +119,21 @@ exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
     startkey: final,
     endkey: `${final}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Generates a new role ID.
+ * @returns {string} The new role ID which the role doc can be stored under.
+ */
+exports.generateRoleID = id => {
+  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
+ */
+exports.getRoleParams = (roleId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
 }
 
 /**

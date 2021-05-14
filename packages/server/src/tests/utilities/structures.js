@@ -1,7 +1,7 @@
-const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const {
   BUILTIN_PERMISSION_IDS,
-} = require("../../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const { createHomeScreen } = require("../../constants/screens")
 const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")

@@ -6,7 +6,7 @@ const {
   getRole,
   isBuiltin,
   getExternalRoleID,
-} = require("../../utilities/security/roles")
+} = require("@budibase/auth/roles")
 const {
   generateRoleID,
   getRoleParams,

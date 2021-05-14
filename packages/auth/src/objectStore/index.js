@@ -126,7 +126,13 @@ exports.makeSureBucketExists = async (client, bucketName) => {
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).
  */
-exports.upload = async ({ bucket: bucketName, filename, path, type, metadata }) => {
+exports.upload = async ({
+  bucket: bucketName,
+  filename,
+  path,
+  type,
+  metadata,
+}) => {
   const extension = [...filename.split(".")].pop()
   const fileBytes = fs.readFileSync(path)
 
