@@ -6,7 +6,7 @@
     Divider,
     Button,
     ButtonGroup,
-    Input,
+    Search,
     Table,
     Label,
     Layout,
@@ -53,7 +53,7 @@
     <Heading size="S">Users</Heading>
     <div class="field">
       <Label size="L">Search / filter</Label>
-      <Input bind:value={search} placeholder="" />
+      <Search bind:value={search} placeholder="" />
     </div>
     <div class="buttons">
       <ButtonGroup>
