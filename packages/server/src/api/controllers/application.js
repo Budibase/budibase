@@ -121,15 +121,8 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function (ctx) {
-  let apps = await getAllApps()
-
   const isDev = ctx.query && ctx.query.status === AppStatus.DEV
-  apps = apps.filter(app => {
-    if (isDev) {
-      return app._id.startsWith(DocumentTypes.APP_DEV)
-    }
-    return !app._id.startsWith(DocumentTypes.APP_DEV)
-  })
+  const apps = await getAllApps(isDev)
 
   // get the locks for all the dev apps
   if (isDev) {
