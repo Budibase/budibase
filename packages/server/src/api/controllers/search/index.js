@@ -6,38 +6,13 @@ exports.rowSearch = async ctx => {
   const appId = ctx.appId
   const { tableId } = ctx.params
   const db = new CouchDB(appId)
-  const {
-    bookmark,
-    query,
-    limit,
-    sort,
-    sortOrder,
-    sortType,
-    paginate,
-  } = ctx.request.body
+  const { paginate, query, ...params } = ctx.request.body
 
   let response
   if (paginate) {
-    response = await paginatedSearch(
-      appId,
-      query,
-      tableId,
-      sort,
-      sortOrder,
-      sortType,
-      limit,
-      bookmark
-    )
+    response = await paginatedSearch(appId, query, params)
   } else {
-    response = await fullSearch(
-      appId,
-      query,
-      tableId,
-      sort,
-      sortOrder,
-      sortType,
-      limit
-    )
+    response = await fullSearch(appId, query, params)
   }
 
   // Enrich search results with relationships

@@ -206,38 +206,34 @@ const runQuery = async query => {
  * until enough results have been found.
  * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
- * @param tableId {string} The table ID to search
- * @param sort {string} The sort column
- * @param sortOrder {string} The sort order ("ascending" or "descending")
- * @param sortType {string} Whether to treat sortable values as strings or
- * numbers. ("string" or "number")
- * @param limit {number} The number of results to fetch
- * @param bookmark {string|null} Current bookmark in the recursive search
- * @param rows {array|null} Current results in the recursive search
+ * @param params {object} The search params including:
+ *   tableId {string} The table ID to search
+ *   sort {string} The sort column
+ *   sortOrder {string} The sort order ("ascending" or "descending")
+ *   sortType {string} Whether to treat sortable values as strings or
+ *     numbers. ("string" or "number")
+ *   limit {number} The number of results to fetch
+ *   bookmark {string|null} Current bookmark in the recursive search
+ *   rows {array|null} Current results in the recursive search
  * @returns {Promise<*[]|*>}
  */
-const recursiveSearch = async (
-  appId,
-  query,
-  tableId,
-  sort,
-  sortOrder,
-  sortType,
-  limit,
-  bookmark = null,
-  rows = []
-) => {
-  if (rows.length >= limit) {
+const recursiveSearch = async (appId, query, params) => {
+  const bookmark = params.bookmark
+  const rows = params.rows || []
+  if (rows.length >= params.limit) {
     return rows
   }
-  const pageSize = rows.length > limit - 200 ? limit - rows.length : 200
+  let pageSize = 200
+  if (rows.length > params.limit - 200) {
+    pageSize = params.limit - rows.length
+  }
   const url = new QueryBuilder(appId, query)
-    .setTable(tableId)
+    .setTable(params.tableId)
     .setBookmark(bookmark)
     .setLimit(pageSize)
-    .setSort(sort)
-    .setSortOrder(sortOrder)
-    .setSortType(sortType)
+    .setSort(params.sort)
+    .setSortOrder(params.sortOrder)
+    .setSortType(params.sortType)
     .buildSearchURL()
   const page = await runQuery(url)
   if (!page.rows.length) {
@@ -246,17 +242,12 @@ const recursiveSearch = async (
   if (page.rows.length < 200) {
     return [...rows, ...page.rows]
   }
-  return await recursiveSearch(
-    appId,
-    query,
-    tableId,
-    sort,
-    sortOrder,
-    sortType,
-    limit,
-    page.bookmark,
-    [...rows, ...page.rows]
-  )
+  const newParams = {
+    ...params,
+    bookmark: page.bookmark,
+    rows: [...rows, ...page.rows],
+  }
+  return await recursiveSearch(appId, query, newParams)
 }
 
 /**
@@ -265,36 +256,29 @@ const recursiveSearch = async (
  * paginated search.
  * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
- * @param tableId {string} The table ID to search
- * @param sort {string} The sort column
- * @param sortOrder {string} The sort order ("ascending" or "descending")
- * @param sortType {string} Whether to treat sortable values as strings or
- * numbers. ("string" or "number")
- * @param limit {number} The desired page size
- * @param bookmark {string} The bookmark to resume from
+ * @param params {object} The search params including:
+ *   tableId {string} The table ID to search
+ *   sort {string} The sort column
+ *   sortOrder {string} The sort order ("ascending" or "descending")
+ *   sortType {string} Whether to treat sortable values as strings or
+ *     numbers. ("string" or "number")
+ *   limit {number} The desired page size
+ *   bookmark {string} The bookmark to resume from
  * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
  */
-exports.paginatedSearch = async (
-  appId,
-  query,
-  tableId,
-  sort,
-  sortOrder,
-  sortType,
-  limit,
-  bookmark
-) => {
+exports.paginatedSearch = async (appId, query, params) => {
+  let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
   }
   limit = Math.min(limit, 200)
   const builder = new QueryBuilder(appId, query)
-    .setTable(tableId)
-    .setSort(sort)
-    .setSortOrder(sortOrder)
-    .setSortType(sortType)
+    .setTable(params.tableId)
+    .setSort(params.sort)
+    .setSortOrder(params.sortOrder)
+    .setSortType(params.sortType)
   const searchUrl = builder
-    .setBookmark(bookmark)
+    .setBookmark(params.bookmark)
     .setLimit(limit)
     .buildSearchURL()
   const searchResults = await runQuery(searchUrl)
@@ -320,35 +304,21 @@ exports.paginatedSearch = async (
  * handling too much data.
  * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
- * @param tableId {string} The table ID to search
- * @param sort {string} The sort column
- * @param sortOrder {string} The sort order ("ascending" or "descending")
- * @param sortType {string} Whether to treat sortable values as strings or
- * numbers. ("string" or "number")
- * @param limit {number} The desired number of results
+ * @param params {object} The search params including:
+ *   tableId {string} The table ID to search
+ *   sort {string} The sort column
+ *   sortOrder {string} The sort order ("ascending" or "descending")
+ *   sortType {string} Whether to treat sortable values as strings or
+ *     numbers. ("string" or "number")
+ *   limit {number} The desired number of results
  * @returns {Promise<{rows: *}>}
  */
-exports.fullSearch = async (
-  appId,
-  query,
-  tableId,
-  sort,
-  sortOrder,
-  sortType,
-  limit
-) => {
+exports.fullSearch = async (appId, query, params) => {
+  let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000
   }
-  limit = Math.min(limit, 1000)
-  const rows = await recursiveSearch(
-    appId,
-    query,
-    tableId,
-    sort,
-    sortOrder,
-    sortType,
-    limit
-  )
+  params.limit = Math.min(limit, 1000)
+  const rows = await recursiveSearch(appId, query, params)
   return { rows }
 }
