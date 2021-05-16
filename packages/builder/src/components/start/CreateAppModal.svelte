@@ -96,7 +96,7 @@
 
       // Select Correct Application/DB in prep for creating user
       const applicationPkg = await get(
-        `/api/applications/${appJson._id}/appPackage`
+        `/api/applications/${appJson.instance._id}/appPackage`
       )
       const pkg = await applicationPkg.json()
       if (applicationPkg.ok) {
@@ -112,7 +112,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      $goto(`/builder/app/${appJson._id}`)
+      $goto(`/builder/app/${appJson.instance._id}`)
     } catch (error) {
       console.error(error)
       notifications.error(error)

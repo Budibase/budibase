@@ -89,7 +89,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     }
-    cleanup(this.allApps.map(app => app._id))
+    cleanup(this.allApps.map(app => app.appId))
   }
 
   defaultHeaders() {
@@ -141,7 +141,7 @@ class TestConfiguration {
 
   async createApp(appName) {
     this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app._id
+    this.appId = this.app.appId
     this.allApps.push(this.app)
     return this.app
   }
