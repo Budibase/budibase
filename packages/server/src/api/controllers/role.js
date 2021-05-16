@@ -1,12 +1,12 @@
 const CouchDB = require("../../db")
 const {
   getBuiltinRoles,
-  BUILTIN_ROLE_IDS,
   Role,
   getRole,
   isBuiltin,
   getExternalRoleID,
-} = require("../../utilities/security/roles")
+  getAllRoles,
+} = require("@budibase/auth/roles")
 const {
   generateRoleID,
   getRoleParams,
@@ -18,14 +18,6 @@ const UpdateRolesOptions = {
   CREATED: "created",
   REMOVED: "removed",
 }
-
-// exclude internal roles like builder
-const EXTERNAL_BUILTIN_ROLE_IDS = [
-  BUILTIN_ROLE_IDS.ADMIN,
-  BUILTIN_ROLE_IDS.POWER,
-  BUILTIN_ROLE_IDS.BASIC,
-  BUILTIN_ROLE_IDS.PUBLIC,
-]
 
 async function updateRolesOnUserTable(db, roleId, updateOption) {
   const table = await db.get(InternalTables.USER_METADATA)
@@ -51,31 +43,7 @@ async function updateRolesOnUserTable(db, roleId, updateOption) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  let roles = body.rows.map(row => row.doc)
-  const builtinRoles = getBuiltinRoles()
-
-  // need to combine builtin with any DB record of them (for sake of permissions)
-  for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
-    const builtinRole = builtinRoles[builtinRoleId]
-    const dbBuiltin = roles.filter(
-      dbRole => getExternalRoleID(dbRole._id) === builtinRoleId
-    )[0]
-    if (dbBuiltin == null) {
-      roles.push(builtinRole)
-    } else {
-      // remove role and all back after combining with the builtin
-      roles = roles.filter(role => role._id !== dbBuiltin._id)
-      dbBuiltin._id = getExternalRoleID(dbBuiltin._id)
-      roles.push(Object.assign(builtinRole, dbBuiltin))
-    }
-  }
-  ctx.body = roles
+  ctx.body = await getAllRoles(ctx.appId)
 }
 
 exports.find = async function (ctx) {

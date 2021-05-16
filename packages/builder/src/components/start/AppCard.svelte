@@ -37,8 +37,8 @@
         </MenuItem>
         {#if deletable}
           <MenuItem on:click={() => deleteApp(app)} icon="Delete">
-          Delete
-        </MenuItem>
+            Delete
+          </MenuItem>
         {/if}
         {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
           <MenuItem on:click={() => releaseLock(app.appId)} icon="LockOpen">

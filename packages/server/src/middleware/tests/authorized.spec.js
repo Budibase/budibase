@@ -1,6 +1,6 @@
 const authorizedMiddleware = require("../authorized")
 const env = require("../../environment")
-const { PermissionTypes, PermissionLevels } = require("../../utilities/security/permissions")
+const { PermissionTypes, PermissionLevels } = require("@budibase/auth/permissions")
 jest.mock("../../environment", () => ({
     prod: false,
     isTest: () => true,

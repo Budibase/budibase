@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const env = require("../../environment")
 const {
   basicTable,
@@ -16,7 +16,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
-const { StaticDatabases } = require("@budibase/auth").db
+const { StaticDatabases } = require("@budibase/auth/db")
 const CouchDB = require("../../db")
 
 const GLOBAL_USER_ID = "us_uuid1"
