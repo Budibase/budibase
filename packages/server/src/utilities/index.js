@@ -1,5 +1,5 @@
 const env = require("../environment")
-const { APP_PREFIX } = require("../db/utils")
+const { APP_PREFIX, DocumentTypes } = require("../db/utils")
 const CouchDB = require("../db")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 
@@ -19,7 +19,9 @@ exports.isDev = env.isDev
 exports.getAllApps = async () => {
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
-  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
+  const appPromises = appDbNames.map(db =>
+    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+  )
   if (appPromises.length === 0) {
     return []
   } else {

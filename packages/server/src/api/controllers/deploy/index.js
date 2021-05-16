@@ -1,6 +1,8 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication } = require("@budibase/auth").db
+const { Replication, StaticDatabases } = require("@budibase/auth").db
+const { DocumentTypes } = require("../../../db/utils")
+
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 const DeploymentStatus = {
@@ -26,16 +28,16 @@ async function checkAllDeployments(deployments) {
   return { updated, deployments }
 }
 
-async function storeLocalDeploymentHistory(deployment) {
+async function storeDeploymentHistory(deployment) {
   const appId = deployment.getAppId()
   const deploymentJSON = deployment.getJSON()
-  const db = new PouchDB(appId)
+  const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
 
   let deploymentDoc
   try {
-    deploymentDoc = await db.get("_local/deployments")
+    deploymentDoc = await db.get(appId)
   } catch (err) {
-    deploymentDoc = { _id: "_local/deployments", history: {} }
+    deploymentDoc = { _id: appId, history: {} }
   }
 
   const deploymentId = deploymentJSON._id
@@ -65,12 +67,9 @@ async function deployApp(deployment) {
     })
 
     await replication.replicate()
-
-    // Strip the _dev prefix and update the appID document in the new DB
     const db = new PouchDB(productionAppId)
-    const appDoc = await db.get(deployment.appId)
-    appDoc._id = productionAppId
-    delete appDoc._rev
+    const appDoc = await db.get(DocumentTypes.APP_METADATA)
+    appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
     await db.put(appDoc)
 
@@ -79,13 +78,17 @@ async function deployApp(deployment) {
       source: productionAppId,
       target: deployment.appId,
     })
-    liveReplication.subscribe()
+    liveReplication.subscribe({
+      filter: function (doc) {
+        return doc._id !== DocumentTypes.APP_METADATA
+      },
+    })
 
     deployment.setStatus(DeploymentStatus.SUCCESS)
-    await storeLocalDeploymentHistory(deployment)
+    await storeDeploymentHistory(deployment)
   } catch (err) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
-    await storeLocalDeploymentHistory(deployment)
+    await storeDeploymentHistory(deployment)
     throw {
       ...err,
       message: `Deployment Failed: ${err.message}`,
@@ -95,8 +98,8 @@ async function deployApp(deployment) {
 
 exports.fetchDeployments = async function (ctx) {
   try {
-    const db = new PouchDB(ctx.appId)
-    const deploymentDoc = await db.get("_local/deployments")
+    const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
+    const deploymentDoc = await db.get(ctx.appId)
     const { updated, deployments } = await checkAllDeployments(
       deploymentDoc,
       ctx.user
@@ -112,8 +115,8 @@ exports.fetchDeployments = async function (ctx) {
 
 exports.deploymentProgress = async function (ctx) {
   try {
-    const db = new PouchDB(ctx.appId)
-    const deploymentDoc = await db.get("_local/deployments")
+    const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
+    const deploymentDoc = await db.get(ctx.appId)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(
@@ -126,7 +129,7 @@ exports.deploymentProgress = async function (ctx) {
 exports.deployApp = async function (ctx) {
   let deployment = new Deployment(ctx.appId)
   deployment.setStatus(DeploymentStatus.PENDING)
-  deployment = await storeLocalDeploymentHistory(deployment)
+  deployment = await storeDeploymentHistory(deployment)
 
   await deployApp(deployment)
 

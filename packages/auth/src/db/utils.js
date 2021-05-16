@@ -12,6 +12,9 @@ exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
   },
+  DEPLOYMENTS: {
+    name: "deployments",
+  },
 }
 
 const DocumentTypes = {
@@ -21,6 +24,7 @@ const DocumentTypes = {
   TEMPLATE: "template",
   APP: "app",
   APP_DEV: "app_dev",
+  APP_METADATA: "app_metadata",
 }
 
 exports.DocumentTypes = DocumentTypes
