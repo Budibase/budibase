@@ -1,7 +1,6 @@
 const selfHostMiddleware = require("../selfhost")
 const env = require("../../environment")
-jest.mock("../../environment") 
-jest.mock("../../utilities/builder/hosting") 
+jest.mock("../../environment")
 
 class TestConfiguration {
   constructor() {

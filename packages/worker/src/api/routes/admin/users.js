@@ -45,6 +45,7 @@ router
   .post("/api/admin/users/init", controller.adminUser)
   .delete("/api/admin/users/:id", controller.destroy)
   .get("/api/admin/users/:id", controller.find)
+  .get("/api/admin/roles/:appId")
   .post("/api/admin/users/invite", buildInviteValidation(), controller.invite)
   .post(
     "/api/admin/users/invite/accept",

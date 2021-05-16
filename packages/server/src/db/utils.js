@@ -1,10 +1,12 @@
 const newid = require("./newid")
 const {
   DocumentTypes: CoreDocTypes,
+  getRoleParams,
+  generateRoleID,
   APP_DEV_PREFIX,
   APP_PREFIX,
   SEPARATOR,
-} = require("@budibase/auth").db
+} = require("@budibase/auth/db")
 
 const UNICODE_MAX = "\ufff0"
 
@@ -24,12 +26,12 @@ const DocumentTypes = {
   APP: CoreDocTypes.APP,
   APP_DEV: CoreDocTypes.APP_DEV,
   APP_METADATA: CoreDocTypes.APP_METADATA,
+  ROLE: CoreDocTypes.ROLE,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
   AUTOMATION: "au",
   LINK: "li",
-  ROLE: "role",
   WEBHOOK: "wh",
   INSTANCE: "inst",
   LAYOUT: "layout",
@@ -61,6 +63,9 @@ exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
+
+exports.generateRoleID = generateRoleID
+exports.getRoleParams = getRoleParams
 
 exports.getQueryIndex = viewName => {
   return `database/${viewName}`
@@ -223,21 +228,6 @@ exports.generateDevAppID = appId => {
   const prefix = `${DocumentTypes.APP}${SEPARATOR}`
   const uuid = appId.split(prefix)[1]
   return `${DocumentTypes.APP_DEV}${SEPARATOR}${uuid}`
-}
-
-/**
- * Generates a new role ID.
- * @returns {string} The new role ID which the role doc can be stored under.
- */
-exports.generateRoleID = id => {
-  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
-}
-
-/**
- * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
- */
-exports.getRoleParams = (roleId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
 }
 
 /**

@@ -1,6 +1,6 @@
 const PouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication, StaticDatabases } = require("@budibase/auth").db
+const { Replication, StaticDatabases } = require("@budibase/auth/db")
 const { DocumentTypes } = require("../../../db/utils")
 
 // the max time we can wait for an invalidation to complete before considering it failed

@@ -20,10 +20,7 @@ const {
   DocumentTypes,
   AppStatus,
 } = require("../../db/utils")
-const {
-  BUILTIN_ROLE_IDS,
-  AccessController,
-} = require("../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const {
   createHomeScreen,
@@ -120,15 +117,8 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function (ctx) {
-  let apps = await getAllApps()
-
-  const isDev = ctx.query.status === AppStatus.DEV
-  apps = apps.filter(app => {
-    if (isDev) {
-      return app.appId.startsWith(DocumentTypes.APP_DEV)
-    }
-    return !app.appId.startsWith(DocumentTypes.APP_DEV)
-  })
+  const isDev = ctx.query && ctx.query.status === AppStatus.DEV
+  const apps = await getAllApps(isDev)
 
   // get the locks for all the dev apps
   if (isDev) {

@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { BASE_LAYOUT_PROP_IDS } = require("./layouts")
 const { LOGO_URL } = require("../constants")
 
