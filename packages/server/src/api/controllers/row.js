@@ -16,7 +16,6 @@ const {
 const { FieldTypes } = require("../../constants")
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
-const { QueryBuilder, search } = require("./search/utils")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -245,45 +244,6 @@ exports.fetchView = async function (ctx) {
       field,
       value: row.value,
     }))
-  }
-}
-
-exports.search = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
-  const {
-    query,
-    pagination: { pageSize = 10, bookmark },
-  } = ctx.request.body
-  const tableId = ctx.params.tableId
-
-  const queryBuilder = new QueryBuilder(appId)
-    .setLimit(pageSize)
-    .addTable(tableId)
-  if (bookmark) {
-    queryBuilder.setBookmark(bookmark)
-  }
-
-  let searchString
-  if (ctx.query && ctx.query.raw && ctx.query.raw !== "") {
-    searchString = queryBuilder.complete(query["RAW"])
-  } else {
-    // make all strings a starts with operation rather than pure equality
-    for (const [key, queryVal] of Object.entries(query)) {
-      if (typeof queryVal === "string") {
-        queryBuilder.addString(key, queryVal)
-      } else {
-        queryBuilder.addEqual(key, queryVal)
-      }
-    }
-    searchString = queryBuilder.complete()
-  }
-
-  const response = await search(searchString)
-  const table = await db.get(tableId)
-  ctx.body = {
-    rows: await outputProcessing(appId, table, response.rows),
-    bookmark: response.bookmark,
   }
 }
 

@@ -40,13 +40,11 @@
     if (wasSelectedTable._id === table._id) {
       $goto("./table")
     }
-    editorModal.hide()
   }
 
   async function save() {
     await tables.save(table)
     notifications.success("Table renamed successfully")
-    editorModal.hide()
   }
 
   function checkValid(evt) {

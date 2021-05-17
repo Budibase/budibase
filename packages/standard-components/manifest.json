@@ -65,41 +65,6 @@
       "type": "schema"
     }
   },
-  "search": {
-    "name": "Search",
-    "description": "A searchable list of items.",
-    "icon": "Search",
-    "styleable": true,
-    "hasChildren": true,
-    "settings": [
-      {
-        "type": "table",
-        "label": "Table",
-        "key": "table"
-      },
-      {
-        "type": "multifield",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": "table"
-      },
-      {
-        "type": "number",
-        "label": "Rows/Page",
-        "defaultValue": 25,
-        "key": "pageSize"
-      },
-      {
-        "type": "text",
-        "label": "Empty Text",
-        "key": "noRowsMessage",
-        "defaultValue": "No rows found."
-      }
-    ],
-    "context": {
-      "type": "schema"
-    }
-  },
   "stackedlist": {
     "name": "Stacked List",
     "icon": "TaskList",
@@ -1416,6 +1381,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
+    "info": "Pagination is only available for data stored in internal tables.",
     "icon": "Data",
     "styleable": false,
     "hasChildren": true,
@@ -1445,7 +1411,14 @@
       {
         "type": "number",
         "label": "Limit",
-        "key": "limit"
+        "key": "limit",
+        "defaultValue": 50
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate",
+        "defaultValue": true
       }
     ],
     "context": {
@@ -1464,12 +1437,8 @@
           "key": "schema"
         },
         {
-          "label": "Loading",
-          "key": "loading"
-        },
-        {
-          "label": "Loaded",
-          "key": "loaded"
+          "label": "Page Number",
+          "key": "pageNumber"
         }
       ]
     }
