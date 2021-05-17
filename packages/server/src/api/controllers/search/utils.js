@@ -33,6 +33,7 @@ class QueryBuilder {
     this.limit = 50
     this.sortOrder = "ascending"
     this.sortType = "string"
+    this.includeDocs = true
   }
 
   setTable(tableId) {
@@ -62,6 +63,11 @@ class QueryBuilder {
 
   setBookmark(bookmark) {
     this.bookmark = bookmark
+    return this
+  }
+
+  excludeDocs() {
+    this.includeDocs = false
     return this
   }
 
@@ -103,15 +109,16 @@ class QueryBuilder {
     return this
   }
 
-  buildSearchURL(excludeDocs = false) {
-    let output = "*:*"
+  buildSearchQuery() {
+    let query = "*:*"
+
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
         const expression = queryFn(luceneEscape(key.replace(/ /, "_")), value)
         if (expression == null) {
           continue
         }
-        output += ` AND ${expression}`
+        query += ` AND ${expression}`
       }
     }
 
@@ -157,35 +164,43 @@ class QueryBuilder {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
 
-    // Build the full search URL
-    let url = `${env.COUCH_DB_URL}/${this.appId}/_design/database/_search`
-    url += `/${SearchIndexes.ROWS}?q=${output}`
-    url += `&limit=${Math.min(this.limit, 200)}`
-    if (!excludeDocs) {
-      url += "&include_docs=true"
-    }
-    if (this.sort) {
-      const orderChar = this.sortOrder === "descending" ? "-" : ""
-      url += `&sort="${orderChar}${this.sort.replace(/ /, "_")}`
-      url += `<${this.sortType}>"`
+    return query
+  }
+
+  buildSearchBody() {
+    let body = {
+      q: this.buildSearchQuery(),
+      limit: Math.min(this.limit, 200),
+      include_docs: this.includeDocs,
     }
     if (this.bookmark) {
-      url += `&bookmark=${this.bookmark}`
+      body.bookmark = this.bookmark
     }
+    if (this.sort) {
+      const order = this.sortOrder === "descending" ? "-" : ""
+      const type = `<${this.sortType}>`
+      body.sort = `${order}${this.sort.replace(/ /, "_")}${type}`
+    }
+    return body
+  }
 
-    // Fix any double slashes in the URL
-    return checkSlashesInUrl(url)
+  async run() {
+    const url = `${env.COUCH_DB_URL}/${this.appId}/_design/database/_search/${SearchIndexes.ROWS}`
+    const body = this.buildSearchBody()
+    return await runQuery(url, body)
   }
 }
 
 /**
  * Executes a lucene search query.
- * @param query The query URL
+ * @param url The query URL
+ * @param body The request body defining search criteria
  * @returns {Promise<{rows: []}>}
  */
-const runQuery = async query => {
-  const response = await fetch(query, {
-    method: "GET",
+const runQuery = async (url, body) => {
+  const response = await fetch(url, {
+    body: JSON.stringify(body),
+    method: "POST",
   })
   const json = await response.json()
   let output = {
@@ -227,15 +242,14 @@ const recursiveSearch = async (appId, query, params) => {
   if (rows.length > params.limit - 200) {
     pageSize = params.limit - rows.length
   }
-  const url = new QueryBuilder(appId, query)
+  const page = await new QueryBuilder(appId, query)
     .setTable(params.tableId)
     .setBookmark(bookmark)
     .setLimit(pageSize)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)
     .setSortType(params.sortType)
-    .buildSearchURL()
-  const page = await runQuery(url)
+    .run()
   if (!page.rows.length) {
     return rows
   }
@@ -272,24 +286,22 @@ exports.paginatedSearch = async (appId, query, params) => {
     limit = 50
   }
   limit = Math.min(limit, 200)
-  const builder = new QueryBuilder(appId, query)
+  const search = new QueryBuilder(appId, query)
     .setTable(params.tableId)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)
     .setSortType(params.sortType)
-  const searchUrl = builder
+  const searchResults = await search
     .setBookmark(params.bookmark)
     .setLimit(limit)
-    .buildSearchURL()
-  const searchResults = await runQuery(searchUrl)
+    .run()
 
   // Try fetching 1 row in the next page to see if another page of results
   // exists or not
-  const nextUrl = builder
+  const nextResults = await search
     .setBookmark(searchResults.bookmark)
     .setLimit(1)
-    .buildSearchURL()
-  const nextResults = await runQuery(nextUrl)
+    .run()
 
   return {
     ...searchResults,
