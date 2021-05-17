@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { page, goto, isActive } from "@roxi/routify"
+  import { page, goto } from "@roxi/routify"
   import { auth } from "stores/backend"
   import { admin } from "stores/portal"
 
