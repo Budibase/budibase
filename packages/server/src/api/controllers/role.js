@@ -1,15 +1,12 @@
 const CouchDB = require("../../db")
 const {
-  getBuiltinRoles,
   Role,
   getRole,
   isBuiltin,
-  getExternalRoleID,
   getAllRoles,
 } = require("@budibase/auth/roles")
 const {
   generateRoleID,
-  getRoleParams,
   getUserMetadataParams,
   InternalTables,
 } = require("../../db/utils")

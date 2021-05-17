@@ -166,7 +166,9 @@ exports.getAllApps = async (devApps = false) => {
   const appDbNames = allDbs.filter(dbName =>
     dbName.startsWith(exports.APP_PREFIX)
   )
-  const appPromises = appDbNames.map(db => new CouchDB(db).get(DocumentTypes.APP_METADATA))
+  const appPromises = appDbNames.map(db =>
+    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+  )
   if (appPromises.length === 0) {
     return []
   } else {
