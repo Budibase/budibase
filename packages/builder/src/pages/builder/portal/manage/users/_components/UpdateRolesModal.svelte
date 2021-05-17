@@ -1,4 +1,5 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
   import { fetchData } from "helpers"
   import { users } from "stores/portal"
@@ -6,19 +7,26 @@
   export let app
   export let user
 
+  const dispatch = createEventDispatcher()
+
   const roles = fetchData(`/api/admin/roles/${app._id}`)
   $: options = $roles?.data?.roles?.map(role => role._id)
   let selectedRole
 
-  function updateUserRoles() {
-    users.updateRoles({
+  async function updateUserRoles() {
+    const res = await users.updateRoles({
       ...user,
       roles: {
         ...user.roles,
         [app._id]: selectedRole,
       },
     })
-    notifications.success("Roles updated")
+    if (res.status === 400) {
+      notifications.error("Failed to update role.")
+    } else {
+      notifications.success("Roles updated")
+      dispatch("update")
+    }
   }
 </script>
 

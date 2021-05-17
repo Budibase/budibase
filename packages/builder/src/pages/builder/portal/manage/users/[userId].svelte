@@ -31,16 +31,16 @@
   // Here we need to merge the Apps list and the roles response to get something that makes sense for the table
   $: appList = $apps.map(app => ({
     ...app,
-    role: $request?.data?.roles?.[app._id],
+    role: $roleFetch?.data?.roles?.[app._id],
   }))
   let selectedApp
 
-  const request = fetchData(`/api/admin/users/${userId}`)
+  const roleFetch = fetchData(`/api/admin/users/${userId}`)
 
   async function deleteUser() {
     const res = await users.del(userId)
     if (res.message) {
-      notifications.success(`User ${$request?.data?.email} deleted.`)
+      notifications.success(`User ${$roleFetch?.data?.email} deleted.`)
       $goto("./")
     } else {
       notifications.error("Failed to delete user.")
@@ -61,7 +61,7 @@
   </div>
   <div class="heading">
     <Layout noPadding gap="XS">
-      <Heading>User: {$request?.data?.email}</Heading>
+      <Heading>User: {$roleFetch?.data?.email}</Heading>
       <Body
         >Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro
         ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
@@ -76,7 +76,7 @@
     <div class="fields">
       <div class="field">
         <Label size="L">Email</Label>
-        <Input disabled thin value={$request?.data?.email} />
+        <Input disabled thin value={$roleFetch?.data?.email} />
       </div>
     </div>
     <div class="regenerate">
@@ -119,13 +119,17 @@
     showCloseIcon={false}
   >
     <Body
-      >Are you sure you want to delete <strong>{$request?.data?.email}</strong
+      >Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong
       ></Body
     >
   </ModalContent>
 </Modal>
 <Modal bind:this={editRolesModal}>
-  <UpdateRolesModal app={selectedApp} user={$request.data} />
+  <UpdateRolesModal
+    app={selectedApp}
+    user={$roleFetch.data}
+    on:update={roleFetch.refresh}
+  />
 </Modal>
 
 <style>
