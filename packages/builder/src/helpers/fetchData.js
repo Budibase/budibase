@@ -5,7 +5,7 @@ export default function (url) {
   const store = writable({ status: "LOADING", data: {}, error: {} })
 
   async function get() {
-    store.update(u => ({ ...u, status: "SUCCESS" }))
+    store.update(u => ({ ...u, status: "LOADING" }))
     try {
       const response = await api.get(url)
       store.set({ data: await response.json(), status: "SUCCESS" })
