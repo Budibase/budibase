@@ -161,6 +161,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/modal/-/modal-3.0.2.tgz#58b6621cab65f90788d310374f40df1f7090473f"
   integrity sha512-YnIivJhoaao7Otu+HV7sgebPyFbO6sd/oMvTN/Rb2wwgnaMnIIuIRdGandSrcgotN2uNgs+P0knG6mv/xA1/dg==
 
+"@spectrum-css/pagination@^3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/pagination/-/pagination-3.0.3.tgz#b204c3ada384c4af751a354bc428346d82eeea65"
+  integrity sha512-OJ/v9GeNXJOZ9Yr9LDBYPrR2NCiLOWP9wANT/a5sqFuugRnQbn/HYMnRp9TBxwpDY6ihaPo0T/wi7kLiAJFdDw==
+
 "@spectrum-css/picker@^1.0.1":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.0.2.tgz#b49429ae3c89f9c5f2c0530787ce45392c9612ff"

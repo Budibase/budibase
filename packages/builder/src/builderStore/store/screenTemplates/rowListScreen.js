@@ -80,6 +80,7 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
+      paginate: false,
     })
 
   const spectrumTable = new Component("@budibase/standard-components/table")

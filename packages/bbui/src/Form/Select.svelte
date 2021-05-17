@@ -28,7 +28,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {disabled} {error}>
+<Field {label} {labelPosition} {error}>
   <Select
     {quiet}
     {error}

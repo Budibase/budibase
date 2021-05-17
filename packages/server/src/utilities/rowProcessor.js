@@ -124,24 +124,6 @@ function processAutoColumn(user, table, row) {
 }
 
 /**
- * Given a set of rows and the table they came from this function will sort by auto ID or a custom
- * method if provided (not implemented yet).
- */
-function sortRows(table, rows) {
-  // sort based on auto ID (if found)
-  let autoIDColumn = Object.entries(table.schema).find(
-    schema => schema[1].subtype === AutoFieldSubTypes.AUTO_ID
-  )
-  // get the column name, this is the first element in the array (Object.entries)
-  autoIDColumn = autoIDColumn && autoIDColumn.length ? autoIDColumn[0] : null
-  if (autoIDColumn) {
-    // sort in ascending order
-    rows.sort((a, b) => a[autoIDColumn] - b[autoIDColumn])
-  }
-  return rows
-}
-
-/**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
 function processFormulas(table, rows) {
@@ -213,8 +195,6 @@ exports.outputProcessing = async (appId, table, rows) => {
     rows = [rows]
     wasArray = false
   }
-  // sort by auto ID
-  rows = sortRows(table, rows)
   // attach any linked row information
   let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
 
