@@ -15,6 +15,15 @@
       const json = await response.json()
       if (response.status !== 200) throw json.message
 
+      // Reset frontend state after revert  
+      const applicationPkg = await api.get(`/api/applications/${appId}/appPackage`)
+      const pkg = await applicationPkg.json()
+      if (applicationPkg.ok) {
+        await store.actions.initialise(pkg)
+      } else {
+        throw new Error(pkg)
+      }
+
       notifications.info("Changes reverted.")
     } catch (err) {
       notifications.error(`Error reverting changes: ${err}`)
