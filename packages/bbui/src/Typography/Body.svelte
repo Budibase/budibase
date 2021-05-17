@@ -4,9 +4,11 @@
   export let size = "M"
   export let serif = false
   export let noPadding = false
+  export let textAlign = "left"
 </script>
 
 <p
+  style="text-align:{textAlign};"
   class:noPadding
   class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
