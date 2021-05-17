@@ -138,6 +138,18 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
 }
 
 /**
+ * Convert a development app ID to a deployed app ID.
+ */
+exports.getDeployedAppID = appId => {
+  // if dev, convert it
+  if (appId.startsWith(exports.APP_DEV_PREFIX)) {
+    const id = appId.split(exports.APP_DEV_PREFIX)[1]
+    return `${exports.APP_PREFIX}${id}`
+  }
+  return appId
+}
+
+/**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
  * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
