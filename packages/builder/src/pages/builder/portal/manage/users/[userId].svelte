@@ -15,7 +15,7 @@
     notifications,
   } from "@budibase/bbui"
   import { fetchData } from "helpers"
-  import { users, apps } from "stores/portal"
+  import { users } from "stores/portal"
 
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
 
@@ -28,14 +28,15 @@
     role: { type: "options" },
   }
 
-  // Here we need to merge the Apps list and the roles response to get something that makes sense for the table
-  $: appList = $apps.map(app => ({
-    ...app,
-    role: $roleFetch?.data?.roles?.[app._id],
+  // Merge the Apps list and the roles response to get something that makes sense for the table
+  $: appList = Object.keys($apps?.data).map(app => ({
+    name: $apps?.data?.[app]?.name,
+    role: $roleFetch?.data?.roles?.[app],
   }))
   let selectedApp
 
   const roleFetch = fetchData(`/api/admin/users/${userId}`)
+  const apps = fetchData(`/api/admin/roles`)
 
   async function deleteUser() {
     const res = await users.del(userId)
