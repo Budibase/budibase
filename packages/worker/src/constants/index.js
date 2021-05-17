@@ -30,45 +30,65 @@ const EmailTemplatePurpose = {
   CUSTOM: "custom",
 }
 
+const InternalTemplateBindings = {
+  PLATFORM_URL: "platformUrl",
+  COMPANY: "company",
+  LOGO_URL: "logoUrl",
+  EMAIL: "email",
+  USER: "user",
+  REQUEST: "request",
+  DOCS_URL: "docsUrl",
+  LOGIN_URL: "loginUrl",
+  CURRENT_YEAR: "currentYear",
+  CURRENT_DATE: "currentDate",
+  BODY: "body",
+  STYLES: "styles",
+  RESET_URL: "resetUrl",
+  RESET_CODE: "resetCode",
+  INVITE_URL: "inviteUrl",
+  INVITE_CODE: "inviteUrl",
+  CONTENTS: "contents",
+}
+
 const TemplateBindings = {
   PLATFORM_URL: {
-    name: "platformUrl",
+    name: InternalTemplateBindings.PLATFORM_URL,
     description: "The URL used to access the budibase platform",
   },
   COMPANY: {
-    name: "company",
+    name: InternalTemplateBindings.COMPANY,
     description: "The name of your organization",
   },
   LOGO_URL: {
-    name: "logoUrl",
+    name: InternalTemplateBindings.LOGO_URL,
     description: "The URL of your organizations logo.",
   },
   EMAIL: {
-    name: "email",
+    name: InternalTemplateBindings.EMAIL,
     description: "The recipients email address.",
   },
   USER: {
-    name: "user",
+    name: InternalTemplateBindings.USER,
     description: "The recipients user object.",
   },
   REQUEST: {
-    name: "request",
+    name: InternalTemplateBindings.REQUEST,
     description: "Additional request metadata.",
   },
   DOCS_URL: {
-    name: "docsUrl",
+    name: InternalTemplateBindings.DOCS_URL,
     description: "Organization documentation URL.",
   },
   LOGIN_URL: {
-    name: "loginUrl",
+    name: InternalTemplateBindings.LOGIN_URL,
     description: "The URL used to log into the organization budibase instance.",
   },
   CURRENT_YEAR: {
-    name: "currentYear",
+    name: InternalTemplateBindings.CURRENT_YEAR,
     description: "The current year.",
   },
   CURRENT_DATE: {
-    name: "currentDate",
+    name: InternalTemplateBindings.CURRENT_DATE,
     description: "The current date.",
   },
 }
@@ -80,11 +100,11 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.BASE,
       bindings: [
         {
-          name: "body",
+          name: InternalTemplateBindings.BODY,
           description: "The main body of another email template.",
         },
         {
-          name: "styles",
+          name: InternalTemplateBindings.STYLES,
           description: "The contents of the Styling email template.",
         },
       ],
@@ -94,12 +114,12 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
       bindings: [
         {
-          name: "resetUrl",
+          name: InternalTemplateBindings.RESET_URL,
           description:
             "The URL the recipient must click to reset their password.",
         },
         {
-          name: "resetCode",
+          name: InternalTemplateBindings.RESET_CODE,
           description:
             "The temporary password reset code used in the recipients password reset URL.",
         },
@@ -110,12 +130,12 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.INVITATION,
       bindings: [
         {
-          name: "inviteUrl",
+          name: InternalTemplateBindings.INVITE_URL,
           description:
             "The URL the recipient must click to accept the invitation and activate their account.",
         },
         {
-          name: "inviteCode",
+          name: InternalTemplateBindings.INVITE_CODE,
           description:
             "The temporary invite code used in the recipients invitation URL.",
         },
@@ -126,7 +146,7 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.CUSTOM,
       bindings: [
         {
-          name: "contents",
+          name: InternalTemplateBindings.CONTENTS,
           description: "Custom content body.",
         },
       ],
@@ -142,4 +162,5 @@ exports.TemplateTypes = TemplateTypes
 exports.EmailTemplatePurpose = EmailTemplatePurpose
 exports.TemplateMetadata = TemplateMetadata
 exports.TemplateBindings = TemplateBindings
+exports.InternalTemplateBindings = InternalTemplateBindings
 exports.GLOBAL_OWNER = "global"
