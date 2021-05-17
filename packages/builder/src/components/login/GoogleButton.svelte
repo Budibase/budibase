@@ -14,25 +14,24 @@
 
 <style>
   .outer {
-    border: 1px;
+    border: 1px solid #494949;
+    border-radius: 4px;
     width: 100%;
+    background-color: var(--background-alt);
   }
 
   .inner {
     display: flex;
     flex-direction: row;
     align-items: center;
-
-    background-color: var(--background-alt);
-    border-radius: 3px;
+    justify-content: center;
     padding-top: var(--spacing-xs);
     padding-bottom: var(--spacing-xs);
   }
 
   .inner img {
-    width: 24px;
-    margin: 1px 14px 1px 1px;
-    border-radius: 2px;
+    width: 18px;
+    margin: 3px 10px 3px 3px;
   }
 
   .inner p {
@@ -41,7 +40,8 @@
 
   .outer :global(a) {
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 500;
+    font-size: var(--font-size-m);
     color: #fff;
   }
 </style>
