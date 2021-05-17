@@ -25,21 +25,17 @@
 
   const roleSchema = {
     name: { displayName: "App" },
-    roles: { type: "options" },
+    role: { type: "options" },
   }
 
   // Here we need to merge the Apps list and the roles response to get something that makes sense for the table
-  $: appList = $apps.map(app => ({ ...app, roles: ["READ"] }))
+  $: appList = $apps.map(app => ({
+    ...app,
+    role: $request?.data?.roles?.[app._id],
+  }))
   let selectedApp
 
   const request = fetchData(`/api/admin/users/${userId}`)
-  const roles = fetchData(
-    `/api/admin/roles/app_5a72d9b923504765852338e614a72c85`
-  )
-
-  $: console.log($apps)
-
-  $: console.log($roles)
 
   async function deleteUser() {
     const res = await users.del(userId)
@@ -71,7 +67,6 @@
         ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
         veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
       </Body>
-      {JSON.stringify($roles.data, null, 2)}
       <Body />
     </Layout>
   </div>
