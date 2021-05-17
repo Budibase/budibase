@@ -70,7 +70,6 @@
         ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
         veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
       </Body>
-      <Body />
     </Layout>
   </div>
   <Divider size="S" />
