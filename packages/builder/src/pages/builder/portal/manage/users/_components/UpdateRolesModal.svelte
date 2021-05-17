@@ -1,20 +1,23 @@
 <script>
-  import {
-    Body,
-    Multiselect,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
+  import { fetchData } from "helpers"
   import { users } from "stores/portal"
 
   export let app
   export let user
-  let roles = app.roles
 
-  const options = ["READ", "WRITE", "ADMIN", "PUBLIC"]
+  const roles = fetchData(`/api/admin/roles/${app._id}`)
+  $: options = $roles?.data?.roles?.map(role => role._id)
+  let selectedRole
 
   function updateUserRoles() {
-    users.updateRoles({ ...user, roles: { ...user.roles, [app._id]: roles } })
+    users.updateRoles({
+      ...user,
+      roles: {
+        ...user.roles,
+        [app._id]: selectedRole,
+      },
+    })
     notifications.success("Roles updated")
   }
 </script>
@@ -30,9 +33,9 @@
   <Body noPadding
     >Update {user.email}'s roles for <strong>{app.name}</strong>.</Body
   >
-  <Multiselect
+  <Select
     placeholder={null}
-    bind:value={roles}
+    bind:value={selectedRole}
     on:change
     {options}
     label="Select roles:"

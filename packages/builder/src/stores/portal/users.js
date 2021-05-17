@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import api, { get } from "builderStore/api"
 import { update } from "lodash"
 
 export function createUsersStore() {
@@ -41,11 +41,13 @@ export function createUsersStore() {
   }
 
   async function updateRoles(data) {
-    console.log(data)
-    // const res = await api.post(`/api/admin/users`, data)
-    // console.log(await res.json())
-    // update(users => (users.filter(user => user._id !== id)))
-    // return await response.json()
+    try {
+      const res = await post(`/api/admin/users`, data)
+      const json = await res.json()
+      return json
+    } catch (error) {
+      return error
+    }
   }
 
   return {
