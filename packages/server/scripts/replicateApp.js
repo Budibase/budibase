@@ -6,6 +6,7 @@
  */
 
 const CouchDB = require("../src/db")
+const { DocumentTypes } = require("../src/db/utils")
 
 const appName = process.argv[2].toLowerCase()
 const remoteUrl = process.argv[3]
@@ -18,7 +19,7 @@ const run = async () => {
   let apps = []
   for (let dbName of appDbNames) {
     const db = new CouchDB(dbName)
-    apps.push(db.get(dbName))
+    apps.push(db.get(DocumentTypes.APP_METADATA))
   }
   apps = await Promise.all(apps)
   const app = apps.find(
@@ -32,7 +33,7 @@ const run = async () => {
     return
   }
 
-  const instanceDb = new CouchDB(app._id)
+  const instanceDb = new CouchDB(app.appId)
   const remoteDb = new CouchDB(`${remoteUrl}/${appName}`)
 
   instanceDb.replicate

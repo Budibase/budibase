@@ -85,7 +85,6 @@ async function getAppUrlIfNotInUse(ctx) {
 }
 
 async function createInstance(template) {
-  // TODO: Do we need the normal app ID?
   const baseAppId = generateAppID()
   const appId = generateDevAppID(baseAppId)
 
@@ -125,7 +124,7 @@ exports.fetch = async function (ctx) {
   if (isDev) {
     const locks = await getAllLocks()
     for (let app of apps) {
-      const lock = locks.find(lock => lock.appId === app._id)
+      const lock = locks.find(lock => lock.appId === app.appId)
       if (lock) {
         app.lockedBy = lock.user
       } else {
@@ -156,7 +155,7 @@ exports.fetchAppDefinition = async function (ctx) {
 
 exports.fetchAppPackage = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
-  const application = await db.get(ctx.params.appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
   const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
 
   ctx.body = {
@@ -181,7 +180,8 @@ exports.create = async function (ctx) {
   const url = await getAppUrlIfNotInUse(ctx)
   const appId = instance._id
   const newApplication = {
-    _id: appId,
+    _id: DocumentTypes.APP_METADATA,
+    appId: instance._id,
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
@@ -244,7 +244,7 @@ exports.delete = async function (ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const db = new CouchDB(app._id)
+  const db = new CouchDB(app.instance._id)
 
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
