@@ -13,24 +13,30 @@
 </div>
 
 <style>
+  .outer {
+    border: 1px;
+    width: 100%;
+  }
+
   .inner {
     display: flex;
     flex-direction: row;
-    background-color: #4285f4;
+    align-items: center;
+
+    background-color: var(--background-alt);
     border-radius: 3px;
-    padding-right: 12px;
+    padding-top: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
   }
 
   .inner img {
     width: 24px;
     margin: 1px 14px 1px 1px;
     border-radius: 2px;
-    background-color: #fff;
-    padding: 8px;
   }
 
   .inner p {
-    margin: 12px 0 0;
+    margin: 0;
   }
 
   .outer :global(a) {
