@@ -9,8 +9,8 @@
 
   const dispatch = createEventDispatcher()
 
-  const roles = fetchData(`/api/admin/roles/${app._id}`)
-  $: options = $roles?.data?.roles?.map(role => role._id)
+  const roles = app.roles
+  let options = roles.map(role => role._id)
   let selectedRole
 
   async function updateUserRoles() {
@@ -22,7 +22,7 @@
       },
     })
     if (res.status === 400) {
-      notifications.error("Failed to update role.")
+      notifications.error("Failed to update role")
     } else {
       notifications.success("Roles updated")
       dispatch("update")

@@ -29,9 +29,10 @@
   }
 
   // Merge the Apps list and the roles response to get something that makes sense for the table
-  $: appList = Object.keys($apps?.data).map(app => ({
-    name: $apps?.data?.[app]?.name,
-    role: $roleFetch?.data?.roles?.[app],
+  $: appList = Object.keys($apps?.data).map(id => ({
+    ...$apps?.data?.[id],
+    _id: id,
+    role: $roleFetch?.data?.roles?.[id],
   }))
   let selectedApp
 
@@ -49,6 +50,7 @@
   }
 
   async function openUpdateRolesModal({ detail }) {
+    console.log(detail)
     selectedApp = detail
     editRolesModal.show()
   }
