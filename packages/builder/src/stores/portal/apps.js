@@ -13,6 +13,7 @@ export function createAppStore() {
       } else {
         store.set([])
       }
+      return json
     } catch (error) {
       store.set([])
     }

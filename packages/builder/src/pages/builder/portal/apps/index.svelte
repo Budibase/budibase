@@ -62,16 +62,16 @@
 
   const openApp = app => {
     if (appStatus === AppStatus.DEV) {
-      $goto(`../../app/${app._id}`)
+      $goto(`../../app/${app.appId}`)
     } else {
-      window.open(`/${app._id}`, "_blank")
+      window.open(`/${app.appId}`, '_blank');
     }
   }
 
   const exportApp = app => {
     try {
       download(
-        `/api/backups/export?appId=${app._id}&appname=${encodeURIComponent(
+        `/api/backups/export?appId=${app.appId}&appname=${encodeURIComponent(
           app.name
         )}`
       )
@@ -157,7 +157,7 @@
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each $apps as app, idx (app._id)}
+        {#each $apps as app, idx (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
             deletable={appStatus === AppStatus.PUBLISHED}
