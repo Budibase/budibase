@@ -1,6 +1,4 @@
 const env = require("../environment")
-const { APP_PREFIX } = require("../db/utils")
-const CouchDB = require("../db")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 const { getAllApps } = require("@budibase/auth/db")
 

@@ -13,6 +13,9 @@ exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
   },
+  DEPLOYMENTS: {
+    name: "deployments",
+  },
 }
 
 const DocumentTypes = {
@@ -22,6 +25,7 @@ const DocumentTypes = {
   TEMPLATE: "template",
   APP: "app",
   APP_DEV: "app_dev",
+  APP_METADATA: "app_metadata",
   ROLE: "role",
 }
 
@@ -138,6 +142,18 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
 }
 
 /**
+ * Convert a development app ID to a deployed app ID.
+ */
+exports.getDeployedAppID = appId => {
+  // if dev, convert it
+  if (appId.startsWith(exports.APP_DEV_PREFIX)) {
+    const id = appId.split(exports.APP_DEV_PREFIX)[1]
+    return `${exports.APP_PREFIX}${id}`
+  }
+  return appId
+}
+
+/**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
  * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
@@ -150,7 +166,7 @@ exports.getAllApps = async (devApps = false) => {
   const appDbNames = allDbs.filter(dbName =>
     dbName.startsWith(exports.APP_PREFIX)
   )
-  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
+  const appPromises = appDbNames.map(db => new CouchDB(db).get(DocumentTypes.APP_METADATA))
   if (appPromises.length === 0) {
     return []
   } else {
@@ -160,9 +176,9 @@ exports.getAllApps = async (devApps = false) => {
       .map(({ value }) => value)
     return apps.filter(app => {
       if (devApps) {
-        return app._id.startsWith(exports.APP_DEV_PREFIX)
+        return app.appId.startsWith(exports.APP_DEV_PREFIX)
       }
-      return !app._id.startsWith(exports.APP_DEV_PREFIX)
+      return !app.appId.startsWith(exports.APP_DEV_PREFIX)
     })
   }
 }
