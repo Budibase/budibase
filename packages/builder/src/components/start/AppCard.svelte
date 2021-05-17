@@ -41,7 +41,7 @@
           </MenuItem>
         {/if}
         {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
-          <MenuItem on:click={() => releaseLock(app._id)} icon="LockOpen">
+          <MenuItem on:click={() => releaseLock(app.appId)} icon="LockOpen">
             Release Lock
           </MenuItem>
         {/if}

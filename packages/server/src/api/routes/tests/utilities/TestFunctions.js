@@ -21,7 +21,7 @@ exports.clearAllApps = async () => {
     return
   }
   for (let app of apps) {
-    const appId = app._id
+    const { appId } = app
     await appController.delete(new Request(null, { appId }))
   }
 }

@@ -31,7 +31,7 @@ class Replication {
    * Two way replication operation, intended to be promise based.
    * @param {Object} opts - PouchDB replication options
    */
-  sync(opts) {
+  sync(opts = {}) {
     this.replication = this.promisify(this.source.sync, opts)
     return this.replication
   }
@@ -40,7 +40,7 @@ class Replication {
    * One way replication operation, intended to be promise based.
    * @param {Object} opts - PouchDB replication options
    */
-  replicate(opts) {
+  replicate(opts = {}) {
     this.replication = this.promisify(this.source.replicate.to, opts)
     return this.replication
   }
@@ -61,8 +61,13 @@ class Replication {
       })
   }
 
+  /**
+   * Rollback the target DB back to the state of the source DB
+   */
   async rollback() {
     await this.target.destroy()
+    // Recreate the DB again
+    this.target = getDB(this.target.name)
     await this.replicate()
   }
 

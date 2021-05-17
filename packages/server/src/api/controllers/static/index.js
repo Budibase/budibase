@@ -18,6 +18,7 @@ const env = require("../../../environment")
 const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
+const { DocumentTypes } = require("../../../db/utils")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -85,7 +86,7 @@ exports.serveApp = async function (ctx) {
   }
   const App = require("./templates/BudibaseApp.svelte").default
   const db = new CouchDB(appId, { skip_setup: true })
-  const appInfo = await db.get(appId)
+  const appInfo = await db.get(DocumentTypes.APP_METADATA)
 
   const { head, html, css } = App.render({
     title: appInfo.name,
@@ -125,7 +126,7 @@ exports.serveComponentLibrary = async function (ctx) {
     return send(ctx, "/index.js", { root: componentLibraryPath })
   }
   const db = new CouchDB(appId)
-  const appInfo = await db.get(appId)
+  const appInfo = await db.get(DocumentTypes.APP_METADATA)
 
   let componentLib = "componentlibrary"
   if (appInfo && appInfo.version) {
