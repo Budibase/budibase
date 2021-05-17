@@ -9,7 +9,6 @@
   export let title = undefined
   export let size = "S"
   export let cancelText = "Cancel"
-  export let warning = false
   export let confirmText = "Confirm"
   export let showCancelButton = true
   export let showConfirmButton = true
