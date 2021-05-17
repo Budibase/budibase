@@ -4,25 +4,7 @@
   import { users } from "stores/portal"
 
   const [email, error, touched] = createValidationStore("", emailValidator)
-  const password = generatePassword()
-
-  function generatePassword() {
-    return Array(30)
-      .fill(
-        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~!@-#$"
-      )
-      .map(
-        x =>
-          x[
-            Math.floor(
-              (crypto.getRandomValues(new Uint32Array(1))[0] /
-                (0xffffffff + 1)) *
-                x.length
-            )
-          ]
-      )
-      .join("")
-  }
+  const password = Math.random().toString(36).substr(2, 20)
 
   async function createUser() {
     const res = await users.create({ email: $email, password })
