@@ -8,12 +8,12 @@ exports.fetch = async ctx => {
   const promises = []
   for (let app of apps) {
     // use dev app IDs
-    promises.push(getAllRoles(app._id))
+    promises.push(getAllRoles(app.appId))
   }
   const roles = await Promise.all(promises)
   const response = {}
   for (let app of apps) {
-    const deployedAppId = getDeployedAppID(app._id)
+    const deployedAppId = getDeployedAppID(app.appId)
     response[deployedAppId] = {
       roles: roles.shift(),
       name: app.name,
