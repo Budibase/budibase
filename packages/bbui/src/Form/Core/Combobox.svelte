@@ -7,7 +7,7 @@
 
   export let value = null
   export let id = null
-  export let placeholder = "Choose an option"
+  export let placeholder = "Choose an option or type"
   export let disabled = false
   export let error = null
   export let options = []
@@ -22,7 +22,7 @@
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder || "Choose an option"
+      return placeholder || "Choose an option or type"
     }
 
     // Wait for options to load if there is a value but no options
@@ -45,10 +45,16 @@
   }
 </script>
 
-<div class="spectrum-InputGroup" class:is-focused={open || focus}>
+<div
+  class="spectrum-InputGroup"
+  class:is-focused={open || focus}
+  class:is-invalid={!!error}
+  class:is-disabled={disabled}
+>
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
-    class:is-disabled={!!error}
+    class:is-invalid={!!error}
+    class:is-disabled={disabled}
     class:is-focused={open || focus}
   >
     <input
@@ -57,6 +63,7 @@
       on:blur={() => (focus = false)}
       on:change={onChange}
       {value}
+      {disabled}
       {placeholder}
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
@@ -65,7 +72,7 @@
     class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
     tabindex="-1"
     aria-haspopup="true"
-    disabled={!!error}
+    {disabled}
     on:click={() => (open = true)}
   >
     <svg
@@ -114,6 +121,9 @@
 <style>
   .spectrum-InputGroup {
     min-width: 0;
+    width: 100%;
+  }
+  .spectrum-Textfield {
     width: 100%;
   }
   .spectrum-Textfield-input {

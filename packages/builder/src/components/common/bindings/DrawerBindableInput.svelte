@@ -13,10 +13,11 @@
   export let title = "Bindings"
   export let placeholder
   export let label
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  $: tempValue = value
+  $: tempValue = Array.isArray(value) ? value : []
   $: readableValue = runtimeToReadableBinding(bindings, value)
 
   const handleClose = () => {
@@ -32,13 +33,16 @@
 <div class="control">
   <Input
     {label}
+    {disabled}
     value={readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
   />
-  <div class="icon" on:click={bindingDrawer.show}>
-    <Icon size="S" name="FlashOn" />
-  </div>
+  {#if !disabled}
+    <div class="icon" on:click={bindingDrawer.show}>
+      <Icon size="S" name="FlashOn" />
+    </div>
+  {/if}
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
   <svelte:fragment slot="description">

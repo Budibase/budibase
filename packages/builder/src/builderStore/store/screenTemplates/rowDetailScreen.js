@@ -90,10 +90,17 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
-      filter: {
-        _id: `{{ ${makePropSafe("url")}.${makePropSafe("id")} }}`,
-      },
+      filter: [
+        {
+          field: "_id",
+          operator: "equal",
+          type: "string",
+          value: `{{ ${makePropSafe("url")}.${makePropSafe("id")} }}`,
+          valueType: "Binding",
+        },
+      ],
       limit: 1,
+      paginate: false,
     })
 
   const repeater = new Component("@budibase/standard-components/repeater")
