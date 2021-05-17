@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api, { get } from "builderStore/api"
+import api, { post } from "builderStore/api"
 import { update } from "lodash"
 
 export function createUsersStore() {
@@ -46,6 +46,7 @@ export function createUsersStore() {
       const json = await res.json()
       return json
     } catch (error) {
+      console.log(error)
       return error
     }
   }
