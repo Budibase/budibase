@@ -61,7 +61,6 @@
         {/if}
         {#if showConfirmButton}
           <Button
-            {warning}
             group
             cta
             {...$$restProps}
