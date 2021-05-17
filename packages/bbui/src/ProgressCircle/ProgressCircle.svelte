@@ -42,7 +42,7 @@
 
 <div
   on:click
-  class:spectrum-ProgressBar--indeterminate={!value}
+  class:spectrum-ProgressCircle--indeterminate={!value}
   class:spectrum-ProgressCircle--overBackground={overBackground}
   class="spectrum-ProgressCircle spectrum-ProgressCircle--{convertSize(size)}"
 >

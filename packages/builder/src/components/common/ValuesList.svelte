@@ -7,7 +7,7 @@
 
   const inputChanged = ev => {
     try {
-      values = ev.target.value.split("\n")
+      values = ev.detail.split("\n")
     } catch (_) {
       values = []
     }

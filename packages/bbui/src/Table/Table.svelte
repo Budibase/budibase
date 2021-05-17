@@ -4,6 +4,16 @@
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
 
+  /**
+   * The expected schema is our normal couch schemas for our tables.
+   * Each field schema can be enriched with a few extra properties to customise
+   * the behaviour.
+   * All of these are optional and do not need to be added.
+   * displayName: Overrides the field name displayed as the column title
+   * sortable: Set to false to disable sorting data by a certain column
+   * editable: Set to false to disable editing a certain column if the
+   *  allowEditColumns prop is true
+   */
   export let data = []
   export let schema = {}
   export let showAutoColumns = false
@@ -462,10 +472,6 @@
   }
   tbody tr.hidden {
     height: calc(var(--row-height) + 1px);
-  }
-  tbody tr.offset {
-    background-color: red;
-    display: block;
   }
   td {
     padding-top: 0;

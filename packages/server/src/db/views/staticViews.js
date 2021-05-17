@@ -84,6 +84,7 @@ async function searchIndex(appId, indexName, fnString) {
   designDoc.indexes = {
     [indexName]: {
       index: fnString,
+      analyzer: "keyword",
     },
   }
   await db.put(designDoc)
@@ -96,11 +97,15 @@ exports.createAllSearchIndex = async appId => {
     function (doc) {
       function idx(input, prev) {
         for (let key of Object.keys(input)) {
-          const idxKey = prev != null ? `${prev}.${key}` : key
-          if (key === "_id" || key === "_rev") {
+          let idxKey = prev != null ? `${prev}.${key}` : key
+          idxKey = idxKey.replace(/ /, "_")
+          if (key === "_id" || key === "_rev" || input[key] == null) {
             continue
           }
-          if (typeof input[key] !== "object") {
+          if (typeof input[key] === "string") {
+            // eslint-disable-next-line no-undef
+            index(idxKey, input[key].toLowerCase(), { store: true })
+          } else if (typeof input[key] !== "object") {
             // eslint-disable-next-line no-undef
             index(idxKey, input[key], { store: true })
           } else {
