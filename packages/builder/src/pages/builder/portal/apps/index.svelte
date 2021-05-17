@@ -18,6 +18,7 @@
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { apps } from "stores/portal"
+  import { auth } from "stores/backend"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -61,6 +62,11 @@
   }
 
   const openApp = app => {
+    if (app.lockedBy && app.lockedBy?.email === $auth.user?.email) {
+      notifications.error(`App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`)
+      return
+    }
+
     if (appStatus === AppStatus.DEV) {
       $goto(`../../app/${app.appId}`)
     } else {
