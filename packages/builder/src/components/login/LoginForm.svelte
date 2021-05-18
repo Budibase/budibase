@@ -52,9 +52,9 @@
       </Layout>
       <Layout gap="S" noPadding>
         <Button cta on:click={login}>Sign in to Budibase</Button>
-        <ActionButton quiet on:click={() => $goto("./forgot")}
-          >Forgot password?</ActionButton
-        >
+        <ActionButton quiet on:click={() => $goto("./forgot")}>
+          Forgot password?
+        </ActionButton>
       </Layout>
     </Layout>
   </div>
