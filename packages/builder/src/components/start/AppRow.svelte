@@ -8,8 +8,6 @@
     MenuItem,
     Link,
   } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { url } from "@roxi/routify"
   import { auth } from "stores/backend"
 
   export let app
@@ -34,8 +32,13 @@
 </div>
 <div class:last>
   {#if app.lockedBy}
-    <div class="status status--locked-you" />
-    Locked by {app.lockedBy.email}
+    {#if app.lockedBy.email === $auth.user.email}
+      <div class="status status--locked-you" />
+      Locked by you
+    {:else}
+      <div class="status status--locked-other" />
+      Locked by {app.lockedBy.email}
+    {/if}
   {:else}
     <div class="status status--open" />
     Open
