@@ -55,13 +55,15 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
 
   const cronTriggerRemoved =
     isCronTrigger(oldAuto) && !isCronTrigger(newAuto) && oldTrigger.cronJobId
-  const cronTriggerAdded = !isCronTrigger(oldAuto) && isCronTrigger(newAuto)
+  const cronTriggerDeactivated = !newAuto.live && oldAuto.live
 
-  if (cronTriggerRemoved) {
+  const cronTriggerActivated = newAuto.live && !oldAuto.live
+
+  if (cronTriggerRemoved || cronTriggerDeactivated) {
     await triggers.automationQueue.removeRepeatableByKey(oldTrigger.cronJobId)
   }
   // need to create cron job
-  else if (cronTriggerAdded) {
+  else if (isCronTrigger(newAuto) && cronTriggerActivated) {
     const job = await triggers.automationQueue.add(
       { automation: newAuto, event: { appId } },
       { repeat: { cron: newTrigger.inputs.cron } }
