@@ -8,7 +8,7 @@
 </script>
 
 <h1
-  style="{textAlign ? `text-align:${textAlign}` : ``}"
+  style={textAlign ? `text-align:${textAlign}` : ``}
   class:noPadding
   class="spectrum-Heading spectrum-Heading--size{size}"
 >

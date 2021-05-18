@@ -1,14 +1,16 @@
 const csv = require("csvtojson")
+const { FieldTypes } = require("../constants")
 
 const VALIDATORS = {
-  string: () => true,
-  number: attribute => !isNaN(Number(attribute)),
-  datetime: attribute => !isNaN(new Date(attribute).getTime()),
+  [FieldTypes.STRING]: () => true,
+  [FieldTypes.OPTIONS]: () => true,
+  [FieldTypes.NUMBER]: attribute => !isNaN(Number(attribute)),
+  [FieldTypes.DATETIME]: attribute => !isNaN(new Date(attribute).getTime()),
 }
 
 const PARSERS = {
-  number: attribute => Number(attribute),
-  datetime: attribute => new Date(attribute).toISOString(),
+  [FieldTypes.NUMBER]: attribute => Number(attribute),
+  [FieldTypes.DATETIME]: attribute => new Date(attribute).toISOString(),
 }
 
 function parse(csvString, parsers) {
