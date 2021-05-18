@@ -1,11 +1,5 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { users } from "stores/portal"
@@ -34,14 +28,13 @@
     </Layout>
     <Layout gap="XS">
       <Heading textAlign="center" size="M">Accept Invitation</Heading>
-      <Body textAlign="center" size="S">Please enter a password to setup your user.</Body>
+      <Body textAlign="center" size="S"
+        >Please enter a password to setup your user.</Body
+      >
       <PasswordRepeatInput bind:error bind:password />
     </Layout>
     <Layout gap="S">
-      <Button
-        disabled={error}
-        cta
-        on:click={acceptInvite}>Accept invite</Button
+      <Button disabled={error} cta on:click={acceptInvite}>Accept invite</Button
       >
     </Layout>
   </div>

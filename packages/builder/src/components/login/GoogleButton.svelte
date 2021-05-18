@@ -12,7 +12,6 @@
   </Link>
 </div>
 
-
 <style>
   .outer {
     border: 1px solid #494949;
