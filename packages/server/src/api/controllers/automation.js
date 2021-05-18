@@ -4,11 +4,6 @@ const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
 const webhooks = require("./webhook")
 const { getAutomationParams, generateAutomationID } = require("../../db/utils")
-const { JobQueues } = require("../../constants")
-const { utils } = require("@budibase/auth/redis")
-const Queue = env.isTest()
-  ? require("../utilities/queue/inMemoryQueue")
-  : require("bull")
 
 const WH_STEP_ID = triggers.BUILTIN_DEFINITIONS.WEBHOOK.stepId
 const CRON_STEP_ID = triggers.BUILTIN_DEFINITIONS.CRON.stepId
@@ -58,39 +53,21 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
     )
   }
 
-  // TODO: AUTO GENERATED ID THAT CAN BE USED TO KILL THE CRON JOB ON CHANGE
+  const cronTriggerRemoved =
+    isCronTrigger(oldAuto) && !isCronTrigger(newAuto) && oldTrigger.cronJobId
+  const cronTriggerAdded = !isCronTrigger(oldAuto) && isCronTrigger(newAuto)
 
-  // need to delete cron trigger
-  if (
-    isCronTrigger(oldAuto) &&
-    !isCronTrigger(newAuto) &&
-    oldTrigger.webhookId
-  ) {
-    triggers.automationQueue.add("cron", { repeat: { cron: newAuto.inputs.cron } });
-    // let db = new CouchDB(appId)
-    // // need to get the webhook to get the rev
-    // const webhook = await db.get(oldTrigger.webhookId)
-    // const ctx = {
-    //   appId,
-    //   params: { id: webhook._id, rev: webhook._rev },
-    // }
-    // // might be updating - reset the inputs to remove the URLs
-    // if (newTrigger) {
-    //   delete newTrigger.webhookId
-    //   newTrigger.inputs = {}
-    // }
-    // await webhooks.destroy(ctx)
+  if (cronTriggerRemoved) {
+    await triggers.automationQueue.removeRepeatableByKey(oldTrigger.cronJobId)
   }
   // need to create cron job
-  else if (!isCronTrigger(oldAuto) && isCronTrigger(newAuto)) {
-    automationQueue.add(newAuto, { repeat: { cron: newAuto.inputs.cron } });
-
-    const id = ctx.body.webhook._id
-    // newTrigger.webhookId = id
-    // newTrigger.inputs = {
-    //   schemaUrl: `api/webhooks/schema/${appId}/${id}`,
-    //   triggerUrl: `api/webhooks/trigger/${appId}/${id}`,
-    // }
+  else if (cronTriggerAdded) {
+    const job = await triggers.automationQueue.add(
+      { automation: newAuto, event: { appId } },
+      { repeat: { cron: newTrigger.inputs.cron } }
+    )
+    // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
+    newTrigger.cronJobId = job.id
   }
   return newAuto
 }
@@ -240,6 +217,10 @@ exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const oldAutomation = await db.get(ctx.params.id)
   await checkForWebhooks({
+    appId: ctx.appId,
+    oldAuto: oldAutomation,
+  })
+  await checkForCronTriggers({
     appId: ctx.appId,
     oldAuto: oldAutomation,
   })

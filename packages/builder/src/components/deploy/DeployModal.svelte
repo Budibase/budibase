@@ -61,7 +61,6 @@
 
   // Required to check any updated deployment statuses between polls
   function checkIncomingDeploymentStatus(current, incoming) {
-    console.log(current, incoming)
     for (let incomingDeployment of incoming) {
       if (
         incomingDeployment.status === DeploymentStatus.FAILURE ||
