@@ -68,9 +68,6 @@
     justify-content: flex-start;
     align-items: stretch;
   }
-  .center {
-    text-align: center;
-  }
   img {
     width: 40px;
     margin: 0 auto;
