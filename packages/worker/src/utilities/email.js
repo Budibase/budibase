@@ -117,6 +117,10 @@ async function getSmtpConfiguration(db, groupId = null) {
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
 exports.isEmailConfigured = async (groupId = null) => {
+  // when "testing" simply return true
+  if (TEST_MODE) {
+    return true
+  }
   const db = new CouchDB(GLOBAL_DB)
   const config = await getSmtpConfiguration(db, groupId)
   return config != null
