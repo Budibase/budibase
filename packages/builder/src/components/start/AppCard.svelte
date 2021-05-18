@@ -25,11 +25,11 @@
   <Layout noPadding gap="XS" alignContent="start">
     <div class="preview" use:gradient={{ seed: app.name }} />
     <div class="title">
-      <Link on:click={() => openApp(app)}>
+      <div class="name" on:click={() => openApp(app)}>
         <Heading size="XS">
           {app.name}
         </Heading>
-      </Link>
+      </div>
       <ActionMenu align="right">
         <Icon slot="control" name="More" hoverable />
         <MenuItem on:click={() => exportApp(app)} icon="Download">
@@ -76,7 +76,7 @@
     align-items: center;
   }
 
-  .title :global(a) {
+  .name {
     text-decoration: none;
     flex: 1 1 auto;
     width: 0;
