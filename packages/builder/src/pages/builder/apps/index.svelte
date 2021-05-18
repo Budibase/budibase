@@ -21,6 +21,7 @@
   let loaded = false
 
   onMount(async () => {
+    await organisation.init()
     await apps.load(AppStatus.DEV)
     loaded = true
   })

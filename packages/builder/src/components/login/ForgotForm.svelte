@@ -1,29 +1,25 @@
 <script>
-  import {
-    Input,
-    Button,
-    Layout,
-    Body,
-    Heading,
-  } from "@budibase/bbui"
+  import { Input, Button, Layout, Body, Heading } from "@budibase/bbui"
+  import { organisation } from "stores/portal"
 
   let username = ""
   let password = ""
 
-  async function reset() {
-
-  }
+  async function reset() {}
 </script>
 
 <div class="login">
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src="https://i.imgur.com/ZKyklgF.png" />
+        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Forgotten your password?</Heading>
-        <Body size="S" textAlign="center">No problem! Just enter your account's email address and we'll send you a link to reset it.</Body>
+        <Body size="S" textAlign="center">
+          No problem! Just enter your account's email address and we'll send you
+          a link to reset it.
+        </Body>
         <Input label="Email" bind:value={username} />
       </Layout>
       <Button cta on:click={reset}>Reset your password</Button>

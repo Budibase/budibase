@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
-  import { admin } from "stores/portal"
+  import { admin, organisation } from "stores/portal"
 
   let adminUser = {}
 
@@ -33,7 +33,7 @@
 <section>
   <div class="container">
     <Layout>
-      <img src="https://i.imgur.com/ZKyklgF.png" />
+      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
         <Body size="M" textAlign="center" noPadding>
