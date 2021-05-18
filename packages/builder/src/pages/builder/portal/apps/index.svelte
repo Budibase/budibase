@@ -62,7 +62,7 @@
   }
 
   const openApp = app => {
-    if (app.lockedBy && app.lockedBy?.email === $auth.user?.email) {
+    if (app.lockedBy && app.lockedBy?.email !== $auth.user?.email) {
       notifications.error(
         `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
       )
