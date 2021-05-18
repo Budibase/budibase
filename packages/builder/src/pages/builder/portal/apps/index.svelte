@@ -160,7 +160,7 @@
         />
       </ActionGroup>
     </div>
-    {#if $apps.length}
+    {#if loaded && $apps.length}
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
@@ -230,7 +230,7 @@
   }
 
   .select {
-    width: 120px;
+    width: 150px;
   }
 
   .appGrid {
@@ -248,7 +248,7 @@
     height: 70px;
     display: grid;
     align-items: center;
-    gap: var(--spacing-xl);
+    grid-gap: var(--spacing-xl);
     grid-template-columns: auto 1fr;
     white-space: nowrap;
     overflow: hidden;
