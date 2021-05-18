@@ -1,6 +1,12 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { Button, Icon, Modal, notifications, ModalContent } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    Modal,
+    notifications,
+    ModalContent,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import { apps } from "stores/portal"
   import api from "builderStore/api"
@@ -15,8 +21,10 @@
       const json = await response.json()
       if (response.status !== 200) throw json.message
 
-      // Reset frontend state after revert  
-      const applicationPkg = await api.get(`/api/applications/${appId}/appPackage`)
+      // Reset frontend state after revert
+      const applicationPkg = await api.get(
+        `/api/applications/${appId}/appPackage`
+      )
       const pkg = await applicationPkg.json()
       if (applicationPkg.ok) {
         await store.actions.initialise(pkg)
@@ -31,14 +39,12 @@
   }
 </script>
 
-
 <Icon name="Revert" hoverable on:click={revertModal.show} />
 <Modal bind:this={revertModal}>
-<ModalContent
-  title="Revert Changes"
-  confirmText="Revert"
-  onConfirm={revert}
->
-  <span>The changes you have made will be deleted and the application reverted back to its production state.</span>
-</ModalContent>
+  <ModalContent title="Revert Changes" confirmText="Revert" onConfirm={revert}>
+    <span
+      >The changes you have made will be deleted and the application reverted
+      back to its production state.</span
+    >
+  </ModalContent>
 </Modal>

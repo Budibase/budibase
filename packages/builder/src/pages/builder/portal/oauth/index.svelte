@@ -1,7 +1,8 @@
 <script>
-  import GoogleLogo from "./logos/Google.svelte"
+  import GoogleLogo from "./_logos/Google.svelte"
   import {
     Button,
+    Page,
     Heading,
     Divider,
     Label,
@@ -9,7 +10,6 @@
     Layout,
     Input,
     Body,
-    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"

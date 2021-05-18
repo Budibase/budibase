@@ -1,18 +1,26 @@
-const { QueryBuilder, buildSearchUrl, search } = require("./utils")
+const { fullSearch, paginatedSearch } = require("./utils")
+const CouchDB = require("../../../db")
+const { outputProcessing } = require("../../../utilities/rowProcessor")
 
 exports.rowSearch = async ctx => {
   const appId = ctx.appId
   const { tableId } = ctx.params
-  const { bookmark, query, raw } = ctx.request.body
-  let url
-  if (query) {
-    url = new QueryBuilder(appId, query, bookmark).addTable(tableId).complete()
-  } else if (raw) {
-    url = buildSearchUrl({
-      appId,
-      query: raw,
-      bookmark,
-    })
+  const db = new CouchDB(appId)
+  const { paginate, query, ...params } = ctx.request.body
+  params.tableId = tableId
+
+  let response
+  if (paginate) {
+    response = await paginatedSearch(appId, query, params)
+  } else {
+    response = await fullSearch(appId, query, params)
   }
-  ctx.body = await search(url)
+
+  // Enrich search results with relationships
+  if (response.rows && response.rows.length) {
+    const table = await db.get(tableId)
+    response.rows = await outputProcessing(appId, table, response.rows)
+  }
+
+  ctx.body = response
 }

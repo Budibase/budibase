@@ -5,7 +5,6 @@
   export let id = null
   export let label = null
   export let labelPosition = "above"
-  export let disabled = false
   export let error = null
 </script>
 

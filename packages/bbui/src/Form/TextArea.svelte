@@ -18,7 +18,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {disabled} {error}>
+<Field {label} {labelPosition} {error}>
   <TextArea
     bind:getCaretPosition
     {error}

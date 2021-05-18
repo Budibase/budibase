@@ -6,10 +6,6 @@ html, body {
     min-height: 100%;
 }
 
-.spectrum--light {
-    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-75);
-}
-
 body {
     --background: var(--spectrum-alias-background-color-primary);
     --background-alt: var(--spectrum-alias-background-color-secondary);

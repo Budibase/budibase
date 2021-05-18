@@ -39,8 +39,18 @@
 </script>
 
 {#if loaded && $screenStore.activeLayout}
-  <Provider key="user" data={$authStore} {actions}>
-    <Component definition={$screenStore.activeLayout.props} />
-    <NotificationDisplay />
-  </Provider>
+  <div lang="en" dir="ltr" class="spectrum spectrum--medium spectrum--light">
+    <Provider key="user" data={$authStore} {actions}>
+      <Component definition={$screenStore.activeLayout.props} />
+      <NotificationDisplay />
+    </Provider>
+  </div>
 {/if}
+
+<style>
+  div {
+    background: transparent;
+    height: 100%;
+    position: relative;
+  }
+</style>

@@ -4,7 +4,7 @@ const processors = require("./processors")
 const { cloneDeep } = require("lodash/fp")
 const {
   removeNull,
-  addConstants,
+  updateContext,
   removeHandlebarsStatements,
 } = require("./utilities")
 const manifest = require("../manifest.json")
@@ -92,8 +92,7 @@ module.exports.processStringSync = (string, context) => {
   }
   // take a copy of input incase error
   const input = string
-  let clonedContext = removeNull(cloneDeep(context))
-  clonedContext = addConstants(clonedContext)
+  const clonedContext = removeNull(updateContext(cloneDeep(context)))
   // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."

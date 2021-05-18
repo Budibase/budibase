@@ -7,9 +7,8 @@ const {
   EmailTemplatePurpose,
 } = require("../constants")
 const { checkSlashesInUrl } = require("./index")
-const env = require("../environment")
 
-const LOCAL_URL = `http://localhost:${env.PORT}`
+const LOCAL_URL = `http://localhost:10000`
 const BASE_COMPANY = "Budibase"
 
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
@@ -42,7 +41,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
     case EmailTemplatePurpose.INVITATION:
       context[InternalTemplateBindings.INVITE_CODE] = code
       context[InternalTemplateBindings.INVITE_URL] = checkSlashesInUrl(
-        `${URL}/invite?code=${code}`
+        `${URL}/builder/invite?code=${code}`
       )
       break
   }

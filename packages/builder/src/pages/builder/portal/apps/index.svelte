@@ -62,15 +62,17 @@
   }
 
   const openApp = app => {
-    if (app.lockedBy && app.lockedBy?.email === $auth.user?.email) {
-      notifications.error(`App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`)
+    if (app.lockedBy && app.lockedBy?.email !== $auth.user?.email) {
+      notifications.error(
+        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+      )
       return
     }
 
     if (appStatus === AppStatus.DEV) {
       $goto(`../../app/${app.appId}`)
     } else {
-      window.open(`/${app.appId}`, '_blank');
+      window.open(`/${app.appId}`, "_blank")
     }
   }
 
