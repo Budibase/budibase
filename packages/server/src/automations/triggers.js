@@ -6,7 +6,7 @@ const Queue = env.isTest()
   : require("bull")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
-const { utils } = require("@budibase/auth").redis
+const { utils } = require("@budibase/auth/redis")
 
 const { opts } = utils.getRedisOptions()
 let automationQueue = new Queue("automationQueue", { redis: opts })

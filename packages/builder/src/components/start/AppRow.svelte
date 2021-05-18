@@ -8,18 +8,22 @@
     MenuItem,
     Link,
   } from "@budibase/bbui"
+  import { AppStatus } from "constants"
   import { url } from "@roxi/routify"
+  import { auth } from "stores/backend"
 
   export let app
   export let openApp
   export let exportApp
   export let deleteApp
+  export let releaseLock
   export let last
+  export let deletable
 </script>
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link href={$url(`../../app/${app._id}`)}>
+  <Link on:click={() => openApp(app)}>
     <Heading size="XS">
       {app.name}
     </Heading>
@@ -29,15 +33,12 @@
   Edited {Math.round(Math.random() * 10 + 1)} months ago
 </div>
 <div class:last>
-  {#if Math.random() < 0.33}
+  {#if app.lockedBy}
+    <div class="status status--locked-you" />
+    Locked by {app.lockedBy.email}
+  {:else}
     <div class="status status--open" />
     Open
-  {:else if Math.random() < 0.33}
-    <div class="status status--locked-other" />
-    Locked by Will Wheaton
-  {:else}
-    <div class="status status--locked-you" />
-    Locked by you
   {/if}
 </div>
 <div class:last>
@@ -45,7 +46,14 @@
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
-    <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+    {#if deletable}
+      <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+    {/if}
+    {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
+      <MenuItem on:click={() => releaseLock(app.appId)} icon="LockOpen">
+        Release Lock
+      </MenuItem>
+    {/if}
   </ActionMenu>
 </div>
 

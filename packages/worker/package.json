@@ -2,7 +2,7 @@
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
   "version": "0.8.16",
-  "description": "Budibase Deployment Server",
+  "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
     "type": "git",

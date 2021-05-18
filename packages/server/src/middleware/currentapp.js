@@ -1,8 +1,8 @@
 const { getAppId, setCookie, getCookie } = require("@budibase/auth").utils
 const { Cookies } = require("@budibase/auth").constants
-const { getRole } = require("../utilities/security/roles")
+const { getRole } = require("@budibase/auth/roles")
 const { getGlobalUsers } = require("../utilities/workerRequests")
-const { BUILTIN_ROLE_IDS } = require("../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
 
 module.exports = async (ctx, next) => {
@@ -31,9 +31,8 @@ module.exports = async (ctx, next) => {
     const globalUser = await getGlobalUsers(ctx, requestAppId, ctx.user._id)
     updateCookie = true
     appId = requestAppId
-    if (globalUser.roles && globalUser.roles[requestAppId]) {
-      roleId = globalUser.roles[requestAppId]
-    }
+    // retrieving global user gets the right role
+    roleId = globalUser.roleId
   } else if (appCookie != null) {
     appId = appCookie.appId
     roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC

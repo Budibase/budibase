@@ -1,10 +1,21 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Button, ActionGroup, ActionButton, Tabs, Tab } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    Modal,
+    ModalContent,
+    ActionGroup,
+    ActionButton,
+    Tabs,
+    Tab,
+  } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
+  import DeployModal from "components/deploy/DeployModal.svelte"
+  import RevertModal from "components/deploy/RevertModal.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "/assets/bb-logo.svg"
@@ -81,25 +92,15 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
-        <ThemeEditorDropdown />
-        <FeedbackNavLink />
-        <div class="topnavitemright">
-          <a
-            target="_blank"
-            href="https://github.com/Budibase/budibase/discussions"
-          >
-            <i class="ri-github-fill" />
-          </a>
-        </div>
-        <SettingsLink />
-        <Button
-          secondary
+        <RevertModal />
+        <Icon
+          name="Play"
+          hoverable
           on:click={() => {
             window.open(`/${application}`)
           }}
-        >
-          Preview
-        </Button>
+        />
+        <DeployModal />
       </div>
     </div>
     <div class="beta">
@@ -153,6 +154,7 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
+    gap: var(--spacing-xl);
   }
 
   .topleftnav {

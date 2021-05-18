@@ -14,3 +14,10 @@ exports.GlobalRoles = {
   BUILDER: "builder",
   GROUP_MANAGER: "group_manager",
 }
+
+exports.Configs = {
+  SETTINGS: "settings",
+  ACCOUNT: "account",
+  SMTP: "smtp",
+  GOOGLE: "google",
+}
