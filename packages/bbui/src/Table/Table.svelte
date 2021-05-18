@@ -282,6 +282,7 @@
             {#if sortedRows?.length && fields.length}
               {#each sortedRows as row, idx}
                 <tr
+                  on:click={() => dispatch("click", row)}
                   on:click={() => toggleSelectRow(row)}
                   class="spectrum-Table-row"
                   class:hidden={idx < firstVisibleRow || idx > lastVisibleRow}
