@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { isActive, goto } from "@roxi/routify"
+  import { isActive, goto, redirect } from "@roxi/routify"
   import { auth } from "stores/backend"
   import { admin } from "stores/portal"
 
@@ -16,14 +16,14 @@
   // Force creation of an admin user if one doesn't exist
   $: {
     if (loaded && !hasAdminUser) {
-      $goto("./admin")
+      $redirect("./admin")
     }
   }
 
   // Redirect to log in at any time if the user isn't authenticated
   $: {
     if (loaded && hasAdminUser && !$auth.user && !$isActive("./auth")) {
-      $goto("./auth/login")
+      $redirect("./auth/login")
     }
   }
 </script>

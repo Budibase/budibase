@@ -1,13 +1,6 @@
 <script>
   import { gradient } from "actions"
-  import {
-    Heading,
-    Button,
-    Icon,
-    ActionMenu,
-    MenuItem,
-    Link,
-  } from "@budibase/bbui"
+  import { Heading, Button, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
   import { auth } from "stores/backend"
 
   export let app
@@ -21,11 +14,11 @@
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link on:click={() => openApp(app)}>
+  <div class="name" on:click={() => openApp(app)}>
     <Heading size="XS">
       {app.name}
     </Heading>
-  </Link>
+  </div>
 </div>
 <div class:last>
   Edited {Math.round(Math.random() * 10 + 1)} months ago
@@ -66,7 +59,7 @@
     width: 40px;
     border-radius: var(--border-radius-s);
   }
-  .title :global(a) {
+  .name {
     text-decoration: none;
   }
   .title :global(h1:hover) {
