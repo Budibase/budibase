@@ -201,7 +201,7 @@ const BUILTIN_DEFINITIONS = {
     name: "Cron Trigger",
     event: "cron:trigger",
     icon: "ri-timer-line",
-    tagline: "Cron Trigger - {{inputs.cron}}",
+    tagline: "Cron Trigger (<b>{{inputs.cron}}</b>)",
     description: "Triggers automation on a cron schedule.",
     stepId: "CRON",
     inputs: {},
@@ -211,7 +211,7 @@ const BUILTIN_DEFINITIONS = {
           cron: {
             type: "string",
             customType: "cron",
-            title: "Cron Expression",
+            title: "Expression",
           },
         },
         required: ["cron"],
