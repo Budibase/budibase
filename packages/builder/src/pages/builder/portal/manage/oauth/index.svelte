@@ -2,7 +2,6 @@
   import GoogleLogo from "./_logos/Google.svelte"
   import {
     Button,
-    Page,
     Heading,
     Divider,
     Label,
@@ -10,6 +9,7 @@
     Layout,
     Input,
     Body,
+    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
@@ -60,55 +60,56 @@
 </script>
 
 <Page>
-  <Layout noPadding>
-    <div>
-      <Heading size="M">OAuth</Heading>
-      <Body>
-        Every budibase app comes with basic authentication (email/password)
-        included. You can add additional authentication methods from the options
-        below.
-      </Body>
-    </div>
-    <Divider />
-    {#if google}
-      <div>
+  <header>
+    <Heading size="M">OAuth</Heading>
+    <Body size="S">
+      Every budibase app comes with basic authentication (email/password)
+      included. You can add additional authentication methods from the options
+      below.
+    </Body>
+  </header>
+  <Divider />
+  {#if google}
+    <div class="config-form">
+      <Layout gap="S">
         <Heading size="S">
           <span>
             <GoogleLogo />
             Google
           </span>
         </Heading>
-        <Body>
-          To allow users to authenticate using their Google accounts, fill out
-          the fields below.
-        </Body>
-      </div>
-
-      {#each ConfigFields.Google as field}
-        <div class="form-row">
-          <Label size="L">{field}</Label>
-          <Input bind:value={google.config[field]} />
-        </div>
-      {/each}
-      <div>
-        <Button cta on:click={() => save(google)}>Save</Button>
-      </div>
-      <Divider />
-    {/if}
-  </Layout>
+        {#each ConfigFields.Google as field}
+          <div class="form-row">
+            <Label>{field}</Label>
+            <Input bind:value={google.config[field]} />
+          </div>
+        {/each}
+      </Layout>
+      <Button primary on:click={() => save(google)}>Save</Button>
+    </div>
+    <Divider />
+  {/if}
 </Page>
 
 <style>
+  .config-form {
+    margin-top: 42px;
+    margin-bottom: 42px;
+  }
+
   .form-row {
     display: grid;
     grid-template-columns: 20% 1fr;
     grid-gap: var(--spacing-l);
-    align-items: center;
   }
 
   span {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  header {
+    margin-bottom: 42px;
   }
 </style>

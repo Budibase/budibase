@@ -2,9 +2,9 @@
   import GoogleLogo from "./_logos/Google.svelte"
   import {
     Button,
-    Page,
     Heading,
     Divider,
+    Page,
     Label,
     notifications,
     Layout,
@@ -91,7 +91,7 @@
         </div>
       {/each}
       <div>
-        <Button cta on:click={() => save(google)}>Save</Button>
+        <Button primary on:click={() => save(google)}>Save</Button>
       </div>
       <Divider />
     {/if}
