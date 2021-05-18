@@ -7,9 +7,10 @@ const Queue = env.isTest()
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 const { utils } = require("@budibase/auth/redis")
+const { JobQueues } = require("../constants")
 
 const { opts } = utils.getRedisOptions()
-let automationQueue = new Queue("automationQueue", { redis: opts })
+let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
@@ -192,6 +193,46 @@ const BUILTIN_DEFINITIONS = {
           },
         },
         required: ["fields"],
+      },
+    },
+    type: "TRIGGER",
+  },
+  CRON: {
+    name: "Cron Trigger",
+    event: "cron:trigger",
+    icon: "ri-timer-line",
+    tagline: "Cron expression",
+    description: "Triggers automation on a cron schedule.",
+    stepId: "CRON",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          cron: {
+            type: "string",
+            customType: "cron",
+            title: "Cron Expression",
+          },
+        },
+        required: ["cron"],
+      },
+      outputs: {
+        properties: {
+          // row: {
+          //   type: "object",
+          //   customType: "row",
+          //   description: "The row that was updated",
+          // },
+          // id: {
+          //   type: "string",
+          //   description: "Row ID - can be used for updating",
+          // },
+          // revision: {
+          //   type: "string",
+          //   description: "Revision of row",
+          // },
+        },
+        // required: ["row", "id"],
       },
     },
     type: "TRIGGER",
