@@ -63,7 +63,7 @@
     <div class="buttons">
       <ButtonGroup>
         <Button disabled secondary>Import users</Button>
-        <Button overBackground on:click={createUserModal.show}>Add user</Button>
+        <Button primary on:click={createUserModal.show}>Add user</Button>
       </ButtonGroup>
     </div>
     <Table
