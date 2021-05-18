@@ -35,7 +35,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       context[InternalTemplateBindings.RESET_CODE] = code
       context[InternalTemplateBindings.RESET_URL] = checkSlashesInUrl(
-        `${URL}/reset?code=${code}`
+        `${URL}/builder/auth/reset?code=${code}`
       )
       break
     case EmailTemplatePurpose.INVITATION:
