@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { page, goto } from "@roxi/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { auth } from "stores/backend"
   import { admin } from "stores/portal"
 
@@ -22,12 +22,7 @@
 
   // Redirect to log in at any time if the user isn't authenticated
   $: {
-    if (
-      !$page.path.includes("/builder/invite") &&
-      loaded &&
-      hasAdminUser &&
-      !$auth.user
-    ) {
+    if (loaded && hasAdminUser && !$auth.user && !$isActive("./auth")) {
       $goto("./auth/login")
     }
   }
