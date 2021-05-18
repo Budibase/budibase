@@ -201,7 +201,7 @@ const BUILTIN_DEFINITIONS = {
     name: "Cron Trigger",
     event: "cron:trigger",
     icon: "ri-timer-line",
-    tagline: "Cron expression",
+    tagline: "Cron Trigger - {{inputs.cron}}",
     description: "Triggers automation on a cron schedule.",
     stepId: "CRON",
     inputs: {},
@@ -218,19 +218,10 @@ const BUILTIN_DEFINITIONS = {
       },
       outputs: {
         properties: {
-          // row: {
-          //   type: "object",
-          //   customType: "row",
-          //   description: "The row that was updated",
-          // },
-          // id: {
-          //   type: "string",
-          //   description: "Row ID - can be used for updating",
-          // },
-          // revision: {
-          //   type: "string",
-          //   description: "Revision of row",
-          // },
+          body: {
+            type: "object",
+            description: "Body of the request which hit the webhook",
+          },
         },
         // required: ["row", "id"],
       },
