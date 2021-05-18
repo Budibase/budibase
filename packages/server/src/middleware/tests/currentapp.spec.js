@@ -8,7 +8,8 @@ function mockWorker() {
         _id: "us_uuid1",
         roles: {
           "app_test": "BASIC",
-        }
+        },
+        roleId: "BASIC",
       }
     }
   }))

@@ -7,3 +7,7 @@ module.exports.setDB = pouch => {
 module.exports.getDB = dbName => {
   return new Pouch(dbName)
 }
+
+module.exports.getCouch = () => {
+  return Pouch
+}

@@ -3,7 +3,7 @@ const controller = require("../controllers/search")
 const {
   PermissionTypes,
   PermissionLevels,
-} = require("../../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
 const authorized = require("../../middleware/authorized")
 const { paramResource } = require("../../middleware/resourceId")
 

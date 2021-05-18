@@ -4,6 +4,7 @@ const groupRoutes = require("./admin/groups")
 const templateRoutes = require("./admin/templates")
 const emailRoutes = require("./admin/email")
 const authRoutes = require("./admin/auth")
+const roleRoutes = require("./admin/roles")
 const appRoutes = require("./app")
 
 exports.routes = [
@@ -14,4 +15,5 @@ exports.routes = [
   appRoutes,
   templateRoutes,
   emailRoutes,
+  roleRoutes,
 ]

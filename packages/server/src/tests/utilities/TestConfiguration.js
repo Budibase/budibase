@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const env = require("../../environment")
 const {
   basicTable,
@@ -16,7 +16,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
-const { StaticDatabases } = require("@budibase/auth").db
+const { StaticDatabases } = require("@budibase/auth/db")
 const CouchDB = require("../../db")
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -89,7 +89,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     }
-    cleanup(this.allApps.map(app => app._id))
+    cleanup(this.allApps.map(app => app.appId))
   }
 
   defaultHeaders() {
@@ -141,7 +141,7 @@ class TestConfiguration {
 
   async createApp(appName) {
     this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app._id
+    this.appId = this.app.appId
     this.allApps.push(this.app)
     return this.app
   }

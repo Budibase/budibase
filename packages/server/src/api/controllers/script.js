@@ -9,14 +9,16 @@ class ScriptExecutor {
   }
 
   execute() {
-    const returnValue = this.script.runInContext(this.context)
-    return returnValue
+    return this.script.runInContext(this.context)
   }
 }
 
 exports.execute = async function (ctx) {
   const executor = new ScriptExecutor(ctx.request.body)
 
-  const result = executor.execute()
-  ctx.body = result
+  ctx.body = executor.execute()
+}
+
+exports.save = async function (ctx) {
+  ctx.throw(501, "Not currently implemented")
 }

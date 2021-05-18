@@ -23,8 +23,8 @@
   import { onMount } from "svelte"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
-  import TemplateBindings from "./TemplateBindings.svelte"
-  import TemplateLink from "./TemplateLink.svelte"
+  import TemplateBindings from "./_components/TemplateBindings.svelte"
+  import TemplateLink from "./_components/TemplateLink.svelte"
   import api from "builderStore/api"
 
   const ConfigTypes = {

@@ -1,5 +1,3 @@
-const { getAppQuota } = require("./quota")
-const env = require("../../../environment")
 const newid = require("../../../db/newid")
 
 /**
@@ -11,24 +9,6 @@ class Deployment {
     this._id = id || newid()
   }
 
-  // purely so that we can do quota stuff outside the main deployment context
-  async init() {
-    if (!env.SELF_HOSTED) {
-      this.setQuota(await getAppQuota(this.appId))
-    }
-  }
-
-  setQuota(quota) {
-    if (!quota) {
-      return
-    }
-    this.quota = quota
-  }
-
-  getQuota() {
-    return this.quota
-  }
-
   getAppId() {
     return this.appId
   }
@@ -38,9 +18,6 @@ class Deployment {
       return
     }
     this.verification = verification
-    if (this.verification.quota) {
-      this.quota = this.verification.quota
-    }
   }
 
   getVerification() {
@@ -58,9 +35,6 @@ class Deployment {
     if (json.verification) {
       this.setVerification(json.verification)
     }
-    if (json.quota) {
-      this.setQuota(json.quota)
-    }
     if (json.status) {
       this.setStatus(json.status, json.err)
     }
@@ -77,9 +51,6 @@ class Deployment {
     }
     if (this.verification && this.verification.cfDistribution) {
       obj.cfDistribution = this.verification.cfDistribution
-    }
-    if (this.quota) {
-      obj.quota = this.quota
     }
     return obj
   }
