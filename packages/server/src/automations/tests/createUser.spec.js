@@ -1,6 +1,6 @@
 const usageQuota = require("../../utilities/usageQuota")
 const setup = require("./utilities")
-const { BUILTIN_ROLE_IDS } = require("../../utilities/security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { InternalTables } = require("../../db/utils")
 
 jest.mock("../../utilities/usageQuota")

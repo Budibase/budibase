@@ -11,6 +11,7 @@
 </script>
 
 <a
+  on:click
   {href}
   {target}
   class:spectrum-Link--primary={primary}
