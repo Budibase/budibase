@@ -16,7 +16,6 @@
     } catch (err) {
       notifications.error("Unable to reset password")
     }
-
   }
 </script>
 
@@ -33,7 +32,9 @@
         </Body>
         <PasswordRepeatInput bind:password bind:error />
       </Layout>
-      <Button cta on:click={reset} disabled={error || !resetCode}>Reset your password</Button>
+      <Button cta on:click={reset} disabled={error || !resetCode}
+        >Reset your password</Button
+      >
     </Layout>
   </div>
 </div>

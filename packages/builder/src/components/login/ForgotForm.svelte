@@ -30,12 +30,14 @@
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Forgotten your password?</Heading>
         <Body size="S" textAlign="center">
-          No problem! Just enter your account's email address and we'll send
-          you a link to reset it.
+          No problem! Just enter your account's email address and we'll send you
+          a link to reset it.
         </Body>
         <Input label="Email" bind:value={email} />
       </Layout>
-      <Button cta on:click={forgot} disabled={!email}>Reset your password</Button>
+      <Button cta on:click={forgot} disabled={!email}
+        >Reset your password</Button
+      >
     </Layout>
   </div>
 </div>
