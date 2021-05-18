@@ -76,6 +76,7 @@
       this={control}
       {componentInstance}
       value={safeValue}
+      updateOnChange={false}
       on:change={handleChange}
       onChange={handleChange}
       {type}
