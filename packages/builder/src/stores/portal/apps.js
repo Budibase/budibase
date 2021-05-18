@@ -4,15 +4,16 @@ import { get } from "builderStore/api"
 export function createAppStore() {
   const store = writable([])
 
-  async function load() {
+  async function load(status = "") {
     try {
-      const res = await get("/api/applications")
+      const res = await get(`/api/applications?status=${status}`)
       const json = await res.json()
       if (res.ok && Array.isArray(json)) {
         store.set(json)
       } else {
         store.set([])
       }
+      return json
     } catch (error) {
       store.set([])
     }

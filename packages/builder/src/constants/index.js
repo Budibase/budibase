@@ -9,6 +9,11 @@ export const FrontendTypes = {
   NONE: "none",
 }
 
+export const AppStatus = {
+  DEV: "dev",
+  PUBLISHED: "published",
+}
+
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = ["email", "password", "roleId", "status"]
 

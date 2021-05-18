@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
-const { AccessController } = require("../../utilities/security/roles")
+const { AccessController } = require("@budibase/auth/roles")
 
 exports.fetch = async ctx => {
   const appId = ctx.appId

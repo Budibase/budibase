@@ -14,14 +14,14 @@ exports.getAllTableRows = async config => {
 }
 
 exports.clearAllApps = async () => {
-  const req = {}
+  const req = { query: { status: "dev" } }
   await appController.fetch(req)
   const apps = req.body
   if (!apps || apps.length <= 0) {
     return
   }
   for (let app of apps) {
-    const appId = app._id
+    const { appId } = app
     await appController.delete(new Request(null, { appId }))
   }
 }

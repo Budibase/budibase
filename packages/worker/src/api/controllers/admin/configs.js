@@ -118,16 +118,17 @@ exports.upload = async function (ctx) {
   // add to configuration structure
   // TODO: right now this only does a global level
   const db = new CouchDB(GLOBAL_DB)
-  let config = await getScopedFullConfig(db, { type })
-  if (!config) {
-    config = {
+  let cfgStructure = await getScopedFullConfig(db, { type })
+  if (!cfgStructure) {
+    cfgStructure = {
       _id: generateConfigID({ type }),
+      config: {},
     }
   }
   const url = `/${bucket}/${key}`
-  config[`${name}Url`] = url
+  cfgStructure.config[`${name}Url`] = url
   // write back to db with url updated
-  await db.put(config)
+  await db.put(cfgStructure)
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",

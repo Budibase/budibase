@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { DocumentTypes } = require("@budibase/auth").db
 const CouchDB = require("../../db")
 const env = require("../../environment")
 
@@ -14,7 +15,9 @@ exports.getApps = async ctx => {
     allDbs = await CouchDB.allDbs()
   }
   const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
-  const appPromises = appDbNames.map(db => new CouchDB(db).get(db))
+  const appPromises = appDbNames.map(db =>
+    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+  )
 
   const apps = await Promise.allSettled(appPromises)
   const body = {}
@@ -26,7 +29,7 @@ exports.getApps = async ctx => {
     let url = app.url || encodeURI(`${app.name}`)
     url = `/${url.replace(URL_REGEX_SLASH, "")}`
     body[url] = {
-      appId: app._id,
+      appId: app.appId,
       name: app.name,
       url,
     }

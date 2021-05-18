@@ -13,6 +13,7 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
+const redis = require("./utilities/redis")
 
 const app = new Koa()
 
@@ -84,6 +85,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await automations.init()
+  await redis.init()
 })
 
 process.on("uncaughtException", err => {

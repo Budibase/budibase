@@ -1,5 +1,4 @@
 const { SearchIndexes } = require("../../../db/utils")
-const { checkSlashesInUrl } = require("../../../utilities")
 const env = require("../../../environment")
 const fetch = require("node-fetch")
 
@@ -10,7 +9,7 @@ const fetch = require("node-fetch")
  * @returns {string}
  */
 const luceneEscape = value => {
-  return `${value}`.replace(/[ #+\-&|!(){}\[\]^"~*?:\\]/g, "\\$&")
+  return `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
 }
 
 /**

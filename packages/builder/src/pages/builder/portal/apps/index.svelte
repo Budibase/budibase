@@ -18,19 +18,24 @@
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { apps } from "stores/portal"
+  import { auth } from "stores/backend"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
+  import { AppStatus } from "constants"
 
   let layout = "grid"
+  let appStatus = AppStatus.PUBLISHED
   let template
   let appToDelete
   let creationModal
   let deletionModal
   let creatingApp = false
   let loaded = false
+
+  $: appStatus && apps.load(appStatus)
 
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
@@ -57,13 +62,24 @@
   }
 
   const openApp = app => {
-    $goto(`../../app/${app._id}`)
+    if (app.lockedBy && app.lockedBy?.email !== $auth.user?.email) {
+      notifications.error(
+        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+      )
+      return
+    }
+
+    if (appStatus === AppStatus.DEV) {
+      $goto(`../../app/${app.appId}`)
+    } else {
+      window.open(`/${app.appId}`, "_blank")
+    }
   }
 
   const exportApp = app => {
     try {
       download(
-        `/api/backups/export?appId=${app._id}&appname=${encodeURIComponent(
+        `/api/backups/export?appId=${app.appId}&appname=${encodeURIComponent(
           app.name
         )}`
       )
@@ -83,54 +99,77 @@
     if (!appToDelete) {
       return
     }
+
     await del(`/api/applications/${appToDelete?._id}`)
     await apps.load()
     appToDelete = null
+    notifications.success("App deleted successfully.")
+  }
+
+  const releaseLock = async appId => {
+    try {
+      const response = await del(`/api/dev/${appId}/lock`)
+      const json = await response.json()
+      if (response.status !== 200) throw json.message
+
+      notifications.success("Lock released")
+      await apps.load(appStatus)
+    } catch (err) {
+      notifications.error(`Error releasing lock: ${err}`)
+    }
   }
 
   onMount(async () => {
     checkKeys()
-    await apps.load()
+    await apps.load(appStatus)
     loaded = true
   })
 </script>
 
 <Page wide>
-  {#if $apps.length}
-    <Layout noPadding>
-      <div class="title">
-        <Heading>Apps</Heading>
-        <ButtonGroup>
-          <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create new app</Button>
-        </ButtonGroup>
+  <Layout noPadding>
+    <div class="title">
+      <Heading>Apps</Heading>
+      <ButtonGroup>
+        <Button secondary on:click={initiateAppImport}>Import app</Button>
+        <Button cta on:click={initiateAppCreation}>Create new app</Button>
+      </ButtonGroup>
+    </div>
+    <div class="filter">
+      <div class="select">
+        <Select
+          bind:value={appStatus}
+          options={[
+            { label: "Published", value: AppStatus.PUBLISHED },
+            { label: "In Development", value: AppStatus.DEV },
+          ]}
+        />
       </div>
-      <div class="filter">
-        <div class="select">
-          <Select quiet placeholder="Filter by groups" />
-        </div>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => (layout = "grid")}
-            selected={layout === "grid"}
-            quiet
-            icon="ClassicGridView"
-          />
-          <ActionButton
-            on:click={() => (layout = "table")}
-            selected={layout === "table"}
-            quiet
-            icon="ViewRow"
-          />
-        </ActionGroup>
-      </div>
+      <ActionGroup>
+        <ActionButton
+          on:click={() => (layout = "grid")}
+          selected={layout === "grid"}
+          quiet
+          icon="ClassicGridView"
+        />
+        <ActionButton
+          on:click={() => (layout = "table")}
+          selected={layout === "table"}
+          quiet
+          icon="ViewRow"
+        />
+      </ActionGroup>
+    </div>
+    {#if $apps.length}
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each $apps as app, idx (app._id)}
+        {#each $apps as app, idx (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
+            deletable={appStatus === AppStatus.PUBLISHED}
+            {releaseLock}
             {app}
             {openApp}
             {exportApp}
@@ -139,8 +178,8 @@
           />
         {/each}
       </div>
-    </Layout>
-  {/if}
+    {/if}
+  </Layout>
   {#if !$apps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>

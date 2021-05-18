@@ -12,6 +12,7 @@
     notifications,
   } from "@budibase/bbui"
   import { organisation } from "stores/portal"
+  import { post } from "builderStore/api"
   import analytics from "analytics"
   let analyticsDisabled = analytics.disabled()
 
@@ -24,18 +25,30 @@
   }
 
   let loading = false
+  let file
 
-  $: company = $organisation?.company
-  $: logoUrl = $organisation.logoUrl
+  async function uploadLogo() {
+    let data = new FormData()
+    data.append("file", file)
+
+    const res = await post("/api/admin/configs/upload/settings/logo", data, {})
+    return await res.json()
+  }
 
   async function saveConfig() {
     loading = true
     await toggleAnalytics()
-    const res = await organisation.save({ ...$organisation, company })
+    if (file) {
+      await uploadLogo()
+    }
+    const res = await organisation.save({
+      company: $organisation.company,
+      platformUrl: $organisation.platformUrl,
+    })
     if (res.status === 200) {
-      notifications.success("General settings saved.")
+      notifications.success("Settings saved.")
     } else {
-      notifications.danger("Error when saving settings.")
+      notifications.error(res.message)
     }
     loading = false
   }
@@ -46,10 +59,9 @@
     <div class="intro">
       <Heading size="M">General</Heading>
       <Body>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Hic vero, aut
-        culpa provident sunt ratione! Voluptas doloremque, dicta nisi velit
-        perspiciatis, ratione vel blanditiis totam, nam voluptate repellat
-        aperiam fuga!
+        General is the place where you edit your organisation name, logo. You
+        can also configure your platform URL as well as turn on or off
+        analytics.
       </Body>
     </div>
     <Divider size="S" />
@@ -59,14 +71,30 @@
       <div class="fields">
         <div class="field">
           <Label size="L">Organization name</Label>
-          <Input thin bind:value={company} />
+          <Input thin bind:value={$organisation.company} />
         </div>
-        <!-- <div class="field">
-          <Label>Logo</Label>
+        <div class="field logo">
+          <Label size="L">Logo</Label>
           <div class="file">
-            <Dropzone />
+            <Dropzone
+              value={[file]}
+              on:change={e => {
+                file = e.detail?.[0]
+              }}
+            />
           </div>
-        </div> -->
+        </div>
+      </div>
+    </div>
+    <Divider size="S" />
+    <div class="analytics">
+      <Heading size="S">Platform</Heading>
+      <Body>Here you can set up general platform settings.</Body>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Platform URL</Label>
+          <Input thin bind:value={$organisation.platformUrl} />
+        </div>
       </div>
     </div>
     <Divider size="S" />
@@ -102,6 +130,9 @@
   }
   .file {
     max-width: 30ch;
+  }
+  .logo {
+    align-items: start;
   }
   .intro {
     display: grid;

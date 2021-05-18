@@ -1,7 +1,8 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { BUILTIN_ROLE_IDS } = require("./security/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { getDeployedAppID } = require("@budibase/auth/db")
 
 function getAppRole(appId, user) {
   if (!user.roles) {
@@ -62,9 +63,6 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
 }
 
 exports.getDeployedApps = async ctx => {
-  if (!env.SELF_HOSTED) {
-    throw "Can only check apps for self hosted environments"
-  }
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
@@ -98,6 +96,8 @@ exports.deleteGlobalUser = async (ctx, globalId) => {
 }
 
 exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
+  // always use the deployed app
+  appId = getDeployedAppID(appId)
   const endpoint = globalId
     ? `/api/admin/users/${globalId}`
     : `/api/admin/users`
@@ -122,9 +122,14 @@ exports.saveGlobalUser = async (ctx, appId, body) => {
   const globalUser = body._id
     ? await exports.getGlobalUsers(ctx, appId, body._id)
     : {}
-  const roles = globalUser.roles || {}
+  const preRoles = globalUser.roles || {}
   if (body.roleId) {
-    roles[appId] = body.roleId
+    preRoles[appId] = body.roleId
+  }
+  // make sure no dev app IDs in roles
+  const roles = {}
+  for (let [appId, roleId] of Object.entries(preRoles)) {
+    roles[getDeployedAppID(appId)] = roleId
   }
   const endpoint = `/api/admin/users`
   const reqCfg = {

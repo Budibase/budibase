@@ -1,9 +1,11 @@
-const { getUserPermissions } = require("../utilities/security/roles")
+const { getUserPermissions } = require("@budibase/auth/roles")
 const {
   PermissionTypes,
   doesHaveResourcePermission,
   doesHaveBasePermission,
-} = require("../utilities/security/permissions")
+} = require("@budibase/auth/permissions")
+const { APP_DEV_PREFIX } = require("../db/utils")
+const { doesUserHaveLock, updateLock } = require("../utilities/redis")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
@@ -12,6 +14,21 @@ function hasResource(ctx) {
 const WEBHOOK_ENDPOINTS = new RegExp(
   ["webhooks/trigger", "webhooks/schema"].join("|")
 )
+
+async function checkDevAppLocks(ctx) {
+  const appId = ctx.appId
+
+  // not a development app, don't need to do anything
+  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+    return
+  }
+  if (!(await doesUserHaveLock(appId, ctx.user))) {
+    ctx.throw(403, "User does not hold app lock.")
+  }
+
+  // they do have lock, update it
+  await updateLock(appId, ctx.user)
+}
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // webhooks don't need authentication, each webhook unique
@@ -23,8 +40,15 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     return ctx.throw(403, "No user info found")
   }
 
-  const isAuthed = ctx.isAuthenticated
+  const builderCall = permType === PermissionTypes.BUILDER
+  const referer = ctx.headers["referer"]
+  const editingApp = referer ? referer.includes(ctx.appId) : false
+  // this makes sure that builder calls abide by dev locks
+  if (builderCall && editingApp) {
+    await checkDevAppLocks(ctx)
+  }
 
+  const isAuthed = ctx.isAuthenticated
   const { basePermissions, permissions } = await getUserPermissions(
     ctx.appId,
     ctx.roleId
@@ -35,7 +59,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
   if (isBuilder) {
     return next()
-  } else if (permType === PermissionTypes.BUILDER && !isBuilder) {
+  } else if (builderCall && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
 

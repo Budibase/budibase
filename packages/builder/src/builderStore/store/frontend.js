@@ -51,14 +51,14 @@ export const getFrontendStore = () => {
   store.actions = {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
-      const components = await fetchComponentLibDefinitions(application._id)
+      const components = await fetchComponentLibDefinitions(application.appId)
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
         components,
         name: application.name,
         description: application.description,
-        appId: application._id,
+        appId: application.appId,
         url: application.url,
         layouts,
         screens,
