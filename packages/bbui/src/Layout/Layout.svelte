@@ -6,10 +6,11 @@
   export let gap = "M"
   export let noGap = false
   export let alignContent = "normal"
+  export let justifyItems = "stretch"
 </script>
 
 <div
-  style="align-content:{alignContent};"
+  style="align-content:{alignContent};justify-items:{justifyItems};"
   class:horizontal
   class="container paddingX-{!noPadding && paddingX} paddingY-{!noPadding &&
     paddingY} gap-{!noGap && gap}"
