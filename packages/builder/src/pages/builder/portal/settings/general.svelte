@@ -25,7 +25,9 @@
   }
 
   let loading = false
-  let file
+  let file = $organisation.logoUrl
+    ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
+    : null
 
   async function uploadLogo() {
     let data = new FormData()
@@ -40,6 +42,7 @@
     await toggleAnalytics()
     if (file) {
       await uploadLogo()
+      await organisation.init()
     }
     const res = await organisation.save({
       company: $organisation.company,
