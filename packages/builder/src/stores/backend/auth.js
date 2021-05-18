@@ -33,6 +33,25 @@ export function createAuthStore() {
       await response.json()
       store.update(state => ({ ...state, user: null }))
     },
+    forgotPassword: async email => {
+      const response = await api.post(`/api/admin/auth/reset`, {
+        email,
+      })
+      if (response.status !== 200) {
+        throw "Unable to send email with reset link"
+      }
+      await response.json()
+    },
+    resetPassword: async (password, code) => {
+      const response = await api.post(`/api/admin/auth/reset/update`, {
+        password,
+        resetCode: code,
+      })
+      if (response.status !== 200) {
+        throw "Unable to reset password"
+      }
+      await response.json()
+    },
     createUser: async user => {
       const response = await api.post(`/api/admin/users`, user)
       if (response.status !== 200) {
