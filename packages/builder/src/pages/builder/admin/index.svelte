@@ -32,22 +32,22 @@
 
 <section>
   <div class="container">
-    <Layout gap="XS">
+    <Layout>
       <img src="https://i.imgur.com/ZKyklgF.png" />
-    </Layout>
-    <div class="center">
-      <Layout gap="XS">
+      <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
-        <Body size="M"
-          >The admin user has access to everything in Budibase.</Body
-        >
+        <Body size="M" textAlign="center" noPadding>
+          The admin user has access to everything in Budibase.
+        </Body>
       </Layout>
-    </div>
-    <Layout gap="XS">
-      <Input label="Email" bind:value={adminUser.email} />
-      <Input label="Password" type="password" bind:value={adminUser.password} />
-    </Layout>
-    <Layout gap="S">
+      <Layout gap="XS" noPadding>
+        <Input label="Email" bind:value={adminUser.email} />
+        <Input
+          label="Password"
+          type="password"
+          bind:value={adminUser.password}
+        />
+      </Layout>
       <Button cta on:click={save}>Create super admin user</Button>
     </Layout>
   </div>
