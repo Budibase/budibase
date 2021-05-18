@@ -1,29 +1,15 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Input,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { createValidationStore, requiredValidator } from "helpers/validation"
+  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { users } from "stores/portal"
 
-  const [password, passwordError, passwordTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
-  const [repeat, _, repeatTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
   const inviteCode = $params["?code"]
+  let password, error
 
   async function acceptInvite() {
     try {
-      const res = await users.acceptInvite(inviteCode, $password)
+      const res = await users.acceptInvite(inviteCode, password)
       if (!res) {
         throw new Error(res.message)
       }
@@ -40,33 +26,15 @@
     <Layout gap="XS">
       <img src="https://i.imgur.com/ZKyklgF.png" />
     </Layout>
-    <div class="center">
-      <Layout gap="XS">
-        <Heading size="M">Accept Invitation</Heading>
-        <Body size="M">Please enter a password to setup your user.</Body>
-      </Layout>
-    </div>
     <Layout gap="XS">
-      <Input
-        label="Password"
-        type="password"
-        error={$passwordTouched && $passwordError}
-        bind:value={$password}
-      />
-      <Input
-        label="Repeat Password"
-        type="password"
-        error={$repeatTouched &&
-          $password !== $repeat &&
-          "Passwords must match"}
-        bind:value={$repeat}
-      />
+      <Heading textAlign="center" size="M">Accept Invitation</Heading>
+      <Body textAlign="center" size="S"
+        >Please enter a password to setup your user.</Body
+      >
+      <PasswordRepeatInput bind:error bind:password />
     </Layout>
     <Layout gap="S">
-      <Button
-        disabled={!$passwordTouched || !$repeatTouched || $password !== $repeat}
-        cta
-        on:click={acceptInvite}>Accept invite</Button
+      <Button disabled={error} cta on:click={acceptInvite}>Accept invite</Button
       >
     </Layout>
   </div>
@@ -86,9 +54,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-  }
-  .center {
-    text-align: center;
   }
   img {
     width: 40px;
