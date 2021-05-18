@@ -83,6 +83,9 @@
           <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
             Old settings
           </MenuItem>
+          <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
+            Close developer mode
+          </MenuItem>
           <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
         </ActionMenu>
       </div>

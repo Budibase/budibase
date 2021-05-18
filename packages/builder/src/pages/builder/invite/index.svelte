@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { createValidationStore, requiredValidator } from "helpers/validation"
-  import { users } from "stores/portal"
+  import { users, organisation } from "stores/portal"
 
   const [password, passwordError, passwordTouched] = createValidationStore(
     "",
@@ -37,37 +37,37 @@
 
 <section>
   <div class="container">
-    <Layout gap="XS">
-      <img src="https://i.imgur.com/ZKyklgF.png" />
-    </Layout>
-    <div class="center">
-      <Layout gap="XS">
+    <Layout>
+      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+      <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Accept Invitation</Heading>
-        <Body size="M">Please enter a password to setup your user.</Body>
+        <Body textAlign="center" size="M" noPadding>
+          Please enter a password to set up your user.
+        </Body>
       </Layout>
-    </div>
-    <Layout gap="XS">
-      <Input
-        label="Password"
-        type="password"
-        error={$passwordTouched && $passwordError}
-        bind:value={$password}
-      />
-      <Input
-        label="Repeat Password"
-        type="password"
-        error={$repeatTouched &&
-          $password !== $repeat &&
-          "Passwords must match"}
-        bind:value={$repeat}
-      />
-    </Layout>
-    <Layout gap="S">
+      <Layout gap="XS" noPadding>
+        <Input
+          label="Password"
+          type="password"
+          error={$passwordTouched && $passwordError}
+          bind:value={$password}
+        />
+        <Input
+          label="Repeat Password"
+          type="password"
+          error={$repeatTouched &&
+            $password !== $repeat &&
+            "Passwords must match"}
+          bind:value={$repeat}
+        />
+      </Layout>
       <Button
         disabled={!$passwordTouched || !$repeatTouched || $password !== $repeat}
         cta
-        on:click={acceptInvite}>Accept invite</Button
+        on:click={acceptInvite}
       >
+        Accept invite
+      </Button>
     </Layout>
   </div>
 </section>
@@ -86,9 +86,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-  }
-  .center {
-    text-align: center;
   }
   img {
     width: 40px;

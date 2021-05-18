@@ -1,31 +1,25 @@
 <script>
-  import {
-    Input,
-    Button,
-    Layout,
-    Body,
-    Heading,
-  } from "@budibase/bbui"
+  import { Input, Button, Layout, Body, Heading } from "@budibase/bbui"
   import { params } from "@roxi/routify"
-  import { auth } from "stores/backend"
+  import { organisation } from "stores/portal"
 
   const resetCode = $params["?code"]
   let password = ""
 
-  async function reset() {
-
-  }
+  async function reset() {}
 </script>
 
 <div class="login">
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src="https://i.imgur.com/ZKyklgF.png" />
+        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Reset your password</Heading>
-        <Body size="S" textAlign="center">Please enter the new password you'd like to use.</Body>
+        <Body size="S" textAlign="center">
+          Please enter the new password you'd like to use.
+        </Body>
         <Input label="Password" bind:value={password} />
       </Layout>
       <Button cta on:click={reset}>Reset your password</Button>

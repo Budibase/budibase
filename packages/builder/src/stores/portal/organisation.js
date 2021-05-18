@@ -2,9 +2,9 @@ import { writable, get } from "svelte/store"
 import api from "builderStore/api"
 
 const DEFAULT_CONFIG = {
-  platformUrl: "",
+  platformUrl: undefined,
   logoUrl: "https://i.imgur.com/ZKyklgF.png",
-  docsUrl: "",
+  docsUrl: undefined,
   company: "Budibase",
 }
 
@@ -19,14 +19,14 @@ export function createOrganisationStore() {
     if (json.status === 400) {
       set(DEFAULT_CONFIG)
     } else {
-      set({ ...json.config, _rev: json._rev })
+      set({ ...DEFAULT_CONFIG, ...json.config, _rev: json._rev })
     }
   }
 
   async function save(config) {
     const res = await api.post("/api/admin/configs", {
       type: "settings",
-      config,
+      config: { ...get(store), ...config },
       _rev: get(store)._rev,
     })
     const json = await res.json()
