@@ -17,6 +17,7 @@
   import { fetchData } from "helpers"
   import { users } from "stores/portal"
 
+  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
 
   export let userId
@@ -25,14 +26,14 @@
 
   const roleSchema = {
     name: { displayName: "App" },
-    role: { type: "options" },
+    role: {},
   }
 
   // Merge the Apps list and the roles response to get something that makes sense for the table
   $: appList = Object.keys($apps?.data).map(id => ({
     ...$apps?.data?.[id],
     _id: id,
-    role: $roleFetch?.data?.roles?.[id],
+    role: [$roleFetch?.data?.roles?.[id]],
   }))
   let selectedApp
 
@@ -97,6 +98,7 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      customRenderers={[{ column: "role", component: TagsRenderer }]}
     />
   </div>
   <Divider size="S" />
