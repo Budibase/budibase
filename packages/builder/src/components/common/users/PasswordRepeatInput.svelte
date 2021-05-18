@@ -1,9 +1,9 @@
 <script>
+  import { Layout, Input } from "@budibase/bbui"
   import {
-    Layout,
-    Input,
-  } from "@budibase/bbui"
-  import {createValidationStore, requiredValidator} from "../../../helpers/validation"
+    createValidationStore,
+    requiredValidator,
+  } from "../../../helpers/validation"
 
   export let password
   export let error
@@ -18,22 +18,26 @@
   )
 
   $: password = $firstPassword
-  $: error = !$firstPassword || !$firstTouched || !$repeatTouched || $firstPassword !== $repeatPassword
+  $: error =
+    !$firstPassword ||
+    !$firstTouched ||
+    !$repeatTouched ||
+    $firstPassword !== $repeatPassword
 </script>
 
 <Layout gap="XS" noPadding>
   <Input
-      label="Password"
-      type="password"
-      error={$firstTouched && $passwordError}
-      bind:value={$firstPassword}
+    label="Password"
+    type="password"
+    error={$firstTouched && $passwordError}
+    bind:value={$firstPassword}
   />
   <Input
-      label="Repeat Password"
-      type="password"
-      error={$repeatTouched &&
-          $firstPassword !== $repeatPassword &&
-          "Passwords must match"}
-      bind:value={$repeatPassword}
+    label="Repeat Password"
+    type="password"
+    error={$repeatTouched &&
+      $firstPassword !== $repeatPassword &&
+      "Passwords must match"}
+    bind:value={$repeatPassword}
   />
 </Layout>

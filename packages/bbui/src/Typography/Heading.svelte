@@ -7,8 +7,10 @@
   export let noPadding = false
 </script>
 
-<h1 style="text-align:{textAlign};"
-    class:noPadding
-    class="spectrum-Heading spectrum-Heading--size{size}">
+<h1
+  style="text-align:{textAlign};"
+  class:noPadding
+  class="spectrum-Heading spectrum-Heading--size{size}"
+>
   <slot />
 </h1>
