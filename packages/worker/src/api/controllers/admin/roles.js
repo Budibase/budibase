@@ -1,5 +1,9 @@
 const { getAllRoles } = require("@budibase/auth/roles")
-const { getAllApps, getDeployedAppID, DocumentTypes } = require("@budibase/auth/db")
+const {
+  getAllApps,
+  getDeployedAppID,
+  DocumentTypes,
+} = require("@budibase/auth/db")
 const CouchDB = require("../../../db")
 
 exports.fetch = async ctx => {
