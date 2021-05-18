@@ -17,6 +17,6 @@
   }
 </script>
 
-<Field {label} {labelPosition} {disabled} {error}>
+<Field {label} {labelPosition} {error}>
   <Checkbox {error} {disabled} {text} {value} on:change={onChange} />
 </Field>

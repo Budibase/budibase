@@ -14,7 +14,6 @@
 
   const POLL_INTERVAL = 1000
 
-
   let loading = false
   let feedbackModal
   let deployments = []
@@ -62,8 +61,12 @@
 
   // Required to check any updated deployment statuses between polls
   function checkIncomingDeploymentStatus(current, incoming) {
+    console.log(current, incoming)
     for (let incomingDeployment of incoming) {
-      if (incomingDeployment.status === DeploymentStatus.FAILURE || incomingDeployment.status === DeploymentStatus.SUCCESS) {
+      if (
+        incomingDeployment.status === DeploymentStatus.FAILURE ||
+        incomingDeployment.status === DeploymentStatus.SUCCESS
+      ) {
         const currentDeployment = current.find(
           deployment => deployment._id === incomingDeployment._id
         )
@@ -76,13 +79,16 @@
           if (incomingDeployment.status === DeploymentStatus.FAILURE) {
             notifications.error(incomingDeployment.err)
           } else {
-            notifications.send("Published to Production.", "success", "CheckmarkCircle")
+            notifications.send(
+              "Published to Production.",
+              "success",
+              "CheckmarkCircle"
+            )
           }
         }
-      } 
+      }
     }
   }
-
 
   onMount(() => {
     fetchDeployments()
@@ -92,19 +98,16 @@
   onDestroy(() => clearInterval(poll))
 </script>
 
-
-<Button
-secondary
-on:click={publishModal.show}
->
-Publish
-</Button>
+<Button secondary on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={publishModal}>
-<ModalContent
-  title="Publish to Production"
-  confirmText="Publish"
-  onConfirm={deployApp}
->
-  <span>The changes you have made will be published to the production version of the application.</span>
-</ModalContent>
+  <ModalContent
+    title="Publish to Production"
+    confirmText="Publish"
+    onConfirm={deployApp}
+  >
+    <span
+      >The changes you have made will be published to the production version of
+      the application.</span
+    >
+  </ModalContent>
 </Modal>

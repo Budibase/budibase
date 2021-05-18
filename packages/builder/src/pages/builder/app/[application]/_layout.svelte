@@ -1,7 +1,16 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Button, Icon, Modal, ModalContent, ActionGroup, ActionButton, Tabs, Tab } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    Modal,
+    ModalContent,
+    ActionGroup,
+    ActionButton,
+    Tabs,
+    Tab,
+  } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
   import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
@@ -84,7 +93,9 @@
       </div>
       <div class="toprightnav">
         <RevertModal />
-        <Icon name="Play" hoverable
+        <Icon
+          name="Play"
+          hoverable
           on:click={() => {
             window.open(`/${application}`)
           }}

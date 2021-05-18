@@ -244,7 +244,7 @@ exports.delete = async function (ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const db = new CouchDB(app.instance._id)
+  const db = new CouchDB(app.appId)
 
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {

@@ -1,32 +1,19 @@
 <script>
   import {
-    Menu,
-    MenuItem,
     Button,
     Detail,
     Heading,
-    Divider,
-    Label,
-    Modal,
-    ModalContent,
     notifications,
-    Layout,
     Icon,
-    Body,
     Page,
-    Select,
     Tabs,
     Tab,
-    MenuSection,
-    MenuSeparator,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { onMount } from "svelte"
   import { fade } from "svelte/transition"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
-  import TemplateBindings from "./TemplateBindings.svelte"
-  import api from "builderStore/api"
+  import TemplateBindings from "./_components/TemplateBindings.svelte"
 
   const ConfigTypes = {
     SMTP: "smtp",

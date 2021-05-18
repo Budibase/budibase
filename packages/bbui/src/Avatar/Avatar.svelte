@@ -16,7 +16,10 @@
 
   function getInitials(name) {
     let parts = name.split(" ")
-    return parts.map(name => name[0]).join("")
+    if (parts.length > 0) {
+      return parts.map(name => name[0]).join("")
+    }
+    return name
   }
 </script>
 

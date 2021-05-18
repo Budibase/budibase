@@ -29,7 +29,7 @@ exports.getApps = async ctx => {
     let url = app.url || encodeURI(`${app.name}`)
     url = `/${url.replace(URL_REGEX_SLASH, "")}`
     body[url] = {
-      appId: app.instance._id,
+      appId: app.appId,
       name: app.name,
       url,
     }

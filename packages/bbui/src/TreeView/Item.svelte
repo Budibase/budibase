@@ -1,6 +1,7 @@
 <script>
   export let selected = false
   export let open = false
+  export let href = false
   export let title
   export let icon
 </script>
@@ -10,7 +11,7 @@
   class:is-open={open}
   class="spectrum-TreeView-item"
 >
-  <a on:click class="spectrum-TreeView-itemLink" href="#">
+  <a on:click class="spectrum-TreeView-itemLink" {href}>
     {#if $$slots.default}
       <svg
         class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-TreeView-itemIndicator"

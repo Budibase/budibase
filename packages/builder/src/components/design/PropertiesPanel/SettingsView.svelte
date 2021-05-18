@@ -16,7 +16,7 @@
   import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
-  import FilterEditor from "./PropertyControls/FilterEditor.svelte"
+  import FilterEditor from "./PropertyControls/FilterEditor/FilterEditor.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
@@ -156,8 +156,11 @@
       {/if}
     {/each}
   {:else}
-    <div class="empty">
-      This component doesn't have any additional settings.
+    <div class="text">This component doesn't have any additional settings.</div>
+  {/if}
+  {#if componentDefinition?.info}
+    <div class="text">
+      {@html componentDefinition?.info}
     </div>
   {/if}
 
@@ -185,7 +188,7 @@
     height: 100%;
     gap: var(--spacing-s);
   }
-  .empty {
+  .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spacing-m);
     color: var(--grey-6);

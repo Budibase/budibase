@@ -80,7 +80,7 @@
     />
   {/each}
   <div>
-    <Button icon="AddCircle" size="S" cta on:click={addField}>
+    <Button icon="AddCircle" secondary on:click={addField}>
       Add
       {fieldLabel}
     </Button>
