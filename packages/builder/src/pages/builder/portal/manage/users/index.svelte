@@ -12,6 +12,7 @@
     Layout,
     Modal,
   } from "@budibase/bbui"
+  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
@@ -20,14 +21,18 @@
 
   const schema = {
     email: {},
-    status: {},
+    status: { displayName: "Development Access", type: "boolean" },
+    // role: { type: "options" },
+    group: {},
     // access: {},
     // group: {}
   }
 
   let search
   let email
-  $: filteredUsers = $users.filter(user => user.email.includes(search || ""))
+  $: filteredUsers = $users
+    .filter(user => user.email.includes(search || ""))
+    .map(user => ({ ...user, group: ["All"] }))
 
   let createUserModal
   let basicOnboardingModal
@@ -68,6 +73,7 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
   </div>
 </Layout>
