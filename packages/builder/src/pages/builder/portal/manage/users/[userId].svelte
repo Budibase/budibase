@@ -51,7 +51,6 @@
   }
 
   async function openUpdateRolesModal({ detail }) {
-    console.log(detail)
     selectedApp = detail
     editRolesModal.show()
   }
@@ -59,15 +58,20 @@
 
 <Layout noPadding gap="XS">
   <div class="back">
-    <ActionButton on:click={() => $goto("./")} quiet size="S" icon="BackAndroid"
-      >Back to users</ActionButton
+    <ActionButton
+      on:click={() => $goto("./")}
+      quiet
+      size="S"
+      icon="BackAndroid"
     >
+      Back to users
+    </ActionButton>
   </div>
   <div class="heading">
     <Layout noPadding gap="XS">
       <Heading>User: {$roleFetch?.data?.email}</Heading>
-      <Body
-        >Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro
+      <Body>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro
         ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
         veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
       </Body>
@@ -83,9 +87,9 @@
       </div>
     </div>
     <div class="regenerate">
-      <ActionButton size="S" icon="Refresh" quiet
-        >Regenerate password</ActionButton
-      >
+      <ActionButton size="S" icon="Refresh" quiet>
+        Regenerate password
+      </ActionButton>
     </div>
   </div>
   <Divider size="S" />
@@ -103,13 +107,13 @@
   </div>
   <Divider size="S" />
   <div class="delete">
-    <Layout gap="S" noPadding
-      ><Heading size="S">Delete user</Heading>
+    <Layout gap="S" noPadding>
+      <Heading size="S">Delete user</Heading>
       <Body>Deleting a user completely removes them from your account.</Body>
       <div class="delete-button">
         <Button warning on:click={deleteUserModal.show}>Delete user</Button>
-      </div></Layout
-    >
+      </div>
+    </Layout>
   </div>
 </Layout>
 
@@ -122,10 +126,9 @@
     cancelText="Cancel"
     showCloseIcon={false}
   >
-    <Body
-      >Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong
-      ></Body
-    >
+    <Body>
+      Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong>
+    </Body>
   </ModalContent>
 </Modal>
 <Modal bind:this={editRolesModal}>
