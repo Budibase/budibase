@@ -3,12 +3,12 @@
 
   // Sizes
   export let size = "M"
-  export let textAlign = "left"
+  export let textAlign
   export let noPadding = false
 </script>
 
 <h1
-  style="text-align:{textAlign};"
+  style="{textAlign ? `text-align:${textAlign}` : ``}"
   class:noPadding
   class="spectrum-Heading spectrum-Heading--size{size}"
 >
