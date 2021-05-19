@@ -11,8 +11,7 @@
     Heading,
   } from "@budibase/bbui"
   import GoogleButton from "./GoogleButton.svelte"
-  import { auth } from "stores/backend"
-  import { organisation } from "stores/portal"
+  import { organisation, auth } from "stores/portal"
 
   let username = ""
   let password = ""

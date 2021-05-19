@@ -1,5 +1,5 @@
 <script>
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 </script>
 
 {#if $auth.user}

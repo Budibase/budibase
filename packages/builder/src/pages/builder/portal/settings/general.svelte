@@ -14,45 +14,52 @@
   import { organisation } from "stores/portal"
   import { post } from "builderStore/api"
   import analytics from "analytics"
-  let analyticsDisabled = analytics.disabled()
+  import { writable } from "svelte/store"
 
-  function toggleAnalytics() {
-    if (analyticsDisabled) {
-      analytics.optIn()
-    } else {
-      analytics.optOut()
-    }
-  }
-
+  const values = writable({
+    analytics: !analytics.disabled(),
+    company: $organisation.company,
+    platformUrl: $organisation.platformUrl,
+    logo: $organisation.logoUrl
+      ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
+      : null,
+  })
   let loading = false
-  let file = $organisation.logoUrl
-    ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
-    : null
 
-  async function uploadLogo() {
+  async function uploadLogo(file) {
     let data = new FormData()
     data.append("file", file)
-
     const res = await post("/api/admin/configs/upload/settings/logo", data, {})
     return await res.json()
   }
 
   async function saveConfig() {
     loading = true
-    await toggleAnalytics()
-    if (file) {
-      await uploadLogo()
+
+    // Set analytics preference
+    if ($values.analytics) {
+      analytics.optIn()
+    } else {
+      analytics.optOut()
+    }
+
+    // Upload logo if required
+    if ($values.logo && !$values.logo.url) {
+      await uploadLogo($values.logo)
       await organisation.init()
     }
+
+    // Update settings
     const res = await organisation.save({
-      company: $organisation.company,
-      platformUrl: $organisation.platformUrl,
+      company: $values.company ?? "",
+      platformUrl: $values.platformUrl ?? "",
     })
     if (res.status === 200) {
-      notifications.success("Settings saved.")
+      notifications.success("Settings saved successfully")
     } else {
       notifications.error(res.message)
     }
+
     loading = false
   }
 </script>
@@ -73,15 +80,15 @@
   <div class="fields">
     <div class="field">
       <Label size="L">Organization name</Label>
-      <Input thin bind:value={$organisation.company} />
+      <Input thin bind:value={$values.company} />
     </div>
     <div class="field logo">
       <Label size="L">Logo</Label>
       <div class="file">
         <Dropzone
-          value={[file]}
+          value={[$values.logo]}
           on:change={e => {
-            file = e.detail?.[0]
+            $values.logo = e.detail?.[0]
           }}
         />
       </div>
@@ -95,7 +102,7 @@
   <div class="fields">
     <div class="field">
       <Label size="L">Platform URL</Label>
-      <Input thin bind:value={$organisation.platformUrl} />
+      <Input thin bind:value={$values.platformUrl} />
     </div>
   </div>
   <Divider size="S" />
@@ -110,7 +117,7 @@
     <div class="fields">
       <div class="field">
         <Label size="L">Send Analytics to Budibase</Label>
-        <Toggle text="" value={!analyticsDisabled} />
+        <Toggle text="" bind:value={$values.analytics} />
       </div>
     </div>
   </Layout>

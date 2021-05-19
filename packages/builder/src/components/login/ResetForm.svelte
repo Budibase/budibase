@@ -1,9 +1,8 @@
 <script>
   import { notifications, Button, Layout, Body, Heading } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import { organisation, auth } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { params, goto } from "@roxi/routify"
-  import { auth } from "stores/backend"
 
   const resetCode = $params["?code"]
   let password, error

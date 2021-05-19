@@ -7,8 +7,7 @@
     Body,
     Heading,
   } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
-  import { auth } from "stores/backend"
+  import { organisation, auth } from "stores/portal"
 
   let email = ""
 
