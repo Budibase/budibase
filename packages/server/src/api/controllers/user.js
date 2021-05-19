@@ -48,7 +48,7 @@ exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = ctx.request.body
-  // make sure to always remove global user props
+  // make sure to always remove some of the global user props
   delete user.password
   delete user.roles
   delete user.builder
