@@ -1,12 +1,23 @@
 <script>
-  import { Input, Button, Layout, Body, Heading } from "@budibase/bbui"
-  import { params } from "@roxi/routify"
+  import { notifications, Button, Layout, Body, Heading } from "@budibase/bbui"
   import { organisation } from "stores/portal"
+  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
+  import { params, goto } from "@roxi/routify"
+  import { auth } from "stores/backend"
 
   const resetCode = $params["?code"]
-  let password = ""
+  let password, error
 
-  async function reset() {}
+  async function reset() {
+    try {
+      await auth.resetPassword(password, resetCode)
+      notifications.success("Password reset successfully")
+      // send them to login if reset successful
+      $goto("./login")
+    } catch (err) {
+      notifications.error("Unable to reset password")
+    }
+  }
 </script>
 
 <div class="login">
@@ -20,9 +31,11 @@
         <Body size="S" textAlign="center">
           Please enter the new password you'd like to use.
         </Body>
-        <Input label="Password" bind:value={password} />
+        <PasswordRepeatInput bind:password bind:error />
       </Layout>
-      <Button cta on:click={reset}>Reset your password</Button>
+      <Button cta on:click={reset} disabled={error || !resetCode}>
+        Reset your password
+      </Button>
     </Layout>
   </div>
 </div>

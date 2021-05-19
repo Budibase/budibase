@@ -22,7 +22,13 @@
 
   // Redirect to log in at any time if the user isn't authenticated
   $: {
-    if (loaded && hasAdminUser && !$auth.user && !$isActive("./auth")) {
+    if (
+      loaded &&
+      hasAdminUser &&
+      !$auth.user &&
+      !$isActive("./auth") &&
+      !$isActive("./invite")
+    ) {
       $redirect("./auth/login")
     }
   }
