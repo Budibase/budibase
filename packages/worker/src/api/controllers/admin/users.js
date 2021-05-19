@@ -96,7 +96,15 @@ exports.destroy = async ctx => {
   }
 }
 
-exports.self = async ctx => {
+exports.getSelf = async ctx => {
+  ctx.params = {
+    id: ctx.user._id
+  }
+  // this will set the body
+  await exports.find(ctx)
+}
+
+exports.updateSelf = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
