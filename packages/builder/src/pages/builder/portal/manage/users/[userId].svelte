@@ -108,8 +108,11 @@
       </div>
     </div>
     <div class="regenerate">
-      <ActionButton size="S" icon="Refresh" quiet
-        >Regenerate password</ActionButton
+      <ActionButton
+        size="S"
+        icon="Refresh"
+        quiet
+        on:click={resetPasswordModal.show}>Force password reset</ActionButton
       >
     </div>
   </div>
@@ -161,7 +164,10 @@
   />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
-  <ForceResetPasswordModal user={$userFetch.data} />
+  <ForceResetPasswordModal
+    user={$userFetch.data}
+    on:update={userFetch.refresh}
+  />
 </Modal>
 
 <style>

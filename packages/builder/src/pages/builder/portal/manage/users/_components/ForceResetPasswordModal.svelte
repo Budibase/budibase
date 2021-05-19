@@ -1,17 +1,21 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { users } from "stores/portal"
+
+  const dispatch = createEventDispatcher()
 
   export let user
 
   const password = Math.random().toString(36).substr(2, 20)
 
   async function resetPassword() {
-    const res = await users.save.create({ ...user, password })
+    const res = await users.save({ ...user, password })
     if (res.status) {
       notifications.error(res.message)
     } else {
       notifications.success("Password reset.")
+      dispatch("update")
     }
   }
 </script>
