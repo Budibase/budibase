@@ -69,7 +69,7 @@
       return false
     }
 
-    notifications.success("User saved successfully.")
+    notifications.success("User saved successfully")
     rows.save(rowResponse)
   }
 </script>
@@ -88,10 +88,12 @@
   <RowFieldControl
     meta={{ ...tableSchema.firstName, name: "First Name" }}
     bind:value={row.firstName}
+    readonly={!creating}
   />
   <RowFieldControl
     meta={{ ...tableSchema.lastName, name: "Last Name" }}
     bind:value={row.lastName}
+    readonly={!creating}
   />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->

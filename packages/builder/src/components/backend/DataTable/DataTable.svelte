@@ -57,10 +57,12 @@
 >
   <CreateColumnButton />
   {#if schema && Object.keys(schema).length > 0}
-    <CreateRowButton
-      title={isUsersTable ? "Create user" : "Create row"}
-      modalContentComponent={isUsersTable ? CreateEditUser : CreateEditRow}
-    />
+    {#if !isUsersTable}
+      <CreateRowButton
+        title={"Create row"}
+        modalContentComponent={CreateEditRow}
+      />
+    {/if}
     <CreateViewButton />
     <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}

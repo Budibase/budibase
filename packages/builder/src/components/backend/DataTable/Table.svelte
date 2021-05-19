@@ -103,7 +103,7 @@
   </div>
   <div class="popovers">
     <slot />
-    {#if selectedRows.length > 0}
+    {#if !isUsersTable && selectedRows.length > 0}
       <DeleteRowsButton {selectedRows} {deleteRows} />
     {/if}
   </div>
@@ -116,7 +116,7 @@
     {customRenderers}
     {rowCount}
     bind:selectedRows
-    allowSelectRows={allowEditing}
+    allowSelectRows={allowEditing && !isUsersTable}
     allowEditRows={allowEditing}
     allowEditColumns={allowEditing}
     showAutoColumns={!hideAutocolumns}
