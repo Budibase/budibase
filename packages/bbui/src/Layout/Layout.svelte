@@ -22,6 +22,7 @@
   .container {
     display: grid;
     grid-template-columns: 1fr;
+    position: relative;
   }
   .paddingX-S {
     padding-left: var(--spacing-s);
