@@ -312,7 +312,10 @@ class TestConfiguration {
     roleId = BUILTIN_ROLE_IDS.POWER
   ) {
     const globalId = `us_${Math.random()}`
-    const resp = await this.globalUser(globalId, roleId === BUILTIN_ROLE_IDS.BUILDER)
+    const resp = await this.globalUser(
+      globalId,
+      roleId === BUILTIN_ROLE_IDS.BUILDER
+    )
     return {
       ...resp,
       globalId,

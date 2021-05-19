@@ -1,8 +1,5 @@
 const CouchDB = require("../db")
-const {
-  getGlobalIDFromUserMetadataID,
-  InternalTables
-} = require("../db/utils")
+const { getGlobalIDFromUserMetadataID, InternalTables } = require("../db/utils")
 const { getGlobalUsers } = require("../utilities/workerRequests")
 
 exports.getFullUser = async (ctx, userId) => {
