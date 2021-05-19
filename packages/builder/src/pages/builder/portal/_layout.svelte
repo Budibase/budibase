@@ -12,8 +12,7 @@
     Modal,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation } from "stores/portal"
-  import { auth } from "stores/backend"
+  import { organisation, auth } from "stores/portal"
   import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
   import { onMount } from "svelte"
 

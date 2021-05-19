@@ -13,8 +13,7 @@
     Modal,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation } from "stores/portal"
-  import { auth } from "stores/backend"
+  import { apps, organisation, auth } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
@@ -73,36 +72,45 @@
             </ActionMenu>
           </div>
           <Divider />
-          <div class="apps-title">
-            <Heading>Apps</Heading>
-            <Select placeholder="Filter by groups" />
-          </div>
-          <div class="group">
-            <Layout gap="S" noPadding>
-              <div class="group-title">
-                <Body weight="500" size="XS">GROUP</Body>
-                {#if $auth.user?.builder?.global}
-                  <Icon
-                    name="Settings"
-                    hoverable
-                    on:click={() => alert("Navigate to portal group page.")}
-                  />
-                {/if}
-              </div>
-              {#each $apps as app, idx (app.appId)}
-                <a class="app" target="_blank" href={`/${app.appId}`}>
-                  <div class="preview" use:gradient={{ seed: app.name }} />
-                  <div class="app-info">
-                    <Heading size="XS">{app.name}</Heading>
-                    <Body size="S">
-                      Edited {Math.round(Math.random() * 10 + 1)} months ago
-                    </Body>
-                  </div>
-                  <Icon name="ChevronRight" />
-                </a>
-              {/each}
+          {#if $apps.length}
+            <div class="apps-title">
+              <Heading>Apps</Heading>
+              <Select placeholder="Filter by groups" />
+            </div>
+            <div class="group">
+              <Layout gap="S" noPadding>
+                <div class="group-title">
+                  <Body weight="500" size="XS">GROUP</Body>
+                  {#if $auth.user?.builder?.global}
+                    <Icon
+                      name="Settings"
+                      hoverable
+                      on:click={() => alert("Navigate to portal group page.")}
+                    />
+                  {/if}
+                </div>
+                {#each $apps as app, idx (app.appId)}
+                  <a class="app" target="_blank" href={`/${app.appId}`}>
+                    <div class="preview" use:gradient={{ seed: app.name }} />
+                    <div class="app-info">
+                      <Heading size="XS">{app.name}</Heading>
+                      <Body size="S">
+                        Edited {Math.round(Math.random() * 10 + 1)} months ago
+                      </Body>
+                    </div>
+                    <Icon name="ChevronRight" />
+                  </a>
+                {/each}
+              </Layout>
+            </div>
+          {:else}
+            <Layout gap="XS" noPadding>
+              <Heading size="S">You don't have access to any apps yet.</Heading>
+              <Body size="S"
+                >The apps you have access to will be listed here.</Body
+              >
             </Layout>
-          </div>
+          {/if}
         </Layout>
       </div>
     </Page>
