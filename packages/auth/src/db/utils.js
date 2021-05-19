@@ -190,7 +190,7 @@ exports.getAllApps = async ({ dev, all } = {}) => {
     } else {
       return apps.map(app => ({
         ...app,
-        status: isDevApp(app) ? "development" : "published"
+        status: isDevApp(app) ? "development" : "published",
       }))
     }
   }
