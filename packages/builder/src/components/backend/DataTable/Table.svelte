@@ -47,6 +47,8 @@
       })
       schema.email.displayName = "Email"
       schema.roleId.displayName = "Role"
+      schema.firstName.displayName = "First Name"
+      schema.lastName.displayName = "Last Name"
       if (schema.status) {
         schema.status.displayName = "Status"
       }

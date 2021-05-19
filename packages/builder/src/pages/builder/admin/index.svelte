@@ -36,7 +36,7 @@
       <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
-        <Body size="M" textAlign="center" noPadding>
+        <Body size="M" textAlign="center">
           The admin user has access to everything in Budibase.
         </Body>
       </Layout>

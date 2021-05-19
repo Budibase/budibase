@@ -50,6 +50,24 @@ exports.USERS_TABLE_SCHEMA = {
       fieldName: "email",
       name: "email",
     },
+    firstName: {
+      name: "firstName",
+      fieldName: "firstName",
+      type: exports.FieldTypes.STRING,
+      constraints: {
+        type: exports.FieldTypes.STRING,
+        presence: false,
+      },
+    },
+    lastName: {
+      name: "lastName",
+      fieldName: "lastName",
+      type: exports.FieldTypes.STRING,
+      constraints: {
+        type: exports.FieldTypes.STRING,
+        presence: false,
+      },
+    },
     roleId: {
       fieldName: "roleId",
       name: "roleId",
