@@ -1,9 +1,7 @@
 <script>
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
+  import { ModalContent, Body, Input } from "@budibase/bbui"
   import { writable } from "svelte/store"
   import { auth } from "stores/backend"
-  import { saveRow } from "components/backend/DataTable/api"
-  import { TableNames } from "constants"
 
   const values = writable({
     firstName: $auth.user.firstName,
@@ -11,19 +9,7 @@
   })
 
   const updateInfo = async () => {
-    const newUser = {
-      ...$auth.user,
-      firstName: $values.firstName,
-      lastName: $values.lastName,
-    }
-    console.log(newUser)
-    const response = await saveRow(newUser, TableNames.USERS)
-    if (response.ok) {
-      await auth.checkAuth()
-      notifications.success("Information updated successfully")
-    } else {
-      notifications.error("Failed to update information")
-    }
+    // Update name
   }
 </script>
 

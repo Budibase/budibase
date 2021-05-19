@@ -19,16 +19,19 @@
   import { AppStatus } from "constants"
   import { gradient } from "actions"
   import UpdateUserInfoModal from "./_components/UpdateUserInfoModal.svelte"
+  import ChangePasswordModal from "./_components/ChangePasswordModal.svelte"
 
   let loaded = false
   let userInfoModal
-  let userPasswordModal
+  let changePasswordModal
 
   onMount(async () => {
     await organisation.init()
     await apps.load(AppStatus.DEV)
     loaded = true
   })
+
+  $: console.log($auth.user)
 </script>
 
 {#if loaded}
@@ -56,7 +59,12 @@
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 Update user information
               </MenuItem>
-              <MenuItem icon="LockClosed">Update password</MenuItem>
+              <MenuItem
+                icon="LockClosed"
+                on:click={() => changePasswordModal.show()}
+              >
+                Update password
+              </MenuItem>
               <MenuItem
                 icon="UserDeveloper"
                 on:click={() => $goto("../portal")}
@@ -76,7 +84,11 @@
               <div class="group-title">
                 <Body weight="500" size="XS">GROUP</Body>
                 {#if $auth.user?.builder?.global}
-                  <Icon name="Settings" hoverable />
+                  <Icon
+                    name="Settings"
+                    hoverable
+                    on:click={() => alert("Navigate to portal group page.")}
+                  />
                 {/if}
               </div>
               {#each $apps as app, idx (app.appId)}
@@ -99,6 +111,9 @@
   </div>
   <Modal bind:this={userInfoModal}>
     <UpdateUserInfoModal />
+  </Modal>
+  <Modal bind:this={changePasswordModal}>
+    <ChangePasswordModal />
   </Modal>
 {/if}
 
@@ -136,7 +151,7 @@
     grid-gap: var(--spacing-xl);
   }
   .group {
-    margin-top: 20px;
+    margin-top: var(--spacing-s);
   }
   .group-title {
     display: grid;
