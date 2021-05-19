@@ -3,12 +3,15 @@
 
   export let size = "M"
   export let serif = false
-  export let weight = 400
-  export let textAlign = "left"
+  export let weight = null
+  export let textAlign = null
 </script>
 
 <p
-  style="font-weight:{weight};text-align:{textAlign};"
+  style={`
+    ${weight ? `font-weight:${weight};` : ""}
+    ${textAlign ? `text-align:${textAlign};` : ""}
+  `}
   class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
 >
