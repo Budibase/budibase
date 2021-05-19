@@ -44,8 +44,7 @@
               </Heading>
               <Body>
                 Welcome to the {$organisation.company} portal. Below you'll find
-                the list of apps that you have access to, as well as company news
-                and the employee handbook.
+                the list of apps that you have access to.
               </Body>
             </Layout>
             <ActionMenu align="right">
@@ -73,22 +72,9 @@
           </div>
           <Divider />
           {#if $apps.length}
-            <div class="apps-title">
-              <Heading>Apps</Heading>
-              <Select placeholder="Filter by groups" />
-            </div>
+            <Heading>Apps</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
-                <div class="group-title">
-                  <Body weight="500" size="XS">GROUP</Body>
-                  {#if $auth.user?.builder?.global}
-                    <Icon
-                      name="Settings"
-                      hoverable
-                      on:click={() => alert("Navigate to portal group page.")}
-                    />
-                  {/if}
-                </div>
                 {#each $apps as app, idx (app.appId)}
                   <a class="app" target="_blank" href={`/${app.appId}`}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
@@ -106,9 +92,9 @@
           {:else}
             <Layout gap="XS" noPadding>
               <Heading size="S">You don't have access to any apps yet.</Heading>
-              <Body size="S"
-                >The apps you have access to will be listed here.</Body
-              >
+              <Body size="S">
+                The apps you have access to will be listed here.
+              </Body>
             </Layout>
           {/if}
         </Layout>
@@ -151,19 +137,8 @@
     cursor: pointer;
     filter: brightness(110%);
   }
-  .apps-title {
-    display: grid;
-    grid-template-columns: 1fr 150px;
-    grid-gap: var(--spacing-xl);
-  }
   .group {
     margin-top: var(--spacing-s);
-  }
-  .group-title {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-gap: var(--spacing-xl);
-    align-items: center;
   }
   .app {
     display: grid;
