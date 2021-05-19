@@ -6,7 +6,7 @@ const {
   InternalTables,
 } = require("../../../db/utils")
 const { isEqual } = require("lodash/fp")
-const { AutoFieldSubTypes } = require("../../../constants")
+const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
 const { inputProcessing } = require("../../../utilities/rowProcessor")
 const { USERS_TABLE_SCHEMA } = require("../../../constants")
 
@@ -72,18 +72,21 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
       row._id = generateRowID(table._id)
       row.tableId = table._id
       const processed = inputProcessing(user, table, row)
+      table = processed.table
       row = processed.row
-      // these auto-fields will never actually link anywhere (always builder)
       for (let [fieldName, schema] of Object.entries(table.schema)) {
+        // check whether the options need to be updated for inclusion as part of the data import
         if (
-          schema.autocolumn &&
-          (schema.subtype === AutoFieldSubTypes.CREATED_BY ||
-            schema.subtype === AutoFieldSubTypes.UPDATED_BY)
+          schema.type === FieldTypes.OPTIONS &&
+          (!schema.constraints.inclusion ||
+            schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
         ) {
-          delete row[fieldName]
+          schema.constraints.inclusion = [
+            ...schema.constraints.inclusion,
+            row[fieldName],
+          ]
         }
       }
-      table = processed.table
       data[i] = row
     }
 
