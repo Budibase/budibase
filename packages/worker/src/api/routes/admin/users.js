@@ -12,6 +12,7 @@ function buildUserSaveValidation() {
     _rev: Joi.string(),
     email: Joi.string(),
     password: Joi.string().allow(null, ""),
+    forcePasswordChange: Joi.boolean().optional(),
     builder: Joi.object({
       global: Joi.boolean().optional(),
       apps: Joi.array().optional(),
