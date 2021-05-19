@@ -1,7 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
-  import { fetchData } from "helpers"
   import { users } from "stores/portal"
 
   export let app
