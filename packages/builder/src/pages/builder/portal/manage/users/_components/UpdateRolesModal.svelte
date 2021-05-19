@@ -14,7 +14,7 @@
   let selectedRole
 
   async function updateUserRoles() {
-    const res = await users.updateRoles({
+    const res = await users.save({
       ...user,
       roles: {
         ...user.roles,

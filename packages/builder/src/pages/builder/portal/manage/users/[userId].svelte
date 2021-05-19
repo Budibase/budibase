@@ -43,7 +43,7 @@
   const apps = fetchData(`/api/admin/roles`)
 
   async function deleteUser() {
-    const res = await users.del(userId)
+    const res = await users.delete(userId)
     if (res.message) {
       notifications.success(`User ${$userFetch?.data?.email} deleted.`)
       $goto("./")
@@ -52,7 +52,14 @@
     }
   }
 
-  async function toggleBuilderAccess() {}
+  let toggleDisabled = false
+
+  async function toggleBuilderAccess({ detail }) {
+    toggleDisabled = true
+    await users.save({ ...$userFetch?.data, builder: { global: detail } })
+    await userFetch.refresh()
+    toggleDisabled = false
+  }
 
   async function openUpdateRolesModal({ detail }) {
     console.log(detail)
@@ -90,7 +97,12 @@
       </div>
       <div class="field">
         <Label size="L">Development access?</Label>
-        <Toggle text="" value={$userFetch?.data?.builder?.global} />
+        <Toggle
+          text=""
+          value={$userFetch?.data?.builder?.global}
+          on:change={toggleBuilderAccess}
+          disabled={toggleDisabled}
+        />
       </div>
     </div>
     <div class="regenerate">
