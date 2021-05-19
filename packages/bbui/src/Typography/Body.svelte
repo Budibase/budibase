@@ -8,7 +8,7 @@
 </script>
 
 <p
-    style="{textAlign ? `text-align:${textAlign}` : ``}"
+  style={textAlign ? `text-align:${textAlign}` : ``}
   class:noPadding
   class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
