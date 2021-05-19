@@ -118,53 +118,38 @@ exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
   return users
 }
 
-exports.saveGlobalUser = async (ctx, appId, body) => {
-  const globalUser = body._id
-    ? await exports.getGlobalUsers(ctx, appId, body._id)
-    : {}
-  const preRoles = globalUser.roles || {}
-  if (body.roleId) {
-    preRoles[appId] = body.roleId
+exports.getGlobalSelf = async ctx => {
+  const endpoint = `/api/admin/users/self`
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + endpoint),
+    request(ctx, { method: "GET" })
+  )
+  const json = await response.json()
+  if (json.status !== 200 && response.status !== 200) {
+    ctx.throw(400, "Unable to get self globally.")
   }
-  // make sure no dev app IDs in roles
-  const roles = {}
-  for (let [appId, roleId] of Object.entries(preRoles)) {
-    roles[getDeployedAppID(appId)] = roleId
-  }
-  const endpoint = `/api/admin/users`
+  return json
+}
+
+exports.addAppRoleToSelf = async (ctx, appId, roleId) => {
+  const self = await exports.getGlobalSelf(ctx)
+  const endpoint = `/api/admin/users/self`
   const reqCfg = {
     method: "POST",
     body: {
-      ...globalUser,
-      password: body.password || undefined,
-      status: body.status,
-      email: body.email,
-      roles,
-      builder: {
-        global: true,
-      },
+      roles: {
+        ...self.roles,
+        [appId]: roleId,
+      }
     },
   }
-
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     request(ctx, reqCfg)
   )
   const json = await response.json()
   if (json.status !== 200 && response.status !== 200) {
-    ctx.throw(400, "Unable to save global user.")
+    ctx.throw(400, "Unable to save self globally.")
   }
-  delete body.password
-  delete body.roles
-  delete body.builder
-  // TODO: for now these have been left in as they are
-  // TODO: pretty important to keeping relationships working
-  // TODO: however if user metadata is changed this should be removed
-  // delete body.email
-  // delete body.roleId
-  // delete body.status
-  return {
-    ...body,
-    _id: json._id,
-  }
+  return json
 }

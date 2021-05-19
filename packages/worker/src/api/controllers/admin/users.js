@@ -98,7 +98,7 @@ exports.destroy = async ctx => {
 
 exports.getSelf = async ctx => {
   ctx.params = {
-    id: ctx.user._id
+    id: ctx.user._id,
   }
   // this will set the body
   await exports.find(ctx)
@@ -172,12 +172,16 @@ exports.invite = async ctx => {
 }
 
 exports.inviteAccept = async ctx => {
-  const { inviteCode } = ctx.request.body
+  const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     const email = await checkInviteCode(inviteCode)
-    // redirect the request
-    delete ctx.request.body.inviteCode
-    ctx.request.body.email = email
+    // only pass through certain props for accepting
+    ctx.request.body = {
+      firstName,
+      lastName,
+      password,
+      email,
+    }
     // this will flesh out the body response
     await exports.save(ctx)
   } catch (err) {
