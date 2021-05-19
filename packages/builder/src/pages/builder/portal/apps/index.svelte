@@ -98,8 +98,7 @@
     if (!appToDelete) {
       return
     }
-
-    await del(`/api/applications/${appToDelete?._id}`)
+    await del(`/api/applications/${appToDelete?.appId}`)
     await apps.load()
     appToDelete = null
     notifications.success("App deleted successfully.")
