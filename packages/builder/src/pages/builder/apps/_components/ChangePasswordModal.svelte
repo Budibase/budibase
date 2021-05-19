@@ -17,7 +17,7 @@
 </script>
 
 <ModalContent
-  title="Change password"
+  title="Update password"
   confirmText="Update password"
   onConfirm={updatePassword}
   disabled={error || !password}
