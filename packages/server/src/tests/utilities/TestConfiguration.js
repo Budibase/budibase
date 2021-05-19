@@ -77,7 +77,11 @@ class TestConfiguration {
     if (builder) {
       user.builder = { global: true }
     }
-    await db.put(user)
+    const resp = await db.put(user)
+    return {
+      _rev: resp._rev,
+      ...user,
+    }
   }
 
   async init(appName = "test_application") {
@@ -308,18 +312,9 @@ class TestConfiguration {
     roleId = BUILTIN_ROLE_IDS.POWER
   ) {
     const globalId = `us_${Math.random()}`
-    await this.globalUser(globalId, roleId === BUILTIN_ROLE_IDS.BUILDER)
-    const user = await this._req(
-      {
-        email,
-        password,
-        roleId,
-      },
-      null,
-      controllers.user.createMetadata
-    )
+    const resp = await this.globalUser(globalId, roleId === BUILTIN_ROLE_IDS.BUILDER)
     return {
-      ...user,
+      ...resp,
       globalId,
     }
   }
