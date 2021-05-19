@@ -5,7 +5,10 @@ const {
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getGlobalUsers, addAppRoleToSelf } = require("../../utilities/workerRequests")
+const {
+  getGlobalUsers,
+  addAppRoleToUser,
+} = require("../../utilities/workerRequests")
 const { getFullUser } = require("../../utilities/users")
 
 function removeGlobalProps(user) {
@@ -46,7 +49,7 @@ exports.updateSelfMetadata = async function (ctx) {
   ctx.request.body._id = ctx.user._id
   if (ctx.user.builder && ctx.user.builder.global) {
     // specific case, update self role in global user
-    await addAppRoleToSelf(ctx, ctx.appId, BUILTIN_ROLE_IDS.ADMIN)
+    await addAppRoleToUser(ctx, ctx.appId, BUILTIN_ROLE_IDS.ADMIN)
   }
   // make sure no stale rev
   delete ctx.request.body._rev
@@ -57,10 +60,12 @@ exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = removeGlobalProps(ctx.request.body)
+  if (user.roleId) {
+    await addAppRoleToUser(ctx, appId, user.roleId, user._id)
+  }
   const metadata = {
     tableId: InternalTables.USER_METADATA,
-    _id: user._id,
-    _rev: user._rev,
+    ...user,
   }
   ctx.body = await db.put(metadata)
 }

@@ -3,6 +3,7 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { getDeployedAppID } = require("@budibase/auth/db")
+const { getGlobalIDFromUserMetadataID } = require("../db/utils")
 
 function getAppRole(appId, user) {
   if (!user.roles) {
@@ -131,21 +132,33 @@ exports.getGlobalSelf = async ctx => {
   return json
 }
 
-exports.addAppRoleToSelf = async (ctx, appId, roleId) => {
-  const self = await exports.getGlobalSelf(ctx)
-  const endpoint = `/api/admin/users/self`
-  const reqCfg = {
-    method: "POST",
-    body: {
-      roles: {
-        ...self.roles,
-        [appId]: roleId,
-      }
+exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
+  appId = getDeployedAppID(appId)
+  let user,
+    endpoint,
+    body = {}
+  if (!userId) {
+    user = await exports.getGlobalSelf(ctx)
+    endpoint = `/api/admin/users/self`
+  } else {
+    userId = getGlobalIDFromUserMetadataID(userId)
+    user = await exports.getGlobalUsers(ctx, appId, userId)
+    body._id = userId
+    endpoint = `/api/admin/users`
+  }
+  body = {
+    ...body,
+    roles: {
+      ...user.roles,
+      [appId]: roleId,
     },
   }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, reqCfg)
+    request(ctx, {
+      method: "POST",
+      body,
+    })
   )
   const json = await response.json()
   if (json.status !== 200 && response.status !== 200) {

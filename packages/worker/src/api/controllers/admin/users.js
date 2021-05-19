@@ -16,9 +16,14 @@ exports.save = async ctx => {
   const { email, password, _id } = ctx.request.body
 
   // make sure another user isn't using the same email
-  const dbUser = await getGlobalUserByEmail(email)
-  if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-    ctx.throw(400, "Email address already in use.")
+  let dbUser
+  if (email) {
+    dbUser = await getGlobalUserByEmail(email)
+    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
+      ctx.throw(400, "Email address already in use.")
+    }
+  } else {
+    dbUser = await db.get(_id)
   }
 
   // get the password, make sure one is defined

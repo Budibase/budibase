@@ -56,13 +56,28 @@ async function findRow(ctx, db, tableId, rowId) {
 exports.patch = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  let dbRow = await db.get(ctx.params.rowId)
-  let dbTable = await db.get(dbRow.tableId)
-  const patchfields = ctx.request.body
+  const inputs = ctx.request.body
+  const tableId = inputs.tableId
+  const isUserTable = tableId === InternalTables.USER_METADATA
+  let dbRow
+  try {
+    dbRow = await db.get(ctx.params.rowId)
+  } catch (err) {
+    if (isUserTable) {
+      // don't include the rev, it'll be the global rev
+      // this time
+      dbRow = {
+        _id: inputs._id,
+      }
+    } else {
+      ctx.throw(400, "Row does not exist")
+    }
+  }
+  let dbTable = await db.get(tableId)
   // need to build up full patch fields before coerce
-  for (let key of Object.keys(patchfields)) {
+  for (let key of Object.keys(inputs)) {
     if (!dbTable.schema[key]) continue
-    dbRow[key] = patchfields[key]
+    dbRow[key] = inputs[key]
   }
 
   // this returns the table and row incase they have been updated
@@ -90,13 +105,9 @@ exports.patch = async function (ctx) {
     table,
   })
 
-  // TODO remove special user case in future
-  if (row.tableId === InternalTables.USER_METADATA) {
+  if (isUserTable) {
     // the row has been updated, need to put it into the ctx
-    ctx.request.body = {
-      ...row,
-      password: ctx.request.body.password,
-    }
+    ctx.request.body = row
     await userController.updateMetadata(ctx)
     return
   }
@@ -129,12 +140,9 @@ exports.save = async function (ctx) {
 
   // if the row obj had an _id then it will have been retrieved
   if (inputs._id && inputs._rev) {
-    const existingRow = await db.get(inputs._id)
-    if (existingRow) {
-      ctx.params.rowId = inputs._id
-      await exports.patch(ctx)
-      return
-    }
+    ctx.params.rowId = inputs._id
+    await exports.patch(ctx)
+    return
   }
 
   if (!inputs._rev && !inputs._id) {
@@ -166,13 +174,6 @@ exports.save = async function (ctx) {
     tableId: row.tableId,
     table,
   })
-
-  if (row.tableId === InternalTables.USER_METADATA && row._id) {
-    // the row has been updated, need to put it into the ctx
-    ctx.request.body = row
-    await userController.updateMetadata(ctx)
-    return
-  }
 
   row.type = "row"
   const response = await db.put(row)

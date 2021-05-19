@@ -86,10 +86,6 @@
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ name: "password", type: "password" }}
-    bind:value={row.password}
-  />
-  <RowFieldControl
     meta={{ ...tableSchema.firstName, name: "First Name" }}
     bind:value={row.firstName}
   />
@@ -106,16 +102,6 @@
     options={$roles}
     getOptionLabel={role => role.name}
     getOptionValue={role => role._id}
-  />
-  <Select
-    label="Status"
-    bind:value={row.status}
-    options={[
-      { label: "Active", value: "active" },
-      { label: "Inactive", value: "inactive" },
-    ]}
-    getOptionLabel={status => status.label}
-    getOptionValue={status => status.value}
   />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}
