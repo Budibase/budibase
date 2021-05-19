@@ -37,7 +37,7 @@
   size="M"
   showCloseIcon={false}
 >
-  <Body noPadding>
+  <Body>
     Update {user.email}'s role for <strong>{app.name}</strong>.
   </Body>
   <Select

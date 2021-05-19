@@ -27,7 +27,7 @@
       <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Accept Invitation</Heading>
-        <Body textAlign="center" size="M" noPadding>
+        <Body textAlign="center" size="M">
           Please enter a password to set up your user.
         </Body>
       </Layout>
