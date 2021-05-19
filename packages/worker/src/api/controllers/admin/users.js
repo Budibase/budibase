@@ -96,6 +96,22 @@ exports.destroy = async ctx => {
   }
 }
 
+exports.self = async ctx => {
+  const db = new CouchDB(GLOBAL_DB)
+  const user = await db.get(ctx.user._id)
+  if (ctx.request.body.password) {
+    ctx.request.body.password = await hash(ctx.request.body.password)
+  }
+  const response = await db.put({
+    ...user,
+    ...ctx.request.body,
+  })
+  ctx.body = {
+    _id: response.id,
+    _rev: response.rev,
+  }
+}
+
 // called internally by app server user fetch
 exports.fetch = async ctx => {
   const db = new CouchDB(GLOBAL_DB)

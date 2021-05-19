@@ -167,11 +167,10 @@ exports.save = async function (ctx) {
     table,
   })
 
-  // TODO remove special user case in future
-  if (row.tableId === InternalTables.USER_METADATA) {
+  if (row.tableId === InternalTables.USER_METADATA && row._id) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
-    await userController.createMetadata(ctx)
+    await userController.updateMetadata(ctx)
     return
   }
 
