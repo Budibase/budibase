@@ -48,7 +48,7 @@
       </ActionMenu>
     </div>
     <div class="status">
-      <Body noPadding size="S">
+      <Body size="S">
         Edited {Math.floor(1 + Math.random() * 10)} months ago
       </Body>
       {#if app.lockedBy}
