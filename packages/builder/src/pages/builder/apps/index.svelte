@@ -13,16 +13,16 @@
     Modal,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation } from "stores/portal"
-  import { auth } from "stores/backend"
+  import { apps, organisation, auth } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
   import UpdateUserInfoModal from "./_components/UpdateUserInfoModal.svelte"
+  import ChangePasswordModal from "./_components/ChangePasswordModal.svelte"
 
   let loaded = false
   let userInfoModal
-  let userPasswordModal
+  let changePasswordModal
 
   onMount(async () => {
     await organisation.init()
@@ -44,8 +44,7 @@
               </Heading>
               <Body>
                 Welcome to the {$organisation.company} portal. Below you'll find
-                the list of apps that you have access to, as well as company news
-                and the employee handbook.
+                the list of apps that you have access to.
               </Body>
             </Layout>
             <ActionMenu align="right">
@@ -56,7 +55,12 @@
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 Update user information
               </MenuItem>
-              <MenuItem icon="LockClosed">Update password</MenuItem>
+              <MenuItem
+                icon="LockClosed"
+                on:click={() => changePasswordModal.show()}
+              >
+                Update password
+              </MenuItem>
               <MenuItem
                 icon="UserDeveloper"
                 on:click={() => $goto("../portal")}
@@ -67,38 +71,41 @@
             </ActionMenu>
           </div>
           <Divider />
-          <div class="apps-title">
+          {#if $apps.length}
             <Heading>Apps</Heading>
-            <Select placeholder="Filter by groups" />
-          </div>
-          <div class="group">
-            <Layout gap="S" noPadding>
-              <div class="group-title">
-                <Body weight="500" size="XS">GROUP</Body>
-                {#if $auth.user?.builder?.global}
-                  <Icon name="Settings" hoverable />
-                {/if}
-              </div>
-              {#each $apps as app, idx (app.appId)}
-                <a class="app" target="_blank" href={`/${app.appId}`}>
-                  <div class="preview" use:gradient={{ seed: app.name }} />
-                  <div class="app-info">
-                    <Heading size="XS">{app.name}</Heading>
-                    <Body size="S">
-                      Edited {Math.round(Math.random() * 10 + 1)} months ago
-                    </Body>
-                  </div>
-                  <Icon name="ChevronRight" />
-                </a>
-              {/each}
+            <div class="group">
+              <Layout gap="S" noPadding>
+                {#each $apps as app, idx (app.appId)}
+                  <a class="app" target="_blank" href={`/${app.appId}`}>
+                    <div class="preview" use:gradient={{ seed: app.name }} />
+                    <div class="app-info">
+                      <Heading size="XS">{app.name}</Heading>
+                      <Body size="S">
+                        Edited {Math.round(Math.random() * 10 + 1)} months ago
+                      </Body>
+                    </div>
+                    <Icon name="ChevronRight" />
+                  </a>
+                {/each}
+              </Layout>
+            </div>
+          {:else}
+            <Layout gap="XS" noPadding>
+              <Heading size="S">You don't have access to any apps yet.</Heading>
+              <Body size="S">
+                The apps you have access to will be listed here.
+              </Body>
             </Layout>
-          </div>
+          {/if}
         </Layout>
       </div>
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
     <UpdateUserInfoModal />
+  </Modal>
+  <Modal bind:this={changePasswordModal}>
+    <ChangePasswordModal />
   </Modal>
 {/if}
 
@@ -130,19 +137,8 @@
     cursor: pointer;
     filter: brightness(110%);
   }
-  .apps-title {
-    display: grid;
-    grid-template-columns: 1fr 150px;
-    grid-gap: var(--spacing-xl);
-  }
   .group {
-    margin-top: 20px;
-  }
-  .group-title {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-gap: var(--spacing-xl);
-    align-items: center;
+    margin-top: var(--spacing-s);
   }
   .app {
     display: grid;

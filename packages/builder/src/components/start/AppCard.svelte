@@ -6,12 +6,9 @@
     Layout,
     ActionMenu,
     MenuItem,
-    Link,
   } from "@budibase/bbui"
   import { gradient } from "actions"
-  import { AppStatus } from "constants"
-  import { url } from "@roxi/routify"
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 
   export let app
   export let exportApp
