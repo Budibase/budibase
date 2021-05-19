@@ -3,7 +3,6 @@ const sendSmtpEmail = require("./steps/sendSmtpEmail")
 const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
-const createUser = require("./steps/createUser")
 const executeScript = require("./steps/executeScript")
 const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
@@ -20,7 +19,6 @@ const BUILTIN_ACTIONS = {
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
   DELETE_ROW: deleteRow.run,
-  CREATE_USER: createUser.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_QUERY: executeQuery.run,
@@ -31,7 +29,6 @@ const BUILTIN_DEFINITIONS = {
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,
   DELETE_ROW: deleteRow.definition,
-  CREATE_USER: createUser.definition,
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
   EXECUTE_SCRIPT: executeScript.definition,
   EXECUTE_QUERY: executeQuery.definition,

@@ -1,6 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/admin/configs")
 const joiValidator = require("../../../middleware/joi-validator")
+const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
 const { Configs, ConfigUploads } = require("../../../constants")
 
@@ -75,6 +76,8 @@ function buildConfigGetValidation() {
     type: Joi.string().valid(...Object.values(Configs)).required()
   }).unknown(true).required())
 }
+
+router.use(adminOnly)
 
 router
   .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
