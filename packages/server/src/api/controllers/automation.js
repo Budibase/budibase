@@ -39,8 +39,6 @@ function cleanAutomationInputs(automation) {
  * @param {string} appId The ID of the app in which we are checking for webhooks
  * @param {object|undefined} oldAuto The old automation object if updating/deleting
  * @param {object|undefined} newAuto The new automation object if creating/updating
- * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
- * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
 async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
@@ -53,11 +51,13 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
     )
   }
 
+  const isLive = auto => auto && auto.live
+
   const cronTriggerRemoved =
     isCronTrigger(oldAuto) && !isCronTrigger(newAuto) && oldTrigger.cronJobId
-  const cronTriggerDeactivated = !newAuto.live && oldAuto.live
+  const cronTriggerDeactivated = !isLive(newAuto) && isLive(oldAuto)
 
-  const cronTriggerActivated = newAuto.live && !oldAuto.live
+  const cronTriggerActivated = isLive(newAuto) && !isLive(oldAuto)
 
   if (cronTriggerRemoved || cronTriggerDeactivated) {
     await triggers.automationQueue.removeRepeatableByKey(oldTrigger.cronJobId)
