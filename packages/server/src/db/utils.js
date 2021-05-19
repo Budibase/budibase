@@ -19,6 +19,7 @@ const StaticDatabases = {
 
 const AppStatus = {
   DEV: "dev",
+  ALL: "all",
   DEPLOYED: "PUBLISHED",
 }
 

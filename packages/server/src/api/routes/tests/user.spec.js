@@ -117,9 +117,6 @@ describe("/users", () => {
 
   describe("update", () => {
     beforeEach(() => {
-      workerRequests.saveGlobalUser.mockImplementationOnce(() => ({
-        _id: "us_test@test.com"
-      }))
     })
 
     it("should be able to update the user", async () => {
@@ -151,9 +148,6 @@ describe("/users", () => {
   describe("find", () => {
     beforeEach(() => {
       jest.resetAllMocks()
-      workerRequests.saveGlobalUser.mockImplementationOnce(() => ({
-        _id: "us_uuid1",
-      }))
       workerRequests.getGlobalUsers.mockImplementationOnce(() => ({
         _id: "us_uuid1",
         roleId: BUILTIN_ROLE_IDS.POWER,

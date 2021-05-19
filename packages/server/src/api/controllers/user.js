@@ -5,8 +5,16 @@ const {
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getGlobalUsers } = require("../../utilities/workerRequests")
+const { getGlobalUsers, addAppRoleToSelf } = require("../../utilities/workerRequests")
 const { getFullUser } = require("../../utilities/users")
+
+function removeGlobalProps(user) {
+  // make sure to always remove some of the global user props
+  delete user.password
+  delete user.roles
+  delete user.builder
+  return user
+}
 
 exports.fetchMetadata = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -37,7 +45,8 @@ exports.updateSelfMetadata = async function (ctx) {
   // overwrite the ID with current users
   ctx.request.body._id = ctx.user._id
   if (ctx.user.builder && ctx.user.builder.global) {
-    ctx.request.body.roleId = BUILTIN_ROLE_IDS.ADMIN
+    // specific case, update self role in global user
+    await addAppRoleToSelf(ctx, ctx.appId, BUILTIN_ROLE_IDS.ADMIN)
   }
   // make sure no stale rev
   delete ctx.request.body._rev
@@ -47,11 +56,7 @@ exports.updateSelfMetadata = async function (ctx) {
 exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const user = ctx.request.body
-  // make sure to always remove some of the global user props
-  delete user.password
-  delete user.roles
-  delete user.builder
+  const user = removeGlobalProps(ctx.request.body)
   const metadata = {
     tableId: InternalTables.USER_METADATA,
     _id: user._id,

@@ -78,8 +78,13 @@ function buildConfigGetValidation() {
 }
 
 router
-  .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
-  .delete("/api/admin/configs/:id", controller.destroy)
+  .post(
+    "/api/admin/configs",
+    adminOnly,
+    buildConfigSaveValidation(),
+    controller.save
+  )
+  .delete("/api/admin/configs/:id", adminOnly, controller.destroy)
   .get("/api/admin/configs", controller.fetch)
   .get("/api/admin/configs/checklist", controller.configChecklist)
   .get(
@@ -90,6 +95,7 @@ router
   .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
   .post(
     "/api/admin/configs/upload/:type/:name",
+    adminOnly,
     buildUploadValidation(),
     controller.upload
   )
