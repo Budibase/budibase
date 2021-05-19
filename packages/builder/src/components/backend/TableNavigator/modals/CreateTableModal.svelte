@@ -3,7 +3,14 @@
   import { store } from "builderStore"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import { Input, Label, ModalContent, Toggle, Divider } from "@budibase/bbui"
+  import {
+    Input,
+    Label,
+    ModalContent,
+    Toggle,
+    Divider,
+    Layout,
+  } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -123,8 +130,10 @@
     bind:value={createAutoscreens}
   />
   <div>
-    <Label grey extraSmall>Create Table from CSV (Optional)</Label>
-    <TableDataImport bind:dataImport />
+    <Layout gap="XS" noPadding>
+      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+      <TableDataImport bind:dataImport />
+    </Layout>
   </div>
 </ModalContent>
 
