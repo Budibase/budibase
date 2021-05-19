@@ -77,8 +77,6 @@ function buildConfigGetValidation() {
   }).unknown(true).required())
 }
 
-router.use(adminOnly)
-
 router
   .post("/api/admin/configs", buildConfigSaveValidation(), controller.save)
   .delete("/api/admin/configs/:id", controller.destroy)
