@@ -1,11 +1,25 @@
 <script>
-  import { Input, Button, Layout, Body, Heading } from "@budibase/bbui"
+  import {
+    notifications,
+    Input,
+    Button,
+    Layout,
+    Body,
+    Heading,
+  } from "@budibase/bbui"
   import { organisation } from "stores/portal"
+  import { auth } from "stores/backend"
 
-  let username = ""
-  let password = ""
+  let email = ""
 
-  async function reset() {}
+  async function forgot() {
+    try {
+      await auth.forgotPassword(email)
+      notifications.success("Email sent - please check your inbox")
+    } catch (err) {
+      notifications.error("Unable to send reset password link")
+    }
+  }
 </script>
 
 <div class="login">
@@ -20,9 +34,11 @@
           No problem! Just enter your account's email address and we'll send you
           a link to reset it.
         </Body>
-        <Input label="Email" bind:value={username} />
+        <Input label="Email" bind:value={email} />
       </Layout>
-      <Button cta on:click={reset}>Reset your password</Button>
+      <Button cta on:click={forgot} disabled={!email}>
+        Reset your password
+      </Button>
     </Layout>
   </div>
 </div>

@@ -1,29 +1,15 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Input,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { createValidationStore, requiredValidator } from "helpers/validation"
   import { users, organisation } from "stores/portal"
+  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
 
-  const [password, passwordError, passwordTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
-  const [repeat, _, repeatTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
   const inviteCode = $params["?code"]
+  let password, error
 
   async function acceptInvite() {
     try {
-      const res = await users.acceptInvite(inviteCode, $password)
+      const res = await users.acceptInvite(inviteCode, password)
       if (!res) {
         throw new Error(res.message)
       }
@@ -41,31 +27,12 @@
       <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Accept Invitation</Heading>
-        <Body textAlign="center" size="M" noPadding>
+        <Body textAlign="center" size="M">
           Please enter a password to set up your user.
         </Body>
       </Layout>
-      <Layout gap="XS" noPadding>
-        <Input
-          label="Password"
-          type="password"
-          error={$passwordTouched && $passwordError}
-          bind:value={$password}
-        />
-        <Input
-          label="Repeat Password"
-          type="password"
-          error={$repeatTouched &&
-            $password !== $repeat &&
-            "Passwords must match"}
-          bind:value={$repeat}
-        />
-      </Layout>
-      <Button
-        disabled={!$passwordTouched || !$repeatTouched || $password !== $repeat}
-        cta
-        on:click={acceptInvite}
-      >
+      <PasswordRepeatInput bind:error bind:password />
+      <Button disabled={error} cta on:click={acceptInvite}>
         Accept invite
       </Button>
     </Layout>

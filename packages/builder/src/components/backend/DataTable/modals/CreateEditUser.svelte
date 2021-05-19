@@ -32,6 +32,8 @@
     delete customSchema["email"]
     delete customSchema["roleId"]
     delete customSchema["status"]
+    delete customSchema["firstName"]
+    delete customSchema["lastName"]
     return Object.entries(customSchema)
   }
 
@@ -86,6 +88,14 @@
   <RowFieldControl
     meta={{ name: "password", type: "password" }}
     bind:value={row.password}
+  />
+  <RowFieldControl
+    meta={{ ...tableSchema.firstName, name: "First Name" }}
+    bind:value={row.firstName}
+  />
+  <RowFieldControl
+    meta={{ ...tableSchema.lastName, name: "Last Name" }}
+    bind:value={row.lastName}
   />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
