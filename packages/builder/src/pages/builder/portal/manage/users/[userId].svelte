@@ -21,10 +21,12 @@
 
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
+  import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
 
   export let userId
   let deleteUserModal
   let editRolesModal
+  let resetPasswordModal
 
   const roleSchema = {
     name: { displayName: "App" },
@@ -157,6 +159,9 @@
     user={$userFetch.data}
     on:update={userFetch.refresh}
   />
+</Modal>
+<Modal bind:this={resetPasswordModal}>
+  <ForceResetPasswordModal user={$userFetch.data} />
 </Modal>
 
 <style>
