@@ -1,8 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { isActive, redirect } from "@roxi/routify"
-  import { auth } from "stores/backend"
-  import { admin } from "stores/portal"
+  import { admin, auth } from "stores/portal"
 
   let loaded = false
   $: hasAdminUser = !!$admin?.checklist?.adminUser

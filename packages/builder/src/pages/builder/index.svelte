@@ -1,6 +1,6 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 
   $: {
     if (!$auth.user) {

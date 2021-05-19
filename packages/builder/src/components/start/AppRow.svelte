@@ -1,7 +1,7 @@
 <script>
   import { gradient } from "actions"
   import { Heading, Button, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 
   export let app
   export let openApp

@@ -1,7 +1,7 @@
 <script>
-  import { ModalContent, Body, Input } from "@budibase/bbui"
+  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 
   const values = writable({
     firstName: $auth.user.firstName,
@@ -9,7 +9,12 @@
   })
 
   const updateInfo = async () => {
-    // Update name
+    try {
+      await auth.updateSelf({ ...$auth.user, ...$values })
+      notifications.success("Information updated successfully")
+    } catch (error) {
+      notifications.error("Failed to update information")
+    }
   }
 </script>
 
