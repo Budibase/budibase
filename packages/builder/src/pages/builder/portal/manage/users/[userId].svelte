@@ -9,6 +9,8 @@
     Divider,
     Label,
     Input,
+    Select,
+    Toggle,
     Modal,
     Table,
     ModalContent,
@@ -33,22 +35,24 @@
   $: appList = Object.keys($apps?.data).map(id => ({
     ...$apps?.data?.[id],
     _id: id,
-    role: [$roleFetch?.data?.roles?.[id]],
+    role: [$userFetch?.data?.roles?.[id]],
   }))
   let selectedApp
 
-  const roleFetch = fetchData(`/api/admin/users/${userId}`)
+  const userFetch = fetchData(`/api/admin/users/${userId}`)
   const apps = fetchData(`/api/admin/roles`)
 
   async function deleteUser() {
     const res = await users.del(userId)
     if (res.message) {
-      notifications.success(`User ${$roleFetch?.data?.email} deleted.`)
+      notifications.success(`User ${$userFetch?.data?.email} deleted.`)
       $goto("./")
     } else {
       notifications.error("Failed to delete user.")
     }
   }
+
+  async function toggleBuilderAccess() {}
 
   async function openUpdateRolesModal({ detail }) {
     console.log(detail)
@@ -65,11 +69,10 @@
   </div>
   <div class="heading">
     <Layout noPadding gap="XS">
-      <Heading>User: {$roleFetch?.data?.email}</Heading>
+      <Heading>User: {$userFetch?.data?.email}</Heading>
       <Body
-        >Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro
-        ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
-        veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
+        >Change user settings and update their app roles. Also contains the
+        ability to delete the user as well as force reset their password.
       </Body>
     </Layout>
   </div>
@@ -79,7 +82,15 @@
     <div class="fields">
       <div class="field">
         <Label size="L">Email</Label>
-        <Input disabled thin value={$roleFetch?.data?.email} />
+        <Input disabled thin value={$userFetch?.data?.email} />
+      </div>
+      <div class="field">
+        <Label size="L">Group(s)</Label>
+        <Select disabled options={["All users"]} value="All users" />
+      </div>
+      <div class="field">
+        <Label size="L">Development access?</Label>
+        <Toggle text="" value={$userFetch?.data?.builder?.global} />
       </div>
     </div>
     <div class="regenerate">
@@ -123,7 +134,7 @@
     showCloseIcon={false}
   >
     <Body
-      >Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong
+      >Are you sure you want to delete <strong>{$userFetch?.data?.email}</strong
       ></Body
     >
   </ModalContent>
@@ -131,8 +142,8 @@
 <Modal bind:this={editRolesModal}>
   <UpdateRolesModal
     app={selectedApp}
-    user={$roleFetch.data}
-    on:update={roleFetch.refresh}
+    user={$userFetch.data}
+    on:update={userFetch.refresh}
   />
 </Modal>
 
