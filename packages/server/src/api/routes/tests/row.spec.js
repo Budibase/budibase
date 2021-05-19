@@ -304,24 +304,6 @@ describe("/rows", () => {
     })
   })
 
-  describe("search", () => {
-    it("should run a search on the table", async () => {
-      const res = await request
-        .post(`/api/${table._id}/rows/search`)
-        .send({
-          query: {
-            name: "Test",
-          },
-          pagination: { pageSize: 25 }
-        })
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body.rows.length).toEqual(1)
-      expect(res.body.bookmark).toBeDefined()
-    })
-  })
-
   describe("fetchView", () => {
     it("should be able to fetch tables contents via 'view'", async () => {
       const row = await config.createRow()

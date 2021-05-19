@@ -214,7 +214,7 @@ exports.create = async function (ctx) {
 exports.update = async function (ctx) {
   const url = await getAppUrlIfNotInUse(ctx)
   const db = new CouchDB(ctx.params.appId)
-  const application = await db.get(ctx.params.appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
 
   const data = ctx.request.body
   const newData = { ...application, ...data, url }
@@ -235,7 +235,7 @@ exports.update = async function (ctx) {
 
 exports.delete = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
-  const app = await db.get(ctx.params.appId)
+  const app = await db.get(DocumentTypes.APP_METADATA)
   const result = await db.destroy()
   /* istanbul ignore next */
   if (!env.isTest()) {
