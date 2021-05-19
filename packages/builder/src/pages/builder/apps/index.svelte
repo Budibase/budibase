@@ -10,6 +10,7 @@
     Page,
     Icon,
     Body,
+    Modal,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { apps, organisation } from "stores/portal"
@@ -17,8 +18,11 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
+  import UpdateUserInfoModal from "./_components/UpdateUserInfoModal.svelte"
 
   let loaded = false
+  let userInfoModal
+  let userPasswordModal
 
   onMount(async () => {
     await organisation.init()
@@ -35,8 +39,10 @@
           <img src={$organisation.logoUrl} />
           <div class="info-title">
             <Layout noPadding gap="XS">
-              <Heading size="L">Hey {$auth.user.email}</Heading>
-              <Body noPadding>
+              <Heading size="L">
+                Hey {$auth.user.firstName || $auth.user.email}
+              </Heading>
+              <Body>
                 Welcome to the {$organisation.company} portal. Below you'll find
                 the list of apps that you have access to, as well as company news
                 and the employee handbook.
@@ -47,7 +53,9 @@
                 <Avatar size="M" name="John Doe" />
                 <Icon size="XL" name="ChevronDown" />
               </div>
-              <MenuItem icon="UserEdit">Update user information</MenuItem>
+              <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+                Update user information
+              </MenuItem>
               <MenuItem icon="LockClosed">Update password</MenuItem>
               <MenuItem
                 icon="UserDeveloper"
@@ -66,7 +74,7 @@
           <div class="group">
             <Layout gap="S" noPadding>
               <div class="group-title">
-                <Body weight="500" noPadding size="XS">GROUP</Body>
+                <Body weight="500" size="XS">GROUP</Body>
                 {#if $auth.user?.builder?.global}
                   <Icon name="Settings" hoverable />
                 {/if}
@@ -76,7 +84,7 @@
                   <div class="preview" use:gradient={{ seed: app.name }} />
                   <div class="app-info">
                     <Heading size="XS">{app.name}</Heading>
-                    <Body noPadding size="S">
+                    <Body size="S">
                       Edited {Math.round(Math.random() * 10 + 1)} months ago
                     </Body>
                   </div>
@@ -89,6 +97,9 @@
       </div>
     </Page>
   </div>
+  <Modal bind:this={userInfoModal}>
+    <UpdateUserInfoModal />
+  </Modal>
 {/if}
 
 <style>
@@ -150,7 +161,7 @@
   }
   .preview {
     height: 40px;
-    width: 40px;
+    width: 60px;
     border-radius: var(--border-radius-s);
   }
 </style>
