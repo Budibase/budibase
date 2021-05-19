@@ -30,8 +30,6 @@
     await apps.load(AppStatus.DEV)
     loaded = true
   })
-
-  $: console.log($auth.user)
 </script>
 
 {#if loaded}
