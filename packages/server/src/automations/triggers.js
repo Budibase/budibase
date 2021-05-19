@@ -216,15 +216,7 @@ const BUILTIN_DEFINITIONS = {
         },
         required: ["cron"],
       },
-      outputs: {
-        properties: {
-          body: {
-            type: "object",
-            description: "Body of the request which hit the webhook",
-          },
-        },
-        // required: ["row", "id"],
-      },
+      outputs: {},
     },
     type: "TRIGGER",
   },
