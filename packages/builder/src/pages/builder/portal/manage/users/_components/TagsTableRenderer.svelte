@@ -10,7 +10,7 @@
 
 <Tags>
   {#each tags as tag}
-    <Tag>
+    <Tag disabled>
       {tag}
     </Tag>
   {/each}

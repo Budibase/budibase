@@ -34,7 +34,7 @@
     .filter(user => user.email.includes(search || ""))
     .map(user => ({
       ...user,
-      group: ["All"],
+      group: ["All users"],
       developmentAccess: user.builder.global,
     }))
 
