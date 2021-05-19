@@ -102,6 +102,9 @@ exports.self = async ctx => {
   if (ctx.request.body.password) {
     ctx.request.body.password = await hash(ctx.request.body.password)
   }
+  // don't allow sending up an ID/Rev, always use the existing one
+  delete ctx.request.body._id
+  delete ctx.request.body._rev
   const response = await db.put({
     ...user,
     ...ctx.request.body,

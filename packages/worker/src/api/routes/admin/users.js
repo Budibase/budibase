@@ -7,10 +7,10 @@ const router = Router()
 
 function buildUserSaveValidation(isSelf = false) {
   let schema = {
-    email: Joi.string(),
+    email: Joi.string().allow(null, ""),
     password: Joi.string().allow(null, ""),
-    firstName: Joi.string(),
-    lastName: Joi.string(),
+    firstName: Joi.string().allow(null, ""),
+    lastName: Joi.string().allow(null, ""),
     builder: Joi.object({
       global: Joi.boolean().optional(),
       apps: Joi.array().optional(),
