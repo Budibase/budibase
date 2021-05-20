@@ -35,6 +35,7 @@
     "test": "jest --testPathIgnorePatterns=routes && yarn run test:integration",
     "test:integration": "jest --coverage --detectOpenHandles",
     "test:watch": "jest --watch",
+    "build:docker": "docker build . -t app-service",
     "run:docker": "node src/index",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
