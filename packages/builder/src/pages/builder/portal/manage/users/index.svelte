@@ -44,27 +44,26 @@
 </script>
 
 <Layout>
-  <div class="heading">
+  <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
-    <Body
-      >Users are the common denominator in Budibase. Each user is assigned to a
+    <Body>
+      Users are the common denominator in Budibase. Each user is assigned to a
       group that contains apps and permissions. In this section, you can add
-      users, or edit and delete an existing user.</Body
-    >
-  </div>
+      users, or edit and delete an existing user.
+    </Body>
+  </Layout>
   <Divider size="S" />
-
-  <div class="users">
-    <Heading size="S">Users</Heading>
+  <Layout gap="S" noPadding>
+    <div class="users-heading">
+      <Heading size="S">Users</Heading>
+      <ButtonGroup>
+        <Button disabled secondary>Import users</Button>
+        <Button primary on:click={createUserModal.show}>Add user</Button>
+      </ButtonGroup>
+    </div>
     <div class="field">
       <Label size="L">Search / filter</Label>
       <Search bind:value={search} placeholder="" />
-    </div>
-    <div class="buttons">
-      <ButtonGroup>
-        <Button disabled secondary>Import users</Button>
-        <Button overBackground on:click={createUserModal.show}>Add user</Button>
-      </ButtonGroup>
     </div>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
@@ -75,31 +74,28 @@
       allowSelectRows={false}
       customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
-  </div>
+  </Layout>
 </Layout>
 
-<Modal bind:this={createUserModal}
-  ><AddUserModal on:change={openBasicOnoboardingModal} /></Modal
->
+<Modal bind:this={createUserModal}>
+  <AddUserModal on:change={openBasicOnoboardingModal} />
+</Modal>
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
-  .users {
-    position: relative;
-  }
   .field {
     display: flex;
     align-items: center;
     flex-direction: row;
     grid-gap: var(--spacing-m);
-    margin: var(--spacing-xl) 0;
   }
   .field > :global(*) + :global(*) {
     margin-left: var(--spacing-m);
   }
-  .buttons {
-    position: absolute;
-    top: 0;
-    right: 0;
+  .users-heading {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>

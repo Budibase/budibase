@@ -1,5 +1,5 @@
 <script>
-  import { isActive, goto } from "@roxi/routify"
+  import { isActive, redirect, goto } from "@roxi/routify"
   import {
     Icon,
     Avatar,
@@ -12,15 +12,14 @@
     Modal,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation } from "stores/portal"
-  import { auth } from "stores/backend"
+  import { organisation, auth } from "stores/portal"
   import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
+  import { onMount } from "svelte"
 
   let oldSettingsModal
+  let loaded = false
 
-  organisation.init()
-
-  let menu = [
+  const menu = [
     { title: "Apps", href: "/builder/portal/apps" },
     { title: "Drafts", href: "/builder/portal/drafts" },
     { title: "Users", href: "/builder/portal/manage/users", heading: "Manage" },
@@ -35,54 +34,69 @@
     { title: "Theming", href: "/builder/portal/theming" },
     { title: "Account", href: "/builder/portal/account" },
   ]
+
+  onMount(async () => {
+    // Prevent non-builders from accessing the portal
+    if (!$auth.user?.builder?.global) {
+      $redirect("../")
+    } else {
+      await organisation.init()
+      loaded = true
+    }
+  })
 </script>
 
-<div class="container">
-  <div class="nav">
-    <Layout paddingX="L" paddingY="L">
-      <div class="branding">
-        <div class="name" on:click={() => $goto("./apps")}>
-          <img
-            src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
-            alt="Logotype"
-          />
-          <span>{$organisation?.company || "Budibase"}</span>
+{#if loaded}
+  <div class="container">
+    <div class="nav">
+      <Layout paddingX="L" paddingY="L">
+        <div class="branding">
+          <div class="name" on:click={() => $goto("./apps")}>
+            <img
+              src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
+              alt="Logotype"
+            />
+            <span>{$organisation?.company || "Budibase"}</span>
+          </div>
+          <div class="onboarding">
+            <ConfigChecklist />
+          </div>
         </div>
-        <div class="onboarding">
-          <ConfigChecklist />
+        <div class="menu">
+          <Navigation>
+            {#each menu as { title, href, heading }}
+              <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+            {/each}
+          </Navigation>
         </div>
-      </div>
-      <div class="menu">
-        <Navigation>
-          {#each menu as { title, href, heading }}
-            <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
-          {/each}
-        </Navigation>
-      </div>
-    </Layout>
-  </div>
-  <div class="main">
-    <div class="toolbar">
-      <Search placeholder="Global search" />
-      <ActionMenu align="right">
-        <div slot="control" class="avatar">
-          <Avatar size="M" name="John Doe" />
-          <Icon size="XL" name="ChevronDown" />
-        </div>
-        <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
-          Old settings
-        </MenuItem>
-        <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
-      </ActionMenu>
+      </Layout>
     </div>
-    <div class="content">
-      <slot />
+    <div class="main">
+      <div class="toolbar">
+        <Search placeholder="Global search" />
+        <ActionMenu align="right">
+          <div slot="control" class="avatar">
+            <Avatar size="M" name="John Doe" />
+            <Icon size="XL" name="ChevronDown" />
+          </div>
+          <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
+            Old settings
+          </MenuItem>
+          <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
+            Close developer mode
+          </MenuItem>
+          <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+        </ActionMenu>
+      </div>
+      <div class="content">
+        <slot />
+      </div>
     </div>
   </div>
-</div>
-<Modal bind:this={oldSettingsModal} width="30%">
-  <BuilderSettingsModal />
-</Modal>
+  <Modal bind:this={oldSettingsModal} width="30%">
+    <BuilderSettingsModal />
+  </Modal>
+{/if}
 
 <style>
   .container {

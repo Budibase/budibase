@@ -102,59 +102,57 @@
   })
 </script>
 
-<Page>
-  <header>
+<Layout>
+  <Layout noPadding gap="XS">
     <Heading size="M">Email</Heading>
-    <Body size="S">
+    <Body>
       Sending email is not required, but highly recommended for processes such
       as password recovery. To setup automated auth emails, simply add the
       values below and click activate.
     </Body>
-  </header>
+  </Layout>
   <Divider />
   {#if smtpConfig}
-    <div class="config-form">
+    <Layout gap="XS" noPadding>
       <Heading size="S">SMTP</Heading>
       <Body size="S">
         To allow your app to benefit from automated auth emails, add your SMTP
         details below.
       </Body>
-      <Layout gap="S">
-        <Heading size="S">
-          <span />
-        </Heading>
-        <div class="form-row">
-          <Label>Host</Label>
-          <Input bind:value={smtpConfig.config.host} />
-        </div>
-        <div class="form-row">
-          <Label>Port</Label>
-          <Input type="number" bind:value={smtpConfig.config.port} />
-        </div>
-        <div class="form-row">
-          <Label>User</Label>
-          <Input bind:value={smtpConfig.config.auth.user} />
-        </div>
-        <div class="form-row">
-          <Label>Password</Label>
-          <Input type="password" bind:value={smtpConfig.config.auth.pass} />
-        </div>
-        <div class="form-row">
-          <Label>From email address</Label>
-          <Input type="email" bind:value={smtpConfig.config.from} />
-        </div>
-      </Layout>
+    </Layout>
+    <Layout gap="XS" noPadding>
+      <div class="form-row">
+        <Label size="L">Host</Label>
+        <Input bind:value={smtpConfig.config.host} />
+      </div>
+      <div class="form-row">
+        <Label size="L">Port</Label>
+        <Input type="number" bind:value={smtpConfig.config.port} />
+      </div>
+      <div class="form-row">
+        <Label size="L">User</Label>
+        <Input bind:value={smtpConfig.config.auth.user} />
+      </div>
+      <div class="form-row">
+        <Label size="L">Password</Label>
+        <Input type="password" bind:value={smtpConfig.config.auth.pass} />
+      </div>
+      <div class="form-row">
+        <Label size="L">From email address</Label>
+        <Input type="email" bind:value={smtpConfig.config.from} />
+      </div>
+    </Layout>
+    <div>
       <Button cta on:click={saveSmtp}>Save</Button>
     </div>
     <Divider />
-
-    <div class="config-form">
+    <Layout gap="XS" noPadding>
       <Heading size="S">Templates</Heading>
       <Body size="S">
         Budibase comes out of the box with ready-made email templates to help
         with user onboarding. Please refrain from changing the links.
       </Body>
-    </div>
+    </Layout>
     <Table
       {customRenderers}
       data={$email.templates}
@@ -165,27 +163,13 @@
       allowEditColumns={false}
     />
   {/if}
-</Page>
+</Layout>
 
 <style>
-  .config-form {
-    margin-top: 42px;
-    margin-bottom: 42px;
-  }
-
   .form-row {
     display: grid;
-    grid-template-columns: 20% 1fr;
+    grid-template-columns: 25% 1fr;
     grid-gap: var(--spacing-l);
-  }
-
-  span {
-    display: flex;
     align-items: center;
-    gap: var(--spacing-s);
-  }
-
-  header {
-    margin-bottom: 42px;
   }
 </style>
