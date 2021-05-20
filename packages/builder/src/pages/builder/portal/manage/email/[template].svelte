@@ -16,21 +16,16 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
 
-  const ConfigTypes = {
-    SMTP: "smtp",
-  }
-
   export let template
 
   let selected = "Edit"
-  let selectedBindingTab = "Template"
   let htmlEditor
 
-  $: selectedTemplate = $email.templates.find(
+  $: selectedTemplate = $email?.templates?.find(
     ({ purpose }) => purpose === template
   )
   $: templateBindings =
-    $email.definitions?.bindings[selectedTemplate.purpose] || []
+    $email.definitions?.bindings?.[selectedTemplate.purpose] || []
 
   async function saveTemplate() {
     try {
@@ -80,7 +75,7 @@
           on:change={e => {
             selectedTemplate.contents = e.detail.value
           }}
-          value={selectedTemplate.contents}
+          value={selectedTemplate?.contents}
         />
         <div class="bindings-editor">
           <Detail size="L">Bindings</Detail>
@@ -95,7 +90,7 @@
             <Tab title="Common">
               <TemplateBindings
                 title="Common Bindings"
-                bindings={$email.definitions.bindings.common}
+                bindings={$email?.definitions?.bindings?.common}
                 onBindingClick={setTemplateBinding}
               />
             </Tab>
@@ -105,7 +100,7 @@
     >
     <Tab title="Preview">
       <div class="preview">
-        {@html selectedTemplate.contents}
+        {@html selectedTemplate?.contents}
       </div>
     </Tab>
   </Tabs>
