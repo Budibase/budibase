@@ -205,7 +205,6 @@ exports.create = async function (ctx) {
 
   ctx.status = 200
   ctx.body = newApplication
-  ctx.message = `Application ${ctx.request.body.name} created successfully`
 }
 
 exports.update = async function (ctx) {
@@ -226,7 +225,6 @@ exports.update = async function (ctx) {
   data._rev = response.rev
 
   ctx.status = 200
-  ctx.message = `Application ${application.name} updated successfully.`
   ctx.body = response
 }
 
@@ -240,7 +238,6 @@ exports.delete = async function (ctx) {
   }
 
   ctx.status = 200
-  ctx.message = `Application ${app.name} deleted successfully.`
   ctx.body = result
 }
 

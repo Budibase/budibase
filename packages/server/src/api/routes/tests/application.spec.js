@@ -28,7 +28,6 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
-      expect(res.res.statusMessage).toEqual("Application My App created successfully")
       expect(res.body._id).toBeDefined()
     })
 
