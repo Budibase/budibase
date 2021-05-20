@@ -16,4 +16,4 @@ exports.AnalyticsEvents = {
 }
 
 exports.BUDIBASE_POSTHOG_URL = "https://posthog.budi.live"
-exports.BUDIBASE_POSTHOG_TOKEN = process.env.BUDIBASE_POSTHOG_TOKEN
+exports.BUDIBASE_POSTHOG_TOKEN = "Oeq9KzIpZYaNsXIvHw5QTZWNpfiG_EOjAOpjTyAiitY"
