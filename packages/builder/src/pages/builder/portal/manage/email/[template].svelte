@@ -18,7 +18,6 @@
 
   export let template
 
-  let selected = "Edit"
   let htmlEditor
 
   $: selectedTemplate = $email?.templates?.find(
@@ -65,7 +64,7 @@
       menu on the right.</Body
     >
   </Layout>
-  <Tabs {selected}>
+  <Tabs selected="Edit">
     <Tab title="Edit">
       <div class="template-editor">
         <Editor
