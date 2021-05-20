@@ -1,13 +1,13 @@
 <script>
   import {
+    notifications,
     Input,
     Button,
     Layout,
     Body,
     Heading,
-    notifications,
   } from "@budibase/bbui"
-  import { auth } from "stores/backend"
+  import { organisation, auth } from "stores/portal"
 
   let email = ""
 
@@ -25,7 +25,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src="https://i.imgur.com/ZKyklgF.png" />
+        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Forgotten your password?</Heading>
@@ -35,9 +35,9 @@
         </Body>
         <Input label="Email" bind:value={email} />
       </Layout>
-      <Button cta on:click={forgot} disabled={!email}
-        >Reset your password</Button
-      >
+      <Button cta on:click={forgot} disabled={!email}>
+        Reset your password
+      </Button>
     </Layout>
   </div>
 </div>

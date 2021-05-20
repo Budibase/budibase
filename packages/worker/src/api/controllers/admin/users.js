@@ -16,9 +16,14 @@ exports.save = async ctx => {
   const { email, password, _id } = ctx.request.body
 
   // make sure another user isn't using the same email
-  const dbUser = await getGlobalUserByEmail(email)
-  if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-    ctx.throw(400, "Email address already in use.")
+  let dbUser
+  if (email) {
+    dbUser = await getGlobalUserByEmail(email)
+    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
+      ctx.throw(400, "Email address already in use.")
+    }
+  } else {
+    dbUser = await db.get(_id)
   }
 
   // get the password, make sure one is defined
@@ -96,6 +101,33 @@ exports.destroy = async ctx => {
   }
 }
 
+exports.getSelf = async ctx => {
+  ctx.params = {
+    id: ctx.user._id,
+  }
+  // this will set the body
+  await exports.find(ctx)
+}
+
+exports.updateSelf = async ctx => {
+  const db = new CouchDB(GLOBAL_DB)
+  const user = await db.get(ctx.user._id)
+  if (ctx.request.body.password) {
+    ctx.request.body.password = await hash(ctx.request.body.password)
+  }
+  // don't allow sending up an ID/Rev, always use the existing one
+  delete ctx.request.body._id
+  delete ctx.request.body._rev
+  const response = await db.put({
+    ...user,
+    ...ctx.request.body,
+  })
+  ctx.body = {
+    _id: response.id,
+    _rev: response.rev,
+  }
+}
+
 // called internally by app server user fetch
 exports.fetch = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
@@ -145,12 +177,16 @@ exports.invite = async ctx => {
 }
 
 exports.inviteAccept = async ctx => {
-  const { inviteCode } = ctx.request.body
+  const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     const email = await checkInviteCode(inviteCode)
-    // redirect the request
-    delete ctx.request.body.inviteCode
-    ctx.request.body.email = email
+    // only pass through certain props for accepting
+    ctx.request.body = {
+      firstName,
+      lastName,
+      password,
+      email,
+    }
     // this will flesh out the body response
     await exports.save(ctx)
   } catch (err) {

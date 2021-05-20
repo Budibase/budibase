@@ -1,20 +1,6 @@
 const setup = require("./utilities")
 const { generateUserMetadataID } = require("../../../db/utils")
 
-require("../../../utilities/workerRequests")
-jest.mock("../../../utilities/workerRequests", () => ({
-  getGlobalUsers: jest.fn(() => {
-    return {
-      _id: "us_uuid1",
-    }
-  }),
-  saveGlobalUser: jest.fn(() => {
-    return {
-      _id: "us_uuid1",
-    }
-  }),
-}))
-
 describe("/authenticate", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -27,7 +13,7 @@ describe("/authenticate", () => {
 
   describe("fetch self", () => {
     it("should be able to fetch self", async () => {
-      const user = await config.createUser("test@test.com", "p4ssw0rd")
+      await config.createUser("test@test.com", "p4ssw0rd")
       const headers = await config.login("test@test.com", "p4ssw0rd", { userId: "us_uuid1" })
       const res = await request
         .get(`/api/self`)

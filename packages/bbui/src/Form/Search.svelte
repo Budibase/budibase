@@ -8,6 +8,7 @@
   export let labelPosition = "above"
   export let placeholder = null
   export let disabled = false
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -18,11 +19,14 @@
 
 <Field {label} {labelPosition}>
   <Search
+    {updateOnChange}
     {disabled}
     {value}
     {placeholder}
     on:change={onChange}
     on:click
     on:input
+    on:focus
+    on:blur
   />
 </Field>
