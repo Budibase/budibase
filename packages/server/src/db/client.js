@@ -12,7 +12,6 @@ PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
 
 let POUCH_DB_DEFAULTS = {
   prefix: COUCH_DB_URL,
-  skip_setup: env.isProd(),
 }
 
 if (env.isTest()) {

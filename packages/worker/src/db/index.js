@@ -7,7 +7,6 @@ const COUCH_DB_URL = env.COUCH_DB_URL || "http://localhost:10000/db/"
 
 let POUCH_DB_DEFAULTS = {
   prefix: COUCH_DB_URL,
-  skip_setup: env.isProd(),
 }
 
 if (env.isTest()) {
