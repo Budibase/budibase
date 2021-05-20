@@ -21,15 +21,27 @@ static_resources:
                   cluster: app-service
                   prefix_rewrite: "/"
 
-              - match: { path: "/" }
+              - match: { prefix: "/builder/" }
+                route:
+                  cluster: app-service
+
+              - match: { prefix: "/builder" }
+                route:
+                  cluster: app-service
+              
+              - match: { prefix: "/app_" }
                 route:
                   cluster: app-service
 
               # special case for worker admin API
-              - match: { path: "/api/admin" }
+              - match: { prefix: "/api/admin/" }
                 route:
                   cluster: worker-service
-              
+
+              - match: { path: "/" }
+                route:
+                  cluster: app-service
+
               # special case for when API requests are made, can just forward, not to minio    
               - match: { prefix: "/api/" }
                 route:
