@@ -1,5 +1,6 @@
 <script>
   import {
+    Button,
     Detail,
     Heading,
     ActionButton,
@@ -11,7 +12,6 @@
     Tab,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { fade } from "svelte/transition"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
@@ -47,16 +47,6 @@
   }
 </script>
 
-<!-- <div class="backbutton" on:click={() => $goto("./")}>
-    <Icon name="BackAndroid" />
-    <span>Back</span>
-  </div>
-  <header>
-    <Heading>
-      Email Template: {template}
-    </Heading>
-    <Button cta on:click={saveTemplate}>Save</Button>
-  </header> -->
 <Page wide>
   <Layout gap="XS" noPadding>
     <div class="back">
@@ -69,10 +59,15 @@
         Back to email settings
       </ActionButton>
     </div>
-    <Heading>Email Template: {template}</Heading>
+    <header>
+      <Heading>
+        Email Template: {template}
+      </Heading>
+      <Button cta on:click={saveTemplate}>Save</Button>
+    </header>
     <Body
-      >Change the email template here. you can insert bindings (email, logo url,
-      etc.) from the list on the right</Body
+      >Change the email template here. Add dynamic content by using the bindings
+      menu on the right.</Body
     >
   </Layout>
   <Tabs {selected}>
@@ -89,7 +84,7 @@
         />
         <div class="bindings-editor">
           <Detail size="L">Bindings</Detail>
-          <Tabs selected={selectedBindingTab}>
+          <Tabs selected="Template">
             <Tab title="Template">
               <TemplateBindings
                 title="Template Bindings"
@@ -109,7 +104,7 @@
       </div></Tab
     >
     <Tab title="Preview">
-      <div class="preview" transition:fade>
+      <div class="preview">
         {@html selectedTemplate.contents}
       </div>
     </Tab>
@@ -128,7 +123,6 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
-    margin-bottom: var(--spacing-l);
     margin-top: var(--spacing-l);
   }
 
@@ -136,12 +130,5 @@
     background: white;
     height: 800px;
     padding: var(--spacing-xl);
-  }
-
-  .backbutton {
-    display: flex;
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
-    cursor: pointer;
   }
 </style>
