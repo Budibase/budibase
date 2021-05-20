@@ -15,7 +15,7 @@ class AnalyticsClient {
   }
 
   capture(event) {
-    if (this.manager.config.analyticsDisabled) return
+    if (this.configManager.config.analyticsDisabled) return
 
     this.client.capture(event)
   }
