@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
-  import { admin } from "stores/portal"
+  import { admin, organisation } from "stores/portal"
 
   let adminUser = {}
 
@@ -32,22 +32,22 @@
 
 <section>
   <div class="container">
-    <Layout gap="XS">
-      <img src="https://i.imgur.com/ZKyklgF.png" />
-    </Layout>
-    <div class="center">
-      <Layout gap="XS">
+    <Layout>
+      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+      <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
-        <Body size="M"
-          >The admin user has access to everything in Budibase.</Body
-        >
+        <Body size="M" textAlign="center">
+          The admin user has access to everything in Budibase.
+        </Body>
       </Layout>
-    </div>
-    <Layout gap="XS">
-      <Input label="Email" bind:value={adminUser.email} />
-      <Input label="Password" type="password" bind:value={adminUser.password} />
-    </Layout>
-    <Layout gap="S">
+      <Layout gap="XS" noPadding>
+        <Input label="Email" bind:value={adminUser.email} />
+        <Input
+          label="Password"
+          type="password"
+          bind:value={adminUser.password}
+        />
+      </Layout>
       <Button cta on:click={save}>Create super admin user</Button>
     </Layout>
   </div>
@@ -67,9 +67,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-  }
-  .center {
-    text-align: center;
   }
   img {
     width: 40px;

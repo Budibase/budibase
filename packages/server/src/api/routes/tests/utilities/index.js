@@ -3,8 +3,7 @@ const structures = require("../../../../tests/utilities/structures")
 const env = require("../../../../environment")
 
 jest.mock("../../../../utilities/workerRequests", () => ({
-  getGlobalUsers: jest.fn(),
-  saveGlobalUser: jest.fn(() => {
+  getGlobalUsers: jest.fn(() => {
     return {
       _id: "us_uuid1",
     }

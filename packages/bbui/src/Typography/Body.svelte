@@ -3,27 +3,17 @@
 
   export let size = "M"
   export let serif = false
-  export let noPadding = false
-  export let textAlign
+  export let weight = null
+  export let textAlign = null
 </script>
 
 <p
-    style="{textAlign ? `text-align:${textAlign}` : ``}"
-  class:noPadding
+  style={`
+    ${weight ? `font-weight:${weight};` : ""}
+    ${textAlign ? `text-align:${textAlign};` : ""}
+  `}
   class="spectrum-Body spectrum-Body--size{size}"
   class:spectrum-Body--serif={serif}
 >
   <slot />
 </p>
-
-<style>
-  p {
-    margin-top: 0.75em;
-    margin-bottom: 0.75em;
-  }
-
-  .noPadding {
-    padding: 0;
-    margin: 0;
-  }
-</style>

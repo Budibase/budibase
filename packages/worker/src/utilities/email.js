@@ -155,9 +155,11 @@ exports.sendEmail = async (
   const context = await getSettingsTemplateContext(purpose, code)
   const message = {
     from: from || config.from,
-    subject: await processString(subject || config.subject, context),
     to: email,
     html: await buildEmail(purpose, email, context, { user, contents }),
+  }
+  if (subject || config.subject) {
+    message.subject = await processString(subject || config.subject, context)
   }
   const response = await transport.sendMail(message)
   if (TEST_MODE) {

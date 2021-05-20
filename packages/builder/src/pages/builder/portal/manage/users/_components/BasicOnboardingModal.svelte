@@ -26,10 +26,10 @@
   error={$touched && $error}
   showCloseIcon={false}
 >
-  <Body noPadding
-    >Below you will find the user’s username and password. The password will not
-    be accessible from this point. Please download the credentials.</Body
-  >
+  <Body size="S">
+    Below you will find the user’s username and password. The password will not
+    be accessible from this point. Please save the credentials.
+  </Body>
   <Input
     type="email"
     label="Username"

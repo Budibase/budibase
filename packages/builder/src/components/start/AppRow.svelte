@@ -1,16 +1,7 @@
 <script>
   import { gradient } from "actions"
-  import {
-    Heading,
-    Button,
-    Icon,
-    ActionMenu,
-    MenuItem,
-    Link,
-  } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { url } from "@roxi/routify"
-  import { auth } from "stores/backend"
+  import { Heading, Button, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
+  import { auth } from "stores/portal"
 
   export let app
   export let openApp
@@ -23,19 +14,24 @@
 
 <div class="title" class:last>
   <div class="preview" use:gradient={{ seed: app.name }} />
-  <Link on:click={() => openApp(app)}>
+  <div class="name" on:click={() => openApp(app)}>
     <Heading size="XS">
       {app.name}
     </Heading>
-  </Link>
+  </div>
 </div>
 <div class:last>
   Edited {Math.round(Math.random() * 10 + 1)} months ago
 </div>
 <div class:last>
   {#if app.lockedBy}
-    <div class="status status--locked-you" />
-    Locked by {app.lockedBy.email}
+    {#if app.lockedBy.email === $auth.user.email}
+      <div class="status status--locked-you" />
+      Locked by you
+    {:else}
+      <div class="status status--locked-other" />
+      Locked by {app.lockedBy.email}
+    {/if}
   {:else}
     <div class="status status--open" />
     Open
@@ -63,7 +59,7 @@
     width: 40px;
     border-radius: var(--border-radius-s);
   }
-  .title :global(a) {
+  .name {
     text-decoration: none;
   }
   .title :global(h1:hover) {

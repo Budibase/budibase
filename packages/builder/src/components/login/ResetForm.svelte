@@ -1,8 +1,8 @@
 <script>
-  import { Button, Layout, Body, Heading, notifications } from "@budibase/bbui"
+  import { notifications, Button, Layout, Body, Heading } from "@budibase/bbui"
+  import { organisation, auth } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { params, goto } from "@roxi/routify"
-  import { auth } from "stores/backend"
 
   const resetCode = $params["?code"]
   let password, error
@@ -16,7 +16,6 @@
     } catch (err) {
       notifications.error("Unable to reset password")
     }
-
   }
 </script>
 
@@ -24,7 +23,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src="https://i.imgur.com/ZKyklgF.png" />
+        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Reset your password</Heading>
@@ -33,7 +32,9 @@
         </Body>
         <PasswordRepeatInput bind:password bind:error />
       </Layout>
-      <Button cta on:click={reset} disabled={error || !resetCode}>Reset your password</Button>
+      <Button cta on:click={reset} disabled={error || !resetCode}>
+        Reset your password
+      </Button>
     </Layout>
   </div>
 </div>

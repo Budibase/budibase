@@ -4,8 +4,9 @@
 
   const displayLimit = 5
 
-  $: tags = value?.slice(0, displayLimit) ?? []
-  $: leftover = (value?.length ?? 0) - tags.length
+  $: roles = value?.filter(role => role != null) ?? []
+  $: tags = roles.slice(0, displayLimit)
+  $: leftover = roles.length - tags.length
 </script>
 
 <Tags>

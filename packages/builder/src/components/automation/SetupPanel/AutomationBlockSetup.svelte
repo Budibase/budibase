@@ -10,6 +10,7 @@
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
+  import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
 
   export let block
@@ -76,6 +77,8 @@
         />
       {:else if value.customType === "query"}
         <QuerySelector bind:value={block.inputs[key]} />
+      {:else if value.customType === "cron"}
+        <CronBuilder bind:value={block.inputs[key]} />
       {:else if value.customType === "queryParams"}
         <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === "table"}
