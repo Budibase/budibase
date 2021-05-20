@@ -28,7 +28,8 @@
       !$isActive("./auth") &&
       !$isActive("./invite")
     ) {
-      $redirect("./auth/login")
+      const returnUrl = encodeURIComponent(window.location.pathname)
+      $redirect("./auth/login?", { returnUrl })
     }
   }
 </script>

@@ -10,6 +10,8 @@
     initialise,
     screenStore,
     authStore,
+    routeStore,
+    builderStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
 
@@ -18,13 +20,13 @@
   setContext("component", writable({}))
   setContext("context", createContextStore())
 
-  let loaded = false
+  let dataLoaded = false
 
   // Load app config
   onMount(async () => {
     await initialise()
     await authStore.actions.fetchUser()
-    loaded = true
+    dataLoaded = true
   })
 
   // Register this as a refreshable datasource so that user changes cause
@@ -36,9 +38,22 @@
       metadata: { dataSource: { type: "table", tableId: TableNames.USERS } },
     },
   ]
+
+  // Redirect to home layout if no matching route
+  $: {
+    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+      if ($authStore) {
+        routeStore.actions.navigate("/")
+      } else {
+        const returnUrl = `${window.location.pathname}${window.location.hash}`
+        const encodedUrl = encodeURIComponent(returnUrl)
+        window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
+      }
+    }
+  }
 </script>
 
-{#if loaded && $screenStore.activeLayout}
+{#if dataLoaded && $screenStore.activeLayout}
   <div lang="en" dir="ltr" class="spectrum spectrum--medium spectrum--light">
     <Provider key="user" data={$authStore} {actions}>
       <Component definition={$screenStore.activeLayout.props} />
