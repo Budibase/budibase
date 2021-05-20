@@ -3,6 +3,7 @@
   import Router from "svelte-spa-router"
   import { routeStore } from "../store"
   import Screen from "./Screen.svelte"
+  import { onMount } from "svelte"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")

@@ -8,6 +8,7 @@ const createRouteStore = () => {
     routeParams: {},
     activeRoute: null,
     routeSessionId: Math.random(),
+    routerLoaded: false,
   }
   const store = writable(initialState)
 
@@ -47,10 +48,19 @@ const createRouteStore = () => {
     })
   }
   const navigate = push
+  const setRouterLoaded = () => {
+    store.update(state => ({ ...state, routerLoaded: true }))
+  }
 
   return {
     subscribe: store.subscribe,
-    actions: { fetchRoutes, navigate, setRouteParams, setActiveRoute },
+    actions: {
+      fetchRoutes,
+      navigate,
+      setRouteParams,
+      setActiveRoute,
+      setRouterLoaded,
+    },
   }
 }
 
