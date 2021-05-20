@@ -306,11 +306,7 @@ class TestConfiguration {
     return await this._req(config, null, controllers.layout.save)
   }
 
-  async createUser(
-    email = EMAIL,
-    password = PASSWORD,
-    roleId = BUILTIN_ROLE_IDS.POWER
-  ) {
+  async createUser(roleId = BUILTIN_ROLE_IDS.POWER) {
     const globalId = `us_${Math.random()}`
     const resp = await this.globalUser(
       globalId,
