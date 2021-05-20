@@ -18,6 +18,11 @@ const WEBHOOK_ENDPOINTS = new RegExp(
 async function checkDevAppLocks(ctx) {
   const appId = ctx.appId
 
+  // if any public usage, don't proceed
+  if (!ctx.user._id && !ctx.user.userId) {
+    return
+  }
+
   // not a development app, don't need to do anything
   if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return
