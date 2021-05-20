@@ -1,7 +1,7 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "1.58.13",
+  "version": "0.9.1",
   "license": "AGPL-3.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
@@ -77,5 +77,6 @@
     "dayjs": "^1.10.4",
     "svelte-flatpickr": "^3.1.0",
     "svelte-portal": "^1.0.0"
-  }
+  },
+  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
