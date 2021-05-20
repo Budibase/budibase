@@ -12,7 +12,7 @@ const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
  * inputs and handles any outputs.
  */
 class Orchestrator {
-  constructor(automation, triggerOutput) {
+  constructor(automation, triggerOutput = {}) {
     this._metadata = triggerOutput.metadata
     this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
     this._appId = triggerOutput.appId

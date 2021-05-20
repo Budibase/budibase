@@ -10,7 +10,7 @@
 
   const roles = app.roles
   let options = roles.map(role => role._id)
-  let selectedRole
+  let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
     const res = await users.save({
@@ -23,7 +23,7 @@
     if (res.status === 400) {
       notifications.error("Failed to update role")
     } else {
-      notifications.success("Roles updated")
+      notifications.success("Role updated")
       dispatch("update")
     }
   }
@@ -31,20 +31,20 @@
 
 <ModalContent
   onConfirm={updateUserRoles}
-  title="Update App Roles"
-  confirmText="Update roles"
+  title="Update App Role"
+  confirmText="Update role"
   cancelText="Cancel"
   size="M"
   showCloseIcon={false}
 >
-  <Body noPadding
-    >Update {user.email}'s roles for <strong>{app.name}</strong>.</Body
-  >
+  <Body>
+    Update {user.email}'s role for <strong>{app.name}</strong>.
+  </Body>
   <Select
     placeholder={null}
     bind:value={selectedRole}
     on:change
     {options}
-    label="Select roles:"
+    label="Role"
   />
 </ModalContent>

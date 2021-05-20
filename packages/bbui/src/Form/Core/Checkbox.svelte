@@ -45,3 +45,9 @@
   </span>
   <span class="spectrum-Checkbox-label">{text || ""}</span>
 </label>
+
+<style>
+  .spectrum-Checkbox-input {
+    opacity: 0;
+  }
+</style>

@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select } from "@budibase/bbui"
   import { notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
@@ -99,15 +99,19 @@
   const typeOptions = [
     {
       label: "Text",
-      value: "string",
+      value: FIELDS.STRING.type,
     },
     {
       label: "Number",
-      value: "number",
+      value: FIELDS.NUMBER.type,
     },
     {
       label: "Date",
-      value: "datetime",
+      value: FIELDS.DATETIME.type,
+    },
+    {
+      label: "Options",
+      value: FIELDS.OPTIONS.type,
     },
   ]
 </script>

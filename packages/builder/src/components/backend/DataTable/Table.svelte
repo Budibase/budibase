@@ -47,6 +47,8 @@
       })
       schema.email.displayName = "Email"
       schema.roleId.displayName = "Role"
+      schema.firstName.displayName = "First Name"
+      schema.lastName.displayName = "Last Name"
       if (schema.status) {
         schema.status.displayName = "Status"
       }
@@ -101,7 +103,7 @@
   </div>
   <div class="popovers">
     <slot />
-    {#if selectedRows.length > 0}
+    {#if !isUsersTable && selectedRows.length > 0}
       <DeleteRowsButton {selectedRows} {deleteRows} />
     {/if}
   </div>
@@ -114,7 +116,7 @@
     {customRenderers}
     {rowCount}
     bind:selectedRows
-    allowSelectRows={allowEditing}
+    allowSelectRows={allowEditing && !isUsersTable}
     allowEditRows={allowEditing}
     allowEditColumns={allowEditing}
     showAutoColumns={!hideAutocolumns}
