@@ -80,6 +80,7 @@ class InMemoryQueue {
    */
   removeRepeatableByKey(cronJobId) {
     // TODO: implement for testing
+    console.log(cronJobId)
   }
 }
 
