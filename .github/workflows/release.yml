@@ -2,11 +2,12 @@ name: Budibase Release
 
 on: 
  push:
-  branches:
-    - master
+    branches:
+      - master
  pull_request:
     branches:
       - master
+
 
 jobs:
   release:
@@ -33,8 +34,9 @@ jobs:
       #   run: yarn release
 
       - name: Build/release Docker images
+        run: | 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build:docker
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        run: yarn build:docker
