@@ -73,6 +73,15 @@ class InMemoryQueue {
     this._messages.push(newJob(this._name, msg))
     this._emitter.emit("message")
   }
+
+  /**
+   * This removes a cron which has been implemented, this is part of Bull API.
+   * @param {string} cronJobId The cron which is to be removed.
+   */
+  removeRepeatableByKey(cronJobId) {
+    // TODO: implement for testing
+    console.log(cronJobId)
+  }
 }
 
 module.exports = InMemoryQueue

@@ -48,6 +48,7 @@ services:
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     depends_on:
+      - redis-service
       - minio-service
       - couch-init
 

@@ -8,11 +8,11 @@ export function createAuthStore() {
     subscribe: store.subscribe,
     checkAuth: async () => {
       const response = await api.get("/api/admin/users/self")
-      const user = await response.json()
-      if (response.status === 200) {
-        store.update(state => ({ ...state, user }))
-      } else {
+      if (response.status !== 200) {
         store.update(state => ({ ...state, user: null }))
+      } else {
+        const user = await response.json()
+        store.update(state => ({ ...state, user }))
       }
     },
     login: async creds => {
