@@ -22,10 +22,7 @@ const {
 } = require("../../db/utils")
 const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
-const {
-  createHomeScreen,
-  createLoginScreen,
-} = require("../../constants/screens")
+const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
@@ -259,10 +256,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   const homeScreen = createHomeScreen(app)
   homeScreen._id = generateScreenID()
   screensAndLayouts.push(homeScreen)
-
-  const loginScreen = createLoginScreen(app)
-  loginScreen._id = generateScreenID()
-  screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)
 }
