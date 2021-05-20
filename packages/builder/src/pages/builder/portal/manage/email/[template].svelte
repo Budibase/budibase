@@ -1,11 +1,12 @@
 <script>
   import {
-    Button,
     Detail,
     Heading,
-    notifications,
-    Icon,
+    ActionButton,
+    Body,
     Page,
+    Layout,
+    notifications,
     Tabs,
     Tab,
   } from "@budibase/bbui"
@@ -46,8 +47,7 @@
   }
 </script>
 
-<Page wide gap="L">
-  <div class="backbutton" on:click={() => $goto("./")}>
+<!-- <div class="backbutton" on:click={() => $goto("./")}>
     <Icon name="BackAndroid" />
     <span>Back</span>
   </div>
@@ -56,7 +56,25 @@
       Email Template: {template}
     </Heading>
     <Button cta on:click={saveTemplate}>Save</Button>
-  </header>
+  </header> -->
+<Page wide>
+  <Layout gap="XS" noPadding>
+    <div class="back">
+      <ActionButton
+        on:click={() => $goto("./")}
+        quiet
+        size="S"
+        icon="BackAndroid"
+      >
+        Back to email settings
+      </ActionButton>
+    </div>
+    <Heading>Email Template: {template}</Heading>
+    <Body
+      >Change the email template here. you can insert bindings (email, logo url,
+      etc.) from the list on the right</Body
+    >
+  </Layout>
   <Tabs {selected}>
     <Tab title="Edit">
       <div class="template-editor">
