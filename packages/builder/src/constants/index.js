@@ -15,7 +15,14 @@ export const AppStatus = {
 }
 
 // fields on the user table that cannot be edited
-export const UNEDITABLE_USER_FIELDS = ["email", "password", "roleId", "status"]
+export const UNEDITABLE_USER_FIELDS = [
+  "email",
+  "password",
+  "roleId",
+  "status",
+  "firstName",
+  "lastName",
+]
 
 export const LAYOUT_NAMES = {
   MASTER: {

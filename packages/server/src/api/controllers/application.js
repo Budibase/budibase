@@ -117,13 +117,17 @@ async function createInstance(template) {
 }
 
 exports.fetch = async function (ctx) {
-  const isDev = ctx.query && ctx.query.status === AppStatus.DEV
-  const apps = await getAllApps(isDev)
+  const dev = ctx.query && ctx.query.status === AppStatus.DEV
+  const all = ctx.query && ctx.query.status === AppStatus.ALL
+  const apps = await getAllApps({ dev, all })
 
   // get the locks for all the dev apps
-  if (isDev) {
+  if (dev || all) {
     const locks = await getAllLocks()
     for (let app of apps) {
+      if (app.status !== "development") {
+        continue
+      }
       const lock = locks.find(lock => lock.appId === app.appId)
       if (lock) {
         app.lockedBy = lock.user

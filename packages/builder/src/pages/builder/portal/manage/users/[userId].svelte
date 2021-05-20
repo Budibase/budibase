@@ -51,45 +51,55 @@
   }
 
   async function openUpdateRolesModal({ detail }) {
-    console.log(detail)
     selectedApp = detail
     editRolesModal.show()
   }
 </script>
 
-<Layout noPadding gap="XS">
-  <div class="back">
-    <ActionButton on:click={() => $goto("./")} quiet size="S" icon="BackAndroid"
-      >Back to users</ActionButton
-    >
-  </div>
-  <div class="heading">
-    <Layout noPadding gap="XS">
-      <Heading>User: {$roleFetch?.data?.email}</Heading>
-      <Body
-        >Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro
-        ut nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
-        veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
-      </Body>
-    </Layout>
-  </div>
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <div class="back">
+      <ActionButton
+        on:click={() => $goto("./")}
+        quiet
+        size="S"
+        icon="BackAndroid"
+      >
+        Back to users
+      </ActionButton>
+    </div>
+    <Heading>User: {$roleFetch?.data?.email}</Heading>
+    <Body>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro ut
+      nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
+      veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
+    </Body>
+  </Layout>
   <Divider size="S" />
-  <div class="general">
+  <Layout gap="S" noPadding>
     <Heading size="S">General</Heading>
     <div class="fields">
       <div class="field">
         <Label size="L">Email</Label>
         <Input disabled thin value={$roleFetch?.data?.email} />
       </div>
+      <div class="field">
+        <Label size="L">First name</Label>
+        <Input disabled thin value={$roleFetch?.data?.firstName} />
+      </div>
+      <div class="field">
+        <Label size="L">Last name</Label>
+        <Input disabled thin value={$roleFetch?.data?.lastName} />
+      </div>
     </div>
     <div class="regenerate">
-      <ActionButton size="S" icon="Refresh" quiet
-        >Regenerate password</ActionButton
-      >
+      <ActionButton size="S" icon="Refresh" quiet>
+        Regenerate password
+      </ActionButton>
     </div>
-  </div>
+  </Layout>
   <Divider size="S" />
-  <div class="roles">
+  <Layout gap="S" noPadding>
     <Heading size="S">Configure roles</Heading>
     <Table
       on:click={openUpdateRolesModal}
@@ -100,16 +110,14 @@
       allowSelectRows={false}
       customRenderers={[{ column: "role", component: TagsRenderer }]}
     />
-  </div>
+  </Layout>
   <Divider size="S" />
-  <div class="delete">
-    <Layout gap="S" noPadding
-      ><Heading size="S">Delete user</Heading>
-      <Body>Deleting a user completely removes them from your account.</Body>
-      <div class="delete-button">
-        <Button warning on:click={deleteUserModal.show}>Delete user</Button>
-      </div></Layout
-    >
+  <Layout gap="XS" noPadding>
+    <Heading size="S">Delete user</Heading>
+    <Body>Deleting a user completely removes them from your account.</Body>
+  </Layout>
+  <div class="delete-button">
+    <Button warning on:click={deleteUserModal.show}>Delete user</Button>
   </div>
 </Layout>
 
@@ -122,10 +130,9 @@
     cancelText="Cancel"
     showCloseIcon={false}
   >
-    <Body
-      >Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong
-      ></Body
-    >
+    <Body>
+      Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong>
+    </Body>
   </ModalContent>
 </Modal>
 <Modal bind:this={editRolesModal}>
@@ -140,25 +147,11 @@
   .fields {
     display: grid;
     grid-gap: var(--spacing-m);
-    margin-top: var(--spacing-xl);
   }
   .field {
     display: grid;
     grid-template-columns: 32% 1fr;
     align-items: center;
-  }
-  .heading {
-    margin-bottom: var(--spacing-xl);
-  }
-  .general {
-    position: relative;
-    margin: var(--spacing-xl) 0;
-  }
-  .roles {
-    margin: var(--spacing-xl) 0;
-  }
-  .delete {
-    margin-top: var(--spacing-xl);
   }
   .regenerate {
     position: absolute;
