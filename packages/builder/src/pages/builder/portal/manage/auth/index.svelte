@@ -59,44 +59,42 @@
   })
 </script>
 
-<Page>
-  <Layout noPadding>
-    <div>
-      <Heading size="M">OAuth</Heading>
-      <Body>
-        Every budibase app comes with basic authentication (email/password)
-        included. You can add additional authentication methods from the options
-        below.
-      </Body>
-    </div>
+<Layout>
+  <Layout gap="XS" noPadding>
+    <Heading size="M">OAuth</Heading>
+    <Body>
+      Every budibase app comes with basic authentication (email/password)
+      included. You can add additional authentication methods from the options
+      below.
+    </Body>
+  </Layout>
+  {#if google}
     <Divider />
-    {#if google}
-      <div>
-        <Heading size="S">
-          <span>
-            <GoogleLogo />
-            Google
-          </span>
-        </Heading>
-        <Body>
-          To allow users to authenticate using their Google accounts, fill out
-          the fields below.
-        </Body>
-      </div>
-
+    <Layout gap="XS" noPadding>
+      <Heading size="S">
+        <span>
+          <GoogleLogo />
+          Google
+        </span>
+      </Heading>
+      <Body size="S">
+        To allow users to authenticate using their Google accounts, fill out the
+        fields below.
+      </Body>
+    </Layout>
+    <Layout gap="XS" noPadding>
       {#each ConfigFields.Google as field}
         <div class="form-row">
           <Label size="L">{field}</Label>
           <Input bind:value={google.config[field]} />
         </div>
       {/each}
-      <div>
-        <Button primary on:click={() => save(google)}>Save</Button>
-      </div>
-      <Divider />
-    {/if}
-  </Layout>
-</Page>
+    </Layout>
+    <div>
+      <Button cta on:click={() => save(google)}>Save</Button>
+    </div>
+  {/if}
+</Layout>
 
 <style>
   .form-row {

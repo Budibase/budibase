@@ -8,7 +8,7 @@ const CouchDB = require("../../../db")
 
 exports.fetch = async ctx => {
   // always use the dev apps as they'll be most up to date (true)
-  const apps = await getAllApps(true)
+  const apps = await getAllApps({ dev: true })
   const promises = []
   for (let app of apps) {
     // use dev app IDs

@@ -3,6 +3,7 @@ const controller = require("../../controllers/admin/templates")
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
 const { TemplatePurpose, TemplateTypes } = require("../../../constants")
+const adminOnly = require("../../../middleware/adminOnly")
 
 const router = Router()
 
@@ -21,11 +22,16 @@ function buildTemplateSaveValidation() {
 
 router
   .get("/api/admin/template/definitions", controller.definitions)
-  .post("/api/admin/template", buildTemplateSaveValidation(), controller.save)
+  .post(
+    "/api/admin/template",
+    adminOnly,
+    buildTemplateSaveValidation(),
+    controller.save
+  )
   .get("/api/admin/template", controller.fetch)
   .get("/api/admin/template/:type", controller.fetchByType)
   .get("/api/admin/template/:ownerId", controller.fetchByOwner)
   .get("/api/admin/template/:id", controller.find)
-  .delete("/api/admin/template/:id/:rev", controller.destroy)
+  .delete("/api/admin/template/:id/:rev", adminOnly, controller.destroy)
 
 module.exports = router

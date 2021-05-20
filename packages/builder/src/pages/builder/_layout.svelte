@@ -1,8 +1,7 @@
 <script>
   import { onMount } from "svelte"
-  import { goto, isActive } from "@roxi/routify"
-  import { auth } from "stores/backend"
-  import { admin } from "stores/portal"
+  import { isActive, redirect } from "@roxi/routify"
+  import { admin, auth } from "stores/portal"
 
   let loaded = false
   $: hasAdminUser = !!$admin?.checklist?.adminUser
@@ -16,7 +15,7 @@
   // Force creation of an admin user if one doesn't exist
   $: {
     if (loaded && !hasAdminUser) {
-      $goto("./admin")
+      $redirect("./admin")
     }
   }
 
@@ -29,7 +28,7 @@
       !$isActive("./auth") &&
       !$isActive("./invite")
     ) {
-      $goto("./auth/login")
+      $redirect("./auth/login")
     }
   }
 </script>

@@ -16,7 +16,7 @@
   {#each bindings as binding}
     <MenuItem on:click={() => onBindingClick(binding)}>
       <Detail size="M">{binding.name}</Detail>
-      <Body size="XS" noPadding>{binding.description}</Body>
+      <Body size="XS">{binding.description}</Body>
     </MenuItem>
   {/each}
 </Menu>

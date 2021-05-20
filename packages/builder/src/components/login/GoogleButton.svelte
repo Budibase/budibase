@@ -1,16 +1,16 @@
 <script>
-  import { Link } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "/assets/google-logo.png"
 </script>
 
-<div class="outer">
-  <Link target="_blank" href="/api/admin/auth/google">
+<ActionButton>
+  <a target="_blank" href="/api/admin/auth/google">
     <div class="inner">
       <img src={GoogleLogo} alt="google icon" />
       <p>Sign in with Google</p>
     </div>
-  </Link>
-</div>
+  </a>
+</ActionButton>
 
 <style>
   .outer {
@@ -34,10 +34,8 @@
   .inner p {
     margin: 0;
   }
-  .outer :global(a) {
+  a {
     text-decoration: none;
-    font-weight: 500;
-    font-size: var(--font-size-m);
-    color: #fff;
+    color: inherit;
   }
 </style>

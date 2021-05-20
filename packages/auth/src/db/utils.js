@@ -34,6 +34,10 @@ exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
 exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
+function isDevApp(app) {
+  return app.appId.startsWith(exports.APP_DEV_PREFIX)
+}
+
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
@@ -160,7 +164,7 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async (devApps = false) => {
+exports.getAllApps = async ({ dev, all } = {}) => {
   const CouchDB = getCouch()
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName =>
@@ -176,12 +180,19 @@ exports.getAllApps = async (devApps = false) => {
     const apps = response
       .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
-    return apps.filter(app => {
-      if (devApps) {
-        return app.appId.startsWith(exports.APP_DEV_PREFIX)
-      }
-      return !app.appId.startsWith(exports.APP_DEV_PREFIX)
-    })
+    if (!all) {
+      return apps.filter(app => {
+        if (dev) {
+          return isDevApp(app)
+        }
+        return !isDevApp(app)
+      })
+    } else {
+      return apps.map(app => ({
+        ...app,
+        status: isDevApp(app) ? "development" : "published",
+      }))
+    }
   }
 }
 

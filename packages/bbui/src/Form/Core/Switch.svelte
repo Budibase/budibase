@@ -26,3 +26,9 @@
   <span class="spectrum-Switch-switch" />
   <label class="spectrum-Switch-label" for={id}>{text}</label>
 </div>
+
+<style>
+  .spectrum-Switch-input {
+    opacity: 0;
+  }
+</style>
