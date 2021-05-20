@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import {
     Button,
     Detail,
@@ -44,6 +44,16 @@
   onMount(() => {
     mounted = true
   })
+
+  async function fixMountBug({ detail }) {
+    console.log(detail)
+    if (detail === "Edit") {
+      await tick()
+      mounted = true
+    } else {
+      mounted = false
+    }
+  }
 </script>
 
 <Page wide>
@@ -69,7 +79,7 @@
       menu on the right.</Body
     >
   </Layout>
-  <Tabs selected="Edit">
+  <Tabs selected="Edit" on:select={fixMountBug}>
     <Tab title="Edit">
       <div class="template-editor">
         <Editor
