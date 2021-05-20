@@ -37,9 +37,28 @@
   const fieldId = id || generateID()
   let selectedImageIdx = 0
   let fileDragged = false
+  let selectedUrl
   $: selectedImage = value?.[selectedImageIdx] ?? null
   $: fileCount = value?.length ?? 0
-  $: isImage = imageExtensions.includes(selectedImage?.extension?.toLowerCase())
+  $: isImage =
+    imageExtensions.includes(selectedImage?.extension?.toLowerCase()) ||
+    selectedImage?.type?.startsWith("image")
+
+  $: {
+    if (selectedImage?.url) {
+      selectedUrl = selectedImage?.url
+    } else if (selectedImage) {
+      try {
+        let reader = new FileReader()
+        reader.readAsDataURL(selectedImage)
+        reader.onload = e => {
+          selectedUrl = e.target.result
+        }
+      } catch (error) {
+        selectedUrl = null
+      }
+    }
+  }
 
   async function processFileList(fileList) {
     if (
@@ -102,11 +121,13 @@
       <div class="gallery">
         <div class="title">
           <div class="filename">{selectedImage.name}</div>
-          <div class="filesize">
-            {#if selectedImage.size <= BYTES_IN_MB}
-              {`${selectedImage.size / BYTES_IN_KB} KB`}
-            {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
-          </div>
+          {#if selectedImage.size}
+            <div class="filesize">
+              {#if selectedImage.size <= BYTES_IN_MB}
+                {`${selectedImage.size / BYTES_IN_KB} KB`}
+              {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
+            </div>
+          {/if}
           {#if !disabled}
             <div class="delete-button" on:click={removeFile}>
               <Icon name="Close" />
@@ -114,7 +135,7 @@
           {/if}
         </div>
         {#if isImage}
-          <img alt="preview" src={selectedImage.url} />
+          <img alt="preview" src={selectedUrl} />
         {:else}
           <div class="placeholder">
             <div class="extension">{selectedImage.extension}</div>
@@ -142,11 +163,13 @@
         <div class="gallery">
           <div class="title">
             <div class="filename">{file.name}</div>
-            <div class="filesize">
-              {#if file.size <= BYTES_IN_MB}
-                {`${file.size / BYTES_IN_KB} KB`}
-              {:else}{`${file.size / BYTES_IN_MB} MB`}{/if}
-            </div>
+            {#if file.size}
+              <div class="filesize">
+                {#if file.size <= BYTES_IN_MB}
+                  {`${file.size / BYTES_IN_KB} KB`}
+                {:else}{`${file.size / BYTES_IN_MB} MB`}{/if}
+              </div>
+            {/if}
             {#if !disabled}
               <div class="delete-button" on:click={removeFile}>
                 <Icon name="Close" />

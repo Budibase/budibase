@@ -1,8 +1,8 @@
 <script>
   import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
+  import { users, organisation } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import { users } from "stores/portal"
 
   const inviteCode = $params["?code"]
   let password, error
@@ -23,19 +23,18 @@
 
 <section>
   <div class="container">
-    <Layout gap="XS">
-      <img src="https://i.imgur.com/ZKyklgF.png" />
-    </Layout>
-    <Layout gap="XS">
-      <Heading textAlign="center" size="M">Accept Invitation</Heading>
-      <Body textAlign="center" size="S"
-        >Please enter a password to setup your user.</Body
-      >
+    <Layout>
+      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+      <Layout gap="XS" justifyItems="center" noPadding>
+        <Heading size="M">Accept Invitation</Heading>
+        <Body textAlign="center" size="M">
+          Please enter a password to set up your user.
+        </Body>
+      </Layout>
       <PasswordRepeatInput bind:error bind:password />
-    </Layout>
-    <Layout gap="S">
-      <Button disabled={error} cta on:click={acceptInvite}>Accept invite</Button
-      >
+      <Button disabled={error} cta on:click={acceptInvite}>
+        Accept invite
+      </Button>
     </Layout>
   </div>
 </section>

@@ -1,15 +1,15 @@
 import { writable, get } from "svelte/store"
 import api from "builderStore/api"
 
-const FALLBACK_CONFIG = {
-  platformUrl: "",
-  logoUrl: "",
-  docsUrl: "",
-  company: "http://localhost:10000",
+const DEFAULT_CONFIG = {
+  platformUrl: "http://localhost:1000",
+  logoUrl: "https://i.imgur.com/ZKyklgF.png",
+  docsUrl: undefined,
+  company: "Budibase",
 }
 
 export function createOrganisationStore() {
-  const store = writable({})
+  const store = writable(DEFAULT_CONFIG)
   const { subscribe, set } = store
 
   async function init() {
@@ -17,16 +17,16 @@ export function createOrganisationStore() {
     const json = await res.json()
 
     if (json.status === 400) {
-      set(FALLBACK_CONFIG)
+      set(DEFAULT_CONFIG)
     } else {
-      set({ ...json.config, _rev: json._rev })
+      set({ ...DEFAULT_CONFIG, ...json.config, _rev: json._rev })
     }
   }
 
   async function save(config) {
     const res = await api.post("/api/admin/configs", {
       type: "settings",
-      config,
+      config: { ...get(store), ...config },
       _rev: get(store)._rev,
     })
     const json = await res.json()
