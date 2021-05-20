@@ -1,19 +1,7 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import {
-    Button,
-    Icon,
-    Modal,
-    ModalContent,
-    ActionGroup,
-    ActionButton,
-    Tabs,
-    Tab,
-  } from "@budibase/bbui"
-  import SettingsLink from "components/settings/Link.svelte"
-  import ThemeEditorDropdown from "components/settings/ThemeEditorDropdown.svelte"
-  import FeedbackNavLink from "components/feedback/FeedbackNavLink.svelte"
+  import { Button, Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import { get } from "builderStore/api"

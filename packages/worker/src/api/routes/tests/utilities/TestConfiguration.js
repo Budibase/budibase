@@ -38,20 +38,25 @@ class TestConfiguration {
     return request.body
   }
 
-  async init() {
-    // create a test user
-    await this._req(
-      {
-        email: "test@test.com",
-        password: "test",
-        _id: "us_uuid1",
-        builder: {
-          global: true,
+  async init(createUser = true) {
+    if (createUser) {
+      // create a test user
+      await this._req(
+        {
+          email: "test@test.com",
+          password: "test",
+          _id: "us_uuid1",
+          builder: {
+            global: true,
+          },
+          admin: {
+            global: true,
+          },
         },
-      },
-      null,
-      controllers.users.save
-    )
+        null,
+        controllers.users.save
+      )
+    }
   }
 
   async end() {

@@ -112,6 +112,9 @@ exports.isClient = ctx => {
  * @return {Promise<object|null>}
  */
 exports.getGlobalUserByEmail = async email => {
+  if (email == null) {
+    throw "Must supply an email address to view"
+  }
   const db = getDB(StaticDatabases.GLOBAL.name)
   try {
     let users = (
