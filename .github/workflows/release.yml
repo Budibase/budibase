@@ -1,34 +1,19 @@
 name: Budibase Release
 
 on: 
- workflow_dispatch:
-  inputs:
-      name:
-        description: 'Version'
-        required: false
-        default: '0.8'
-        
- # Trigger the workflow on push with tags,
- # but only for the master branch
  push:
-  tags:
-    - 'v*'
+  branches:
+    - master
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
-
-    # Platforms to build on/for
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        node-version: [12.x]
+    runs-on: ubuntu-latest 
     
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 12.x
       - run: yarn 
       - run: yarn lint 
       - run: yarn bootstrap 
@@ -39,42 +24,14 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - run: yarn test
 
-      - name: Prepare for app notarization (macOS)
-        if: startsWith(matrix.os, 'macos')
-        # Import Apple API key for app notarization on macOS
-        run: |
-          xattr -cr *
-          mkdir -p ~/private_keys/
-          echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
-
-
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          package_root: packages/server
-
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-
-          mac_certs: ${{ secrets.mac_certs }}
-          mac_certs_password: ${{ secrets.mac_certs_password }}
-          windows_certs: ${{ secrets.windows_certs }}
-          windows_certs_password: ${{ secrets.windows_certs_password }}
-
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Publish budibase packages to NPM
         env:
-            # macOS notarization API key
-            API_KEY_ID: ${{ secrets.api_key_id }}
-            API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: yarn release
 
       - name: Build/release Docker images
-        # only run the docker image build on linux, easiest way
-        if: startsWith(matrix.os, 'ubuntu')
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-        run: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        run: yarn build:docker
