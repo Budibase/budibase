@@ -12,7 +12,6 @@
     Body,
     Table,
   } from "@budibase/bbui"
-  import { onMount } from "svelte"
   import { email } from "stores/portal"
   import TemplateLink from "./_components/TemplateLink.svelte"
   import api from "builderStore/api"
@@ -36,9 +35,6 @@
   ]
 
   let smtpConfig
-  let bindingsOpen = false
-  let htmlModal
-  let htmlEditor
   let loading
 
   async function saveSmtp() {
@@ -56,16 +52,8 @@
     }
   }
 
-  async function saveTemplate() {
-    try {
-      await email.templates.save(selectedTemplate)
-      notifications.success(`Template saved.`)
-    } catch (err) {
-      notifications.error(`Failed to update template settings. ${err}`)
-    }
-  }
-
   async function fetchSmtp() {
+    loading = true
     // fetch the configs for smtp
     const smtpResponse = await api.get(`/api/admin/configs/${ConfigTypes.SMTP}`)
     const smtpDoc = await smtpResponse.json()
@@ -82,14 +70,10 @@
     } else {
       smtpConfig = smtpDoc
     }
+    loading = false
   }
 
-  onMount(async () => {
-    loading = true
-    await fetchSmtp()
-    await email.templates.fetch()
-    loading = false
-  })
+  fetchSmtp()
 </script>
 
 <Page>
