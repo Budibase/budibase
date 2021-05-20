@@ -32,6 +32,8 @@
     delete customSchema["email"]
     delete customSchema["roleId"]
     delete customSchema["status"]
+    delete customSchema["firstName"]
+    delete customSchema["lastName"]
     return Object.entries(customSchema)
   }
 
@@ -67,7 +69,7 @@
       return false
     }
 
-    notifications.success("User saved successfully.")
+    notifications.success("User saved successfully")
     rows.save(rowResponse)
   }
 </script>
@@ -84,8 +86,14 @@
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ name: "password", type: "password" }}
-    bind:value={row.password}
+    meta={{ ...tableSchema.firstName, name: "First Name" }}
+    bind:value={row.firstName}
+    readonly={!creating}
+  />
+  <RowFieldControl
+    meta={{ ...tableSchema.lastName, name: "Last Name" }}
+    bind:value={row.lastName}
+    readonly={!creating}
   />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
@@ -96,16 +104,6 @@
     options={$roles}
     getOptionLabel={role => role.name}
     getOptionValue={role => role._id}
-  />
-  <Select
-    label="Status"
-    bind:value={row.status}
-    options={[
-      { label: "Active", value: "active" },
-      { label: "Inactive", value: "inactive" },
-    ]}
-    getOptionLabel={status => status.label}
-    getOptionValue={status => status.value}
   />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}

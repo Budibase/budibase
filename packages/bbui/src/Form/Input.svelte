@@ -11,6 +11,7 @@
   export let disabled = false
   export let readonly = false
   export let error = null
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -21,6 +22,7 @@
 
 <Field {label} {labelPosition} {error}>
   <TextField
+    {updateOnChange}
     {error}
     {disabled}
     {readonly}
@@ -31,5 +33,6 @@
     on:click
     on:input
     on:blur
+    on:focus
   />
 </Field>

@@ -56,6 +56,7 @@
       {query}
       schema={fetchQueryDefinition(query)}
       editable={false}
+      {datasource}
     />
   {/if}
 </Layout>

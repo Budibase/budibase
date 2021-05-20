@@ -2,10 +2,11 @@
   import "@spectrum-css/search/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let value = ""
+  export let value = null
   export let placeholder = null
   export let disabled = false
   export let id = null
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   let focus = false
@@ -20,6 +21,13 @@
 
   const onBlur = event => {
     focus = false
+    updateValue(event.target.value)
+  }
+
+  const onInput = event => {
+    if (!updateOnChange) {
+      return
+    }
     updateValue(event.target.value)
   }
 
@@ -44,15 +52,18 @@
       <use xlink:href="#spectrum-icon-18-Magnify" />
     </svg>
     <input
-      on:click
-      on:keyup={updateValueOnEnter}
       {disabled}
       {id}
       value={value || ""}
       placeholder={placeholder || ""}
+      on:click
+      on:blur
+      on:focus
+      on:input
       on:blur={onBlur}
       on:focus={onFocus}
-      on:input
+      on:input={onInput}
+      on:keyup={updateValueOnEnter}
       type="search"
       class="spectrum-Textfield-input spectrum-Search-input"
       autocomplete="off"

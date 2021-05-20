@@ -12,7 +12,7 @@
     FAILURE: "FAILURE",
   }
 
-  const POLL_INTERVAL = 1000
+  const POLL_INTERVAL = 10000
 
   let loading = false
   let feedbackModal
@@ -61,7 +61,6 @@
 
   // Required to check any updated deployment statuses between polls
   function checkIncomingDeploymentStatus(current, incoming) {
-    console.log(current, incoming)
     for (let incomingDeployment of incoming) {
       if (
         incomingDeployment.status === DeploymentStatus.FAILURE ||
