@@ -16,7 +16,9 @@ async function redirect(ctx, method) {
       body: ctx.request.body,
     })
   )
-  ctx.body = await response.json()
+  if (response.status !== 200) {
+    ctx.throw(response.status, response.statusText)
+  }
   const cookie = response.headers.get("set-cookie")
   if (cookie) {
     ctx.set("set-cookie", cookie)
