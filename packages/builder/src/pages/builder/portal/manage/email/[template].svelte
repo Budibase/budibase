@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import {
     Button,
     Detail,
@@ -19,6 +20,7 @@
   export let template
 
   let htmlEditor
+  let mounted = false
 
   $: selectedTemplate = $email?.templates?.find(
     ({ purpose }) => purpose === template
@@ -39,6 +41,9 @@
   function setTemplateBinding(binding) {
     htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
   }
+  onMount(() => {
+    mounted = true
+  })
 </script>
 
 <Page wide>
@@ -78,22 +83,24 @@
         />
         <div class="bindings-editor">
           <Detail size="L">Bindings</Detail>
-          <Tabs selected="Template">
-            <Tab title="Template">
-              <TemplateBindings
-                title="Template Bindings"
-                bindings={templateBindings}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-            <Tab title="Common">
-              <TemplateBindings
-                title="Common Bindings"
-                bindings={$email?.definitions?.bindings?.common}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-          </Tabs>
+          {#if mounted}
+            <Tabs selected="Template">
+              <Tab title="Template">
+                <TemplateBindings
+                  title="Template Bindings"
+                  bindings={templateBindings}
+                  onBindingClick={setTemplateBinding}
+                />
+              </Tab>
+              <Tab title="Common">
+                <TemplateBindings
+                  title="Common Bindings"
+                  bindings={$email?.definitions?.bindings?.common}
+                  onBindingClick={setTemplateBinding}
+                />
+              </Tab>
+            </Tabs>
+          {/if}
         </div>
       </div></Tab
     >
@@ -108,7 +115,7 @@
 <style>
   .template-editor {
     display: grid;
-    grid-template-columns: 1fr 20%;
+    grid-template-columns: 1fr minmax(250px, 20%);
     grid-gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
   }
