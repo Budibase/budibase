@@ -3,6 +3,7 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { getDeployedAppID } = require("@budibase/auth/db")
+const { getGlobalIDFromUserMetadataID } = require("../db/utils")
 
 function getAppRole(appId, user) {
   if (!user.roles) {
@@ -118,53 +119,50 @@ exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
   return users
 }
 
-exports.saveGlobalUser = async (ctx, appId, body) => {
-  const globalUser = body._id
-    ? await exports.getGlobalUsers(ctx, appId, body._id)
-    : {}
-  const preRoles = globalUser.roles || {}
-  if (body.roleId) {
-    preRoles[appId] = body.roleId
-  }
-  // make sure no dev app IDs in roles
-  const roles = {}
-  for (let [appId, roleId] of Object.entries(preRoles)) {
-    roles[getDeployedAppID(appId)] = roleId
-  }
-  const endpoint = `/api/admin/users`
-  const reqCfg = {
-    method: "POST",
-    body: {
-      ...globalUser,
-      password: body.password || undefined,
-      status: body.status,
-      email: body.email,
-      roles,
-      builder: {
-        global: true,
-      },
-    },
-  }
-
+exports.getGlobalSelf = async ctx => {
+  const endpoint = `/api/admin/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, reqCfg)
+    request(ctx, { method: "GET" })
   )
   const json = await response.json()
   if (json.status !== 200 && response.status !== 200) {
-    ctx.throw(400, "Unable to save global user.")
+    ctx.throw(400, "Unable to get self globally.")
   }
-  delete body.password
-  delete body.roles
-  delete body.builder
-  // TODO: for now these have been left in as they are
-  // TODO: pretty important to keeping relationships working
-  // TODO: however if user metadata is changed this should be removed
-  // delete body.email
-  // delete body.roleId
-  // delete body.status
-  return {
+  return json
+}
+
+exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
+  appId = getDeployedAppID(appId)
+  let user,
+    endpoint,
+    body = {}
+  if (!userId) {
+    user = await exports.getGlobalSelf(ctx)
+    endpoint = `/api/admin/users/self`
+  } else {
+    userId = getGlobalIDFromUserMetadataID(userId)
+    user = await exports.getGlobalUsers(ctx, appId, userId)
+    body._id = userId
+    endpoint = `/api/admin/users`
+  }
+  body = {
     ...body,
-    _id: json._id,
+    roles: {
+      ...user.roles,
+      [appId]: roleId,
+    },
   }
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + endpoint),
+    request(ctx, {
+      method: "POST",
+      body,
+    })
+  )
+  const json = await response.json()
+  if (json.status !== 200 && response.status !== 200) {
+    ctx.throw(400, "Unable to save self globally.")
+  }
+  return json
 }

@@ -13,7 +13,7 @@ describe("/api/admin/configs/checklist", () => {
   let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init()
+    await config.init(false)
   })
 
   afterAll(setup.afterAll)

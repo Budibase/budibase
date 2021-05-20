@@ -2,13 +2,14 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let value = ""
+  export let value = null
   export let placeholder = null
   export let type = "text"
   export let disabled = false
   export let error = null
   export let id = null
   export let readonly = false
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   let focus = false
@@ -37,7 +38,13 @@
     }
     focus = false
     updateValue(event.target.value)
-    dispatch("blur")
+  }
+
+  const onInput = event => {
+    if (readonly || !updateOnChange) {
+      return
+    }
+    updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
@@ -66,16 +73,19 @@
     </svg>
   {/if}
   <input
-    on:click
-    on:keyup={updateValueOnEnter}
     {disabled}
     {readonly}
     {id}
     value={value || ""}
     placeholder={placeholder || ""}
+    on:click
+    on:blur
+    on:focus
+    on:input
     on:blur={onBlur}
     on:focus={onFocus}
-    on:input
+    on:input={onInput}
+    on:keyup={updateValueOnEnter}
     {type}
     class="spectrum-Textfield-input"
   />

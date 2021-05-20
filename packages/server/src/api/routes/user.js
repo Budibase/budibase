@@ -26,12 +26,6 @@ router
     controller.updateMetadata
   )
   .post(
-    "/api/users/metadata",
-    authorized(PermissionTypes.USER, PermissionLevels.WRITE),
-    usage,
-    controller.createMetadata
-  )
-  .post(
     "/api/users/metadata/self",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     usage,

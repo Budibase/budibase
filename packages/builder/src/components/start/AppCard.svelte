@@ -6,12 +6,9 @@
     Layout,
     ActionMenu,
     MenuItem,
-    Link,
   } from "@budibase/bbui"
   import { gradient } from "actions"
-  import { AppStatus } from "constants"
-  import { url } from "@roxi/routify"
-  import { auth } from "stores/backend"
+  import { auth } from "stores/portal"
 
   export let app
   export let exportApp
@@ -25,11 +22,11 @@
   <Layout noPadding gap="XS" alignContent="start">
     <div class="preview" use:gradient={{ seed: app.name }} />
     <div class="title">
-      <Link on:click={() => openApp(app)}>
+      <div class="name" on:click={() => openApp(app)}>
         <Heading size="XS">
           {app.name}
         </Heading>
-      </Link>
+      </div>
       <ActionMenu align="right">
         <Icon slot="control" name="More" hoverable />
         <MenuItem on:click={() => exportApp(app)} icon="Download">
@@ -48,7 +45,7 @@
       </ActionMenu>
     </div>
     <div class="status">
-      <Body noPadding size="S">
+      <Body size="S">
         Edited {Math.floor(1 + Math.random() * 10)} months ago
       </Body>
       {#if app.lockedBy}
@@ -76,7 +73,7 @@
     align-items: center;
   }
 
-  .title :global(a) {
+  .name {
     text-decoration: none;
     flex: 1 1 auto;
     width: 0;
