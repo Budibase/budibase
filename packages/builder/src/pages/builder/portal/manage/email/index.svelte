@@ -1,29 +1,18 @@
 <script>
   import { goto } from "@roxi/routify"
   import {
-    Menu,
-    MenuItem,
     Button,
     Heading,
     Divider,
     Label,
-    Modal,
-    ModalContent,
     notifications,
     Layout,
     Input,
-    TextArea,
     Body,
-    Page,
-    Select,
-    MenuSection,
-    MenuSeparator,
     Table,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { email } from "stores/portal"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import TemplateBindings from "./_components/TemplateBindings.svelte"
   import TemplateLink from "./_components/TemplateLink.svelte"
   import api from "builderStore/api"
 
@@ -158,6 +147,7 @@
       data={$email.templates}
       schema={templateSchema}
       {loading}
+      on:click={({ detail }) => $goto(`./${detail.purpose}`)}
       allowEditRows={false}
       allowSelectRows={false}
       allowEditColumns={false}
