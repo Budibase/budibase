@@ -13,7 +13,6 @@
     try {
       if (forceResetPassword) {
         await auth.updateSelf({
-          ...$auth.user,
           password,
           forceResetPassword: false,
         })

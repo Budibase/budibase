@@ -10,7 +10,7 @@
 
   const updateInfo = async () => {
     try {
-      await auth.updateSelf({ ...$auth.user, ...$values })
+      await auth.updateSelf($values)
       notifications.success("Information updated successfully")
     } catch (error) {
       notifications.error("Failed to update information")
