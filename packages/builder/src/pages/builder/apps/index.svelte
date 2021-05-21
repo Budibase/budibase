@@ -35,7 +35,6 @@
   <div class="container">
     <Page>
       <div class="content">
-        asdas
         <Layout noPadding>
           <img src={$organisation.logoUrl} />
           <div class="info-title">
