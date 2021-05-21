@@ -34,5 +34,6 @@
     on:input
     on:blur
     on:focus
+    on:keyup
   />
 </Field>
