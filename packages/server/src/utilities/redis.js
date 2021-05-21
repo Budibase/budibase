@@ -2,13 +2,13 @@ const { Client, utils } = require("@budibase/auth/redis")
 const { getGlobalIDFromUserMetadataID } = require("../db/utils")
 
 const APP_DEV_LOCK_SECONDS = 600
-const DB_NAME = utils.Databases.DEV_LOCKS
-let devAppClient
+let devAppClient, debounceClient
 
 // we init this as we want to keep the connection open all the time
 // reduces the performance hit
 exports.init = async () => {
-  devAppClient = await new Client(DB_NAME).init()
+  devAppClient = await new Client(utils.Databases.DEV_LOCKS).init()
+  debounceClient = await new Client(utils.Databases.DEBOUNCE).init()
 }
 
 exports.doesUserHaveLock = async (devAppId, user) => {
@@ -51,4 +51,12 @@ exports.clearLock = async (devAppId, user) => {
     throw "User does not hold lock, cannot clear it."
   }
   await devAppClient.delete(devAppId)
+}
+
+exports.checkDebounce = async id => {
+  return debounceClient.get(id)
+}
+
+exports.setDebounce = async (id, seconds) => {
+  await debounceClient.store(id, "debouncing", seconds)
 }
