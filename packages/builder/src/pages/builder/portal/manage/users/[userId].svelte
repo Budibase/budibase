@@ -9,6 +9,8 @@
     Divider,
     Label,
     Input,
+    Select,
+    Toggle,
     Modal,
     Table,
     ModalContent,
@@ -19,10 +21,12 @@
 
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
+  import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
 
   export let userId
   let deleteUserModal
   let editRolesModal
+  let resetPasswordModal
 
   const roleSchema = {
     name: { displayName: "App" },
@@ -33,21 +37,30 @@
   $: appList = Object.keys($apps?.data).map(id => ({
     ...$apps?.data?.[id],
     _id: id,
-    role: [$roleFetch?.data?.roles?.[id]],
+    role: [$userFetch?.data?.roles?.[id]],
   }))
   let selectedApp
 
-  const roleFetch = fetchData(`/api/admin/users/${userId}`)
+  const userFetch = fetchData(`/api/admin/users/${userId}`)
   const apps = fetchData(`/api/admin/roles`)
 
   async function deleteUser() {
-    const res = await users.del(userId)
+    const res = await users.delete(userId)
     if (res.message) {
-      notifications.success(`User ${$roleFetch?.data?.email} deleted.`)
+      notifications.success(`User ${$userFetch?.data?.email} deleted.`)
       $goto("./")
     } else {
       notifications.error("Failed to delete user.")
     }
+  }
+
+  let toggleDisabled = false
+
+  async function toggleBuilderAccess({ detail }) {
+    toggleDisabled = true
+    await users.save({ ...$userFetch?.data, builder: { global: detail } })
+    await userFetch.refresh()
+    toggleDisabled = false
   }
 
   async function openUpdateRolesModal({ detail }) {
@@ -68,11 +81,10 @@
         Back to users
       </ActionButton>
     </div>
-    <Heading>User: {$roleFetch?.data?.email}</Heading>
+    <Heading>User: {$userFetch?.data?.email}</Heading>
     <Body>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis porro ut
-      nesciunt ipsam perspiciatis aliquam et hic minus alias beatae. Odit
-      veritatis quos quas laborum magnam tenetur perspiciatis ex hic.
+      Change user settings and update their app roles. Also contains the ability
+      to delete the user as well as force reset their password..
     </Body>
   </Layout>
   <Divider size="S" />
@@ -81,21 +93,37 @@
     <div class="fields">
       <div class="field">
         <Label size="L">Email</Label>
-        <Input disabled thin value={$roleFetch?.data?.email} />
+        <Input disabled thin value={$userFetch?.data?.email} />
+      </div>
+      <div class="field">
+        <Label size="L">Group(s)</Label>
+        <Select disabled options={["All users"]} value="All users" />
       </div>
       <div class="field">
         <Label size="L">First name</Label>
-        <Input disabled thin value={$roleFetch?.data?.firstName} />
+        <Input disabled thin value={$userFetch?.data?.firstName} />
       </div>
       <div class="field">
         <Label size="L">Last name</Label>
-        <Input disabled thin value={$roleFetch?.data?.lastName} />
+        <Input disabled thin value={$userFetch?.data?.lastName} />
+      </div>
+      <div class="field">
+        <Label size="L">Development access?</Label>
+        <Toggle
+          text=""
+          value={$userFetch?.data?.builder?.global}
+          on:change={toggleBuilderAccess}
+          disabled={toggleDisabled}
+        />
       </div>
     </div>
     <div class="regenerate">
-      <ActionButton size="S" icon="Refresh" quiet>
-        Regenerate password
-      </ActionButton>
+      <ActionButton
+        size="S"
+        icon="Refresh"
+        quiet
+        on:click={resetPasswordModal.show}>Force password reset</ActionButton
+      >
     </div>
   </Layout>
   <Divider size="S" />
@@ -131,15 +159,21 @@
     showCloseIcon={false}
   >
     <Body>
-      Are you sure you want to delete <strong>{$roleFetch?.data?.email}</strong>
+      Are you sure you want to delete <strong>{$userFetch?.data?.email}</strong>
     </Body>
   </ModalContent>
 </Modal>
 <Modal bind:this={editRolesModal}>
   <UpdateRolesModal
     app={selectedApp}
-    user={$roleFetch.data}
-    on:update={roleFetch.refresh}
+    user={$userFetch.data}
+    on:update={userFetch.refresh}
+  />
+</Modal>
+<Modal bind:this={resetPasswordModal}>
+  <ForceResetPasswordModal
+    user={$userFetch.data}
+    on:update={userFetch.refresh}
   />
 </Modal>
 
