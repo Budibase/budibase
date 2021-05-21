@@ -1,17 +1,17 @@
 <script>
-  import { goto } from "@roxi/routify"
   import {
-    notifications,
-    Input,
+    ActionButton,
+    Body,
     Button,
     Divider,
-    ActionButton,
-    Layout,
-    Body,
     Heading,
+    Input,
+    Layout,
+    notifications,
   } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import { auth, organisation } from "stores/portal"
   import GoogleButton from "./GoogleButton.svelte"
-  import { organisation, auth } from "stores/portal"
 
   let username = ""
   let password = ""
@@ -23,7 +23,11 @@
         password,
       })
       notifications.success("Logged in successfully")
-      $goto("../portal")
+      if ($auth?.user?.forceResetPassword) {
+        $goto("./reset")
+      } else {
+        $goto("../portal")
+      }
     } catch (err) {
       console.error(err)
       notifications.error("Invalid credentials")
