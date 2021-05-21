@@ -179,47 +179,47 @@
 </script>
 
 <Page wide>
-  <Layout noPadding>
-    <div class="title">
-      <Heading>Apps</Heading>
-      <ButtonGroup>
-        <Button secondary on:click={initiateAppImport}>Import app</Button>
-        <Button cta on:click={initiateAppCreation}>Create new app</Button>
-      </ButtonGroup>
-    </div>
-    <div class="filter">
-      <div class="select">
-        <Select
-          bind:value={sortBy}
-          placeholder={null}
-          options={[
-            { label: "Sort by name", value: "name" },
-            { label: "Sort by recently updated", value: "updated" },
-            { label: "Sort by status", value: "status" },
-          ]}
-        />
+  {#if loaded && enrichedApps.length}
+    <Layout noPadding>
+      <div class="title">
+        <Heading>Apps</Heading>
+        <ButtonGroup>
+          <Button secondary on:click={initiateAppImport}>Import app</Button>
+          <Button cta on:click={initiateAppCreation}>Create new app</Button>
+        </ButtonGroup>
       </div>
-      <ActionGroup>
-        <ActionButton
-          on:click={() => (layout = "grid")}
-          selected={layout === "grid"}
-          quiet
-          icon="ClassicGridView"
-        />
-        <ActionButton
-          on:click={() => (layout = "table")}
-          selected={layout === "table"}
-          quiet
-          icon="ViewRow"
-        />
-      </ActionGroup>
-    </div>
-    {#if loaded && enrichedApps.length}
+      <div class="filter">
+        <div class="select">
+          <Select
+            bind:value={sortBy}
+            placeholder={null}
+            options={[
+              { label: "Sort by name", value: "name" },
+              { label: "Sort by recently updated", value: "updated" },
+              { label: "Sort by status", value: "status" },
+            ]}
+          />
+        </div>
+        <ActionGroup>
+          <ActionButton
+            on:click={() => (layout = "grid")}
+            selected={layout === "grid"}
+            quiet
+            icon="ClassicGridView"
+          />
+          <ActionButton
+            on:click={() => (layout = "table")}
+            selected={layout === "table"}
+            quiet
+            icon="ViewRow"
+          />
+        </ActionGroup>
+      </div>
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each enrichedApps as app, idx (app.appId)}
+        {#each enrichedApps as app (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
             {releaseLock}
@@ -229,12 +229,11 @@
             {editApp}
             {exportApp}
             {deleteApp}
-            last={idx === enrichedApps.length - 1}
           />
         {/each}
       </div>
-    {/if}
-  </Layout>
+    </Layout>
+  {/if}
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
@@ -318,7 +317,7 @@
     text-overflow: ellipsis;
     padding: 0 var(--spacing-s);
   }
-  .appTable :global(> div:not(.last)) {
+  .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
   .empty-wrapper {

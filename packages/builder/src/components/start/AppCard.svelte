@@ -39,13 +39,18 @@
           <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
             View published app
           </MenuItem>
-          <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-            Unpublish
-          </MenuItem>
         {/if}
         {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
           <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
             Release lock
+          </MenuItem>
+        {/if}
+        <MenuItem on:click={() => exportApp(app)} icon="Download">
+          Export
+        </MenuItem>
+        {#if app.deployed}
+          <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
+            Unpublish
           </MenuItem>
         {/if}
         {#if !app.deployed}
@@ -53,9 +58,6 @@
             Delete
           </MenuItem>
         {/if}
-        <MenuItem on:click={() => exportApp(app)} icon="Download">
-          Export
-        </MenuItem>
       </ActionMenu>
     </div>
     <div class="status">
