@@ -1,25 +1,42 @@
-import { writable } from "svelte/store"
+import { derived, writable } from "svelte/store"
 import api from "../../builderStore/api"
 
 export function createAuthStore() {
-  const store = writable({ user: null })
+  const user = writable(null)
+  const store = derived(user, $user => {
+    let initials = null
+    if ($user) {
+      if ($user.firstName) {
+        initials = $user.firstName[0]
+        if ($user.lastName) {
+          initials += $user.lastName[0]
+        }
+      } else {
+        initials = $user.email[0]
+      }
+    }
+    return {
+      user: $user,
+      initials,
+    }
+  })
 
   return {
     subscribe: store.subscribe,
     checkAuth: async () => {
       const response = await api.get("/api/admin/users/self")
       if (response.status !== 200) {
-        store.update(state => ({ ...state, user: null }))
+        user.set(null)
       } else {
-        const user = await response.json()
-        store.update(state => ({ ...state, user }))
+        const json = await response.json()
+        user.set(json)
       }
     },
     login: async creds => {
       const response = await api.post(`/api/admin/auth`, creds)
       const json = await response.json()
       if (response.status === 200) {
-        store.update(state => ({ ...state, user: json.user }))
+        user.set(json.user)
       } else {
         throw "Invalid credentials"
       }
@@ -31,12 +48,12 @@ export function createAuthStore() {
         throw "Unable to create logout"
       }
       await response.json()
-      store.update(state => ({ ...state, user: null }))
+      user.set(null)
     },
-    updateSelf: async user => {
-      const response = await api.post("/api/admin/users/self", user)
+    updateSelf: async newUser => {
+      const response = await api.post("/api/admin/users/self", newUser)
       if (response.status === 200) {
-        store.update(state => ({ ...state, user: { ...state.user, ...user } }))
+        user.update(state => ({ ...state, ...newUser }))
       } else {
         throw "Unable to update user details"
       }
