@@ -3,7 +3,6 @@
   import {
     Icon,
     Avatar,
-    Search,
     Layout,
     SideNavigation as Navigation,
     SideNavigationItem as Item,
@@ -77,7 +76,7 @@
         <div />
         <ActionMenu align="right">
           <div slot="control" class="avatar">
-            <Avatar size="M" name="John Doe" />
+            <Avatar size="M" initials={$auth.initials} />
             <Icon size="XL" name="ChevronDown" />
           </div>
           <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
