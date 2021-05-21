@@ -41,8 +41,8 @@
     const enrichedApps = apps.map(app => ({
       ...app,
       deployed: app.status === AppStatus.DEPLOYED,
-      lockedYou: app.lockedBy?.email === user.email,
-      lockedOther: app.lockedBy && app.lockedBy.email !== user.email,
+      lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
+      lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
     }))
     if (sortBy === "status") {
       return enrichedApps.sort((a, b) => {
