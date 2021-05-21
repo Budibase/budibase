@@ -40,7 +40,7 @@
             View published app
           </MenuItem>
         {/if}
-        {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
+        {#if app.lockedYou}
           <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
             Release lock
           </MenuItem>
