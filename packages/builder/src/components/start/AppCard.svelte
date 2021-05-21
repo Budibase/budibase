@@ -65,7 +65,7 @@
       <Body size="S">
         {#if app.updatedAt}
           {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-            time: (new Date().getTime() - new Date(app.updatedAt).getTime())
+            time: new Date().getTime() - new Date(app.updatedAt).getTime(),
           })}
         {:else}
           Never updated

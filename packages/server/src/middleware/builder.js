@@ -44,7 +44,7 @@ async function updateAppUpdatedAt(ctx) {
   const appId = ctx.appId
   // if debouncing skip this update
   // get methods also aren't updating
-  if (await checkDebounce(appId) || ctx.method === "GET") {
+  if ((await checkDebounce(appId)) || ctx.method === "GET") {
     return
   }
   const db = new CouchDB(appId)
