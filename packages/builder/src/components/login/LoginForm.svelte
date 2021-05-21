@@ -33,6 +33,12 @@
       notifications.error("Invalid credentials")
     }
   }
+
+  const submitOnEnter = e => {
+    if (e.key === "Enter") {
+      login()
+    }
+  }
 </script>
 
 <div class="login">
@@ -46,12 +52,13 @@
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
-        <Input label="Email" bind:value={username} />
+        <Input label="Email" bind:value={username} on:keyup={submitOnEnter} />
         <Input
           label="Password"
           type="password"
           on:change
           bind:value={password}
+          on:keyup={submitOnEnter}
         />
       </Layout>
       <Layout gap="XS" noPadding>

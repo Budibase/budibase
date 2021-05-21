@@ -82,6 +82,7 @@
     on:blur
     on:focus
     on:input
+    on:keyup
     on:blur={onBlur}
     on:focus={onFocus}
     on:input={onInput}
