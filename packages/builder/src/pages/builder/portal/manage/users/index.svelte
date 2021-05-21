@@ -51,9 +51,8 @@
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body>
-      Users are the common denominator in Budibase. Each user is assigned to a
-      group that contains apps and permissions. In this section, you can add
-      users, or edit and delete an existing user.
+      Each user is assigned to a group that contains apps and permissions. In
+      this section, you can add users, or edit and delete an existing user.
     </Body>
   </Layout>
   <Divider size="S" />
