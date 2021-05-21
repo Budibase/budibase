@@ -12,15 +12,7 @@
   export let size = "M"
   export let url = ""
   export let disabled = false
-  export let name = "John Doe"
-
-  function getInitials(name) {
-    let parts = name.split(" ")
-    if (parts.length > 0) {
-      return parts.map(name => name[0]).join("")
-    }
-    return name
-  }
+  export let initials = "JD"
 </script>
 
 {#if url}
@@ -38,7 +30,7 @@
       size
     )}); font-size: calc(var({sizes.get(size)}) / 2)"
   >
-    {getInitials(name)}
+    {initials || ""}
   </div>
 {/if}
 
@@ -52,5 +44,6 @@
     border-radius: 50%;
     overflow: hidden;
     user-select: none;
+    text-transform: uppercase;
   }
 </style>

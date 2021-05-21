@@ -92,7 +92,7 @@
     <Heading>User: {$userFetch?.data?.email}</Heading>
     <Body>
       Change user settings and update their app roles. Also contains the ability
-      to delete the user as well as force reset their password..
+      to delete the user as well as force reset their password.
     </Body>
   </Layout>
   <Divider size="S" />
@@ -118,7 +118,7 @@
       <!-- don't let a user remove the privileges that let them be here -->
       {#if userId !== $auth.user._id}
         <div class="field">
-          <Label size="L">Development access?</Label>
+          <Label size="L">Development access</Label>
           <Toggle
             text=""
             value={$userFetch?.data?.builder?.global}
@@ -127,7 +127,7 @@
           />
         </div>
         <div class="field">
-          <Label size="L">Administration access?</Label>
+          <Label size="L">Administration access</Label>
           <Toggle
               text=""
               value={$userFetch?.data?.admin?.global}

@@ -10,8 +10,10 @@
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
   import { admin, organisation } from "stores/portal"
+  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
 
   let adminUser = {}
+  let error
 
   async function save() {
     try {
@@ -42,13 +44,11 @@
       </Layout>
       <Layout gap="XS" noPadding>
         <Input label="Email" bind:value={adminUser.email} />
-        <Input
-          label="Password"
-          type="password"
-          bind:value={adminUser.password}
-        />
+        <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>
-      <Button cta on:click={save}>Create super admin user</Button>
+      <Button cta disabled={error} on:click={save}>
+        Create super admin user
+      </Button>
     </Layout>
   </div>
 </section>
