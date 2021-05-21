@@ -1,7 +1,7 @@
 <script>
-  import { onMount } from "svelte"
   import { isActive, redirect } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
+  import { onMount } from "svelte"
 
   let loaded = false
   $: hasAdminUser = !!$admin?.checklist?.adminUser
@@ -29,6 +29,8 @@
       !$isActive("./invite")
     ) {
       $redirect("./auth/login")
+    } else if ($auth?.user?.forceResetPassword) {
+      $redirect("./auth/reset")
     }
   }
 </script>
