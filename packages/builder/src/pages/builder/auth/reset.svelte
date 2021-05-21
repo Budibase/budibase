@@ -12,8 +12,11 @@
   async function reset() {
     try {
       if (forceResetPassword) {
-        console.log("Updating self!")
-        await auth.updateSelf({ ...$auth.user, password })
+        await auth.updateSelf({
+          ...$auth.user,
+          password,
+          forceResetPassword: false,
+        })
         $goto("../portal/")
       } else {
         await auth.resetPassword(password, resetCode)
@@ -43,7 +46,12 @@
         </Body>
         <PasswordRepeatInput bind:password bind:error />
       </Layout>
-      <Button cta on:click={reset} disabled={error}>Reset your password</Button>
+      <Button
+        cta
+        on:click={reset}
+        disabled={error || (forceResetPassword ? false : !resetCode)}
+        >Reset your password</Button
+      >
     </Layout>
   </div>
 </div>
