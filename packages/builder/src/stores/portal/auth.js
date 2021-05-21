@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store"
+import { derived, writable, get } from "svelte/store"
 import api from "../../builderStore/api"
 
 export function createAuthStore() {
@@ -50,10 +50,11 @@ export function createAuthStore() {
       await response.json()
       user.set(null)
     },
-    updateSelf: async newUser => {
+    updateSelf: async fields => {
+      const newUser = { ...get(user), ...fields }
       const response = await api.post("/api/admin/users/self", newUser)
       if (response.status === 200) {
-        user.update(state => ({ ...state, ...newUser }))
+        user.set(newUser)
       } else {
         throw "Unable to update user details"
       }
