@@ -9,7 +9,7 @@ const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
 const { PermissionTypes } = require("@budibase/auth/permissions")
 
-const DEBOUNCE_TIME_SEC = 20
+const DEBOUNCE_TIME_SEC = 30
 
 /************************************************** *
  * This middleware has been broken out of the       *
