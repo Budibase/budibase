@@ -1,24 +1,32 @@
 <script>
+  import { onMount } from "svelte"
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "/assets/google-logo.png"
+
+  let show = false
+
+  async function fetchConfig() {
+    const googleResponse = await api.get(
+      `/api/admin/configs/${ConfigTypes.Google}`
+    )
+    const googleDoc = await googleResponse.json()
+
+    if (googleDoc._id) show = true 
+  }
 </script>
 
-<ActionButton>
-  <a target="_blank" href="/api/admin/auth/google">
-    <div class="inner">
-      <img src={GoogleLogo} alt="google icon" />
-      <p>Sign in with Google</p>
-    </div>
-  </a>
-</ActionButton>
+{#if show}
+  <ActionButton>
+    <a target="_blank" href="/api/admin/auth/google">
+      <div class="inner">
+        <img src={GoogleLogo} alt="google icon" />
+        <p>Sign in with Google</p>
+      </div>
+    </a>
+  </ActionButton>
+{/if}
 
 <style>
-  .outer {
-    border: 1px solid #494949;
-    border-radius: 4px;
-    width: 100%;
-    background-color: var(--background-alt);
-  }
   .inner {
     display: flex;
     flex-direction: row;
