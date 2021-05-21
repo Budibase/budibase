@@ -108,7 +108,7 @@
         <Input disabled thin value={$userFetch?.data?.lastName} />
       </div>
       <div class="field">
-        <Label size="L">Development access?</Label>
+        <Label size="L">Development access</Label>
         <Toggle
           text=""
           value={$userFetch?.data?.builder?.global}
