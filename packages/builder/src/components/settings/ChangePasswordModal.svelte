@@ -9,7 +9,7 @@
   const updatePassword = async () => {
     try {
       await auth.updateSelf({ ...$auth.user, password })
-      notifications.success("Information updated successfully")
+      notifications.success("Password changed successfully")
     } catch (error) {
       notifications.error("Failed to update password")
     }

@@ -141,7 +141,7 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/inputgroup/-/inputgroup-3.0.2.tgz#f1b13603832cbd22394f3d898af13203961f8691"
   integrity sha512-O0G3Lw9gxsh8gTLQWIAKkN1O8cWhjpEUl+oR1PguIKFni72uNr2ikU9piOwy/r0gJG2Q/TVs6hAshoAAkmsSzw==
 
-"@spectrum-css/label@^2.0.9":
+"@spectrum-css/label@^2.0.10":
   version "2.0.10"
   resolved "https://registry.yarnpkg.com/@spectrum-css/label/-/label-2.0.10.tgz#2368651d7636a19385b5d300cdf6272db1916001"
   integrity sha512-xCbtEiQkZIlLdWFikuw7ifDCC21DOC/KMgVrrVJHXFc4KRQe9LTZSqmGF3tovm+CSq1adE59mYoTbojVQ9YuEQ==
@@ -200,6 +200,11 @@
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/sidenav/-/sidenav-3.0.2.tgz#9d70f408d588ee79c69857751010333671f32713"
   integrity sha512-YpIdH/F0jEICYmoduGrnkTmxwJq1kfKxEp0wOs+ZkQOsvKMv1an7nyhsfOKCQqcGNfYzJ9mJAk7/u5+vsxHa8g==
+
+"@spectrum-css/statuslight@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/statuslight/-/statuslight-3.0.2.tgz#dc54b6cd113413dcdb909c486b5d7bae60db65c5"
+  integrity sha512-xodB8g8vGJH20XmUj9ZsPlM1jHrGeRbvmVXkz0q7YvQrYAhim8pP3W+XKKZAletPFAuu8cmUOc6SWn6i4X4z6w==
 
 "@spectrum-css/switch@^1.0.2":
   version "1.0.2"
