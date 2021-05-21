@@ -26,15 +26,39 @@
   import { AppStatus } from "constants"
 
   let layout = "grid"
-  let appStatus = AppStatus.PUBLISHED
+  let sortBy = "name"
   let template
-  let appToDelete
+  let selectedApp
   let creationModal
   let deletionModal
+  let unpublishModal
   let creatingApp = false
   let loaded = false
 
-  $: appStatus && apps.load(appStatus)
+  $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
+
+  const enrichApps = (apps, user, sortBy) => {
+    const enrichedApps = apps.map(app => ({
+      ...app,
+      deployed: app.status === AppStatus.DEPLOYED,
+      lockedYou: app.lockedBy?.email === user.email,
+      lockedOther: app.lockedBy && app.lockedBy.email !== user.email,
+    }))
+    if (sortBy === "status") {
+      return enrichedApps.sort((a, b) => {
+        if (a.status === b.status) {
+          return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+        }
+        return a.status === AppStatus.DEPLOYED ? -1 : 1
+      })
+    } else if (sortBy === "name") {
+      return enrichedApps.sort((a, b) => {
+        return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+      })
+    } else {
+      return enrichedApps
+    }
+  }
 
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
@@ -60,19 +84,19 @@
     creatingApp = false
   }
 
-  const openApp = app => {
-    if (app.lockedBy && app.lockedBy?.email !== $auth.user?.email) {
+  const viewApp = app => {
+    const id = app.deployed ? app.prodId : app.devId
+    window.open(`/${id}`, "_blank")
+  }
+
+  const editApp = app => {
+    if (app.lockedOther) {
       notifications.error(
         `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
       )
       return
     }
-
-    if (appStatus === AppStatus.DEV) {
-      $goto(`../../app/${app.appId}`)
-    } else {
-      window.open(`/${app.appId}`, "_blank")
-    }
+    $goto(`../../app/${app.devId}`)
   }
 
   const exportApp = app => {
@@ -82,36 +106,66 @@
           app.name
         )}`
       )
-      notifications.success("App export complete")
+      notifications.success("App exported successfully")
     } catch (err) {
-      console.error(err)
-      notifications.error("App export failed")
+      notifications.error(`Error exporting app: ${err}`)
+    }
+  }
+
+  const unpublishApp = app => {
+    selectedApp = app
+    unpublishModal.show()
+  }
+
+  const confirmUnpublishApp = async () => {
+    if (!selectedApp) {
+      return
+    }
+    try {
+      const response = await del(`/api/applications/${selectedApp.prodId}`)
+      if (response.status !== 200) {
+        const json = await response.json()
+        throw json.message
+      }
+      await apps.load()
+      notifications.success("App unpublished successfully")
+    } catch (err) {
+      notifications.error(`Error unpublishing app: ${err}`)
     }
   }
 
   const deleteApp = app => {
-    appToDelete = app
+    selectedApp = app
     deletionModal.show()
   }
 
   const confirmDeleteApp = async () => {
-    if (!appToDelete) {
+    if (!selectedApp) {
       return
     }
-    await del(`/api/applications/${appToDelete?.appId}`)
-    await apps.load()
-    appToDelete = null
-    notifications.success("App deleted successfully.")
+    try {
+      const response = await del(`/api/applications/${selectedApp?.devId}`)
+      if (response.status !== 200) {
+        const json = await response.json()
+        throw json.message
+      }
+      await apps.load()
+      notifications.success("App deleted successfully")
+    } catch (err) {
+      notifications.error(`Error deleting app: ${err}`)
+    }
+    selectedApp = null
   }
 
-  const releaseLock = async appId => {
+  const releaseLock = async app => {
     try {
-      const response = await del(`/api/dev/${appId}/lock`)
-      const json = await response.json()
-      if (response.status !== 200) throw json.message
-
-      notifications.success("Lock released")
-      await apps.load(appStatus)
+      const response = await del(`/api/dev/${app.devId}/lock`)
+      if (response.status !== 200) {
+        const json = await response.json()
+        throw json.message
+      }
+      await apps.load()
+      notifications.success("Lock released successfully")
     } catch (err) {
       notifications.error(`Error releasing lock: ${err}`)
     }
@@ -119,7 +173,7 @@
 
   onMount(async () => {
     checkKeys()
-    await apps.load(appStatus)
+    await apps.load()
     loaded = true
   })
 </script>
@@ -136,10 +190,12 @@
     <div class="filter">
       <div class="select">
         <Select
-          bind:value={appStatus}
+          bind:value={sortBy}
+          placeholder={null}
           options={[
-            { label: "Published", value: AppStatus.PUBLISHED },
-            { label: "In Development", value: AppStatus.DEV },
+            { label: "Sort by name", value: "name" },
+            { label: "Sort by recently updated", value: "updated" },
+            { label: "Sort by status", value: "status" },
           ]}
         />
       </div>
@@ -158,27 +214,28 @@
         />
       </ActionGroup>
     </div>
-    {#if loaded && $apps.length}
+    {#if loaded && enrichedApps.length}
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each $apps as app, idx (app.appId)}
+        {#each enrichedApps as app, idx (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
-            deletable={appStatus === AppStatus.PUBLISHED}
             {releaseLock}
             {app}
-            {openApp}
+            {unpublishApp}
+            {viewApp}
+            {editApp}
             {exportApp}
             {deleteApp}
-            last={idx === $apps.length - 1}
+            last={idx === enrichedApps.length - 1}
           />
         {/each}
       </div>
     {/if}
   </Layout>
-  {#if !$apps.length && !creatingApp && loaded}
+  {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
         <ModalContent
@@ -215,7 +272,15 @@
   okText="Delete app"
   onOk={confirmDeleteApp}
 >
-  Are you sure you want to delete the app <b>{appToDelete?.name}</b>?
+  Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
+</ConfirmDialog>
+<ConfirmDialog
+  bind:this={unpublishModal}
+  title="Confirm unpublish"
+  okText="Unpublish app"
+  onOk={confirmUnpublishApp}
+>
+  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
 <style>
@@ -228,7 +293,7 @@
   }
 
   .select {
-    width: 150px;
+    width: 190px;
   }
 
   .appGrid {
@@ -239,7 +304,7 @@
   .appTable {
     display: grid;
     grid-template-rows: auto;
-    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
     align-items: center;
   }
   .appTable :global(> div) {
@@ -256,7 +321,6 @@
   .appTable :global(> div:not(.last)) {
     border-bottom: var(--border-light);
   }
-
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
