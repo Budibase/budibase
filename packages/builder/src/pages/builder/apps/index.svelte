@@ -17,8 +17,8 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
-  import UpdateUserInfoModal from "./_components/UpdateUserInfoModal.svelte"
-  import ChangePasswordModal from "./_components/ChangePasswordModal.svelte"
+  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
 
   let loaded = false
   let userInfoModal
@@ -31,10 +31,11 @@
   })
 </script>
 
-{#if loaded}
+{#if $auth.user && loaded}
   <div class="container">
     <Page>
       <div class="content">
+        asdas
         <Layout noPadding>
           <img src={$organisation.logoUrl} />
           <div class="info-title">

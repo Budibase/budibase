@@ -66,10 +66,11 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading size="M">General</Heading>
+    <Heading size="M">Organisation</Heading>
     <Body>
-      General is the place where you edit your organisation name, logo. You can
-      also configure your platform URL as well as turn on or off analytics.
+      Organisation settings is where you can edit your organisation name and
+      logo. You can also configure your platform URL and enable or disable
+      analytics.
     </Body>
   </Layout>
   <Divider size="S" />
