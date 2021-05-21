@@ -17,8 +17,8 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
-  import UpdateUserInfoModal from "./_components/UpdateUserInfoModal.svelte"
-  import ChangePasswordModal from "./_components/ChangePasswordModal.svelte"
+  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
 
   let loaded = false
   let userInfoModal
@@ -26,12 +26,14 @@
 
   onMount(async () => {
     await organisation.init()
-    await apps.load(AppStatus.DEV)
+    await apps.load()
     loaded = true
   })
+
+  $: publishedApps = $apps.filter(app => app.status === AppStatus.DEPLOYED)
 </script>
 
-{#if loaded}
+{#if $auth.user && loaded}
   <div class="container">
     <Page>
       <div class="content">
@@ -71,17 +73,17 @@
             </ActionMenu>
           </div>
           <Divider />
-          {#if $apps.length}
+          {#if publishedApps.length}
             <Heading>Apps</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
-                {#each $apps as app, idx (app.appId)}
+                {#each publishedApps as app, idx (app.appId)}
                   <a class="app" target="_blank" href={`/${app.appId}`}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
                       <Body size="S">
-                        Edited {Math.round(Math.random() * 10 + 1)} months ago
+                        Updated {Math.round(Math.random() * 10 + 1)} months ago
                       </Body>
                     </div>
                     <Icon name="ChevronRight" />

@@ -18,9 +18,9 @@ const StaticDatabases = {
 }
 
 const AppStatus = {
-  DEV: "dev",
+  DEV: "development",
   ALL: "all",
-  DEPLOYED: "PUBLISHED",
+  DEPLOYED: "published",
 }
 
 const DocumentTypes = {
