@@ -1,6 +1,8 @@
 <script>
+  import "@spectrum-css/tags/dist/index-vars.css"
   import Avatar from "../Avatar/Avatar.svelte"
   import ClearButton from "../ClearButton/ClearButton.svelte"
+
   export let icon = ""
   export let avatar = ""
   export let invalid = false
@@ -32,3 +34,10 @@
     <ClearButton on:click />
   {/if}
 </div>
+
+<style>
+  .spectrum-Tags-item {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
