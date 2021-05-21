@@ -6,51 +6,67 @@
     Layout,
     ActionMenu,
     MenuItem,
+    StatusLight,
   } from "@budibase/bbui"
   import { gradient } from "actions"
   import { auth } from "stores/portal"
+  import { AppStatus } from "constants"
 
   export let app
   export let exportApp
-  export let openApp
+  export let viewApp
+  export let editApp
   export let deleteApp
+  export let unpublishApp
   export let releaseLock
-  export let deletable
 </script>
 
 <div class="wrapper">
   <Layout noPadding gap="XS" alignContent="start">
     <div class="preview" use:gradient={{ seed: app.name }} />
     <div class="title">
-      <div class="name" on:click={() => openApp(app)}>
+      {#if app.lockedBy}
+        <Icon name="LockClosed" />
+      {/if}
+      <div class="name" on:click={() => editApp(app)}>
         <Heading size="XS">
           {app.name}
         </Heading>
       </div>
       <ActionMenu align="right">
         <Icon slot="control" name="More" hoverable />
+        {#if app.deployed}
+          <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
+            View published app
+          </MenuItem>
+        {/if}
+        {#if app.lockedYou}
+          <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
+            Release lock
+          </MenuItem>
+        {/if}
         <MenuItem on:click={() => exportApp(app)} icon="Download">
           Export
         </MenuItem>
-        {#if deletable}
-          <MenuItem on:click={() => deleteApp(app)} icon="Delete">
-            Delete
+        {#if app.deployed}
+          <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
+            Unpublish
           </MenuItem>
         {/if}
-        {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
-          <MenuItem on:click={() => releaseLock(app.appId)} icon="LockOpen">
-            Release Lock
+        {#if !app.deployed}
+          <MenuItem on:click={() => deleteApp(app)} icon="Delete">
+            Delete
           </MenuItem>
         {/if}
       </ActionMenu>
     </div>
     <div class="status">
       <Body size="S">
-        Edited {Math.floor(1 + Math.random() * 10)} months ago
+        Updated {Math.floor(1 + Math.random() * 10)} months ago
       </Body>
-      {#if app.lockedBy}
-        <Icon name="LockClosed" />
-      {/if}
+      <StatusLight active={app.deployed} neutral={!app.deployed}>
+        {#if app.deployed}Published{:else}Unpublished{/if}
+      </StatusLight>
     </div>
   </Layout>
 </div>
@@ -59,13 +75,17 @@
   .wrapper {
     overflow: hidden;
   }
+  .wrapper :global(.spectrum-StatusLight) {
+    padding: 0;
+    min-height: 0;
+  }
+
   .preview {
     height: 135px;
     border-radius: var(--border-radius-s);
-    margin-bottom: var(--spacing-s);
+    margin-bottom: var(--spacing-m);
   }
 
-  .title,
   .status {
     display: flex;
     flex-direction: row;
@@ -74,12 +94,18 @@
   }
 
   .name {
-    text-decoration: none;
     flex: 1 1 auto;
-    width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-right: var(--spacing-m);
+  }
+
+  .title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-m);
+  }
+  .title :global(.spectrum-Icon) {
+    flex: 0 0 auto;
   }
   .title :global(h1) {
     overflow: hidden;
