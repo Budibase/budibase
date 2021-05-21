@@ -54,16 +54,9 @@ router
     buildUserSaveValidation(),
     controller.save
   )
-  .get("/api/admin/users", controller.fetch)
-  .post("/api/admin/users/init", controller.adminUser)
-  .get("/api/admin/users/self", controller.getSelf)
-  .post(
-    "/api/admin/users/self",
-    buildUserSaveValidation(true),
-    controller.updateSelf
-  )
+  .get("/api/admin/users", adminOnly, controller.fetch)
   .delete("/api/admin/users/:id", adminOnly, controller.destroy)
-  .get("/api/admin/users/:id", controller.find)
+  .get("/api/admin/users/:id", adminOnly, controller.find)
   .get("/api/admin/roles/:appId")
   .post(
     "/api/admin/users/invite",
@@ -71,10 +64,18 @@ router
     buildInviteValidation(),
     controller.invite
   )
+  // non-admin endpoints
+  .post(
+    "/api/admin/users/self",
+    buildUserSaveValidation(true),
+    controller.updateSelf
+  )
   .post(
     "/api/admin/users/invite/accept",
     buildInviteAcceptValidation(),
     controller.inviteAccept
   )
+  .post("/api/admin/users/init", controller.adminUser)
+  .get("/api/admin/users/self", controller.getSelf)
 
 module.exports = router
