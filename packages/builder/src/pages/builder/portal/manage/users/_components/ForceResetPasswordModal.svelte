@@ -10,7 +10,11 @@
   const password = Math.random().toString(36).substr(2, 20)
 
   async function resetPassword() {
-    const res = await users.save({ ...user, password })
+    const res = await users.save({
+      ...user,
+      password,
+      forceResetPassword: true,
+    })
     if (res.status) {
       notifications.error(res.message)
     } else {
