@@ -6,7 +6,12 @@ jest.mock("../../../utilities/redis", () => ({
   getAllLocks: () => {
     return []
   },
+  doesUserHaveLock: () => {
+    return true
+  },
   updateLock: jest.fn(),
+  setDebounce: jest.fn(),
+  checkDebounce: jest.fn(),
 }))
 
 describe("/applications", () => {
@@ -102,6 +107,29 @@ describe("/applications", () => {
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
+    })
+  })
+
+  describe("edited at", () => {
+    it("middleware should set edited at", async () => {
+      const headers = config.defaultHeaders()
+      headers["referer"] = `/${config.getAppId()}/test`
+      const res = await request
+        .put(`/api/applications/${config.getAppId()}`)
+        .send({
+          name: "UPDATED_NAME",
+        })
+        .set(headers)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.body.rev).toBeDefined()
+      // retrieve the app to check it
+      const getRes = await request
+        .get(`/api/applications/${config.getAppId()}/appPackage`)
+        .set(headers)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(getRes.body.application.updatedAt).toBeDefined()
     })
   })
 })

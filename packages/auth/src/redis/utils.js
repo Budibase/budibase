@@ -10,6 +10,7 @@ exports.Databases = {
   PW_RESETS: "pwReset",
   INVITATIONS: "invitation",
   DEV_LOCKS: "devLocks",
+  DEBOUNCE: "debounce",
 }
 
 exports.getRedisOptions = (clustered = false) => {
