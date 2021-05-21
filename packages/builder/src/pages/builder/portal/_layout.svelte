@@ -13,11 +13,13 @@
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth } from "stores/portal"
-  import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
   import { onMount } from "svelte"
+  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
 
-  let oldSettingsModal
   let loaded = false
+  let userInfoModal
+  let changePasswordModal
 
   const menu = [
     { title: "Apps", href: "/builder/portal/apps" },
@@ -25,12 +27,11 @@
     { title: "Auth", href: "/builder/portal/manage/auth" },
     { title: "Email", href: "/builder/portal/manage/email" },
     {
-      title: "General",
-      href: "/builder/portal/settings/general",
+      title: "Organisation",
+      href: "/builder/portal/settings/organisation",
       heading: "Settings",
     },
-    { title: "Theming", href: "/builder/portal/theming" },
-    { title: "Account", href: "/builder/portal/account" },
+    { title: "Theming", href: "/builder/portal/settings/theming" },
   ]
 
   onMount(async () => {
@@ -44,7 +45,7 @@
   })
 </script>
 
-{#if loaded}
+{#if $auth.user && loaded}
   <div class="container">
     <div class="nav">
       <Layout paddingX="L" paddingY="L">
@@ -77,8 +78,14 @@
             <Avatar size="M" name="John Doe" />
             <Icon size="XL" name="ChevronDown" />
           </div>
-          <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
-            Old settings
+          <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            Update user information
+          </MenuItem>
+          <MenuItem
+            icon="LockClosed"
+            on:click={() => changePasswordModal.show()}
+          >
+            Update password
           </MenuItem>
           <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
             Close developer mode
@@ -91,8 +98,11 @@
       </div>
     </div>
   </div>
-  <Modal bind:this={oldSettingsModal} width="30%">
-    <BuilderSettingsModal />
+  <Modal bind:this={userInfoModal}>
+    <UpdateUserInfoModal />
+  </Modal>
+  <Modal bind:this={changePasswordModal}>
+    <ChangePasswordModal />
   </Modal>
 {/if}
 
