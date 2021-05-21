@@ -11,10 +11,16 @@
     Dropzone,
     notifications,
   } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { writable } from "svelte/store"
+  import { redirect } from "@roxi/routify"
+
+  // only admins allowed here
+  if (!$auth.isAdmin) {
+    $redirect("../../portal")
+  }
 
   const values = writable({
     analytics: !analytics.disabled(),

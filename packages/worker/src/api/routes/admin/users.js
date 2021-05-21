@@ -56,7 +56,6 @@ router
   )
   .get("/api/admin/users", adminOnly, controller.fetch)
   .delete("/api/admin/users/:id", adminOnly, controller.destroy)
-  .get("/api/admin/users/:id", adminOnly, controller.find)
   .get("/api/admin/roles/:appId")
   .post(
     "/api/admin/users/invite",
@@ -77,5 +76,7 @@ router
   )
   .post("/api/admin/users/init", controller.adminUser)
   .get("/api/admin/users/self", controller.getSelf)
+  // admin endpoint but needs to come at end (blocks other endpoints otherwise)
+  .get("/api/admin/users/:id", adminOnly, controller.find)
 
 module.exports = router
