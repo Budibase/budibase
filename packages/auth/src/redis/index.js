@@ -17,12 +17,8 @@ let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
 function init() {
   return new Promise((resolve, reject) => {
     // testing uses a single in memory client
-    if (env.isTest()) {
+    if (env.isTest() || (CLIENT && CONNECTED)) {
       return resolve(CLIENT)
-    }
-    // if a connection existed, close it and re-create it
-    if (CLIENT && CONNECTED) {
-      return CLIENT
     }
     const { opts, host, port } = getRedisOptions(CLUSTERED)
     if (CLUSTERED) {

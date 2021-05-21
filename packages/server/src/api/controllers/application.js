@@ -190,6 +190,8 @@ exports.create = async function (ctx) {
     url: url,
     template: ctx.request.body.template,
     instance: instance,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     deployment: {
       type: "cloud",
     },

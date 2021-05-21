@@ -8,7 +8,7 @@ let devAppClient, debounceClient
 // reduces the performance hit
 exports.init = async () => {
   devAppClient = await new Client(utils.Databases.DEV_LOCKS).init()
-  debounceClient = await new Client(utils.Databases).init()
+  debounceClient = await new Client(utils.Databases.DEBOUNCE).init()
 }
 
 exports.doesUserHaveLock = async (devAppId, user) => {
