@@ -2,17 +2,11 @@
   import { onMount } from "svelte"
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "/assets/google-logo.png"
+  import { admin } from "stores/portal"
 
   let show = false
 
-  async function fetchConfig() {
-    const googleResponse = await api.get(
-      `/api/admin/configs/${ConfigTypes.Google}`
-    )
-    const googleDoc = await googleResponse.json()
-
-    if (googleDoc._id) show = true 
-  }
+  $: show = $admin.checklist?.oauth
 </script>
 
 {#if show}

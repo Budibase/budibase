@@ -168,6 +168,11 @@ exports.configChecklist = async function (ctx) {
       type: Configs.SMTP,
     })
 
+    // They have set up Google Auth
+    const oauthConfig = await getScopedFullConfig(db, {
+      type: Configs.GOOGLE,
+    })
+
     // They have set up an admin user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
@@ -180,6 +185,7 @@ exports.configChecklist = async function (ctx) {
       apps: appDbNames.length,
       smtp: !!smtpConfig,
       adminUser,
+      oauth: !!oauthConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)
