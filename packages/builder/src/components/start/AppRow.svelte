@@ -17,10 +17,9 @@
   export let deleteApp
   export let unpublishApp
   export let releaseLock
-  export let last
 </script>
 
-<div class="title" class:last>
+<div class="title">
   <div class="preview" use:gradient={{ seed: app.name }} />
   <div class="name" on:click={() => editApp(app)}>
     <Heading size="XS">
@@ -28,10 +27,10 @@
     </Heading>
   </div>
 </div>
-<div class:last>
+<div>
   Updated {Math.round(Math.random() * 10 + 1)} months ago
 </div>
-<div class:last>
+<div>
   <StatusLight
     positive={!app.lockedYou && !app.lockedOther}
     notice={app.lockedYou}
@@ -46,12 +45,12 @@
     {/if}
   </StatusLight>
 </div>
-<div class:last>
+<div>
   <StatusLight active={app.deployed} neutral={!app.deployed}>
     {#if app.deployed}Published{:else}Unpublished{/if}
   </StatusLight>
 </div>
-<div class:last>
+<div>
   <Button
     disabled={app.lockedOther}
     on:click={() => editApp(app)}
@@ -64,19 +63,21 @@
       <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
         View published app
       </MenuItem>
-      <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-        Unpublish
-      </MenuItem>
     {/if}
     {#if app.lockedBy && app.lockedBy?.email === $auth.user?.email}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
         Release lock
       </MenuItem>
     {/if}
+    <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
+    {#if app.deployed}
+      <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
+        Unpublish
+      </MenuItem>
+    {/if}
     {#if !app.deployed}
       <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
     {/if}
-    <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
   </ActionMenu>
 </div>
 
