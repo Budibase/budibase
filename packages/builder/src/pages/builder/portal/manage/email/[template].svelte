@@ -1,35 +1,32 @@
 <script>
+  import { onMount, tick } from "svelte"
   import {
     Button,
     Detail,
     Heading,
-    notifications,
-    Icon,
+    ActionButton,
+    Body,
     Page,
+    Layout,
+    notifications,
     Tabs,
     Tab,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { fade } from "svelte/transition"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
 
-  const ConfigTypes = {
-    SMTP: "smtp",
-  }
-
   export let template
 
-  let selected = "Edit"
-  let selectedBindingTab = "Template"
   let htmlEditor
+  let mounted = false
 
-  $: selectedTemplate = $email.templates.find(
+  $: selectedTemplate = $email?.templates?.find(
     ({ purpose }) => purpose === template
   )
   $: templateBindings =
-    $email.definitions?.bindings[selectedTemplate.purpose] || []
+    $email.definitions?.bindings?.[selectedTemplate.purpose] || []
 
   async function saveTemplate() {
     try {
@@ -44,20 +41,45 @@
   function setTemplateBinding(binding) {
     htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
   }
+  onMount(() => {
+    mounted = true
+  })
+
+  async function fixMountBug({ detail }) {
+    console.log(detail)
+    if (detail === "Edit") {
+      await tick()
+      mounted = true
+    } else {
+      mounted = false
+    }
+  }
 </script>
 
-<Page wide gap="L">
-  <div class="backbutton" on:click={() => $goto("./")}>
-    <Icon name="BackAndroid" />
-    <span>Back</span>
-  </div>
-  <header>
-    <Heading>
-      Email Template: {template}
-    </Heading>
-    <Button cta on:click={saveTemplate}>Save</Button>
-  </header>
-  <Tabs {selected}>
+<Page wide>
+  <Layout gap="XS" noPadding>
+    <div class="back">
+      <ActionButton
+        on:click={() => $goto("./")}
+        quiet
+        size="S"
+        icon="BackAndroid"
+      >
+        Back to email settings
+      </ActionButton>
+    </div>
+    <header>
+      <Heading>
+        Email Template: {template}
+      </Heading>
+      <Button cta on:click={saveTemplate}>Save</Button>
+    </header>
+    <Body
+      >Change the email template here. Add dynamic content by using the bindings
+      menu on the right.</Body
+    >
+  </Layout>
+  <Tabs selected="Edit" on:select={fixMountBug}>
     <Tab title="Edit">
       <div class="template-editor">
         <Editor
@@ -67,32 +89,34 @@
           on:change={e => {
             selectedTemplate.contents = e.detail.value
           }}
-          value={selectedTemplate.contents}
+          value={selectedTemplate?.contents}
         />
         <div class="bindings-editor">
           <Detail size="L">Bindings</Detail>
-          <Tabs selected={selectedBindingTab}>
-            <Tab title="Template">
-              <TemplateBindings
-                title="Template Bindings"
-                bindings={templateBindings}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-            <Tab title="Common">
-              <TemplateBindings
-                title="Common Bindings"
-                bindings={$email.definitions.bindings.common}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-          </Tabs>
+          {#if mounted}
+            <Tabs selected="Template">
+              <Tab title="Template">
+                <TemplateBindings
+                  title="Template Bindings"
+                  bindings={templateBindings}
+                  onBindingClick={setTemplateBinding}
+                />
+              </Tab>
+              <Tab title="Common">
+                <TemplateBindings
+                  title="Common Bindings"
+                  bindings={$email?.definitions?.bindings?.common}
+                  onBindingClick={setTemplateBinding}
+                />
+              </Tab>
+            </Tabs>
+          {/if}
         </div>
       </div></Tab
     >
     <Tab title="Preview">
-      <div class="preview" transition:fade>
-        {@html selectedTemplate.contents}
+      <div class="preview">
+        {@html selectedTemplate?.contents}
       </div>
     </Tab>
   </Tabs>
@@ -101,7 +125,7 @@
 <style>
   .template-editor {
     display: grid;
-    grid-template-columns: 1fr 20%;
+    grid-template-columns: 1fr minmax(250px, 20%);
     grid-gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
   }
@@ -110,7 +134,6 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
-    margin-bottom: var(--spacing-l);
     margin-top: var(--spacing-l);
   }
 
@@ -118,12 +141,5 @@
     background: white;
     height: 800px;
     padding: var(--spacing-xl);
-  }
-
-  .backbutton {
-    display: flex;
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
-    cursor: pointer;
   }
 </style>

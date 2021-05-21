@@ -40,7 +40,7 @@ export function createUsersStore() {
     return await response.json()
   }
 
-  async function updateRoles(data) {
+  async function save(data) {
     try {
       const res = await post(`/api/admin/users`, data)
       const json = await res.json()
@@ -57,8 +57,8 @@ export function createUsersStore() {
     invite,
     acceptInvite,
     create,
-    updateRoles,
-    del,
+    save,
+    delete: del,
   }
 }
 
