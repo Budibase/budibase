@@ -1,6 +1,7 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
+const { AppStatus } = require("../../../../db/utils")
 
 function Request(appId, params) {
   this.appId = appId
@@ -14,7 +15,7 @@ exports.getAllTableRows = async config => {
 }
 
 exports.clearAllApps = async () => {
-  const req = { query: { status: "dev" } }
+  const req = { query: { status: AppStatus.DEV } }
   await appController.fetch(req)
   const apps = req.body
   if (!apps || apps.length <= 0) {

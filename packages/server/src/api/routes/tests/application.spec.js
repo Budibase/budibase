@@ -1,5 +1,6 @@
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { AppStatus } = require("../../../db/utils")
 
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
@@ -52,7 +53,7 @@ describe("/applications", () => {
       await config.createApp(request, "app2")
 
       const res = await request
-        .get("/api/applications?status=dev")
+        .get(`/api/applications?status=${AppStatus.DEV}`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
