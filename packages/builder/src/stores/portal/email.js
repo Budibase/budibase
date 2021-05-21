@@ -2,7 +2,7 @@ import { writable } from "svelte/store"
 import api from "builderStore/api"
 
 export function createEmailStore() {
-  const store = writable([])
+  const store = writable({})
 
   return {
     subscribe: store.subscribe,

@@ -22,11 +22,13 @@
   let htmlEditor
   let mounted = false
 
-  $: selectedTemplate = $email?.templates?.find(
+  $: selectedTemplate = $email.templates?.find(
     ({ purpose }) => purpose === template
   )
+  $: baseTemplate = $email.templates?.find(({ purpose }) => purpose === "base")
   $: templateBindings =
     $email.definitions?.bindings?.[selectedTemplate.purpose] || []
+  $: previewContent = makePreviewContent(baseTemplate, selectedTemplate)
 
   async function saveTemplate() {
     try {
@@ -41,12 +43,23 @@
   function setTemplateBinding(binding) {
     htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
   }
+
+  const makePreviewContent = (baseTemplate, selectedTemplate) => {
+    if (!selectedTemplate) {
+      return ""
+    }
+    if (selectedTemplate.purpose === "base") {
+      return selectedTemplate.contents
+    }
+    const base = baseTemplate?.contents ?? ""
+    return base.replace("{{ body }}", selectedTemplate?.contents ?? "")
+  }
+
   onMount(() => {
     mounted = true
   })
 
   async function fixMountBug({ detail }) {
-    console.log(detail)
     if (detail === "Edit") {
       await tick()
       mounted = true
@@ -112,11 +125,11 @@
             </Tabs>
           {/if}
         </div>
-      </div></Tab
-    >
+      </div>
+    </Tab>
     <Tab title="Preview">
       <div class="preview">
-        {@html selectedTemplate?.contents}
+        <iframe srcdoc={previewContent} />
       </div>
     </Tab>
   </Tabs>
@@ -138,8 +151,13 @@
   }
 
   .preview {
-    background: white;
     height: 800px;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-xl) 0;
+    position: relative;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 </style>
