@@ -4,8 +4,7 @@ const {
   doesHaveResourcePermission,
   doesHaveBasePermission,
 } = require("@budibase/auth/permissions")
-const { APP_DEV_PREFIX } = require("../db/utils")
-const { doesUserHaveLock, updateLock } = require("../utilities/redis")
+const builderMiddleware = require("./builder")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
@@ -15,25 +14,7 @@ const WEBHOOK_ENDPOINTS = new RegExp(
   ["webhooks/trigger", "webhooks/schema"].join("|")
 )
 
-async function checkDevAppLocks(ctx) {
-  const appId = ctx.appId
 
-  // if any public usage, don't proceed
-  if (!ctx.user._id && !ctx.user.userId) {
-    return
-  }
-
-  // not a development app, don't need to do anything
-  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
-    return
-  }
-  if (!(await doesUserHaveLock(appId, ctx.user))) {
-    ctx.throw(403, "User does not hold app lock.")
-  }
-
-  // they do have lock, update it
-  await updateLock(appId, ctx.user)
-}
 
 module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // webhooks don't need authentication, each webhook unique
@@ -45,13 +26,9 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     return ctx.throw(403, "No user info found")
   }
 
-  const builderCall = permType === PermissionTypes.BUILDER
-  const referer = ctx.headers["referer"]
-  const editingApp = referer ? referer.includes(ctx.appId) : false
-  // this makes sure that builder calls abide by dev locks
-  if (builderCall && editingApp) {
-    await checkDevAppLocks(ctx)
-  }
+  // check general builder stuff, this middleware is a good way
+  // to find API endpoints which are builder focused
+  await builderMiddleware(ctx, permType)
 
   const isAuthed = ctx.isAuthenticated
   const { basePermissions, permissions } = await getUserPermissions(
@@ -62,9 +39,10 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
   // builders for now have permission to do anything
   // TODO: in future should consider separating permissions with an require("@budibase/auth").isClient check
   let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
+  const isBuilderApi = permType === PermissionTypes.BUILDER
   if (isBuilder) {
     return next()
-  } else if (builderCall && !isBuilder) {
+  } else if (isBuilderApi && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
 

@@ -6,6 +6,7 @@ const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
 const CLUSTERED = false
 
 // for testing just generate the client once
+let CONNECTED = false
 let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
 
 /**
@@ -20,9 +21,8 @@ function init() {
       return resolve(CLIENT)
     }
     // if a connection existed, close it and re-create it
-    if (CLIENT) {
-      CLIENT.disconnect()
-      CLIENT = null
+    if (CLIENT && CONNECTED) {
+      return CLIENT
     }
     const { opts, host, port } = getRedisOptions(CLUSTERED)
     if (CLUSTERED) {
@@ -32,12 +32,15 @@ function init() {
     }
     CLIENT.on("end", err => {
       reject(err)
+      CONNECTED = false
     })
     CLIENT.on("error", err => {
       reject(err)
+      CONNECTED = false
     })
     CLIENT.on("connect", () => {
       resolve(CLIENT)
+      CONNECTED = true
     })
   })
 }

@@ -78,9 +78,6 @@ describe("Authorization middleware", () => {
   })
 
   describe("external web hook call", () => {
-    let ctx = {}
-    let middleware
-
     beforeEach(() => {
       config = new TestConfiguration()
       config.setEnvironment(true)

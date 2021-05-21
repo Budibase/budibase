@@ -214,6 +214,9 @@ exports.update = async function (ctx) {
 
   const data = ctx.request.body
   const newData = { ...application, ...data, url }
+  if (ctx.request.body._rev !== application._rev) {
+    newData._rev = application._rev
+  }
 
   // the locked by property is attached by server but generated from
   // Redis, shouldn't ever store it
