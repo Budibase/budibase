@@ -20,7 +20,7 @@ describe("Postgres Integration", () => {
     const response = await config.integration.create({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(pg.queryMock).toHaveBeenCalledWith(sql)
   })
 
   it("calls the read method with the correct params", async () => {
@@ -28,7 +28,7 @@ describe("Postgres Integration", () => {
     const response = await config.integration.read({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(pg.queryMock).toHaveBeenCalledWith(sql)
   })
 
   it("calls the update method with the correct params", async () => {
@@ -36,20 +36,20 @@ describe("Postgres Integration", () => {
     const response = await config.integration.update({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(pg.queryMock).toHaveBeenCalledWith(sql)
   })
 
   it("calls the delete method with the correct params", async () => {
     const sql = "delete from users where name = 'todelete';"
-    const response = await config.integration.delete({ 
+    await config.integration.delete({
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(pg.queryMock).toHaveBeenCalledWith(sql)
   })
 
   describe("no rows returned", () => {
     beforeEach(() => {
-      config.integration.client.query.mockImplementation(() => ({ rows: [] }))
+      pg.queryMock.mockImplementation(() => ({ rows: [] }))
     })
 
     it("returns the correct response when the create response has no rows", async () => {
