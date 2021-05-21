@@ -41,4 +41,7 @@
     align-items: center;
     grid-template-columns: 200px 20px;
   }
+  .icon {
+    cursor: pointer;
+  }
 </style>
