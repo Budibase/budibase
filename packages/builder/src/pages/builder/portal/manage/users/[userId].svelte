@@ -129,10 +129,10 @@
         <div class="field">
           <Label size="L">Administration access</Label>
           <Toggle
-              text=""
-              value={$userFetch?.data?.admin?.global}
-              on:change={toggleAdminAccess}
-              disabled={toggleDisabled}
+            text=""
+            value={$userFetch?.data?.admin?.global}
+            on:change={toggleAdminAccess}
+            disabled={toggleDisabled}
           />
         </div>
       {/if}
