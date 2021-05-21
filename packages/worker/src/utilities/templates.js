@@ -7,8 +7,9 @@ const {
   EmailTemplatePurpose,
 } = require("../constants")
 const { checkSlashesInUrl } = require("./index")
+const env = require("../environment")
 
-const LOCAL_URL = `http://localhost:10000`
+const LOCAL_URL = `http://localhost:${env.CLUSTER_PORT || 10000}`
 const BASE_COMPANY = "Budibase"
 
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
