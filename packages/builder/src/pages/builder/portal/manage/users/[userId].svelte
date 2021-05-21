@@ -84,7 +84,7 @@
     <Heading>User: {$userFetch?.data?.email}</Heading>
     <Body>
       Change user settings and update their app roles. Also contains the ability
-      to delete the user as well as force reset their password..
+      to delete the user as well as force reset their password.
     </Body>
   </Layout>
   <Divider size="S" />
