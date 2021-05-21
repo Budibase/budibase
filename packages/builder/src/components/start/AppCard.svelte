@@ -9,8 +9,6 @@
     StatusLight,
   } from "@budibase/bbui"
   import { gradient } from "actions"
-  import { auth } from "stores/portal"
-  import { AppStatus } from "constants"
 
   export let app
   export let exportApp
