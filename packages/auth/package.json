@@ -1,6 +1,6 @@
 {
   "name": "@budibase/auth",
-  "version": "0.18.6",
+  "version": "0.9.1",
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
   "author": "Budibase",
@@ -24,5 +24,6 @@
   },
   "devDependencies": {
     "ioredis-mock": "^5.5.5"
-  }
+  },
+  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
