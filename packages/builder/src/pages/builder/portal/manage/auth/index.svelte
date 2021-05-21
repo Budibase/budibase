@@ -4,7 +4,6 @@
     Button,
     Heading,
     Divider,
-    Page,
     Label,
     notifications,
     Layout,
@@ -22,6 +21,13 @@
 
   const ConfigFields = {
     Google: ["clientID", "clientSecret", "callbackURL"],
+  }
+  const ConfigLabels = {
+    Google: {
+      clientID: "Client ID",
+      clientSecret: "Client secret",
+      callbackURL: "Callback URL",
+    },
   }
 
   let google
@@ -85,7 +91,7 @@
     <Layout gap="XS" noPadding>
       {#each ConfigFields.Google as field}
         <div class="form-row">
-          <Label size="L">{field}</Label>
+          <Label size="L">{ConfigLabels.Google[field]}</Label>
           <Input bind:value={google.config[field]} />
         </div>
       {/each}
