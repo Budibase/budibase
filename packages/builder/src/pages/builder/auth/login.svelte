@@ -9,7 +9,7 @@
     Layout,
     notifications,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { auth, organisation } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
 
@@ -26,7 +26,12 @@
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
-        $goto("../portal")
+        if ($params["?returnUrl"]) {
+          window.location = decodeURIComponent($params["?returnUrl"])
+        } else {
+          notifications.success("Logged in successfully")
+          $goto("../portal")
+        }
       }
     } catch (err) {
       console.error(err)
