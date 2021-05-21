@@ -5,13 +5,6 @@
   const component = getContext("component")
 
   export let logoUrl
-
-  const logOut = async () => {
-    if ($builderStore.inBuilder) {
-      return
-    }
-    await authStore.actions.logOut()
-  }
 </script>
 
 <div class="nav" use:styleable={$component.styles}>
@@ -21,9 +14,6 @@
         <img class="logo" alt="logo" src={logoUrl} height="48" />
       {/if}
     </a>
-    <div class="nav__controls">
-      <div on:click={logOut}>Log out</div>
-    </div>
   </div>
   <div class="nav__menu">
     <slot />

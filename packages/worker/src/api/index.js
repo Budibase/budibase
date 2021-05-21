@@ -33,6 +33,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/admin/configs/checklist",
     method: "GET",
   },
+  {
+    route: "/api/apps",
+    method: "GET",
+  },
 ]
 
 const router = new Router()

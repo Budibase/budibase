@@ -18,12 +18,11 @@ const createScreenStore = () => {
         activeLayout = $builderStore.layout
         activeScreen = $builderStore.screen
       } else {
-        // Otherwise find the correct screen by matching the current route
+        activeLayout = { props: { _component: "screenslot" } }
+
+        // Find the correct screen by matching the current route
         const { screens, layouts } = $config
-        activeLayout = layouts[0]
-        if (screens.length === 1) {
-          activeScreen = screens[0]
-        } else if ($routeStore.activeRoute) {
+        if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
           )

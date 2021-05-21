@@ -22,10 +22,7 @@ const {
 } = require("../../db/utils")
 const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
-const {
-  createHomeScreen,
-  createLoginScreen,
-} = require("../../constants/screens")
+const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
@@ -208,7 +205,6 @@ exports.create = async function (ctx) {
 
   ctx.status = 200
   ctx.body = newApplication
-  ctx.message = `Application ${ctx.request.body.name} created successfully`
 }
 
 exports.update = async function (ctx) {
@@ -229,13 +225,11 @@ exports.update = async function (ctx) {
   data._rev = response.rev
 
   ctx.status = 200
-  ctx.message = `Application ${application.name} updated successfully.`
   ctx.body = response
 }
 
 exports.delete = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
-  const app = await db.get(DocumentTypes.APP_METADATA)
   const result = await db.destroy()
   /* istanbul ignore next */
   if (!env.isTest()) {
@@ -243,7 +237,6 @@ exports.delete = async function (ctx) {
   }
 
   ctx.status = 200
-  ctx.message = `Application ${app.name} deleted successfully.`
   ctx.body = result
 }
 
@@ -259,10 +252,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   const homeScreen = createHomeScreen(app)
   homeScreen._id = generateScreenID()
   screensAndLayouts.push(homeScreen)
-
-  const loginScreen = createLoginScreen(app)
-  loginScreen._id = generateScreenID()
-  screensAndLayouts.push(loginScreen)
 
   await db.bulkDocs(screensAndLayouts)
 }

@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import {
     notifications,
     Input,
@@ -22,8 +22,12 @@
         username,
         password,
       })
-      notifications.success("Logged in successfully")
-      $goto("../portal")
+      if ($params["?returnUrl"]) {
+        window.location = decodeURIComponent($params["?returnUrl"])
+      } else {
+        notifications.success("Logged in successfully")
+        $goto("../portal")
+      }
     } catch (err) {
       console.error(err)
       notifications.error("Invalid credentials")

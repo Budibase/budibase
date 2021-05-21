@@ -160,7 +160,7 @@ exports.generateUserMetadataID = globalId => {
  */
 exports.getGlobalIDFromUserMetadataID = id => {
   const prefix = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-  if (!id.includes(prefix)) {
+  if (!id || !id.includes(prefix)) {
     return id
   }
   return id.split(prefix)[1]
