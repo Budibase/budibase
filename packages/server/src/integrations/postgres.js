@@ -1,4 +1,6 @@
-const { Client } = require("pg")
+const { Pool } = require("pg")
+
+let pool
 
 const SCHEMA = {
   docs: "https://node-postgres.com",
@@ -51,31 +53,39 @@ const SCHEMA = {
 class PostgresIntegration {
   constructor(config) {
     this.config = config
-    this.client = new Client(config)
-    this.connect()
+    if (!pool) {
+      pool = new Pool(this.config)
+    }
   }
 
-  async connect() {
-    return this.client.connect()
+  async query(sql) {
+    try {
+      this.client = await pool.connect()
+      return await this.client.query(sql)
+    } catch (err) {
+      throw new Error(err)
+    } finally {
+      this.client.release()
+    }
   }
 
   async create({ sql }) {
-    const response = await this.client.query(sql)
+    const response = await this.query(sql)
     return response.rows.length ? response.rows : [{ created: true }]
   }
 
   async read({ sql }) {
-    const response = await this.client.query(sql)
+    const response = await this.query(sql)
     return response.rows
   }
 
   async update({ sql }) {
-    const response = await this.client.query(sql)
+    const response = await this.query(sql)
     return response.rows.length ? response.rows : [{ updated: true }]
   }
 
   async delete({ sql }) {
-    const response = await this.client.query(sql)
+    const response = await this.query(sql)
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 }

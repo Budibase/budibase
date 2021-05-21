@@ -21,7 +21,7 @@ describe("/screens", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.length).toEqual(3)
+      expect(res.body.length).toEqual(2)
       expect(res.body.some(s => s._id === screen._id)).toEqual(true)
     })
 
