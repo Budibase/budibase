@@ -7,6 +7,7 @@ async function init() {
   const envFileJson = {
     SELF_HOSTED: 1,
     PORT: 4002,
+    CLUSTER_PORT: 10000,
     JWT_SECRET: "testsecret",
     INTERNAL_API_KEY: "budibase",
     MINIO_ACCESS_KEY: "budibase",

@@ -9,6 +9,9 @@
     StatusLight,
   } from "@budibase/bbui"
   import { gradient } from "actions"
+  import { auth } from "stores/portal"
+  import { AppStatus } from "constants"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let app
   export let exportApp
@@ -60,7 +63,13 @@
     </div>
     <div class="status">
       <Body size="S">
-        Updated {Math.floor(1 + Math.random() * 10)} months ago
+        {#if app.updatedAt}
+          {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+            time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+          })}
+        {:else}
+          Never updated
+        {/if}
       </Body>
       <StatusLight active={app.deployed} neutral={!app.deployed}>
         {#if app.deployed}Published{:else}Unpublished{/if}

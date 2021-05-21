@@ -1,12 +1,18 @@
 const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { AppStatus } = require("../../../db/utils")
 
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
   getAllLocks: () => {
     return []
   },
+  doesUserHaveLock: () => {
+    return true
+  },
   updateLock: jest.fn(),
+  setDebounce: jest.fn(),
+  checkDebounce: jest.fn(),
 }))
 
 describe("/applications", () => {
@@ -47,7 +53,7 @@ describe("/applications", () => {
       await config.createApp(request, "app2")
 
       const res = await request
-        .get("/api/applications?status=dev")
+        .get(`/api/applications?status=${AppStatus.DEV}`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
@@ -102,6 +108,29 @@ describe("/applications", () => {
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
+    })
+  })
+
+  describe("edited at", () => {
+    it("middleware should set edited at", async () => {
+      const headers = config.defaultHeaders()
+      headers["referer"] = `/${config.getAppId()}/test`
+      const res = await request
+        .put(`/api/applications/${config.getAppId()}`)
+        .send({
+          name: "UPDATED_NAME",
+        })
+        .set(headers)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.body.rev).toBeDefined()
+      // retrieve the app to check it
+      const getRes = await request
+        .get(`/api/applications/${config.getAppId()}/appPackage`)
+        .set(headers)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(getRes.body.application.updatedAt).toBeDefined()
     })
   })
 })
