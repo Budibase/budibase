@@ -1,12 +1,5 @@
 <script>
-  import {
-    Body,
-    Menu,
-    MenuItem,
-    Detail,
-    MenuSection,
-    DetailSummary,
-  } from "@budibase/bbui"
+  import { Body, Menu, MenuItem, Detail } from "@budibase/bbui"
 
   export let bindings
   export let onBindingClick = () => {}

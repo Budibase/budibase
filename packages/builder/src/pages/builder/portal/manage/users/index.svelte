@@ -21,7 +21,7 @@
 
   const schema = {
     email: {},
-    status: { displayName: "Development Access", type: "boolean" },
+    developmentAccess: { displayName: "Development Access", type: "boolean" },
     // role: { type: "options" },
     group: {},
     // access: {},
@@ -32,7 +32,11 @@
   let email
   $: filteredUsers = $users
     .filter(user => user.email.includes(search || ""))
-    .map(user => ({ ...user, group: ["All"] }))
+    .map(user => ({
+      ...user,
+      group: ["All users"],
+      developmentAccess: user.builder.global,
+    }))
 
   let createUserModal
   let basicOnboardingModal
