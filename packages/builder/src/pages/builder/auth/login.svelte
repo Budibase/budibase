@@ -38,8 +38,13 @@
       notifications.error("Invalid credentials")
     }
   }
+
+  function handleKeydown(evt) {
+    if (evt.key === "Enter") login()
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <div class="login">
   <div class="main">
     <Layout>
