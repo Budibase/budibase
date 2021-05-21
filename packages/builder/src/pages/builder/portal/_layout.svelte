@@ -72,7 +72,7 @@
     </div>
     <div class="main">
       <div class="toolbar">
-        <Search placeholder="Global search" />
+        <div />
         <ActionMenu align="right">
           <div slot="control" class="avatar">
             <Avatar size="M" name="John Doe" />
