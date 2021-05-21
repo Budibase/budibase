@@ -10,7 +10,7 @@ function buildUserSaveValidation(isSelf = false) {
   let schema = {
     email: Joi.string().allow(null, ""),
     password: Joi.string().allow(null, ""),
-    forcePasswordChange: Joi.boolean().optional(),
+    forceResetPassword: Joi.boolean().optional(),
     firstName: Joi.string().allow(null, ""),
     lastName: Joi.string().allow(null, ""),
     builder: Joi.object({
