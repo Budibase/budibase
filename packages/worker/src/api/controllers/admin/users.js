@@ -42,6 +42,10 @@ exports.save = async ctx => {
     _id: _id || generateGlobalUserID(),
     password: hashedPassword,
   }
+  // make sure the roles object is always present
+  if (!user.roles) {
+    user.roles = {}
+  }
   // add the active status to a user if its not provided
   if (user.status == null) {
     user.status = UserStatus.ACTIVE
