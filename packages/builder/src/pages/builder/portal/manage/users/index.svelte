@@ -36,8 +36,8 @@
     .map(user => ({
       ...user,
       group: ["All users"],
-      developmentAccess: user.builder.global,
-      adminAccess: user.admin.global,
+      developmentAccess: !!user.builder?.global,
+      adminAccess: !!user.admin?.global,
     }))
 
   let createUserModal
