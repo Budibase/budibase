@@ -108,6 +108,7 @@ describe("Authorization middleware", () => {
 
     it("passes on to next() middleware if user is an admin", async () => {
       config.setUser({
+        _id: "user",
         role: {
           _id: "ADMIN",
         }

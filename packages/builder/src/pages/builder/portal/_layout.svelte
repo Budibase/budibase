@@ -37,11 +37,13 @@
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
-    if (!$auth.user?.builder?.global) {
-      $redirect("../")
-    } else {
-      await organisation.init()
-      loaded = true
+    if ($auth.user) {
+      if (!$auth.user?.builder?.global) {
+        $redirect("../")
+      } else {
+        await organisation.init()
+        loaded = true
+      }
     }
   })
 </script>
