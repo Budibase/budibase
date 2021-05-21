@@ -21,9 +21,7 @@
 
   const menu = [
     { title: "Apps", href: "/builder/portal/apps" },
-    { title: "Drafts", href: "/builder/portal/drafts" },
     { title: "Users", href: "/builder/portal/manage/users", heading: "Manage" },
-    { title: "Groups", href: "/builder/portal/manage/groups" },
     { title: "Auth", href: "/builder/portal/manage/auth" },
     { title: "Email", href: "/builder/portal/manage/email" },
     {
