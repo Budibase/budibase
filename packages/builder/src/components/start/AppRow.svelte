@@ -8,7 +8,6 @@
     MenuItem,
     StatusLight,
   } from "@budibase/bbui"
-  import { auth } from "stores/portal"
 
   export let app
   export let exportApp
