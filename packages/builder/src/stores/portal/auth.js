@@ -53,7 +53,7 @@ export function createAuthStore() {
     resetPassword: async (password, code) => {
       const response = await api.post(`/api/admin/auth/reset/update`, {
         password,
-        resetCode: code
+        resetCode: code,
       })
       if (response.status !== 200) {
         throw "Unable to reset password"
