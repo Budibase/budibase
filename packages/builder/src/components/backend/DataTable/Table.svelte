@@ -65,6 +65,12 @@
     )
   }
 
+  const selectAttachment = ({ url }) => {
+    $goto(
+      `/builder/app/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
+    )
+  }
+
   const deleteRows = async () => {
     await api.post(`/api/${tableId}/rows`, {
       rows: selectedRows,
