@@ -71,6 +71,7 @@
     "@spectrum-css/tags": "^3.0.2",
     "@spectrum-css/textfield": "^3.0.1",
     "@spectrum-css/toast": "^3.0.1",
+    "@spectrum-css/tooltip": "^3.0.3",
     "@spectrum-css/treeview": "^3.0.2",
     "@spectrum-css/typography": "^3.0.1",
     "@spectrum-css/underlay": "^2.0.9",
