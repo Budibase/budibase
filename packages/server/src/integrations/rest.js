@@ -111,7 +111,7 @@ class RestIntegration {
     }
   }
 
-  async create({ path, queryString, headers = {}, json }) {
+  async create({ path = "", queryString = "", headers = {}, json }) {
     this.headers = {
       ...this.config.defaultHeaders,
       ...headers,
@@ -126,7 +126,7 @@ class RestIntegration {
     return await this.parseResponse(response)
   }
 
-  async read({ path, queryString, headers = {} }) {
+  async read({ path = "", queryString = "", headers = {} }) {
     this.headers = {
       ...this.config.defaultHeaders,
       ...headers,
@@ -139,7 +139,7 @@ class RestIntegration {
     return await this.parseResponse(response)
   }
 
-  async update({ path, queryString, headers = {}, json }) {
+  async update({ path = "", queryString = "", headers = {}, json }) {
     this.headers = {
       ...this.config.defaultHeaders,
       ...headers,
@@ -154,7 +154,7 @@ class RestIntegration {
     return await this.parseResponse(response)
   }
 
-  async delete({ path, queryString, headers = {} }) {
+  async delete({ path = "", queryString = "", headers = {} }) {
     this.headers = {
       ...this.config.defaultHeaders,
       ...headers,
