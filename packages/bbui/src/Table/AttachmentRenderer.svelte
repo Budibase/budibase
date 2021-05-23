@@ -1,11 +1,8 @@
 <script>
   import Tooltip from "../Tooltip/Tooltip.svelte"
   import Link from "../Link/Link.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let value
-
-  const dispatch = createEventDispatcher()
 
   const displayLimit = 5
   $: attachments = value?.slice(0, displayLimit) ?? []
