@@ -33,6 +33,7 @@
   let fieldDefinitions = cloneDeep(FIELDS)
   const { hide } = getContext(Context.Modal)
 
+  export let onClosed = () => {}
   export let field = {
     type: "string",
     constraints: fieldDefinitions.STRING.constraints,
@@ -56,9 +57,8 @@
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
-    ($tables.selected?._id === TableNames.USERS &&
-      UNEDITABLE_USER_FIELDS.includes(field.name)) ||
-    (originalName && field.type === LINK_TYPE)
+    $tables.selected?._id === TableNames.USERS &&
+    UNEDITABLE_USER_FIELDS.includes(field.name)
   $: invalid =
     !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
@@ -98,7 +98,8 @@
     } else {
       tables.deleteField(field)
       notifications.success(`Column ${field.name} deleted.`)
-      hide()
+      confirmDeleteDialog.hide()
+      deletion = false
     }
   }
 
@@ -193,7 +194,11 @@
   onConfirm={saveColumn}
   disabled={invalid}
 >
-  <Input label="Name" bind:value={field.name} disabled={uneditable} />
+  <Input
+    label="Name"
+    bind:value={field.name}
+    disabled={uneditable || field.type === LINK_TYPE}
+  />
 
   <Select
     disabled={originalName}
