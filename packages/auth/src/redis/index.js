@@ -21,7 +21,7 @@ function retryConnection() {
  */
 function init() {
   function errorOccurred(err) {
-    CONNECTED = false;
+    CONNECTED = false
     console.error("Redis connection failed - " + err)
     setTimeout(() => {
       init()
