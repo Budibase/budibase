@@ -20,18 +20,40 @@
   let userInfoModal
   let changePasswordModal
 
-  const menu = [
-    { title: "Apps", href: "/builder/portal/apps" },
-    { title: "Users", href: "/builder/portal/manage/users", heading: "Manage" },
-    { title: "Auth", href: "/builder/portal/manage/auth" },
-    { title: "Email", href: "/builder/portal/manage/email" },
-    {
-      title: "Organisation",
-      href: "/builder/portal/settings/organisation",
-      heading: "Settings",
-    },
-    { title: "Theming", href: "/builder/portal/settings/theming" },
-  ]
+  $: menu = buildMenu($auth.isAdmin)
+
+  const buildMenu = admin => {
+    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    if (admin) {
+      menu = menu.concat([
+        {
+          title: "Users",
+          href: "/builder/portal/manage/users",
+          heading: "Manage",
+        },
+        { title: "Auth", href: "/builder/portal/manage/auth" },
+        { title: "Email", href: "/builder/portal/manage/email" },
+        {
+          title: "Organisation",
+          href: "/builder/portal/settings/organisation",
+          heading: "Settings",
+        },
+        {
+          title: "Theming",
+          href: "/builder/portal/settings/theming",
+        },
+      ])
+    } else {
+      menu = menu.concat([
+        {
+          title: "Theming",
+          href: "/builder/portal/settings/theming",
+          heading: "Settings",
+        },
+      ])
+    }
+    return menu
+  }
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
