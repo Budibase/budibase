@@ -384,7 +384,7 @@ describe("/rows", () => {
         name: "test",
         description: "test",
         attachment: [{
-          key: `/assets/${config.getAppId()}/attachment/test/thing.csv`,
+          key: `${config.getAppId()}/attachment/test/thing.csv`,
         }],
         tableId: table._id,
       })
