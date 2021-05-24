@@ -70,7 +70,7 @@
     align-items: stretch;
   }
   img {
-    width: 40px;
+    width: 48px;
     margin: 0 auto;
   }
 </style>
