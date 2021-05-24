@@ -23,7 +23,16 @@ async function redirect(ctx, method) {
   if (cookie) {
     ctx.set("set-cookie", cookie)
   }
+  let body
+  try {
+    body = await response.json()
+  } catch (err) {
+    // don't worry about errors, likely no JSON
+  }
   ctx.status = response.status
+  if (body) {
+    ctx.body = body
+  }
   ctx.cookies
 }
 
