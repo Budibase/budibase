@@ -4,6 +4,7 @@ const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
 const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
 
 const RETRY_PERIOD_MS = 2000
+const STARTUP_TIMEOUT_MS = 5000
 const CLUSTERED = false
 
 // for testing just generate the client once
@@ -15,7 +16,10 @@ let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
  * will return the ioredis client which will be ready to use.
  */
 function init() {
+  let timeout
   function errorOccurred(err) {
+    // always clear this on error
+    clearTimeout(timeout)
     CONNECTED = false
     console.error("Redis connection failed - " + err)
     setTimeout(() => {
@@ -26,6 +30,14 @@ function init() {
   if (env.isTest() || (CLIENT && CONNECTED)) {
     return
   }
+  // start the timer - only allowed 5 seconds to connect
+  timeout = setTimeout(() => {
+    if (!CONNECTED) {
+      errorOccurred()
+    }
+  }, STARTUP_TIMEOUT_MS)
+
+  // disconnect any lingering client
   if (CLIENT) {
     CLIENT.disconnect()
   }
@@ -35,6 +47,7 @@ function init() {
   } else {
     CLIENT = new Redis(opts)
   }
+  // attach handlers
   CLIENT.on("end", err => {
     errorOccurred(err)
   })
@@ -42,6 +55,7 @@ function init() {
     errorOccurred(err)
   })
   CLIENT.on("connect", () => {
+    clearTimeout(timeout)
     CONNECTED = true
   })
 }
