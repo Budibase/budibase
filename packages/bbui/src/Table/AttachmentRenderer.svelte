@@ -1,4 +1,7 @@
 <script>
+  import Tooltip from "../Tooltip/Tooltip.svelte"
+  import Link from "../Link/Link.svelte"
+
   export let value
 
   const displayLimit = 5
@@ -13,9 +16,17 @@
 
 {#each attachments as attachment}
   {#if isImage(attachment.extension)}
-    <img src={attachment.url} alt={attachment.extension} />
+    <Link quiet target="_blank" href={attachment.url}>
+      <img src={attachment.url} alt={attachment.extension} />
+    </Link>
   {:else}
-    <div class="file">{attachment.extension}</div>
+    <Tooltip text={attachment.name} direction="right">
+      <div class="file">
+        <Link quiet target="_blank" href={attachment.url}
+          >{attachment.extension}</Link
+        >
+      </div>
+    </Tooltip>
   {/if}
 {/each}
 {#if leftover}
