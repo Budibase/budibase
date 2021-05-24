@@ -9,8 +9,9 @@
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
-  import { admin, organisation } from "stores/portal"
+  import { admin } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
+  import Logo from "assets/bb-space-black.svg"
 
   let adminUser = {}
   let error
@@ -35,7 +36,7 @@
 <section>
   <div class="container">
     <Layout>
-      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+      <img src={Logo} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
         <Body size="M" textAlign="center">

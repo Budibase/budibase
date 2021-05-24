@@ -8,6 +8,7 @@
     Heading,
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
+  import Logo from "assets/bb-space-black.svg"
 
   let email = ""
 
@@ -25,7 +26,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+        <img src={$organisation.logoUrl || Logo} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Forgotten your password?</Heading>

@@ -19,6 +19,7 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
+  import Logo from "assets/bb-space-black.svg"
 
   let loaded = false
   let userInfoModal
@@ -38,7 +39,7 @@
     <Page>
       <div class="content">
         <Layout noPadding>
-          <img src={$organisation.logoUrl} />
+          <img src={$organisation.logoUrl || Logo} />
           <div class="info-title">
             <Layout noPadding gap="XS">
               <Heading size="L">
