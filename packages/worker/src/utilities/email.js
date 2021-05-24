@@ -46,12 +46,12 @@ function createSMTPTransport(config) {
   return nodemailer.createTransport(options)
 }
 
-async function getLinkCode(purpose, email, user) {
+async function getLinkCode(purpose, email, user, info = null) {
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       return getResetPasswordCode(user._id)
     case EmailTemplatePurpose.INVITATION:
-      return getInviteCode(email)
+      return getInviteCode(email, info)
     default:
       return null
   }
@@ -136,13 +136,14 @@ exports.isEmailConfigured = async (groupId = null) => {
  * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
  * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
  * @param {string|undefined} subject A custom subject can be specified if the config one is not desired.
+ * @param {object|undefined} info Pass in a structure of information to be stored alongside the invitation.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
 exports.sendEmail = async (
   email,
   purpose,
-  { groupId, user, from, contents, subject } = {}
+  { groupId, user, from, contents, subject, info } = {}
 ) => {
   const db = new CouchDB(GLOBAL_DB)
   let config = (await getSmtpConfiguration(db, groupId)) || {}
@@ -151,7 +152,7 @@ exports.sendEmail = async (
   }
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
-  const code = await getLinkCode(purpose, email, user)
+  const code = await getLinkCode(purpose, email, user, info)
   const context = await getSettingsTemplateContext(purpose, code)
   const message = {
     from: from || config.from,

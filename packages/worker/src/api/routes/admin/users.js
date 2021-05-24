@@ -47,6 +47,7 @@ function buildInviteValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     email: Joi.string().required(),
+    userInfo: Joi.object().optional(),
   }).required())
 }
 
