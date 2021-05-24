@@ -1,8 +1,9 @@
 <script>
   import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { users, organisation } from "stores/portal"
+  import { users } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
+  import Logo from "assets/bb-space-black.svg"
 
   const inviteCode = $params["?code"]
   let password, error
@@ -24,7 +25,7 @@
 <section>
   <div class="container">
     <Layout>
-      <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+      <img src={Logo} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Accept Invitation</Heading>
         <Body textAlign="center" size="M">
