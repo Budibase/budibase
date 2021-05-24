@@ -11,10 +11,18 @@
     Dropzone,
     notifications,
   } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
   import { post } from "builderStore/api"
   import analytics from "analytics"
   import { writable } from "svelte/store"
+  import { redirect } from "@roxi/routify"
+
+  // Only admins allowed here
+  $: {
+    if (!$auth.isAdmin) {
+      $redirect("../../portal")
+    }
+  }
 
   const values = writable({
     analytics: !analytics.disabled(),
@@ -64,68 +72,70 @@
   }
 </script>
 
-<Layout>
-  <Layout gap="XS" noPadding>
-    <Heading size="M">Organisation</Heading>
-    <Body>
-      Organisation settings is where you can edit your organisation name and
-      logo. You can also configure your platform URL and enable or disable
-      analytics.
-    </Body>
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="XS" noPadding>
-    <Heading size="S">Information</Heading>
-    <Body size="S">Here you can update your logo and organization name.</Body>
-  </Layout>
-  <div class="fields">
-    <div class="field">
-      <Label size="L">Organization name</Label>
-      <Input thin bind:value={$values.company} />
-    </div>
-    <div class="field logo">
-      <Label size="L">Logo</Label>
-      <div class="file">
-        <Dropzone
-          value={[$values.logo]}
-          on:change={e => {
-            $values.logo = e.detail?.[0]
-          }}
-        />
-      </div>
-    </div>
-  </div>
-  <Divider size="S" />
-  <Layout gap="XS" noPadding>
-    <Heading size="S">Platform</Heading>
-    <Body size="S">Here you can set up general platform settings.</Body>
-  </Layout>
-  <div class="fields">
-    <div class="field">
-      <Label size="L">Platform URL</Label>
-      <Input thin bind:value={$values.platformUrl} />
-    </div>
-  </div>
-  <Divider size="S" />
-  <Layout gap="S" noPadding>
+{#if $auth.isAdmin}
+  <Layout>
     <Layout gap="XS" noPadding>
-      <Heading size="S">Analytics</Heading>
-      <Body size="S">
-        If you would like to send analytics that help us make Budibase better,
-        please let us know below.
+      <Heading size="M">Organisation</Heading>
+      <Body>
+        Organisation settings is where you can edit your organisation name and
+        logo. You can also configure your platform URL and enable or disable
+        analytics.
       </Body>
+    </Layout>
+    <Divider size="S" />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Information</Heading>
+      <Body size="S">Here you can update your logo and organization name.</Body>
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">Send Analytics to Budibase</Label>
-        <Toggle text="" bind:value={$values.analytics} />
+        <Label size="L">Organization name</Label>
+        <Input thin bind:value={$values.company} />
+      </div>
+      <div class="field logo">
+        <Label size="L">Logo</Label>
+        <div class="file">
+          <Dropzone
+            value={[$values.logo]}
+            on:change={e => {
+              $values.logo = e.detail?.[0]
+            }}
+          />
+        </div>
       </div>
     </div>
+    <Divider size="S" />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Platform</Heading>
+      <Body size="S">Here you can set up general platform settings.</Body>
+    </Layout>
+    <div class="fields">
+      <div class="field">
+        <Label size="L">Platform URL</Label>
+        <Input thin bind:value={$values.platformUrl} />
+      </div>
+    </div>
+    <Divider size="S" />
+    <Layout gap="S" noPadding>
+      <Layout gap="XS" noPadding>
+        <Heading size="S">Analytics</Heading>
+        <Body size="S">
+          If you would like to send analytics that help us make Budibase better,
+          please let us know below.
+        </Body>
+      </Layout>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Send Analytics to Budibase</Label>
+          <Toggle text="" bind:value={$values.analytics} />
+        </div>
+      </div>
+    </Layout>
+    <div>
+      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+    </div>
   </Layout>
-  <div>
-    <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
-  </div>
-</Layout>
+{/if}
 
 <style>
   .fields {

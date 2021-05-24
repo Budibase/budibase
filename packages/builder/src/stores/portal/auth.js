@@ -5,19 +5,27 @@ export function createAuthStore() {
   const user = writable(null)
   const store = derived(user, $user => {
     let initials = null
+    let isAdmin = false
+    let isBuilder = false
     if ($user) {
       if ($user.firstName) {
         initials = $user.firstName[0]
         if ($user.lastName) {
           initials += $user.lastName[0]
         }
-      } else {
+      } else if ($user.email) {
         initials = $user.email[0]
+      } else {
+        initials = "Unknown"
       }
+      isAdmin = !!$user.admin?.global
+      isBuilder = !!$user.builder?.global
     }
     return {
       user: $user,
       initials,
+      isAdmin,
+      isBuilder,
     }
   })
 

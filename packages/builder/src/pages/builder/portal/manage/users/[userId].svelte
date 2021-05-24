@@ -17,7 +17,7 @@
     notifications,
   } from "@budibase/bbui"
   import { fetchData } from "helpers"
-  import { users } from "stores/portal"
+  import { users, auth } from "stores/portal"
 
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
@@ -56,11 +56,19 @@
 
   let toggleDisabled = false
 
-  async function toggleBuilderAccess({ detail }) {
+  async function toggleFlag(flagName, detail) {
     toggleDisabled = true
-    await users.save({ ...$userFetch?.data, builder: { global: detail } })
+    await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
     await userFetch.refresh()
     toggleDisabled = false
+  }
+
+  async function toggleBuilderAccess({ detail }) {
+    return toggleFlag("builder", detail)
+  }
+
+  async function toggleAdminAccess({ detail }) {
+    return toggleFlag("admin", detail)
   }
 
   async function openUpdateRolesModal({ detail }) {
@@ -107,15 +115,27 @@
         <Label size="L">Last name</Label>
         <Input disabled thin value={$userFetch?.data?.lastName} />
       </div>
-      <div class="field">
-        <Label size="L">Development access</Label>
-        <Toggle
-          text=""
-          value={$userFetch?.data?.builder?.global}
-          on:change={toggleBuilderAccess}
-          disabled={toggleDisabled}
-        />
-      </div>
+      <!-- don't let a user remove the privileges that let them be here -->
+      {#if userId !== $auth.user._id}
+        <div class="field">
+          <Label size="L">Development access</Label>
+          <Toggle
+            text=""
+            value={$userFetch?.data?.builder?.global}
+            on:change={toggleBuilderAccess}
+            disabled={toggleDisabled}
+          />
+        </div>
+        <div class="field">
+          <Label size="L">Administration access</Label>
+          <Toggle
+            text=""
+            value={$userFetch?.data?.admin?.global}
+            on:change={toggleAdminAccess}
+            disabled={toggleDisabled}
+          />
+        </div>
+      {/if}
     </div>
     <div class="regenerate">
       <ActionButton

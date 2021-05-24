@@ -22,6 +22,7 @@
   const schema = {
     email: {},
     developmentAccess: { displayName: "Development Access", type: "boolean" },
+    adminAccess: { displayName: "Admin Access", type: "boolean" },
     // role: { type: "options" },
     group: {},
     // access: {},
@@ -35,7 +36,8 @@
     .map(user => ({
       ...user,
       group: ["All users"],
-      developmentAccess: user.builder.global,
+      developmentAccess: !!user.builder?.global,
+      adminAccess: !!user.admin?.global,
     }))
 
   let createUserModal
