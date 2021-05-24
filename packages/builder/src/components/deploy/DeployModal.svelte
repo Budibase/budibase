@@ -25,10 +25,8 @@
   async function deployApp() {
     try {
       const response = await api.post("/api/deploy")
-      const json = await response.json()
       if (response.status !== 200) {
-        console.log(json)
-        throw new Error()
+        throw new Error(`status ${response.status}`)
       } else {
         notifications.success(`Application published successfully`)
       }
