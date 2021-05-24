@@ -8,8 +8,24 @@ const STARTUP_TIMEOUT_MS = 5000
 const CLUSTERED = false
 
 // for testing just generate the client once
-let CONNECTED = false
+let CLOSED = false
 let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
+// if in test always connected
+let CONNECTED = !!env.isTest()
+
+function connectionError(timeout, err) {
+  // manually shut down, ignore errors
+  if (CLOSED) {
+    return
+  }
+  // always clear this on error
+  clearTimeout(timeout)
+  CONNECTED = false
+  console.error("Redis connection failed - " + err)
+  setTimeout(() => {
+    init()
+  }, RETRY_PERIOD_MS)
+}
 
 /**
  * Inits the system, will error if unable to connect to redis cluster (may take up to 10 seconds) otherwise
@@ -17,15 +33,7 @@ let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
  */
 function init() {
   let timeout
-  function errorOccurred(err) {
-    // always clear this on error
-    clearTimeout(timeout)
-    CONNECTED = false
-    console.error("Redis connection failed - " + err)
-    setTimeout(() => {
-      init()
-    }, RETRY_PERIOD_MS)
-  }
+  CLOSED = false
   // testing uses a single in memory client
   if (env.isTest() || (CLIENT && CONNECTED)) {
     return
@@ -33,7 +41,7 @@ function init() {
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
     if (!CONNECTED) {
-      errorOccurred()
+      connectionError(timeout)
     }
   }, STARTUP_TIMEOUT_MS)
 
@@ -49,10 +57,10 @@ function init() {
   }
   // attach handlers
   CLIENT.on("end", err => {
-    errorOccurred(err)
+    connectionError(timeout, err)
   })
   CLIENT.on("error", err => {
-    errorOccurred(err)
+    connectionError(timeout, err)
   })
   CLIENT.on("connect", () => {
     clearTimeout(timeout)
@@ -122,12 +130,14 @@ class RedisWrapper {
   }
 
   async init() {
+    CLOSED = false
     init()
     await waitForConnection()
     return this
   }
 
   async finish() {
+    CLOSED = true
     CLIENT.disconnect()
   }
 
