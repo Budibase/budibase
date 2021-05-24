@@ -167,13 +167,14 @@ exports.find = async ctx => {
 }
 
 exports.invite = async ctx => {
-  const { email } = ctx.request.body
+  const { email, userInfo } = ctx.request.body
   const existing = await getGlobalUserByEmail(email)
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
   await sendEmail(email, EmailTemplatePurpose.INVITATION, {
     subject: "{{ company }} platform invitation",
+    info: userInfo,
   })
   ctx.body = {
     message: "Invitation has been sent.",
@@ -183,13 +184,15 @@ exports.invite = async ctx => {
 exports.inviteAccept = async ctx => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
-    const email = await checkInviteCode(inviteCode)
+    // info is an extension of the user object that was stored by admin
+    const { email, info } = await checkInviteCode(inviteCode)
     // only pass through certain props for accepting
     ctx.request.body = {
       firstName,
       lastName,
       password,
       email,
+      ...info,
     }
     // this will flesh out the body response
     await exports.save(ctx)
