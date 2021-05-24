@@ -6,6 +6,13 @@ const Joi = require("joi")
 
 const router = Router()
 
+function buildAdminInitValidation() {
+  return joiValidator.body(Joi.object({
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }).required().unknown(false))
+}
+
 function buildUserSaveValidation(isSelf = false) {
   let schema = {
     email: Joi.string().allow(null, ""),
@@ -74,7 +81,7 @@ router
     buildInviteAcceptValidation(),
     controller.inviteAccept
   )
-  .post("/api/admin/users/init", controller.adminUser)
+  .post("/api/admin/users/init", buildAdminInitValidation(), controller.adminUser)
   .get("/api/admin/users/self", controller.getSelf)
   // admin endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/admin/users/:id", adminOnly, controller.find)
