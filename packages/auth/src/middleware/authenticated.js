@@ -43,6 +43,7 @@ module.exports = (noAuthPatterns = [], opts) => {
       // this is an internal request, no user made it
       if (apiKey && apiKey === env.INTERNAL_API_KEY) {
         ctx.isAuthenticated = true
+        ctx.internal = true
       } else if (authCookie) {
         try {
           const db = database.getDB(StaticDatabases.GLOBAL.name)
