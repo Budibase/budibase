@@ -103,7 +103,7 @@ exports.AutoFieldSubTypes = {
   AUTO_ID: "autoID",
 }
 
-exports.OBJ_STORE_DIRECTORY = "/app-assets/assets"
+exports.OBJ_STORE_DIRECTORY = "/prod-budi-app-assets/assets"
 exports.BaseQueryVerbs = {
   CREATE: "create",
   READ: "read",
