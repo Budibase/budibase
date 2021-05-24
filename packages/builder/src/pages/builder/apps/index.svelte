@@ -64,12 +64,14 @@
               >
                 Update password
               </MenuItem>
-              <MenuItem
-                icon="UserDeveloper"
-                on:click={() => $goto("../portal")}
-              >
-                Open developer mode
-              </MenuItem>
+              {#if $auth.isBuilder}
+                <MenuItem
+                  icon="UserDeveloper"
+                  on:click={() => $goto("../portal")}
+                >
+                  Open developer mode
+                </MenuItem>
+              {/if}
               <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
