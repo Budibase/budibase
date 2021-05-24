@@ -8,6 +8,7 @@
     MenuItem,
     StatusLight,
   } from "@budibase/bbui"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let app
   export let exportApp
@@ -27,7 +28,13 @@
   </div>
 </div>
 <div>
-  Updated {Math.round(Math.random() * 10 + 1)} months ago
+  {#if app.updatedAt}
+    {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+      time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+    })}
+  {:else}
+    Never updated
+  {/if}
 </div>
 <div>
   <StatusLight
