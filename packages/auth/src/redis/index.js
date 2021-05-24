@@ -68,9 +68,13 @@ function waitForConnection() {
       resolve()
       return
     }
-    CLIENT.on("connect", () => {
-      resolve()
-    })
+    // check if the connection is ready
+    const interval = setInterval(() => {
+      if (CONNECTED) {
+        clearInterval(interval)
+        resolve()
+      }
+    }, 500)
   })
 }
 
