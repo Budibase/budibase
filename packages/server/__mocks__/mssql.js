@@ -9,6 +9,14 @@ mssql.query = jest.fn(() => ({
   ],
 }))
 
-mssql.connect = jest.fn(() => ({ recordset: [] }))
+// mssql.connect = jest.fn(() => ({ recordset: [] }))
+
+mssql.ConnectionPool = jest.fn(() => ({
+  connect: jest.fn(() => ({
+    request: jest.fn(() => ({
+      query: jest.fn(() => ({})),
+    })),
+  })),
+}))
 
 module.exports = mssql
