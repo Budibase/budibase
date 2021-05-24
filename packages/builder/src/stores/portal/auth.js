@@ -37,7 +37,6 @@ export function createAuthStore() {
         user.set(null)
       } else {
         const json = await response.json()
-        console.log(json)
         user.set(json)
       }
     },
