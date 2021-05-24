@@ -4,16 +4,11 @@ const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
 const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
 
 const RETRY_PERIOD_MS = 2000
-const MAX_RETRIES = 20
 const CLUSTERED = false
 
 // for testing just generate the client once
 let CONNECTED = false
 let CLIENT = env.isTest() ? new Redis(getRedisOptions()) : null
-
-function retryConnection() {
-  setTimeout(init, RETRY_PERIOD_MS)
-}
 
 /**
  * Inits the system, will error if unable to connect to redis cluster (may take up to 10 seconds) otherwise
