@@ -101,10 +101,15 @@ async function init(type) {
 async function start() {
   await checkDockerConfigured()
   checkInitComplete()
-  console.log(info("Starting services, this may take a moment."))
+  console.log(
+    info(
+      "Starting services, this may take a moment - first time this may take a few minutes to download images."
+    )
+  )
   const port = makeEnv.get("MAIN_PORT")
   await handleError(async () => {
-    await compose.upAll({ cwd: "./", log: false })
+    // need to log as it makes it more clear
+    await compose.upAll({ cwd: "./", log: true })
   })
   console.log(
     success(
