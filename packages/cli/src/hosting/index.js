@@ -101,7 +101,11 @@ async function init(type) {
 async function start() {
   await checkDockerConfigured()
   checkInitComplete()
-  console.log(info("Starting services, this may take a moment - first time this may take a few minutes to download images."))
+  console.log(
+    info(
+      "Starting services, this may take a moment - first time this may take a few minutes to download images."
+    )
+  )
   const port = makeEnv.get("MAIN_PORT")
   await handleError(async () => {
     // need to log as it makes it more clear
