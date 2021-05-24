@@ -1,6 +1,7 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 const { getAllApps } = require("@budibase/auth/db")
+const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 
 const BB_CDN = "https://cdn.app.budi.live/assets"
 
@@ -43,7 +44,9 @@ exports.objectStoreUrl = () => {
  */
 exports.clientLibraryPath = appId => {
   if (env.isProd()) {
-    return `${exports.objectStoreUrl()}/${appId}/budibase-client.js`
+    return `${exports.objectStoreUrl()}/${sanitizeKey(
+      appId
+    )}/budibase-client.js`
   } else {
     return `/api/assets/client`
   }
