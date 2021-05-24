@@ -2,7 +2,6 @@
   import {
     Heading,
     Layout,
-    Select,
     Divider,
     ActionMenu,
     MenuItem,
@@ -19,6 +18,7 @@
   import { gradient } from "actions"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import { processStringSync } from "@budibase/string-templates"
 
   let loaded = false
   let userInfoModal
@@ -83,7 +83,18 @@
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
                       <Body size="S">
-                        Updated {Math.round(Math.random() * 10 + 1)} months ago
+                        {#if app.updatedAt}
+                          {processStringSync(
+                            "Updated {{ duration time 'millisecond' }} ago",
+                            {
+                              time:
+                                new Date().getTime() -
+                                new Date(app.updatedAt).getTime(),
+                            }
+                          )}
+                        {:else}
+                          Never updated
+                        {/if}
                       </Body>
                     </div>
                     <Icon name="ChevronRight" />
