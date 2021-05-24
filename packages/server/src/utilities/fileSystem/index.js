@@ -12,8 +12,9 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  uploadDirectory,
 } = require("./utilities")
-const { downloadLibraries, newAppPublicPath } = require("./newApp")
+const { downloadLibraries, uploadClientLibrary } = require("./newApp")
 const download = require("download")
 const env = require("../../environment")
 const { homedir } = require("os")
@@ -134,7 +135,8 @@ exports.performBackup = async (appId, backupName) => {
  */
 exports.createApp = async appId => {
   await downloadLibraries(appId)
-  await newAppPublicPath(appId)
+  await uploadClientLibrary(appId)
+  await uploadDirectory(ObjectStoreBuckets.APPS, NODE_MODULES_PATH, appId)
 }
 
 /**

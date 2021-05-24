@@ -10,13 +10,13 @@
 </script>
 
 {#if show}
-  <ActionButton>
-    <a target="_blank" href="/api/admin/auth/google">
-      <div class="inner">
-        <img src={GoogleLogo} alt="google icon" />
-        <p>Sign in with Google</p>
-      </div>
-    </a>
+  <ActionButton
+    on:click={() => window.open("/api/admin/auth/google", "_blank")}
+  >
+    <div class="inner">
+      <img src={GoogleLogo} alt="google icon" />
+      <p>Sign in with Google</p>
+    </div>
   </ActionButton>
 {/if}
 
