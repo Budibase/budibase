@@ -33,6 +33,10 @@ export default ({ mode }) => {
       dedupe: ["@roxi/routify"],
       alias: [
         {
+          find: "assets",
+          replacement: path.resolve("./assets"),
+        },
+        {
           find: "components",
           replacement: path.resolve("./src/components"),
         },

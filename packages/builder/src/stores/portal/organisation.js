@@ -3,7 +3,7 @@ import api from "builderStore/api"
 
 const DEFAULT_CONFIG = {
   platformUrl: "http://localhost:1000",
-  logoUrl: "https://i.imgur.com/ZKyklgF.png",
+  logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",
 }

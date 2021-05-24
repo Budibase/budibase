@@ -15,6 +15,7 @@
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import Logo from "assets/bb-space-black.svg"
 
   let loaded = false
   let userInfoModal
@@ -74,10 +75,7 @@
       <Layout paddingX="L" paddingY="L">
         <div class="branding">
           <div class="name" on:click={() => $goto("./apps")}>
-            <img
-              src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
-              alt="Logotype"
-            />
+            <img src={$organisation?.logoUrl || Logo} alt="Logotype" />
             <span>{$organisation?.company || "Budibase"}</span>
           </div>
           <div class="onboarding">

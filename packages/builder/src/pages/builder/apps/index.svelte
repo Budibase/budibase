@@ -19,6 +19,7 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
+  import Logo from "assets/bb-space-black.svg"
 
   let loaded = false
   let userInfoModal
@@ -38,7 +39,7 @@
     <Page>
       <div class="content">
         <Layout noPadding>
-          <img src={$organisation.logoUrl} />
+          <img src={$organisation.logoUrl || Logo} />
           <div class="info-title">
             <Layout noPadding gap="XS">
               <Heading size="L">
@@ -63,12 +64,14 @@
               >
                 Update password
               </MenuItem>
-              <MenuItem
-                icon="UserDeveloper"
-                on:click={() => $goto("../portal")}
-              >
-                Open developer mode
-              </MenuItem>
+              {#if $auth.isBuilder}
+                <MenuItem
+                  icon="UserDeveloper"
+                  on:click={() => $goto("../portal")}
+                >
+                  Open developer mode
+                </MenuItem>
+              {/if}
               <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
@@ -78,7 +81,7 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each publishedApps as app, idx (app.appId)}
-                  <a class="app" target="_blank" href={`/${app.appId}`}>
+                  <a class="app" target="_blank" href={`/${app.prodId}`}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
