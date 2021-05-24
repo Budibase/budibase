@@ -73,10 +73,11 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
-server.on("close", () => {
+server.on("close", async () => {
   if (env.NODE_ENV !== "jest") {
     console.log("Server Closed")
   }
+  await redis.shutdown()
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
