@@ -51,12 +51,16 @@
         }
         return a.status === AppStatus.DEPLOYED ? -1 : 1
       })
-    } else if (sortBy === "name") {
+    } else if (sortBy === "updated") {
+      return enrichedApps.sort((a, b) => {
+        const aUpdated = a.updatedAt || "9999"
+        const bUpdated = b.updatedAt || "9999"
+        return aUpdated < bUpdated ? 1 : -1
+      })
+    } else {
       return enrichedApps.sort((a, b) => {
         return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
       })
-    } else {
-      return enrichedApps
     }
   }
 
