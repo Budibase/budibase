@@ -32,7 +32,8 @@ describe("MS SQL Server Integration", () => {
   })
 
   describe("no rows returned", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      await config.integration.connect()
       config.integration.client.query.mockImplementation(() => ({ rows: [] }))
     })
 
