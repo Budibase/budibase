@@ -6,7 +6,7 @@
   import RevertModal from "components/deploy/RevertModal.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@roxi/routify"
-  import Logo from "/assets/bb-logo.svg"
+  import Logo from "assets/bb-space-black.svg"
   import { capitalise } from "helpers"
 
   // Get Package and set store
@@ -190,7 +190,7 @@
   }
 
   .home-logo img {
-    height: 32px;
+    height: 30px;
   }
 
   i {
