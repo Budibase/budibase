@@ -2,7 +2,8 @@
   import { Body, Button, Heading, Layout, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import { auth, organisation } from "stores/portal"
+  import { auth } from "stores/portal"
+  import Logo from "assets/bb-space-black.svg"
 
   const resetCode = $params["?code"]
   let password, error
@@ -33,10 +34,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img
-          src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
-          alt="Organisation logo"
-        />
+        <img src={Logo} alt="Organisation logo" />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Reset your password</Heading>
@@ -49,8 +47,9 @@
         cta
         on:click={reset}
         disabled={error || (forceResetPassword ? false : !resetCode)}
-        >Reset your password</Button
       >
+        Reset your password
+      </Button>
     </Layout>
   </div>
 </div>

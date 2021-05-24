@@ -10,8 +10,9 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth, organisation } from "stores/portal"
+  import { auth } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
+  import Logo from "assets/bb-space-black.svg"
 
   let username = ""
   let password = ""
@@ -49,7 +50,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src={$organisation.logoUrl || "https://i.imgur.com/ZKyklgF.png"} />
+        <img src={Logo} />
         <Heading>Sign in to Budibase</Heading>
       </Layout>
       <GoogleButton />
