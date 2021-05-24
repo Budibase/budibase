@@ -79,7 +79,7 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each publishedApps as app, idx (app.appId)}
-                  <a class="app" target="_blank" href={`/${app.appId}`}>
+                  <a class="app" target="_blank" href={`/${app.prodId}`}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
