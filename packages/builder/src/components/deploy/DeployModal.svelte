@@ -24,11 +24,11 @@
 
   async function deployApp() {
     try {
-      notifications.info(`Deployment started. Please wait.`)
       const response = await api.post("/api/deploy")
-      const json = await response.json()
       if (response.status !== 200) {
-        throw new Error()
+        throw new Error(`status ${response.status}`)
+      } else {
+        notifications.success(`Application published successfully`)
       }
 
       if (analytics.requestFeedbackOnDeploy()) {
@@ -36,7 +36,7 @@
       }
     } catch (err) {
       analytics.captureException(err)
-      notifications.error("Deployment unsuccessful. Please try again later.")
+      notifications.error(`Error publishing app: ${err}`)
     }
   }
 
