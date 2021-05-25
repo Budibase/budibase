@@ -186,7 +186,7 @@
   span {
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 500;
+    font-weight: 600;
   }
   .content {
     overflow: auto;

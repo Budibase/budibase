@@ -49,7 +49,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 2px;
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 11px;
   }
 </style>

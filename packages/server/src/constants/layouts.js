@@ -98,7 +98,6 @@ const BASE_LAYOUTS = [
                   "margin-left": "auto",
                   "margin-right": "auto",
                   padding: "20px",
-                  color: "#757575",
                   "font-weight": "400",
                   "font-size": "16px",
                   flex: "1 1 auto",
@@ -120,9 +119,7 @@ const BASE_LAYOUTS = [
                   _component: "@budibase/standard-components/link",
                   _styles: {
                     normal: {
-                      "font-family": "Inter",
-                      "font-weight": "500",
-                      color: "#000000",
+                      "font-weight": "600",
                       "text-decoration-line": "none",
                       "font-size": "16px",
                     },

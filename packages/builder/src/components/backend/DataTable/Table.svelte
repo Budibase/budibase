@@ -143,7 +143,7 @@
   }
   .table-title h1 {
     font-size: var(--font-size-m);
-    font-weight: 500;
+    font-weight: 600;
     margin: 0;
   }
   .table-title > div {
@@ -158,7 +158,7 @@
     gap: var(--spacing-s);
   }
   .popovers :global(button) {
-    font-weight: 500;
+    font-weight: 600;
     margin-top: var(--spacing-l);
   }
   .popovers :global(button svg) {

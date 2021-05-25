@@ -24,7 +24,7 @@ function generateTitleContainer(table) {
       "border-width": "0",
       "border-style": "None",
       color: "#fff",
-      "font-weight": "500",
+      "font-weight": "600",
       "font-size": "14px",
     })
     .hoverStyle({
@@ -110,7 +110,7 @@ const createScreen = table => {
     .instanceName("View Button")
     .normalStyle({
       background: "transparent",
-      "font-weight": "500",
+      "font-weight": "600",
       color: "#888",
       "border-width": "0",
     })

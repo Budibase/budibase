@@ -172,7 +172,7 @@
 
   .topnavitemright a:hover {
     color: var(--ink);
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .home-logo {
