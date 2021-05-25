@@ -1,7 +1,7 @@
 <script>
   import { Page } from "@budibase/bbui"
   import { auth } from "stores/portal"
-  import { redirect } from "@roxi/routify"
+  import { page, redirect } from "@roxi/routify"
 
   // Only admins allowed here
   $: {
@@ -9,10 +9,12 @@
       $redirect("../")
     }
   }
+
+  $: console.log($page)
 </script>
 
 {#if $auth.isAdmin}
-  <Page>
+  <Page wide={$page.path.includes("email/:template")}>
     <slot />
   </Page>
 {/if}

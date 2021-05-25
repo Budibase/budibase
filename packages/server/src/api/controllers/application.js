@@ -92,10 +92,6 @@ async function createInstance(template) {
     // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
     views: {},
   })
-  // add view for linked rows
-  await createLinkView(appId)
-  await createRoutingView(appId)
-  await createAllSearchIndex(appId)
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
@@ -109,6 +105,11 @@ async function createInstance(template) {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
   }
+
+  // add view for linked rows
+  await createLinkView(appId)
+  await createRoutingView(appId)
+  await createAllSearchIndex(appId)
 
   return { _id: appId }
 }
