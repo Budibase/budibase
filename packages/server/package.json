@@ -1,35 +1,12 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.1",
+  "version": "0.9.3",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Budibase/budibase.git"
-  },
-  "build": {
-    "icon": "./build/icons/512x512.png",
-    "appId": "com.budibase.builder",
-    "productName": "Budibase Builder",
-    "afterSign": "electron-builder-notarize",
-    "mac": {
-      "icon": "./assets/icons/icon.icns",
-      "category": "public.app-category.developer-tools",
-      "hardenedRuntime": true
-    },
-    "linux": {
-      "maintainer": "Budibase",
-      "icon": "./build/icons/",
-      "target": [
-        "deb",
-        "AppImage"
-      ],
-      "category": "Development"
-    },
-    "extraMetadata": {
-      "name": "Budibase Builder"
-    }
   },
   "scripts": {
     "test": "jest --testPathIgnorePatterns=routes && yarn run test:integration",
@@ -41,9 +18,6 @@
     "dev:stack:down": "node scripts/dev/manage.js down",
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev:builder": "yarn run dev:stack:up && nodemon src/index.js",
-    "electron": "electron src/electron.js",
-    "build:electron": "electron-builder --dir",
-    "publish:electron": "electron-builder -mwl --publish always",
     "lint": "eslint --fix src/",
     "initialise": "node scripts/initialise.js"
   },
@@ -81,9 +55,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.1",
-    "@budibase/client": "^0.9.1",
-    "@budibase/string-templates": "^0.9.1",
+    "@budibase/auth": "^0.9.3",
+    "@budibase/client": "^0.9.3",
+    "@budibase/string-templates": "^0.9.3",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -133,7 +107,7 @@
     "zlib": "1.0.5"
   },
   "devDependencies": {
-    "@budibase/standard-components": "^0.9.1",
+    "@budibase/standard-components": "^0.9.3",
     "@jest/test-sequencer": "^24.8.0",
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",

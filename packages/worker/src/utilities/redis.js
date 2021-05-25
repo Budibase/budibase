@@ -12,15 +12,21 @@ function getExpirySecondsForDB(db) {
   }
 }
 
-async function getClient(db) {
-  return await new Client(db).init()
+let pwResetClient, invitationClient
+
+function getClient(db) {
+  switch (db) {
+    case utils.Databases.PW_RESETS:
+      return pwResetClient
+    case utils.Databases.INVITATIONS:
+      return invitationClient
+  }
 }
 
 async function writeACode(db, value) {
   const client = await getClient(db)
   const code = newid()
   await client.store(code, value, getExpirySecondsForDB(db))
-  client.finish()
   return code
 }
 
@@ -33,8 +39,20 @@ async function getACode(db, code, deleteCode = true) {
   if (deleteCode) {
     await client.delete(code)
   }
-  client.finish()
   return value
+}
+
+exports.init = async () => {
+  pwResetClient = await new Client(utils.Databases.PW_RESETS).init()
+  invitationClient = await new Client(utils.Databases.PW_RESETS).init()
+}
+
+/**
+ * make sure redis connection is closed.
+ */
+exports.shutdown = async () => {
+  await pwResetClient.finish()
+  await invitationClient.finish()
 }
 
 /**
@@ -64,17 +82,18 @@ exports.checkResetPasswordCode = async (resetCode, deleteCode = true) => {
 /**
  * Generates an invitation code and writes it to redis - which can later be checked for user creation.
  * @param {string} email the email address which the code is being sent to (for use later).
+ * @param {object|null} info Information to be carried along with the invitation.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
-exports.getInviteCode = async email => {
-  return writeACode(utils.Databases.INVITATIONS, email)
+exports.getInviteCode = async (email, info) => {
+  return writeACode(utils.Databases.INVITATIONS, { email, info })
 }
 
 /**
  * Checks that the provided invite code is valid - will return the email address of user that was invited.
  * @param {string} inviteCode the invite code that was provided as part of the link.
  * @param {boolean} deleteCode whether or not the code should be deleted after retrieval - defaults to true.
- * @return {Promise<string>} If the code is valid then an email address will be returned.
+ * @return {Promise<object>} If the code is valid then an email address will be returned.
  */
 exports.checkInviteCode = async (inviteCode, deleteCode = true) => {
   try {

@@ -384,7 +384,7 @@ describe("/rows", () => {
         name: "test",
         description: "test",
         attachment: [{
-          key: `/assets/${config.getAppId()}/attachment/test/thing.csv`,
+          key: `${config.getAppId()}/attachment/test/thing.csv`,
         }],
         tableId: table._id,
       })
@@ -392,7 +392,7 @@ describe("/rows", () => {
       await setup.switchToSelfHosted(async () => {
         const enriched = await outputProcessing(config.getAppId(), table, [row])
         expect(enriched[0].attachment[0].url).toBe(
-          `/prod-budi-app-assets/assets/${config.getAppId()}/attachment/test/thing.csv`
+          `/prod-budi-app-assets/${config.getAppId()}/attachment/test/thing.csv`
         )
       })
     })
