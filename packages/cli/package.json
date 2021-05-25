@@ -11,6 +11,10 @@
   "scripts": {
     "build": "pkg . --out-path build"
   },
+  "pkg": {
+    "targets": [ "node14" ],
+    "outputPath": "build"
+  },
   "dependencies": {
     "axios": "^0.21.1",
     "chalk": "^4.1.0",
