@@ -11,6 +11,7 @@
   export let icon = ""
   export let dataCy = null
   export let size = "M"
+  export let active = false
 
   function longPress(element) {
     if (!longPressable) return
@@ -40,6 +41,7 @@
   class:spectrum-ActionButton--emphasized={emphasized}
   class:is-selected={selected}
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
+  class:active
   {disabled}
   on:longPress
   on:click|preventDefault
@@ -67,3 +69,10 @@
     <span class="spectrum-ActionButton-label"><slot /></span>
   {/if}
 </button>
+
+<style>
+  .active,
+  .active svg {
+    color: var(--spectrum-global-color-blue-600);
+  }
+</style>
