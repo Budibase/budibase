@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte"
   import { ActionButton } from "@budibase/bbui"
-  import GoogleLogo from "/assets/google-logo.png"
+  import GoogleLogo from "assets/google-logo.png"
   import { admin } from "stores/portal"
 
   let show = false
