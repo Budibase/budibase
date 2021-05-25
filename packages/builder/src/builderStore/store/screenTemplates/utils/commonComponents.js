@@ -97,7 +97,6 @@ export function makeSaveButton(table, formId) {
       "border-width": "0",
       "border-style": "None",
       color: "#fff",
-      "font-family": "Inter",
       "font-weight": "500",
       "font-size": "14px",
       "margin-left": "16px",

@@ -32,7 +32,6 @@ function generateTitleContainer(table, title, formId, repeaterId) {
     "border-width": "0",
     "border-style": "None",
     color: "#fff",
-    "font-family": "Inter",
     "font-weight": "500",
     "font-size": "14px",
   })
@@ -43,7 +42,6 @@ function generateTitleContainer(table, title, formId, repeaterId) {
       "border-width": "0",
       "border-style": "None",
       color: "#9e9e9e",
-      "font-family": "Inter",
       "font-weight": "500",
       "font-size": "14px",
       "margin-right": "8px",

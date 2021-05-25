@@ -24,7 +24,6 @@ function generateTitleContainer(table) {
       "border-width": "0",
       "border-style": "None",
       color: "#fff",
-      "font-family": "Inter",
       "font-weight": "500",
       "font-size": "14px",
     })
@@ -111,7 +110,6 @@ const createScreen = table => {
     .instanceName("View Button")
     .normalStyle({
       background: "transparent",
-      "font-family": "Inter, sans-serif",
       "font-weight": "500",
       color: "#888",
       "border-width": "0",

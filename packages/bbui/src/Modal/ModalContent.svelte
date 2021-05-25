@@ -95,7 +95,7 @@
     overflow: visible;
   }
   .spectrum-Dialog-heading {
-    font-family: var(--spectrum-alias-body-text-font-family);
+    font-family: var(--font-sans);
   }
 
   .spectrum-Dialog-buttonGroup {

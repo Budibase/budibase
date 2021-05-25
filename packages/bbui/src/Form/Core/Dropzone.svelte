@@ -285,9 +285,6 @@
       --spectrum-global-dimension-font-size-400
     );
   }
-  .container * {
-    font-family: "Inter", sans-serif !important;
-  }
 
   .gallery,
   .spectrum-Dropzone {
