@@ -7,7 +7,7 @@
 
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.wait(100)
+  cy.wait(500)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
@@ -16,12 +16,14 @@ Cypress.Commands.add("login", () => {
       cy.get('input[type="password"]').eq(1).type("test")
       cy.contains("Create super admin user").click()
     }
-    // login
-    cy.contains("Sign in to Budibase").then(() => {
-      cy.get("input").first().type("test@test.com")
-      cy.get('input[type="password"]').type("test")
-      cy.get("button").first().click()
-    })
+    if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
+      // login
+      cy.contains("Sign in to Budibase").then(() => {
+        cy.get("input").first().type("test@test.com")
+        cy.get('input[type="password"]').type("test")
+        cy.get("button").first().click()
+      })
+    }
   })
 })
 
@@ -44,30 +46,23 @@ Cypress.Commands.add("createApp", name => {
   })
 })
 
-Cypress.Commands.add("deleteApp", name => {
-  cy.contains("Create your first app").then($first => {
-    if ($first.length === 1) {
-      return
-    }
-    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-    cy.get(".app").then($app => {
-      cy.wait(1000)
-      if ($app.find(`[data-cy="app-${name}"]`).length) {
-        cy.get(`[data-cy="app-${name}"]`).contains("Open").click()
-        cy.get("[data-cy=settings-icon]").click()
-        cy.get(".spectrum-Dialog").within(() => {
-          cy.contains("Danger Zone").click()
-          cy.get("input").type("DELETE").blur()
-          cy.contains("Delete Entire App").click()
-        })
-      }
-    })
-  })
+Cypress.Commands.add("deleteApp", () => {
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.wait(1000)
+
+  const firstAppHeader = Object.values(Cypress.$("h1")).filter(
+    $h1 => typeof $h1 === "string" && $h1.includes("Create your first app")
+  )
+  if (firstAppHeader.length === 0) {
+    cy.get(".hoverable > use").click()
+    cy.contains("Delete").click()
+    cy.get(".spectrum-Button--warning").click()
+  }
 })
 
 Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
-  cy.deleteApp(appName)
+  cy.deleteApp()
   cy.createApp(appName, "This app is used for Cypress testing.")
 })
 
@@ -98,8 +93,10 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
 
     // Unset table display column
     cy.contains("display column").click({ force: true })
-    cy.get("select").select(type)
-    cy.contains("Save").click()
+    cy.get(".spectrum-Picker-label").click()
+    cy.contains(type).click()
+
+    cy.contains("Save Column").click()
   })
 })
 
