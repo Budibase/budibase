@@ -150,17 +150,15 @@ Cypress.Commands.add("getComponent", componentId => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
-  cy.contains("design").click()
+  cy.contains("Design").click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
-  cy.get("[data-cy=new-screen]").click()
+  cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(screenName).blur()
-    if (route) {
-      cy.get("input").eq(1).type(route).blur()
-    }
-    cy.contains("Create Screen").click()
+    cy.get("input").first().type(screenName)
+    cy.get("input").eq(1).type(route)
+    cy.get(".spectrum-Button--cta").click()
   })
   cy.get(".nav-items-container").within(() => {
     cy.contains(route).should("exist")
