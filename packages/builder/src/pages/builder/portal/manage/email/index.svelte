@@ -76,71 +76,69 @@
   fetchSmtp()
 </script>
 
-<Page>
-  <Layout>
-    <Layout noPadding gap="XS">
-      <Heading size="M">Email</Heading>
-      <Body>
-        Sending email is not required, but highly recommended for processes such
-        as password recovery. To setup automated auth emails, simply add the
-        values below and click activate.
+<Layout>
+  <Layout noPadding gap="XS">
+    <Heading size="M">Email</Heading>
+    <Body>
+      Sending email is not required, but highly recommended for processes such
+      as password recovery. To setup automated auth emails, simply add the
+      values below and click activate.
+    </Body>
+  </Layout>
+  <Divider />
+  {#if smtpConfig}
+    <Layout gap="XS" noPadding>
+      <Heading size="S">SMTP</Heading>
+      <Body size="S">
+        To allow your app to benefit from automated auth emails, add your SMTP
+        details below.
       </Body>
     </Layout>
-    <Divider />
-    {#if smtpConfig}
-      <Layout gap="XS" noPadding>
-        <Heading size="S">SMTP</Heading>
-        <Body size="S">
-          To allow your app to benefit from automated auth emails, add your SMTP
-          details below.
-        </Body>
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <div class="form-row">
-          <Label size="L">Host</Label>
-          <Input bind:value={smtpConfig.config.host} />
-        </div>
-        <div class="form-row">
-          <Label size="L">Port</Label>
-          <Input type="number" bind:value={smtpConfig.config.port} />
-        </div>
-        <div class="form-row">
-          <Label size="L">User</Label>
-          <Input bind:value={smtpConfig.config.auth.user} />
-        </div>
-        <div class="form-row">
-          <Label size="L">Password</Label>
-          <Input type="password" bind:value={smtpConfig.config.auth.pass} />
-        </div>
-        <div class="form-row">
-          <Label size="L">From email address</Label>
-          <Input type="email" bind:value={smtpConfig.config.from} />
-        </div>
-      </Layout>
-      <div>
-        <Button cta on:click={saveSmtp}>Save</Button>
+    <Layout gap="XS" noPadding>
+      <div class="form-row">
+        <Label size="L">Host</Label>
+        <Input bind:value={smtpConfig.config.host} />
       </div>
-      <Divider />
-      <Layout gap="XS" noPadding>
-        <Heading size="S">Templates</Heading>
-        <Body size="S">
-          Budibase comes out of the box with ready-made email templates to help
-          with user onboarding. Please refrain from changing the links.
-        </Body>
-      </Layout>
-      <Table
-        {customRenderers}
-        data={$email.templates}
-        schema={templateSchema}
-        {loading}
-        on:click={({ detail }) => $goto(`./${detail.purpose}`)}
-        allowEditRows={false}
-        allowSelectRows={false}
-        allowEditColumns={false}
-      />
-    {/if}
-  </Layout>
-</Page>
+      <div class="form-row">
+        <Label size="L">Port</Label>
+        <Input type="number" bind:value={smtpConfig.config.port} />
+      </div>
+      <div class="form-row">
+        <Label size="L">User</Label>
+        <Input bind:value={smtpConfig.config.auth.user} />
+      </div>
+      <div class="form-row">
+        <Label size="L">Password</Label>
+        <Input type="password" bind:value={smtpConfig.config.auth.pass} />
+      </div>
+      <div class="form-row">
+        <Label size="L">From email address</Label>
+        <Input type="email" bind:value={smtpConfig.config.from} />
+      </div>
+    </Layout>
+    <div>
+      <Button cta on:click={saveSmtp}>Save</Button>
+    </div>
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Templates</Heading>
+      <Body size="S">
+        Budibase comes out of the box with ready-made email templates to help
+        with user onboarding. Please refrain from changing the links.
+      </Body>
+    </Layout>
+    <Table
+      {customRenderers}
+      data={$email.templates}
+      schema={templateSchema}
+      {loading}
+      on:click={({ detail }) => $goto(`./${detail.purpose}`)}
+      allowEditRows={false}
+      allowSelectRows={false}
+      allowEditColumns={false}
+    />
+  {/if}
+</Layout>
 
 <style>
   .form-row {
