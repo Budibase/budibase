@@ -141,7 +141,7 @@
     cursor: pointer;
   }
   .binding__label {
-    font-weight: 500;
+    font-weight: 600;
     text-transform: capitalize;
   }
   .binding__description {
@@ -160,7 +160,7 @@
     border-radius: var(--border-radius-m);
     padding: 2px;
     margin-left: 2px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .syntax-error {

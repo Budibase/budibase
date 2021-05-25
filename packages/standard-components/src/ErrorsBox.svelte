@@ -22,7 +22,7 @@
 
   .error {
     font-size: var(--font-size-xs);
-    font-weight: 500;
+    font-weight: 600;
     color: var(--red-dark);
   }
   .error:first-letter {
