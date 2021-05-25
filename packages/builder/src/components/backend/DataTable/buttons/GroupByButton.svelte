@@ -15,7 +15,7 @@
   active={!!view.groupBy}
   on:click={modal.show}
 >
-  Group By
+  Group by
 </Button>
 <Modal bind:this={modal}>
   <GroupByModal {view} />
