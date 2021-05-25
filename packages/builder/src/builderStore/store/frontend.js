@@ -65,6 +65,7 @@ export const getFrontendStore = () => {
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,
+        previousTopNavPath: {},
       }))
       await hostingStore.actions.fetch()
 
