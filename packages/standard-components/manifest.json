@@ -338,6 +338,12 @@
         "type": "text",
         "label": "Logo URL",
         "key": "logoUrl"
+      },
+      {
+        "type": "boolean",
+        "label": "Hide logo",
+        "key": "hideLogo",
+        "defaultValue": false
       }
     ]
   },
