@@ -51,7 +51,7 @@ function generateTitleContainer(table) {
       flex: "1 1 auto",
       "text-transform": "capitalize",
     })
-    .type("h3")
+    .type("h2")
     .instanceName("Title")
     .text(table.name)
 
