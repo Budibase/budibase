@@ -61,8 +61,7 @@
     "icon": "More",
     "children": [
       "screenslot",
-      "navigation",
-      "login"
+      "navigation"
     ]
   }
 ]
