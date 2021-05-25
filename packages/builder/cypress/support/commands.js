@@ -12,22 +12,19 @@ Cypress.Commands.add("login", () => {
 
     cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
 
-    // cy.get("button").then(btn => {
-    //   const adminUserButton = "Create super admin user"
-    //   console.log(btn.first().first())
-    //   if (!btn.first().contains(adminUserButton)) {
-    //     // create admin user
-    //     cy.get("input").first().type("test@test.com")
-    //     cy.get('input[type="password"]').first().type("test")
-    //     cy.get('input[type="password"]').eq(1).type("test")
-    //     cy.contains(adminUserButton).click()
-    //   }
-
-    // login
-    cy.get("input").first().type("test@test.com")
-    cy.get('input[type="password"]').type("test")
-    cy.contains("Login").click()
-    // })
+    cy.url().then(url => {
+      if (url.includes("builder/admin")) {
+        // create admin user
+        cy.get("input").first().type("test@test.com")
+        cy.get('input[type="password"]').first().type("test")
+        cy.get('input[type="password"]').eq(1).type("test")
+        cy.contains("Create super admin user").click()
+      }
+      // login
+      cy.get("input").first().type("test@test.com")
+      cy.get('input[type="password"]').type("test")
+      cy.get("button").first().click()
+    })
   })
 })
 
