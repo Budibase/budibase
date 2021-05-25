@@ -6,21 +6,18 @@
 //
 
 Cypress.Commands.add("login", () => {
-  cy.getCookie("budibase:auth").then(cookie => {
-    // Already logged in
-    if (cookie) return
-
-    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-
-    cy.url().then(url => {
-      if (url.includes("builder/admin")) {
-        // create admin user
-        cy.get("input").first().type("test@test.com")
-        cy.get('input[type="password"]').first().type("test")
-        cy.get('input[type="password"]').eq(1).type("test")
-        cy.contains("Create super admin user").click()
-      }
-      // login
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.wait(100)
+  cy.url().then(url => {
+    if (url.includes("builder/admin")) {
+      // create admin user
+      cy.get("input").first().type("test@test.com")
+      cy.get('input[type="password"]').first().type("test")
+      cy.get('input[type="password"]').eq(1).type("test")
+      cy.contains("Create super admin user").click()
+    }
+    // login
+    cy.contains("Sign in to Budibase").then(() => {
       cy.get("input").first().type("test@test.com")
       cy.get('input[type="password"]').type("test")
       cy.get("button").first().click()
@@ -32,45 +29,39 @@ Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
   cy.wait(100)
-  cy.contains("Create New Web App").click()
-  cy.get("body")
-    .then($body => {
-      if ($body.find("input[name=apiKey]").length) {
-        // input was found, do something else here
-        cy.get("input[name=apiKey]").type(name).should("have.value", name)
-        cy.contains("Next").click()
-      }
-    })
-    .then(() => {
-      cy.get(".spectrum-Modal")
-        .within(() => {
-          cy.get("input").eq(0).type(name).should("have.value", name).blur()
-          cy.contains("Next").click()
-          cy.get("input").eq(1).type("test@test.com").blur()
-          cy.get("input").eq(2).type("test").blur()
-          cy.contains("Submit").click()
-        })
-        .then(() => {
-          cy.get("[data-cy=new-table]", {
-            timeout: 20000,
-          }).should("be.visible")
-        })
-    })
+  cy.contains("Create app").click()
+  cy.get("body").then(() => {
+    cy.get(".spectrum-Modal")
+      .within(() => {
+        cy.get("input").eq(0).type(name).should("have.value", name).blur()
+        cy.contains("Create app").click()
+      })
+      .then(() => {
+        cy.get("[data-cy=new-table]", {
+          timeout: 20000,
+        }).should("be.visible")
+      })
+  })
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.get(".apps").then($apps => {
-    cy.wait(1000)
-    if ($apps.find(`[data-cy="app-${name}"]`).length) {
-      cy.get(`[data-cy="app-${name}"]`).contains("Open").click()
-      cy.get("[data-cy=settings-icon]").click()
-      cy.get(".spectrum-Dialog").within(() => {
-        cy.contains("Danger Zone").click()
-        cy.get("input").type("DELETE").blur()
-        cy.contains("Delete Entire App").click()
-      })
+  cy.contains("Create your first app").then($first => {
+    if ($first.length === 1) {
+      return
     }
+    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.get(".app").then($app => {
+      cy.wait(1000)
+      if ($app.find(`[data-cy="app-${name}"]`).length) {
+        cy.get(`[data-cy="app-${name}"]`).contains("Open").click()
+        cy.get("[data-cy=settings-icon]").click()
+        cy.get(".spectrum-Dialog").within(() => {
+          cy.contains("Danger Zone").click()
+          cy.get("input").type("DELETE").blur()
+          cy.contains("Delete Entire App").click()
+        })
+      }
+    })
   })
 })
 
