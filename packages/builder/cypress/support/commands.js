@@ -5,6 +5,13 @@
 // ***********************************************
 //
 
+function isFirstApp() {
+  const firstAppHeader = Object.values(Cypress.$("h1")).filter(
+    $h1 => $h1.outerHTML && $h1.outerHTML.includes("Create your first app")
+  )
+  return firstAppHeader.length !== 0
+}
+
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
@@ -30,8 +37,9 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   // wait for init API calls on visit
+  const buttonText = isFirstApp() ? "Create app" : "Create new app"
   cy.wait(100)
-  cy.contains("Create app").click()
+  cy.contains(buttonText).click()
   cy.get("body").then(() => {
     cy.get(".spectrum-Modal")
       .within(() => {
@@ -50,10 +58,7 @@ Cypress.Commands.add("deleteApp", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
 
-  const firstAppHeader = Object.values(Cypress.$("h1")).filter(
-    $h1 => typeof $h1 === "string" && $h1.includes("Create your first app")
-  )
-  if (firstAppHeader.length === 0) {
+  if (!isFirstApp()) {
     cy.get(".hoverable > use").click()
     cy.contains("Delete").click()
     cy.get(".spectrum-Button--warning").click()
@@ -110,18 +115,14 @@ Cypress.Commands.add("addRow", values => {
   })
 })
 
-Cypress.Commands.add("createUser", (email, password, role) => {
-  // Create User
+Cypress.Commands.add("createUser", email => {
+  // quick hacky recorded way to create a user
   cy.contains("Users").click()
-  cy.contains("Create user").click()
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").first().type(email).blur()
-    cy.get("input").eq(1).type(password).blur()
-    cy.get("select").first().select(role)
-
-    // Save
-    cy.get(".spectrum-ButtonGroup").contains("Create User").click()
-  })
+  cy.get(".spectrum-Button--primary").click()
+  cy.get(".spectrum-Picker-label").click()
+  cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
+  cy.get(".spectrum-Modal input").eq(1).type(email, { force: true })
+  cy.get(".spectrum-Button--cta").click({ force: true })
 })
 
 Cypress.Commands.add("addComponent", (category, component) => {

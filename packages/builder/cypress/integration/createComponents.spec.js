@@ -5,9 +5,9 @@ context("Create Components", () => {
     cy.login()
     cy.createTestApp()
     cy.createTable("dog")
-    cy.addColumn("dog", "name", "string")
-    cy.addColumn("dog", "age", "number")
-    cy.addColumn("dog", "type", "options")
+    cy.addColumn("dog", "name", "Text")
+    cy.addColumn("dog", "age", "Number")
+    cy.addColumn("dog", "type", "Options")
     cy.navigateToFrontend()
   })
 
