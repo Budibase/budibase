@@ -12,7 +12,5 @@
 </script>
 
 {#if $auth.isAdmin}
-  <Page>
-    <slot />
-  </Page>
+  <slot />
 {/if}
