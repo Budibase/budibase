@@ -1,5 +1,3 @@
-const { LOGO_URL } = require("../constants")
-
 const BASE_LAYOUT_PROP_IDS = {
   PRIVATE: "layout_private_master",
   PUBLIC: "layout_public_master",
@@ -109,7 +107,6 @@ const BASE_LAYOUTS = [
                 active: {},
                 selected: {},
               },
-              logoUrl: LOGO_URL,
               title: "",
               backgroundColor: "",
               color: "",
