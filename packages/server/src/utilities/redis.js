@@ -11,6 +11,11 @@ exports.init = async () => {
   debounceClient = await new Client(utils.Databases.DEBOUNCE).init()
 }
 
+exports.shutdown = async () => {
+  await devAppClient.finish()
+  await debounceClient.finish()
+}
+
 exports.doesUserHaveLock = async (devAppId, user) => {
   const value = await devAppClient.get(devAppId)
   if (!value) {

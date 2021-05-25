@@ -34,10 +34,14 @@ function sanitizeKey(input) {
   return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
 }
 
+exports.sanitizeKey = sanitizeKey
+
 // simply handles the dev app to app conversion
 function sanitizeBucket(input) {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
+
+exports.sanitizeBucket = sanitizeBucket
 
 function publicPolicy(bucketName) {
   return {

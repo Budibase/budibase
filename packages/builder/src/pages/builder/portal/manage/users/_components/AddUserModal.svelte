@@ -5,6 +5,8 @@
     Select,
     ModalContent,
     notifications,
+    Toggle,
+    Label,
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
@@ -13,12 +15,12 @@
 
   const options = ["Email onboarding", "Basic onboarding"]
   let selected = options[0]
+  let builder, admin
 
   const [email, error, touched] = createValidationStore("", emailValidator)
 
   async function createUserFlow() {
-    const res = await users.invite($email)
-    console.log(res)
+    const res = await users.invite({ email: $email, builder, admin })
     if (res.status) {
       notifications.error(res.message)
     } else {
@@ -56,4 +58,23 @@
     placeholder="john@doe.com"
     label="Email"
   />
+  <div>
+    <div class="toggle">
+      <Label size="L">Development access</Label>
+      <Toggle text="" bind:value={builder} />
+    </div>
+    <div class="toggle">
+      <Label size="L">Administration access</Label>
+      <Toggle text="" bind:value={admin} />
+    </div>
+  </div>
 </ModalContent>
+
+<style>
+  .toggle {
+    display: grid;
+    grid-template-columns: 78% 1fr;
+    align-items: center;
+    width: 50%;
+  }
+</style>

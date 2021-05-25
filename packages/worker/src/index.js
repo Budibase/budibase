@@ -9,6 +9,7 @@ const { passport } = require("@budibase/auth").auth
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
+const redis = require("./utilities/redis")
 
 const app = new Koa()
 
@@ -34,10 +35,16 @@ app.use(api.routes())
 const server = http.createServer(app.callback())
 destroyable(server)
 
-server.on("close", () => console.log("Server Closed"))
+server.on("close", async () => {
+  if (env.isProd()) {
+    console.log("Server Closed")
+  }
+  await redis.shutdown()
+})
 
 module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  await redis.init()
 })
 
 process.on("uncaughtException", err => {

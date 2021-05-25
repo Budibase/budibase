@@ -11,10 +11,22 @@ export function createUsersStore() {
     set(json)
   }
 
-  async function invite(email) {
-    const response = await api.post(`/api/admin/users/invite`, { email })
+  async function invite({ email, builder, admin }) {
+    const body = { email, userInfo: {} }
+    if (admin) {
+      body.userInfo.admin = {
+        global: true,
+      }
+    }
+    if (builder) {
+      body.userInfo.builder = {
+        global: true,
+      }
+    }
+    const response = await api.post(`/api/admin/users/invite`, body)
     return await response.json()
   }
+
   async function acceptInvite(inviteCode, password) {
     const response = await api.post("/api/admin/users/invite/accept", {
       inviteCode,
@@ -23,14 +35,20 @@ export function createUsersStore() {
     return await response.json()
   }
 
-  async function create({ email, password }) {
-    const response = await api.post("/api/admin/users", {
+  async function create({ email, password, admin, builder }) {
+    const body = {
       email,
       password,
-      builder: { global: true },
       roles: {},
-    })
-    init()
+    }
+    if (builder) {
+      body.builder = { global: true }
+    }
+    if (admin) {
+      body.admin = { global: true }
+    }
+    const response = await api.post("/api/admin/users", body)
+    await init()
     return await response.json()
   }
 
@@ -43,8 +61,7 @@ export function createUsersStore() {
   async function save(data) {
     try {
       const res = await post(`/api/admin/users`, data)
-      const json = await res.json()
-      return json
+      return await res.json()
     } catch (error) {
       console.log(error)
       return error
