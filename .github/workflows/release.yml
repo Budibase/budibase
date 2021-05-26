@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest 
-    
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -31,6 +31,7 @@ jobs:
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config user.name "Budibase Release Bot"
           git config user.email "<>"
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release
 
       - name: Build/release Docker images
