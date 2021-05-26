@@ -69,8 +69,6 @@
 
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Cloud hosting and self-hosting.** Users can self-host (see below), or host their apps with Budibase. Currently, our cloud hosting offering is limited to the free tier but we aim to change this in the future. For heavy usage, we advise users to self-host.
-
 <p align="center">
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
 </p>
