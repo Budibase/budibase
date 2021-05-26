@@ -65,7 +65,10 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
   // need to create cron job
   else if (isCronTrigger(newAuto) && cronTriggerActivated) {
     const job = await triggers.automationQueue.add(
-      { automation: newAuto, event: { appId } },
+      {
+        automation: newAuto,
+        event: { appId, timestamp: Date.now() },
+      },
       { repeat: { cron: newTrigger.inputs.cron } }
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed

@@ -40,12 +40,5 @@
     "test:e2e:ci": "lerna run cy:ci",
     "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
     "build:docker:staging": "cd hosting/scripts/linux/ && ./release-to-docker-hub.sh staging && cd -"
-  },
-  "dependencies": {
-    "@spectrum-css/actionbutton": "^1.0.1",
-    "@spectrum-css/actiongroup": "^1.0.1",
-    "@spectrum-css/link": "^3.1.1",
-    "@spectrum-css/menu": "^3.0.1",
-    "@spectrum-css/toast": "^3.0.1"
   }
 }
