@@ -6,7 +6,16 @@ import { enrichRows } from "./rows"
  * Since definitions cannot change at runtime, the result is cached.
  */
 export const fetchTableDefinition = async tableId => {
-  return await API.get({ url: `/api/tables/${tableId}`, cache: true })
+  const res = await API.get({ url: `/api/tables/${tableId}`, cache: true })
+
+  // Wipe any HBS formulae, as these interfere with handlebars enrichment
+  Object.keys(res?.schema || {}).forEach(field => {
+    if (res.schema[field]?.type === "formula") {
+      delete res.schema[field].formula
+    }
+  })
+
+  return res
 }
 
 /**
