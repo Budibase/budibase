@@ -27,7 +27,11 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: yarn release
+        run: | 
+          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
+          git config user.name "Budibase Release Bot"
+          git config user.email "<>"
+          yarn release
 
       - name: Build/release Docker images
         run: | 
