@@ -24,10 +24,10 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - run: yarn test
 
-      # - name: Publish budibase packages to NPM
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #   run: yarn release
+      - name: Publish budibase packages to NPM
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: yarn release
 
       - name: Build/release Docker images
         run: | 

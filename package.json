@@ -23,7 +23,7 @@
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
-    "release": "lerna publish --force-publish --yes",
+    "release": "yarn build && lerna publish --force-publish --yes",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
