@@ -45,10 +45,18 @@
           schema[field].editable = false
         }
       })
-      schema.email.displayName = "Email"
-      schema.roleId.displayName = "Role"
-      schema.firstName.displayName = "First Name"
-      schema.lastName.displayName = "Last Name"
+      if (schema.email) {
+        schema.email.displayName = "Email"
+      }
+      if (schema.roleId) {
+        schema.roleId.displayName = "Role"
+      }
+      if (schema.firstName) {
+        schema.firstName.displayName = "First Name"
+      }
+      if (schema.lastName) {
+        schema.lastName.displayName = "Last Name"
+      }
       if (schema.status) {
         schema.status.displayName = "Status"
       }
