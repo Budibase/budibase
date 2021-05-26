@@ -216,7 +216,15 @@ const BUILTIN_DEFINITIONS = {
         },
         required: ["cron"],
       },
-      outputs: {},
+      outputs: {
+        properties: {
+          timestamp: {
+            type: "number",
+            description: "Timestamp the cron was executed",
+          },
+        },
+        required: ["timestamp"],
+      },
     },
     type: "TRIGGER",
   },

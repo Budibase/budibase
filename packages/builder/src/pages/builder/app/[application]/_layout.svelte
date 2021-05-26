@@ -91,14 +91,6 @@
         <DeployModal />
       </div>
     </div>
-    <div class="beta">
-      <Button
-        secondary
-        href="https://github.com/Budibase/budibase/discussions/categories/ideas"
-      >
-        Request feature
-      </Button>
-    </div>
     <slot />
   </div>
 {:catch error}
@@ -199,15 +191,5 @@
   }
   i:hover {
     color: var(--ink);
-  }
-
-  .beta {
-    position: absolute;
-    bottom: var(--spacing-m);
-    left: var(--spacing-m);
-    z-index: 1;
-  }
-  .beta :global(button) {
-    background-color: var(--background);
   }
 </style>
