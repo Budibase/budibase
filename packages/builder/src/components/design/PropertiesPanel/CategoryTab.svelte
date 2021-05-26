@@ -24,7 +24,7 @@
     align-items: center;
     list-style: none;
     font-size: var(--font-size-m);
-    font-weight: 500;
+    font-weight: 600;
     height: 24px;
   }
 

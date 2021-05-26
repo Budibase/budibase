@@ -40,11 +40,6 @@
   --rounded-medium: 8px;
   --rounded-large: 16px;
 
-  --font-normal: "Inter";
-  --font-black: "Inter Black";
-  --font-bold: "Inter Bold";
-  --font-medium: "Inter Medium";
-  --font-light: "Inter Light";
   --font-sans: Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
     "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

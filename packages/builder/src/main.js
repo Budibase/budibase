@@ -7,9 +7,6 @@ import "@spectrum-css/vars/dist/spectrum-light.css"
 import "@spectrum-css/vars/dist/spectrum-lightest.css"
 import "@spectrum-css/page/dist/index-vars.css"
 import "./global.css"
-import "./fonts.css"
-import "./budibase.css"
-import "./fonts.css"
 
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 loadSpectrumIcons()
