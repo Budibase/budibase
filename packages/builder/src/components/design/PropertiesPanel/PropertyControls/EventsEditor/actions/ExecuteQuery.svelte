@@ -24,18 +24,18 @@
   }
 </script>
 
-<Layout noGap noPadding>
-  <Label>Datasource</Label>
+<Layout>
   <Select
+    label="Datasource"
     bind:value={parameters.datasourceId}
-    option={$datasources.list}
+    options={$datasources.list}
     getOptionLabel={source => source.name}
     getOptionValue={source => source._id}
   />
 
   {#if parameters.datasourceId}
-    <Label>Query</Label>
     <Select
+      label="Query"
       bind:value={parameters.queryId}
       options={$queries.list.filter(
         query => query.datasourceId === datasource._id
@@ -46,17 +46,19 @@
   {/if}
 
   {#if query?.parameters?.length > 0}
-    <ParameterBuilder
-      bind:customParams={parameters.queryParams}
-      parameters={query.parameters}
-      bindings={bindableProperties}
-    />
-    <IntegrationQueryEditor
-      height={200}
-      {query}
-      schema={fetchQueryDefinition(query)}
-      editable={false}
-      {datasource}
-    />
+    <div>
+      <ParameterBuilder
+        bind:customParams={parameters.queryParams}
+        parameters={query.parameters}
+        bindings={bindableProperties}
+      />
+      <IntegrationQueryEditor
+        height={200}
+        {query}
+        schema={fetchQueryDefinition(query)}
+        editable={false}
+        {datasource}
+      />
+    </div>
   {/if}
 </Layout>
