@@ -16,12 +16,13 @@
 </script>
 
 <div class="block-field">
-  <Select bind:value={value.queryId} extraThin secondary>
-    <option value="">Choose an option</option>
-    {#each $queries.list as query}
-      <option value={query._id}>{query.name}</option>
-    {/each}
-  </Select>
+  <Select
+    label="Query"
+    bind:value={value.queryId}
+    options={$queries.list}
+    getOptionValue={query => query._id}
+    getOptionLabel={query => query.name}
+  />
 </div>
 
 {#if parameters.length}
