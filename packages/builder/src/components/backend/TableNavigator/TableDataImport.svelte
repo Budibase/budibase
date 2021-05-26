@@ -170,7 +170,7 @@
   .field-status {
     color: var(--green);
     justify-self: center;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .error {
@@ -192,7 +192,7 @@
   label {
     font-family: var(--font-sans);
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     box-sizing: border-box;
     overflow: hidden;
     border-radius: var(--border-radius-s);

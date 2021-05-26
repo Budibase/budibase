@@ -50,7 +50,7 @@
   .name {
     text-align: left;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.14px;
     color: var(--ink);
     flex: 1 1 auto;

@@ -130,7 +130,7 @@
   }
 
   .block-label {
-    font-weight: 500;
+    font-weight: 600;
     font-size: var(--font-size-s);
     color: var(--grey-7);
   }

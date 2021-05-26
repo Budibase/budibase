@@ -30,7 +30,7 @@
     color: var(--grey-7);
     border-radius: var(--border-radius-m);
     font-size: var(--spectrum-global-dimension-font-size-75);
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.3s;
     text-rendering: optimizeLegibility;
   }

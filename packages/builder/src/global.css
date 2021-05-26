@@ -36,6 +36,9 @@ body {
 .hoverable:hover {
     cursor: pointer;
 }
+a {
+    text-decoration: none;
+}
 
 /* Top bottom spacing */
 .bb-margin-m {
@@ -44,11 +47,9 @@ body {
 * + .bb-margin-m {
     margin-top: var(--spacing-m);
 }
-
 .bb-margin-xl {
     margin-bottom: var(--spacing-xl);
 }
-
 * + .bb-margin-xl {
     margin-top: var(--spacing-xl);
 }

@@ -115,7 +115,7 @@
 
   div.delete-items div {
     margin-top: 4px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .actions {
@@ -127,7 +127,7 @@
 
   h5 {
     margin: 0;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   footer {
