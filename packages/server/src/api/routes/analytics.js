@@ -5,6 +5,6 @@ const { BUILDER } = require("@budibase/auth/permissions")
 
 const router = Router()
 
-router.get("/api/analytics", authorized(BUILDER), controller.isEnabled)
+router.get("/api/analytics", controller.isEnabled)
 
 module.exports = router
