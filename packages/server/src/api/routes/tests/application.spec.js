@@ -61,14 +61,6 @@ describe("/applications", () => {
       // two created apps + the inited app
       expect(res.body.length).toBe(3)
     })
-
-    it("should apply authorization to endpoint", async () => {
-      await checkBuilderEndpoint({
-        config,
-        method: "GET",
-        url: `/api/applications`,
-      })
-    })
   })
 
   describe("fetchAppDefinition", () => {

@@ -58,9 +58,9 @@ const SCHEMA = {
 class PostgresIntegration {
   constructor(config) {
     this.config = config
-    if (this.config.ssl.rejectUnauthorized) {
+    if (this.config.ssl && this.config.ssl.rejectUnauthorized) {
       this.config.ssl.rejectUnauthorized =
-        this.config.ssl.rejectUnauthorized === "true" ? true : false
+        this.config.ssl.rejectUnauthorized === "true"
     }
 
     if (!pool) {

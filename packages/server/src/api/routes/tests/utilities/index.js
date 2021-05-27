@@ -8,6 +8,11 @@ jest.mock("../../../../utilities/workerRequests", () => ({
       _id: "us_uuid1",
     }
   }),
+  getGlobalSelf: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
 }))
 
 exports.delay = ms => new Promise(resolve => setTimeout(resolve, ms))
