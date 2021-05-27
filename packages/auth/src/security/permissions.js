@@ -17,6 +17,7 @@ const PermissionTypes = {
   BUILDER: "builder",
   VIEW: "view",
   QUERY: "query",
+  APP: "app",
 }
 
 function Permission(type, level) {
@@ -86,6 +87,7 @@ const BUILTIN_PERMISSIONS = {
       new Permission(PermissionTypes.QUERY, PermissionLevels.READ),
       new Permission(PermissionTypes.TABLE, PermissionLevels.READ),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
+      new Permission(PermissionTypes.APP, PermissionLevels.READ),
     ],
   },
   WRITE: {
@@ -118,6 +120,7 @@ const BUILTIN_PERMISSIONS = {
       new Permission(PermissionTypes.VIEW, PermissionLevels.ADMIN),
       new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
       new Permission(PermissionTypes.QUERY, PermissionLevels.ADMIN),
+      new Permission(PermissionTypes.APP, PermissionLevels.ADMIN),
     ],
   },
 }
