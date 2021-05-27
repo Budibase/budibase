@@ -119,15 +119,18 @@ exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
   return users
 }
 
-exports.getGlobalSelf = async ctx => {
+exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/admin/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     request(ctx, { method: "GET" })
   )
-  const json = await response.json()
+  let json = await response.json()
   if (json.status !== 200 && response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
+  }
+  if (appId) {
+    json = getAppRole(appId, json)
   }
   return json
 }
