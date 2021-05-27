@@ -1,4 +1,5 @@
 const { processString, processObject, isValid } = require("../src/index.cjs")
+const tableJson = require("./examples/table.json")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -387,5 +388,18 @@ describe("Cover a few complex use cases", () => {
     )
     const output = await processObject(input, context)
     expect(output.text).toBe("12-01")
+  })
+
+  it("should only invalidate a single string in an object", async () => {
+    const input = {
+      dataProvider:"{{ literal [c670254c9e74e40518ee5becff53aa5be] }}",
+      theme:"spectrum--lightest",
+      showAutoColumns:false,
+      quiet:true,
+      size:"spectrum--medium",
+      rowCount:8,
+    }
+    const output = await processObject(input, tableJson)
+    expect(output.dataProvider).not.toBe("Invalid Binding")
   })
 })
