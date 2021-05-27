@@ -356,6 +356,15 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
+  it("should test a case of attempting to get a UTC ISO back out after processing", async () => {
+    const date = new Date()
+    const input = `{{ date (subtract (date dateThing "x") 300000) "" }}`
+    const output = await processString(input, {
+      dateThing: date.toISOString(),
+    })
+    expect(output).toEqual(new Date(date.getTime() - 300000).toISOString())
+  })
+
   it("test a very complex duration output", async () => {
     const currentTime = new Date(1612432082000).toISOString(),
       eventTime = new Date(1612432071000).toISOString()
