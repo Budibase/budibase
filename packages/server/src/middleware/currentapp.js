@@ -1,7 +1,7 @@
 const { getAppId, setCookie, getCookie } = require("@budibase/auth").utils
 const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
-const { getGlobalUsers, getGlobalSelf } = require("../utilities/workerRequests")
+const { getGlobalSelf } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
 
