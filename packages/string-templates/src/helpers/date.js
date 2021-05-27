@@ -2,6 +2,7 @@ const dayjs = require("dayjs")
 dayjs.extend(require("dayjs/plugin/duration"))
 dayjs.extend(require("dayjs/plugin/advancedFormat"))
 dayjs.extend(require("dayjs/plugin/relativeTime"))
+dayjs.extend(require("dayjs/plugin/utc"))
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -88,7 +89,11 @@ module.exports.date = (str, pattern, options) => {
 
   setLocale(config.str, config.pattern, config.options)
 
-  return dayjs(new Date(config.str)).format(config.pattern)
+  const date = dayjs(new Date(config.str)).utc()
+  if (config.pattern === "") {
+    return date.toISOString()
+  }
+  return date.format(config.pattern)
 }
 
 module.exports.duration = (str, pattern, format) => {
