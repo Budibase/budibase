@@ -42,7 +42,14 @@ module.exports.run = async function ({ inputs, context }) {
 
   try {
     const command = processStringSync(inputs.code, context)
-    const stdout = execSync(command, { timeout: 1000 })
+
+    let stdout
+    try {
+      stdout = execSync(command, { timeout: 500 })
+    } catch (err) {
+      stdout = err.message
+    }
+
     return {
       stdout,
     }
