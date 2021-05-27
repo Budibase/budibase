@@ -1,4 +1,5 @@
 const { Pool } = require("pg")
+const { FIELD_TYPES } = require("./Integration")
 
 let pool
 
@@ -9,29 +10,33 @@ const SCHEMA = {
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
   datasource: {
     host: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "localhost",
       required: true,
     },
     port: {
-      type: "number",
+      type: FIELD_TYPES.NUMBER,
       required: true,
       default: 5432,
     },
     database: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "postgres",
       required: true,
     },
     user: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "root",
       required: true,
     },
     password: {
-      type: "password",
+      type: FIELD_TYPES.PASSWORD,
       default: "root",
       required: true,
+    },
+    ssl: {
+      type: FIELD_TYPES.OBJECT,
+      required: false,
     },
   },
   query: {
@@ -53,6 +58,11 @@ const SCHEMA = {
 class PostgresIntegration {
   constructor(config) {
     this.config = config
+    if (this.config.ssl.rejectUnauthorized) {
+      this.config.ssl.rejectUnauthorized =
+        this.config.ssl.rejectUnauthorized === "true" ? true : false
+    }
+
     if (!pool) {
       pool = new Pool(this.config)
     }
@@ -65,7 +75,9 @@ class PostgresIntegration {
     } catch (err) {
       throw new Error(err)
     } finally {
-      this.client.release()
+      if (this.client) {
+        this.client.release()
+      }
     }
   }
 
