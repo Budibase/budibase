@@ -3,7 +3,7 @@ mockWorker()
 
 function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({
-    getGlobalUsers: () => {
+    getGlobalSelf: () => {
       return {
         _id: "us_uuid1",
         roles: {
