@@ -197,8 +197,8 @@
         <Combobox
           disabled={expression.noValue}
           options={[
-            { label: "True", value: true },
-            { label: "False", value: false },
+            { label: "True", value: "true" },
+            { label: "False", value: "false" },
           ]}
           bind:value={expression.value}
         />
