@@ -1,5 +1,8 @@
 <script>
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import {
+    getBindableProperties,
+    getDataProviderComponents,
+  } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -61,6 +64,17 @@
     $currentAsset,
     $store.selectedComponentId
   )
+  $: dataProviders = getDataProviderComponents(
+    $currentAsset,
+    $store.selectedComponentId
+  ).map(provider => ({
+    label: provider._instanceName,
+    name: provider._instanceName,
+    providerId: provider._id,
+    value: `{{ literal [${provider._id}] }}`,
+    type: "provider",
+    schema: provider.schema,
+  }))
   $: queryBindableProperties = bindableProperties.map(property => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
@@ -182,7 +196,20 @@
         </li>
       {/each}
     </ul>
-
+    <Divider size="S" />
+    <div class="title">
+      <Heading size="XS">Data Providers</Heading>
+    </div>
+    <ul>
+      {#each dataProviders as provider}
+        <li
+          class:selected={value === provider}
+          on:click={() => handleSelected(provider)}
+        >
+          {provider.label}
+        </li>
+      {/each}
+    </ul>
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">
