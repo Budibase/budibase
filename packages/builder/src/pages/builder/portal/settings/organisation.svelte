@@ -12,7 +12,7 @@
     notifications,
   } from "@budibase/bbui"
   import { auth, organisation } from "stores/portal"
-  import { post } from "builderStore/api"
+  import { post, get } from "builderStore/api"
   import analytics from "analytics"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
@@ -70,6 +70,7 @@
 
     loading = false
   }
+
 </script>
 
 {#if $auth.isAdmin}
@@ -130,10 +131,10 @@
           <Toggle text="" bind:value={$values.analytics} />
         </div>
       </div>
+      <div>
+        <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+      </div>
     </Layout>
-    <div>
-      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
-    </div>
   </Layout>
 {/if}
 

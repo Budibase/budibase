@@ -1,4 +1,3 @@
-const scriptController = require("../../api/controllers/script")
 const { execSync } = require("child_process")
 const { processStringSync } = require("@budibase/string-templates")
 
