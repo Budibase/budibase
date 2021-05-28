@@ -77,7 +77,7 @@ const lengthConstraint = maxLength => value => {
 }
 
 const numericalConstraint = (constraint, error) => value => {
-  if (value == null || value === "") {  
+  if (value == null || value === "") {
     return null
   }
   if (isNaN(value)) {

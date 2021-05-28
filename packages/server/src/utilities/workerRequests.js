@@ -98,7 +98,6 @@ exports.deleteGlobalUser = async (ctx, globalId) => {
 }
 
 exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
-
   const endpoint = globalId
     ? `/api/admin/users/${globalId}`
     : `/api/admin/users`
