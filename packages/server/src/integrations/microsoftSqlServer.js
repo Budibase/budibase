@@ -31,6 +31,10 @@ const SCHEMA = {
       type: FIELD_TYPES.STRING,
       default: "root",
     },
+    encrypt: {
+      type: FIELD_TYPES.BOOLEAN,
+      default: true,
+    },
   },
   query: {
     create: {
@@ -51,6 +55,10 @@ const SCHEMA = {
 class SqlServerIntegration {
   constructor(config) {
     this.config = config
+    this.config.options = {
+      encrypt: this.config.encrypt,
+    }
+    delete this.config.encrypt
     if (!pool) {
       pool = new sqlServer.ConnectionPool(this.config)
     }
