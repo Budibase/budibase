@@ -43,6 +43,10 @@
           title: "Theming",
           href: "/builder/portal/settings/theming",
         },
+        {
+          title: "Update",
+          href: "/builder/portal/settings/update",
+        },
       ])
     } else {
       menu = menu.concat([

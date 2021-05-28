@@ -38,6 +38,11 @@ static_resources:
                 route:
                   cluster: worker-service
 
+              - match: { prefix: "/v1/update" }
+                route:
+                  cluster: watchtower-service
+
+
               - match: { path: "/" }
                 route:
                   cluster: app-service
@@ -122,4 +127,18 @@ static_resources:
               socket_address:
                 address: couchdb-service
                 port_value: 5984
+
+  - name: watchtower-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: watchtower-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: 
+                address: watchtower-service
+                port_value: 6666
 
