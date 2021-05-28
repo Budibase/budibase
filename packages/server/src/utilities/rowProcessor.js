@@ -174,7 +174,7 @@ exports.inputProcessing = (user = {}, table, row) => {
     const field = table.schema[key]
     // cleanse fields that aren't in the schema
     if (!field) {
-      if (copiedTable.indexOf(key) === -1) {
+      if (dontCleanseKeys.indexOf(key) === -1) {
         delete clonedRow[key]
       }
       continue
