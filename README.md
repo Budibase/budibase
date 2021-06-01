@@ -20,7 +20,7 @@
 
 
 <p align="center">
-  <img src="https://i.imgur.com/tPQHruf.png">
+  <img src="https://i.imgur.com/k9ANC3b.png">
 </p>
 
 <p align="center">
@@ -43,7 +43,7 @@
 </p>
 
 <h3 align="center">
-  <a href="https://portal.budi.live/signup">Sign-up</a>
+  <a href="https://docs.budibase.com/getting-started">Get started</a>
   <span> · </span>
   <a href="https://docs.budibase.com">Docs</a>
   <span> · </span>
@@ -70,7 +70,7 @@
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
-  <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
+  <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
 </p>
 
 
