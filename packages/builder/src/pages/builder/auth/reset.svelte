@@ -3,7 +3,7 @@
   import { goto, params } from "@roxi/routify"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { auth } from "stores/portal"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   const resetCode = $params["?code"]
   let password, error
