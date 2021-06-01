@@ -37,6 +37,7 @@
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "apexcharts": "^3.22.1",
+    "dayjs": "^1.10.5",
     "svelte-apexcharts": "^1.0.2",
     "svelte-flatpickr": "^3.1.0"
   }
