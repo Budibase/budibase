@@ -12,7 +12,7 @@
   import { goto, params } from "@roxi/routify"
   import { auth } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   let username = ""
   let password = ""
