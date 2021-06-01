@@ -4,6 +4,7 @@ const {
   getDatasourceParams,
   getQueryParams,
 } = require("../../db/utils")
+const { integrations } = require("../../integrations")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -27,6 +28,12 @@ exports.save = async function (ctx) {
 
   const response = await db.post(datasource)
   datasource._rev = response.rev
+
+  // Drain connection pools when configuration is changed
+  const pool = integrations[datasource.source].pool
+  if (pool) {
+    await pool.end()
+  }
 
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
