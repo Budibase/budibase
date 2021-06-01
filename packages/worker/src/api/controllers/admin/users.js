@@ -11,6 +11,16 @@ const { sendEmail } = require("../../../utilities/email")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
+async function allUsers() {
+  const db = new CouchDB(GLOBAL_DB)
+  const response = await db.allDocs(
+    getGlobalUserParams(null, {
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc)
+}
+
 exports.save = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const { email, password, _id } = ctx.request.body
@@ -105,6 +115,23 @@ exports.destroy = async ctx => {
   }
 }
 
+exports.removeAppRole = async ctx => {
+  const { appId } = ctx.params
+  const db = new CouchDB(GLOBAL_DB)
+  const users = await allUsers()
+  const bulk = []
+  for (let user of users) {
+    if (user.roles[appId]) {
+      delete user.roles[appId]
+      bulk.push(user)
+    }
+  }
+  await db.bulkDocs(bulk)
+  ctx.body = {
+    message: "App role removed from all users",
+  }
+}
+
 exports.getSelf = async ctx => {
   ctx.params = {
     id: ctx.user._id,
@@ -134,13 +161,7 @@ exports.updateSelf = async ctx => {
 
 // called internally by app server user fetch
 exports.fetch = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  const users = response.rows.map(row => row.doc)
+  const users = await allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of users) {
     if (user) {
