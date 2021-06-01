@@ -3,7 +3,7 @@
   import { goto, params } from "@roxi/routify"
   import { users } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   const inviteCode = $params["?code"]
   let password, error
