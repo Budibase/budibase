@@ -30,9 +30,9 @@ exports.save = async function (ctx) {
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
-  const pool = integrations[datasource.source].pool
-  if (pool) {
-    await pool.end()
+  const source = integrations[datasource.source]
+  if (source && source.pool) {
+    await source.pool.end()
   }
 
   ctx.status = 200
