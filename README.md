@@ -82,7 +82,7 @@
 ## ⌛ Status
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
 - [x] Private Beta: We are testing Budibase with a closed set of customers
-- [x] Public Beta: Anyone can [sign-up and use Budibase](https://portal.budi.live/signup).
+- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
 - [ ] Official Launch
 
 Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
