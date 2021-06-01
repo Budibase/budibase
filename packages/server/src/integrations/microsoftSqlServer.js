@@ -1,8 +1,6 @@
 const sqlServer = require("mssql")
 const { FIELD_TYPES } = require("./Integration")
 
-let pool
-
 const SCHEMA = {
   docs: "https://github.com/tediousjs/node-mssql",
   description:
@@ -31,6 +29,10 @@ const SCHEMA = {
       type: FIELD_TYPES.STRING,
       default: "root",
     },
+    encrypt: {
+      type: FIELD_TYPES.BOOLEAN,
+      default: true,
+    },
   },
   query: {
     create: {
@@ -49,15 +51,21 @@ const SCHEMA = {
 }
 
 class SqlServerIntegration {
+  static pool
+
   constructor(config) {
     this.config = config
-    if (!pool) {
-      pool = new sqlServer.ConnectionPool(this.config)
+    this.config.options = {
+      encrypt: this.config.encrypt,
+    }
+    delete this.config.encrypt
+    if (!this.pool) {
+      this.pool = new sqlServer.ConnectionPool(this.config)
     }
   }
 
   async connect() {
-    const client = await pool.connect()
+    const client = await this.pool.connect()
     this.client = client.request()
   }
 

@@ -27,7 +27,10 @@ const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const { getDeployedApps } = require("../../utilities/workerRequests")
+const {
+  getDeployedApps,
+  removeAppFromUserRoles,
+} = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 
@@ -101,6 +104,7 @@ async function createInstance(template) {
     if (!ok) {
       throw "Error loading database dump from template."
     }
+    var { _rev } = await db.get(DocumentTypes.APP_METADATA)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -111,7 +115,7 @@ async function createInstance(template) {
   await createRoutingView(appId)
   await createAllSearchIndex(appId)
 
-  return { _id: appId }
+  return { _id: appId, _rev }
 }
 
 exports.fetch = async function (ctx) {
@@ -197,6 +201,9 @@ exports.create = async function (ctx) {
       type: "cloud",
     },
   }
+  if (instance._rev) {
+    newApplication._rev = instance._rev
+  }
   const instanceDb = new CouchDB(appId)
   await instanceDb.put(newApplication)
 
@@ -241,6 +248,8 @@ exports.delete = async function (ctx) {
   if (!env.isTest()) {
     await deleteApp(ctx.params.appId)
   }
+  // make sure the app/role doesn't stick around after the app has been deleted
+  await removeAppFromUserRoles(ctx.params.appId)
 
   ctx.status = 200
   ctx.body = result

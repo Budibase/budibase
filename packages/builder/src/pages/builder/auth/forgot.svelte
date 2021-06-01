@@ -8,7 +8,7 @@
     Heading,
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   let email = ""
 
