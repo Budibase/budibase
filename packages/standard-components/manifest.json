@@ -1505,5 +1505,23 @@
     "context": {
       "type": "schema"
     }
+  },
+  "daterangepicker": {
+    "name": "Date Range",
+    "icon": "Date",
+    "styleable": true,
+    "hasChildren": false,
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Date field",
+        "key": "field"
+      }
+    ]
   }
 }

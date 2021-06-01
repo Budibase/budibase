@@ -17,13 +17,19 @@ export const buildLuceneQuery = filter => {
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
           query.range[field] = {
-            low: type === "number" ? Number.MIN_SAFE_INTEGER : "0000",
-            high: type === "number" ? Number.MAX_SAFE_INTEGER : "9999",
+            low:
+              type === "number"
+                ? Number.MIN_SAFE_INTEGER
+                : "0000-00-00T00:00:00.000Z",
+            high:
+              type === "number"
+                ? Number.MAX_SAFE_INTEGER
+                : "9999-00-00T00:00:00.000Z",
           }
         }
-        if (operator === "rangeLow") {
+        if (operator === "rangeLow" && value != null && value !== "") {
           query.range[field].low = value
-        } else if (operator === "rangeHigh") {
+        } else if (operator === "rangeHigh" && value != null && value !== "") {
           query.range[field].high = value
         }
       } else if (query[operator]) {

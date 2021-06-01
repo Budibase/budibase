@@ -17,6 +17,10 @@
 
   const { API, styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
+  const dataProviderApi = {
+    setLuceneQuery: newQuery => (query = newQuery),
+    foo: "bar",
+  }
 
   // Loading flag every time data is being fetched
   let loading = false
@@ -31,9 +35,11 @@
   let schema = {}
   let bookmarks = [null]
   let pageNumber = 0
+  let query = null
 
-  $: internalTable = dataSource?.type === "table"
   $: query = buildLuceneQuery(filter)
+  $: internalTable = dataSource?.type === "table"
+  $: nestedProvider = dataSource?.type === "provider"
   $: hasNextPage = bookmarks[pageNumber + 1] != null
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
@@ -71,8 +77,21 @@
       callback: () => refresh(),
       metadata: { dataSource },
     },
+    {
+      type: ActionTypes.SetDataProviderQuery,
+      callback: newQuery => (query = newQuery),
+    },
   ]
-  $: dataContext = { rows, schema, rowsLength: rows.length }
+  $: dataContext = {
+    rows,
+    schema,
+    rowsLength: rows.length,
+
+    // Undocumented properties. These aren't supposed to be used in builder
+    // bindings, but are used internally by other components
+    id: $component?.id,
+    state: { query },
+  }
 
   const getSortType = (schema, sortColumn) => {
     if (!schema || !sortColumn || !schema[sortColumn]) {
@@ -83,7 +102,7 @@
   }
 
   const refresh = async () => {
-    if (schemaLoaded) {
+    if (schemaLoaded && !nestedProvider) {
       fetchData(
         dataSource,
         query,
