@@ -5,11 +5,24 @@
 // ***********************************************
 //
 
-function isFirstApp() {
-  const firstAppHeader = Object.values(Cypress.$("h1")).filter(
-    $h1 => $h1.outerHTML && $h1.outerHTML.includes("Create your first app")
-  )
-  return firstAppHeader.length !== 0
+export function checkIfElementExists(el) {
+  return new Promise(resolve => {
+    /// here if  ele exists or not
+    cy.get("body").then(body => {
+      const found = body.find(el)
+      console.log(found)
+      console.log(found.length)
+      if (found.length > 0) {
+        resolve(true)
+      } else {
+        resolve(false)
+      }
+    })
+  })
+}
+
+async function isFirstApp() {
+  return checkIfElementExists(".empty-wrapper")
 }
 
 Cypress.Commands.add("login", () => {
@@ -36,21 +49,23 @@ Cypress.Commands.add("login", () => {
 
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  // wait for init API calls on visit
-  const buttonText = isFirstApp() ? "Create app" : "Create new app"
-  cy.wait(100)
-  cy.contains(buttonText).click()
-  cy.get("body").then(() => {
-    cy.get(".spectrum-Modal")
-      .within(() => {
-        cy.get("input").eq(0).type(name).should("have.value", name).blur()
-        cy.contains("Create app").click()
-      })
-      .then(() => {
-        cy.get("[data-cy=new-table]", {
-          timeout: 20000,
-        }).should("be.visible")
-      })
+  cy.wait(500)
+  isFirstApp().then(isFirst => {
+    console.log(isFirst)
+    const buttonText = isFirst ? "Create app" : "Create new app"
+    cy.contains(buttonText).click()
+    cy.get("body").then(() => {
+      cy.get(".spectrum-Modal")
+        .within(() => {
+          cy.get("input").eq(0).type(name).should("have.value", name).blur()
+          cy.contains("Create app").click()
+        })
+        .then(() => {
+          cy.get("[data-cy=new-table]", {
+            timeout: 20000,
+          }).should("be.visible")
+        })
+    })
   })
 })
 
@@ -58,11 +73,13 @@ Cypress.Commands.add("deleteApp", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
 
-  if (!isFirstApp()) {
-    cy.get(".hoverable > use").click()
-    cy.contains("Delete").click()
-    cy.get(".spectrum-Button--warning").click()
-  }
+  isFirstApp().then(isFirst => {
+    if (!isFirst) {
+      cy.get(".hoverable > use").click()
+      cy.contains("Delete").click()
+      cy.get(".spectrum-Button--warning").click()
+    }
+  })
 })
 
 Cypress.Commands.add("createTestApp", () => {
