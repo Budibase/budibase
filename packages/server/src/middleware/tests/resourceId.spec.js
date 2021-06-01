@@ -91,7 +91,7 @@ describe("resourceId middleware", () => {
       .mainResource("custom")
       .subResource("customSub")
       .build()
-    config = new TestConfiguration(middleware)
+    let config = new TestConfiguration(middleware)
     config.setBody({
       custom: "test",
       customSub: "subtest"

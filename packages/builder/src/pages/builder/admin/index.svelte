@@ -11,7 +11,7 @@
   import api from "builderStore/api"
   import { admin } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   let adminUser = {}
   let error

@@ -1,4 +1,5 @@
 const { processString, processObject, isValid } = require("../src/index.cjs")
+const tableJson = require("./examples/table.json")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -355,6 +356,15 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
+  it("should test a case of attempting to get a UTC ISO back out after processing", async () => {
+    const date = new Date()
+    const input = `{{ date (subtract (date dateThing "x") 300000) "" }}`
+    const output = await processString(input, {
+      dateThing: date.toISOString(),
+    })
+    expect(output).toEqual(new Date(date.getTime() - 300000).toISOString())
+  })
+
   it("test a very complex duration output", async () => {
     const currentTime = new Date(1612432082000).toISOString(),
       eventTime = new Date(1612432071000).toISOString()
@@ -387,5 +397,18 @@ describe("Cover a few complex use cases", () => {
     )
     const output = await processObject(input, context)
     expect(output.text).toBe("12-01")
+  })
+
+  it("should only invalidate a single string in an object", async () => {
+    const input = {
+      dataProvider:"{{ literal [c670254c9e74e40518ee5becff53aa5be] }}",
+      theme:"spectrum--lightest",
+      showAutoColumns:false,
+      quiet:true,
+      size:"spectrum--medium",
+      rowCount:8,
+    }
+    const output = await processObject(input, tableJson)
+    expect(output.dataProvider).not.toBe("Invalid Binding")
   })
 })
