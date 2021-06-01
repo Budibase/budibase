@@ -1,6 +1,5 @@
 const { Pool } = require("pg")
-
-let pool
+const { FIELD_TYPES } = require("./Integration")
 
 const SCHEMA = {
   docs: "https://node-postgres.com",
@@ -9,29 +8,34 @@ const SCHEMA = {
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
   datasource: {
     host: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "localhost",
       required: true,
     },
     port: {
-      type: "number",
+      type: FIELD_TYPES.NUMBER,
       required: true,
       default: 5432,
     },
     database: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "postgres",
       required: true,
     },
     user: {
-      type: "string",
+      type: FIELD_TYPES.STRING,
       default: "root",
       required: true,
     },
     password: {
-      type: "password",
+      type: FIELD_TYPES.PASSWORD,
       default: "root",
       required: true,
+    },
+    ssl: {
+      type: FIELD_TYPES.BOOLEAN,
+      default: false,
+      required: false,
     },
   },
   query: {
@@ -51,21 +55,28 @@ const SCHEMA = {
 }
 
 class PostgresIntegration {
+  static pool
+
   constructor(config) {
     this.config = config
-    if (!pool) {
-      pool = new Pool(this.config)
+    if (this.config.ssl) {
+      this.config.ssl = {
+        rejectUnauthorized: true,
+      }
     }
+
+    if (!this.pool) {
+      this.pool = new Pool(this.config)
+    }
+
+    this.client = this.pool
   }
 
   async query(sql) {
     try {
-      this.client = await pool.connect()
       return await this.client.query(sql)
     } catch (err) {
       throw new Error(err)
-    } finally {
-      this.client.release()
     }
   }
 

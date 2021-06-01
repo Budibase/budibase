@@ -7,12 +7,12 @@
   // Check this onMount rather than a reactive statement to avoid trumping
   // the login return URL functionality.
   onMount(() => {
-    if ($auth.user) {
+    if ($auth.user && !$auth.user.forceResetPassword) {
       $redirect("../")
     }
   })
 </script>
 
-{#if !$auth.user}
+{#if !$auth.user || $auth.user.forceResetPassword}
   <slot />
 {/if}

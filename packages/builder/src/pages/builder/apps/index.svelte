@@ -13,13 +13,13 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { apps, organisation, auth } from "stores/portal"
-  import { goto } from "@roxi/routify"
+  import { goto, redirect } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
-  import Logo from "assets/bb-space-black.svg"
+  import Logo from "assets/bb-emblem.svg"
 
   let loaded = false
   let userInfoModal
@@ -28,10 +28,17 @@
   onMount(async () => {
     await organisation.init()
     await apps.load()
-    loaded = true
+    // Skip the portal if you only have one app
+    if (!$auth.isBuilder && $apps.filter(publishedAppsOnly).length === 1) {
+      window.location = `/${publishedApps[0].prodId}`
+    } else {
+      loaded = true
+    }
   })
 
-  $: publishedApps = $apps.filter(app => app.status === AppStatus.DEPLOYED)
+  const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
+
+  $: publishedApps = $apps.filter(publishedAppsOnly)
 </script>
 
 {#if $auth.user && loaded}
