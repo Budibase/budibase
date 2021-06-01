@@ -1,1 +1,0 @@
-exports.updateSystem = async ctx => {}

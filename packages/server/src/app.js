@@ -28,14 +28,14 @@ app.use(
   })
 )
 
-let logger = pino({
-  prettyPrint: {
-    levelFirst: true,
-  },
-  level: env.LOG_LEVEL || "error",
-})
-
-app.use(logger)
+app.use(
+  pino({
+    prettyPrint: {
+      levelFirst: true,
+    },
+    level: env.LOG_LEVEL || "error",
+  })
+)
 
 if (!env.isTest()) {
   const bullApp = bullboard.init()

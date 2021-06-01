@@ -5,7 +5,6 @@ const templateRoutes = require("./admin/templates")
 const emailRoutes = require("./admin/email")
 const authRoutes = require("./admin/auth")
 const roleRoutes = require("./admin/roles")
-const updatesRoutes = require("./admin/updates")
 const appRoutes = require("./app")
 
 exports.routes = [
@@ -17,5 +16,4 @@ exports.routes = [
   templateRoutes,
   emailRoutes,
   roleRoutes,
-  updatesRoutes,
 ]

@@ -70,7 +70,6 @@
 
     loading = false
   }
-
 </script>
 
 {#if $auth.isAdmin}

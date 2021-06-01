@@ -27,17 +27,16 @@
   async function updateBudibase() {
     try {
       notifications.info("Updating budibase..")
-      // const response = await fetch("http://localhost:6666/v1/update", {
-      //   headers: {
-      //     Authorization: "Bearer budibase"
-      //   }
-      // })
+      const response = await fetch("/v1/update", {
+        headers: {
+          Authorization: "Bearer budibase",
+        },
+      })
       notifications.success("Your budibase installation is up to date.")
     } catch (err) {
       notifications.error(`Error installing budibase update ${err}`)
     }
   }
-
 </script>
 
 {#if $auth.isAdmin}
@@ -45,15 +44,16 @@
     <Layout gap="XS" noPadding>
       <Heading size="M">Update</Heading>
       <Body>
-        Keep your budibase installation up to date to take advantage of the latest features, security updates and much more.
+        Keep your budibase installation up to date to take advantage of the
+        latest features, security updates and much more.
       </Body>
     </Layout>
     <Divider size="S" />
-      <div class="fields">
-        <div class="field">
-          <Button cta on:click={updateBudibase}>Check For Updates</Button>
-        </div>
+    <div class="fields">
+      <div class="field">
+        <Button cta on:click={updateBudibase}>Check For Updates</Button>
       </div>
+    </div>
   </Layout>
 {/if}
 

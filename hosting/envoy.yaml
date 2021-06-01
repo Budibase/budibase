@@ -140,5 +140,5 @@ static_resources:
             address:
               socket_address: 
                 address: watchtower-service
-                port_value: 6666
+                port_value: 6161
 

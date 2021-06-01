@@ -126,7 +126,7 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
     ports:
-      - 6666:8080
+      - 6161:8080
 
 
 volumes:
