@@ -64,20 +64,6 @@ services:
       - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
-  
-  watchtower-service:
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug --http-api-update budibase/apps budibase/worker
-    environment:
-      - WATCHTOWER_HTTP_API=true
-      - WATCHTOWER_HTTP_API_TOKEN=budibase
-      - WATCHTOWER_CLEANUP=true
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
-    ports:
-      - 6161:8080
 
 volumes:
   couchdb3_data:

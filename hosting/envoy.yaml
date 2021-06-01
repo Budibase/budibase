@@ -21,6 +21,10 @@ static_resources:
                   cluster: app-service
                   prefix_rewrite: "/"
 
+              - match: { path: "/v1/update" }
+                route:
+                  cluster: watchtower-service
+
               - match: { prefix: "/builder/" }
                 route:
                   cluster: app-service
@@ -37,11 +41,6 @@ static_resources:
               - match: { prefix: "/api/admin/" }
                 route:
                   cluster: worker-service
-
-              - match: { prefix: "/v1/update" }
-                route:
-                  cluster: watchtower-service
-
 
               - match: { path: "/" }
                 route:
