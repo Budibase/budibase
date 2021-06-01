@@ -2,20 +2,26 @@ const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
-const { StaticDatabases, generateGlobalUserID } = require("../../db/utils")
+const {
+  StaticDatabases,
+  generateGlobalUserID,
+  ViewNames,
+} = require("../../db/utils")
 
 async function authenticate(token, tokenSecret, profile, done) {
   // Check the user exists in the instance DB by email
   const db = database.getDB(StaticDatabases.GLOBAL.name)
 
   let dbUser
+
   const userId = generateGlobalUserID(profile.id)
 
   try {
     // use the google profile id
     dbUser = await db.get(userId)
   } catch (err) {
-    console.error("Google user not found. Creating..")
+    console.log("Google user not found. Creating..")
+
     // create the user
     const user = {
       _id: userId,
@@ -26,6 +32,28 @@ async function authenticate(token, tokenSecret, profile, done) {
       },
       ...profile._json,
     }
+
+    // check if an account with the google email address exists locally
+    const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
+      key: profile._json.email,
+      include_docs: true,
+    })
+
+    // Google user already exists by email
+    if (users.rows.length > 0) {
+      const existing = users.rows[0].doc
+
+      console.log(existing)
+
+      // remove the local account to avoid conflicts
+      await db.remove(existing._id, existing._rev)
+
+      // merge with existing account
+      user.roles = existing.roles
+      user.builder = existing.builder
+      user.admin = existing.admin
+    }
+
     const response = await db.post(user)
 
     dbUser = user
