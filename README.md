@@ -63,11 +63,13 @@
 
 - **Open source and extensable.** Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
 
-- **Load data or start from scratch.** Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, Google Sheets, S3, DyanmoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Load data or start from scratch.** Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, S3, DyanmoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Design and build apps with powerful pre-made components.** Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new components](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Design and build apps with powerful pre-made components.** Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+
+- **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infraastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
 
 <p align="center">
   <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
