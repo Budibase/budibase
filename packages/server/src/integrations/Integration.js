@@ -6,6 +6,7 @@ exports.QUERY_TYPES = {
 
 exports.FIELD_TYPES = {
   STRING: "string",
+  BOOLEAN: "boolean",
   NUMBER: "number",
   PASSWORD: "password",
   LIST: "list",

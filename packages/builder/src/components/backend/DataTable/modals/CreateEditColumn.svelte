@@ -291,7 +291,7 @@
     />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
-        disabled={originalName}
+        disabled={originalName != null}
         label="Define the relationship"
         bind:value={field.relationshipType}
         options={relationshipOptions}

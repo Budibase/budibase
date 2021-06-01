@@ -9,7 +9,8 @@ function getAppRole(appId, user) {
   if (!user.roles) {
     return user
   }
-  user.roleId = user.roles[appId]
+  // always use the deployed app
+  user.roleId = user.roles[getDeployedAppID(appId)]
   if (!user.roleId) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
@@ -97,8 +98,6 @@ exports.deleteGlobalUser = async (ctx, globalId) => {
 }
 
 exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
-  // always use the deployed app
-  appId = getDeployedAppID(appId)
   const endpoint = globalId
     ? `/api/admin/users/${globalId}`
     : `/api/admin/users`
@@ -119,21 +118,23 @@ exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
   return users
 }
 
-exports.getGlobalSelf = async ctx => {
+exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/admin/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     request(ctx, { method: "GET" })
   )
-  const json = await response.json()
+  let json = await response.json()
   if (json.status !== 200 && response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
+  }
+  if (appId) {
+    json = getAppRole(appId, json)
   }
   return json
 }
 
 exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
-  appId = getDeployedAppID(appId)
   let user,
     endpoint,
     body = {}

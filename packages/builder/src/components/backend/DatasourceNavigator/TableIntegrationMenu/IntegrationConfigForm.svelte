@@ -1,5 +1,5 @@
 <script>
-  import { Label, Input, Layout } from "@budibase/bbui"
+  import { Label, Input, Layout, Toggle } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
 
@@ -16,6 +16,11 @@
           defaults={schema[configKey].default}
           bind:object={integration[configKey]}
         />
+      {:else if schema[configKey].type === "boolean"}
+        <div class="form-row">
+          <Label>{capitalise(configKey)}</Label>
+          <Toggle text="" bind:value={integration[configKey]} />
+        </div>
       {:else}
         <div class="form-row">
           <Label>{capitalise(configKey)}</Label>
