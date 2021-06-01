@@ -4,7 +4,6 @@ const fs = require("fs")
 
 const TO_SYNC = "dist/"
 const BUCKET_LOCATION = "s3://prod-budi-app-assets/assets"
-const BASE_PROFILE = "budibase"
 const S3_COMP_DIR = "@budibase/standard-components/dist"
 const MANIFEST = "componentlibrary-latest.json"
 
@@ -13,10 +12,6 @@ function buildS3Path() {
 }
 
 async function run() {
-  let profile = process.env.AWS_PROFILE
-  if (profile == null) {
-    profile = BASE_PROFILE
-  }
   // basic manifest file describing the latest
   fs.writeFileSync(
     MANIFEST,
@@ -25,10 +20,8 @@ async function run() {
       dir: S3_COMP_DIR,
     })
   )
-  execSync(`aws s3 sync ${TO_SYNC} ${buildS3Path()} --profile ${profile}`)
-  execSync(
-    `aws s3 cp ${MANIFEST} ${BUCKET_LOCATION}/${MANIFEST} --profile ${profile}`
-  )
+  execSync(`aws s3 sync ${TO_SYNC} ${buildS3Path()}`)
+  execSync(`aws s3 cp ${MANIFEST} ${BUCKET_LOCATION}/${MANIFEST}`)
   fs.unlinkSync(MANIFEST)
 }
 

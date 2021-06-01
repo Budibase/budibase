@@ -45,10 +45,18 @@
           schema[field].editable = false
         }
       })
-      schema.email.displayName = "Email"
-      schema.roleId.displayName = "Role"
-      schema.firstName.displayName = "First Name"
-      schema.lastName.displayName = "Last Name"
+      if (schema.email) {
+        schema.email.displayName = "Email"
+      }
+      if (schema.roleId) {
+        schema.roleId.displayName = "Role"
+      }
+      if (schema.firstName) {
+        schema.firstName.displayName = "First Name"
+      }
+      if (schema.lastName) {
+        schema.lastName.displayName = "Last Name"
+      }
       if (schema.status) {
         schema.status.displayName = "Status"
       }
@@ -143,7 +151,7 @@
   }
   .table-title h1 {
     font-size: var(--font-size-m);
-    font-weight: 500;
+    font-weight: 600;
     margin: 0;
   }
   .table-title > div {
@@ -158,7 +166,7 @@
     gap: var(--spacing-s);
   }
   .popovers :global(button) {
-    font-weight: 500;
+    font-weight: 600;
     margin-top: var(--spacing-l);
   }
   .popovers :global(button svg) {

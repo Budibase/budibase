@@ -285,9 +285,6 @@
       --spectrum-global-dimension-font-size-400
     );
   }
-  .container * {
-    font-family: "Inter", sans-serif !important;
-  }
 
   .gallery,
   .spectrum-Dropzone {
@@ -346,7 +343,7 @@
   .extension {
     color: var(--spectrum-global-color-gray-600);
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 5px;
   }
 

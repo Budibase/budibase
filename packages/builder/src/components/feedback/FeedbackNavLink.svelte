@@ -36,7 +36,7 @@
     cursor: pointer;
     color: var(--grey-7);
     margin: 0 12px 0 0;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 1rem;
     display: flex;
     flex-direction: row;

@@ -23,3 +23,9 @@
     <slot />
   </a>
 {/if}
+
+<style>
+  a {
+    color: var(--spectrum-alias-text-color);
+  }
+</style>

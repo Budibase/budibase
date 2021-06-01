@@ -1,15 +1,28 @@
 export default `
 <html>
   <head>
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
     <style>
-      body, html {
-        height: 100% !important;
-        font-family: Inter, sans-serif !important;
-        margin: 0 !important;
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
       }
-      *, *:before, *:after {
+  
+      *,
+      *:before,
+      *:after {
         box-sizing: border-box;
       }
     </style>

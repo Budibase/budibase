@@ -209,7 +209,7 @@
 
   .deploy-time {
     color: var(--grey-7);
-    font-weight: 500;
+    font-weight: 600;
     font-size: var(--font-size-s);
   }
 
@@ -224,7 +224,7 @@
     font-size: var(--font-size-s);
     padding: var(--spacing-s);
     border-radius: var(--border-radius-s);
-    font-weight: 500;
+    font-weight: 600;
     text-transform: lowercase;
     width: 80px;
     text-align: center;
@@ -235,7 +235,7 @@
 
   a {
     color: var(--blue);
-    font-weight: 500;
+    font-weight: 600;
     font-size: var(--font-size-s);
   }
 

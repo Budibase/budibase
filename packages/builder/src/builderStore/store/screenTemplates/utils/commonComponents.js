@@ -97,8 +97,7 @@ export function makeSaveButton(table, formId) {
       "border-width": "0",
       "border-style": "None",
       color: "#fff",
-      "font-family": "Inter",
-      "font-weight": "500",
+      "font-weight": "600",
       "font-size": "14px",
       "margin-left": "16px",
     })
@@ -145,7 +144,7 @@ export function makeTitleContainer(title) {
       flex: "1 1 auto",
     })
     .customStyle(spectrumColor(900))
-    .type("h3")
+    .type("h2")
     .instanceName("Title")
     .text(title)
 

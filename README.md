@@ -8,10 +8,10 @@
 </h1>
 
 <h3 align="center">
-  Build custom business tools in minutes and on your own infrastructure
+  Build internal tools on your own infrastructure in minutes
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship custom business apps in minutes and on their own infrastructure.
+  Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship internal tools on their own infrastructure in minutes.
 </p>
 
 <h3 align="center">
@@ -58,7 +58,6 @@
 
 
 ## ✨ Features
-When other platforms chose the closed source route, we decided to go open source. When other platforms chose cloud builders, we decided a local builder offered the better developer experience. We like to do things differently at Budibase.
 
 - **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
 
@@ -70,11 +69,12 @@ When other platforms chose the closed source route, we decided to go open source
 
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [request new integrations here](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Cloud hosting and self-hosting.** Users can self-host (see below), or host their apps with Budibase. Currently, our cloud hosting offering is limited to the free tier but we aim to change this in the future. For heavy usage, we advise users to self-host.
-
 <p align="center">
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
 </p>
+
+
+---
 
 
 ## ⌛ Status
@@ -96,25 +96,43 @@ Watch "releases" of this repo to get notified of major updates, and give the sta
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
-## 🏁 Getting Started with Budibase
-
-The Budibase builder runs in Electron, on Mac, PC and Linux. Follow the steps below to get started:
-- [ ] [Sign-up to Budibase](https://portal.budi.live/signup)
-- [ ] Create a username and password
-- [ ] Copy your API key
-- [ ] Download Budibase
-- [ ] Open Budibase and enter your API key
-
-[Here is a guided tutorial](https://docs.budibase.com/tutorial/tutorial-signing-up) if you need extra help.
+---
 
 
-## 🤖 Self-hosting
+## 🏁 Getting Started with Budibase in 5 minutes
 
-Budibase wants to make sure anyone can use the tools we develop and we know a lot of people need to be able to host the apps they make on their own systems - that is why we've decided to try and make self hosting as easy as possible!
+To get started, you must have docker and docker compose installed on your machine. 
+Once you have Docker installed, the process takes 5 minutes, with these four steps:
 
-Currently, you can host your apps using Docker or Digital Ocean. The documentation for self-hosting can be found [here](https://docs.budibase.com/self-hosting/introduction-to-self-hosting).
+1. Install the Budibase CLI.
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/droplets/new?onboarding_origin=marketplace&i=09038e&fleetUuid=bb04f9c8-1de8-4687-b2ae-1d5177a0535b&appId=77729671&type=applications&size=s-4vcpu-8gb&region=nyc1&refcode=0caaa6085a82&image=budibase-20-04)
+```
+$ npm i -g @budibase/cli 
+```
+
+
+2. Setup Budibase (select where to store Budibase, and the port to run it on)
+
+```
+budi hosting --init 
+```
+
+
+3. Run Budibase
+
+```
+budi hosting --start 
+```
+
+
+4. Create your admin user
+
+Enter the email and password for the new admin user.
+
+Done! You are now ready to build powerful internal tools in minutes. For additional information on how to get started and learn Budibase, visit our [docs](https://docs.budibase.com/getting-started).
+
+
+---
 
 
 ## 🎓 Learning Budibase
@@ -122,6 +140,9 @@ Currently, you can host your apps using Docker or Digital Ocean. The documentati
 The Budibase [documentation lives here](https://docs.budibase.com).
 
 You can also follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+
+
+---
 
 
 ## Roadmap
@@ -151,9 +172,17 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
+
+---
+
+
 ## 📝 License
 
 Budibase is open-source. The builder is licensed [AGPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html), the server is licensed [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html), and the client is licensed [MPL](https://directory.fsf.org/wiki/License:MPL-2.0).
+
+
+---
+
 
 ## 💬 Get in touch
 
@@ -162,6 +191,9 @@ If you have a question or would like to talk with other Budibase users, please h
 [Discord chatroom](https://discord.gg/rCYayfe)
 
 ![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
+
+
+---
 
 
 ## Contributors ✨

@@ -25,7 +25,7 @@
 {:else if type === "attachment"}
   <Dropzone {label} bind:value />
 {:else if type === "boolean"}
-  <Toggle text={label} bind:checked={value} data-cy="{meta.name}-input" />
+  <Toggle text={label} bind:value data-cy="{meta.name}-input" />
 {:else if type === "link"}
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />
 {:else if type === "longform"}

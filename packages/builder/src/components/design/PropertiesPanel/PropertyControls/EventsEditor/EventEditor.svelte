@@ -144,7 +144,7 @@
     margin-bottom: var(--spacing-m);
     font-size: var(--font-size-s);
     color: var(--grey-7);
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .action-header:hover,

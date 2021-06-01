@@ -14,6 +14,11 @@
   <title>{title}</title>
   <link rel="icon" type="image/png" href={favicon} />
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link
     href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
     rel="stylesheet"
@@ -21,11 +26,10 @@
   <style>
     html,
     body {
-      font-family: Inter;
       height: 100%;
       width: 100%;
-      margin: 0px;
-      padding: 0px;
+      margin: 0;
+      padding: 0;
     }
 
     *,

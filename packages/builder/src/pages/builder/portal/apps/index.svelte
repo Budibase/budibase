@@ -104,9 +104,10 @@
   }
 
   const exportApp = app => {
+    const id = app.deployed ? app.prodId : app.devId
     try {
       download(
-        `/api/backups/export?appId=${app.appId}&appname=${encodeURIComponent(
+        `/api/backups/export?appId=${id}&appname=${encodeURIComponent(
           app.name
         )}`
       )
