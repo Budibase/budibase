@@ -43,8 +43,6 @@ async function authenticate(token, tokenSecret, profile, done) {
     if (users.rows.length > 0) {
       const existing = users.rows[0].doc
 
-      console.log(existing)
-
       // remove the local account to avoid conflicts
       await db.remove(existing._id, existing._rev)
 
