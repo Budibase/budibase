@@ -1,8 +1,6 @@
 const { Pool } = require("pg")
 const { FIELD_TYPES } = require("./Integration")
 
-let pool
-
 const SCHEMA = {
   docs: "https://node-postgres.com",
   friendlyName: "PostgreSQL",
@@ -35,7 +33,8 @@ const SCHEMA = {
       required: true,
     },
     ssl: {
-      type: FIELD_TYPES.OBJECT,
+      type: FIELD_TYPES.BOOLEAN,
+      default: false,
       required: false,
     },
   },
@@ -56,28 +55,28 @@ const SCHEMA = {
 }
 
 class PostgresIntegration {
+  static pool
+
   constructor(config) {
     this.config = config
-    if (this.config.ssl && this.config.ssl.rejectUnauthorized) {
-      this.config.ssl.rejectUnauthorized =
-        this.config.ssl.rejectUnauthorized === "true"
+    if (this.config.ssl) {
+      this.config.ssl = {
+        rejectUnauthorized: true,
+      }
     }
 
-    if (!pool) {
-      pool = new Pool(this.config)
+    if (!this.pool) {
+      this.pool = new Pool(this.config)
     }
+
+    this.client = this.pool
   }
 
   async query(sql) {
     try {
-      this.client = await pool.connect()
       return await this.client.query(sql)
     } catch (err) {
       throw new Error(err)
-    } finally {
-      if (this.client) {
-        this.client.release()
-      }
     }
   }
 
