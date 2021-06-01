@@ -1,11 +1,13 @@
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-const { basicUser } = setup.structures
 const workerRequests = require("../../../utilities/workerRequests")
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
+    return {}
+  }),
+  getGlobalSelf: jest.fn(() => {
     return {}
   }),
   addAppRoleToUser: jest.fn(),

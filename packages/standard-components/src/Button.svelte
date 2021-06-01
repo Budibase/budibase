@@ -33,5 +33,6 @@
     user-select: none;
     white-space: nowrap;
     text-align: center;
+    font-family: var(--font-sans);
   }
 </style>

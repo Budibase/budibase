@@ -20,6 +20,7 @@ const SCHEMA = {
   },
   query: {
     create: {
+      readable: true,
       displayName: "POST",
       type: QUERY_TYPES.FIELDS,
       urlDisplay: true,
@@ -40,6 +41,7 @@ const SCHEMA = {
     },
     read: {
       displayName: "GET",
+      readable: true,
       type: QUERY_TYPES.FIELDS,
       urlDisplay: true,
       fields: {
@@ -56,6 +58,7 @@ const SCHEMA = {
     },
     update: {
       displayName: "PUT",
+      readable: true,
       type: QUERY_TYPES.FIELDS,
       urlDisplay: true,
       fields: {

@@ -5,16 +5,22 @@
   const component = getContext("component")
 
   export let logoUrl
+  export let hideLogo
 </script>
 
 <div class="nav" use:styleable={$component.styles}>
-  <div class="nav__top">
-    <a href="/" use:linkable>
-      {#if logoUrl}
-        <img class="logo" alt="logo" src={logoUrl} height="48" />
-      {/if}
-    </a>
-  </div>
+  {#if !hideLogo}
+    <div class="nav__top">
+      <a href="/" use:linkable>
+        <img
+          class="logo"
+          alt="logo"
+          src={logoUrl || "https://i.imgur.com/Dn7Xt1G.png"}
+          height="48"
+        />
+      </a>
+    </div>
+  {/if}
   <div class="nav__menu">
     <slot />
   </div>
@@ -33,6 +39,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 40px;
   }
   .nav__top img {
     margin-right: 16px;
@@ -52,7 +59,6 @@
 
   .nav__menu {
     display: flex;
-    margin-top: 40px;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;

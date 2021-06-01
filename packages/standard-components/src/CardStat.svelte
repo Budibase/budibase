@@ -28,14 +28,14 @@
   .title {
     font-size: 0.85rem;
     color: #9e9e9e;
-    font-weight: 500;
+    font-weight: 600;
     margin: 1rem 1.5rem 0.5rem 1.5rem;
     white-space: pre-wrap;
   }
 
   .value {
     font-size: 2rem;
-    font-weight: 500;
+    font-weight: 600;
     margin: 0 1.5rem 1.5rem 1.5rem;
     color: inherit;
     white-space: pre-wrap;

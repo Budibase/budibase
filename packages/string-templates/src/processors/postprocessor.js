@@ -18,7 +18,7 @@ class Postprocessor {
 
 module.exports.processors = [
   new Postprocessor(PostProcessorNames.CONVERT_LITERALS, statement => {
-    if (!statement.includes(LITERAL_MARKER)) {
+    if (typeof statement !== "string" || !statement.includes(LITERAL_MARKER)) {
       return statement
     }
     const splitMarkerIndex = statement.indexOf("-")

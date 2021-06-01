@@ -101,6 +101,7 @@ async function createInstance(template) {
     if (!ok) {
       throw "Error loading database dump from template."
     }
+    var { _rev } = await db.get(DocumentTypes.APP_METADATA)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -111,7 +112,7 @@ async function createInstance(template) {
   await createRoutingView(appId)
   await createAllSearchIndex(appId)
 
-  return { _id: appId }
+  return { _id: appId, _rev }
 }
 
 exports.fetch = async function (ctx) {
@@ -193,6 +194,9 @@ exports.create = async function (ctx) {
     instance: instance,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+  }
+  if (instance._rev) {
+    newApplication._rev = instance._rev
   }
   const instanceDb = new CouchDB(appId)
   await instanceDb.put(newApplication)

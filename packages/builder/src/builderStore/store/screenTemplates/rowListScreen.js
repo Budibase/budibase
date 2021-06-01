@@ -24,8 +24,7 @@ function generateTitleContainer(table) {
       "border-width": "0",
       "border-style": "None",
       color: "#fff",
-      "font-family": "Inter",
-      "font-weight": "500",
+      "font-weight": "600",
       "font-size": "14px",
     })
     .hoverStyle({
@@ -52,7 +51,7 @@ function generateTitleContainer(table) {
       flex: "1 1 auto",
       "text-transform": "capitalize",
     })
-    .type("h3")
+    .type("h2")
     .instanceName("Title")
     .text(table.name)
 
@@ -111,8 +110,7 @@ const createScreen = table => {
     .instanceName("View Button")
     .normalStyle({
       background: "transparent",
-      "font-family": "Inter, sans-serif",
-      "font-weight": "500",
+      "font-weight": "600",
       color: "#888",
       "border-width": "0",
     })

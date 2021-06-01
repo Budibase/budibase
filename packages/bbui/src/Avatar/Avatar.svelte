@@ -39,7 +39,7 @@
     color: white;
     display: grid;
     place-items: center;
-    font-weight: 500;
+    font-weight: 600;
     background: #3aab87;
     border-radius: 50%;
     overflow: hidden;
