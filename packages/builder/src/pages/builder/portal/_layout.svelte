@@ -44,7 +44,7 @@
           href: "/builder/portal/settings/theming",
         },
         {
-          title: "Update",
+          title: "Updates",
           href: "/builder/portal/settings/update",
         },
       ])
