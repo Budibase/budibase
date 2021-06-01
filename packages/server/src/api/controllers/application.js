@@ -27,7 +27,10 @@ const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const { getAllApps } = require("../../utilities")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const { getDeployedApps, removeAppFromUserRoles } = require("../../utilities/workerRequests")
+const {
+  getDeployedApps,
+  removeAppFromUserRoles,
+} = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 

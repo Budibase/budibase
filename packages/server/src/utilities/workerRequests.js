@@ -174,7 +174,7 @@ exports.removeAppFromUserRoles = async appId => {
       method: "DELETE",
       headers: {
         "x-budibase-api-key": env.INTERNAL_API_KEY,
-      }
+      },
     })
   )
   if (response.status !== 200) {
@@ -182,4 +182,3 @@ exports.removeAppFromUserRoles = async appId => {
   }
   return response.json()
 }
-
