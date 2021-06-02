@@ -49,8 +49,6 @@
   <a href="https://github.com/Budibase/budibase/issues">Report a bug</a>
   <span> · </span>
   Support: <a href="https://github.com/Budibase/budibase/discussions">Discussions</a>
-  <span> & </span>
-  <a href="https://discord.gg/rCYayfe">Discord</a>
 </h3>
 
 
@@ -71,28 +69,6 @@
 <p align="center">
   <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
 </p>
-
-
----
-
-
-## ⌛ Status
-- [x] Alpha: We are demoing Budibase to users and receiving feedback
-- [x] Private Beta: We are testing Budibase with a closed set of customers
-- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
-- [ ] Official Launch
-
-Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
-
-<p align="center">
-  <img src="https://i.imgur.com/cJpgqm8.png">
-</p>
-
-### Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
-
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ---
@@ -138,7 +114,29 @@ Done! You are now ready to build powerful internal tools in minutes. For additio
 
 The Budibase [documentation lives here](https://docs.budibase.com).
 
-You can also follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+
+---
+
+## ⌛ Status
+- [x] Alpha: We are demoing Budibase to users and receiving feedback
+- [x] Private Beta: We are testing Budibase with a closed set of customers
+- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
+- [ ] Official Launch
+
+Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
+
+<p align="center">
+  <img src="https://i.imgur.com/cJpgqm8.png">
+</p>
+
+
+---
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
+
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ---
