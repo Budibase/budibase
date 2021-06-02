@@ -9,10 +9,7 @@ export function checkIfElementExists(el) {
   return new Promise(resolve => {
     /// here if  ele exists or not
     cy.get("body").then(body => {
-      const found = body.find(el)
-      console.log(found)
-      console.log(found.length)
-      if (found.length > 0) {
+      if (body.find(el).length > 0) {
         resolve(true)
       } else {
         resolve(false)
@@ -51,7 +48,6 @@ Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
   isFirstApp().then(isFirst => {
-    console.log(isFirst)
     const buttonText = isFirst ? "Create app" : "Create new app"
     cy.contains(buttonText).click()
     cy.get("body").then(() => {
