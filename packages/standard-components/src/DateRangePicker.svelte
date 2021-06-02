@@ -9,12 +9,11 @@
 
   export let dataProvider
   export let field
+  export let defaultValue
 
   const dataContext = getContext("context")
   const component = getContext("component")
   const { styleable, builderStore, ActionTypes } = getContext("sdk")
-
-  let value = "Last 30 days"
   const options = [
     "Last 1 day",
     "Last 7 days",
@@ -23,6 +22,7 @@
     "Last 6 months",
     "Last 1 year",
   ]
+  let value = options.includes(defaultValue) ? defaultValue : "Last 30 days"
 
   const updateDateRange = option => {
     const query = dataProvider?.state?.query
