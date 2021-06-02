@@ -18,20 +18,20 @@ context("Create a View", () => {
 
   it("creates a view", () => {
     cy.contains("Create view").click()
-    cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get("input").type("Test view")
-      cy.get(".spectrum-Button--cta").click()
+    cy.get(".modal-inner-wrapper").within(() => {
+      cy.get("input").type("Test View")
+      cy.get("button").contains("Create View").click({ force: true })
     })
-    cy.get(".table-title h1").contains("Test view")
-    cy.get("[data-cy=table-header]").then($headers => {
+    cy.get(".table-title h1").contains("Test View")
+    cy.get(".title").then($headers => {
       expect($headers).to.have.length(3)
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
       expect(removeSpacing(headers)).to.deep.eq([
-        "rating Number",
-        "age Number",
-        "group Text",
+        "group",
+        "age",
+        "rating",
       ])
     })
   })
@@ -56,7 +56,7 @@ context("Create a View", () => {
     //   .find("select")
     //   .eq(1)
     //   .select("More Than")
-    cy.get(".menu-container")
+    cy.get(".modal-inner-wrapper")
       .find("input")
       .type(18)
     cy.contains("Save").click()
@@ -135,7 +135,7 @@ context("Create a View", () => {
       .find(".ri-more-line")
       .click({ force: true })
     cy.get("[data-cy=edit-view]").click()
-    cy.get(".menu-container").within(() => {
+    cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
     })
