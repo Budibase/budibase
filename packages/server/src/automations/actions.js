@@ -4,6 +4,7 @@ const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
 const executeScript = require("./steps/executeScript")
+const bash = require("./steps/bash")
 const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
 const env = require("../environment")
@@ -21,6 +22,7 @@ const BUILTIN_ACTIONS = {
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
+  EXECUTE_BASH: bash.run,
   EXECUTE_QUERY: executeQuery.run,
 }
 const BUILTIN_DEFINITIONS = {
@@ -32,6 +34,7 @@ const BUILTIN_DEFINITIONS = {
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
   EXECUTE_SCRIPT: executeScript.definition,
   EXECUTE_QUERY: executeQuery.definition,
+  EXECUTE_BASH: bash.definition,
 }
 
 let MANIFEST = null
