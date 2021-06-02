@@ -17,12 +17,12 @@ context("Create a View", () => {
   })
 
   it("creates a view", () => {
-    cy.contains("Create New View").click()
-    cy.get(".menu-container").within(() => {
-      cy.get("input").type("Test View")
-      cy.contains("Save View").click()
+    cy.contains("Create view").click()
+    cy.get(".spectrum-Dialog-grid").within(() => {
+      cy.get("input").type("Test view")
+      cy.get(".spectrum-Button--cta").click()
     })
-    cy.get(".table-title h1").contains("Test View")
+    cy.get(".table-title h1").contains("Test view")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(3)
       const headers = Array.from($headers).map(header =>
@@ -125,7 +125,7 @@ context("Create a View", () => {
   })
 
   it("renames a view", () => {
-    cy.contains(".nav-item", "Test View")
+    cy.contains(".nav-item", "Test view")
       .find(".ri-more-line")
       .click({ force: true })
     cy.get("[data-cy=edit-view]").click()
@@ -134,11 +134,11 @@ context("Create a View", () => {
       cy.contains("Save").click()
     })
     cy.wait(1000)
-    cy.contains("Test View Updated").should("be.visible")
+    cy.contains("Test view Updated").should("be.visible")
   })
 
   it("deletes a view", () => {
-    cy.contains(".nav-item", "Test View Updated")
+    cy.contains(".nav-item", "Test view Updated")
       .find(".ri-more-line")
       .click({ force: true })
     cy.get("[data-cy=delete-view]").click()
