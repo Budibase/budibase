@@ -144,14 +144,11 @@ You can also follow a quick tutorial on [how to build a CRM with Budibase](https
 ---
 
 
-## Roadmap
-
-Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10). If you would like to discuss some of the items on the roadmap, please feel to reach out on [Discord](https://discord.gg/rCYayfe), or via [Github discussions](https://github.com/Budibase/budibase/discussions)
-
-
 ## ❗ Code of Conduct
 
 Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+
+---
 
 ## 🙌 Contributing to Budibase
 
