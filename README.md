@@ -30,9 +30,6 @@
   <a href="https://github.com/Budibase/budibase/releases">
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Budibase/budibase">
   </a>
-  <a href="https://discord.gg/rCYayfe">
-    <img alt="Discord" src="https://img.shields.io/discord/733030666647765003">
-  </a>
   <a href="https://twitter.com/intent/follow?screen_name=budibase">
     <img src="https://img.shields.io/twitter/follow/budibase?style=social" alt="Follow @budibase" />
   </a>
@@ -188,11 +185,7 @@ Budibase is open-source. The builder is licensed [AGPL v3](https://www.gnu.org/l
 
 ## 💬 Get in touch
 
-If you have a question or would like to talk with other Budibase users, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions) or join our Discord server:
-
-[Discord chatroom](https://discord.gg/rCYayfe)
-
-![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
+If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
 
 
 ---
