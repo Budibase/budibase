@@ -61,10 +61,10 @@ context("Create a Table", () => {
   })
 
   it("deletes a table", () => {
-    cy.get(".ri-more-line")
+    cy.get(".actions > :nth-child(1) > .icon > .spectrum-Icon > use")
       .first()
       .click({ force: true })
-    cy.get("[data-cy=delete-table]").click()
+    cy.get(".spectrum-Menu > :nth-child(2)").click()
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
   })
