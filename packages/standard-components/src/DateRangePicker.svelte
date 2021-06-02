@@ -16,7 +16,6 @@
 
   let value = "Last 30 days"
   const options = [
-    "Last 1 hour",
     "Last 1 day",
     "Last 7 days",
     "Last 30 days",
@@ -34,9 +33,7 @@
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
 
-    if (option === "Last 1 hour") {
-      low = dayjs.utc().subtract(1, "hour")
-    } else if (option === "Last 1 day") {
+    if (option === "Last 1 day") {
       low = dayjs.utc().subtract(1, "day")
     } else if (option === "Last 7 days") {
       low = dayjs.utc().subtract(7, "days")
