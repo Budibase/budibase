@@ -134,7 +134,11 @@ Cypress.Commands.add("createUser", email => {
   cy.get(".spectrum-Button--primary").click()
   cy.get(".spectrum-Picker-label").click()
   cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
-  cy.get(".spectrum-Modal input").eq(1).type(email, { force: true })
+  cy.get(
+    ":nth-child(2) > .spectrum-Form-itemField > .spectrum-Textfield > .spectrum-Textfield-input"
+  )
+    .first()
+    .type(email, { force: true })
   cy.get(".spectrum-Button--cta").click({ force: true })
 })
 
@@ -164,6 +168,7 @@ Cypress.Commands.add("getComponent", componentId => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
+  cy.wait(1000)
   cy.contains("Design").click()
 })
 
