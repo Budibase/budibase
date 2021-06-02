@@ -67,6 +67,7 @@ router
     controller.save
   )
   .get("/api/admin/users", adminOnly, controller.fetch)
+  .delete("/api/admin/roles/:appId", adminOnly, controller.removeAppRole)
   .delete("/api/admin/users/:id", adminOnly, controller.destroy)
   .get("/api/admin/roles/:appId")
   .post(

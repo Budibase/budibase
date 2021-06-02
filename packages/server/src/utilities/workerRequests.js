@@ -57,11 +57,10 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
     })
   )
 
-  const json = await response.json()
-  if (json.status !== 200 && response.status !== 200) {
+  if (response.status !== 200) {
     throw "Unable to send email."
   }
-  return json
+  return response.json()
 }
 
 exports.getDeployedApps = async ctx => {
@@ -124,10 +123,10 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     request(ctx, { method: "GET" })
   )
-  let json = await response.json()
-  if (json.status !== 200 && response.status !== 200) {
+  if (response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
   }
+  let json = await response.json()
   if (appId) {
     json = getAppRole(appId, json)
   }
@@ -151,7 +150,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     ...body,
     roles: {
       ...user.roles,
-      [appId]: roleId,
+      [getDeployedAppID(appId)]: roleId,
     },
   }
   const response = await fetch(
@@ -161,9 +160,25 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
       body,
     })
   )
-  const json = await response.json()
-  if (json.status !== 200 && response.status !== 200) {
+  if (response.status !== 200) {
     ctx.throw(400, "Unable to save self globally.")
   }
-  return json
+  return response.json()
+}
+
+exports.removeAppFromUserRoles = async appId => {
+  const deployedAppId = getDeployedAppID(appId)
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + `/api/admin/roles/${deployedAppId}`),
+    request(null, {
+      method: "DELETE",
+      headers: {
+        "x-budibase-api-key": env.INTERNAL_API_KEY,
+      },
+    })
+  )
+  if (response.status !== 200) {
+    throw "Unable to remove app role"
+  }
+  return response.json()
 }

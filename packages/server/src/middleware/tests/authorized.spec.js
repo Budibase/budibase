@@ -5,7 +5,7 @@ jest.mock("../../environment", () => ({
     prod: false,
     isTest: () => true,
     isProd: () => this.prod,
-    _set: (key, value) => {
+    _set: function(key, value) {
       this.prod = value === "production"
     }
   })
