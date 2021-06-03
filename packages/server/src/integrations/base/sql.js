@@ -47,7 +47,7 @@ function addFilters(query, filters) {
 function buildCreate(knex, json) {
   const { endpoint, body } = json
   let query = knex(endpoint.entityId)
-  return query.insert(body).toString()
+  return query.insert(body)
 }
 
 function buildRead(knex, json, limit) {
@@ -78,21 +78,21 @@ function buildRead(knex, json, limit) {
   } else {
     query.limit(limit)
   }
-  return query.toString()
+  return query
 }
 
 function buildUpdate(knex, json) {
   const { endpoint, body, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.update(body).toString()
+  return query.update(body)
 }
 
 function buildDelete(knex, json) {
   const { endpoint, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.delete().toString()
+  return query.delete()
 }
 
 class SqlQueryBuilder {
@@ -102,22 +102,28 @@ class SqlQueryBuilder {
     this._limit = limit
   }
 
-  query(json) {
+  _query(json) {
     const { endpoint } = json
     const knex = require("knex")({ client: this._client })
     const operation = endpoint.operation
+    let query
     switch (operation) {
       case Operation.CREATE:
-        return buildCreate(knex, json)
+        query = buildCreate(knex, json)
+        break
       case Operation.READ:
-        return buildRead(knex, json, this._limit)
+        query = buildRead(knex, json, this._limit)
+        break
       case Operation.UPDATE:
-        return buildUpdate(knex, json)
+        query = buildUpdate(knex, json)
+        break
       case Operation.DELETE:
-        return buildDelete(knex, json)
+        query = buildDelete(knex, json)
+        break
       default:
         throw `Operation ${operation} type is not supported by SQL query builder`
     }
+    return query.toSQL().toNative()
   }
 }
 
