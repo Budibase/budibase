@@ -53,6 +53,21 @@ const SCHEMA = {
   },
 }
 
+function internalQuery(client, query) {
+  // Node MySQL is callback based, so we must wrap our call in a promise
+  return new Promise((resolve, reject) => {
+    client.connect()
+    return client.query(query, (error, results) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(results)
+        client.end()
+      }
+    })
+  })
+}
+
 class MySQLIntegration extends Sql {
   constructor(config) {
     super("mysql")
@@ -63,35 +78,30 @@ class MySQLIntegration extends Sql {
     this.client = mysql.createConnection(config)
   }
 
-  query(query) {
-    // Node MySQL is callback based, so we must wrap our call in a promise
-    return new Promise((resolve, reject) => {
-      this.client.connect()
-      return this.client.query(query.sql, (error, results) => {
-        if (error) return reject(error)
-        resolve(results)
-        this.client.end()
-      })
-    })
-  }
-
   async create(query) {
-    const results = await this.query(query)
+    const results = await internalQuery(this.client, query.sql)
     return results.length ? results : [{ created: true }]
   }
 
   read(query) {
-    return this.query(query)
+    return internalQuery(this.client, query.sql)
   }
 
   async update(query) {
-    const results = await this.query(query)
+    const results = await internalQuery(this.client, query.sql)
     return results.length ? results : [{ updated: true }]
   }
 
   async delete(query) {
-    const results = await this.query(query)
+    const results = await internalQuery(this.client, query.sql)
     return results.length ? results : [{ deleted: true }]
+  }
+
+  async query(json) {
+    const operation = this._operation(json).toLowerCase()
+    const input = this._query(json)
+    const results = await internalQuery(this.client, input)
+    return results.length ? results : [{ [operation]: true }]
   }
 }
 

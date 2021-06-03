@@ -55,6 +55,15 @@ const SCHEMA = {
   },
 }
 
+async function internalQuery(client, sql) {
+  try {
+    return await client.query(sql)
+  } catch (err) {
+    throw new Error(err)
+  }
+}
+
+
 class PostgresIntegration extends Sql {
   static pool
 
@@ -74,32 +83,31 @@ class PostgresIntegration extends Sql {
     this.client = this.pool
   }
 
-  async query(sql) {
-    try {
-      return await this.client.query(sql)
-    } catch (err) {
-      throw new Error(err)
-    }
-  }
-
   async create({ sql }) {
-    const response = await this.query(sql)
+    const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ created: true }]
   }
 
   async read({ sql }) {
-    const response = await this.query(sql)
+    const response = await internalQuery(this.client, sql)
     return response.rows
   }
 
   async update({ sql }) {
-    const response = await this.query(sql)
+    const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ updated: true }]
   }
 
   async delete({ sql }) {
-    const response = await this.query(sql)
+    const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ deleted: true }]
+  }
+
+  async query(json) {
+    const operation = this._operation(json).toLowerCase()
+    const input = this._query(json)
+    const response = await internalQuery(this.client, input)
+    return response.rows.length ? response.rows : [{ [operation]: true }]
   }
 }
 

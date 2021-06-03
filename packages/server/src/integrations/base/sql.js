@@ -102,12 +102,17 @@ class SqlQueryBuilder {
     this._limit = limit
   }
 
+  _operation(json) {
+    if (!json || !json.endpoint) {
+      return null
+    }
+    return json.endpoint.operation
+  }
+
   _query(json) {
-    const { endpoint } = json
     const knex = require("knex")({ client: this._client })
-    const operation = endpoint.operation
     let query
-    switch (operation) {
+    switch (this._operation(json)) {
       case Operation.CREATE:
         query = buildCreate(knex, json)
         break

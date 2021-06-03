@@ -1,12 +1,9 @@
-const pg = require("mysql")
 const MySQLIntegration = require("../mysql")
 jest.mock("mysql")
 
 class TestConfiguration {
   constructor(config = { ssl: {} }) {
-    this.integration = new MySQLIntegration.integration(config) 
-    this.query = jest.fn(() => [{ id: 1 }])
-    this.integration.query = this.query
+    this.integration = new MySQLIntegration.integration(config)
   }
 }
 
@@ -19,43 +16,37 @@ describe("MySQL Integration", () => {
 
   it("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
-    const response = await config.integration.create({ 
+    await config.integration.create({
       sql
     })
-    expect(config.query).toHaveBeenCalledWith({ sql })
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
   })
 
   it("calls the read method with the correct params", async () => {
     const sql = "select * from users;"
-    const response = await config.integration.read({ 
+    await config.integration.read({
       sql
     })
-    expect(config.query).toHaveBeenCalledWith({
-      sql
-    })
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
   })
 
   it("calls the update method with the correct params", async () => {
     const sql = "update table users set name = 'test';"
-    const response = await config.integration.update({ 
+    await config.integration.update({
       sql
     })
-    expect(config.query).toHaveBeenCalledWith({ sql })
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
   })
 
   it("calls the delete method with the correct params", async () => {
     const sql = "delete from users where name = 'todelete';"
-    const response = await config.integration.delete({ 
+    await config.integration.delete({
       sql
     })
-    expect(config.query).toHaveBeenCalledWith({ sql })
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
   })
 
   describe("no rows returned", () => {
-    beforeEach(() => {
-      config.query.mockImplementation(() => [])
-    })
-
     it("returns the correct response when the create response has no rows", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
       const response = await config.integration.create({ 
