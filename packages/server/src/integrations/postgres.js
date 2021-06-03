@@ -1,5 +1,6 @@
 const { Pool } = require("pg")
 const { FIELD_TYPES } = require("./Integration")
+const Sql = require("./base/sql")
 
 const SCHEMA = {
   docs: "https://node-postgres.com",
@@ -54,10 +55,11 @@ const SCHEMA = {
   },
 }
 
-class PostgresIntegration {
+class PostgresIntegration extends Sql {
   static pool
 
   constructor(config) {
+    super("pg")
     this.config = config
     if (this.config.ssl) {
       this.config.ssl = {

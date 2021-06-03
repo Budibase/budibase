@@ -1,5 +1,6 @@
 const sqlServer = require("mssql")
 const { FIELD_TYPES } = require("./Integration")
+const Sql = require("./base/sql")
 
 const SCHEMA = {
   docs: "https://github.com/tediousjs/node-mssql",
@@ -50,10 +51,11 @@ const SCHEMA = {
   },
 }
 
-class SqlServerIntegration {
+class SqlServerIntegration extends Sql {
   static pool
 
   constructor(config) {
+    super("mssql")
     this.config = config
     this.config.options = {
       encrypt: this.config.encrypt,
