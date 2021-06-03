@@ -17,9 +17,6 @@
 
   const { API, styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
-  const dataProviderApi = {
-    setLuceneQuery: newQuery => (query = newQuery),
-  }
 
   // Loading flag every time data is being fetched
   let loading = false
