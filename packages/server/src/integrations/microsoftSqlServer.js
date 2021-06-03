@@ -51,6 +51,15 @@ const SCHEMA = {
   },
 }
 
+async function internalQuery(client, sql) {
+  try {
+    return await client.query(sql)
+  } catch (err) {
+    throw new Error(err)
+  }
+}
+
+
 class SqlServerIntegration extends Sql {
   static pool
 
@@ -67,52 +76,43 @@ class SqlServerIntegration extends Sql {
   }
 
   async connect() {
-    const client = await this.pool.connect()
-    this.client = client.request()
+    try {
+      const client = await this.pool.connect()
+      this.client = client.request()
+    } catch (err) {
+      throw new Error(err)
+    }
   }
 
   async read(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query.sql)
+    return response.recordset
   }
 
   async create(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset || [{ created: true }]
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query.sql)
+    return response.recordset || [{ created: true }]
   }
 
   async update(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query.sql)
+    return response.recordset || [{ updated: true }]
   }
 
   async delete(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query.sql)
+    return response.recordset || [{ deleted: true }]
+  }
+
+  async query(json) {
+    const operation = this._operation(json).toLowerCase()
+    const input = this._query(json)
+    const response = await internalQuery(this.client, input)
+    return response.recordset ? response.recordset : [{ [operation]: true }]
   }
 }
 

@@ -6,7 +6,7 @@ const {
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
-const PostgresConnector = require("../../integrations/plus/Postgres")
+const PostgresConnector = require("../../integrations/plus/postgres")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -61,6 +61,11 @@ exports.destroy = async function (ctx) {
 exports.find = async function (ctx) {
   const database = new CouchDB(ctx.appId)
   ctx.body = await database.get(ctx.params.datasourceId)
+}
+
+// dynamic query functionality
+exports.query = async function (ctx) {
+
 }
 
 // TODO: merge endpoint with main datasource endpoint
