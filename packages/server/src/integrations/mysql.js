@@ -1,5 +1,6 @@
 const mysql = require("mysql")
 const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
+const Sql = require("./base/sql")
 
 const SCHEMA = {
   docs: "https://github.com/mysqljs/mysql",
@@ -52,8 +53,9 @@ const SCHEMA = {
   },
 }
 
-class MySQLIntegration {
+class MySQLIntegration extends Sql {
   constructor(config) {
+    super("mysql")
     this.config = config
     if (Object.keys(config.ssl).length === 0) {
       delete config.ssl

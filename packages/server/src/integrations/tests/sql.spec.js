@@ -117,4 +117,14 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual(`delete from "${TABLE_NAME}" where "id" = 1001`)
   })
+
+  it("should work with MS-SQL", () => {
+    const query = new Sql("mssql", 10).buildQuery(generateReadJson())
+    expect(query).toEqual(`select top (10) * from [${TABLE_NAME}]`)
+  })
+
+  it("should work with mySQL", () => {
+    const query = new Sql("mysql", 10).buildQuery(generateReadJson())
+    expect(query).toEqual(`select * from \`${TABLE_NAME}\` limit 10`)
+  })
 })
