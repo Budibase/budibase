@@ -16,6 +16,7 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     datasourceController.find
   )
+  .post("/api/datasources/plus", datasourceController.plus)
   .post("/api/datasources", authorized(BUILDER), datasourceController.save)
   .delete(
     "/api/datasources/:datasourceId/:revId",
