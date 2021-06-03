@@ -54,30 +54,39 @@ describe("SQL query builder", () => {
   })
 
   it("should test a basic read", () => {
-    const query = sql.query(generateReadJson())
-    expect(query).toEqual(`select * from "${TABLE_NAME}" limit ${limit}`)
+    const query = sql._query(generateReadJson())
+    expect(query).toEqual({
+      bindings: [limit],
+      sql: `select * from "${TABLE_NAME}" limit $1`
+    })
   })
 
   it("should test a read with specific columns", () => {
-    const query = sql.query(generateReadJson({
+    const query = sql._query(generateReadJson({
       fields: ["name", "age"]
     }))
-    expect(query).toEqual(`select "name", "age" from "${TABLE_NAME}" limit ${limit}`)
+    expect(query).toEqual({
+      bindings: [limit],
+      sql: `select "name", "age" from "${TABLE_NAME}" limit $1`
+    })
   })
 
   it("should test a where string starts with read", () => {
-    const query = sql.query(generateReadJson({
+    const query = sql._query(generateReadJson({
       filters: {
         string: {
           name: "John",
         }
       }
     }))
-    expect(query).toEqual(`select * from "${TABLE_NAME}" where "name" like 'John%' limit ${limit}`)
+    expect(query).toEqual({
+      bindings: ["John%", limit],
+      sql: `select * from "${TABLE_NAME}" where "name" like $1 limit $2`
+    })
   })
 
   it("should test a where range read", () => {
-    const query = sql.query(generateReadJson({
+    const query = sql._query(generateReadJson({
       filters: {
         range: {
           age: {
@@ -87,44 +96,62 @@ describe("SQL query builder", () => {
         }
       }
     }))
-    expect(query).toEqual(`select * from "${TABLE_NAME}" where "age" between 2 and 10 limit ${limit}`)
+    expect(query).toEqual({
+      bindings: [2, 10, limit],
+      sql: `select * from "${TABLE_NAME}" where "age" between $1 and $2 limit $3`
+    })
   })
 
   it("should test an create statement", () => {
-    const query = sql.query(generateCreateJson(TABLE_NAME, {
+    const query = sql._query(generateCreateJson(TABLE_NAME, {
       name: "Michael",
       age: 45,
     }))
-    expect(query).toEqual(`insert into "${TABLE_NAME}" ("age", "name") values (45, 'Michael')`)
+    expect(query).toEqual({
+      bindings: [45, "Michael"],
+      sql: `insert into "${TABLE_NAME}" ("age", "name") values ($1, $2)`
+    })
   })
 
   it("should test an update statement", () => {
-    const query = sql.query(generateUpdateJson(TABLE_NAME, {
+    const query = sql._query(generateUpdateJson(TABLE_NAME, {
       name: "John"
     }, {
       equal: {
         id: 1001,
       }
     }))
-    expect(query).toEqual(`update "${TABLE_NAME}" set "name" = 'John' where "id" = 1001`)
+    expect(query).toEqual({
+      bindings: ["John", 1001],
+      sql: `update "${TABLE_NAME}" set "name" = $1 where "id" = $2`
+    })
   })
 
   it("should test a delete statement", () => {
-    const query = sql.query(generateDeleteJson(TABLE_NAME, {
+    const query = sql._query(generateDeleteJson(TABLE_NAME, {
       equal: {
         id: 1001,
       }
     }))
-    expect(query).toEqual(`delete from "${TABLE_NAME}" where "id" = 1001`)
+    expect(query).toEqual({
+      bindings: [1001],
+      sql: `delete from "${TABLE_NAME}" where "id" = $1`
+    })
   })
 
   it("should work with MS-SQL", () => {
-    const query = new Sql("mssql", 10).query(generateReadJson())
-    expect(query).toEqual(`select top (10) * from [${TABLE_NAME}]`)
+    const query = new Sql("mssql", 10)._query(generateReadJson())
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select top (@p0) * from [${TABLE_NAME}]`
+    })
   })
 
   it("should work with mySQL", () => {
-    const query = new Sql("mysql", 10).query(generateReadJson())
-    expect(query).toEqual(`select * from \`${TABLE_NAME}\` limit 10`)
+    const query = new Sql("mysql", 10)._query(generateReadJson())
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from \`${TABLE_NAME}\` limit ?`
+    })
   })
 })
