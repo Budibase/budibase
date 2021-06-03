@@ -19,7 +19,6 @@
   const component = getContext("component")
   const dataProviderApi = {
     setLuceneQuery: newQuery => (query = newQuery),
-    foo: "bar",
   }
 
   // Loading flag every time data is being fetched
