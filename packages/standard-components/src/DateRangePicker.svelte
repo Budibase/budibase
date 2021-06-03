@@ -13,7 +13,9 @@
 
   const dataContext = getContext("context")
   const component = getContext("component")
-  const { styleable, builderStore, ActionTypes } = getContext("sdk")
+  const { styleable, builderStore, ActionTypes, getAction } = getContext("sdk")
+
+  const setQuery = getAction(dataProvider?.id, ActionTypes.SetDataProviderQuery)
   const options = [
     "Last 1 day",
     "Last 7 days",
@@ -26,10 +28,11 @@
 
   const updateDateRange = option => {
     const query = dataProvider?.state?.query
-    if (!query) {
+    if (!query || !setQuery) {
       return
     }
 
+    value = option
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
 
@@ -45,7 +48,8 @@
       low = dayjs.utc().subtract(6, "months")
     }
 
-    const newQuery = {
+    // Update data provider query with the new filter
+    setQuery({
       ...query,
       range: {
         ...query.range,
@@ -54,15 +58,10 @@
           low: low.format(),
         },
       },
-    }
-
-    const setQuery =
-      $dataContext[`${dataProvider.id}_${ActionTypes.SetDataProviderQuery}`]
-    if (setQuery) {
-      setQuery(newQuery)
-    }
+    })
   }
 
+  // Update the range on mount to the initial value
   onMount(() => {
     updateDateRange(value)
   })
