@@ -63,6 +63,7 @@ exports.find = async function (ctx) {
   ctx.body = await database.get(ctx.params.datasourceId)
 }
 
+// TODO: merge endpoint with main datasource endpoint
 exports.plus = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
