@@ -54,19 +54,19 @@ describe("SQL query builder", () => {
   })
 
   it("should test a basic read", () => {
-    const query = sql.buildQuery(generateReadJson())
+    const query = sql.query(generateReadJson())
     expect(query).toEqual(`select * from "${TABLE_NAME}" limit ${limit}`)
   })
 
   it("should test a read with specific columns", () => {
-    const query = sql.buildQuery(generateReadJson({
+    const query = sql.query(generateReadJson({
       fields: ["name", "age"]
     }))
     expect(query).toEqual(`select "name", "age" from "${TABLE_NAME}" limit ${limit}`)
   })
 
   it("should test a where string starts with read", () => {
-    const query = sql.buildQuery(generateReadJson({
+    const query = sql.query(generateReadJson({
       filters: {
         string: {
           name: "John",
@@ -77,7 +77,7 @@ describe("SQL query builder", () => {
   })
 
   it("should test a where range read", () => {
-    const query = sql.buildQuery(generateReadJson({
+    const query = sql.query(generateReadJson({
       filters: {
         range: {
           age: {
@@ -91,7 +91,7 @@ describe("SQL query builder", () => {
   })
 
   it("should test an create statement", () => {
-    const query = sql.buildQuery(generateCreateJson(TABLE_NAME, {
+    const query = sql.query(generateCreateJson(TABLE_NAME, {
       name: "Michael",
       age: 45,
     }))
@@ -99,7 +99,7 @@ describe("SQL query builder", () => {
   })
 
   it("should test an update statement", () => {
-    const query = sql.buildQuery(generateUpdateJson(TABLE_NAME, {
+    const query = sql.query(generateUpdateJson(TABLE_NAME, {
       name: "John"
     }, {
       equal: {
@@ -110,7 +110,7 @@ describe("SQL query builder", () => {
   })
 
   it("should test a delete statement", () => {
-    const query = sql.buildQuery(generateDeleteJson(TABLE_NAME, {
+    const query = sql.query(generateDeleteJson(TABLE_NAME, {
       equal: {
         id: 1001,
       }
@@ -119,12 +119,12 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MS-SQL", () => {
-    const query = new Sql("mssql", 10).buildQuery(generateReadJson())
+    const query = new Sql("mssql", 10).query(generateReadJson())
     expect(query).toEqual(`select top (10) * from [${TABLE_NAME}]`)
   })
 
   it("should work with mySQL", () => {
-    const query = new Sql("mysql", 10).buildQuery(generateReadJson())
+    const query = new Sql("mysql", 10).query(generateReadJson())
     expect(query).toEqual(`select * from \`${TABLE_NAME}\` limit 10`)
   })
 })
