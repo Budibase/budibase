@@ -102,7 +102,7 @@ class SqlQueryBuilder {
     this._limit = limit
   }
 
-  buildQuery(json) {
+  query(json) {
     const { endpoint } = json
     const knex = require("knex")({ client: this._client })
     const operation = endpoint.operation
