@@ -6,7 +6,6 @@ const {
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
-const PostgresConnector = require("../../integrations/plus/Postgres")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -65,7 +64,7 @@ exports.find = async function (ctx) {
 
 // TODO: merge endpoint with main datasource endpoint
 exports.plus = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = new CouchDB("testapp123")
 
   const PlusConnector = plusIntegrations[ctx.request.body.source]
 
@@ -73,11 +72,11 @@ exports.plus = async function (ctx) {
   await connector.init()
 
   const datasource = {
-    _id: generateDatasourceID(),
-    type: "datasource:plus",
+    _id: generateDatasourceID({ plus: true }),
+    type: "datasource_plus",
+    relationships: [],
     ...ctx.request.body,
     entities: connector.tables,
-    relationships: {},
   }
 
   const response = await db.post(datasource)
