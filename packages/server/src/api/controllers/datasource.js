@@ -64,7 +64,17 @@ exports.find = async function (ctx) {
 
 // dynamic query functionality
 exports.query = async function (ctx) {
-
+  const queryJson = ctx.request.body
+  const datasourceId = queryJson.endpoint.datasourceId
+  const database = new CouchDB(ctx.appId)
+  const datasource = await database.get(datasourceId)
+  const source = integrations[datasource.source]
+  // query is the opinionated function
+  if (source.query) {
+    ctx.body = await source.query(queryJson)
+  } else {
+    ctx.throw(400, "Datasource does not support query.")
+  }
 }
 
 // TODO: merge endpoint with main datasource endpoint

@@ -1,4 +1,7 @@
-const { Operation, SortDirection } = require("./constants")
+const {
+  DataSourceOperation,
+  SortDirection,
+} = require("../../constants")
 
 const BASE_LIMIT = 5000
 
@@ -113,20 +116,20 @@ class SqlQueryBuilder {
     const knex = require("knex")({ client: this._client })
     let query
     switch (this._operation(json)) {
-      case Operation.CREATE:
+      case DataSourceOperation.CREATE:
         query = buildCreate(knex, json)
         break
-      case Operation.READ:
+      case DataSourceOperation.READ:
         query = buildRead(knex, json, this._limit)
         break
-      case Operation.UPDATE:
+      case DataSourceOperation.UPDATE:
         query = buildUpdate(knex, json)
         break
-      case Operation.DELETE:
+      case DataSourceOperation.DELETE:
         query = buildDelete(knex, json)
         break
       default:
-        throw `Operation ${operation} type is not supported by SQL query builder`
+        throw `Operation type is not supported by SQL query builder`
     }
     return query.toSQL().toNative()
   }
