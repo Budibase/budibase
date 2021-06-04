@@ -6,7 +6,6 @@ const {
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
-const PostgresConnector = require("../../integrations/plus/postgres")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -78,11 +77,11 @@ exports.plus = async function (ctx) {
   await connector.init()
 
   const datasource = {
-    _id: generateDatasourceID(),
-    type: "datasource:plus",
+    _id: generateDatasourceID({ plus: true }),
+    type: "datasource_plus",
+    relationships: [],
     ...ctx.request.body,
     entities: connector.tables,
-    relationships: {},
   }
 
   const response = await db.post(datasource)

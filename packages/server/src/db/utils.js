@@ -38,6 +38,7 @@ const DocumentTypes = {
   LAYOUT: "layout",
   SCREEN: "screen",
   DATASOURCE: "datasource",
+  DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
 }
 
@@ -280,8 +281,10 @@ exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
  * Generates a new datasource ID.
  * @returns {string} The new datasource ID which the webhook doc can be stored under.
  */
-exports.generateDatasourceID = () => {
-  return `${DocumentTypes.DATASOURCE}${SEPARATOR}${newid()}`
+exports.generateDatasourceID = ({ plus = false }) => {
+  return `${
+    plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE
+  }${SEPARATOR}${newid()}`
 }
 
 /**
