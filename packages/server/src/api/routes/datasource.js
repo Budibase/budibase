@@ -8,7 +8,7 @@ const {
   PermissionTypes,
 } = require("@budibase/auth/permissions")
 const Joi = require("joi")
-const { FieldTypes } = require("../../constants")
+const { FieldTypes, DataSourceOperation, SortDirection } = require("../../constants")
 
 const router = Router()
 
@@ -31,6 +31,35 @@ function generatePlusDatasourceSchema() {
   }).unknown(true))
 }
 
+function generateQueryDatasourceSchema() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    endpoint: Joi.object({
+      datasourceId: Joi.string().required(),
+      operation: Joi.string().required().valid(...Object.values(DataSourceOperation)),
+      entityId: Joi.string().required(),
+    }).required(),
+    resource: Joi.object({
+      fields: Joi.array().items(Joi.string()).optional(),
+    }).optional(),
+    body: Joi.object().optional(),
+    sort: Joi.object().optional(),
+    filters: Joi.object({
+      string: Joi.object().optional(),
+      range: Joi.object().optional(),
+      equal: Joi.object().optional(),
+      notEqual: Joi.object().optional(),
+      empty: Joi.object().optional(),
+      notEmpty: Joi.object().optional(),
+    }).optional(),
+    paginate: Joi.object({
+      page: Joi.string().alphanum().optional(),
+      limit: Joi.number().optional(),
+    }).optional(),
+  }))
+}
+
+
 router
   .get("/api/datasources", authorized(BUILDER), datasourceController.fetch)
   .get(
@@ -40,8 +69,15 @@ router
   )
   .post(
     "/api/datasources/plus",
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     generatePlusDatasourceSchema(),
     datasourceController.plus
+  )
+  .post(
+    "/api/datasources/query",
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    generateQueryDatasourceSchema(),
+    datasourceController.query
   )
   .post("/api/datasources", authorized(BUILDER), datasourceController.save)
   .delete(
