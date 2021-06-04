@@ -11,6 +11,9 @@ function addFilters(query, filters) {
       fn(key, value)
     }
   }
+  if (!filters) {
+    return query
+  }
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       query = query.where(key, "like", `${value}%`)
@@ -72,11 +75,11 @@ function buildRead(knex, json, limit) {
     }
   }
   // handle pagination
-  if (paginate.page && paginate.limit) {
+  if (paginate && paginate.page && paginate.limit) {
     const page = paginate.page <= 1 ? 0 : paginate.page - 1
     const offset = page * paginate.limit
     query = query.offset(offset).limit(paginate.limit)
-  } else if (paginate.limit) {
+  } else if (paginate && paginate.limit) {
     query = query.limit(paginate.limit)
   } else {
     query.limit(limit)
