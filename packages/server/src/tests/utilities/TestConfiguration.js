@@ -308,9 +308,7 @@ class TestConfiguration {
 
   async createUser() {
     const globalId = `us_${Math.random()}`
-    const resp = await this.globalUser(
-      globalId,
-    )
+    const resp = await this.globalUser(globalId)
     return {
       ...resp,
       globalId,
