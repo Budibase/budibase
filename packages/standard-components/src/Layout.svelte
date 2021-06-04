@@ -56,9 +56,6 @@
   .threeColumns {
     grid-template-columns: 1fr 1fr 1fr;
   }
-  .containerSmall {
-    grid-template-columns: 1fr;
-  }
   .columns-1 {
     grid-template-columns: 1fr;
   }
