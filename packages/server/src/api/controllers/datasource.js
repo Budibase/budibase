@@ -68,10 +68,11 @@ exports.query = async function (ctx) {
   const datasourceId = queryJson.endpoint.datasourceId
   const database = new CouchDB(ctx.appId)
   const datasource = await database.get(datasourceId)
-  const source = integrations[datasource.source]
+  const Integration = integrations[datasource.source]
   // query is the opinionated function
-  if (source.query) {
-    ctx.body = await source.query(queryJson)
+  if (Integration.prototype.query) {
+    const integration = new Integration(datasource.config)
+    ctx.body = await integration.query(queryJson)
   } else {
     ctx.throw(400, "Datasource does not support query.")
   }

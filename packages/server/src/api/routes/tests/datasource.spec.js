@@ -2,6 +2,9 @@ let setup = require("./utilities")
 let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
+jest.mock("pg")
+const pg = require("pg")
+
 describe("/datasources", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -63,6 +66,37 @@ describe("/datasources", () => {
         .expect(200)
       expect(res.body._rev).toBeDefined()
       expect(res.body._id).toEqual(datasource._id)
+    })
+  })
+
+  describe("query", () => {
+    it("should be able to query a pg datasource", async () => {
+      const res = await request
+        .post(`/api/datasources/query`)
+        .send({
+          endpoint: {
+            datasourceId: datasource._id,
+            operation: "READ",
+            // table name below
+            entityId: "users",
+          },
+          resource: {
+            fields: ["name", "age"],
+          },
+          filters: {
+            string: {
+              name: "John",
+            },
+          },
+        })
+        .set(config.defaultHeaders())
+        .expect(200)
+      // this is mock data, can't test it
+      expect(res.body).toBeDefined()
+      expect(pg.queryMock).toHaveBeenCalledWith({
+        bindings: ["John%", 5000],
+        sql: `select "name", "age" from "users" where "name" like $1 limit $2`
+      })
     })
   })
 
