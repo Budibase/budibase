@@ -31,7 +31,6 @@
       margin: 0;
       padding: 0;
     }
-
     *,
     *:before,
     *:after {
@@ -41,9 +40,9 @@
 </svelte:head>
 
 <body id="app">
-  <script src={clientLibPath}>
+  <script type="application/javascript" src={clientLibPath}>
   </script>
-  <script>
+  <script type="application/javascript">
     loadBudibase()
   </script>
 </body>
