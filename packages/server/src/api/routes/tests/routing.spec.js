@@ -28,9 +28,7 @@ describe("/routing", () => {
     it("returns the correct routing for basic user", async () => {
       workerRequests.getGlobalUsers.mockImplementationOnce((ctx, appId) => {
         return {
-          roles: {
-            [appId]: BUILTIN_ROLE_IDS.BASIC,
-          }
+          roleId: BUILTIN_ROLE_IDS.BASIC,
         }
       })
       const res = await request

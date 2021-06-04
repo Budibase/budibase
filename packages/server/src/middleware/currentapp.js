@@ -33,7 +33,7 @@ module.exports = async (ctx, next) => {
     updateCookie = true
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId
+    roleId = globalUser.roleId || BUILTIN_ROLE_IDS.PUBLIC
   } else if (appCookie != null) {
     appId = appCookie.appId
     roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
