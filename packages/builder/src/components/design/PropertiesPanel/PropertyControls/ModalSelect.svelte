@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
+  import { ActionButton, Body, Icon, Modal, ModalContent } from "@budibase/bbui"
 
   const dispatch = createEventDispatcher()
 
@@ -9,14 +9,26 @@
 
   let modal
   let layoutMap = {
-    mainSidebar: "Main with Sidebar",
-    sidebarMain: "Sidebar with Main",
-    twoColumns: "Two columns",
-    threeColumns: "Three columns",
+    mainSidebar: {
+      name: "Main with Sidebar",
+      icon: "ColumnTwoB",
+    },
+    sidebarMain: {
+      name: "Sidebar with Main",
+      icon: "ColumnTwoC",
+    },
+    twoColumns: {
+      name: "Two columns",
+      icon: "ColumnTwoA",
+    },
+    threeColumns: {
+      name: "Three columns",
+      icon: "ViewColumn",
+    },
   }
 </script>
 
-<ActionButton on:click={modal.show}>{layoutMap[value]}</ActionButton>
+<ActionButton on:click={modal.show}>{layoutMap[value].name}</ActionButton>
 
 <Modal bind:this={modal}>
   <ModalContent
@@ -31,7 +43,8 @@
           on:click={() => (selected = key)}
           class="layout"
         >
-          {value}
+          <Icon color="white" size="L" name={value.icon} />
+          <Body size="XS">{value.name}</Body>
         </button>
       {/each}
     </div>
@@ -39,24 +52,26 @@
 </Modal>
 
 <style>
-  button {
-    border: none;
-  }
   .container {
     display: grid;
-    grid-gap: 16px;
+    grid-gap: 20px;
     grid-template-columns: 1fr 1fr 1fr;
   }
 
   .layout {
+    color: var(--spectrum-body-m-text-color, var(--spectrum-alias-text-color));
+    border: none;
     box-sizing: border-box;
     display: grid;
     place-items: center;
-    background: rebeccapurple;
-    color: white;
-    height: 100px;
+    background: var(--background-alt);
+    border-radius: 3px;
+    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
+    padding: var(--spectrum-alias-item-padding-s);
+    transition: 0.3s all;
+    border-radius: var(--spacing-s);
   }
   .selected {
-    border: 3px dashed red;
+    background: var(--spectrum-alias-background-color-tertiary);
   }
 </style>
