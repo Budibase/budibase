@@ -12,12 +12,24 @@
     twoColumns: 2,
     threeColumns: 3,
   }
+
+  let containerWidth
+  $: columnsDependingOnSize = calculateColumns(containerWidth)
+
+  function calculateColumns(parentWidth) {
+    const numberOfAllowedColumns = Math.floor(parentWidth / 250) || 100
+    if (layoutMap[type] <= numberOfAllowedColumns) {
+      return false
+    } else if (layoutMap[type] > numberOfAllowedColumns) {
+      return numberOfAllowedColumns
+    }
+  }
 </script>
 
 <div
+  bind:clientWidth={containerWidth}
   in:transition={{ type: $component.transition }}
-  use:styleable={$component.styles}
-  class={type}
+  class="{type} columns-{columnsDependingOnSize}"
 >
   <slot />
   {#if layoutMap[type] - $component.children > 0}
@@ -43,6 +55,15 @@
   }
   .threeColumns {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+  .containerSmall {
+    grid-template-columns: 1fr;
+  }
+  .columns-1 {
+    grid-template-columns: 1fr;
+  }
+  .columns-2 {
+    grid-template-columns: 1fr 1fr;
   }
 
   p {
