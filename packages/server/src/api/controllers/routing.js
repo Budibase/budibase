@@ -63,10 +63,6 @@ exports.fetch = async ctx => {
 exports.clientFetch = async ctx => {
   const routing = await getRoutingStructure(ctx.appId)
   let roleId = ctx.user.role._id
-  // builder is a special case, always return the full routing structure
-  if (roleId === BUILTIN_ROLE_IDS.BUILDER) {
-    roleId = BUILTIN_ROLE_IDS.ADMIN
-  }
   const roleIds = await getUserRoleHierarchy(ctx.appId, roleId)
   for (let topLevel of Object.values(routing.routes)) {
     for (let subpathKey of Object.keys(topLevel.subpaths)) {
