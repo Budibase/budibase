@@ -8,6 +8,23 @@
     "transitionable": true,
     "settings": []
   },
+  "layout": {
+    "name": "Layout",
+    "description": "Use this component to create different column layouts",
+    "icon": "ColumnTwoB",
+    "hasChildren": true,
+    "styleable": true,
+    "transitionable": true,
+    "settings": [
+      {
+        "type": "modal",
+        "label": "Type",
+        "key": "type",
+        "options": ["mainSidebar", "sidebarMain", "twoColumns", "threeColumns"],
+        "defaultValue": "mainSidebar"
+      }
+    ]
+  },
   "screenslot": {
     "name": "Screenslot",
     "icon": "WebPage",
