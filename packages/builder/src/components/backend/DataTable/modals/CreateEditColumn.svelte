@@ -197,7 +197,7 @@
   <Input
     label="Name"
     bind:value={field.name}
-    disabled={uneditable || field.type === LINK_TYPE}
+    disabled={uneditable || (originalName && field.type === LINK_TYPE)}
   />
 
   <Select
