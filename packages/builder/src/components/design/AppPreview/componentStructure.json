@@ -18,7 +18,8 @@
       "longformfield",
       "datetimefield",
       "attachmentfield",
-      "relationshipfield"
+      "relationshipfield",
+      "daterangepicker"
     ]
   },
   {

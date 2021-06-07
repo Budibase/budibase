@@ -5,4 +5,5 @@ export const TableNames = {
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
   RefreshDatasource: "RefreshDatasource",
+  SetDataProviderQuery: "SetDataProviderQuery",
 }
