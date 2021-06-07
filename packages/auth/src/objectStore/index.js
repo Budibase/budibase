@@ -159,7 +159,7 @@ exports.upload = async ({
  * Similar to the upload function but can be used to send a file stream
  * through to the object store.
  */
-exports.streamUpload = async (bucketName, filename, stream) => {
+exports.streamUpload = async (bucketName, filename, stream, extra = {}) => {
   const objectStore = exports.ObjectStore(bucketName)
   await exports.makeSureBucketExists(objectStore, bucketName)
 
@@ -167,6 +167,7 @@ exports.streamUpload = async (bucketName, filename, stream) => {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
     Body: stream,
+    ...extra,
   }
   return objectStore.upload(params).promise()
 }

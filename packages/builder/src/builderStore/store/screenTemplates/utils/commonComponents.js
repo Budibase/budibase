@@ -174,7 +174,7 @@ const fieldTypeToComponentMap = {
 }
 
 export function makeDatasourceFormComponents(datasource) {
-  const { schema } = getSchemaForDatasource(datasource, true)
+  const { schema } = getSchemaForDatasource(null, datasource, true)
   let components = []
   let fields = Object.keys(schema || {})
   fields.forEach(field => {

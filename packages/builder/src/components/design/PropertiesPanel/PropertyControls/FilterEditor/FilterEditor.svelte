@@ -27,19 +27,16 @@
     ? tempValue.length
     : Object.keys(tempValue || {}).length
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource(dataSource)?.schema
+  $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
   $: schemaFields = Object.values(schema || {})
   $: internalTable = dataSource?.type === "table"
 
   // Reset value if value is wrong type for the datasource.
   // Lucene editor needs an array, and simple editor needs an object.
   $: {
-    if (internalTable && !Array.isArray(value)) {
+    if (!Array.isArray(value)) {
       tempValue = []
       dispatch("change", [])
-    } else if (!internalTable && Array.isArray(value)) {
-      tempValue = {}
-      dispatch("change", {})
     }
   }
 
@@ -63,28 +60,7 @@
           constaints.
         {/if}
       </Body>
-      {#if internalTable}
-        <LuceneFilterBuilder bind:value={tempValue} {schemaFields} />
-      {:else}
-        <div class="fields">
-          <SaveFields
-            parameterFields={Array.isArray(value) ? {} : value}
-            {schemaFields}
-            valueLabel="Equals"
-            on:change={e => (tempValue = e.detail)}
-          />
-        </div>
-      {/if}
+      <LuceneFilterBuilder bind:value={tempValue} {schemaFields} />
     </Layout>
   </DrawerContent>
 </Drawer>
-
-<style>
-  .fields {
-    display: grid;
-    column-gap: var(--spacing-l);
-    row-gap: var(--spacing-s);
-    align-items: center;
-    grid-template-columns: auto 1fr auto 1fr auto;
-  }
-</style>

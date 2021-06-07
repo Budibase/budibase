@@ -21,7 +21,7 @@ export const propsAreSame = (a, b) => {
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
-export const enrichProps = async (props, context) => {
+export const enrichProps = (props, context) => {
   // Exclude all private props that start with an underscore
   let validProps = {}
   Object.entries(props)
@@ -41,7 +41,7 @@ export const enrichProps = async (props, context) => {
   }
 
   // Enrich all data bindings in top level props
-  let enrichedProps = await enrichDataBindings(validProps, totalContext)
+  let enrichedProps = enrichDataBindings(validProps, totalContext)
 
   // Enrich click actions if they exist
   if (enrichedProps.onClick) {

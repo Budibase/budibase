@@ -51,12 +51,8 @@ exports.init = async () => {
  * make sure redis connection is closed.
  */
 exports.shutdown = async () => {
-  if (pwResetClient != null) {
-    await pwResetClient.finish()
-  }
-  if (invitationClient != null) {
-    await invitationClient.finish()
-  }
+  if (pwResetClient) await pwResetClient.finish()
+  if (invitationClient) await invitationClient.finish()
 }
 
 /**

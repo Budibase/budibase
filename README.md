@@ -30,9 +30,6 @@
   <a href="https://github.com/Budibase/budibase/releases">
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Budibase/budibase">
   </a>
-  <a href="https://discord.gg/rCYayfe">
-    <img alt="Discord" src="https://img.shields.io/discord/733030666647765003">
-  </a>
   <a href="https://twitter.com/intent/follow?screen_name=budibase">
     <img src="https://img.shields.io/twitter/follow/budibase?style=social" alt="Follow @budibase" />
   </a>
@@ -52,8 +49,6 @@
   <a href="https://github.com/Budibase/budibase/issues">Report a bug</a>
   <span> · </span>
   Support: <a href="https://github.com/Budibase/budibase/discussions">Discussions</a>
-  <span> & </span>
-  <a href="https://discord.gg/rCYayfe">Discord</a>
 </h3>
 
 
@@ -61,7 +56,7 @@
 
 - **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
 
-- **Open source and extensable.** Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
+- **Open source and extensible.** Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
 
 - **Load data or start from scratch.** Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, S3, DyanmoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
@@ -74,28 +69,6 @@
 <p align="center">
   <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
 </p>
-
-
----
-
-
-## ⌛ Status
-- [x] Alpha: We are demoing Budibase to users and receiving feedback
-- [x] Private Beta: We are testing Budibase with a closed set of customers
-- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
-- [ ] Official Launch
-
-Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
-
-<p align="center">
-  <img src="https://i.imgur.com/cJpgqm8.png">
-</p>
-
-### Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
-
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ---
@@ -141,20 +114,39 @@ Done! You are now ready to build powerful internal tools in minutes. For additio
 
 The Budibase [documentation lives here](https://docs.budibase.com).
 
-You can also follow a quick tutorial on [how to build a CRM with Budibase](https://docs.budibase.com/tutorial/tutorial-introduction)
+
+---
+
+## ⌛ Status
+- [x] Alpha: We are demoing Budibase to users and receiving feedback
+- [x] Private Beta: We are testing Budibase with a closed set of customers
+- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
+- [ ] Official Launch
+
+Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
+
+<p align="center">
+  <img src="https://i.imgur.com/cJpgqm8.png">
+</p>
+
+
+---
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
+
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 
 ---
 
 
-## Roadmap
-
-Checkout our [Public Roadmap](https://github.com/Budibase/budibase/projects/10). If you would like to discuss some of the items on the roadmap, please feel to reach out on [Discord](https://discord.gg/rCYayfe), or via [Github discussions](https://github.com/Budibase/budibase/discussions)
-
-
 ## ❗ Code of Conduct
 
 Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+
+---
 
 ## 🙌 Contributing to Budibase
 
@@ -188,11 +180,7 @@ Budibase is open-source. The builder is licensed [AGPL v3](https://www.gnu.org/l
 
 ## 💬 Get in touch
 
-If you have a question or would like to talk with other Budibase users, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions) or join our Discord server:
-
-[Discord chatroom](https://discord.gg/rCYayfe)
-
-![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
+If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
 
 
 ---

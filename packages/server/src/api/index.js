@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const { buildAuthMiddleware } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
@@ -37,6 +37,7 @@ router
     })
   )
   .use(currentApp)
+  .use(auditLog)
 
 // error handling middleware
 router.use(async (ctx, next) => {

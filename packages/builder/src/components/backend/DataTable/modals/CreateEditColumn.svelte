@@ -43,6 +43,7 @@
   }
 
   let originalName = field.name
+  const linkEditDisabled = originalName != null
   let primaryDisplay =
     $tables.selected.primaryDisplay == null ||
     $tables.selected.primaryDisplay === field.name
@@ -198,7 +199,7 @@
   <Input
     label="Name"
     bind:value={field.name}
-    disabled={uneditable || field.type === LINK_TYPE}
+    disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
   />
 
   <Select
@@ -285,6 +286,7 @@
   {:else if field.type === "link"}
     <Select
       label="Table"
+      disabled={linkEditDisabled}
       bind:value={field.tableId}
       options={tableOptions}
       getOptionLabel={table => table.name}
@@ -292,7 +294,7 @@
     />
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
-        disabled={originalName != null}
+        disabled={linkEditDisabled}
         label="Define the relationship"
         bind:value={field.relationshipType}
         options={relationshipOptions}
@@ -300,7 +302,11 @@
         getOptionValue={option => option.value}
       />
     {/if}
-    <Input label={`Column name in other table`} bind:value={field.fieldName} />
+    <Input
+      disabled={linkEditDisabled}
+      label={`Column name in other table`}
+      bind:value={field.fieldName}
+    />
   {:else if field.type === FORMULA_TYPE}
     <ModalBindableInput
       title="Handlebars Formula"

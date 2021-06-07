@@ -1,7 +1,7 @@
 const scriptController = require("../../api/controllers/script")
 
 module.exports.definition = {
-  name: "Scripting",
+  name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "ri-terminal-box-line",
   description: "Run a piece of JavaScript code in your automation",

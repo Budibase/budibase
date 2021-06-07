@@ -99,12 +99,18 @@ async function createInstance(template) {
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
+  let _rev
   if (template && template.useTemplate === "true") {
     const { ok } = await db.load(await getTemplateStream(template))
     if (!ok) {
       throw "Error loading database dump from template."
     }
-    var { _rev } = await db.get(DocumentTypes.APP_METADATA)
+    try {
+      const response = await db.get(DocumentTypes.APP_METADATA)
+      _rev = response._rev
+    } catch (err) {
+      _rev = null
+    }
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
