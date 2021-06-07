@@ -5,11 +5,13 @@ import ExecuteQuery from "./ExecuteQuery.svelte"
 import TriggerAutomation from "./TriggerAutomation.svelte"
 import ValidateForm from "./ValidateForm.svelte"
 
-// defines what actions are available, when adding a new one
-// the component is the setup panel for the action
-// NOTE that the "name" is used by the client library,
-// so if you want to change it, you must change it client lib too
-
+// Defines which actions are available to configure in the front end.
+// Unfortunately the "name" property is used as the identifier so please don't
+// change them.
+// The client library removes any spaces when processing actions, so they can
+// be considered as camel case too.
+// There is technical debt here to sanitize all these and standardise them
+// across the packages but it's a breaking change to existing apps.
 export default [
   {
     name: "Save Row",
