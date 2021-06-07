@@ -18,10 +18,6 @@ export function checkIfElementExists(el) {
   })
 }
 
-async function isFirstApp() {
-  return checkIfElementExists(".empty-wrapper")
-}
-
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
@@ -47,35 +43,32 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
-  isFirstApp().then(isFirst => {
-    const buttonText = isFirst ? "Create app" : "Create new app"
-    cy.contains(buttonText).click()
-    cy.get("body").then(() => {
-      cy.get(".spectrum-Modal")
-        .within(() => {
-          cy.get("input").eq(0).type(name).should("have.value", name).blur()
-          cy.contains("Create app").click()
-        })
-        .then(() => {
-          cy.get("[data-cy=new-table]", {
-            timeout: 20000,
-          }).should("be.visible")
-        })
+  cy.contains(/Create (new )?app/).click()
+  cy.get(".spectrum-Modal")
+    .within(() => {
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
+      cy.contains("Create app").click()
     })
-  })
+    .then(() => {
+      cy.get("[data-cy=new-table]", {
+        timeout: 20000,
+      }).should("be.visible")
+    })
 })
 
 Cypress.Commands.add("deleteApp", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
-
-  isFirstApp().then(isFirst => {
-    if (!isFirst) {
-      cy.get(".hoverable > use").click()
-      cy.contains("Delete").click()
-      cy.get(".spectrum-Button--warning").click()
-    }
-  })
+  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      console.log(val)
+      if (val.length > 0) {
+        cy.get(".hoverable > use").click()
+        cy.contains("Delete").click()
+        cy.get(".spectrum-Button--warning").click()
+      }
+    })
 })
 
 Cypress.Commands.add("createTestApp", () => {
