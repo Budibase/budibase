@@ -3,7 +3,9 @@ const path = require("path")
 
 const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
-const WORKER_PORT = "4002"
+// these run on ports we don't normally use so that they can run alongside the
+// normal development system
+const WORKER_PORT = "10002"
 const MAIN_PORT = cypressConfig.env.PORT
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
 process.env.NODE_ENV = "cypress"
@@ -12,8 +14,8 @@ process.env.PORT = MAIN_PORT
 process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
 process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
 process.env.SELF_HOSTED = 1
-process.env.WORKER_URL = "http://localhost:4002/"
-process.env.MINIO_URL = "http://localhost:10000/"
+process.env.WORKER_URL = "http://localhost:10002/"
+process.env.MINIO_URL = `http://localhost:${MAIN_PORT}/`
 process.env.MINIO_ACCESS_KEY = "budibase"
 process.env.MINIO_SECRET_KEY = "budibase"
 process.env.COUCH_DB_USER = "budibase"

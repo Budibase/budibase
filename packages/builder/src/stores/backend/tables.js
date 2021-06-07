@@ -101,6 +101,12 @@ export function createTablesStore() {
         // Optionally set display column
         if (primaryDisplay) {
           state.draft.primaryDisplay = field.name
+        } else if (state.draft.primaryDisplay === originalName) {
+          const fields = Object.keys(state.draft.schema)
+          // pick another display column randomly if unselecting
+          state.draft.primaryDisplay = fields.filter(
+            name => name !== originalName || name !== field
+          )[0]
         }
 
         if (indexes) {

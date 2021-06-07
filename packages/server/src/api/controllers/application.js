@@ -127,7 +127,7 @@ async function createInstance(template) {
 exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps({ dev, all })
+  const apps = await getAllApps({ CouchDB, dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -203,9 +203,6 @@ exports.create = async function (ctx) {
     instance: instance,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    deployment: {
-      type: "cloud",
-    },
   }
   if (instance._rev) {
     newApplication._rev = instance._rev

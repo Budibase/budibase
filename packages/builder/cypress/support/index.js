@@ -14,8 +14,8 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import "./cookies"
 import "./commands"
+import "./cookies"
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
