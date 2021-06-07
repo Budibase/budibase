@@ -36,7 +36,9 @@ context("Create Bindings", () => {
   it("should add a binding with a handlebars helper", () => {
     cy.addComponent("Elements", "Paragraph").then(componentId => {
       // Cypress needs to escape curly brackets
-      addSettingBinding("text", "{{}{{} add 1 2 {}}{}}", false)
+      cy.get("[data-cy=setting-text] input")
+        .type("{{}{{} add 1 2 {}}{}}")
+        .blur()
       cy.getComponent(componentId).should("have.text", "3")
     })
   })
@@ -51,6 +53,6 @@ const addSettingBinding = (setting, bindingText, clickOption = true) => {
     } else {
       cy.get("textarea").type(bindingText)
     }
-    cy.get("button").click()
+    cy.contains("Save").click()
   })
 }
