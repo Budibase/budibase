@@ -46,7 +46,6 @@ exports.basicRow = tableId => {
   return {
     name: "Test Contact",
     description: "original description",
-    status: "new",
     tableId: tableId,
   }
 }
