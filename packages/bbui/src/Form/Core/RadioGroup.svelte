@@ -37,3 +37,9 @@
     {/each}
   {/if}
 </div>
+
+<style>
+  .spectrum-Radio-input {
+    opacity: 0;
+  }
+</style>
