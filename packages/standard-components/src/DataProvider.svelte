@@ -1,6 +1,12 @@
 <script>
   import { getContext } from "svelte"
   import { ProgressCircle, Pagination } from "@budibase/bbui"
+  import {
+    buildLuceneQuery,
+    luceneQuery,
+    luceneSort,
+    luceneLimit,
+  } from "./lucene"
 
   export let dataSource
   export let filter
@@ -25,9 +31,11 @@
   let schema = {}
   let bookmarks = [null]
   let pageNumber = 0
+  let query = null
 
+  $: query = buildLuceneQuery(filter)
   $: internalTable = dataSource?.type === "table"
-  $: query = internalTable ? buildLuceneQuery(filter) : null
+  $: nestedProvider = dataSource?.type === "provider"
   $: hasNextPage = bookmarks[pageNumber + 1] != null
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
@@ -48,22 +56,38 @@
     }
   }
   $: {
-    // Sort and limit rows in memory when we aren't searching internal tables
     if (internalTable) {
+      // Internal tables are already processed server-side
       rows = allRows
     } else {
-      const sortedRows = sortRows(allRows, sortColumn, sortOrder)
-      rows = limitRows(sortedRows, limit)
+      // For anything else we use client-side implementations to filter, sort
+      // and limit
+      const filtered = luceneQuery(allRows, query)
+      const sorted = luceneSort(filtered, sortColumn, sortOrder, sortType)
+      rows = luceneLimit(sorted, limit)
     }
   }
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
-      callback: () => fetchData(dataSource),
+      callback: () => refresh(),
       metadata: { dataSource },
     },
+    {
+      type: ActionTypes.SetDataProviderQuery,
+      callback: newQuery => (query = newQuery),
+    },
   ]
-  $: dataContext = { rows, schema, rowsLength: rows.length }
+  $: dataContext = {
+    rows,
+    schema,
+    rowsLength: rows.length,
+
+    // Undocumented properties. These aren't supposed to be used in builder
+    // bindings, but are used internally by other components
+    id: $component?.id,
+    state: { query },
+  }
 
   const getSortType = (schema, sortColumn) => {
     if (!schema || !sortColumn || !schema[sortColumn]) {
@@ -73,36 +97,18 @@
     return type === "number" ? "number" : "string"
   }
 
-  const buildLuceneQuery = filter => {
-    let query = {
-      string: {},
-      fuzzy: {},
-      range: {},
-      equal: {},
-      notEqual: {},
-      empty: {},
-      notEmpty: {},
+  const refresh = async () => {
+    if (schemaLoaded && !nestedProvider) {
+      fetchData(
+        dataSource,
+        query,
+        limit,
+        sortColumn,
+        sortOrder,
+        sortType,
+        paginate
+      )
     }
-    if (Array.isArray(filter)) {
-      filter.forEach(({ operator, field, type, value }) => {
-        if (operator.startsWith("range")) {
-          if (!query.range[field]) {
-            query.range[field] = {
-              low: type === "number" ? Number.MIN_SAFE_INTEGER : "0000",
-              high: type === "number" ? Number.MAX_SAFE_INTEGER : "9999",
-            }
-          }
-          if (operator === "rangeLow") {
-            query.range[field].low = value
-          } else if (operator === "rangeHigh") {
-            query.range[field].high = value
-          }
-        } else if (query[operator]) {
-          query[operator][field] = value
-        }
-      })
-    }
-    return query
   }
 
   const fetchData = async (
@@ -116,6 +122,7 @@
   ) => {
     loading = true
     if (dataSource?.type === "table") {
+      // For internal tables we use server-side processing
       const res = await API.searchTable({
         tableId: dataSource.tableId,
         query,
@@ -132,47 +139,17 @@
       } else {
         bookmarks = [null]
       }
+    } else if (dataSource?.type === "provider") {
+      // For providers referencing another provider, just use the rows it
+      // provides
+      allRows = dataSource?.value?.rows ?? []
     } else {
-      const rows = await API.fetchDatasource(dataSource)
-      allRows = inMemoryFilterRows(rows, filter)
+      // For other data sources like queries or views, fetch all rows from the
+      // server
+      allRows = await API.fetchDatasource(dataSource)
     }
     loading = false
     loaded = true
-  }
-
-  const inMemoryFilterRows = (rows, filter) => {
-    let filteredData = [...rows]
-    Object.entries(filter || {}).forEach(([field, value]) => {
-      if (value != null && value !== "") {
-        filteredData = filteredData.filter(row => {
-          return row[field] === value
-        })
-      }
-    })
-    return filteredData
-  }
-
-  const sortRows = (rows, sortColumn, sortOrder) => {
-    if (!sortColumn || !sortOrder) {
-      return rows
-    }
-    return rows.slice().sort((a, b) => {
-      const colA = a[sortColumn]
-      const colB = b[sortColumn]
-      if (sortOrder === "Descending") {
-        return colA > colB ? -1 : 1
-      } else {
-        return colA > colB ? 1 : -1
-      }
-    })
-  }
-
-  const limitRows = (rows, limit) => {
-    const numLimit = parseFloat(limit)
-    if (isNaN(numLimit)) {
-      return rows
-    }
-    return rows.slice(0, numLimit)
   }
 
   const getSchema = async dataSource => {
@@ -181,6 +158,8 @@
     } else if (dataSource?.tableId) {
       const definition = await API.fetchTableDefinition(dataSource.tableId)
       schema = definition?.schema ?? {}
+    } else if (dataSource?.type === "provider") {
+      schema = dataSource.value?.schema ?? {}
     } else {
       schema = {}
     }

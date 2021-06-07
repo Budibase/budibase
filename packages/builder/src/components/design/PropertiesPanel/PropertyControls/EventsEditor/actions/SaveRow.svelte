@@ -14,11 +14,11 @@
     $currentAsset,
     $store.selectedComponentId
   )
-  $: schemaFields = getSchemaFields(parameters?.tableId)
+  $: schemaFields = getSchemaFields($currentAsset, parameters?.tableId)
   $: tableOptions = $tables.list || []
 
-  const getSchemaFields = tableId => {
-    const { schema } = getSchemaForDatasource({ type: "table", tableId })
+  const getSchemaFields = (asset, tableId) => {
+    const { schema } = getSchemaForDatasource(asset, { type: "table", tableId })
     return Object.values(schema || {})
   }
 

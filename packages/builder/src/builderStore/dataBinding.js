@@ -136,7 +136,7 @@ const getContextBindings = (asset, componentId) => {
       if (!datasource) {
         return
       }
-      const info = getSchemaForDatasource(datasource)
+      const info = getSchemaForDatasource(asset, datasource)
       schema = info.schema
       readablePrefix = info.table?.name
     }
@@ -191,7 +191,7 @@ const getContextBindings = (asset, componentId) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const { schema } = getSchemaForDatasource({
+  const { schema } = getSchemaForDatasource(null, {
     type: "table",
     tableId: TableNames.USERS,
   })
@@ -244,11 +244,15 @@ const getUrlBindings = asset => {
 /**
  * Gets a schema for a datasource object.
  */
-export const getSchemaForDatasource = (datasource, isForm = false) => {
+export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
   let schema, table
   if (datasource) {
     const { type } = datasource
-    if (type === "query") {
+    if (type === "provider") {
+      const component = findComponent(asset.props, datasource.providerId)
+      const source = getDatasourceForProvider(asset, component)
+      return getSchemaForDatasource(asset, source, isForm)
+    } else if (type === "query") {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
     } else {
