@@ -5,19 +5,6 @@
 // ***********************************************
 //
 
-export function checkIfElementExists(el) {
-  return new Promise(resolve => {
-    /// here if  ele exists or not
-    cy.get("body").then(body => {
-      if (body.find(el).length > 0) {
-        resolve(true)
-      } else {
-        resolve(false)
-      }
-    })
-  })
-}
-
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
