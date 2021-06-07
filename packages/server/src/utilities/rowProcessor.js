@@ -169,9 +169,14 @@ exports.inputProcessing = (user = {}, table, row) => {
   let clonedRow = cloneDeep(row)
   // need to copy the table so it can be differenced on way out
   const copiedTable = cloneDeep(table)
+  const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
+    // cleanse fields that aren't in the schema
     if (!field) {
+      if (dontCleanseKeys.indexOf(key) === -1) {
+        delete clonedRow[key]
+      }
       continue
     }
     clonedRow[key] = exports.coerce(value, field.type)

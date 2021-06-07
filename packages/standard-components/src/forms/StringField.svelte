@@ -22,6 +22,7 @@
 >
   {#if fieldState}
     <CoreTextField
+      updateOnChange={false}
       value={$fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
       disabled={$fieldState.disabled}
