@@ -2,6 +2,7 @@ const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
 const { AppStatus } = require("../../../../db/utils")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 
 function Request(appId, params) {
   this.appId = appId
@@ -77,11 +78,17 @@ exports.checkPermissionsEndpoint = async ({
     .set(passHeader)
     .expect(200)
 
-  user = await config.createUser("fail@budibase.com", password, failRole)
-  const failHeader = await config.login("fail@budibase.com", password, {
-    roleId: failRole,
-    userId: user.globalId,
-  })
+  let failHeader
+  if (failRole === BUILTIN_ROLE_IDS.PUBLIC) {
+    failHeader = config.publicHeaders()
+  } else {
+    user = await config.createUser("fail@budibase.com", password, failRole)
+    failHeader = await config.login("fail@budibase.com", password, {
+      roleId: failRole,
+      userId: user.globalId,
+      builder: false,
+    })
+  }
 
   await exports
     .createRequest(config.request, method, url, body)

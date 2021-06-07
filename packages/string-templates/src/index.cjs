@@ -33,7 +33,7 @@ function testObject(object) {
  */
 module.exports.processObject = async (object, context) => {
   testObject(object)
-  for (let key of Object.keys(object)) {
+  for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
       let val = object[key]
       if (typeof val === "string") {
@@ -68,7 +68,7 @@ module.exports.processString = async (string, context) => {
  */
 module.exports.processObjectSync = (object, context) => {
   testObject(object)
-  for (let key of Object.keys(object)) {
+  for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
       object[key] = module.exports.processStringSync(object[key], context)

@@ -1505,5 +1505,38 @@
     "context": {
       "type": "schema"
     }
+  },
+  "daterangepicker": {
+    "name": "Date Range",
+    "icon": "Date",
+    "styleable": true,
+    "hasChildren": false,
+    "info": "Your data provider will be automatically filtered to the given date range.",
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Date field",
+        "key": "field"
+      },
+      {
+        "type": "select",
+        "label": "Default range",
+        "key": "defaultValue",
+        "options": [
+          "Last 1 day",
+          "Last 7 days",
+          "Last 30 days",
+          "Last 3 months",
+          "Last 6 months",
+          "Last 1 year"
+        ],
+        "defaultValue": "Last 30 days"
+      }
+    ]
   }
 }
