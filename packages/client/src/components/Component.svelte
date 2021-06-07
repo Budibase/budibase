@@ -55,13 +55,13 @@
   }
 
   // Enriches any string component props using handlebars
-  const updateComponentProps = async (definition, context) => {
+  const updateComponentProps = (definition, context) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich props with context
-    const enrichedProps = await enrichProps(definition, context)
+    const enrichedProps = enrichProps(definition, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {

@@ -12,12 +12,8 @@ exports.init = async () => {
 }
 
 exports.shutdown = async () => {
-  if (devAppClient != null) {
-    await devAppClient.finish()
-  }
-  if (debounceClient != null) {
-    await debounceClient.finish()
-  }
+  if (devAppClient) await devAppClient.finish()
+  if (debounceClient) await debounceClient.finish()
 }
 
 exports.doesUserHaveLock = async (devAppId, user) => {
