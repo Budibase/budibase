@@ -3,7 +3,6 @@
   import { builderStore } from "../store"
   import Indicator from "./Indicator.svelte"
 
-  const offset = 2
   let indicators = []
   let interval
   let componentId
@@ -24,10 +23,10 @@
         if (child) {
           const elBounds = child.getBoundingClientRect()
           newIndicators.push({
-            top: elBounds.top + scrollY - offset * 2,
-            left: elBounds.left + scrollX - offset * 2,
-            width: elBounds.width + offset * 2,
-            height: elBounds.height + offset * 2,
+            top: elBounds.top + scrollY - 2,
+            left: elBounds.left + scrollX - 2,
+            width: elBounds.width + 4,
+            height: elBounds.height + 4,
           })
         }
       }

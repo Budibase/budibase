@@ -41,5 +41,6 @@
 <style>
   div {
     position: relative;
+    overflow-x: auto;
   }
 </style>
