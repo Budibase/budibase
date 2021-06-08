@@ -33,7 +33,7 @@
     { label: "Datetime", value: "DATETIME" },
   ]
 
-  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId) 
+  $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fields.reduce(
     (acc, next) => ({
       ...acc,
@@ -49,7 +49,7 @@
   $: queryConfig = integrationInfo?.query
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
   $: readQuery = query.queryVerb === "read" || query.readable
-  $: queryInvalid =  !query.name || (readQuery && data.length === 0)
+  $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
   function newField() {
     fields = [...fields, {}]
@@ -152,11 +152,7 @@
     <div class="viewer-controls">
       <Heading size="S">Results</Heading>
       <ButtonGroup>
-        <Button
-          cta
-          disabled={queryInvalid}
-          on:click={saveQuery}
-        >
+        <Button cta disabled={queryInvalid} on:click={saveQuery}>
           Save Query
         </Button>
         <Button secondary on:click={previewQuery}>Run Query</Button>
