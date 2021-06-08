@@ -64,7 +64,7 @@ exports.find = async function (ctx) {
 
 // TODO: merge endpoint with main datasource endpoint
 exports.plus = async function (ctx) {
-  const db = new CouchDB("testapp123")
+  const db = new CouchDB(ctx.appId)
 
   const PlusConnector = plusIntegrations[ctx.request.body.source]
 
