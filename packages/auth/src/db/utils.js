@@ -169,7 +169,8 @@ exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
     dbName.startsWith(exports.APP_PREFIX)
   )
   const appPromises = appDbNames.map(db =>
-    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+    // skip setup otherwise databases could be re-created
+    new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
   )
   if (appPromises.length === 0) {
     return []
@@ -192,6 +193,21 @@ exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
       }))
     }
   }
+}
+
+exports.dbExists = async (CouchDB, dbName) => {
+  let exists = false
+  try {
+    const db = CouchDB(dbName, {skip_setup: true})
+    // check if database exists
+    const info = await db.info()
+    if (info && !info.error) {
+      exists = true
+    }
+  } catch (err) {
+    exists = false
+  }
+  return exists
 }
 
 /**

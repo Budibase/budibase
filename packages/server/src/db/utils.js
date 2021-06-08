@@ -59,6 +59,7 @@ exports.StaticDatabases = {
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
