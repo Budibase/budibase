@@ -1,4 +1,9 @@
-const { getAppId, setCookie, getCookie, clearCookie } = require("@budibase/auth").utils
+const {
+  getAppId,
+  setCookie,
+  getCookie,
+  clearCookie,
+} = require("@budibase/auth").utils
 const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
 const { getGlobalSelf } = require("../utilities/workerRequests")
