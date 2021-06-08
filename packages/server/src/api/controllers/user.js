@@ -4,9 +4,7 @@ const {
   getUserMetadataParams,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const {
-  addAppRoleToUser,
-} = require("../../utilities/workerRequests")
+const { addAppRoleToUser } = require("../../utilities/workerRequests")
 const { getGlobalUsers, getGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 
