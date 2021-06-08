@@ -5,6 +5,7 @@
   export let prop
   export let value
   export let icon
+  export let title
   export let rotate = false
   export let bool = false
 
@@ -13,6 +14,7 @@
 </script>
 
 <div
+  {title}
   class:rotate
   class:active
   on:click={() => {
@@ -28,17 +30,18 @@
 <style>
   div {
     padding: 6px;
-    border-radius: 4px;
-    color: #666;
+    border-radius: 2px;
+    color: var(--spectrum-global-color-gray-700);
     display: flex;
+    transition: color 0.13s ease-in-out, background-color 0.13s ease-in-out;
   }
   div:hover {
-    background-color: #eee;
+    background-color: var(--spectrum-global-color-gray-200);
     cursor: pointer;
   }
   .active,
   .active:hover {
-    background-color: #e5f2ff;
+    background-color: rgba(13, 102, 208, 0.1);
     color: var(--spectrum-global-color-blue-600);
   }
   .rotate {
