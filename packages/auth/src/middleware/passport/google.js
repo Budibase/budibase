@@ -20,16 +20,10 @@ async function authenticate(token, tokenSecret, profile, done) {
     // use the google profile id
     dbUser = await db.get(userId)
   } catch (err) {
-    console.log("Google user not found. Creating..")
-
-    // create the user
     const user = {
       _id: userId,
       provider: profile.provider,
       roles: {},
-      builder: {
-        global: true,
-      },
       ...profile._json,
     }
 
@@ -50,12 +44,18 @@ async function authenticate(token, tokenSecret, profile, done) {
       user.roles = existing.roles
       user.builder = existing.builder
       user.admin = existing.admin
+
+      const response = await db.post(user)
+      dbUser = user
+      dbUser._rev = response.rev
+    } else {
+      return done(
+        new Error(
+          "email does not yet exist. You must set up your local budibase account first."
+        ),
+        false
+      )
     }
-
-    const response = await db.post(user)
-
-    dbUser = user
-    dbUser._rev = response.rev
   }
 
   // authenticate

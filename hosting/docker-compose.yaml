@@ -6,6 +6,7 @@ services:
   app-service:
     restart: always
     image: budibase/apps
+    container_name: bbapps
     ports:
       - "${APP_PORT}:4002"
     environment:
@@ -32,6 +33,7 @@ services:
   worker-service:
     restart: always
     image: budibase/worker
+    container_name: bbworker
     ports:
       - "${WORKER_PORT}:4003"
     environment:
@@ -118,7 +120,7 @@ services:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug --http-api-update budibase/apps budibase/worker
+    command: --debug --http-api-update bbapps bbworker
     environment:
       - WATCHTOWER_HTTP_API=true
       - WATCHTOWER_HTTP_API_TOKEN=budibase
