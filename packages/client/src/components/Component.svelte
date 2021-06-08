@@ -32,6 +32,7 @@
   $: constructor = getComponentConstructor(definition._component)
   $: children = definition._children || []
   $: id = definition._id
+  $: name = definition._instanceName
   $: updateComponentProps(definition, $context)
   $: styles = definition._styles
   $: transition = definition._transition
@@ -99,9 +100,9 @@
   }
 </script>
 
-{#if constructor && componentProps}
+<div class={id} data-type="component" data-id={id} data-name={name}>
   {#key propsHash}
-    <div class={id}>
+    {#if constructor && componentProps}
       <svelte:component this={constructor} {...componentProps}>
         {#if children.length}
           {#each children as child (child._id)}
@@ -109,9 +110,9 @@
           {/each}
         {/if}
       </svelte:component>
-    </div>
+    {/if}
   {/key}
-{/if}
+</div>
 
 <style>
   div {

@@ -3,11 +3,15 @@
   import SettingsButton from "./SettingsButton.svelte"
   import { builderStore } from "../store"
 
+  const verticalOffset = 28
+  const horizontalOffset = 2
+
   let top = 0
   let left = 0
   let interval
   let self
   let measured = false
+
   $: definition = $builderStore.selectedComponentDefinition
   $: showBar = definition?.showSettingsBar
   $: settings = definition?.settings?.filter(setting => setting.showInBar) ?? []
@@ -20,32 +24,35 @@
     const parent = document.getElementsByClassName(id)?.[0]
     const element = parent?.childNodes?.[0]
     if (element && self) {
+      // Batch reads to minimize reflow
       const elBounds = element.getBoundingClientRect()
       const width = self.offsetWidth
       const height = self.offsetHeight
+      const { scrollX, scrollY, innerWidth } = window
 
       // Vertically, always render above unless no room, then render inside
-      let newTop = elBounds.top + window.scrollY - 10 - height
+      let newTop = elBounds.top + scrollY - verticalOffset - height
       if (newTop < 0) {
-        newTop = elBounds.top + window.scrollY + 10
+        newTop = elBounds.top + scrollY + verticalOffset
       }
 
       // Horizontally, try to center first.
       // Failing that, render to left edge of component.
       // Failing that, render to right edge of component,
       // Failing that, render to window left edge and accept defeat.
-      let elCenter = elBounds.left + window.scrollX + elBounds.width / 2
+      let elCenter = elBounds.left + scrollX + elBounds.width / 2
       let newLeft = elCenter - width / 2
-      if (newLeft < 0 || newLeft + width > window.innerWidth) {
-        newLeft = elBounds.left + window.scrollX
-        if (newLeft < 0 || newLeft + width > window.innerWidth) {
-          newLeft = elBounds.left + window.scrollX + elBounds.width - width
-          if (newLeft < 0 || newLeft + width > window.innerWidth) {
+      if (newLeft < 0 || newLeft + width > innerWidth) {
+        newLeft = elBounds.left + scrollX - horizontalOffset
+        if (newLeft < 0 || newLeft + width > innerWidth) {
+          newLeft = innerWidth - width - 20
+          if (newLeft < 0 || newLeft + width > innerWidth) {
             newLeft = 0
           }
         }
       }
 
+      // Only update state when things changes to minimize renders
       if (Math.round(newTop) !== Math.round(top)) {
         top = newTop
       }
@@ -62,9 +69,7 @@
   })
 
   onDestroy(() => {
-    if (interval) {
-      clearInterval(interval)
-    }
+    clearInterval(interval)
   })
 </script>
 
@@ -97,8 +102,8 @@
   .bar {
     display: flex;
     position: absolute;
-    z-index: 999;
-    padding: 6px 10px;
+    z-index: 920;
+    padding: 6px 8px;
     opacity: 0;
     flex-direction: row;
     background: var(--background);

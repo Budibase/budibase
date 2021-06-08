@@ -15,6 +15,8 @@
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
   import SettingsBar from "./SettingsBar.svelte"
+  import SelectionIndicator from "./SelectionIndicator.svelte"
+  import HoverIndicator from "./HoverIndicator.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -64,11 +66,13 @@
     <Provider key="user" data={$authStore} {actions}>
       <Component definition={$screenStore.activeLayout.props} />
       <NotificationDisplay />
-      {#if $builderStore.inBuilder && $builderStore.selectedComponent}
-        {#key $builderStore.selectedComponentId}
+      {#key $builderStore.selectedComponentId}
+        {#if $builderStore.inBuilder && $builderStore.selectedComponent}
           <SettingsBar />
-        {/key}
-      {/if}
+          <SelectionIndicator />
+          <HoverIndicator />
+        {/if}
+      {/key}
     </Provider>
   </div>
 {/if}
