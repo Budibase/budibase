@@ -18,7 +18,10 @@ const download = require("download")
 const env = require("../../environment")
 const { homedir } = require("os")
 const fetch = require("node-fetch")
-const { USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX } = require("../../db/utils")
+const {
+  USER_METDATA_PREFIX,
+  LINK_USER_METADATA_PREFIX,
+} = require("../../db/utils")
 
 const DEFAULT_AUTOMATION_BUCKET =
   "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
@@ -120,7 +123,11 @@ exports.performBackup = async (appId, backupName) => {
   const instanceDb = new CouchDB(appId)
   await instanceDb.dump(writeStream, {
     // filter out anything that has a user metadata structure in its ID
-    filter: doc => !(doc._id.includes(USER_METDATA_PREFIX) || doc.includes(LINK_USER_METADATA_PREFIX))
+    filter: doc =>
+      !(
+        doc._id.includes(USER_METDATA_PREFIX) ||
+        doc.includes(LINK_USER_METADATA_PREFIX)
+      ),
   })
   // write the file to the object store
   await streamUpload(

@@ -198,7 +198,7 @@ exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
 exports.dbExists = async (CouchDB, dbName) => {
   let exists = false
   try {
-    const db = CouchDB(dbName, {skip_setup: true})
+    const db = CouchDB(dbName, { skip_setup: true })
     // check if database exists
     const info = await db.info()
     if (info && !info.error) {
