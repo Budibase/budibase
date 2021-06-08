@@ -1,7 +1,5 @@
-const fetch = require("node-fetch")
 const { DocumentTypes } = require("@budibase/auth").db
 const CouchDB = require("../../db")
-const env = require("../../environment")
 
 const APP_PREFIX = "app_"
 const URL_REGEX_SLASH = /\/|\\/g
