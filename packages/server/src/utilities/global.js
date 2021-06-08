@@ -43,14 +43,20 @@ exports.getGlobalUsers = async (appId = null, users = null) => {
       row => row.doc
     )
   } else {
-    globalUsers = (await db.allDocs(getGlobalUserParams(null,{
-      include_docs: true,
-    }))).rows.map(row => row.doc)
+    globalUsers = (
+      await db.allDocs(
+        getGlobalUserParams(null, {
+          include_docs: true,
+        })
+      )
+    ).rows.map(row => row.doc)
   }
-  globalUsers = globalUsers.filter(user => user != null).map(user => {
-    delete user.password
-    return user
-  })
+  globalUsers = globalUsers
+    .filter(user => user != null)
+    .map(user => {
+      delete user.password
+      return user
+    })
   if (!appId) {
     return globalUsers
   }
