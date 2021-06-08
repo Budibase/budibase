@@ -82,6 +82,7 @@
             prop={setting.key}
             value={option.value}
             icon={option.barIcon}
+            title={option.barTitle}
           />
         {/each}
       {/if}
@@ -97,10 +98,10 @@
     display: flex;
     position: absolute;
     z-index: 999;
-    padding: 6px 12px;
+    padding: 6px 10px;
     opacity: 0;
-    background-color: white;
     flex-direction: row;
+    background: var(--background);
     justify-content: center;
     align-items: center;
     border-radius: 4px;
@@ -115,6 +116,6 @@
     flex: 0 0 1px;
     align-self: stretch;
     margin: 0 4px;
-    background-color: #ddd;
+    background-color: var(--spectrum-global-color-gray-300);
   }
 </style>
