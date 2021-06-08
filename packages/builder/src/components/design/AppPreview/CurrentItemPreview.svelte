@@ -101,12 +101,12 @@
     overflow: hidden;
     margin: auto;
     height: 100%;
-    background-color: white;
   }
   .component-container iframe {
     border: 0;
     left: 0;
     top: 0;
     width: 100%;
+    background-color: transparent;
   }
 </style>

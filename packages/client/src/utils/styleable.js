@@ -15,25 +15,6 @@ const buildStyleString = (styleObject, customStyles) => {
 }
 
 /**
- * Applies styles to enrich the builder preview.
- * Applies styles to highlight the selected component, and allows pointer
- * events for any selectable components (overriding the blanket ban on pointer
- * events in the iframe HTML).
- */
-const addBuilderPreviewStyles = (node, styleString, componentId) => {
-  if (componentId === get(builderStore).selectedComponentId) {
-    const style = window.getComputedStyle(node)
-    const property = style?.display === "table-row" ? "outline" : "border"
-    return (
-      styleString +
-      `;${property}: 2px solid #4285f4 !important; border-radius: 4px !important;`
-    )
-  } else {
-    return styleString
-  }
-}
-
-/**
  * Svelte action to apply correct component styles.
  * This also applies handlers for selecting components from the builder preview.
  */
@@ -54,7 +35,7 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = addBuilderPreviewStyles(node, styleString, componentId)
+      node.style = styleString
       node.dataset.componentId = componentId
     }
 
