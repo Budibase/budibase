@@ -11,7 +11,12 @@ const {
 const { flatten } = require("lodash")
 const CouchDB = require("../../db")
 const { FieldTypes } = require("../../constants")
-const { getMultiIDParams } = require("../../db/utils")
+const {
+  getMultiIDParams,
+  USER_METDATA_PREFIX,
+} = require("../../db/utils")
+const { partition } = require("lodash")
+const { getGlobalUsers } = require("../../utilities/global")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -55,6 +60,30 @@ async function getLinksForRows(appId, rows) {
       .map(el => ({ ...el, unique: el.id + el.thisId + el.fieldName })),
     "unique"
   )
+}
+
+async function getFullLinkedDocs(appId, links) {
+  // create DBs
+  const db = new CouchDB(appId)
+  const linkedRowIds = links.map(link => link.id)
+  let linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
+    row => row.doc
+  )
+  // need to handle users as specific cases
+  let [users, other] = partition(linked, linkRow => linkRow._id.startsWith(USER_METDATA_PREFIX))
+  const globalUsers = await getGlobalUsers(appId, users)
+  users = users.map(user => {
+    const globalUser = globalUsers.find(globalUser => globalUser && user._id.includes(globalUser._id))
+    return {
+      ...globalUser,
+      // doing user second overwrites the id and rev (always metadata)
+      ...user,
+    }
+  })
+  return [
+    ...other,
+    ...users,
+  ]
 }
 
 /**
@@ -154,14 +183,13 @@ exports.attachFullLinkedDocs = async (appId, table, rows) => {
   if (linkedTableIds.length === 0) {
     return rows
   }
+  // create DBs
   const db = new CouchDB(appId)
+  // get all the links
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
-  const linkedRowIds = links.map(link => link.id)
-  const linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
-    row => row.doc
-  )
+  let linked = await getFullLinkedDocs(appId, links)
   const linkedTables = []
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
