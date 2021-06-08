@@ -45,9 +45,9 @@
       if (newLeft < 0 || newLeft + width > innerWidth) {
         newLeft = elBounds.left + scrollX - horizontalOffset
         if (newLeft < 0 || newLeft + width > innerWidth) {
-          newLeft = innerWidth - width - 20
+          newLeft = elBounds.right + scrollX - width + horizontalOffset
           if (newLeft < 0 || newLeft + width > innerWidth) {
-            newLeft = 0
+            newLeft = horizontalOffset
           }
         }
       }

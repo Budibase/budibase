@@ -64,7 +64,9 @@
     class="spectrum spectrum--medium spectrum--light"
   >
     <Provider key="user" data={$authStore} {actions}>
-      <Component definition={$screenStore.activeLayout.props} />
+      <div id="app-root">
+        <Component definition={$screenStore.activeLayout.props} />
+      </div>
       <NotificationDisplay />
       {#key $builderStore.selectedComponentId}
         {#if $builderStore.inBuilder && $builderStore.selectedComponent}
@@ -78,9 +80,16 @@
 {/if}
 
 <style>
-  div {
-    background: transparent;
+  #spectrum-root {
     height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+  #app-root {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
   }
 </style>
