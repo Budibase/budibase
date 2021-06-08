@@ -41,7 +41,7 @@
           {
             "label": "Middle",
             "value": "middle",
-            "barIcon": "AlignMiddle"
+            "barIcon": "AlignCenter"
           },
           {
             "label": "Right",
