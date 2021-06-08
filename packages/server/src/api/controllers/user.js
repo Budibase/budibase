@@ -5,9 +5,9 @@ const {
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const {
-  getGlobalUsers,
   addAppRoleToUser,
 } = require("../../utilities/workerRequests")
+const { getGlobalUsers, getGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 
 function removeGlobalProps(user) {
@@ -20,7 +20,7 @@ function removeGlobalProps(user) {
 
 exports.fetchMetadata = async function (ctx) {
   const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers(ctx, ctx.appId)
+  const global = await getGlobalUsers(ctx.appId)
   const metadata = (
     await database.allDocs(
       getUserMetadataParams(null, {

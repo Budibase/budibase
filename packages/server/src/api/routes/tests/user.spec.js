@@ -1,7 +1,6 @@
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-const workerRequests = require("../../../utilities/workerRequests")
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
@@ -25,30 +24,18 @@ describe("/users", () => {
   })
 
   describe("fetch", () => {
-    beforeEach(() => {
-      workerRequests.getGlobalUsers.mockImplementationOnce(() => ([
-          {
-            _id: "us_uuid1",
-          },
-          {
-            _id: "us_uuid2",
-          }
-        ]
-      ))
-    })
-
     it("returns a list of users from an instance db", async () => {
-      await config.createUser("brenda@brenda.com", "brendas_password")
-      await config.createUser("pam@pam.com", "pam_password")
+      await config.createUser("uuidx")
+      await config.createUser("uuidy")
       const res = await request
         .get(`/api/users/metadata`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.body.length).toBe(2)
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuid1`)).toBeDefined()
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuid2`)).toBeDefined()
+      expect(res.body.length).toBe(3)
+      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidx`)).toBeDefined()
+      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidy`)).toBeDefined()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -65,9 +52,6 @@ describe("/users", () => {
   })
 
   describe("update", () => {
-    beforeEach(() => {
-    })
-
     it("should be able to update the user", async () => {
       const user = await config.createUser()
       user.roleId = BUILTIN_ROLE_IDS.BASIC
@@ -94,14 +78,6 @@ describe("/users", () => {
   })
 
   describe("find", () => {
-    beforeEach(() => {
-      jest.resetAllMocks()
-      workerRequests.getGlobalUsers.mockImplementationOnce(() => ({
-        _id: "us_uuid1",
-        roleId: BUILTIN_ROLE_IDS.POWER,
-      }))
-    })
-
     it("should be able to find the user", async () => {
       const user = await config.createUser()
       const res = await request
@@ -110,7 +86,7 @@ describe("/users", () => {
         .expect(200)
         .expect("Content-Type", /json/)
       expect(res.body._id).toEqual(user._id)
-      expect(res.body.roleId).toEqual(BUILTIN_ROLE_IDS.POWER)
+      expect(res.body.roleId).toEqual(BUILTIN_ROLE_IDS.ADMIN)
       expect(res.body.tableId).toBeDefined()
     })
   })
