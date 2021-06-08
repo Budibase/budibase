@@ -35,6 +35,9 @@
   $: updateComponentProps(definition, $context)
   $: styles = definition._styles
   $: transition = definition._transition
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId === definition._id
 
   // Update component context
   $: componentStore.set({
@@ -42,6 +45,8 @@
     children: children.length,
     styles: { ...styles, id },
     transition,
+    selected,
+    props: componentProps,
   })
 
   // Gets the component constructor for the specified component
@@ -96,12 +101,20 @@
 
 {#if constructor && componentProps}
   {#key propsHash}
-    <svelte:component this={constructor} {...componentProps}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self definition={child} />
-        {/each}
-      {/if}
-    </svelte:component>
+    <div class={id}>
+      <svelte:component this={constructor} {...componentProps}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self definition={child} />
+          {/each}
+        {/if}
+      </svelte:component>
+    </div>
   {/key}
 {/if}
+
+<style>
+  div {
+    display: contents;
+  }
+</style>

@@ -14,6 +14,7 @@
     builderStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
+  import SettingsBar from "./SettingsBar.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -54,10 +55,20 @@
 </script>
 
 {#if dataLoaded && $screenStore.activeLayout}
-  <div lang="en" dir="ltr" class="spectrum spectrum--medium spectrum--light">
+  <div
+    id="spectrum-root"
+    lang="en"
+    dir="ltr"
+    class="spectrum spectrum--medium spectrum--light"
+  >
     <Provider key="user" data={$authStore} {actions}>
       <Component definition={$screenStore.activeLayout.props} />
       <NotificationDisplay />
+      {#if $builderStore.inBuilder && $builderStore.selectedComponent}
+        {#key $builderStore.selectedComponentId}
+          <SettingsBar />
+        {/key}
+      {/if}
     </Provider>
   </div>
 {/if}

@@ -6,7 +6,105 @@
     "hasChildren": true,
     "styleable": true,
     "transitionable": true,
-    "settings": []
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Column",
+            "value": "column",
+            "barIcon": "ViewRow"
+          },
+          {
+            "label": "Row",
+            "value": "row",
+            "barIcon": "ViewColumn"
+          }
+        ],
+        "defaultValue": "column"
+      },
+      {
+        "type": "select",
+        "label": "Horizontal",
+        "key": "hAlign",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "AlignLeft"
+          },
+          {
+            "label": "Middle",
+            "value": "middle",
+            "barIcon": "AlignMiddle"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "AlignRight"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveLeftRight"
+          }
+        ],
+        "defaultValue": "stretch"
+      },
+      {
+        "type": "select",
+        "label": "Vertical",
+        "key": "vAlign",
+        "showInBar": "true",
+        "options": [
+          {
+            "label": "Top",
+            "value": "top",
+            "barIcon": "AlignTop"
+          },
+          {
+            "label": "Middle",
+            "value": "middle",
+            "barIcon": "AlignMiddle"
+          },
+          {
+            "label": "Bottom",
+            "value": "bottom",
+            "barIcon": "AlignBottom"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveUpDown"
+          }
+        ],
+        "defaultValue": "top"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Shrink",
+            "value": "shrink",
+            "barIcon": "Minimize"
+          },
+          {
+            "label": "Grow",
+            "value": "grow",
+            "barIcon": "Maximize"
+          }
+        ],
+        "defaultValue": "shrink"
+      }
+    ]
   },
   "screenslot": {
     "name": "Screenslot",
