@@ -80,7 +80,7 @@
   }
 
   // Provide both form API and state to children
-  setContext("form", { formApi, formState })
+  setContext("form", { formApi, formState, dataSource })
 
   // Action context to pass to children
   $: actions = [{ type: ActionTypes.ValidateForm, callback: formApi.validate }]
