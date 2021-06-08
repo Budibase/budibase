@@ -9,8 +9,6 @@
 
   let fieldState
   let fieldApi
-
-  // $: if (fieldApi && $fieldState.value === null) fieldApi.setValue(false)
 </script>
 
 <Field
