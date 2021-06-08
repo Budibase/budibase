@@ -7,13 +7,8 @@ const APP_PREFIX = "app_"
 const URL_REGEX_SLASH = /\/|\\/g
 
 exports.getApps = async ctx => {
-  let allDbs
   // allDbs call of CouchDB is very inaccurate in production
-  if (env.COUCH_DB_URL) {
-    allDbs = await (await fetch(`${env.COUCH_DB_URL}/_all_dbs`)).json()
-  } else {
-    allDbs = await CouchDB.allDbs()
-  }
+  const allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
   const appPromises = appDbNames.map(db =>
     new CouchDB(db).get(DocumentTypes.APP_METADATA)

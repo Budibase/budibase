@@ -105,12 +105,6 @@ async function createInstance(template) {
     if (!ok) {
       throw "Error loading database dump from template."
     }
-    try {
-      const response = await db.get(DocumentTypes.APP_METADATA)
-      _rev = response._rev
-    } catch (err) {
-      _rev = null
-    }
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -121,7 +115,7 @@ async function createInstance(template) {
   await createRoutingView(appId)
   await createAllSearchIndex(appId)
 
-  return { _id: appId, _rev }
+  return { _id: appId }
 }
 
 exports.fetch = async function (ctx) {
@@ -188,11 +182,21 @@ exports.create = async function (ctx) {
     instanceConfig.file = ctx.request.files.templateFile
   }
   const instance = await createInstance(instanceConfig)
+  const appId = instance._id
 
   const url = await getAppUrlIfNotInUse(ctx)
-  const appId = instance._id
+  const db = new CouchDB(appId)
+  let _rev
+  try {
+    // if template there will be an existing doc
+    const existing = await db.get(DocumentTypes.APP_METADATA)
+    _rev = existing._rev
+  } catch (err) {
+    // nothing to do
+  }
   const newApplication = {
     _id: DocumentTypes.APP_METADATA,
+    _rev,
     appId: instance._id,
     type: "app",
     version: packageJson.version,
@@ -204,11 +208,7 @@ exports.create = async function (ctx) {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
-  if (instance._rev) {
-    newApplication._rev = instance._rev
-  }
-  const instanceDb = new CouchDB(appId)
-  await instanceDb.put(newApplication)
+  await db.put(newApplication, { force: true })
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
