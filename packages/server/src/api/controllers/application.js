@@ -99,7 +99,6 @@ async function createInstance(template) {
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
-  let _rev
   if (template && template.useTemplate === "true") {
     const { ok } = await db.load(await getTemplateStream(template))
     if (!ok) {

@@ -5,7 +5,7 @@ const {
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { addAppRoleToUser } = require("../../utilities/workerRequests")
-const { getGlobalUsers, getGlobalUser } = require("../../utilities/global")
+const { getGlobalUsers } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 
 function removeGlobalProps(user) {
