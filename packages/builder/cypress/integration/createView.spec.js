@@ -17,21 +17,21 @@ context("Create a View", () => {
   })
 
   it("creates a view", () => {
-    cy.contains("Create New View").click()
-    cy.get(".menu-container").within(() => {
+    cy.contains("Create view").click()
+    cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type("Test View")
-      cy.contains("Save View").click()
+      cy.get("button").contains("Create View").click({ force: true })
     })
     cy.get(".table-title h1").contains("Test View")
-    cy.get("[data-cy=table-header]").then($headers => {
+    cy.get(".title").then($headers => {
       expect($headers).to.have.length(3)
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
       expect(removeSpacing(headers)).to.deep.eq([
-        "rating Number",
-        "age Number",
-        "group Text",
+        "group",
+        "age",
+        "rating",
       ])
     })
   })
@@ -39,97 +39,95 @@ context("Create a View", () => {
   it("filters the view by age over 10", () => {
     cy.contains("Filter").click()
     cy.contains("Add Filter").click()
-    cy.get(".menu-container")
-      .find("select")
-      .first()
-      .select("age")
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("More Than")
-    cy.get(".menu-container")
-      .find("input")
-      .type(18)
-    cy.contains("Save").click()
-    cy.get("[role=rowgroup] .ag-row").get($values => {
+
+    cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(".spectrum-Picker-label").eq(0).click()
+      cy.contains("age").click({ force: true })
+
+      cy.get(".spectrum-Picker-label").eq(1).click()
+      cy.contains("More Than").click({ force: true })
+
+      cy.get("input").type(18)
+      cy.contains("Save").click()
+    })
+
+    cy.get(".spectrum-Table-row").get($values => {
       expect($values).to.have.length(5)
     })
   })
 
   it("creates a stats calculation view based on age", () => {
-    // Required due to responsive bug with ag grid in cypress
-    cy.viewport("macbook-15")
-
     cy.contains("Calculate").click()
-    cy.get(".menu-container")
-      .find("select")
-      .eq(0)
-      .select("Statistics")
-    cy.wait(50)
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("age")
-    cy.contains("Save").click()
+    cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(".spectrum-Picker-label").eq(0).click()
+      cy.contains("Statistics").click()
+      
+      cy.get(".spectrum-Picker-label").eq(1).click()
+      cy.contains("age").click({ force: true })
+
+      cy.contains("Save").click()
+    })
     cy.wait(1000)
-    cy.get(".ag-center-cols-viewport").scrollTo("100%")
-    cy.get("[data-cy=table-header]").then($headers => {
+
+    cy.get(".title").then($headers => {
       expect($headers).to.have.length(7)
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
       expect(removeSpacing(headers)).to.deep.eq([
-        "avg Number",
-        "sumsqr Number",
-        "count Number",
-        "max Number",
-        "min Number",
-        "sum Number",
-        "field Text",
+        "field",
+        "sum",
+        "min",
+        "max",
+        "count",
+        "sumsqr",
+        "avg",
       ])
     })
-    cy.get(".ag-cell").then($values => {
+    cy.get(".spectrum-Table-cell").then($values => {
       let values = Array.from($values).map(header => header.textContent.trim())
-      expect(values).to.deep.eq(["31", "5347", "5", "49", "20", "155", "age"])
+      expect(values).to.deep.eq(["age", "155", "20", "49", "5", "5347", "31"])
     })
   })
 
   it("groups the view by group", () => {
-    // Required due to responsive bug with ag grid in cypress
-    cy.viewport("macbook-15")
-
-    cy.contains("Group By").click()
-    cy.get("select").select("group")
-    cy.contains("Save").click()
+    cy.contains("Group by").click()
+    cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(".spectrum-Picker-label").eq(0).click()
+      cy.contains("group").click()
+      cy.contains("Save").click()
+    })
     cy.wait(1000)
-    cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.contains("Students").should("be.visible")
     cy.contains("Teachers").should("be.visible")
 
-    cy.get(".ag-row[row-index=0]")
-      .find(".ag-cell")
-      .then($values => {
-        const values = Array.from($values).map(value => value.textContent)
-        expect(values.sort()).to.deep.eq(
-          [
+    cy.get(".spectrum-Table-cell").then($values => {
+      let values = Array.from($values).map(header => header.textContent.trim())
+      expect(values).to.deep.eq([
             "Students",
-            "23.333333333333332",
-            "1650",
-            "3",
-            "25",
-            "20",
             "70",
-          ].sort()
-        )
-      })
+            "20",
+            "25",
+            "3",
+            "1650",
+            "23.333333333333332",
+            "Teachers",
+            "85",
+            "36",
+            "49",
+            "2",
+            "3697",
+            "42.5",
+      ])
+    })
   })
 
   it("renames a view", () => {
     cy.contains(".nav-item", "Test View")
-      .find(".ri-more-line")
+      .find(".actions .icon")
       .click({ force: true })
-    cy.get("[data-cy=edit-view]").click()
-    cy.get(".menu-container").within(() => {
+    cy.contains("Edit").click()
+    cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
     })
@@ -139,9 +137,9 @@ context("Create a View", () => {
 
   it("deletes a view", () => {
     cy.contains(".nav-item", "Test View Updated")
-      .find(".ri-more-line")
+      .find(".actions .icon")
       .click({ force: true })
-    cy.get("[data-cy=delete-view]").click()
+    cy.contains("Delete").click()
     cy.contains("Delete View").click()
     cy.wait(1000)
     cy.contains("TestView Updated").should("not.be.visible")
