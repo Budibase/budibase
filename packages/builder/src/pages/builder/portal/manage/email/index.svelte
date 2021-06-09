@@ -38,17 +38,21 @@
   let loading
 
   async function saveSmtp() {
-    try {
-      // Save your SMTP config
-      const response = await api.post(`/api/admin/configs`, smtpConfig)
+    // Save your SMTP config
+    const response = await api.post(`/api/admin/configs`, smtpConfig)
+
+    if (response.status !== 200) {
+      const error = await response.text()
+      let message = error
+      try {
+        message = JSON.parse(error).message
+      } catch (err) {}
+      notifications.error(`Failed to save email settings, reason: ${message}`)
+    } else {
       const json = await response.json()
-      if (response.status !== 200) throw new Error(json.message)
       smtpConfig._rev = json._rev
       smtpConfig._id = json._id
-
       notifications.success(`Settings saved.`)
-    } catch (err) {
-      notifications.error(`Failed to save email settings. ${err}`)
     }
   }
 
