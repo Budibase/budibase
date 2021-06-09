@@ -1,13 +1,9 @@
 const CouchDB = require("../db")
-const { getGlobalIDFromUserMetadataID, InternalTables } = require("../db/utils")
-const { getGlobalUsers } = require("../utilities/workerRequests")
+const { InternalTables } = require("../db/utils")
+const { getGlobalUser } = require("../utilities/global")
 
 exports.getFullUser = async (ctx, userId) => {
-  const global = await getGlobalUsers(
-    ctx,
-    ctx.appId,
-    getGlobalIDFromUserMetadataID(userId)
-  )
+  const global = await getGlobalUser(ctx.appId, userId)
   let metadata
   try {
     // this will throw an error if the db doesn't exist, or there is no appId

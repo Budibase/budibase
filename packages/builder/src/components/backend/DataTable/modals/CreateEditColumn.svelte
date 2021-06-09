@@ -100,6 +100,7 @@
       tables.deleteField(field)
       notifications.success(`Column ${field.name} deleted.`)
       confirmDeleteDialog.hide()
+      hide()
       deletion = false
     }
   }

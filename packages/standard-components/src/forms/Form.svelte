@@ -8,6 +8,7 @@
   export let theme
   export let size
   export let disabled = false
+  export let actionType = "Create"
 
   const component = getContext("component")
   const context = getContext("context")
@@ -19,15 +20,29 @@
   let fieldMap = {}
 
   // Returns the closes data context which isn't a built in context
-  const getInitialValues = context => {
+  const getInitialValues = (type, dataSource, context) => {
+    // Only inherit values for update forms
+    if (type !== "Update") {
+      return {}
+    }
+    // Only inherit values for forms targetting internal tables
+    if (!dataSource?.tableId) {
+      return {}
+    }
+    // Don't inherit values representing built in contexts
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
-    return context[`${context.closestComponentId}`] || {}
+    // Only inherit values if the table ID matches
+    const closestContext = context[`${context.closestComponentId}`] || {}
+    if (dataSource.tableId !== closestContext?.tableId) {
+      return {}
+    }
+    return closestContext
   }
 
   // Use the closest data context as the initial form values
-  const initialValues = getInitialValues($context)
+  const initialValues = getInitialValues(actionType, dataSource, $context)
 
   // Form state contains observable data about the form
   const formState = writable({ values: initialValues, errors: {}, valid: true })
@@ -42,22 +57,11 @@
       // Auto columns are always disabled
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
-      if (fieldMap[field] != null) {
-        // Update disabled property just so that toggling the disabled field
-        // state in the builder makes updates in real time.
-        // We only need this because of optimisations which prevent fully
-        // remounting when settings change.
-        fieldMap[field].fieldState.update(state => {
-          state.disabled = disabled || fieldDisabled || isAutoColumn
-          return state
-        })
-        return fieldMap[field]
-      }
-
       // Create validation function based on field schema
       const constraints = schema?.[field]?.constraints
       const validate = createValidatorFromConstraints(constraints, field, table)
 
+      // Construct field object
       fieldMap[field] = {
         fieldState: makeFieldState(
           field,
@@ -67,6 +71,17 @@
         fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
+
+      // Set initial value
+      const initialValue = get(fieldMap[field].fieldState).value
+      formState.update(state => ({
+        ...state,
+        values: {
+          ...state.values,
+          [field]: initialValue,
+        },
+      }))
+
       return fieldMap[field]
     },
     validate: () => {
@@ -80,7 +95,7 @@
   }
 
   // Provide both form API and state to children
-  setContext("form", { formApi, formState })
+  setContext("form", { formApi, formState, dataSource })
 
   // Action context to pass to children
   $: actions = [{ type: ActionTypes.ValidateForm, callback: formApi.validate }]

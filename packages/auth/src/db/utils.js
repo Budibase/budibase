@@ -1,6 +1,5 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { getCouch } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
@@ -164,14 +163,14 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async ({ dev, all } = {}) => {
-  const CouchDB = getCouch()
+exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName =>
     dbName.startsWith(exports.APP_PREFIX)
   )
   const appPromises = appDbNames.map(db =>
-    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+    // skip setup otherwise databases could be re-created
+    new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
   )
   if (appPromises.length === 0) {
     return []
@@ -194,6 +193,21 @@ exports.getAllApps = async ({ dev, all } = {}) => {
       }))
     }
   }
+}
+
+exports.dbExists = async (CouchDB, dbName) => {
+  let exists = false
+  try {
+    const db = CouchDB(dbName, { skip_setup: true })
+    // check if database exists
+    const info = await db.info()
+    if (info && !info.error) {
+      exists = true
+    }
+  } catch (err) {
+    exists = false
+  }
+  return exists
 }
 
 /**

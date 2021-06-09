@@ -306,8 +306,8 @@ class TestConfiguration {
     return await this._req(config, null, controllers.layout.save)
   }
 
-  async createUser() {
-    const globalId = `us_${Math.random()}`
+  async createUser(id = null) {
+    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser(globalId)
     return {
       ...resp,

@@ -1,26 +1,8 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { getDeployedAppID } = require("@budibase/auth/db")
-const { getGlobalIDFromUserMetadataID } = require("../db/utils")
-
-function getAppRole(appId, user) {
-  if (!user.roles) {
-    return user
-  }
-  if (user.builder && user.builder.global) {
-    user.roleId = BUILTIN_ROLE_IDS.ADMIN
-  } else {
-    // always use the deployed app
-    user.roleId = user.roles[getDeployedAppID(appId)]
-    if (!user.roleId) {
-      user.roleId = BUILTIN_ROLE_IDS.PUBLIC
-    }
-  }
-  delete user.roles
-  return user
-}
+const { updateAppRole, getGlobalUser } = require("./global")
 
 function request(ctx, request, noApiKey) {
   if (!request.headers) {
@@ -90,27 +72,6 @@ exports.getDeployedApps = async ctx => {
   }
 }
 
-exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
-  const endpoint = globalId
-    ? `/api/admin/users/${globalId}`
-    : `/api/admin/users`
-  const reqCfg = { method: "GET" }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, reqCfg)
-  )
-  let users = await response.json()
-  if (!appId) {
-    return users
-  }
-  if (Array.isArray(users)) {
-    users = users.map(user => getAppRole(appId, user))
-  } else {
-    users = getAppRole(appId, users)
-  }
-  return users
-}
-
 exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/admin/users/self`
   const response = await fetch(
@@ -123,7 +84,7 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   }
   let json = await response.json()
   if (appId) {
-    json = getAppRole(appId, json)
+    json = updateAppRole(appId, json)
   }
   return json
 }
@@ -136,8 +97,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     user = await exports.getGlobalSelf(ctx)
     endpoint = `/api/admin/users/self`
   } else {
-    userId = getGlobalIDFromUserMetadataID(userId)
-    user = await exports.getGlobalUsers(ctx, appId, userId)
+    user = await getGlobalUser(appId, userId)
     body._id = userId
     endpoint = `/api/admin/users`
   }
