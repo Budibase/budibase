@@ -29,11 +29,11 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.9.35",
+  "version": "0.9.36",
   "license": "MIT",
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc",
   "dependencies": {
-    "@budibase/bbui": "^0.9.35",
+    "@budibase/bbui": "^0.9.36",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "apexcharts": "^3.22.1",
