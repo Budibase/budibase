@@ -1024,6 +1024,13 @@
     ],
     "settings": [
       {
+        "type": "select",
+        "label": "Type",
+        "key": "type",
+        "options": ["Create", "Update"],
+        "defaultValue": "Create"
+      },
+      {
         "type": "schema",
         "label": "Schema",
         "key": "dataSource"
