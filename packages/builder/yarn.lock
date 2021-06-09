@@ -882,10 +882,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/bbui@^0.9.30":
-  version "0.9.30"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.30.tgz#ec16ba15c36d86bfb0131e7a33bc6beeb127a1d7"
-  integrity sha512-Bleqck7C3UPYQk9j0VF8AUl9EBHNOuQVM8uv7S9+IVdL6NH2SbdR1V9sOXiX6D+qZwqNwbXM+MZ3aXRMOPThkQ==
+"@budibase/bbui@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.34.tgz#44c0a0e7b6ca2c607841130063ce59b4fd5e27d9"
+  integrity sha512-kH74IG2/m9txaSy+n+zF6viLXX+5DDc7acbhIOWc9Ch+GzEcZlQFpF5GvL16Bi01p7U/YtqJLP2CdhbyaKt1CQ==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -930,12 +930,12 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.30":
-  version "0.9.30"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.30.tgz#70f3d5f2d088b5a0e49d18356e72e4f7c55c29cf"
-  integrity sha512-x3INLSIh6VkWE/yFzgmlsOyMTpdukdiltQVNkUPiNgA9dRFSLeStGzo+mhMxhfFxN2VlGibrsd3O/Hg+MQoQxw==
+"@budibase/client@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.34.tgz#d01ba1d24de04ec739a7b33a6c3012448b580322"
+  integrity sha512-s22VrNg6eEdY3dcrzv2BSH/edbGfMWlMPTq7gOq7bzzgLR+xDz0goLvn9J/blQIf9YsNNSDqYUZqAXObxFpB1Q==
   dependencies:
-    "@budibase/string-templates" "^0.9.30"
+    "@budibase/string-templates" "^0.9.34"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -977,10 +977,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.30":
-  version "0.9.30"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.30.tgz#946b56083f7b1e61b1084da26a696800a45b1ed7"
-  integrity sha512-IwgVxkwj0Cq9EFlpAIOHDuLnAAiuQctYTs7nVmEIhsM+ZhtwIGNqVuaDTpd1BvPYz0zQmVK3wiVjErFvGZe3wQ==
+"@budibase/string-templates@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.34.tgz#ec1a6833ef9767fcdf09203ae5ff3280974001c8"
+  integrity sha512-qZqs1ECJG3pAp3QTYQx1gz0yeBW8tIKcFnVXRyvP2MuJPOClbqjEci1YWAGiZR4ddbChbAULAYBsxRYCBlwiKQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.3"
     dayjs "^1.10.4"
@@ -5349,10 +5349,10 @@ nanoid@^2.1.0:
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-2.1.11.tgz#ec24b8a758d591561531b4176a01e3ab4f0f0280"
   integrity sha512-s/snB+WGm6uwi0WjsZdaVcuf3KJXlfGl2LcxgwkEwJF0D/BWzVWAZW/XY4bFaiR7s0Jk3FPvlnepg1H1b1UwlA==
 
-nanoid@^3.1.22:
-  version "3.1.22"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.22.tgz#b35f8fb7d151990a8aebd5aa5015c03cf726f844"
-  integrity sha512-/2ZUaJX2ANuLtTvqTlgqBQNJoQO398KyJgZloL0PZkC0dpysjncRUPsFe3DUPzz/y3h+u7C46np8RMuvF3jsSQ==
+nanoid@^3.1.23:
+  version "3.1.23"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.23.tgz#f744086ce7c2bc47ee0a8472574d5c78e4183a81"
+  integrity sha512-FiB0kzdP0FFVGDKlRLEQ1BgDzU87dy5NnzjeW9YZNt+/c3+q82EQDUwniSAUxp/F0gFNI1ZhKU1FqYsMuqZVnw==
 
 nanomatch@^1.2.9:
   version "1.2.13"
@@ -5720,13 +5720,13 @@ posix-character-classes@^0.1.0:
   integrity sha1-AerA/jta9xoqbAL+q7jB/vfgDqs=
 
 postcss@^8.2.1:
-  version "8.2.9"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.2.9.tgz#fd95ff37b5cee55c409b3fdd237296ab4096fba3"
-  integrity sha512-b+TmuIL4jGtCHtoLi+G/PisuIl9avxs8IZMSmlABRwNz5RLUUACrC+ws81dcomz1nRezm5YPdXiMEzBEKgYn+Q==
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.3.0.tgz#b1a713f6172ca427e3f05ef1303de8b65683325f"
+  integrity sha512-+ogXpdAjWGa+fdYY5BQ96V/6tAo+TdSSIMP5huJBIygdWwKtVoB5JWZ7yUd4xZ8r+8Kvvx4nyg/PQ071H4UtcQ==
   dependencies:
     colorette "^1.2.2"
-    nanoid "^3.1.22"
-    source-map "^0.6.1"
+    nanoid "^3.1.23"
+    source-map-js "^0.6.2"
 
 posthog-js@1.4.5:
   version "1.4.5"
@@ -6347,6 +6347,11 @@ snapdragon@^0.8.1:
     source-map "^0.5.6"
     source-map-resolve "^0.5.0"
     use "^3.1.0"
+
+source-map-js@^0.6.2:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-0.6.2.tgz#0bb5de631b41cfbda6cfba8bd05a80efdfd2385e"
+  integrity sha512-/3GptzWzu0+0MBQFrDKzw/DvvMTUORvgY6k6jd/VS6iCR4RDTKWH6v6WPwQoUO8667uQEf9Oe38DxAYWY5F/Ug==
 
 source-map-resolve@^0.5.0:
   version "0.5.3"
