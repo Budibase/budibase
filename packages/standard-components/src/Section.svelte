@@ -30,6 +30,7 @@
   bind:clientWidth={containerWidth}
   in:transition={{ type: $component.transition }}
   class="{type} columns-{columnsDependingOnSize}"
+  use:styleable={$component.styles}
 >
   <slot />
   {#if layoutMap[type] - $component.children > 0}
@@ -45,10 +46,10 @@
     grid-gap: 16px;
   }
   .mainSidebar {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 3fr 1fr;
   }
   .sidebarMain {
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 3fr;
   }
   .twoColumns {
     grid-template-columns: 1fr 1fr;

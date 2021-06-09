@@ -11,7 +11,7 @@ import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 loadSpectrumIcons()
 
 export { default as container } from "./Container.svelte"
-export { default as layout } from "./Layout.svelte"
+export { default as section } from "./Section.svelte"
 export { default as dataprovider } from "./DataProvider.svelte"
 export { default as screenslot } from "./ScreenSlot.svelte"
 export { default as button } from "./Button.svelte"
