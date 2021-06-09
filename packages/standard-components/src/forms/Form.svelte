@@ -42,18 +42,6 @@
       // Auto columns are always disabled
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
-      if (fieldMap[field] != null) {
-        // Update disabled property just so that toggling the disabled field
-        // state in the builder makes updates in real time.
-        // We only need this because of optimisations which prevent fully
-        // remounting when settings change.
-        fieldMap[field].fieldState.update(state => {
-          state.disabled = disabled || fieldDisabled || isAutoColumn
-          return state
-        })
-        return fieldMap[field]
-      }
-
       // Create validation function based on field schema
       const constraints = schema?.[field]?.constraints
       const validate = createValidatorFromConstraints(constraints, field, table)
@@ -67,6 +55,10 @@
         fieldApi: makeFieldApi(field, defaultValue, validate),
         fieldSchema: schema?.[field] ?? {},
       }
+
+      // Set initial value
+      fieldMap[field].fieldApi.setValue(defaultValue, true)
+
       return fieldMap[field]
     },
     validate: () => {
