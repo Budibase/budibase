@@ -5,6 +5,10 @@ const { join } = require("path")
 const CouchDB = require("../src/db")
 // load environment
 const env = require("../src/environment")
+const {
+  USER_METDATA_PREFIX,
+  LINK_USER_METADATA_PREFIX,
+} = require("../src/db/utils")
 
 // Script to export a chosen budibase app into a package
 // Usage: ./scripts/exportAppTemplate.js export --name=Funky --appId=appId
@@ -44,7 +48,13 @@ yargs
       // perform couch dump
 
       const instanceDb = new CouchDB(appId)
-      await instanceDb.dump(writeStream, {})
+      await instanceDb.dump(writeStream, {
+        filter: doc =>
+          !(
+            doc._id.includes(USER_METDATA_PREFIX) ||
+            doc.includes(LINK_USER_METADATA_PREFIX)
+          ),
+      })
       console.log(`Template ${name} exported to ${exportPath}`)
     }
   )

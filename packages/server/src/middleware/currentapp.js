@@ -1,9 +1,16 @@
-const { getAppId, setCookie, getCookie } = require("@budibase/auth").utils
+const {
+  getAppId,
+  setCookie,
+  getCookie,
+  clearCookie,
+} = require("@budibase/auth").utils
 const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
 const { getGlobalSelf } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
+const { dbExists } = require("@budibase/auth/db")
+const CouchDB = require("../db")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -12,6 +19,15 @@ module.exports = async (ctx, next) => {
   const appCookie = getCookie(ctx, Cookies.CurrentApp)
   if (!appCookie && !requestAppId) {
     return next()
+  }
+  // check the app exists referenced in cookie
+  if (appCookie) {
+    const appId = appCookie.appId
+    const exists = await dbExists(CouchDB, appId)
+    if (!exists) {
+      clearCookie(ctx, Cookies.CurrentApp)
+      return next()
+    }
   }
 
   let updateCookie = false,
