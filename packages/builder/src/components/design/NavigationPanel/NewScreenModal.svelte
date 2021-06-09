@@ -1,5 +1,5 @@
 <script>
-  import { store, allScreens } from "builderStore"
+  import { store, allScreens, selectedAccessRole } from "builderStore"
   import { tables } from "stores/backend"
   import { roles } from "stores/backend"
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
@@ -14,7 +14,7 @@
   let templateIndex
   let draftScreen
   let createLink = true
-  let roleId = "BASIC"
+  let roleId = $selectedAccessRole || "BASIC"
 
   $: templates = getTemplates($store, $tables.list)
   $: route = !route && $allScreens.length === 0 ? "*" : route

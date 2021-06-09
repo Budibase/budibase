@@ -7,8 +7,8 @@ const {
   PermissionTypes,
   PermissionLevels,
 } = require("@budibase/auth/permissions")
-const usage = require("../../middleware/usageQuota")
 const env = require("../../environment")
+const { paramResource } = require("../../middleware/resourceId")
 
 const router = Router()
 
@@ -39,9 +39,9 @@ router
   .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post(
-    "/api/attachments/upload",
+    "/api/attachments/:tableId/upload",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-    usage,
     controller.uploadFile
   )
   .get("/componentlibrary", controller.serveComponentLibrary)
