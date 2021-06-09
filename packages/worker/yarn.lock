@@ -287,10 +287,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.31":
-  version "0.9.31"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.31.tgz#9a8cbb97c10c99e596af2100f38a45827c819229"
-  integrity sha512-Wbf9v8hNkdjASQSIzNbFkNFhqy7ZxnI6f5Mim1+MJB2oyhnxaLsXjrB6Q5EYn0t4+2kzY2Tgbgz6ccflS3/EDA==
+"@budibase/auth@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.34.tgz#f617cedf7d53465b431f399655beb23611b01027"
+  integrity sha512-na5W3dVqV9/d7/nINRikYFqPQwUhU7tZG/pRc+zJgFbqzZOB/bDdKiPszffelPENxLSu+ACT+xLES3YbtThPWg==
   dependencies:
     aws-sdk "^2.901.0"
     bcryptjs "^2.4.3"
@@ -340,10 +340,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.31":
-  version "0.9.31"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.31.tgz#9b58be5df79a4b0a4e623e0bbe38998665d92051"
-  integrity sha512-577kAAQkmr3/TBH0+Pbqp/GRoh4lzH98FApplFAt+fimqE5Q5zTf6Y7N53vGnwWs5fX9BcXX1k76lRDf0xh/Gw==
+"@budibase/string-templates@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.34.tgz#ec1a6833ef9767fcdf09203ae5ff3280974001c8"
+  integrity sha512-qZqs1ECJG3pAp3QTYQx1gz0yeBW8tIKcFnVXRyvP2MuJPOClbqjEci1YWAGiZR4ddbChbAULAYBsxRYCBlwiKQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.3"
     dayjs "^1.10.4"
@@ -4830,9 +4830,9 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
 normalize-url@^4.1.0:
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.0.tgz#453354087e6ca96957bd8f5baf753f5982142129"
-  integrity sha512-2s47yzUxdexf1OhyRi4Em83iQk0aPvwTddtFz4hnSSw9dCEsLEGf6SwIO8ss/19S9iBb5sJaOuTvTGDeZI00BQ==
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.1.tgz#0dd90cf1288ee1d1313b87081c9a5932ee48518a"
+  integrity sha512-9UZCFRHQdNrfTpGg8+1INIg93B6zE0aXMVFkw1WFwvO4SlZywU6aLg5Of0Ap/PgcbSw4LNxvMWXMeugwMCX0AA==
 
 npm-run-path@^2.0.0:
   version "2.0.2"
