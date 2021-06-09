@@ -13,7 +13,9 @@ export const buildLuceneQuery = filter => {
     notEmpty: {},
   }
   if (Array.isArray(filter)) {
-    filter.forEach(({ operator, field, type, value }) => {
+    // Build up proper range filters
+    filter.forEach(expression => {
+      const { operator, field, type, value } = expression
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
           query.range[field] = {
@@ -33,10 +35,24 @@ export const buildLuceneQuery = filter => {
           query.range[field].high = value
         }
       } else if (query[operator]) {
-        query[operator][field] = value
+        if (type === "boolean") {
+          // Transform boolean filters to cope with null.
+          // "equals false" needs to be "not equals true"
+          // "not equals false" needs to be "equals true"
+          if (operator === "equal" && value === "false") {
+            query.notEqual[field] = "true"
+          } else if (operator === "notEqual" && value === "false") {
+            query.equal[field] = "true"
+          } else {
+            query[operator][field] = value
+          }
+        } else {
+          query[operator][field] = value
+        }
       }
     })
   }
+
   return query
 }
 
