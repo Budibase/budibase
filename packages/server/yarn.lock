@@ -1057,10 +1057,10 @@
     "@babel/helper-validator-identifier" "^7.14.0"
     to-fast-properties "^2.0.0"
 
-"@budibase/auth@^0.9.24":
-  version "0.9.24"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.24.tgz#7c8e02076025d97734a5815a7c17562a566c23c2"
-  integrity sha512-uYYw29mOtzeQ16uBaOmcT+OabGhXxeTcXFexayZDv4s9d6F3wpvxi/t7MMemCmUP0cSxuFd9DOiJj58iMLILDA==
+"@budibase/auth@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.34.tgz#f617cedf7d53465b431f399655beb23611b01027"
+  integrity sha512-na5W3dVqV9/d7/nINRikYFqPQwUhU7tZG/pRc+zJgFbqzZOB/bDdKiPszffelPENxLSu+ACT+xLES3YbtThPWg==
   dependencies:
     aws-sdk "^2.901.0"
     bcryptjs "^2.4.3"
@@ -1078,10 +1078,10 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-"@budibase/bbui@^0.9.24":
-  version "0.9.24"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.24.tgz#ee0c2b5cbbf478492b525ef365c09311b0a59a70"
-  integrity sha512-FaZo1zk2CN/MeCarAw9qaDMO3PDIBzGTV5cZ1wHg5KDAEoTx4xLkxDdCbJOLbA42zBPUks5Mru7C9qomQUc8yQ==
+"@budibase/bbui@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.34.tgz#44c0a0e7b6ca2c607841130063ce59b4fd5e27d9"
+  integrity sha512-kH74IG2/m9txaSy+n+zF6viLXX+5DDc7acbhIOWc9Ch+GzEcZlQFpF5GvL16Bi01p7U/YtqJLP2CdhbyaKt1CQ==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1126,12 +1126,12 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.24":
-  version "0.9.24"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.24.tgz#a6bcc641f961715c1701c4dcc03fe0fb7a8de9bd"
-  integrity sha512-L3MIpRU0ncsFh9uPk2BcoZ1D52Of1LZNJGWxPt8QdhBvtLuKqD6sM3rdKuUA0EsUOn7hgPIZl82SEolQQz9Dyw==
+"@budibase/client@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.34.tgz#d01ba1d24de04ec739a7b33a6c3012448b580322"
+  integrity sha512-s22VrNg6eEdY3dcrzv2BSH/edbGfMWlMPTq7gOq7bzzgLR+xDz0goLvn9J/blQIf9YsNNSDqYUZqAXObxFpB1Q==
   dependencies:
-    "@budibase/string-templates" "^0.9.24"
+    "@budibase/string-templates" "^0.9.34"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1168,22 +1168,23 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/standard-components@^0.9.24":
-  version "0.9.24"
-  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.24.tgz#f14b81fea6a1b2f7d5212b523ec9097be505af89"
-  integrity sha512-TWdfi044EaT1NigZB02NmTARfamlN8anHjc87QZfNdbdPxD9tgLxcPe/sPaPd5ACBjVC6McL3sKJs2xCbB78Ig==
+"@budibase/standard-components@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.34.tgz#0da54fbff01925f1145180bf168e9577f494477a"
+  integrity sha512-BMbWIxPeNkj0U/e3ItfwZLQ5BUXmlJg9QHRNRxOws8D2xjV5wpPPaXYk4wVp0S5ob/aChETVIOF2DcrZH6V+Xg==
   dependencies:
-    "@budibase/bbui" "^0.9.24"
+    "@budibase/bbui" "^0.9.34"
     "@spectrum-css/page" "^3.0.1"
     "@spectrum-css/vars" "^3.0.1"
     apexcharts "^3.22.1"
+    dayjs "^1.10.5"
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.24":
-  version "0.9.24"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.24.tgz#8feea5e1510b8e615b5db2c58b7907b64ebdd8bf"
-  integrity sha512-CeACQYbzsxrvjcrcbzEIRHbcJgy7siXz1ybxBxgErcKX/WhVpPKKAcviyW+5m9RnRWpD3OWOfHFZdzrVreVxjw==
+"@budibase/string-templates@^0.9.34":
+  version "0.9.34"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.34.tgz#ec1a6833ef9767fcdf09203ae5ff3280974001c8"
+  integrity sha512-qZqs1ECJG3pAp3QTYQx1gz0yeBW8tIKcFnVXRyvP2MuJPOClbqjEci1YWAGiZR4ddbChbAULAYBsxRYCBlwiKQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.3"
     dayjs "^1.10.4"
@@ -3866,7 +3867,7 @@ dateformat@^3.0.3:
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-3.0.3.tgz#a6e37499a4d9a9cf85ef5872044d62901c9889ae"
   integrity sha512-jyCETtSl3VMZMWeRo7iY1FL19ges1t55hMo5yaam4Jrsm5EPL89UQkoQRyiI+Yf4k8r2ZpdngkV8hr1lIdjb3Q==
 
-dayjs@^1.10.4:
+dayjs@^1.10.4, dayjs@^1.10.5:
   version "1.10.5"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.5.tgz#5600df4548fc2453b3f163ebb2abbe965ccfb986"
   integrity sha512-BUFis41ikLz+65iH6LHQCDm4YPMj5r1YFLdupPIyM4SGcXMmtiLQ7U37i+hGS8urIuqe7I/ou3IS1jVc4nbN4g==
