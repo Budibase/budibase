@@ -99,17 +99,10 @@ async function createInstance(template) {
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
-  let _rev
   if (template && template.useTemplate === "true") {
     const { ok } = await db.load(await getTemplateStream(template))
     if (!ok) {
       throw "Error loading database dump from template."
-    }
-    try {
-      const response = await db.get(DocumentTypes.APP_METADATA)
-      _rev = response._rev
-    } catch (err) {
-      _rev = null
     }
   } else {
     // create the users table
@@ -121,13 +114,13 @@ async function createInstance(template) {
   await createRoutingView(appId)
   await createAllSearchIndex(appId)
 
-  return { _id: appId, _rev }
+  return { _id: appId }
 }
 
 exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps({ dev, all })
+  const apps = await getAllApps({ CouchDB, dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -188,11 +181,21 @@ exports.create = async function (ctx) {
     instanceConfig.file = ctx.request.files.templateFile
   }
   const instance = await createInstance(instanceConfig)
+  const appId = instance._id
 
   const url = await getAppUrlIfNotInUse(ctx)
-  const appId = instance._id
+  const db = new CouchDB(appId)
+  let _rev
+  try {
+    // if template there will be an existing doc
+    const existing = await db.get(DocumentTypes.APP_METADATA)
+    _rev = existing._rev
+  } catch (err) {
+    // nothing to do
+  }
   const newApplication = {
     _id: DocumentTypes.APP_METADATA,
+    _rev,
     appId: instance._id,
     type: "app",
     version: packageJson.version,
@@ -203,15 +206,8 @@ exports.create = async function (ctx) {
     instance: instance,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    deployment: {
-      type: "cloud",
-    },
   }
-  if (instance._rev) {
-    newApplication._rev = instance._rev
-  }
-  const instanceDb = new CouchDB(appId)
-  await instanceDb.put(newApplication)
+  await db.put(newApplication, { force: true })
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */

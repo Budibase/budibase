@@ -60,7 +60,7 @@ exports.save = async function (ctx) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-async function enrichQueryFields(fields, parameters) {
+async function enrichQueryFields(fields, parameters = {}) {
   const enrichedQuery = {}
 
   // enrich the fields with dynamic parameters

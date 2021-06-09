@@ -125,6 +125,7 @@ describe("/rows", () => {
           numberNull: number,
           numberUndefined: number,
           numberString: number,
+          numberNumber: number,
           datetimeEmptyString: datetime,
           datetimeNull: datetime,
           datetimeUndefined: datetime,

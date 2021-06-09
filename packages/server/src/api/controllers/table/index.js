@@ -75,8 +75,6 @@ exports.save = async function (ctx) {
   /* istanbul ignore next */
   if (_rename && tableToSave.schema[_rename.updated].type === FieldTypes.LINK) {
     ctx.throw(400, "Cannot rename a linked column.")
-  } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
-    ctx.throw(400, "Cannot rename the display column.")
   }
 
   tableToSave = await tableSaveFunctions.mid(tableToSave)

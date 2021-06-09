@@ -1,5 +1,25 @@
 const setup = require("./utilities")
 
+function priceTable() {
+  return {
+    name: "table",
+    type: "table",
+    key: "name",
+    schema: {
+      Price: {
+        type: "number",
+        constraints: {},
+      },
+      Category: {
+        type: "string",
+        constraints: {
+          type: "string",
+        },
+      },
+    },
+  }
+}
+
 describe("/views", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -13,7 +33,7 @@ describe("/views", () => {
 
   describe("create", () => {
     beforeEach(async () => {
-      table = await config.createTable()
+      table = await config.createTable(priceTable())
     })
 
     it("returns a success message when the view is successfully created", async () => {
@@ -83,7 +103,7 @@ describe("/views", () => {
 
   describe("fetch", () => {
     beforeEach(async () => {
-      table = await config.createTable()
+      table = await config.createTable(priceTable())
     })
 
     it("returns only custom views", async () => {
@@ -105,7 +125,7 @@ describe("/views", () => {
 
   describe("query", () => {
     beforeEach(async () => {
-      table = await config.createTable()
+      table = await config.createTable(priceTable())
     })
 
     it("returns data for the created view", async () => {
@@ -172,7 +192,7 @@ describe("/views", () => {
 
   describe("destroy", () => {
     it("should be able to delete a view", async () => {
-      const table = await config.createTable()
+      const table = await config.createTable(priceTable())
       const view = await config.createView()
       const res = await request
         .delete(`/api/views/${view.name}`)
@@ -186,7 +206,7 @@ describe("/views", () => {
 
   describe("exportView", () => {
     it("should be able to delete a view", async () => {
-      await config.createTable()
+      await config.createTable(priceTable())
       await config.createRow()
       const view = await config.createView()
       let res = await request

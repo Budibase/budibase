@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.27":
-  version "0.9.30"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.30.tgz#ec16ba15c36d86bfb0131e7a33bc6beeb127a1d7"
-  integrity sha512-Bleqck7C3UPYQk9j0VF8AUl9EBHNOuQVM8uv7S9+IVdL6NH2SbdR1V9sOXiX6D+qZwqNwbXM+MZ3aXRMOPThkQ==
+"@budibase/bbui@^0.9.39":
+  version "0.9.39"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.39.tgz#3bccaa86ed7ae02f67661dadc57becd3db5ca9b6"
+  integrity sha512-5cPMFOGBOpvu3fMWLGBvgVpw+O8gvUh2g6xgWTZi2bCAgtXej+ryL0s7Xs4/mmoS2Y4z5ggc+wE4mOtCM9eFUQ==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -333,9 +333,9 @@ debug@^4.3.2:
     ms "2.1.2"
 
 esbuild@^0.12.5:
-  version "0.12.6"
-  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.12.6.tgz#85bc755c7cf3005d4f34b4f10f98049ce0ee67ce"
-  integrity sha512-RDvVLvAjsq/kIZJoneMiUOH7EE7t2QaW7T3Q7EdQij14+bZbDq5sndb0tTanmHIFSqZVMBMMyqzVHkS3dJobeA==
+  version "0.12.8"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.12.8.tgz#ac90da77cb3bfbf49ab815200bcef7ffe1a3348f"
+  integrity sha512-sx/LwlP/SWTGsd9G4RlOPrXnIihAJ2xwBUmzoqe2nWwbXORMQWtAGNJNYLBJJqa3e9PWvVzxdrtyFZJcr7D87g==
 
 estree-walker@^2.0.1:
   version "2.0.2"
@@ -401,7 +401,7 @@ picomatch@^2.2.2:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.0.tgz#f1f061de8f6a4bf022892e2d128234fb98302972"
   integrity sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==
 
-postcss@^8.2.10:
+postcss@^8.3.0:
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.3.0.tgz#b1a713f6172ca427e3f05ef1303de8b65683325f"
   integrity sha512-+ogXpdAjWGa+fdYY5BQ96V/6tAo+TdSSIMP5huJBIygdWwKtVoB5JWZ7yUd4xZ8r+8Kvvx4nyg/PQ071H4UtcQ==
@@ -542,12 +542,12 @@ svg.select.js@^3.0.1:
     svg.js "^2.6.5"
 
 vite@^2.1.5:
-  version "2.3.6"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-2.3.6.tgz#1f7cfde88a51a802d69000c7bac85d481c2e871c"
-  integrity sha512-fsEpNKDHgh3Sn66JH06ZnUBnIgUVUtw6ucDhlOj1CEqxIkymU25yv1/kWDPlIjyYHnalr0cN6V+zzUJ+fmWHYw==
+  version "2.3.7"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.3.7.tgz#3023892419367465e1af1739578f8663d04243b2"
+  integrity sha512-Y0xRz11MPYu/EAvzN94+FsOZHbSvO6FUvHv127CyG7mV6oDoay2bw+g5y9wW3Blf8OY3chaz3nc/DcRe1IQ3Nw==
   dependencies:
     esbuild "^0.12.5"
-    postcss "^8.2.10"
+    postcss "^8.3.0"
     resolve "^1.19.0"
     rollup "^2.38.5"
   optionalDependencies:
