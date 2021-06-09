@@ -45,9 +45,10 @@ jobs:
 
     - name: Build and Push Staging Docker Image
       # Only run on push
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
       run: |
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        yarn build
         yarn build:docker:staging
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}

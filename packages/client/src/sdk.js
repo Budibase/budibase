@@ -9,6 +9,7 @@ import {
 import { styleable } from "./utils/styleable"
 import transition from "./utils/transition"
 import { linkable } from "./utils/linkable"
+import { getAction } from "./utils/getAction"
 import Provider from "./components/Provider.svelte"
 import { ActionTypes } from "./constants"
 
@@ -22,6 +23,7 @@ export default {
   styleable,
   transition,
   linkable,
+  getAction,
   Provider,
   ActionTypes,
 }

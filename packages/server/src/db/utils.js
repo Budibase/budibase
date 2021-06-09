@@ -6,16 +6,10 @@ const {
   APP_DEV_PREFIX,
   APP_PREFIX,
   SEPARATOR,
+  StaticDatabases,
 } = require("@budibase/auth/db")
 
 const UNICODE_MAX = "\ufff0"
-
-const StaticDatabases = {
-  BUILDER: {
-    name: "builder-db",
-    baseDoc: "builder-doc",
-  },
-}
 
 const AppStatus = {
   DEV: "development",
@@ -54,9 +48,18 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
+exports.StaticDatabases = {
+  BUILDER: {
+    name: "builder-db",
+    baseDoc: "builder-doc",
+  },
+  ...StaticDatabases,
+}
+
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
-exports.StaticDatabases = StaticDatabases
+exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes

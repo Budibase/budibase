@@ -16,6 +16,9 @@ registerAll(hbsInstance)
  * utility function to check if the object is valid
  */
 function testObject(object) {
+  if (object == null) {
+    throw "Unable to process null object"
+  }
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)
@@ -33,7 +36,7 @@ function testObject(object) {
  */
 module.exports.processObject = async (object, context) => {
   testObject(object)
-  for (let key of Object.keys(object)) {
+  for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
       let val = object[key]
       if (typeof val === "string") {
@@ -68,7 +71,7 @@ module.exports.processString = async (string, context) => {
  */
 module.exports.processObjectSync = (object, context) => {
   testObject(object)
-  for (let key of Object.keys(object)) {
+  for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
       object[key] = module.exports.processStringSync(object[key], context)

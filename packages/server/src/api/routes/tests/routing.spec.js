@@ -26,13 +26,6 @@ describe("/routing", () => {
 
   describe("fetch", () => {
     it("returns the correct routing for basic user", async () => {
-      workerRequests.getGlobalUsers.mockImplementationOnce((ctx, appId) => {
-        return {
-          roles: {
-            [appId]: BUILTIN_ROLE_IDS.BASIC,
-          }
-        }
-      })
       const res = await request
         .get(`/api/routing/client`)
         .set(await config.roleHeaders({
@@ -54,13 +47,6 @@ describe("/routing", () => {
     })
 
     it("returns the correct routing for power user", async () => {
-      workerRequests.getGlobalUsers.mockImplementationOnce((ctx, appId) => {
-        return {
-          roles: {
-            [appId]: BUILTIN_ROLE_IDS.POWER,
-          }
-        }
-      })
       const res = await request
         .get(`/api/routing/client`)
         .set(await config.roleHeaders({

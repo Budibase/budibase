@@ -30,5 +30,7 @@ exports.uploadClientLibrary = async appId => {
   const sourcepath = require.resolve("@budibase/client")
   const destPath = join(appId, "budibase-client.js")
 
-  await streamUpload(BUCKET_NAME, destPath, fs.createReadStream(sourcepath))
+  await streamUpload(BUCKET_NAME, destPath, fs.createReadStream(sourcepath), {
+    ContentType: "application/javascript",
+  })
 }

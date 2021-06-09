@@ -1223,7 +1223,7 @@ pkg@^4.4.9:
     resolve "^1.15.1"
     stream-meter "^1.0.4"
 
-posthog-node@^1.0.7:
+posthog-node@1.0.7:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/posthog-node/-/posthog-node-1.0.7.tgz#a7a9525eebff23312117e57cff3ddac82afb2262"
   integrity sha512-KTCwyU+PU1eAQtjy5ZSJ47mrxv2d/mMkxo+vvV5c+YqfE4mBAY1UPEPMv1nElb5Vq0UnxvyQXaUnOn8d8Xr6Eg==

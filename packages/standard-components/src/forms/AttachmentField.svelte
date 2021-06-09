@@ -9,8 +9,10 @@
 
   let fieldState
   let fieldApi
+  let fieldSchema
 
   const { API, notifications } = getContext("sdk")
+  const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
 
   export let files = []
@@ -28,7 +30,7 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-    return await API.uploadAttachment(data)
+    return await API.uploadAttachment(data, formContext?.dataSource?.tableId)
   }
 </script>
 
@@ -45,7 +47,9 @@
     <CoreDropzone
       value={$fieldState.value}
       disabled={$fieldState.disabled}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={e => {
+        fieldApi.setValue(e.detail)
+      }}
       {processFiles}
       {handleFileTooLarge}
     />
