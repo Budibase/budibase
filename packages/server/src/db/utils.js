@@ -284,10 +284,12 @@ exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
  * Generates a new datasource ID.
  * @returns {string} The new datasource ID which the webhook doc can be stored under.
  */
-exports.generateDatasourceID = ({ plus = false }) => {
-  return `${
-    plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE
-  }${SEPARATOR}${newid()}`
+exports.generateDatasourceID = options => {
+  let id = DocumentTypes.DATASOURCE
+  if (options && options.plus) {
+    id = DocumentTypes.DATASOURCE_PLUS
+  }
+  return `${id}${SEPARATOR}${newid()}`
 }
 
 /**

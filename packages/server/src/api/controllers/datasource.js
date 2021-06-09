@@ -66,7 +66,7 @@ exports.find = async function (ctx) {
 exports.plus = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
-  const PlusConnector = plusIntegrations[ctx.request.body.source]
+  const PlusConnector = plusIntegrations[ctx.request.body.source].integration
 
   const connector = new PlusConnector(ctx.request.body)
   await connector.init()

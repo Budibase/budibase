@@ -1,5 +1,6 @@
 const { Pool } = require("pg")
 const { FieldTypes } = require("../../constants")
+const { FIELD_TYPES } = require("../Integration")
 
 const TYPE_MAP = {
   text: FieldTypes.LONGFORM,
@@ -11,6 +12,44 @@ const TYPE_MAP = {
   timestamp: FieldTypes.DATETIME,
   time: FieldTypes.DATETIME,
   boolean: FieldTypes.BOOLEAN,
+}
+
+const SCHEMA = {
+  friendlyName: "PostgreSQL",
+  description:
+    "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
+  datasource: {
+    host: {
+      type: FIELD_TYPES.STRING,
+      default: "localhost",
+      required: true,
+    },
+    port: {
+      type: FIELD_TYPES.NUMBER,
+      required: true,
+      default: 5432,
+    },
+    database: {
+      type: FIELD_TYPES.STRING,
+      default: "postgres",
+      required: true,
+    },
+    user: {
+      type: FIELD_TYPES.STRING,
+      default: "root",
+      required: true,
+    },
+    password: {
+      type: FIELD_TYPES.PASSWORD,
+      default: "root",
+      required: true,
+    },
+    ssl: {
+      type: FIELD_TYPES.BOOLEAN,
+      default: false,
+      required: false,
+    },
+  },
 }
 
 class PostgresPlus {
@@ -52,4 +91,7 @@ class PostgresPlus {
   }
 }
 
-module.exports = PostgresPlus
+module.exports = {
+  schema: SCHEMA,
+  integration: PostgresPlus,
+}
