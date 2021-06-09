@@ -163,7 +163,7 @@ describe("test the date helpers", () => {
   it("should allow use of the date helper", async () => {
     const date = new Date(1611577535000)
     const output = await processString("{{ date time 'YYYY-MM-DD' }}", {
-      time: date.toISOString(),
+      time: date.toUTCString(),
     })
     expect(output).toBe("2021-01-25")
   })
@@ -177,15 +177,16 @@ describe("test the date helpers", () => {
   it("should test the timezone capabilities", async () => {
     const date = new Date(1611577535000)
     const output = await processString("{{ date time 'HH-mm-ss Z' 'America/New_York' }}", {
-      time: date.toISOString(),
+      time: date.toUTCString(),
     })
-    expect(output).toBe("07-25-35 -04:00")
+    const formatted = new dayjs(date).tz("America/New_York").format("HH-mm-ss Z")
+    expect(output).toBe(formatted)
   })
 
   it("should guess the users timezone when not specified", async () => {
     const date = new Date()
     const output = await processString("{{ date time 'Z' }}", {
-      time: date.toISOString()
+      time: date.toUTCString()
     })
     const timezone = dayjs.tz.guess()
     const offset = new dayjs(date).tz(timezone).format("Z")
