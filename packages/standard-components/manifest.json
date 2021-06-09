@@ -346,6 +346,13 @@
         "key": "logoUrl"
       },
       {
+        "type": "select",
+        "label": "Type",
+        "key": "type",
+        "options": ["Horizontal", "Vertical"],
+        "defaultValue": "Horizontal"
+      },
+      {
         "type": "boolean",
         "label": "Hide logo",
         "key": "hideLogo",
