@@ -53,8 +53,6 @@ export const buildLuceneQuery = filter => {
     })
   }
 
-  console.log(query)
-
   return query
 }
 
