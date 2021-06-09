@@ -1,26 +1,15 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { getDeployedAppID } = require("@budibase/auth/db")
-const { getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { updateAppRole, getGlobalUser } = require("./global")
 
-function getAppRole(appId, user) {
-  if (!user.roles) {
-    return user
-  }
-  // always use the deployed app
-  user.roleId = user.roles[getDeployedAppID(appId)]
-  if (!user.roleId) {
-    user.roleId = BUILTIN_ROLE_IDS.PUBLIC
-  }
-  delete user.roles
-  return user
-}
-
-function request(ctx, request) {
+function request(ctx, request, noApiKey) {
   if (!request.headers) {
     request.headers = {}
+  }
+  if (!noApiKey) {
+    request.headers["x-budibase-api-key"] = env.INTERNAL_API_KEY
   }
   if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
@@ -44,9 +33,6 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
     checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
     request(null, {
       method: "POST",
-      headers: {
-        "x-budibase-api-key": env.INTERNAL_API_KEY,
-      },
       body: {
         email: to,
         from,
@@ -86,49 +72,19 @@ exports.getDeployedApps = async ctx => {
   }
 }
 
-exports.deleteGlobalUser = async (ctx, globalId) => {
-  const endpoint = `/api/admin/users/${globalId}`
-  const reqCfg = { method: "DELETE" }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, reqCfg)
-  )
-  return response.json()
-}
-
-exports.getGlobalUsers = async (ctx, appId = null, globalId = null) => {
-  const endpoint = globalId
-    ? `/api/admin/users/${globalId}`
-    : `/api/admin/users`
-  const reqCfg = { method: "GET" }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, reqCfg)
-  )
-  let users = await response.json()
-  if (!appId) {
-    return users
-  }
-  if (Array.isArray(users)) {
-    users = users.map(user => getAppRole(appId, user))
-  } else {
-    users = getAppRole(appId, users)
-  }
-  return users
-}
-
 exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/admin/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, { method: "GET" })
+    // we don't want to use API key when getting self
+    request(ctx, { method: "GET" }, true)
   )
   if (response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
   }
   let json = await response.json()
   if (appId) {
-    json = getAppRole(appId, json)
+    json = updateAppRole(appId, json)
   }
   return json
 }
@@ -141,8 +97,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     user = await exports.getGlobalSelf(ctx)
     endpoint = `/api/admin/users/self`
   } else {
-    userId = getGlobalIDFromUserMetadataID(userId)
-    user = await exports.getGlobalUsers(ctx, appId, userId)
+    user = await getGlobalUser(appId, userId)
     body._id = userId
     endpoint = `/api/admin/users`
   }
@@ -172,9 +127,6 @@ exports.removeAppFromUserRoles = async appId => {
     checkSlashesInUrl(env.WORKER_URL + `/api/admin/roles/${deployedAppId}`),
     request(null, {
       method: "DELETE",
-      headers: {
-        "x-budibase-api-key": env.INTERNAL_API_KEY,
-      },
     })
   )
   if (response.status !== 200) {

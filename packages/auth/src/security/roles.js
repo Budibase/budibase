@@ -13,7 +13,6 @@ const BUILTIN_IDS = {
   POWER: "POWER",
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
-  BUILDER: "BUILDER",
 }
 
 // exclude internal roles like builder

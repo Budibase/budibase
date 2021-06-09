@@ -14,7 +14,7 @@
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource(datasource).schema
+  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
   $: options = Object.keys(schema || {})
   $: boundValue = getValidOptions(value, options)
 

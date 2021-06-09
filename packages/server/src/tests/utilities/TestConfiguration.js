@@ -101,7 +101,7 @@ class TestConfiguration {
       userId: GLOBAL_USER_ID,
     }
     const app = {
-      roleId: BUILTIN_ROLE_IDS.BUILDER,
+      roleId: BUILTIN_ROLE_IDS.ADMIN,
       appId: this.appId,
     }
     const authToken = jwt.sign(auth, env.JWT_SECRET)
@@ -306,12 +306,9 @@ class TestConfiguration {
     return await this._req(config, null, controllers.layout.save)
   }
 
-  async createUser(roleId = BUILTIN_ROLE_IDS.POWER) {
-    const globalId = `us_${Math.random()}`
-    const resp = await this.globalUser(
-      globalId,
-      roleId === BUILTIN_ROLE_IDS.BUILDER
-    )
+  async createUser(id = null) {
+    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
+    const resp = await this.globalUser(globalId)
     return {
       ...resp,
       globalId,
@@ -319,7 +316,6 @@ class TestConfiguration {
   }
 
   async login(email, password, { roleId, userId, builder } = {}) {
-    roleId = !roleId ? BUILTIN_ROLE_IDS.BUILDER : roleId
     userId = !userId ? `us_uuid1` : userId
     if (!this.request) {
       throw "Server has not been opened, cannot login."

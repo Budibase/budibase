@@ -5,7 +5,7 @@ const { getFullUser } = require("../../utilities/users")
 
 exports.fetchSelf = async ctx => {
   const appId = ctx.appId
-  const { userId } = ctx.user
+  let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId) {
     ctx.body = {}
