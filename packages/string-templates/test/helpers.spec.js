@@ -1,5 +1,6 @@
 const { processString, processObject, isValid } = require("../src/index.cjs")
 const tableJson = require("./examples/table.json")
+const dayjs = require("dayjs")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -162,7 +163,7 @@ describe("test the date helpers", () => {
   it("should allow use of the date helper", async () => {
     const date = new Date(1611577535000)
     const output = await processString("{{ date time 'YYYY-MM-DD' }}", {
-      time: date.toISOString(),
+      time: date.toUTCString(),
     })
     expect(output).toBe("2021-01-25")
   })
@@ -171,6 +172,25 @@ describe("test the date helpers", () => {
     const date = new Date()
     const output = await processString("{{ date now 'DD' }}", {})
     expect(parseInt(output)).toBe(date.getDate())
+  })
+
+  it("should test the timezone capabilities", async () => {
+    const date = new Date(1611577535000)
+    const output = await processString("{{ date time 'HH-mm-ss Z' 'America/New_York' }}", {
+      time: date.toUTCString(),
+    })
+    const formatted = new dayjs(date).tz("America/New_York").format("HH-mm-ss Z")
+    expect(output).toBe(formatted)
+  })
+
+  it("should guess the users timezone when not specified", async () => {
+    const date = new Date()
+    const output = await processString("{{ date time 'Z' }}", {
+      time: date.toUTCString()
+    })
+    const timezone = dayjs.tz.guess()
+    const offset = new dayjs(date).tz(timezone).format("Z")
+    expect(output).toBe(offset)
   })
 })
 

@@ -19,8 +19,9 @@ const ADDED_HELPERS = {
     date: {
       args: ["datetime", "format"],
       numArgs: 2,
-      example: '{{date now "DD-MM-YYYY"}} -> 21-01-2021',
-      description: "Format a date using moment.js date formatting.",
+      example: '{{date now "DD-MM-YYYY" "America/New_York" }} -> 21-01-2021',
+      description:
+        "Format a date using moment.js date formatting - the timezone is optional and uses the tz database.",
     },
     duration: {
       args: ["time", "durationType"],
