@@ -8,7 +8,7 @@
   export let theme
   export let size
   export let disabled = false
-  export let type = "Create"
+  export let actionType = "Create"
 
   const component = getContext("component")
   const context = getContext("context")
@@ -42,7 +42,7 @@
   }
 
   // Use the closest data context as the initial form values
-  const initialValues = getInitialValues(type, dataSource, $context)
+  const initialValues = getInitialValues(actionType, dataSource, $context)
 
   // Form state contains observable data about the form
   const formState = writable({ values: initialValues, errors: {}, valid: true })
