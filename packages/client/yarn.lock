@@ -28,10 +28,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^0.9.34":
-  version "0.9.34"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.34.tgz#44c0a0e7b6ca2c607841130063ce59b4fd5e27d9"
-  integrity sha512-kH74IG2/m9txaSy+n+zF6viLXX+5DDc7acbhIOWc9Ch+GzEcZlQFpF5GvL16Bi01p7U/YtqJLP2CdhbyaKt1CQ==
+"@budibase/bbui@^0.9.35":
+  version "0.9.35"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.35.tgz#7a201c0d56cd3efb212a7adff99bbe2b6c9b7613"
+  integrity sha512-xgzeDXE+Lv7T1x6f2O8f9l8YOusMBVV1Ar9jf/4sERHxLNJCJNokkLI9GAWTc7HnSp78Kb98kZ9M+/mcEkIXyw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -108,12 +108,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/standard-components@^0.9.34":
-  version "0.9.34"
-  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.34.tgz#0da54fbff01925f1145180bf168e9577f494477a"
-  integrity sha512-BMbWIxPeNkj0U/e3ItfwZLQ5BUXmlJg9QHRNRxOws8D2xjV5wpPPaXYk4wVp0S5ob/aChETVIOF2DcrZH6V+Xg==
+"@budibase/standard-components@^0.9.35":
+  version "0.9.35"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.35.tgz#5b2c2844c47324dbb6e563f30cd53ca19cd5baa8"
+  integrity sha512-HMmFXyLiMEPKTn8as5mq4wNwFviPdhoaSkfwFqVr/LD9nEX5Ti2+6ZCL/EGjIZXwPXcN6wnJ4wqfmK9q6pb84g==
   dependencies:
-    "@budibase/bbui" "^0.9.34"
+    "@budibase/bbui" "^0.9.35"
     "@spectrum-css/page" "^3.0.1"
     "@spectrum-css/vars" "^3.0.1"
     apexcharts "^3.22.1"
@@ -121,10 +121,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.34":
-  version "0.9.34"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.34.tgz#ec1a6833ef9767fcdf09203ae5ff3280974001c8"
-  integrity sha512-qZqs1ECJG3pAp3QTYQx1gz0yeBW8tIKcFnVXRyvP2MuJPOClbqjEci1YWAGiZR4ddbChbAULAYBsxRYCBlwiKQ==
+"@budibase/string-templates@^0.9.35":
+  version "0.9.35"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.35.tgz#5f5d114f65e8acf4eb0856c544fcdc27263f3bc9"
+  integrity sha512-puPUxnCHUp3+VZi8HYoFe+ruHC8/m0q5F1SdhRZtNLpjwBkgXNun7e+hegF/y7lkxVz/rR76Ufmyza31Mliv9w==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.3"
     dayjs "^1.10.4"
@@ -3614,10 +3614,10 @@ postcss@^7.0.0, postcss@^7.0.1, postcss@^7.0.27:
     source-map "^0.6.1"
     supports-color "^6.1.0"
 
-postcss@^8.2.9:
-  version "8.2.9"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.2.9.tgz#fd95ff37b5cee55c409b3fdd237296ab4096fba3"
-  integrity sha512-b+TmuIL4jGtCHtoLi+G/PisuIl9avxs8IZMSmlABRwNz5RLUUACrC+ws81dcomz1nRezm5YPdXiMEzBEKgYn+Q==
+postcss@^8.2.10:
+  version "8.2.10"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.2.10.tgz#ca7a042aa8aff494b334d0ff3e9e77079f6f702b"
+  integrity sha512-b/h7CPV7QEdrqIxtAf2j31U5ef05uBDuvoXv6L51Q4rcS1jdlXAVKJv+atCFdUXYl9dyTHGyoMzIepwowRJjFw==
   dependencies:
     colorette "^1.2.2"
     nanoid "^3.1.22"
