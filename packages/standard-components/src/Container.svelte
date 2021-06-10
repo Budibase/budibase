@@ -56,7 +56,7 @@
   .direction-column.vAlign-top {
     justify-content: flex-start;
   }
-  .direction-row.hAlign-middle,
+  .direction-row.hAlign-center,
   .direction-column.vAlign-middle {
     justify-content: center;
   }
@@ -74,7 +74,7 @@
     align-items: flex-start;
   }
   .direction-row.vAlign-middle,
-  .direction-column.hAlign-middle {
+  .direction-column.hAlign-center {
     align-items: center;
   }
   .direction-row.vAlign-bottom,

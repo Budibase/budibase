@@ -149,7 +149,6 @@ const createScreen = table => {
   provider.addChild(repeater)
 
   return new Screen()
-    .component("@budibase/standard-components/container")
     .instanceName(`${table.name} - Detail`)
     .route(rowDetailUrl(table))
     .addChild(provider)

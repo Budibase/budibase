@@ -56,13 +56,14 @@ function generateTitleContainer(table) {
     .text(table.name)
 
   return new Component("@budibase/standard-components/container")
-    .type("div")
     .normalStyle({
-      display: "flex",
-      "flex-direction": "row",
-      "justify-content": "space-between",
-      "align-items": "center",
       "margin-bottom": "32px",
+    })
+    .customProps({
+      direction: "row",
+      hAlign: "stretch",
+      vAlign: "middle",
+      size: "shrink",
     })
     .instanceName("Title Container")
     .addChild(heading)
@@ -137,13 +138,17 @@ const createScreen = table => {
       "padding-left": "48px",
       "margin-bottom": "20px",
     })
-    .type("div")
+    .customProps({
+      direction: "column",
+      hAlign: "stretch",
+      vAlign: "top",
+      size: "shrink",
+    })
     .instanceName("Container")
     .addChild(generateTitleContainer(table))
     .addChild(provider)
 
   return new Screen()
-    .component("@budibase/standard-components/container")
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)
     .addChild(mainContainer)
