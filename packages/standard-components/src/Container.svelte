@@ -52,11 +52,17 @@
     flex-direction: column;
   }
 
+  /* Grow containers inside a row need 0 width 0 so that they ignore content */
+  /* The nested selector for data-type is the wrapper around all components */
+  .direction-row :global(> [data-type="component"] > .size-grow) {
+    width: 0;
+  }
+
   .size-shrink {
     flex: 0 1 auto;
   }
   .size-grow {
-    flex: 1 1 0;
+    flex: 1 1 auto;
   }
 
   .direction-row.hAlign-left,
