@@ -116,7 +116,7 @@
         <Input bind:value={smtpConfig.config.host} />
       </div>
       <div class="form-row">
-        <Label siz="L">Security type</Label>
+        <Label size="L">Security type</Label>
         <Select
           bind:value={smtpConfig.config.secure}
           options={[
