@@ -245,9 +245,10 @@ exports.update = async function (ctx) {
 
 exports.delete = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
+
   const result = await db.destroy()
   /* istanbul ignore next */
-  if (!env.isTest()) {
+  if (!env.isTest() && !ctx.query.unpublish) {
     await deleteApp(ctx.params.appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
