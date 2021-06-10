@@ -71,7 +71,7 @@ exports.uploadFile = async function (ctx) {
 
     return prepareUpload({
       file,
-      s3Key: `/${ctx.appId}/attachments/${processedFileName}`,
+      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })
