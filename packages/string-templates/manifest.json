@@ -245,7 +245,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{equalsLength [1, 2, 3] 3}} -> true",
+      "example": "{{equalsLength '[1,2,3]' 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "last": {
@@ -262,7 +262,7 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "{{length [1, 2, 3]}} -> 3",
+      "example": "{{length '[1, 2, 3]'}} -> 3",
       "description": "<p>Returns the length of the given string or array.</p>\n"
     },
     "lengthEqual": {
@@ -272,7 +272,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{equalsLength [1, 2, 3] 3}} -> true",
+      "example": "{{equalsLength '[1,2,3]' 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "map": {
@@ -1097,8 +1097,8 @@
         "format"
       ],
       "numArgs": 2,
-      "example": "{{date now \"DD-MM-YYYY\"}} -> 21-01-2021",
-      "description": "<p>Format a date using moment.js date formatting.</p>\n"
+      "example": "{{date now \"DD-MM-YYYY\" \"America/New_York\" }} -> 21-01-2021",
+      "description": "<p>Format a date using moment.js date formatting - the timezone is optional and uses the tz database.</p>\n"
     },
     "duration": {
       "args": [
