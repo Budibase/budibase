@@ -151,6 +151,9 @@ const createScreen = table => {
   return new Screen()
     .instanceName(`${table.name} - Detail`)
     .route(rowDetailUrl(table))
+    .customProps({
+      hAlign: "center",
+    })
     .addChild(provider)
     .json()
 }
