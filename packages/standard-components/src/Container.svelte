@@ -4,22 +4,21 @@
   const { styleable, transition, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let direction = "column"
-  export let hAlign = "left"
-  export let vAlign = "top"
-  export let size = "shrink"
+  export let direction
+  export let hAlign
+  export let vAlign
+  export let size
 
   let element
+
+  $: directionClass = direction ? `direction-${direction}` : ""
+  $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
+  $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
+  $: sizeClass = size ? `size-${size}` : ""
 </script>
 
 <div
-  class={`
-    container
-    hAlign-${hAlign}
-    vAlign-${vAlign}
-    direction-${direction}
-    size-${size}
-  `}
+  class={[directionClass, hAlignClass, vAlignClass, sizeClass].join(" ")}
   class:empty={!$component.children && $builderStore.inBuilder}
   class:selected={$component.selected}
   in:transition={{ type: $component.transition }}
@@ -34,16 +33,15 @@
 </div>
 
 <style>
-  .container {
-    display: flex;
-  }
   .empty {
     border: 2px dashed rgba(0, 0, 0, 0.25);
   }
   .direction-row {
+    display: flex;
     flex-direction: row;
   }
   .direction-column {
+    display: flex;
     flex-direction: column;
   }
 
