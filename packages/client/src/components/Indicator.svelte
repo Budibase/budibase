@@ -7,13 +7,18 @@
   export let height
   export let text
   export let color
+  export let zIndex
   export let transition = false
 </script>
 
 <div
-  in:fade={{ delay: transition ? 65 : 0, duration: transition ? 130 : 0 }}
+  in:fade={{
+    delay: transition ? 50 : 0,
+    duration: transition ? 130 : 0,
+  }}
+  out:fade={{ duration: transition ? 130 : 0 }}
   class="indicator"
-  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color};"
+  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
 >
   {#if text}
     <div class="text" class:flipped={top < 22}>
@@ -24,8 +29,8 @@
 
 <style>
   .indicator {
-    position: absolute;
-    z-index: 910;
+    position: fixed;
+    z-index: var(--zIndex);
     border: 2px solid var(--color);
     pointer-events: none;
     border-radius: 4px;
