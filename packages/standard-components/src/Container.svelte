@@ -11,7 +11,7 @@
 
   let element
 
-  $: directionClass = direction ? `container direction-${direction}` : ""
+  $: directionClass = direction ? `valid-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
@@ -36,11 +36,11 @@
   .empty {
     border: 2px dashed rgba(0, 0, 0, 0.25);
   }
-  .container {
+  .valid-container {
     display: flex;
     max-width: 100%;
   }
-  .container :global([data-type="component"] > *) {
+  .valid-container :global([data-type="component"] > *) {
     max-width: 100%;
   }
   .direction-row {
