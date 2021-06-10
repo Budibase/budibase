@@ -81,14 +81,14 @@ describe("Test that the object processing works correctly", () => {
     expect(error).not.toBeNull()
   })
 
-  it("should fail gracefully when wrong type is passed in", async () => {
+  it("should be able to handle null objects", async () => {
     let error = null
     try {
       await processObject(null, null)
     } catch (err) {
       error = err
     }
-    expect(error).not.toBeNull()
+    expect(error).toBeNull()
   })
 })
 
