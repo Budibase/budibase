@@ -59,4 +59,11 @@ export class Screen extends BaseStructure {
     this._json.props._instanceName = name
     return this
   }
+
+  customProps(props) {
+    for (let key of Object.keys(props)) {
+      this._json.props[key] = props[key]
+    }
+    return this
+  }
 }
