@@ -17,12 +17,14 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewRow"
+            "barIcon": "ViewRow",
+            "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewColumn"
+            "barIcon": "ViewColumn",
+            "barTitle": "Row layout"
           }
         ],
         "defaultValue": "column"
@@ -36,22 +38,26 @@
           {
             "label": "Left",
             "value": "left",
-            "barIcon": "AlignLeft"
+            "barIcon": "AlignLeft",
+            "barTitle": "Align left"
           },
           {
             "label": "Center",
             "value": "center",
-            "barIcon": "AlignCenter"
+            "barIcon": "AlignCenter",
+            "barTitle": "Align center"
           },
           {
             "label": "Right",
             "value": "right",
-            "barIcon": "AlignRight"
+            "barIcon": "AlignRight",
+            "barTitle": "Align right"
           },
           {
             "label": "Stretch",
             "value": "stretch",
-            "barIcon": "MoveLeftRight"
+            "barIcon": "MoveLeftRight",
+            "barTitle": "Align stretched horizontally"
           }
         ],
         "defaultValue": "stretch"
@@ -65,22 +71,26 @@
           {
             "label": "Top",
             "value": "top",
-            "barIcon": "AlignTop"
+            "barIcon": "AlignTop",
+            "barTitle": "Align top"
           },
           {
             "label": "Middle",
             "value": "middle",
-            "barIcon": "AlignMiddle"
+            "barIcon": "AlignMiddle",
+            "barTitle": "Align middle"
           },
           {
             "label": "Bottom",
             "value": "bottom",
-            "barIcon": "AlignBottom"
+            "barIcon": "AlignBottom",
+            "barTitle": "Align bottom"
           },
           {
             "label": "Stretch",
             "value": "stretch",
-            "barIcon": "MoveUpDown"
+            "barIcon": "MoveUpDown",
+            "barTitle": "Align stretched vertically"
           }
         ],
         "defaultValue": "top"
@@ -94,12 +104,14 @@
           {
             "label": "Shrink",
             "value": "shrink",
-            "barIcon": "Minimize"
+            "barIcon": "Minimize",
+            "barTitle": "Shrink container"
           },
           {
             "label": "Grow",
             "value": "grow",
-            "barIcon": "Maximize"
+            "barIcon": "Maximize",
+            "barTitle": "Grow container"
           }
         ],
         "defaultValue": "shrink"

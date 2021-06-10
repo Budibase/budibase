@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore } from "../store"
+  import { builderStore } from "../../store"
 
   let componentId
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
