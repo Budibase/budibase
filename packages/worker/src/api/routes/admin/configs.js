@@ -14,7 +14,6 @@ function smtpValidation() {
     host: Joi.string().required(),
     from: Joi.string().email().required(),
     secure: Joi.boolean().optional(),
-    selfSigned: Joi.boolean().optional(),
     auth: Joi.object({
       type: Joi.string().valid("login", "oauth2", null),
       user: Joi.string().required(),
