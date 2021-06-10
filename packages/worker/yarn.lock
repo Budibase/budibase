@@ -287,10 +287,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.36":
-  version "0.9.36"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.36.tgz#8111890390fb57a513ea1fc0b209db474460ea59"
-  integrity sha512-pGDd3d5/MwEDrSQI7NZNfekXlywuxjKNOfQHi5+5cbpje3DdWxRu2ILpvYj0TdmIk8K3vd4TsZLL0APVaB/mhg==
+"@budibase/auth@^0.9.38":
+  version "0.9.38"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.38.tgz#196f2f20f8df09e07804877965ada6bd7a9e7e72"
+  integrity sha512-ww1gfjjmSvmzNFZY8Omy9tzuzFsStLzHR6t54hinOVcL3Bu8T/xBAqSyEvyCkZNbfTHis7V8QmTzugRxhuyHoQ==
   dependencies:
     aws-sdk "^2.901.0"
     bcryptjs "^2.4.3"
@@ -340,10 +340,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.36":
-  version "0.9.36"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.36.tgz#a8391d01fec9587b8b0873f6bdc402a6d8375e8a"
-  integrity sha512-OtuwJZkwgGD/pu0I0duCqiC4djGhc3olMvROq9JHIs6jm7qWLRxud53S1TdgHFFZPdEsuUGHGLRlZrIZaPujQw==
+"@budibase/string-templates@^0.9.38":
+  version "0.9.38"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.38.tgz#8fec7b18654b2e42e388a774a515c6f8617b56e9"
+  integrity sha512-38n+zf8L1s24rbSnk9/18In7xxz/zLeI0Yn6OUn079Nqz7MCgdhnYg/TTYAORzm7WYFwnAF1pXStWqTrsZk+lg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.3"
     dayjs "^1.10.4"
