@@ -35,7 +35,6 @@ export function makeLinkComponent(tableName) {
 
 export function makeMainForm() {
   return new Component("@budibase/standard-components/form")
-    .type("div")
     .normalStyle({
       width: "700px",
       padding: "0px",
@@ -79,10 +78,15 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .instanceName("Identifier")
 
   return new Component("@budibase/standard-components/container")
-    .type("div")
     .normalStyle({
       "font-size": "14px",
       color: "#757575",
+    })
+    .customProps({
+      direction: "row",
+      hAlign: "left",
+      vAlign: "middle",
+      size: "shrink",
     })
     .instanceName("Breadcrumbs")
     .addChild(link)
@@ -149,14 +153,15 @@ export function makeTitleContainer(title) {
     .text(title)
 
   return new Component("@budibase/standard-components/container")
-    .type("div")
     .normalStyle({
-      display: "flex",
-      "flex-direction": "row",
-      "justify-content": "space-between",
-      "align-items": "center",
       "margin-top": "32px",
       "margin-bottom": "32px",
+    })
+    .customProps({
+      direction: "row",
+      hAlign: "stretch",
+      vAlign: "middle",
+      size: "shrink",
     })
     .instanceName("Title Container")
     .addChild(heading)

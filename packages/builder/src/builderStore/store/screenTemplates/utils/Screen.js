@@ -8,7 +8,7 @@ export class Screen extends BaseStructure {
       layoutId: "layout_private_master",
       props: {
         _id: uuid(),
-        _component: "",
+        _component: "@budibase/standard-components/container",
         _styles: {
           normal: {},
           hover: {},
@@ -17,6 +17,10 @@ export class Screen extends BaseStructure {
         },
         _children: [],
         _instanceName: "",
+        direction: "column",
+        hAlign: "stretch",
+        vAlign: "top",
+        size: "grow",
       },
       routing: {
         route: "",
@@ -38,11 +42,6 @@ export class Screen extends BaseStructure {
 
   table(tableName) {
     this._json.props.table = tableName
-    return this
-  }
-
-  mainType(type) {
-    this._json.type = type
     return this
   }
 

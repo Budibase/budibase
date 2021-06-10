@@ -39,8 +39,8 @@
             "barIcon": "AlignLeft"
           },
           {
-            "label": "Middle",
-            "value": "middle",
+            "label": "Center",
+            "value": "center",
             "barIcon": "AlignCenter"
           },
           {
