@@ -80,7 +80,8 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
-      paginate: false,
+      paginate: true,
+      limit: 8,
     })
 
   const spectrumTable = new Component("@budibase/standard-components/table")
@@ -127,7 +128,6 @@ const createScreen = table => {
       background: "white",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      margin: "auto",
       "margin-top": "20px",
       "border-width": "2px",
       "border-color": "rgba(0, 0, 0, 0.1)",

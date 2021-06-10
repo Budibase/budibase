@@ -29,6 +29,9 @@ function generateTitleContainer(table, formId) {
 const createScreen = table => {
   const screen = new Screen()
     .instanceName(`${table.name} - New`)
+    .customProps({
+      hAlign: "center",
+    })
     .route(newRowUrl(table))
 
   const form = makeMainForm()
