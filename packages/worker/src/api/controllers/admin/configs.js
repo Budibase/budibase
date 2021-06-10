@@ -27,11 +27,15 @@ exports.save = async function (ctx) {
     })
   }
 
-  // verify the configuration
-  switch (type) {
-    case Configs.SMTP:
-      await email.verifyConfig(config)
-      break
+  try {
+    // verify the configuration
+    switch (type) {
+      case Configs.SMTP:
+        await email.verifyConfig(config)
+        break
+    }
+  } catch (err) {
+    ctx.throw(400, err)
   }
 
   try {
@@ -42,7 +46,7 @@ exports.save = async function (ctx) {
       _rev: response.rev,
     }
   } catch (err) {
-    ctx.throw(err.status, err)
+    ctx.throw(400, err)
   }
 }
 

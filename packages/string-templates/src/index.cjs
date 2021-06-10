@@ -16,9 +16,6 @@ registerAll(hbsInstance)
  * utility function to check if the object is valid
  */
 function testObject(object) {
-  if (object == null) {
-    throw "Unable to process null object"
-  }
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)

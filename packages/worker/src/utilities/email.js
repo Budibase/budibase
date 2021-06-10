@@ -27,10 +27,8 @@ function createSMTPTransport(config) {
       secure: config.secure || false,
       auth: config.auth,
     }
-    if (config.selfSigned) {
-      options.tls = {
-        rejectUnauthorized: false,
-      }
+    options.tls = {
+      rejectUnauthorized: false,
     }
   } else {
     options = {
