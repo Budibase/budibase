@@ -75,9 +75,6 @@
         type: ConfigTypes.SMTP,
         config: {
           secure: true,
-          auth: {
-            type: "login",
-          },
         },
       }
     } else {
@@ -85,6 +82,11 @@
     }
     loading = false
     requireAuth = smtpConfig.config.auth != null
+    // always attach the auth for the forms purpose -
+    // this will be removed later if required
+    smtpConfig.config.auth = {
+      type: "login",
+    }
   }
 
   fetchSmtp()
