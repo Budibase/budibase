@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.9.41",
+  "version": "0.9.42",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -65,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^0.9.41",
-    "@budibase/client": "^0.9.41",
+    "@budibase/bbui": "^0.9.42",
+    "@budibase/client": "^0.9.42",
     "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^0.9.41",
+    "@budibase/string-templates": "^0.9.42",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
