@@ -5,16 +5,18 @@
     Heading,
     Divider,
     Label,
-    Page,
     notifications,
     Layout,
     Input,
+    Select,
     Body,
     Table,
+    Checkbox,
   } from "@budibase/bbui"
   import { email } from "stores/portal"
   import TemplateLink from "./_components/TemplateLink.svelte"
   import api from "builderStore/api"
+  import { cloneDeep } from "lodash/fp"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -36,10 +38,16 @@
 
   let smtpConfig
   let loading
+  let requireAuth = false
 
   async function saveSmtp() {
+    // clone it so we can remove stuff if required
+    const smtp = cloneDeep(smtpConfig)
+    if (!requireAuth) {
+      delete smtp.config.auth
+    }
     // Save your SMTP config
-    const response = await api.post(`/api/admin/configs`, smtpConfig)
+    const response = await api.post(`/api/admin/configs`, smtp)
 
     if (response.status !== 200) {
       const error = await response.text()
@@ -66,6 +74,7 @@
       smtpConfig = {
         type: ConfigTypes.SMTP,
         config: {
+          secure: true,
           auth: {
             type: "login",
           },
@@ -75,6 +84,7 @@
       smtpConfig = smtpDoc
     }
     loading = false
+    requireAuth = smtpConfig.config.auth != null
   }
 
   fetchSmtp()
@@ -104,21 +114,34 @@
         <Input bind:value={smtpConfig.config.host} />
       </div>
       <div class="form-row">
+        <Label siz="L">Security type</Label>
+        <Select
+          bind:value={smtpConfig.config.secure}
+          options={[
+            { label: "SSL/TLS", value: true },
+            { label: "None/STARTTLS", value: false },
+          ]}
+        />
+      </div>
+      <div class="form-row">
         <Label size="L">Port</Label>
         <Input type="number" bind:value={smtpConfig.config.port} />
-      </div>
-      <div class="form-row">
-        <Label size="L">User</Label>
-        <Input bind:value={smtpConfig.config.auth.user} />
-      </div>
-      <div class="form-row">
-        <Label size="L">Password</Label>
-        <Input type="password" bind:value={smtpConfig.config.auth.pass} />
       </div>
       <div class="form-row">
         <Label size="L">From email address</Label>
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
+      <Checkbox bind:value={requireAuth} text="Require sign-in" />
+      {#if requireAuth}
+        <div class="form-row">
+          <Label size="L">User</Label>
+          <Input bind:value={smtpConfig.config.auth.user} />
+        </div>
+        <div class="form-row">
+          <Label size="L">Password</Label>
+          <Input type="password" bind:value={smtpConfig.config.auth.pass} />
+        </div>
+      {/if}
     </Layout>
     <div>
       <Button cta on:click={saveSmtp}>Save</Button>

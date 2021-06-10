@@ -20,11 +20,16 @@ const FULL_EMAIL_PURPOSES = [
 
 function createSMTPTransport(config) {
   let options
+  let secure = config.secure
+  // default it if not specified
+  if (secure == null) {
+    secure = config.port === 465
+  }
   if (!TEST_MODE) {
     options = {
       port: config.port,
       host: config.host,
-      secure: config.secure || false,
+      secure: secure,
       auth: config.auth,
     }
     options.tls = {
