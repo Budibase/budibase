@@ -20,7 +20,7 @@
     "manifest": "node ./scripts/gen-collection-info.js"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.11.3",
+    "@budibase/handlebars-helpers": "^0.11.4",
     "dayjs": "^1.10.4",
     "handlebars": "^4.7.6",
     "handlebars-utils": "^1.0.6",
