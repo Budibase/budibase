@@ -50,7 +50,6 @@
     align-items: center;
   }
   .flipped {
-    border-top-left-radius: 0;
     transform: translateY(0%);
     top: -2px;
   }
