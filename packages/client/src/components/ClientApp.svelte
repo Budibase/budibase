@@ -14,9 +14,9 @@
     builderStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
-  import SettingsBar from "./SettingsBar.svelte"
-  import SelectionIndicator from "./SelectionIndicator.svelte"
-  import HoverIndicator from "./HoverIndicator.svelte"
+  import SettingsBar from "./preview/SettingsBar.svelte"
+  import SelectionIndicator from "./preview/SelectionIndicator.svelte"
+  import HoverIndicator from "./preview/HoverIndicator.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)

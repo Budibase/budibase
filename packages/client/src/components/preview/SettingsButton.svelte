@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { builderStore } from "../store"
+  import { builderStore } from "../../store"
 
   export let prop
   export let value

@@ -1,8 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import SettingsButton from "./SettingsButton.svelte"
-  import { builderStore } from "../store"
-  import { domDebounce } from "../utils/domDebounce"
+  import { builderStore } from "../../store"
+  import { domDebounce } from "../../utils/domDebounce"
 
   const verticalOffset = 28
   const horizontalOffset = 2
@@ -107,7 +107,7 @@
   .bar {
     display: flex;
     position: absolute;
-    z-index: 920;
+    z-index: 930;
     padding: 6px 8px;
     opacity: 0;
     flex-direction: row;

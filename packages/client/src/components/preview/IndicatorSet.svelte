@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { domDebounce } from "../utils/domDebounce"
+  import { domDebounce } from "../../utils/domDebounce"
 
   export let componentId
   export let color

@@ -1,5 +1,5 @@
 <script>
-  import { builderStore } from "../store"
+  import { builderStore } from "../../store"
   import IndicatorSet from "./IndicatorSet.svelte"
 </script>
 
