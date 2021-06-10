@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore } from "../store"
   import Indicator from "./Indicator.svelte"
+  import { domDebounce } from "../utils/domDebounce"
 
   let indicators = []
   let interval
@@ -29,13 +30,17 @@
     }
     indicators = newIndicators
   }
+  const debouncedUpdate = domDebounce(updatePosition)
 
   onMount(() => {
-    interval = setInterval(updatePosition, 100)
+    debouncedUpdate()
+    interval = setInterval(debouncedUpdate, 100)
+    document.addEventListener("scroll", debouncedUpdate, true)
   })
 
   onDestroy(() => {
     clearInterval(interval)
+    document.removeEventListener("scroll", debouncedUpdate, true)
   })
 </script>
 

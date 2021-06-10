@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import SettingsButton from "./SettingsButton.svelte"
   import { builderStore } from "../store"
+  import { domDebounce } from "../utils/domDebounce"
 
   const verticalOffset = 28
   const horizontalOffset = 2
@@ -63,13 +64,17 @@
       measured = true
     }
   }
+  const debouncedUpdate = domDebounce(updatePosition)
 
   onMount(() => {
-    interval = setInterval(updatePosition, 100)
+    debouncedUpdate()
+    interval = setInterval(debouncedUpdate, 100)
+    document.addEventListener("scroll", debouncedUpdate, true)
   })
 
   onDestroy(() => {
     clearInterval(interval)
+    document.removeEventListener("scroll", debouncedUpdate, true)
   })
 </script>
 
