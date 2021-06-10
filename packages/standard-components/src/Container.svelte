@@ -36,12 +36,19 @@
   .empty {
     border: 2px dashed rgba(0, 0, 0, 0.25);
   }
-  .direction-row {
+  .direction-row,
+  .direction-column {
     display: flex;
+    max-width: 100%;
+  }
+  .direction-row :global(*),
+  .direction-column :global(*) {
+    max-width: 100%;
+  }
+  .direction-row {
     flex-direction: row;
   }
   .direction-column {
-    display: flex;
     flex-direction: column;
   }
 
