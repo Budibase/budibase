@@ -68,13 +68,20 @@
         <Component definition={$screenStore.activeLayout.props} />
       </div>
       <NotificationDisplay />
+      <!-- Key block needs to be outside the if statement or it breaks -->
       {#key $builderStore.selectedComponentId}
-        {#if $builderStore.inBuilder && $builderStore.selectedComponent}
+        {#if $builderStore.inBuilder}
           <SettingsBar />
-          <SelectionIndicator />
-          <HoverIndicator />
         {/if}
       {/key}
+      <!--
+        We don't want to key these by componentID as they control their own
+        re-mounting to avoid flashes.
+      -->
+      {#if $builderStore.inBuilder}
+        <SelectionIndicator />
+        <HoverIndicator />
+      {/if}
     </Provider>
   </div>
 {/if}
