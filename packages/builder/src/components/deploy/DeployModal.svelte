@@ -31,9 +31,9 @@
         notifications.success(`Application published successfully`)
       }
 
-      // if (analytics.requestFeedbackOnDeploy()) {
-      feedbackModal.show()
-      // }
+      if (analytics.requestFeedbackOnDeploy()) {
+        feedbackModal.show()
+      }
     } catch (err) {
       analytics.captureException(err)
       notifications.error(`Error publishing app: ${err}`)
