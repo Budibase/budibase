@@ -127,7 +127,9 @@
       return
     }
     try {
-      const response = await del(`/api/applications/${selectedApp.prodId}`)
+      const response = await del(
+        `/api/applications/${selectedApp.prodId}?unpublish=1`
+      )
       if (response.status !== 200) {
         const json = await response.json()
         throw json.message

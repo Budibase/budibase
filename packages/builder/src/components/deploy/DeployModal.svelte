@@ -31,9 +31,9 @@
         notifications.success(`Application published successfully`)
       }
 
-      if (analytics.requestFeedbackOnDeploy()) {
-        feedbackModal.show()
-      }
+      // if (analytics.requestFeedbackOnDeploy()) {
+      feedbackModal.show()
+      // }
     } catch (err) {
       analytics.captureException(err)
       notifications.error(`Error publishing app: ${err}`)
@@ -98,6 +98,16 @@
 </script>
 
 <Button secondary on:click={publishModal.show}>Publish</Button>
+<Modal bind:this={feedbackModal}>
+  <ModalContent
+    title="Enjoying Budibase?"
+    size="L"
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <FeedbackIframe on:finished={feedbackModal.hide} />
+  </ModalContent>
+</Modal>
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish to Production"
