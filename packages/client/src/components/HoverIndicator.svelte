@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore } from "../store"
   import Indicator from "./Indicator.svelte"
+  import { domDebounce } from "../utils/domDebounce"
 
   let indicators = []
   let interval
@@ -34,11 +35,17 @@
 
     indicators = newIndicators
   }
+  const debouncedUpdate = domDebounce(updatePosition)
 
   const onMouseOver = e => {
     const element = e.target.closest("[data-type='component']")
-    componentId = element?.dataset?.id
-    componentName = element?.dataset?.name
+    const newId = element?.dataset?.id
+    const newName = element?.dataset?.name
+    if (newId !== componentId) {
+      componentId = newId
+      componentName = newName
+      debouncedUpdate()
+    }
   }
 
   const onMouseLeave = () => {
@@ -47,27 +54,33 @@
   }
 
   onMount(() => {
-    interval = setInterval(updatePosition, 100)
-    window.addEventListener("mouseover", onMouseOver)
-    document.documentElement.addEventListener("mouseleave", onMouseLeave)
+    debouncedUpdate()
+    interval = setInterval(debouncedUpdate, 100)
+    document.addEventListener("mouseover", onMouseOver)
+    document.addEventListener("mouseleave", onMouseLeave)
+    document.addEventListener("scroll", debouncedUpdate, true)
   })
 
   onDestroy(() => {
     clearInterval(interval)
-    window.removeEventListener("mouseover", onMouseOver)
-    document.documentElement.removeEventListener("mouseleave", onMouseLeave)
+    document.removeEventListener("mouseover", onMouseOver)
+    document.removeEventListener("mouseleave", onMouseLeave)
+    document.removeEventListener("scroll", debouncedUpdate, true)
   })
 </script>
 
-{#if componentId !== $builderStore.selectedComponentId}
-  {#each indicators as indicator, idx}
-    <Indicator
-      top={indicator.top}
-      left={indicator.left}
-      width={indicator.width}
-      height={indicator.height}
-      text={idx === 0 ? componentName : null}
-      color="rgb(120, 170, 244)"
-    />
-  {/each}
-{/if}
+{#key componentId}
+  {#if componentId !== $builderStore.selectedComponentId}
+    {#each indicators as indicator, idx}
+      <Indicator
+        top={indicator.top}
+        left={indicator.left}
+        width={indicator.width}
+        height={indicator.height}
+        text={idx === 0 ? componentName : null}
+        color="rgb(120, 170, 244)"
+        transition
+      />
+    {/each}
+  {/if}
+{/key}

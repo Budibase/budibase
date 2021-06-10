@@ -1,13 +1,17 @@
 <script>
+  import { fade } from "svelte/transition"
+
   export let top
   export let left
   export let width
   export let height
   export let text
   export let color
+  export let transition = false
 </script>
 
 <div
+  in:fade={{ delay: transition ? 65 : 0, duration: transition ? 130 : 0 }}
   class="indicator"
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color};"
 >
