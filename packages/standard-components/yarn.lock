@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.39":
-  version "0.9.39"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.39.tgz#3bccaa86ed7ae02f67661dadc57becd3db5ca9b6"
-  integrity sha512-5cPMFOGBOpvu3fMWLGBvgVpw+O8gvUh2g6xgWTZi2bCAgtXej+ryL0s7Xs4/mmoS2Y4z5ggc+wE4mOtCM9eFUQ==
+"@budibase/bbui@^0.9.41":
+  version "0.9.45"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.45.tgz#c37e84ffbf99daf0ebaa5c19b9109e7222463591"
+  integrity sha512-+wojKap0kieYoeCqhah1V9EswVbR+Pg1k9Nlw1n/zTsuGtjA0kUH652yKjz7zNzZgFm+s5oYS1CoPieIMehhSw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -475,11 +475,6 @@ svelte-portal@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-1.0.0.tgz#36a47c5578b1a4d9b4dc60fa32a904640ec4cdd3"
   integrity sha512-nHf+DS/jZ6jjnZSleBMSaZua9JlG5rZv9lOGKgJuaZStfevtjIlUJrkLc3vbV8QdBvPPVmvcjTlazAzfKu0v3Q==
-
-svelte-portal@^2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-2.1.2.tgz#5a355c18c9782149f94cbb1649ecbdf3d3667293"
-  integrity sha512-u1ONI4ZJDNhVJPDW7tH6RH1ZIzALt6kJZbF00Hz9bgNIVRlzvzimsnwf35rGFMtPFA+FYenvsTHUR815yYNc9A==
 
 svelte@^3.38.2:
   version "3.38.2"
