@@ -22,6 +22,6 @@
 <!-- Ensure to fully remount when screen changes -->
 {#key screenDefinition?._id}
   <Provider key="url" data={params}>
-    <Component definition={screenDefinition} />
+    <Component instance={screenDefinition} />
   </Provider>
 {/key}

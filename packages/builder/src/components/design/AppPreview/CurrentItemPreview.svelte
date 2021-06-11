@@ -70,9 +70,16 @@
       { once: true }
     )
 
-    // Add listener to select components
-    iframe.contentWindow.addEventListener("bb-select-component", data => {
-      store.actions.components.select({ _id: data.detail })
+    // Add listener for events sent by cliebt library in preview
+    iframe.contentWindow.addEventListener("bb-event", event => {
+      const { type, data } = event.detail
+      if (type === "select-component") {
+        store.actions.components.select({ _id: data.id })
+      } else if (type === "update-prop") {
+        store.actions.components.updateProp(data.prop, data.value)
+      } else {
+        console.log(data)
+      }
     })
   })
 </script>
@@ -94,12 +101,12 @@
     overflow: hidden;
     margin: auto;
     height: 100%;
-    background-color: white;
   }
   .component-container iframe {
     border: 0;
     left: 0;
     top: 0;
     width: 100%;
+    background-color: transparent;
   }
 </style>

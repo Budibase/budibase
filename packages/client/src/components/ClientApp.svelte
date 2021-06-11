@@ -14,6 +14,9 @@
     builderStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
+  import SettingsBar from "./preview/SettingsBar.svelte"
+  import SelectionIndicator from "./preview/SelectionIndicator.svelte"
+  import HoverIndicator from "./preview/HoverIndicator.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -54,18 +57,46 @@
 </script>
 
 {#if dataLoaded && $screenStore.activeLayout}
-  <div lang="en" dir="ltr" class="spectrum spectrum--medium spectrum--light">
+  <div
+    id="spectrum-root"
+    lang="en"
+    dir="ltr"
+    class="spectrum spectrum--medium spectrum--light"
+  >
     <Provider key="user" data={$authStore} {actions}>
-      <Component definition={$screenStore.activeLayout.props} />
+      <div id="app-root">
+        <Component instance={$screenStore.activeLayout.props} />
+      </div>
       <NotificationDisplay />
+      <!-- Key block needs to be outside the if statement or it breaks -->
+      {#key $builderStore.selectedComponentId}
+        {#if $builderStore.inBuilder}
+          <SettingsBar />
+        {/if}
+      {/key}
+      <!--
+        We don't want to key these by componentID as they control their own
+        re-mounting to avoid flashes.
+      -->
+      {#if $builderStore.inBuilder}
+        <SelectionIndicator />
+        <HoverIndicator />
+      {/if}
     </Provider>
   </div>
 {/if}
 
 <style>
-  div {
-    background: transparent;
+  #spectrum-root {
     height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+  #app-root {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
   }
 </style>

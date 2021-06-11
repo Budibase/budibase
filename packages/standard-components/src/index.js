@@ -10,6 +10,10 @@ import "@spectrum-css/page/dist/index-vars.css"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 loadSpectrumIcons()
 
+// Non user-facing components
+export { default as Placeholder } from "./Placeholder.svelte"
+
+// User facing components
 export { default as container } from "./Container.svelte"
 export { default as dataprovider } from "./DataProvider.svelte"
 export { default as screenslot } from "./ScreenSlot.svelte"
