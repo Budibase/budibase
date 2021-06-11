@@ -8,7 +8,6 @@
     luceneLimit,
   } from "./lucene"
   import Placeholder from "./Placeholder.svelte"
-  import Container from "./Container.svelte"
 
   export let dataSource
   export let filter
@@ -24,7 +23,8 @@
   let loading = false
 
   // Loading flag for the initial load
-  let loaded = false
+  // Mark as loaded if we have no datasource so we don't stall forever
+  let loaded = !dataSource
   let schemaLoaded = false
 
   // Provider state
@@ -89,6 +89,7 @@
     // bindings, but are used internally by other components
     id: $component?.id,
     state: { query },
+    loaded,
   }
 
   const getSortType = (schema, sortColumn) => {

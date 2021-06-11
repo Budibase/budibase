@@ -58,9 +58,17 @@
     const scrollY = window.scrollY
 
     // Extract valid children
+    // Sanity limit of 100 active indicators
     const children = Array.from(parents)
       .map(parent => parent?.childNodes?.[0])
       .filter(child => child != null)
+      .slice(0, 100)
+
+    // If there aren't any nodes then reset
+    if (!children.length) {
+      indicators = []
+      updating = false
+    }
 
     children.forEach((child, idx) => {
       const callback = createIntersectionCallback(idx)
