@@ -7,6 +7,7 @@
   import { builderStore } from "../store"
   import { hashString } from "../utils/hash"
   import Manifest from "@budibase/standard-components/manifest.json"
+  import { Placeholder } from "@budibase/standard-components"
 
   export let instance = {}
 
@@ -127,7 +128,7 @@
             <svelte:self instance={child} />
           {/each}
         {:else if empty}
-          <div class="placeholder">{name}</div>
+          <Placeholder />
         {/if}
       </svelte:component>
     {/if}
@@ -137,9 +138,5 @@
 <style>
   .component {
     display: contents;
-  }
-  .placeholder {
-    color: #888;
-    padding: 20px;
   }
 </style>
