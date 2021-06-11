@@ -9,6 +9,7 @@
 
   export let logoUrl
   export let hideLogo
+  export let type = "Horizontal"
 </script>
 
 <div class="nav" use:styleable={$component.styles}>
