@@ -25,9 +25,17 @@ export const styleable = (node, styles = {}) => {
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
+    // Use empty state styles as base styles if required, but let them, get
+    // overridden by any user specified styles
+    let baseStyles = {}
+    if (newStyles.empty) {
+      baseStyles.border = "2px dashed var(--grey-5)"
+      baseStyles.padding = "var(--spacing-l)"
+    }
+
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
-    const normalStyles = newStyles.normal || {}
+    const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
       ...(newStyles.hover || {}),
@@ -35,11 +43,6 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      // Apply empty border if required
-      if (newStyles.empty) {
-        styleString += "border: 2px dashed var(--grey-5);"
-      }
-
       node.style = styleString
       node.dataset.componentId = componentId
     }

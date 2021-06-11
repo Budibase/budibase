@@ -17,6 +17,5 @@
   div {
     color: var(--grey-6);
     font-size: var(--font-size-s);
-    padding: var(--spacing-l);
   }
 </style>
