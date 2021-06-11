@@ -6,8 +6,9 @@
   import { enrichProps, propsAreSame } from "../utils/componentProps"
   import { builderStore } from "../store"
   import { hashString } from "../utils/hash"
+  import Manifest from "@budibase/standard-components/manifest.json"
 
-  export let definition = {}
+  export let instance = {}
 
   // Props that will be passed to the component instance
   let componentProps
@@ -28,26 +29,29 @@
   const componentStore = writable({})
   setContext("component", componentStore)
 
-  // Extract component definition info
-  $: constructor = getComponentConstructor(definition._component)
-  $: children = definition._children || []
-  $: id = definition._id
-  $: name = definition._instanceName
-  $: updateComponentProps(definition, $context)
-  $: styles = definition._styles
-  $: transition = definition._transition
+  // Extract component instance info
+  $: constructor = getComponentConstructor(instance._component)
+  $: definition = getComponentDefinition(instance._component)
+  $: children = instance._children || []
+  $: id = instance._id
+  $: name = instance._instanceName
+  $: empty =
+    !children.length && definition?.hasChildren && $builderStore.inBuilder
+  $: updateComponentProps(instance, $context)
   $: selected =
     $builderStore.inBuilder &&
-    $builderStore.selectedComponentId === definition._id
+    $builderStore.selectedComponentId === instance._id
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...styles, id },
-    transition,
+    styles: { ...instance._styles, id, empty },
+    empty,
+    transition: instance._transition,
     selected,
     props: componentProps,
+    name,
   })
 
   // Gets the component constructor for the specified component
@@ -60,14 +64,20 @@
     return ComponentLibrary[name]
   }
 
+  const getComponentDefinition = component => {
+    const prefix = "@budibase/standard-components/"
+    const type = component?.replace(prefix, "")
+    return type ? Manifest[type] : null
+  }
+
   // Enriches any string component props using handlebars
-  const updateComponentProps = (definition, context) => {
+  const updateComponentProps = (instance, context) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich props with context
-    const enrichedProps = enrichProps(definition, context)
+    const enrichedProps = enrichProps(instance, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -100,14 +110,21 @@
   }
 </script>
 
-<div class={id} data-type="component" data-id={id} data-name={name}>
+<div
+  class={`component ${id}`}
+  data-type="component"
+  data-id={id}
+  data-name={name}
+>
   {#key propsHash}
     {#if constructor && componentProps}
       <svelte:component this={constructor} {...componentProps}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self definition={child} />
+            <svelte:self instance={child} />
           {/each}
+        {:else if empty}
+          <div class="placeholder">{name}</div>
         {/if}
       </svelte:component>
     {/if}
@@ -115,7 +132,11 @@
 </div>
 
 <style>
-  div {
+  .component {
     display: contents;
+  }
+  .placeholder {
+    color: #888;
+    padding: 20px;
   }
 </style>

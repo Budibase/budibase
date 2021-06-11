@@ -9,8 +9,6 @@
   export let vAlign
   export let size
 
-  let element
-
   $: directionClass = direction ? `valid-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
@@ -19,23 +17,13 @@
 
 <div
   class={[directionClass, hAlignClass, vAlignClass, sizeClass].join(" ")}
-  class:empty={!$component.children && $builderStore.inBuilder}
-  class:selected={$component.selected}
   in:transition={{ type: $component.transition }}
   use:styleable={$component.styles}
-  bind:this={element}
 >
-  {#if !$component.children && $builderStore.inBuilder}
-    <div class="placeholder">Add some content</div>
-  {:else}
-    <slot />
-  {/if}
+  <slot />
 </div>
 
 <style>
-  .empty {
-    border: 2px dashed rgba(0, 0, 0, 0.25);
-  }
   .valid-container {
     display: flex;
     max-width: 100%;
@@ -95,13 +83,5 @@
   .direction-row.vAlign-stretch,
   .direction-column.hAlign-stretch {
     align-items: stretch;
-  }
-
-  .selected {
-    position: relative;
-  }
-  .placeholder {
-    padding: 20px;
-    color: #888;
   }
 </style>

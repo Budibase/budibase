@@ -35,6 +35,11 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
+      // Apply empty border if required
+      if (newStyles.empty) {
+        styleString += "border: 2px dashed rgba(0, 0, 0, 0.25);"
+      }
+
       node.style = styleString
       node.dataset.componentId = componentId
     }

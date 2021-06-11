@@ -7,6 +7,8 @@
     luceneSort,
     luceneLimit,
   } from "./lucene"
+  import Placeholder from "./Placeholder.svelte"
+  import Container from "./Container.svelte"
 
   export let dataSource
   export let filter
@@ -231,7 +233,11 @@
         <ProgressCircle />
       </div>
     {:else}
-      <slot />
+      {#if !$component.children}
+        <Placeholder />
+      {:else}
+        <slot />
+      {/if}
       {#if paginate && internalTable}
         <div class="pagination">
           <Pagination
