@@ -52,8 +52,8 @@ router
     rowController.validate
   )
   .delete(
-    "/api/:tableId/rows/:rowId/:revId",
-    paramSubResource("tableId", "rowId"),
+    "/api/:tableId/rows",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     usage,
     rowController.destroy

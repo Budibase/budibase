@@ -74,9 +74,8 @@
   }
 
   const deleteRows = async () => {
-    await api.post(`/api/${tableId}/rows`, {
+    await api.delete(`/api/${tableId}/rows`, {
       rows: selectedRows,
-      type: "delete",
     })
     data = data.filter(row => !selectedRows.includes(row))
     notifications.success(`Successfully deleted ${selectedRows.length} rows`)
