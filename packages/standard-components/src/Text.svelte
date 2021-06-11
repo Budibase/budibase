@@ -1,25 +1,19 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let text = ""
-  export let bold = false
-  export let italic = false
-  export let underline = false
+  export let text
 
-  let element
+  $: placeholder = $builderStore.inBuilder && !text
+  $: componentText = $builderStore.inBuilder
+    ? text || "Placeholder text"
+    : text || ""
 </script>
 
-<p
-  bind:this={element}
-  use:styleable={$component.styles}
-  class:bold
-  class:italic
-  class:underline
->
-  {text}
+<p use:styleable={$component.styles} class:placeholder>
+  {componentText}
 </p>
 
 <style>
@@ -27,13 +21,9 @@
     display: inline-block;
     white-space: pre-wrap;
   }
-  .bold {
-    font-weight: bold;
-  }
-  .italic {
+
+  .placeholder {
     font-style: italic;
-  }
-  .underline {
-    text-decoration: underline;
+    color: var(--grey-6);
   }
 </style>

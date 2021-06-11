@@ -10,7 +10,7 @@
   const context = getContext("context")
 
   $: rows = dataProvider?.rows ?? []
-  $: loaded = dataProvider?.loaded ?? false
+  $: loaded = dataProvider?.loaded ?? true
 </script>
 
 <div use:styleable={$component.styles}>
