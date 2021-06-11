@@ -1,12 +1,12 @@
 <script>
-  import { getContext } from "svelte"
+  import { setContext, getContext } from "svelte"
   import Router from "svelte-spa-router"
   import { routeStore } from "../store"
   import Screen from "./Screen.svelte"
-  import { onMount } from "svelte"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
+  setContext("screenslot", true)
 
   // Only wrap this as an array to take advantage of svelte keying,
   // to ensure the svelte-spa-router is fully remounted when route config
