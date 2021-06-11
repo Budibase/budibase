@@ -11,8 +11,6 @@
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? false
-
-  $: console.log(loaded)
 </script>
 
 <div use:styleable={$component.styles}>
