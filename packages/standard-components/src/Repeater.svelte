@@ -11,6 +11,8 @@
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? false
+
+  $: console.log(loaded)
 </script>
 
 <div use:styleable={$component.styles}>
@@ -23,6 +25,21 @@
       </Provider>
     {/each}
   {:else if loaded && noRowsMessage}
-    <Placeholder text={noRowsMessage} />
+    <div class="noRows"><i class="ri-list-check-2" />{noRowsMessage}</div>
   {/if}
 </div>
+
+<style>
+  .noRows {
+    color: var(--grey-6);
+    font-size: var(--font-size-s);
+    padding: var(--spacing-l);
+    display: grid;
+    place-items: center;
+  }
+  .noRows i {
+    margin-bottom: var(--spacing-m);
+    font-size: 1.5rem;
+    color: var(--grey-5);
+  }
+</style>

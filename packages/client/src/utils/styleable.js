@@ -37,7 +37,7 @@ export const styleable = (node, styles = {}) => {
     const applyStyles = styleString => {
       // Apply empty border if required
       if (newStyles.empty) {
-        styleString += "border: 2px dashed rgba(0, 0, 0, 0.25);"
+        styleString += "border: 2px dashed var(--grey-5);"
       }
 
       node.style = styleString
