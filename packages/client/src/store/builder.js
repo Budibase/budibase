@@ -1,5 +1,5 @@
 import { writable, derived } from "svelte/store"
-import manifest from "@budibase/standard-components/manifest.json"
+import Manifest from "@budibase/standard-components/manifest.json"
 
 const dispatchEvent = (type, data) => {
   window.dispatchEvent(
@@ -46,7 +46,7 @@ const createBuilderStore = () => {
     const component = findComponentById(asset?.props, selectedComponentId)
     const prefix = "@budibase/standard-components/"
     const type = component?._component?.replace(prefix, "")
-    const definition = type ? manifest[type] : null
+    const definition = type ? Manifest[type] : null
     return {
       ...$state,
       selectedComponent: component,
