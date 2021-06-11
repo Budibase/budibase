@@ -12,7 +12,7 @@
 {#if options}
   <div use:chart={options} use:styleable={$component.styles} />
 {:else if $builderStore.inBuilder}
-  <div use:styleable={{ ...$component.styles, empty: true }}>
+  <div use:styleable={$component.styles}>
     <Placeholder text="Use the settings panel to build your chart" />
   </div>
 {/if}
