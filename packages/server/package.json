@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.46",
+  "version": "0.9.47",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -55,9 +55,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.46",
-    "@budibase/client": "^0.9.46",
-    "@budibase/string-templates": "^0.9.46",
+    "@budibase/auth": "^0.9.47",
+    "@budibase/client": "^0.9.47",
+    "@budibase/string-templates": "^0.9.47",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -109,7 +109,7 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.46",
+    "@budibase/standard-components": "^0.9.47",
     "@jest/test-sequencer": "^24.8.0",
     "babel-jest": "^27.0.2",
     "docker-compose": "^0.23.6",
