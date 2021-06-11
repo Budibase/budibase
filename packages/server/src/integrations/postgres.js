@@ -104,6 +104,7 @@ class PostgresIntegration extends Sql {
   }
 
   async query(json) {
+    // TODO: get the schema
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json)
     const response = await internalQuery(this.client, input)

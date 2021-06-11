@@ -50,6 +50,10 @@ function addFilters(query, filters) {
   return query
 }
 
+function buildRelationships() {
+
+}
+
 function buildCreate(knex, json) {
   const { endpoint, body } = json
   let query = knex(endpoint.entityId)
