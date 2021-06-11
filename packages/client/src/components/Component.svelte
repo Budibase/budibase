@@ -25,6 +25,7 @@
 
   // Get contexts
   const context = getContext("context")
+  const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
   const componentStore = writable({})
@@ -45,12 +46,13 @@
   $: selected =
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
+  $: interactive = $builderStore.previewType === "layout" || insideScreenslot
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...instance._styles, id, empty },
+    styles: { ...instance._styles, id, empty, interactive },
     empty,
     transition: instance._transition,
     selected,
@@ -116,7 +118,7 @@
 
 <div
   class={`component ${id}`}
-  data-type="component"
+  data-type={interactive ? "component" : ""}
   data-id={id}
   data-name={name}
 >
