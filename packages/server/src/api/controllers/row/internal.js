@@ -142,8 +142,7 @@ exports.fetchView = async (ctx) => {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(TABLE_VIEW_BEGINS_WITH)) {
     ctx.params.tableId = viewName.substring(4)
-    await exports.fetchTableRows(ctx)
-    return
+    return exports.fetchTableRows(ctx)
   }
 
   const db = new CouchDB(appId)
@@ -228,7 +227,8 @@ exports.find = async (ctx) => {
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const row = await db.get(ctx.params.rowId)
+  const { rowId, revId } = ctx.request.body
+  const row = await db.get(rowId)
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
@@ -241,12 +241,12 @@ exports.destroy = async function (ctx) {
   })
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     ctx.params = {
-      id: ctx.params.rowId,
+      id: rowId,
     }
     await userController.destroyMetadata(ctx)
     return { response: ctx.body, row }
   } else {
-     const response = await db.remove(ctx.params.rowId, ctx.params.revId)
+     const response = await db.remove(rowId, revId)
     return { response, row }
   }
 }

@@ -62,8 +62,12 @@ module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   let ctx = {
     params: {
       tableId: inputs.tableId,
-      rowId: inputs.id,
-      revId: inputs.revision,
+    },
+    request: {
+      body: {
+        rowId: inputs.id,
+        revId: inputs.revision,
+      },
     },
     appId,
     eventEmitter: emitter,

@@ -9,7 +9,7 @@
 
   async function confirmDeletion() {
     await deleteRows()
-    modal.hide()
+    modal?.hide()
   }
 </script>
 
