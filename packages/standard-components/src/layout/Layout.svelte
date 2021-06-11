@@ -30,7 +30,7 @@
     <div class="nav">
       <div class="logo">
         {#if !hideLogo}
-          <img src={logoUrl} alt={title} height="48" />
+          <img src="https://i.imgur.com/Xhdt1YP.png" alt={title} height="48" />
         {/if}
         {#if !hideTitle}
           <span>{title}</span>
@@ -63,16 +63,12 @@
     justify-content: space-between;
     padding: var(--spacing-m);
   }
-  .top,
-  .left {
-    grid-template-columns: 1fr;
-  }
   .links {
     grid-area: burger;
   }
   .logo {
     display: grid;
-    place-items: center;
+    justify-items: center;
     grid-area: logo;
   }
   .portal {
@@ -82,7 +78,8 @@
   }
 
   @media (min-width: 600px) {
-    .nav {
+    .nav,
+    .logo {
       display: initial;
     }
     .top {
