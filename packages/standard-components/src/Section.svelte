@@ -5,6 +5,7 @@
   const component = getContext("component")
   export let type = "mainSidebar"
   export let gap = "16px"
+  export let minSize = 250
 
   let layoutMap = {
     mainSidebar: 2,
@@ -17,7 +18,7 @@
   $: columnsDependingOnSize = calculateColumns(containerWidth)
 
   function calculateColumns(parentWidth) {
-    const numberOfAllowedColumns = Math.floor(parentWidth / 250) || 100
+    const numberOfAllowedColumns = Math.floor(parentWidth / minSize) || 100
     if (layoutMap[type] <= numberOfAllowedColumns) {
       return false
     } else if (layoutMap[type] > numberOfAllowedColumns) {
