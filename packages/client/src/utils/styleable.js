@@ -15,25 +15,6 @@ const buildStyleString = (styleObject, customStyles) => {
 }
 
 /**
- * Applies styles to enrich the builder preview.
- * Applies styles to highlight the selected component, and allows pointer
- * events for any selectable components (overriding the blanket ban on pointer
- * events in the iframe HTML).
- */
-const addBuilderPreviewStyles = (node, styleString, componentId) => {
-  if (componentId === get(builderStore).selectedComponentId) {
-    const style = window.getComputedStyle(node)
-    const property = style?.display === "table-row" ? "outline" : "border"
-    return (
-      styleString +
-      `;${property}: 2px solid #4285f4 !important; border-radius: 4px !important;`
-    )
-  } else {
-    return styleString
-  }
-}
-
-/**
  * Svelte action to apply correct component styles.
  * This also applies handlers for selecting components from the builder preview.
  */
@@ -44,9 +25,17 @@ export const styleable = (node, styles = {}) => {
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
+    // Use empty state styles as base styles if required, but let them, get
+    // overridden by any user specified styles
+    let baseStyles = {}
+    if (newStyles.empty) {
+      baseStyles.border = "2px dashed var(--grey-5)"
+      baseStyles.padding = "var(--spacing-l)"
+    }
+
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
-    const normalStyles = newStyles.normal || {}
+    const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
       ...(newStyles.hover || {}),
@@ -54,7 +43,7 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = addBuilderPreviewStyles(node, styleString, componentId)
+      node.style = styleString
       node.dataset.componentId = componentId
     }
 
@@ -71,7 +60,9 @@ export const styleable = (node, styles = {}) => {
     // Handler to select a component in the builder when clicking it in the
     // builder preview
     selectComponent = event => {
-      builderStore.actions.selectComponent(componentId)
+      if (newStyles.interactive) {
+        builderStore.actions.selectComponent(componentId)
+      }
       event.preventDefault()
       event.stopPropagation()
       return false

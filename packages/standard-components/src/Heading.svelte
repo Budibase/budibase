@@ -1,25 +1,30 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let type
-  export let text = ""
+  export let text
+
+  $: placeholder = $builderStore.inBuilder && !text
+  $: componentText = $builderStore.inBuilder
+    ? text || "Placeholder text"
+    : text || ""
 </script>
 
 {#if type === "h1"}
-  <h1 use:styleable={$component.styles}>{text}</h1>
+  <h1 class:placeholder use:styleable={$component.styles}>{componentText}</h1>
 {:else if type === "h2"}
-  <h2 use:styleable={$component.styles}>{text}</h2>
+  <h2 class:placeholder use:styleable={$component.styles}>{componentText}</h2>
 {:else if type === "h3"}
-  <h3 use:styleable={$component.styles}>{text}</h3>
+  <h3 class:placeholder use:styleable={$component.styles}>{componentText}</h3>
 {:else if type === "h4"}
-  <h4 use:styleable={$component.styles}>{text}</h4>
+  <h4 class:placeholder use:styleable={$component.styles}>{componentText}</h4>
 {:else if type === "h5"}
-  <h5 use:styleable={$component.styles}>{text}</h5>
+  <h5 class:placeholder use:styleable={$component.styles}>{componentText}</h5>
 {:else if type === "h6"}
-  <h6 use:styleable={$component.styles}>{text}</h6>
+  <h6 class:placeholder use:styleable={$component.styles}>{componentText}</h6>
 {/if}
 
 <style>
@@ -30,5 +35,10 @@
   h5,
   h6 {
     white-space: pre-wrap;
+  }
+
+  .placeholder {
+    font-style: italic;
+    color: var(--grey-6);
   }
 </style>
