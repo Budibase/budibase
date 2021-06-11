@@ -8,26 +8,26 @@ const {
   PermissionTypes,
 } = require("@budibase/auth/permissions")
 const Joi = require("joi")
-const { FieldTypes, DataSourceOperation, SortDirection } = require("../../constants")
+const { DataSourceOperation } = require("../../constants")
 
 const router = Router()
 
-function generatePlusDatasourceSchema() {
+function generateDatasourceSchema() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     _id: Joi.string(),
     _rev: Joi.string(),
-    source: Joi.string().valid("postgres"),
-    type: Joi.string().valid("datasource_plus"),
-    relationships: Joi.array().required().items(Joi.object({
+    source: Joi.string().valid("POSTGRES_PLUS"),
+    type: Joi.string().allow("datasource_plus"),
+    relationships: Joi.array().items(Joi.object({
       from: Joi.string().required(),
       to: Joi.string().required(),
       cardinality: Joi.valid("1:N", "1:1", "N:N").required()
     })),
-    entities: Joi.array().required().items(Joi.object({
-      type: Joi.string().valid(...Object.values(FieldTypes)).required(),
-      name: Joi.string().required(),
-    })),
+    // entities: Joi.array().items(Joi.object({
+    //   type: Joi.string().valid(...Object.values(FieldTypes)).required(),
+    //   name: Joi.string().required(),
+    // })),
   }).unknown(true))
 }
 
@@ -59,7 +59,6 @@ function generateQueryDatasourceSchema() {
   }))
 }
 
-
 router
   .get("/api/datasources", authorized(BUILDER), datasourceController.fetch)
   .get(
@@ -68,18 +67,17 @@ router
     datasourceController.find
   )
   .post(
-    "/api/datasources/plus",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-    generatePlusDatasourceSchema(),
-    datasourceController.plus
-  )
-  .post(
     "/api/datasources/query",
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     generateQueryDatasourceSchema(),
     datasourceController.query
   )
-  .post("/api/datasources", authorized(BUILDER), datasourceController.save)
+  .post(
+    "/api/datasources",
+    authorized(BUILDER),
+    generateDatasourceSchema(),
+    datasourceController.save
+  )
   .delete(
     "/api/datasources/:datasourceId/:revId",
     authorized(BUILDER),

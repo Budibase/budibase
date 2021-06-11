@@ -88,7 +88,8 @@
 
   onMount(() => {
     fetchDeployments()
-    poll = setInterval(fetchDeployments, POLL_INTERVAL)
+    // TODO: fix
+    // poll = setInterval(fetchDeployments, POLL_INTERVAL)
   })
 
   onDestroy(() => clearInterval(poll))

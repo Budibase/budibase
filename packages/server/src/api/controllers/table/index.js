@@ -5,18 +5,30 @@ const {
   getRowParams,
   getTableParams,
   generateTableID,
+  getDatasourceParams,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
 const { TableSaveFunctions } = require("./utils")
 
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  const body = await db.allDocs(
+  const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = body.rows.map(row => row.doc)
+  const internal = internalTables.rows.map(row => row.doc)
+
+  const externalTables = await db.allDocs(
+    getDatasourceParams("plus", {
+      include_docs: true,
+    })
+  )
+  const external = externalTables.rows.flatMap(row =>
+    Object.values(row.doc.entities)
+  )
+
+  ctx.body = [...internal, ...external]
 }
 
 exports.find = async function (ctx) {

@@ -3,6 +3,7 @@ const {
   generateDatasourceID,
   getDatasourceParams,
   getQueryParams,
+  DocumentTypes,
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
@@ -20,11 +21,22 @@ exports.fetch = async function (ctx) {
 
 exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
+  const plus = ctx.request.body.plus
 
   const datasource = {
-    _id: generateDatasourceID(),
-    type: "datasource",
+    _id: generateDatasourceID({ plus }),
+    type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
     ...ctx.request.body,
+  }
+
+  // update the schema
+  if (ctx.query.refresh) {
+    const PlusConnector = plusIntegrations[datasource.source].integration
+
+    const connector = new PlusConnector(ctx.request.body.config)
+    await connector.init()
+
+    datasource.entities = connector.tables
   }
 
   const response = await db.post(datasource)
@@ -76,27 +88,4 @@ exports.query = async function (ctx) {
   } else {
     ctx.throw(400, "Datasource does not support query.")
   }
-}
-
-// TODO: merge endpoint with main datasource endpoint
-exports.plus = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
-
-  const PlusConnector = plusIntegrations[ctx.request.body.source].integration
-
-  const connector = new PlusConnector(ctx.request.body)
-  await connector.init()
-
-  const datasource = {
-    _id: generateDatasourceID({ plus: true }),
-    type: "datasource_plus",
-    relationships: [],
-    ...ctx.request.body,
-    entities: connector.tables,
-  }
-
-  const response = await db.post(datasource)
-  datasource._rev = response.rev
-
-  ctx.body = datasource
 }

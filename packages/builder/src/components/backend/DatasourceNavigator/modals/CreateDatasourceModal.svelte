@@ -23,16 +23,17 @@
   }
 
   async function saveDatasource() {
-    const { type, ...config } = integration
+    const { type, plus, ...config } = integration
 
     // Create datasource
     const response = await datasources.save({
       name,
       source: type,
       config,
+      plus
     })
     notifications.success(`Datasource ${name} created successfully.`)
-    analytics.captureEvent("Datasource Created", { name })
+    analytics.captureEvent("Datasource Created", { name, type })
 
     // Navigate to new datasource
     $goto(`./datasource/${response._id}`)
