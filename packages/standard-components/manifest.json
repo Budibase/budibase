@@ -9,6 +9,51 @@
     "illegalChildren": ["Section"],
     "settings": []
   },
+  "layout": {
+    "name": "Layout",
+    "description": "This component is specific only to layouts",
+    "icon": "Sandbox",
+    "hasChildren": true,
+    "styleable": true,
+    "transitionable": true,
+    "illegalChildren": [],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Logo URL",
+        "key": "logoUrl"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "boolean",
+        "label": "Hide title",
+        "key": "hideTitle",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Hide logo",
+        "key": "hideLogo",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Navigation",
+        "key": "navigation",
+        "options": ["Top", "Left", "None"],
+        "defaultValue": "Top"
+      },
+      {
+        "type": "select",
+        "label": "Links",
+        "key": "type"
+      }
+    ]
+  },
   "section": {
     "name": "Section",
     "description": "Add a section to your application",
@@ -344,13 +389,6 @@
         "type": "text",
         "label": "Logo URL",
         "key": "logoUrl"
-      },
-      {
-        "type": "select",
-        "label": "Type",
-        "key": "type",
-        "options": ["Horizontal", "Vertical"],
-        "defaultValue": "Horizontal"
       },
       {
         "type": "boolean",

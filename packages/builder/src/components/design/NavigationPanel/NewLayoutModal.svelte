@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import { Input, ModalContent } from "@budibase/bbui"
