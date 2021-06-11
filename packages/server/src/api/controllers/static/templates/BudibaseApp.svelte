@@ -5,6 +5,10 @@
   export let appId
   export let production
   export let clientLibPath
+
+  function initialise() {
+    alert("Yeet")
+  }
 </script>
 
 <svelte:head>

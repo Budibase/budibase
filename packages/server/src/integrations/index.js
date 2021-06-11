@@ -39,6 +39,7 @@ const INTEGRATIONS = {
   MYSQL: mysql.integration,
   ARANGODB: arangodb.integration,
   REST: rest.integration,
+  POSTGRES_PLUS: postgresPlus.integration,
 }
 
 module.exports = {

@@ -1,3 +1,4 @@
+const Sql = require("../base/sql")
 const { Pool } = require("pg")
 const { FieldTypes } = require("../../constants")
 const { FIELD_TYPES } = require("../Integration")
@@ -18,6 +19,7 @@ const SCHEMA = {
   friendlyName: "PostgreSQL",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
+  plus: true,
   datasource: {
     host: {
       type: FIELD_TYPES.STRING,
@@ -52,12 +54,13 @@ const SCHEMA = {
   },
 }
 
-class PostgresPlus {
+class PostgresPlus extends Sql {
   static pool
   COLUMNS_SQL =
     "select * from information_schema.columns where table_schema = 'public'"
 
   constructor(config) {
+    super("pg")
     this.config = config
     if (!this.pool) {
       this.pool = new Pool(this.config)
@@ -71,23 +74,31 @@ class PostgresPlus {
 
     const tables = {}
     for (let column of response.rows) {
+      const tableName = column.table_name
+      const columnName = column.column_name
+
       // table key doesn't exist yet
-      if (!tables[column.table_name]) {
-        tables[column.table_name] = []
+      if (!tables[tableName]) {
+        tables[tableName] = {
+          _id: "something",
+          name: tableName,
+          schema: {},
+        }
       }
 
-      // Add the new column
-      const columnData = {
-        type: TYPE_MAP[column.data_type] || "unknown",
-        table: column.table_name,
-        name: column.column_name,
-        updateable: column.is_updatable,
-        precision: column.numeric_precision,
-        nullable: column.is_nullable === "YES",
+      tables[tableName].schema[columnName] = {
+        name: columnName,
+        type: TYPE_MAP[column.data_type],
       }
-      tables[column.table_name].push(columnData)
     }
     this.tables = tables
+  }
+
+  async query(json) {
+    const operation = this._operation(json).toLowerCase()
+    const sql = this._query(json)
+    const response = await this.client.query(sql)
+    return response.rows.length ? response.rows : [{ [operation]: true }]
   }
 }
 
