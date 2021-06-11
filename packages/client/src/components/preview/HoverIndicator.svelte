@@ -20,12 +20,12 @@
 
   onMount(() => {
     document.addEventListener("mouseover", onMouseOver)
-    window.addEventListener("mouseleave", onMouseLeave)
+    document.body.addEventListener("mouseleave", onMouseLeave)
   })
 
   onDestroy(() => {
     document.removeEventListener("mouseover", onMouseOver)
-    window.removeEventListener("mouseleave", onMouseLeave)
+    document.body.removeEventListener("mouseleave", onMouseLeave)
   })
 </script>
 
