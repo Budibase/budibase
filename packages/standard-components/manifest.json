@@ -1548,6 +1548,7 @@
     "icon": "Table",
     "styleable": true,
     "hasChildren": true,
+    "showEmptyState": false,
     "settings": [
       {
         "type": "dataProvider",

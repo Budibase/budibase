@@ -36,7 +36,10 @@
   $: id = instance._id
   $: name = instance._instanceName
   $: empty =
-    !children.length && definition?.hasChildren && $builderStore.inBuilder
+    !children.length &&
+    definition?.hasChildren &&
+    definition?.showEmptyState !== false &&
+    $builderStore.inBuilder
   $: updateComponentProps(instance, $context)
   $: selected =
     $builderStore.inBuilder &&
