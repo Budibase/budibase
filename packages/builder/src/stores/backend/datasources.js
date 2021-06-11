@@ -29,8 +29,18 @@ export function createDatasourcesStore() {
       queries.update(state => ({ ...state, selected: null }))
     },
     save: async datasource => {
-      const response = await api.post("/api/datasources", datasource)
+      let url = "/api/datasources"
+
+      if (datasource.plus) {
+        url += "?refresh=1"
+      }
+
+      const response = await api.post(url, datasource)
       const json = await response.json()
+
+      if (response.status !== 200) {
+        throw new Error(json.message)
+      }
 
       update(state => {
         const currentIdx = state.list.findIndex(ds => ds._id === json._id)
