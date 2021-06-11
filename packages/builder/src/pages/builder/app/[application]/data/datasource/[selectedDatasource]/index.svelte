@@ -13,10 +13,14 @@
   $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {
-    // Create datasource
-    await datasources.save(datasource)
-    notifications.success(`Datasource ${name} saved successfully.`)
-    unsaved = false
+    try {
+      // Create datasource
+      await datasources.save(datasource)
+      notifications.success(`Datasource ${name} saved successfully.`)
+      unsaved = false
+    } catch (err) {
+      notifications.error(`Error saving datasource: ${err}`)
+    }
   }
 
   function onClickQuery(query) {
@@ -66,20 +70,22 @@
           on:change={setUnsaved}
         />
       </div>
-      <Divider />
-      <div class="query-header">
-        <Heading size="S">Queries</Heading>
-        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
-      </div>
-      <div class="query-list">
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
-          <div class="query-list-item" on:click={() => onClickQuery(query)}>
-            <p class="query-name">{query.name}</p>
-            <p>{capitalise(query.queryVerb)}</p>
-            <p>→</p>
-          </div>
-        {/each}
-      </div>
+      {#if !integration.plus}
+        <Divider />
+        <div class="query-header">
+          <Heading size="S">Queries</Heading>
+          <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+        </div>
+        <div class="query-list">
+          {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+            <div class="query-list-item" on:click={() => onClickQuery(query)}>
+              <p class="query-name">{query.name}</p>
+              <p>{capitalise(query.queryVerb)}</p>
+              <p>→</p>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </Layout>
   </section>
 {/if}

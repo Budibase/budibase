@@ -17,7 +17,7 @@
       return
     }
     queries.select(query)
-    $goto(`./datasource/${query.datasourceId}/${query._id}`)
+    $goto(`./datasource/${query.datasourceId}/query/${query._id}`)
   }
 
   onMount(() => {

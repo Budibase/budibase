@@ -4,7 +4,6 @@
   import { store } from "builderStore"
   import api from "builderStore/api"
   import analytics from "analytics"
-  import FeedbackIframe from "components/feedback/FeedbackIframe.svelte"
 
   const DeploymentStatus = {
     SUCCESS: "SUCCESS",
@@ -29,10 +28,6 @@
         throw new Error(`status ${response.status}`)
       } else {
         notifications.success(`Application published successfully`)
-      }
-
-      if (analytics.requestFeedbackOnDeploy()) {
-        feedbackModal.show()
       }
     } catch (err) {
       analytics.captureException(err)
