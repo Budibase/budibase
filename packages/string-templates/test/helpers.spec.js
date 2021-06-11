@@ -305,6 +305,17 @@ describe("Test the object/array helper", () => {
     const output = await processString("{{ literal ( sum ( pluck items 'price' ) ) }}", context)
     expect(output).toBe(50)
   })
+
+  it("should allow use of the length helper", async () => {
+    const array = [1, 2, 3]
+    const output = await processString("{{ length array }}", { array })
+    expect(output).toBe("3")
+  })
+
+  it("should allow use of the length helper inline", async () => {
+    const output = await processString(`{{ length '[1, 2, 3]' }}`, {})
+    expect(output).toBe("3")
+  })
 })
 
 describe("Test the literal helper", () => {
