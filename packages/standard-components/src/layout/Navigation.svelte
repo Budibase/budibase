@@ -8,8 +8,7 @@
 
   export let navigation
   export let links
-
-  let mobileOpen = false
+  export let mobileOpen = false
 </script>
 
 <div class="container">
