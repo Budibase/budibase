@@ -33,12 +33,17 @@
     role: {},
   }
 
+  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : ""
+  $: console.log(defaultRoleId)
   // Merge the Apps list and the roles response to get something that makes sense for the table
-  $: appList = Object.keys($apps?.data).map(id => ({
-    ...$apps?.data?.[id],
-    _id: id,
-    role: [$userFetch?.data?.roles?.[id]],
-  }))
+  $: appList = Object.keys($apps?.data).map(id => {
+    const role = $userFetch?.data?.roles?.[id] || defaultRoleId
+    return {
+      ...$apps?.data?.[id],
+      _id: id,
+      role: [role],
+    }
+  })
   let selectedApp
 
   const userFetch = fetchData(`/api/admin/users/${userId}`)
