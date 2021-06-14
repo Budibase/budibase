@@ -1,8 +1,10 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, transition } = getContext("sdk")
+  const { styleable, transition, builderStore } = getContext("sdk")
   const component = getContext("component")
+
   export let type = "mainSidebar"
   export let gap = "16px"
   export let minSize = 250
@@ -36,7 +38,9 @@
   <slot />
   {#if layoutMap[type] - $component.children > 0}
     {#each new Array(layoutMap[type] - $component.children) as _}
-      <p><i class="ri-image-line" />Add some components to display.</p>
+      <div class:placeholder={$builderStore.inBuilder}>
+        <Placeholder />
+      </div>
     {/each}
   {/if}
 </div>
@@ -78,5 +82,10 @@
     margin-bottom: var(--spacing-m);
     font-size: 1.5rem;
     color: var(--grey-5);
+  }
+
+  .placeholder {
+    border: 2px dashed var(--grey-5);
+    padding: var(--spacing-l);
   }
 </style>
