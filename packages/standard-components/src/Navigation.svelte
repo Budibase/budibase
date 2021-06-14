@@ -53,15 +53,11 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-  }
-
-  .nav__menu > * {
-    margin-right: 16px;
+    gap: 16px;
   }
 
   :global(.nav__menu > a) {
     font-size: 1.5em;
     text-decoration: none;
-    margin-right: 16px;
   }
 </style>
