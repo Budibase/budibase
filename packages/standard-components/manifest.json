@@ -58,6 +58,7 @@
         "type": "select",
         "label": "Direction",
         "key": "direction",
+        "key": "direction",
         "showInBar": true,
         "options": [
           {
@@ -172,6 +173,7 @@
     "styleable": true,
     "transitionable": true,
     "illegalChildren": ["Section"],
+    "showEmptyState": false,
     "settings": [
       {
         "type": "section",
