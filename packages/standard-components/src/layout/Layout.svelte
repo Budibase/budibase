@@ -10,6 +10,7 @@
   export let logoUrl = "https://i.imgur.com/Xhdt1YP.png"
   export let hideLogo = false
   export let navigation = "Top"
+  export let sticky = true
 
   export let links = [
     { text: "Some Text", url: "/" },
@@ -28,7 +29,7 @@
 
 <div class="layout layout--{type}" use:styleable={$component.styles}>
   {#if type !== "none"}
-    <div class="nav-wrapper">
+    <div class="nav-wrapper" class:sticky>
       <div class="nav nav--{type}">
         <div class="burger">
           <ActionButton
@@ -85,18 +86,29 @@
 <style>
   /*  Main components */
   .layout {
-    display: grid;
-    position: relative;
-    grid-template-columns: 1fr;
-    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 100%;
+    overflow: auto;
   }
+
   .nav-wrapper {
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: stretch;
     background: white;
+    z-index: 1;
   }
+  .layout--top .nav-wrapper.sticky {
+    position: sticky;
+    top: 0;
+    left: 0;
+    box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+  }
+
   .nav {
     flex: 1 1 auto;
     display: grid;
@@ -109,6 +121,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: stretch;
+    flex: 1 1 auto;
   }
   .main {
     flex: 1 1 auto;
@@ -117,6 +130,7 @@
     justify-content: flex-start;
     align-items: stretch;
     max-width: 1400px;
+    position: relative;
   }
 
   /*  Nav components */
@@ -170,14 +184,13 @@
 
   /* Desktop nav overrides */
   @media (min-width: 600px) {
-    .layout--top {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr;
-    }
     .layout--left {
-      grid-template-columns: auto 1fr;
-      grid-template-rows: 1fr;
+      flex-direction: row;
+      overflow: hidden;
+    }
+    .layout--left .main-wrapper {
       height: 100%;
+      overflow: auto;
     }
 
     .nav--top {
@@ -215,18 +228,15 @@
       justify-content: flex-start;
       align-items: stretch;
     }
-    .layout--left .main-wrapper {
-      height: 100%;
-      overflow: auto;
-    }
   }
 
   /* Mobile nav overrides */
   @media (max-width: 600px) {
-    /* Always use top layout on mobile */
-    .layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr;
+    .nav-wrapper {
+      position: sticky;
+      top: 0;
+      left: 0;
+      box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
     }
 
     /* Show close button in drawer */
