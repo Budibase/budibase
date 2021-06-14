@@ -53,9 +53,6 @@ exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = removeGlobalProps(ctx.request.body)
-  if (user.roleId) {
-    await addAppRoleToUser(ctx, appId, user.roleId, user._id)
-  }
   const metadata = {
     tableId: InternalTables.USER_METADATA,
     ...user,
