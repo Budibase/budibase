@@ -1,14 +1,4 @@
 {
-  "container": {
-    "name": "Container",
-    "description": "This component contains things within itself",
-    "icon": "Sandbox",
-    "hasChildren": true,
-    "styleable": true,
-    "transitionable": true,
-    "illegalChildren": ["Section"],
-    "settings": []
-  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
@@ -48,11 +38,21 @@
         "defaultValue": "Top"
       },
       {
-        "type": "select",
+        "type": "navigationSelect",
         "label": "Links",
         "key": "type"
       }
     ]
+  },
+  "container": {
+    "name": "Container",
+    "description": "This component contains things within itself",
+    "icon": "Sandbox",
+    "hasChildren": true,
+    "styleable": true,
+    "transitionable": true,
+    "illegalChildren": ["Section"],
+    "settings": []
   },
   "section": {
     "name": "Section",
@@ -64,7 +64,7 @@
     "illegalChildren": ["Section"],
     "settings": [
       {
-        "type": "modal",
+        "type": "section",
         "label": "Type",
         "key": "type",
         "options": ["mainSidebar", "sidebarMain", "twoColumns", "threeColumns"],
