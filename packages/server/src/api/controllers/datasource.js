@@ -7,6 +7,7 @@ const {
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
+const { makeExternalQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -77,15 +78,9 @@ exports.find = async function (ctx) {
 // dynamic query functionality
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
-  const datasourceId = queryJson.endpoint.datasourceId
-  const database = new CouchDB(ctx.appId)
-  const datasource = await database.get(datasourceId)
-  const Integration = integrations[datasource.source]
-  // query is the opinionated function
-  if (Integration.prototype.query) {
-    const integration = new Integration(datasource.config)
-    ctx.body = await integration.query(queryJson)
-  } else {
-    ctx.throw(400, "Datasource does not support query.")
+  try {
+    ctx.body = await makeExternalQuery(ctx.appId, queryJson)
+  } catch (err) {
+    ctx.throw(400, err)
   }
 }

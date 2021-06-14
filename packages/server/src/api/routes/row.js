@@ -33,6 +33,13 @@ router
     rowController.find
   )
   .post(
+    "/api/:tableId/search",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    rowController.search
+  )
+
+  .post(
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
@@ -40,8 +47,8 @@ router
     rowController.save
   )
   .patch(
-    "/api/:tableId/rows/:rowId",
-    paramSubResource("tableId", "rowId"),
+    "/api/:tableId/rows",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     rowController.patch
   )
