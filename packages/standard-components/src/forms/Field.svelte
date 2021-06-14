@@ -1,5 +1,5 @@
 <script>
-  import Placeholder from "./Placeholder.svelte"
+  import Placeholder from "../Placeholder.svelte"
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
   import { getContext } from "svelte"
 
@@ -36,6 +36,7 @@
 <FieldGroupFallback>
   <div class="spectrum-Form-item" use:styleable={$component.styles}>
     <label
+      class:hidden={!label}
       for={$fieldState?.fieldId}
       class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}
     >
@@ -43,15 +44,15 @@
     </label>
     <div class="spectrum-Form-itemField">
       {#if !formContext}
-        <Placeholder>Form components need to be wrapped in a Form</Placeholder>
+        <Placeholder text="Form components need to be wrapped in a form" />
       {:else if !fieldState}
-        <Placeholder>
-          Add the Field setting to start using your component
-        </Placeholder>
+        <Placeholder
+          text="Add the Field setting to start using your component"
+        />
       {:else if fieldSchema?.type && fieldSchema?.type !== type}
-        <Placeholder>
-          This Field setting is the wrong data type for this component
-        </Placeholder>
+        <Placeholder
+          text="This Field setting is the wrong data type for this component"
+        />
       {:else}
         <slot />
         {#if $fieldState.error}
@@ -65,6 +66,9 @@
 <style>
   label {
     white-space: nowrap;
+  }
+  label.hidden {
+    padding: 0;
   }
 
   .spectrum-Form-itemField {

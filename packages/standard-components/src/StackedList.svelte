@@ -7,7 +7,7 @@
   export let imageUrl = ""
   export let heading = ""
   export let subheading = ""
-  export let destinationUrl = ""
+  export let destinationUrl = "/"
 
   $: showImage = !!imageUrl
 </script>

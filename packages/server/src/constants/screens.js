@@ -9,19 +9,12 @@ exports.createHomeScreen = () => ({
     _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
     _component: "@budibase/standard-components/container",
     _styles: {
-      normal: {
-        flex: "1 1 auto",
-        display: "flex",
-        "flex-direction": "column",
-        "justify-content": "flex-start",
-        "align-items": "stretch",
-      },
+      normal: {},
       hover: {},
       active: {},
       selected: {},
     },
     _transition: "fade",
-    type: "div",
     _children: [
       {
         _id: "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
@@ -41,6 +34,10 @@ exports.createHomeScreen = () => ({
       },
     ],
     _instanceName: "Home",
+    direction: "column",
+    hAlign: "stretch",
+    vAlign: "top",
+    size: "grow",
   },
   routing: {
     route: "/",

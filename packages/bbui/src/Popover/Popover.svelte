@@ -9,6 +9,7 @@
 
   export let anchor
   export let align = "right"
+  export let portalTarget
 
   export const show = () => {
     dispatch("open")
@@ -30,7 +31,7 @@
 </script>
 
 {#if open}
-  <Portal>
+  <Portal target={portalTarget}>
     <div
       tabindex="0"
       use:positionDropdown={{ anchor, align }}

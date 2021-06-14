@@ -51,8 +51,118 @@
     "hasChildren": true,
     "styleable": true,
     "transitionable": true,
-    "illegalChildren": ["Section"],
-    "settings": []
+    "illegalChildren": ["section"],
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Column",
+            "value": "column",
+            "barIcon": "ViewRow",
+            "barTitle": "Column layout"
+          },
+          {
+            "label": "Row",
+            "value": "row",
+            "barIcon": "ViewColumn",
+            "barTitle": "Row layout"
+          }
+        ],
+        "defaultValue": "column"
+      },
+      {
+        "type": "select",
+        "label": "Horiz. Align",
+        "key": "hAlign",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "AlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "AlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "AlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveLeftRight",
+            "barTitle": "Align stretched horizontally"
+          }
+        ],
+        "defaultValue": "stretch"
+      },
+      {
+        "type": "select",
+        "label": "Vert. Align",
+        "key": "vAlign",
+        "showInBar": "true",
+        "options": [
+          {
+            "label": "Top",
+            "value": "top",
+            "barIcon": "AlignTop",
+            "barTitle": "Align top"
+          },
+          {
+            "label": "Middle",
+            "value": "middle",
+            "barIcon": "AlignMiddle",
+            "barTitle": "Align middle"
+          },
+          {
+            "label": "Bottom",
+            "value": "bottom",
+            "barIcon": "AlignBottom",
+            "barTitle": "Align bottom"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveUpDown",
+            "barTitle": "Align stretched vertically"
+          }
+        ],
+        "defaultValue": "top"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Shrink",
+            "value": "shrink",
+            "barIcon": "Minimize",
+            "barTitle": "Shrink container"
+          },
+          {
+            "label": "Grow",
+            "value": "grow",
+            "barIcon": "Maximize",
+            "barTitle": "Grow container"
+          }
+        ],
+        "defaultValue": "shrink"
+      }
+    ]
   },
   "section": {
     "name": "Section",
@@ -119,7 +229,7 @@
         "type": "text",
         "label": "Empty Text",
         "key": "noRowsMessage",
-        "defaultValue": "No rows found."
+        "defaultValue": "No rows found"
       },
       {
         "type": "filter",
@@ -1535,6 +1645,7 @@
     "styleable": true,
     "illegalChildren": ["Section"],
     "hasChildren": true,
+    "showEmptyState": false,
     "settings": [
       {
         "type": "dataProvider",
