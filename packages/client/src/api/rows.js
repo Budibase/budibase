@@ -69,7 +69,7 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
     body: {
       _id: rowId,
       _rev: revId,
-    }
+    },
   })
   res.error
     ? notificationStore.danger("An error has occurred")

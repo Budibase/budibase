@@ -29,7 +29,7 @@
     integration = {
       type: integrationType,
       plus: selected.plus,
-      ...schema
+      ...schema,
     }
   }
 

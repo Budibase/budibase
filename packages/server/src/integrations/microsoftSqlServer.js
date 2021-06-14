@@ -59,7 +59,6 @@ async function internalQuery(client, sql) {
   }
 }
 
-
 class SqlServerIntegration extends Sql {
   static pool
 

@@ -135,7 +135,7 @@ exports.save = async function (ctx) {
   return { row, table }
 }
 
-exports.fetchView = async (ctx) => {
+exports.fetchView = async ctx => {
   const appId = ctx.appId
   const viewName = ctx.params.viewName
 
@@ -195,7 +195,7 @@ exports.fetchView = async (ctx) => {
   return rows
 }
 
-exports.fetchTableRows = async (ctx) => {
+exports.fetchTableRows = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
@@ -215,7 +215,7 @@ exports.fetchTableRows = async (ctx) => {
   return outputProcessing(appId, table, rows)
 }
 
-exports.find = async (ctx) => {
+exports.find = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const table = await db.get(ctx.params.tableId)
@@ -246,7 +246,7 @@ exports.destroy = async function (ctx) {
     await userController.destroyMetadata(ctx)
     return { response: ctx.body, row }
   } else {
-     const response = await db.remove(_id, _rev)
+    const response = await db.remove(_id, _rev)
     return { response, row }
   }
 }
@@ -304,7 +304,7 @@ exports.search = async ctx => {
   ctx.body = response
 }
 
-exports.validate = async (ctx) => {
+exports.validate = async ctx => {
   return validate({
     appId: ctx.appId,
     tableId: ctx.params.tableId,
@@ -312,7 +312,7 @@ exports.validate = async (ctx) => {
   })
 }
 
-exports.fetchEnrichedRow = async (ctx) => {
+exports.fetchEnrichedRow = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableId = ctx.params.tableId

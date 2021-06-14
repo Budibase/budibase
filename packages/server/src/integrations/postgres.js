@@ -63,7 +63,6 @@ async function internalQuery(client, sql) {
   }
 }
 
-
 class PostgresIntegration extends Sql {
   static pool
 

@@ -43,7 +43,6 @@ exports.SortDirection = {
   DESCENDING: "DESCENDING",
 }
 
-
 exports.USERS_TABLE_SCHEMA = {
   _id: "ta_users",
   type: "table",
