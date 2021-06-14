@@ -227,8 +227,8 @@ exports.find = async (ctx) => {
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const { rowId, revId } = ctx.request.body
-  const row = await db.get(rowId)
+  const { _id, _rev } = ctx.request.body
+  const row = await db.get(_id)
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
@@ -241,12 +241,12 @@ exports.destroy = async function (ctx) {
   })
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     ctx.params = {
-      id: rowId,
+      id: _id,
     }
     await userController.destroyMetadata(ctx)
     return { response: ctx.body, row }
   } else {
-     const response = await db.remove(rowId, revId)
+     const response = await db.remove(_id, _rev)
     return { response, row }
   }
 }

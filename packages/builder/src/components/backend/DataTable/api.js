@@ -14,8 +14,11 @@ export async function saveRow(row, tableId) {
 }
 
 export async function deleteRow(row) {
-  const DELETE_ROWS_URL = `/api/${row.tableId}/rows/${row._id}/${row._rev}`
-  return api.delete(DELETE_ROWS_URL)
+  const DELETE_ROWS_URL = `/api/${row.tableId}/rows`
+  return api.delete(DELETE_ROWS_URL, {
+    _id: row._id,
+    _rev: row._rev,
+  })
 }
 
 export async function fetchDataForView(view) {
