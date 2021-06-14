@@ -23,7 +23,8 @@ exports.patch = async ctx => {
   const tableId = getTableId(ctx)
   try {
     const { row, table } = await pickApi(tableId).patch(ctx)
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
     ctx.message = `${table.name} updated successfully`
     ctx.body = row
   } catch (err) {
@@ -103,7 +104,6 @@ exports.search = async ctx => {
     ctx.throw(400, err)
   }
 }
-
 
 exports.validate = async function (ctx) {
   const tableId = getTableId(ctx)

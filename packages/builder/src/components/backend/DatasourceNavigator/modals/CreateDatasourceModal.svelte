@@ -30,7 +30,7 @@
       name,
       source: type,
       config,
-      plus
+      plus,
     })
     notifications.success(`Datasource ${name} created successfully.`)
     analytics.captureEvent("Datasource Created", { name, type })

@@ -1,7 +1,4 @@
-const {
-  DataSourceOperation,
-  SortDirection,
-} = require("../../constants")
+const { DataSourceOperation, SortDirection } = require("../../constants")
 
 const BASE_LIMIT = 5000
 
@@ -50,9 +47,7 @@ function addFilters(query, filters) {
   return query
 }
 
-function buildRelationships() {
-
-}
+function buildRelationships() {}
 
 function buildCreate(knex, json) {
   const { endpoint, body } = json
