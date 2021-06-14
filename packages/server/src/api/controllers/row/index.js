@@ -95,6 +95,16 @@ exports.destroy = async function (ctx) {
   ctx.body = response
 }
 
+exports.search = async ctx => {
+  const tableId = getTableId(ctx)
+  try {
+    ctx.body = await pickApi(tableId).search(ctx)
+  } catch (err) {
+    ctx.throw(400, err)
+  }
+}
+
+
 exports.validate = async function (ctx) {
   const tableId = getTableId(ctx)
   try {

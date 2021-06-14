@@ -15,6 +15,7 @@ const {
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
+const { fullSearch, paginatedSearch } = require("./internalSearch")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
@@ -32,7 +33,7 @@ exports.patch = async ctx => {
   const isUserTable = tableId === InternalTables.USER_METADATA
   let dbRow
   try {
-    dbRow = await db.get(ctx.params.rowId)
+    dbRow = await db.get(inputs._id)
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -96,7 +97,6 @@ exports.save = async function (ctx) {
 
   // if the row obj had an _id then it will have been retrieved
   if (inputs._id && inputs._rev) {
-    ctx.params.rowId = inputs._id
     return exports.patch(ctx)
   }
 
@@ -279,6 +279,29 @@ exports.bulkDestroy = async ctx => {
   }
   await Promise.all(updates)
   return { response: { ok: true }, rows }
+}
+
+exports.search = async ctx => {
+  const appId = ctx.appId
+  const { tableId } = ctx.params
+  const db = new CouchDB(appId)
+  const { paginate, query, ...params } = ctx.request.body
+  params.tableId = tableId
+
+  let response
+  if (paginate) {
+    response = await paginatedSearch(appId, query, params)
+  } else {
+    response = await fullSearch(appId, query, params)
+  }
+
+  // Enrich search results with relationships
+  if (response.rows && response.rows.length) {
+    const table = await db.get(tableId)
+    response.rows = await outputProcessing(appId, table, response.rows)
+  }
+
+  ctx.body = response
 }
 
 exports.validate = async (ctx) => {

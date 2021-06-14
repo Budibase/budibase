@@ -201,7 +201,7 @@ describe("/rows", () => {
       const existing = await config.createRow()
 
       const res = await request
-        .patch(`/api/${table._id}/rows/${existing._id}`)
+        .patch(`/api/${table._id}/rows`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
@@ -225,7 +225,7 @@ describe("/rows", () => {
     it("should throw an error when given improper types", async () => {
       const existing = await config.createRow()
       await request
-        .patch(`/api/${table._id}/rows/${existing._id}`)
+        .patch(`/api/${table._id}/rows`)
         .send({
           _id: existing._id,
           _rev: existing._rev,

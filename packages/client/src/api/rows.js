@@ -44,7 +44,7 @@ export const updateRow = async row => {
     return
   }
   const res = await API.patch({
-    url: `/api/${row.tableId}/rows/${row._id}`,
+    url: `/api/${row.tableId}/rows`,
     body: row,
   })
   res.error
