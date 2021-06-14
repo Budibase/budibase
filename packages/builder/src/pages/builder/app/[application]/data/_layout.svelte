@@ -8,7 +8,7 @@
 
   const tabs = [
     {
-      title: "Internal",
+      title: "Databases",
       key: "table",
     },
     {
@@ -17,7 +17,7 @@
     },
   ]
 
-  let selected = $isActive("./datasource") ? "External" : "Internal"
+  let selected = $isActive("./datasource") ? "External" : "Databases"
 
   function selectFirstTableOrSource({ detail }) {
     const { key } = tabs.find(t => t.title === detail)
@@ -35,7 +35,7 @@
 <div class="root">
   <div class="nav">
     <Tabs {selected} on:select={selectFirstTableOrSource}>
-      <Tab title="Internal">
+      <Tab title="Databases">
         <div class="tab-content-padding">
           <TableNavigator />
           <Modal bind:this={modal}>

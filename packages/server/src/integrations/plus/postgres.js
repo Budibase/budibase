@@ -59,6 +59,16 @@ class PostgresPlus extends Sql {
   COLUMNS_SQL =
     "select * from information_schema.columns where table_schema = 'public'"
 
+  PRIMARY_KEYS_SQL = `
+    select tc.table_schema, tc.table_name, tc.column_name, kc.column_name as primary_key 
+    from information_schema.table_constraints tc
+    join 
+      information_schema.key_column_usage kc on kc.table_name = tc.table_name 
+      and kc.table_schema = tc.table_schema 
+      and kc.constraint_name = tc.constraint_name
+    where tc.constraint_type = 'PRIMARY KEY';
+  `
+
   constructor(config) {
     super("pg")
     this.config = config
@@ -70,17 +80,24 @@ class PostgresPlus extends Sql {
   }
 
   async init() {
-    const response = await this.client.query(this.COLUMNS_SQL)
+    const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+    const primaryKeys = {}
 
+    for (let table of primaryKeysResponse.rows) {
+      primaryKeys[table.primary_key] = table.column_name
+    }
+
+    const columnsResponse = await this.client.query(this.COLUMNS_SQL)
     const tables = {}
-    for (let column of response.rows) {
+
+    for (let column of columnsResponse.rows) {
       const tableName = column.table_name
       const columnName = column.column_name
 
       // table key doesn't exist yet
       if (!tables[tableName]) {
         tables[tableName] = {
-          _id: "something",
+          _id: primaryKeys[tableName],
           name: tableName,
           schema: {},
         }
