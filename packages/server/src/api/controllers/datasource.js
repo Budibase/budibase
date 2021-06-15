@@ -35,7 +35,7 @@ exports.save = async function (ctx) {
     const PlusConnector = plusIntegrations[datasource.source].integration
 
     const connector = new PlusConnector(ctx.request.body.config)
-    await connector.init()
+    await connector.init(datasource._id)
 
     datasource.entities = connector.tables
   }

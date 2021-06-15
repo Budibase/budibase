@@ -79,12 +79,16 @@ class PostgresPlus extends Sql {
     this.client = this.pool
   }
 
-  async init() {
-    const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
-    const primaryKeys = {}
-
-    for (let table of primaryKeysResponse.rows) {
-      primaryKeys[table.primary_key] = table.column_name
+  async init(datasourceId) {
+    let keys = []
+    try {
+      const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+      for (let table of primaryKeysResponse.rows) {
+        keys.push(table.column_name)
+      }
+    } catch (err) {
+      // TODO: this try catch method isn't right
+      keys = ["id"]
     }
 
     const columnsResponse = await this.client.query(this.COLUMNS_SQL)
@@ -97,7 +101,8 @@ class PostgresPlus extends Sql {
       // table key doesn't exist yet
       if (!tables[tableName]) {
         tables[tableName] = {
-          _id: primaryKeys[tableName],
+          _id: `${datasourceId}_${tableName}`,
+          primary: keys,
           name: tableName,
           schema: {},
         }
