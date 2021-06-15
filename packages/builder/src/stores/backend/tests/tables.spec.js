@@ -46,7 +46,7 @@ describe("Tables Store", () => {
     await store.select(tableToSelect)
   
     expect(get(store).selected).toEqual(tableToSelect) 
-    expect(get(views).selected).toEqual({ name: `all_${tableToSelect._id}` })
+    expect(get(views).selected).toEqual({ name: tableToSelect._id })
   })
 
   it("saving a table also selects it", async () => {

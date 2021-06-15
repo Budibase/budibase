@@ -25,7 +25,7 @@ export function createTablesStore() {
         selected: table,
         draft: cloneDeep(table),
       }))
-      views.select({ name: `all_${table._id}` })
+      views.select({ name: table._id })
     }
   }
 
