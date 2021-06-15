@@ -13,6 +13,37 @@ async function getTable(appId, datasourceId, tableName) {
   )
 }
 
+function inputProcessing(row, table) {
+  if (!row) {
+    return row
+  }
+  let newRow = {}
+  for (let key of Object.keys(table.schema)) {
+    // currently excludes empty strings
+    if (row[key]) {
+      newRow[key] = row[key]
+    }
+  }
+  return newRow
+}
+
+function outputProcessing(rows, table) {
+  // if no rows this is what is returned? Might be PG only
+  if (rows[0].read === true) {
+    return []
+  }
+  const primary = table.primary
+  for (let row of rows) {
+    // build id array
+    let idParts = []
+    for (let field of primary) {
+      idParts.push(row[field])
+    }
+    row._id = idParts
+  }
+  return rows
+}
+
 function buildIDFilter(id, table) {
   if (!id || !table) {
     return null
@@ -45,8 +76,13 @@ async function handleRequest(
   if (!table) {
     throw `Unable to process query, table "${tableName}" not defined.`
   }
+  // clean up row on ingress using schema
+  row = inputProcessing(row, table)
   // try and build an id filter if required
-  let idFilters = buildIDFilter(id)
+  let idFilters = buildIDFilter(id, table)
+  if (operation === DataSourceOperation.DELETE && Object.keys(idFilters).length === 0) {
+    throw "Deletion must be filtered in someway"
+  }
   let json = {
     endpoint: {
       datasourceId,
@@ -62,7 +98,17 @@ async function handleRequest(
     paginate,
     body: row,
   }
-  return makeExternalQuery(appId, json)
+  // can't really use response right now
+  const response = await makeExternalQuery(appId, json)
+  // we searched for rows in someway
+  if (operation === DataSourceOperation.READ && Array.isArray(response)) {
+    return outputProcessing(response, table)
+  }
+  // append tableId back onto row if it exists
+  if (row) {
+    row.tableId = table._id
+  }
+  return { row, table }
 }
 
 exports.patch = async ctx => {
