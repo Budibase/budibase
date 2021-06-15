@@ -123,9 +123,11 @@ exports.bulkDestroy = async ctx => {
   // TODO: this can probably be optimised to a single SQL statement in the future
   let promises = []
   for (let row of rows) {
-    promises.push(handleRequest(appId, DataSourceOperation.DELETE, tableId, {
-      id: row._id,
-    }))
+    promises.push(
+      handleRequest(appId, DataSourceOperation.DELETE, tableId, {
+        id: row._id,
+      })
+    )
   }
   await Promise.all(promises)
   ctx.body = { response: { ok: true }, rows }
