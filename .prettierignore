@@ -1,5 +1,8 @@
-packages/builder/src/components/design/AppPreview/CurrentItemPreview.svelte
+node_modules
 public
 dist
+*.spec.js
+packages/builder/src/components/design/AppPreview/CurrentItemPreview.svelte
 packages/server/builder
-**/*.spec.js
+packages/server/coverage
+packages/builder/.routify
