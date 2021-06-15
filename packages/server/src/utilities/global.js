@@ -12,14 +12,14 @@ exports.updateAppRole = (appId, user) => {
   if (!user.roles) {
     return user
   }
-  if (user.builder && user.builder.global) {
+
+  // always use the deployed app
+  user.roleId = user.roles[getDeployedAppID(appId)]
+  // if a role wasn't found then either set as admin (builder) or public (everyone else)
+  if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
-  } else {
-    // always use the deployed app
-    user.roleId = user.roles[getDeployedAppID(appId)]
-    if (!user.roleId) {
-      user.roleId = BUILTIN_ROLE_IDS.PUBLIC
-    }
+  } else if (!user.roleId) {
+    user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
   delete user.roles
   return user
