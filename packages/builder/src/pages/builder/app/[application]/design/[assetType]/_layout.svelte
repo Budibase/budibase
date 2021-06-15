@@ -194,7 +194,6 @@
     padding: var(--spacing-l) 40px var(--spacing-xl) 40px;
   }
   .preview-content {
-    background: var(--background);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
     flex: 1 1 auto;
   }

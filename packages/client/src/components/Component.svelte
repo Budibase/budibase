@@ -6,8 +6,10 @@
   import { enrichProps, propsAreSame } from "../utils/componentProps"
   import { builderStore } from "../store"
   import { hashString } from "../utils/hash"
+  import Manifest from "@budibase/standard-components/manifest.json"
+  import { Placeholder } from "@budibase/standard-components"
 
-  export let definition = {}
+  export let instance = {}
 
   // Props that will be passed to the component instance
   let componentProps
@@ -23,25 +25,39 @@
 
   // Get contexts
   const context = getContext("context")
+  const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
   const componentStore = writable({})
   setContext("component", componentStore)
 
-  // Extract component definition info
-  $: constructor = getComponentConstructor(definition._component)
-  $: children = definition._children || []
-  $: id = definition._id
-  $: updateComponentProps(definition, $context)
-  $: styles = definition._styles
-  $: transition = definition._transition
+  // Extract component instance info
+  $: constructor = getComponentConstructor(instance._component)
+  $: definition = getComponentDefinition(instance._component)
+  $: children = instance._children || []
+  $: id = instance._id
+  $: name = instance._instanceName
+  $: empty =
+    !children.length &&
+    definition?.hasChildren &&
+    definition?.showEmptyState !== false &&
+    $builderStore.inBuilder
+  $: updateComponentProps(instance, $context)
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId === instance._id
+  $: interactive = $builderStore.previewType === "layout" || insideScreenslot
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...styles, id },
-    transition,
+    styles: { ...instance._styles, id, empty, interactive },
+    empty,
+    transition: instance._transition,
+    selected,
+    props: componentProps,
+    name,
   })
 
   // Gets the component constructor for the specified component
@@ -54,14 +70,20 @@
     return ComponentLibrary[name]
   }
 
+  const getComponentDefinition = component => {
+    const prefix = "@budibase/standard-components/"
+    const type = component?.replace(prefix, "")
+    return type ? Manifest[type] : null
+  }
+
   // Enriches any string component props using handlebars
-  const updateComponentProps = (definition, context) => {
+  const updateComponentProps = (instance, context) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich props with context
-    const enrichedProps = enrichProps(definition, context)
+    const enrichedProps = enrichProps(instance, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -94,14 +116,29 @@
   }
 </script>
 
-{#if constructor && componentProps}
+<div
+  class={`component ${id}`}
+  data-type={interactive ? "component" : ""}
+  data-id={id}
+  data-name={name}
+>
   {#key propsHash}
-    <svelte:component this={constructor} {...componentProps}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self definition={child} />
-        {/each}
-      {/if}
-    </svelte:component>
+    {#if constructor && componentProps}
+      <svelte:component this={constructor} {...componentProps}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self instance={child} />
+          {/each}
+        {:else if empty}
+          <Placeholder />
+        {/if}
+      </svelte:component>
+    {/if}
   {/key}
-{/if}
+</div>
+
+<style>
+  .component {
+    display: contents;
+  }
+</style>

@@ -56,13 +56,14 @@ function generateTitleContainer(table) {
     .text(table.name)
 
   return new Component("@budibase/standard-components/container")
-    .type("div")
     .normalStyle({
-      display: "flex",
-      "flex-direction": "row",
-      "justify-content": "space-between",
-      "align-items": "center",
       "margin-bottom": "32px",
+    })
+    .customProps({
+      direction: "row",
+      hAlign: "stretch",
+      vAlign: "middle",
+      size: "shrink",
     })
     .instanceName("Title Container")
     .addChild(heading)
@@ -79,7 +80,8 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
-      paginate: false,
+      paginate: true,
+      limit: 8,
     })
 
   const spectrumTable = new Component("@budibase/standard-components/table")
@@ -126,7 +128,6 @@ const createScreen = table => {
       background: "white",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      margin: "auto",
       "margin-top": "20px",
       "border-width": "2px",
       "border-color": "rgba(0, 0, 0, 0.1)",
@@ -137,13 +138,17 @@ const createScreen = table => {
       "padding-left": "48px",
       "margin-bottom": "20px",
     })
-    .type("div")
+    .customProps({
+      direction: "column",
+      hAlign: "stretch",
+      vAlign: "top",
+      size: "shrink",
+    })
     .instanceName("Container")
     .addChild(generateTitleContainer(table))
     .addChild(provider)
 
   return new Screen()
-    .component("@budibase/standard-components/container")
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)
     .addChild(mainContainer)
