@@ -142,7 +142,7 @@ exports.fetchView = async ctx => {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(TABLE_VIEW_BEGINS_WITH)) {
     ctx.params.tableId = viewName.substring(4)
-    return exports.fetchTableRows(ctx)
+    return exports.fetch(ctx)
   }
 
   const db = new CouchDB(appId)
@@ -195,7 +195,7 @@ exports.fetchView = async ctx => {
   return rows
 }
 
-exports.fetchTableRows = async ctx => {
+exports.fetch = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
