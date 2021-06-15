@@ -36,7 +36,7 @@
         border={idx > 0}
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
-        selected={selectedView === `all_${table._id}`}
+        selected={selectedView === table._id}
         on:click={() => selectTable(table)}
       >
         {#if table._id !== TableNames.USERS}

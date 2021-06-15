@@ -309,7 +309,7 @@ describe("/rows", () => {
     it("should be able to fetch tables contents via 'view'", async () => {
       const row = await config.createRow()
       const res = await request
-        .get(`/api/views/all_${table._id}`)
+        .get(`/api/views/${table._id}`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
