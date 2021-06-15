@@ -3,8 +3,6 @@ const { DataSourceOperation, SortDirection } = require("../../constants")
 const BASE_LIMIT = 5000
 
 function addFilters(query, filters) {
-  // if all or specified in filters, then everything is an or
-  const allOr = !!filters.allOr
   function iterate(structure, fn) {
     for (let [key, value] of Object.entries(structure)) {
       fn(key, value)
@@ -13,6 +11,8 @@ function addFilters(query, filters) {
   if (!filters) {
     return query
   }
+  // if all or specified in filters, then everything is an or
+  const allOr = !!filters.allOr
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       const fnc = allOr ? "orWhere" : "where"

@@ -119,7 +119,7 @@ class PostgresPlus extends Sql {
   async query(json) {
     const operation = this._operation(json).toLowerCase()
     const sql = this._query(json)
-    const response = await this.client.query(sql)
+    const response = await this.client.query(sql.sql, sql.bindings)
     return response.rows.length ? response.rows : [{ [operation]: true }]
   }
 }

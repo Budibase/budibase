@@ -57,7 +57,7 @@ function internalQuery(client, query) {
   // Node MySQL is callback based, so we must wrap our call in a promise
   return new Promise((resolve, reject) => {
     client.connect()
-    return client.query(query, (error, results) => {
+    return client.query(query.sql, query.bindings, (error, results) => {
       if (error) {
         reject(error)
       } else {
