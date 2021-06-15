@@ -4,6 +4,8 @@ const {
   getDatasourceParams,
   getQueryParams,
   DocumentTypes,
+  BudibaseInternalDB,
+  getTableParams,
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const plusIntegrations = require("../../integrations/plus")
@@ -11,13 +13,31 @@ const { makeExternalQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
-  ctx.body = (
+
+  // Get internal tables
+  const db = new CouchDB(ctx.appId)
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+  const internal = internalTables.rows.map(row => row.doc)
+
+  const bbInternalDb = {
+    ...BudibaseInternalDB,
+    entities: internal,
+  }
+
+  // Get external datasources
+  const datasources = (
     await database.allDocs(
       getDatasourceParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
+
+  ctx.body = [bbInternalDb, ...datasources]
 }
 
 exports.save = async function (ctx) {

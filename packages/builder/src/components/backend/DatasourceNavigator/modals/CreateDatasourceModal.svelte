@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"

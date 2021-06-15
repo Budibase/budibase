@@ -6,26 +6,10 @@
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
-  const tabs = [
-    {
-      title: "Databases",
-      key: "table",
-    },
-    {
-      title: "External",
-      key: "datasource",
-    },
-  ]
+  let selected = "Sources"
 
-  let selected = $isActive("./datasource") ? "External" : "Databases"
-
-  function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find(t => t.title === detail)
-    if (key === "datasource") {
-      $goto("./datasource")
-    } else {
-      $goto("./table")
-    }
+  function selectFirstDatasource({ detail }) {
+    $goto("./datasource")
   }
 
   let modal
@@ -34,16 +18,8 @@
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <Tabs {selected} on:select={selectFirstTableOrSource}>
-      <Tab title="Databases">
-        <div class="tab-content-padding">
-          <TableNavigator />
-          <Modal bind:this={modal}>
-            <CreateTableModal />
-          </Modal>
-        </div>
-      </Tab>
-      <Tab title="External">
+    <Tabs {selected} on:select={selectFirstDatasource}>
+      <Tab title="Sources">
         <div class="tab-content-padding">
           <DatasourceNavigator />
           <Modal bind:this={modal}>

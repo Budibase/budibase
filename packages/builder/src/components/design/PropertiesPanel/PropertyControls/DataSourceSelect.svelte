@@ -39,7 +39,7 @@
     type: "table",
   }))
   $: views = $tablesStore.list.reduce((acc, cur) => {
-    let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
+    let viewsArr = Object.entries(cur.views || {}).map(([key, value]) => ({
       label: key,
       name: key,
       ...value,

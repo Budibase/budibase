@@ -6,27 +6,38 @@ const {
   getTableParams,
   generateTableID,
   getDatasourceParams,
+  DocumentTypes,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
 const { TableSaveFunctions } = require("./utils")
 
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
+
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  const internal = internalTables.rows.map(row => row.doc)
+
+  const internal = internalTables.rows.map(row => ({
+    ...row.doc,
+    sourceId: BudibaseInternalDB._id,
+  }))
 
   const externalTables = await db.allDocs(
     getDatasourceParams("plus", {
       include_docs: true,
     })
   )
-  const external = externalTables.rows.flatMap(row =>
-    Object.values(row.doc.entities)
-  )
+
+  const external = externalTables.rows.flatMap(row => {
+    return Object.values(row.doc.entities).map(entity => ({
+      ...entity,
+      sourceId: row.doc._id,
+    }))
+  })
 
   ctx.body = [...internal, ...external]
 }

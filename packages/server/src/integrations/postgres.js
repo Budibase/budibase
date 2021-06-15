@@ -57,7 +57,7 @@ const SCHEMA = {
 
 async function internalQuery(client, sql) {
   try {
-    return await client.query(sql.sql, sql.bindings)
+    return await client.query(sql)
   } catch (err) {
     throw new Error(err)
   }

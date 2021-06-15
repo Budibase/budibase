@@ -6,6 +6,8 @@
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
+  export let sourceId
+
   $: selectedView = $views.selected && $views.selected.name
 
   function selectTable(table) {
@@ -31,8 +33,9 @@
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each $tables.list as table, idx}
+    {#each $tables.list.filter(table => table.sourceId === sourceId) as table, idx}
       <NavItem
+        indentLevel={1}
         border={idx > 0}
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
@@ -45,7 +48,7 @@
       </NavItem>
       {#each Object.keys(table.views || {}) as viewName, idx (idx)}
         <NavItem
-          indentLevel={1}
+          indentLevel={2}
           icon="Remove"
           text={viewName}
           selected={selectedView === viewName}

@@ -1,7 +1,7 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -15,9 +15,10 @@
   async function saveDatasource() {
     try {
       // Create datasource
-      await datasources.save(datasource)
+      await datasources.save(datasource, { refresh: true })
       notifications.success(`Datasource ${name} saved successfully.`)
       unsaved = false
+      await tables.fetch()
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
     }
@@ -43,7 +44,7 @@
   })
 </script>
 
-{#if datasource}
+{#if datasource && integration}
   <section>
     <Layout>
       <header>
