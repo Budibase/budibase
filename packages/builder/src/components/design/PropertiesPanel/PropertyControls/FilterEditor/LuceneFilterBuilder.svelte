@@ -9,11 +9,8 @@
   } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { getBindableProperties } from "builderStore/dataBinding"
-  import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
-
-  const dispatch = createEventDispatcher()
 
   export let schemaFields
   export let value

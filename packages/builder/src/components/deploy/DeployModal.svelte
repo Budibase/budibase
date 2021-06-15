@@ -14,7 +14,6 @@
 
   const POLL_INTERVAL = 10000
 
-  let loading = false
   let feedbackModal
   let deployments = []
   let poll

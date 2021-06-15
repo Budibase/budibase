@@ -14,7 +14,6 @@
   } from "builderStore/dataBinding"
   import LuceneFilterBuilder from "./LuceneFilterBuilder.svelte"
   import { currentAsset } from "builderStore"
-  import SaveFields from "../EventsEditor/actions/SaveFields.svelte"
 
   const dispatch = createEventDispatcher()
 

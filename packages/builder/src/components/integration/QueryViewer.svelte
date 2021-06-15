@@ -216,15 +216,6 @@
     gap: var(--spacing-l);
   }
 
-  .button-container {
-    display: flex;
-  }
-
-  .delete {
-    align-self: center;
-    cursor: pointer;
-  }
-
   .viewer {
     min-height: 200px;
   }

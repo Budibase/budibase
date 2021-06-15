@@ -153,16 +153,6 @@
     color: var(--ink);
   }
 
-  .available-action {
-    padding: var(--spacing-s);
-    font-size: var(--font-size-s);
-    cursor: pointer;
-  }
-
-  .available-action:hover {
-    background: var(--grey-2);
-  }
-
   .action-container {
     border-bottom: 1px solid var(--grey-1);
     display: flex;
@@ -170,10 +160,5 @@
   }
   .action-container:last-child {
     border-bottom: none;
-  }
-
-  i:hover {
-    color: var(--red);
-    cursor: pointer;
   }
 </style>

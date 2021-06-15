@@ -59,14 +59,6 @@
 {/if}
 
 <style>
-  .field {
-    margin-bottom: var(--spacing-m);
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-
   .horizontal {
     display: grid;
     grid-template-columns: 20% 1fr;

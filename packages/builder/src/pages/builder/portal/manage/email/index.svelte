@@ -51,10 +51,12 @@
 
     if (response.status !== 200) {
       const error = await response.text()
-      let message = error
+      let message
       try {
         message = JSON.parse(error).message
-      } catch (err) {}
+      } catch (err) {
+        message = error
+      }
       notifications.error(`Failed to save email settings, reason: ${message}`)
     } else {
       const json = await response.json()

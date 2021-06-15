@@ -6,9 +6,6 @@
 
   export let parameters
 
-  let bindingDrawer
-  let tempValue = parameters.url
-
   $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 

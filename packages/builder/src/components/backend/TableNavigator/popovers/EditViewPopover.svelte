@@ -15,7 +15,6 @@
   export let view
 
   let editorModal
-  let confirmDeleteDialogue
   let originalName = view.name
   let confirmDeleteDialog
 

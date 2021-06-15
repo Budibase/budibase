@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Spinner from "components/common/Spinner.svelte"
   import { slide } from "svelte/transition"
-  import { Heading, Body, Button, Modal, ModalContent } from "@budibase/bbui"
+  import { Heading, Button, Modal, ModalContent } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
@@ -158,11 +158,6 @@
   .deployment-list {
     height: 40vh;
     overflow-y: auto;
-  }
-
-  h4 {
-    margin-top: var(--spacing-xl);
-    margin-bottom: var(--spacing-s);
   }
 
   header {

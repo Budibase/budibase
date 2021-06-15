@@ -6,7 +6,6 @@
     Heading,
     ActionButton,
     Body,
-    Page,
     Layout,
     notifications,
     Tabs,
@@ -128,7 +127,7 @@
   </Tab>
   <Tab title="Preview">
     <div class="preview">
-      <iframe srcdoc={previewContent} />
+      <iframe title="preview" srcdoc={previewContent} />
     </div>
   </Tab>
 </Tabs>

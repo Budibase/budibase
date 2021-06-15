@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable, transition, builderStore } = getContext("sdk")
+  const { styleable, transition } = getContext("sdk")
   const component = getContext("component")
 
   export let direction

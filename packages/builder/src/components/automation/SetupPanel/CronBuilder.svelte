@@ -1,5 +1,5 @@
 <script>
-  import { Button, Select, Label, Heading, Input } from "@budibase/bbui"
+  import { Button, Select, Input } from "@budibase/bbui"
 
   export let value
 
