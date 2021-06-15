@@ -24,7 +24,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-    rowController.fetchTableRows
+    rowController.fetch
   )
   .get(
     "/api/:tableId/rows/:rowId",
