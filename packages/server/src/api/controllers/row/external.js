@@ -38,7 +38,9 @@ async function handleRequest(
   tableId,
   { id, row, filters, sort, paginate } = {}
 ) {
-  let [datasourceId, tableName] = tableId.split("_")
+  const parts = tableId.split("_")
+  let tableName = parts.pop()
+  let datasourceId = parts.join("_")
   const table = await getTable(appId, datasourceId, tableName)
   if (!table) {
     throw `Unable to process query, table "${tableName}" not defined.`
@@ -86,7 +88,9 @@ exports.save = async ctx => {
 
 exports.fetchView = async ctx => {
   // there are no views in external data sources, shouldn't ever be called
-  ctx.throw(501, "Not implemented")
+  // for now just fetch
+  ctx.params.tableId = ctx.params.viewName.split("all_")[1]
+  return exports.fetch(ctx)
 }
 
 exports.fetch = async ctx => {
