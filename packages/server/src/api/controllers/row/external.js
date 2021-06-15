@@ -53,6 +53,10 @@ async function handleRequest(
       entityId: tableName,
       operation,
     },
+    resource: {
+      // not specifying any fields means "*"
+      fields: [],
+    },
     filters: idFilters != null ? idFilters : filters,
     sort,
     paginate,
@@ -68,7 +72,7 @@ exports.patch = async ctx => {
   const id = inputs._id
   // don't save the ID to db
   delete inputs._id
-  ctx.body = await handleRequest(appId, DataSourceOperation.UPDATE, tableId, {
+  return handleRequest(appId, DataSourceOperation.UPDATE, tableId, {
     id,
     row: inputs,
   })
@@ -81,7 +85,7 @@ exports.save = async ctx => {
     return exports.patch(ctx)
   }
   const tableId = ctx.params.tableId
-  ctx.body = await handleRequest(appId, DataSourceOperation.CREATE, tableId, {
+  return handleRequest(appId, DataSourceOperation.CREATE, tableId, {
     row: inputs,
   })
 }
@@ -96,14 +100,14 @@ exports.fetchView = async ctx => {
 exports.fetch = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
-  ctx.body = await handleRequest(appId, DataSourceOperation.READ, tableId)
+  return handleRequest(appId, DataSourceOperation.READ, tableId)
 }
 
 exports.find = async ctx => {
   const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  ctx.body = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+  return handleRequest(appId, DataSourceOperation.READ, tableId, {
     id,
   })
 }
@@ -111,7 +115,7 @@ exports.find = async ctx => {
 exports.destroy = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
-  ctx.body = await handleRequest(appId, DataSourceOperation.DELETE, tableId, {
+  return handleRequest(appId, DataSourceOperation.DELETE, tableId, {
     id: ctx.request.body._id,
   })
 }
@@ -128,7 +132,7 @@ exports.bulkDestroy = async ctx => {
     }))
   }
   await Promise.all(promises)
-  ctx.body = { response: { ok: true }, rows }
+  return { response: { ok: true }, rows }
 }
 
 exports.search = async ctx => {
@@ -153,7 +157,7 @@ exports.search = async ctx => {
       [params.sort]: direction,
     }
   }
-  ctx.body = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+  return handleRequest(appId, DataSourceOperation.READ, tableId, {
     filters: query,
     sort,
     paginate: paginateObj,
@@ -162,10 +166,10 @@ exports.search = async ctx => {
 
 exports.validate = async ctx => {
   // can't validate external right now - maybe in future
-  ctx.body = { valid: true }
+  return { valid: true }
 }
 
 exports.fetchEnrichedRow = async ctx => {
   // TODO: How does this work
-  ctx.throw(501, "Not implemented")
+  throw "Not Implemented"
 }
