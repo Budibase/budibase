@@ -57,6 +57,14 @@ exports.StaticDatabases = {
   ...StaticDatabases,
 }
 
+const BudibaseInternalDB = {
+  _id: "bb_internal",
+  type: "budibase",
+  name: "Budibase Internal",
+  source: "BUDIBASE",
+  config: {},
+}
+
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
@@ -68,6 +76,7 @@ exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
+exports.BudibaseInternalDB = BudibaseInternalDB
 
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams

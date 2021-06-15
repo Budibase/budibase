@@ -28,10 +28,11 @@ export function createDatasourcesStore() {
       update(state => ({ ...state, selected: datasourceId }))
       queries.update(state => ({ ...state, selected: null }))
     },
-    save: async datasource => {
+    save: async (datasource, opts = {}) => {
       let url = "/api/datasources"
 
-      if (datasource.plus) {
+      if (datasource.plus && opts.refresh) {
+        // Pull the latest tables from the datasource
         url += "?refresh=1"
       }
 

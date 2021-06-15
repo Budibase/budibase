@@ -1,10 +1,12 @@
 <script>
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { database, datasources, queries } from "stores/backend"
+  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { database, datasources, queries, tables } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import ICONS from "./icons"
 
   function selectDatasource(datasource) {
@@ -18,6 +20,11 @@
     }
     queries.select(query)
     $goto(`./datasource/${query.datasourceId}/${query._id}`)
+  }
+
+  function onClickTable(table) {
+    tables.select(table)
+    $goto(`./table/${table._id}`)
   }
 
   onMount(() => {
@@ -42,8 +49,13 @@
             width="18"
           />
         </div>
-        <EditDatasourcePopover {datasource} />
+        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+          <EditDatasourcePopover {datasource} />
+        {/if}
       </NavItem>
+
+      <TableNavigator sourceId={datasource._id} />
+
       {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}

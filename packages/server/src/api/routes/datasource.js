@@ -17,7 +17,7 @@ function generateDatasourceSchema() {
   return joiValidator.body(Joi.object({
     _id: Joi.string(),
     _rev: Joi.string(),
-    source: Joi.string().valid("POSTGRES_PLUS"),
+    // source: Joi.string().valid("POSTGRES_PLUS"),
     type: Joi.string().allow("datasource_plus"),
     relationships: Joi.array().items(Joi.object({
       from: Joi.string().required(),
