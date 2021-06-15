@@ -14,6 +14,7 @@ const TYPE_MAP = {
   timestamp: FieldTypes.DATETIME,
   time: FieldTypes.DATETIME,
   boolean: FieldTypes.BOOLEAN,
+  json: FIELD_TYPES.JSON,
 }
 
 const SCHEMA = {
@@ -87,7 +88,7 @@ class PostgresPlus extends Sql {
     try {
       const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
       for (let table of primaryKeysResponse.rows) {
-        keys.push(table.column_name)
+        keys.push(table.column_name || table.primary_key)
       }
     } catch (err) {
       // TODO: this try catch method isn't right
@@ -114,7 +115,7 @@ class PostgresPlus extends Sql {
 
       tables[tableName].schema[columnName] = {
         name: columnName,
-        type: TYPE_MAP[column.data_type],
+        type: TYPE_MAP[column.data_type] || FIELD_TYPES.STRING,
       }
     }
     this.tables = tables
