@@ -30,9 +30,6 @@
     "bmp",
     "jfif",
   ]
-  const onChange = event => {
-    dispatch("change", event.target.checked)
-  }
 
   const fieldId = id || generateID()
   let selectedImageIdx = 0
@@ -205,7 +202,8 @@
         width="125"
         height="60"
         viewBox="0 0 199 97.7"
-        ><defs>
+      >
+        <defs>
           <style>
             .cls-1,
             .cls-2 {
@@ -267,9 +265,9 @@
         <p
           class="spectrum-Body spectrum-Body--sizeS spectrum-IllustratedMessage-description"
         >
-          <label for={fieldId} class="spectrum-Link"
-            >Select a file to upload</label
-          >
+          <label for={fieldId} class="spectrum-Link">
+            Select a file to upload
+          </label>
           <br />
           from your computer
         </p>
@@ -368,21 +366,10 @@
   .right {
     right: 5px;
   }
-  i {
-    font-size: 2rem;
-    color: var(--ink);
-  }
-  i:hover {
-    cursor: pointer;
-    color: var(--background);
-  }
   .delete-button {
     transition: all 0.3s;
     margin-left: 10px;
     display: flex;
-  }
-  .delete-button i {
-    font-size: 2em;
   }
   .delete-button:hover {
     cursor: pointer;

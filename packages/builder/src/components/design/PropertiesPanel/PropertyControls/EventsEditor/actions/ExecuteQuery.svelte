@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Layout } from "@budibase/bbui"
+  import { Select, Layout } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { datasources, integrations, queries } from "stores/backend"
   import { getBindableProperties } from "builderStore/dataBinding"
@@ -18,8 +18,9 @@
   )
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
-      .source
+    const source = $datasources.list.find(
+      ds => ds._id === query.datasourceId
+    ).source
     return $integrations[source].query[query.queryVerb]
   }
 </script>

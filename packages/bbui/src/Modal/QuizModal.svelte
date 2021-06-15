@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import ModalContent from "./ModalContent.svelte"
   import Input from "../Form/Input.svelte"
 

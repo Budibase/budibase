@@ -8,7 +8,6 @@
   export let duration = 1000
   export let width = false
   export let sideLabel = false
-  export let overBackground = false
 
   export let size = "M"
 

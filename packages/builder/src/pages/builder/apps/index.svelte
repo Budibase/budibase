@@ -13,7 +13,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { apps, organisation, auth } from "stores/portal"
-  import { goto, redirect } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
@@ -46,7 +46,7 @@
     <Page>
       <div class="content">
         <Layout noPadding>
-          <img src={$organisation.logoUrl || Logo} />
+          <img alt="logo" src={$organisation.logoUrl || Logo} />
           <div class="info-title">
             <Layout noPadding gap="XS">
               <Heading size="L">

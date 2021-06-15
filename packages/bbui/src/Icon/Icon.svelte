@@ -10,7 +10,11 @@
   export let hoverable = false
   export let disabled = false
 
-  $: rotation = directions.indexOf(direction) * 45
+  $: rotation = getRotation(direction)
+
+  const getRotation = direction => {
+    return directions.indexOf(direction) * 45
+  }
 </script>
 
 <svg

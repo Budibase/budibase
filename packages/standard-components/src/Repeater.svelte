@@ -5,9 +5,8 @@
   export let dataProvider
   export let noRowsMessage
 
-  const { API, styleable, builderStore, Provider } = getContext("sdk")
+  const { styleable, Provider } = getContext("sdk")
   const component = getContext("component")
-  const context = getContext("context")
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? true

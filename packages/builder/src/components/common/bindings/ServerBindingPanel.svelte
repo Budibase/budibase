@@ -15,7 +15,6 @@
 
   const dispatch = createEventDispatcher()
 
-  export let bindingContainer
   export let bindableProperties = []
   export let validity = true
   export let value = ""
@@ -50,9 +49,7 @@
       <div class="section">
         {#each categories as [categoryName, bindings]}
           <Heading size="XS">{categoryName}</Heading>
-          {#each bindings.filter(binding =>
-            binding.label.match(searchRgx)
-          ) as binding}
+          {#each bindings.filter( binding => binding.label.match(searchRgx) ) as binding}
             <div
               class="binding"
               on:click={() => {

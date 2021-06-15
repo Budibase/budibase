@@ -36,7 +36,7 @@
 <section>
   <div class="container">
     <Layout>
-      <img src={Logo} />
+      <img alt="logo" src={Logo} />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Create an admin user</Heading>
         <Body size="M" textAlign="center">

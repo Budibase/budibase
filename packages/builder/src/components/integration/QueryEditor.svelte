@@ -77,8 +77,6 @@
   const refs = {}
   let editor
   let updating_externally = false
-  let marker
-  let error_line
   let destroyed = false
 
   $: if (editor && width && height) {
