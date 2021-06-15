@@ -4,7 +4,6 @@ const {
   getUserMetadataParams,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const { addAppRoleToUser } = require("../../utilities/workerRequests")
 const { getGlobalUsers } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 
@@ -53,9 +52,6 @@ exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const user = removeGlobalProps(ctx.request.body)
-  if (user.roleId) {
-    await addAppRoleToUser(ctx, appId, user.roleId, user._id)
-  }
   const metadata = {
     tableId: InternalTables.USER_METADATA,
     ...user,

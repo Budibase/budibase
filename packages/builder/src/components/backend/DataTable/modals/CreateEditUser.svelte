@@ -104,6 +104,7 @@
     options={$roles}
     getOptionLabel={role => role.name}
     getOptionValue={role => role._id}
+    disabled={!creating}
   />
   {#each customSchemaKeys as [key, meta]}
     {#if !meta.autocolumn}
