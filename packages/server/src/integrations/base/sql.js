@@ -3,6 +3,8 @@ const { DataSourceOperation, SortDirection } = require("../../constants")
 const BASE_LIMIT = 5000
 
 function addFilters(query, filters) {
+  // if all or specified in filters, then everything is an or
+  const allOr = !!filters.allOr
   function iterate(structure, fn) {
     for (let [key, value] of Object.entries(structure)) {
       fn(key, value)
@@ -13,7 +15,8 @@ function addFilters(query, filters) {
   }
   if (filters.string) {
     iterate(filters.string, (key, value) => {
-      query = query.where(key, "like", `${value}%`)
+      const fnc = allOr ? "orWhere" : "where"
+      query = query[fnc](key, "like", `${value}%`)
     })
   }
   if (filters.range) {
@@ -21,27 +24,32 @@ function addFilters(query, filters) {
       if (!value.high || !value.low) {
         return
       }
-      query = query.whereBetween(key, [value.low, value.high])
+      const fnc = allOr ? "orWhereBetween" : "whereBetween"
+      query = query[fnc](key, [value.low, value.high])
     })
   }
   if (filters.equal) {
     iterate(filters.equal, (key, value) => {
-      query = query.where({ [key]: value })
+      const fnc = allOr ? "orWhere" : "where"
+      query = query[fnc]({ [key]: value })
     })
   }
   if (filters.notEqual) {
     iterate(filters.notEqual, (key, value) => {
-      query = query.whereNot({ [key]: value })
+      const fnc = allOr ? "orWhereNot" : "whereNot"
+      query = query[fnc]({ [key]: value })
     })
   }
   if (filters.empty) {
     iterate(filters.empty, key => {
-      query = query.whereNull(key)
+      const fnc = allOr ? "orWhereNull" : "whereNull"
+      query = query[fnc](key)
     })
   }
   if (filters.notEmpty) {
     iterate(filters.notEmpty, key => {
-      query = query.whereNotNull(key)
+      const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
+      query = query[fnc](key)
     })
   }
   return query

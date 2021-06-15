@@ -1,8 +1,11 @@
 const internal = require("./internal")
 const external = require("./external")
+const { DocumentTypes } = require("../../../db/utils")
 
 function pickApi(tableId) {
-  // TODO: go to external
+  if (tableId.includes(DocumentTypes.DATASOURCE)) {
+    return external
+  }
   return internal
 }
 
@@ -33,7 +36,6 @@ exports.patch = async ctx => {
 }
 
 exports.save = async function (ctx) {
-  // TODO: this used to handle bulk delete, need to update builder/client
   const appId = ctx.appId
   const tableId = getTableId(ctx)
   try {
@@ -55,10 +57,10 @@ exports.fetchView = async function (ctx) {
   }
 }
 
-exports.fetchTableRows = async function (ctx) {
+exports.fetch = async function (ctx) {
   const tableId = getTableId(ctx)
   try {
-    ctx.body = await pickApi(tableId).fetchTableRows(ctx)
+    ctx.body = await pickApi(tableId).fetch(ctx)
   } catch (err) {
     ctx.throw(400, err)
   }

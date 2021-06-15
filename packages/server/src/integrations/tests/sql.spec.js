@@ -102,6 +102,22 @@ describe("SQL query builder", () => {
     })
   })
 
+  it("should test for multiple IDs with OR", () => {
+    const query = sql._query(generateReadJson({
+      filters: {
+        equal: {
+          age: 10,
+          name: "John",
+        },
+        allOr: true,
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "John", limit],
+      sql: `select * from "${TABLE_NAME}" where ("age" = $1) or ("name" = $2) limit $3`
+    })
+  })
+
   it("should test an create statement", () => {
     const query = sql._query(generateCreateJson(TABLE_NAME, {
       name: "Michael",

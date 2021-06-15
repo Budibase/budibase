@@ -2,15 +2,33 @@ const CouchDB = require("../../../db")
 const { makeExternalQuery } = require("./utils")
 const { DataSourceOperation, SortDirection } = require("../../../constants")
 
-async function buildIDFilter(id) {
-  if (!id) {
-    return {}
+async function getTable(appId, datasourceId, tableName) {
+  const db = new CouchDB(appId)
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    throw "Datasource is not configured fully."
   }
-  // TODO: work out how to use the schema to get filter
+  return Object.values(datasource.entities).find(
+    entity => entity.name === tableName
+  )
+}
+
+function buildIDFilter(id, table) {
+  if (!id || !table) {
+    return null
+  }
+  // if used as URL parameter it will have been joined
+  if (typeof id === "string") {
+    id = id.split(",")
+  }
+  const primary = table.primary
+  const equal = {}
+  for (let field of primary) {
+    // work through the ID and get the parts
+    equal[field] = id.shift()
+  }
   return {
-    equal: {
-      id: id,
-    },
+    equal,
   }
 }
 
@@ -18,20 +36,24 @@ async function handleRequest(
   appId,
   operation,
   tableId,
-  { id, row, filters, sort, paginate }
+  { id, row, filters, sort, paginate } = {}
 ) {
-  let [datasourceId, tableName] = tableId.split("/")
-  let idFilter = buildIDFilter(id)
+  const parts = tableId.split("_")
+  let tableName = parts.pop()
+  let datasourceId = parts.join("_")
+  const table = await getTable(appId, datasourceId, tableName)
+  if (!table) {
+    throw `Unable to process query, table "${tableName}" not defined.`
+  }
+  // try and build an id filter if required
+  let idFilters = buildIDFilter(id)
   let json = {
     endpoint: {
       datasourceId,
       entityId: tableName,
       operation,
     },
-    filters: {
-      ...filters,
-      ...idFilter,
-    },
+    filters: idFilters != null ? idFilters : filters,
     sort,
     paginate,
     body: row,
@@ -65,15 +87,25 @@ exports.save = async ctx => {
 }
 
 exports.fetchView = async ctx => {
-  // TODO: don't know what this does for external
+  // there are no views in external data sources, shouldn't ever be called
+  // for now just fetch
+  ctx.params.tableId = ctx.params.viewName.split("all_")[1]
+  return exports.fetch(ctx)
 }
 
-exports.fetchTableRows = async ctx => {
-  // TODO: this is a basic read?
+exports.fetch = async ctx => {
+  const appId = ctx.appId
+  const tableId = ctx.params.tableId
+  ctx.body = await handleRequest(appId, DataSourceOperation.READ, tableId)
 }
 
 exports.find = async ctx => {
-  // TODO: single find
+  const appId = ctx.appId
+  const id = ctx.params.rowId
+  const tableId = ctx.params.tableId
+  ctx.body = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+    id,
+  })
 }
 
 exports.destroy = async ctx => {
@@ -85,7 +117,18 @@ exports.destroy = async ctx => {
 }
 
 exports.bulkDestroy = async ctx => {
-  // TODO: iterate through rows, build a large OR filter?
+  const appId = ctx.appId
+  const { rows } = ctx.request.body
+  const tableId = ctx.params.tableId
+  // TODO: this can probably be optimised to a single SQL statement in the future
+  let promises = []
+  for (let row of rows) {
+    promises.push(handleRequest(appId, DataSourceOperation.DELETE, tableId, {
+      id: row._id,
+    }))
+  }
+  await Promise.all(promises)
+  ctx.body = { response: { ok: true }, rows }
 }
 
 exports.search = async ctx => {
@@ -123,7 +166,6 @@ exports.validate = async ctx => {
 }
 
 exports.fetchEnrichedRow = async ctx => {
-  // TODO: should this join?
-  const appId = ctx.appId
-  ctx.body = {}
+  // TODO: How does this work
+  ctx.throw(501, "Not implemented")
 }
