@@ -27,22 +27,20 @@
 
   // Fetch rows for specified table
   $: {
-    if ($views.selected?.name?.startsWith("all_")) {
-      loading = true
-      const loadingTableId = $tables.selected?._id
-      api.fetchDataForView($views.selected).then(rows => {
-        loading = false
+    loading = true
+    const loadingTableId = $tables.selected?._id
+    api.fetchDataForTable($tables.selected._id).then(rows => {
+      loading = false
 
-        // If we started a slow request then quickly change table, sometimes
-        // the old data overwrites the new data.
-        // This check ensures that we don't do that.
-        if (loadingTableId !== $tables.selected?._id) {
-          return
-        }
+      // If we started a slow request then quickly change table, sometimes
+      // the old data overwrites the new data.
+      // This check ensures that we don't do that.
+      if (loadingTableId !== $tables.selected?._id) {
+        return
+      }
 
-        data = rows || []
-      })
-    }
+      data = rows || []
+    })
   }
 </script>
 

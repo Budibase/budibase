@@ -2,6 +2,7 @@ const Sql = require("../base/sql")
 const { Pool } = require("pg")
 const { FieldTypes } = require("../../constants")
 const { FIELD_TYPES } = require("../Integration")
+const { SEPARATOR } = require("@budibase/auth/db")
 
 const TYPE_MAP = {
   text: FieldTypes.LONGFORM,
@@ -60,7 +61,7 @@ class PostgresPlus extends Sql {
     "select * from information_schema.columns where table_schema = 'public'"
 
   PRIMARY_KEYS_SQL = `
-    select tc.table_schema, tc.table_name, tc.column_name, kc.column_name as primary_key 
+    select tc.table_schema, tc.table_name, kc.column_name as primary_key 
     from information_schema.table_constraints tc
     join 
       information_schema.key_column_usage kc on kc.table_name = tc.table_name 
@@ -69,9 +70,11 @@ class PostgresPlus extends Sql {
     where tc.constraint_type = 'PRIMARY KEY';
   `
 
-  constructor(config) {
+  constructor(config, datasource) {
     super("pg")
     this.config = config
+    this.datasource = datasource
+
     if (!this.pool) {
       this.pool = new Pool(this.config)
     }
@@ -84,7 +87,7 @@ class PostgresPlus extends Sql {
     const primaryKeys = {}
 
     for (let table of primaryKeysResponse.rows) {
-      primaryKeys[table.primary_key] = table.column_name
+      primaryKeys[table.column_name] = table.primary_key
     }
 
     const columnsResponse = await this.client.query(this.COLUMNS_SQL)
@@ -97,7 +100,9 @@ class PostgresPlus extends Sql {
       // table key doesn't exist yet
       if (!tables[tableName]) {
         tables[tableName] = {
-          _id: primaryKeys[tableName],
+          _id: `${this.datasource._id}${SEPARATOR}${tableName}`,
+          // TODO: this needs to accommodate composite keys
+          primary: primaryKeys[tableName],
           name: tableName,
           schema: {},
         }
