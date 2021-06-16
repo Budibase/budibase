@@ -15,12 +15,22 @@
   async function saveDatasource() {
     try {
       // Create datasource
-      await datasources.save(datasource, { refresh: true })
+      await datasources.save(datasource)
       notifications.success(`Datasource ${name} saved successfully.`)
+      unsaved = false
+    } catch (err) {
+      notifications.error(`Error saving datasource: ${err}`)
+    }
+  }
+
+  async function updateDatasourceSchema() {
+    try {
+      await datasources.updateSchema(datasource)
+      notifications.success(`Datasource ${name} schema saved successfully.`)
       unsaved = false
       await tables.fetch()
     } catch (err) {
-      notifications.error(`Error saving datasource: ${err}`)
+      notifications.error(`Error updating datasource schema: ${err}`)
     }
   }
 
@@ -71,7 +81,6 @@
           on:change={setUnsaved}
         />
       </div>
-      {#if !integration.plus}
         <Divider />
         <div class="query-header">
           <Heading size="S">Queries</Heading>
@@ -86,6 +95,8 @@
             </div>
           {/each}
         </div>
+      {#if datasource.plus}
+        <Button cta on:click={updateDatasourceSchema}>Fetch Tables From Database</Button>
       {/if}
     </Layout>
   </section>

@@ -8,7 +8,6 @@ const {
   getTableParams,
 } = require("../../db/utils")
 const { integrations } = require("../../integrations")
-const plusIntegrations = require("../../integrations/plus")
 const { makeExternalQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
@@ -40,6 +39,24 @@ exports.fetch = async function (ctx) {
   ctx.body = [bbInternalDb, ...datasources]
 }
 
+exports.buildSchemaFromDb = async function (ctx) {
+  const db = new CouchDB(ctx.appId)
+  const datasourceId = ctx.params.datasourceId
+  const datasource = await db.get(datasourceId)
+
+  const Connector = integrations[datasource.source]
+
+  // Connect to the DB and build the schema
+  const connector = new Connector(datasource.config)
+  await connector.buildSchema(datasource._id)
+  datasource.entities = connector.tables
+
+  const response = await db.post(datasource)
+  datasource._rev = response.rev
+
+  ctx.body = datasource
+}
+
 exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const plus = ctx.request.body.plus
@@ -48,16 +65,6 @@ exports.save = async function (ctx) {
     _id: generateDatasourceID({ plus }),
     type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
     ...ctx.request.body,
-  }
-
-  // update the schema
-  if (ctx.query.refresh) {
-    const PlusConnector = plusIntegrations[datasource.source].integration
-
-    const connector = new PlusConnector(ctx.request.body.config)
-    await connector.init(datasource._id)
-
-    datasource.entities = connector.tables
   }
 
   const response = await db.post(datasource)

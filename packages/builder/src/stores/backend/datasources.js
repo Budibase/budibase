@@ -28,13 +28,33 @@ export function createDatasourcesStore() {
       update(state => ({ ...state, selected: datasourceId }))
       queries.update(state => ({ ...state, selected: null }))
     },
-    save: async (datasource, opts = {}) => {
-      let url = "/api/datasources"
+    updateSchema: async (datasource) => {
+      let url = `/api/datasources/${datasource._id}/schema`
 
-      if (datasource.plus && opts.refresh) {
-        // Pull the latest tables from the datasource
-        url += "?refresh=1"
+      const response = await api.post(url)
+      const json = await response.json()
+
+      if (response.status !== 200) {
+        throw new Error(json.message)
       }
+
+      update(state => {
+        const currentIdx = state.list.findIndex(ds => ds._id === json._id)
+
+        const sources = state.list
+
+        if (currentIdx >= 0) {
+          sources.splice(currentIdx, 1, json)
+        } else {
+          sources.push(json)
+        }
+
+        return { list: sources, selected: json._id }
+      })
+      return json
+    },
+    save: async (datasource) => {
+      let url = "/api/datasources"
 
       const response = await api.post(url, datasource)
       const json = await response.json()

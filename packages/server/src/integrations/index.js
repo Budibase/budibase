@@ -24,7 +24,6 @@ const DEFINITIONS = {
   MYSQL: mysql.schema,
   ARANGODB: arangodb.schema,
   REST: rest.schema,
-  POSTGRES_PLUS: postgresPlus.schema,
 }
 
 const INTEGRATIONS = {
@@ -39,7 +38,6 @@ const INTEGRATIONS = {
   MYSQL: mysql.integration,
   ARANGODB: arangodb.integration,
   REST: rest.integration,
-  POSTGRES_PLUS: postgresPlus.integration,
 }
 
 module.exports = {
