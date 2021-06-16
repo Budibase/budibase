@@ -6,11 +6,17 @@ const {
   getTableParams,
   generateTableID,
   getDatasourceParams,
-  DocumentTypes,
   BudibaseInternalDB,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
-const { TableSaveFunctions } = require("./utils")
+const {
+  TableSaveFunctions,
+  getExternalTable
+} = require("./utils")
+const {
+  isExternalTable,
+  breakExternalTableId
+} = require("../../../integrations/utils")
 
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
@@ -44,7 +50,13 @@ exports.fetch = async function (ctx) {
 
 exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  ctx.body = await db.get(ctx.params.id)
+  const tableId = ctx.params.id
+  if (isExternalTable(tableId)) {
+    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    ctx.body = await getExternalTable(ctx.appId, datasourceId, tableName)
+  } else {
+    ctx.body = await db.get(ctx.params.id)
+  }
 }
 
 exports.save = async function (ctx) {
