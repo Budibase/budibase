@@ -7,7 +7,7 @@
 
   const isChildAllowed = ({ name }, selectedComponent) => {
     const currentComponent = store.actions.components.getDefinition(
-      selectedComponent._component
+      selectedComponent?._component
     )
 
     return currentComponent?.illegalChildren?.includes(name)
