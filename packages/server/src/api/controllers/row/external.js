@@ -68,7 +68,10 @@ async function handleRequest(
   row = inputProcessing(row, table)
   // try and build an id filter if required
   let idFilters = buildIDFilter(id, table)
-  if (operation === DataSourceOperation.DELETE && Object.keys(idFilters).length === 0) {
+  if (
+    operation === DataSourceOperation.DELETE &&
+    Object.keys(idFilters).length === 0
+  ) {
     throw "Deletion must be filtered in someway"
   }
   let json = {
