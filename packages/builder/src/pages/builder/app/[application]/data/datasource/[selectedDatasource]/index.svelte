@@ -3,7 +3,6 @@
   import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
   import {
     datasources,
-    entities,
     integrations,
     queries,
     tables,
