@@ -93,3 +93,7 @@ exports.revert = async ctx => {
     ctx.throw(400, `Unable to revert. ${err}`)
   }
 }
+
+exports.getBudibaseVersion = async ctx => {
+  ctx.body = require("../../../package.json").version
+}

@@ -1,7 +1,13 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
-  import { datasources, integrations, queries, tables } from "stores/backend"
+  import {
+    datasources,
+    entities,
+    integrations,
+    queries,
+    tables,
+  } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -96,9 +102,13 @@
         {/each}
       </div>
       {#if datasource.plus}
-        <Button cta on:click={updateDatasourceSchema}
-          >Fetch Tables From Database</Button
-        >
+        <Divider />
+        <div class="query-header">
+          <Heading size="S">Queries</Heading>
+          <Button cta on:click={updateDatasourceSchema}
+            >Fetch Tables From Database</Button
+          >
+        </div>
       {/if}
     </Layout>
   </section>

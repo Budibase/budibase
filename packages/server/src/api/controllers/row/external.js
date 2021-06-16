@@ -210,7 +210,7 @@ exports.validate = async () => {
   return { valid: true }
 }
 
-exports.fetchEnrichedRow = async ctx => {
+exports.fetchEnrichedRow = async () => {
   // TODO: How does this work
   throw "Not Implemented"
 }

@@ -16,7 +16,7 @@ export function createDatasourcesStore() {
     init: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()
-      set({ list: json, selected: null })
+      set({ list: json })
     },
     fetch: async () => {
       const response = await api.get(`/api/datasources`)

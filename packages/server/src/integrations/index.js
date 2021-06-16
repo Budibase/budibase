@@ -9,8 +9,6 @@ const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
 const rest = require("./rest")
-// Plus
-const postgresPlus = require("../integrations/plus/postgres")
 
 const DEFINITIONS = {
   POSTGRES: postgres.schema,
