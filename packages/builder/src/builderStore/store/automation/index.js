@@ -100,9 +100,10 @@ const automationActions = store => ({
   },
   deleteAutomationBlock: block => {
     store.update(state => {
-      const idx = state.selectedAutomation.automation.definition.steps.findIndex(
-        x => x.id === block.id
-      )
+      const idx =
+        state.selectedAutomation.automation.definition.steps.findIndex(
+          x => x.id === block.id
+        )
       state.selectedAutomation.deleteBlock(block.id)
 
       // Select next closest step
