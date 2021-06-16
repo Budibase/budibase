@@ -33,7 +33,7 @@ exports.fetch = async function (ctx) {
   )
 
   const external = externalTables.rows.flatMap(row => {
-    return Object.values(row.doc.entities).map(entity => ({
+    return Object.values(row.doc.entities || {}).map(entity => ({
       ...entity,
       sourceId: row.doc._id,
     }))

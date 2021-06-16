@@ -73,6 +73,11 @@ router
     datasourceController.query
   )
   .post(
+    "/api/datasources/:datasourceId/schema",
+    authorized(BUILDER),
+    datasourceController.buildSchemaFromDb
+  )
+  .post(
     "/api/datasources",
     authorized(BUILDER),
     generateDatasourceSchema(),
