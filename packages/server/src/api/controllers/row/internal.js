@@ -301,7 +301,7 @@ exports.search = async ctx => {
     response.rows = await outputProcessing(appId, table, response.rows)
   }
 
-  ctx.body = response
+  return response
 }
 
 exports.validate = async ctx => {
