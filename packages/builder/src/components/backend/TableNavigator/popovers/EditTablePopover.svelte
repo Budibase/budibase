@@ -117,22 +117,4 @@
     margin-top: 4px;
     font-weight: 600;
   }
-
-  .actions {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    min-width: 400px;
-  }
-
-  h5 {
-    margin: 0;
-    font-weight: 600;
-  }
-
-  footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
 </style>

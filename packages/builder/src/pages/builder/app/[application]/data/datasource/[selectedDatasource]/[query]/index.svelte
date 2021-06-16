@@ -3,17 +3,6 @@
   import { database, queries } from "stores/backend"
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
-  async function fetchQueryConfig() {
-    try {
-      const response = await api.get(`/api/integrations/${datasource.source}`)
-      const json = await response.json()
-      config = json.query
-    } catch (err) {
-      notifications.error("Error fetching datasource configuration options.")
-      console.error(err)
-    }
-  }
-
   $: selectedQuery = $queries.list.find(
     query => query._id === $queries.selected
   ) || {

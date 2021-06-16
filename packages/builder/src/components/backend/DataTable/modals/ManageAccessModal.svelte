@@ -12,7 +12,6 @@
 
   export let resourceId
   export let permissions
-  export let onClosed
 
   async function changePermission(level, role) {
     await permissionsStore.save({

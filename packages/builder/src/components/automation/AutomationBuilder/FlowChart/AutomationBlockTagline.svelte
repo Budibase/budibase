@@ -48,7 +48,7 @@
           return
         }
         formattedTagline = formattedTagline.replace(
-          new RegExp(`{{\s*${inputPath}\s*}}`),
+          new RegExp(`{{\\s*${inputPath}\\s*}}`),
           prettyValue
         )
       }

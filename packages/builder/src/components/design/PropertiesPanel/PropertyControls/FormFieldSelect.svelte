@@ -9,7 +9,6 @@
 
   export let componentInstance
   export let value
-  export let onChange
   export let type
 
   $: form = findClosestMatchingComponent(

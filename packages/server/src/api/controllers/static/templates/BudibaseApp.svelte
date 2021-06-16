@@ -2,8 +2,6 @@
   export let title = ""
   export let favicon = ""
 
-  export let appId
-  export let production
   export let clientLibPath
 
   function initialise() {

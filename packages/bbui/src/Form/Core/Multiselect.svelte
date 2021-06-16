@@ -10,6 +10,7 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let readonly = false
 
   const dispatch = createEventDispatcher()
   $: selectedLookupMap = getSelectedLookupMap(value)
@@ -72,6 +73,7 @@
   {id}
   {error}
   {disabled}
+  {readonly}
   {fieldText}
   {options}
   isPlaceholder={!value?.length}

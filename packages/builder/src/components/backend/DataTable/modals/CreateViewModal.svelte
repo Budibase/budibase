@@ -5,8 +5,6 @@
   import { tables } from "stores/backend"
   import analytics from "analytics"
 
-  export let onClosed
-
   let name
   let field
 

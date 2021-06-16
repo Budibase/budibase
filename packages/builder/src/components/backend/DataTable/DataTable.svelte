@@ -11,7 +11,6 @@
   import * as api from "./api"
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
-  import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
 
   let hideAutocolumns = true

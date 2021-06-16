@@ -1,5 +1,5 @@
 <script>
-  import { Button, Icon } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let selectedRows

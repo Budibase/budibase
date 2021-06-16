@@ -33,7 +33,7 @@
     unsaved = true
   }
 
-  $beforeUrlChange((event, store) => {
+  $beforeUrlChange(() => {
     if (unsaved) {
       notifications.error(
         "Unsaved changes. Please save your datasource configuration before leaving."

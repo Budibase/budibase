@@ -90,15 +90,17 @@ const numericalConstraint = (constraint, error) => value => {
   return null
 }
 
-const inclusionConstraint = (options = []) => value => {
-  if (value == null || value === "") {
+const inclusionConstraint =
+  (options = []) =>
+  value => {
+    if (value == null || value === "") {
+      return null
+    }
+    if (!options.includes(value)) {
+      return "Invalid value"
+    }
     return null
   }
-  if (!options.includes(value)) {
-    return "Invalid value"
-  }
-  return null
-}
 
 const dateConstraint = (dateString, isEarliest) => {
   const dateLimit = Date.parse(dateString)

@@ -12,7 +12,7 @@
   export let quiet
 
   const component = getContext("component")
-  const { styleable, Provider } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {

@@ -9,13 +9,10 @@
 
   let fieldState
   let fieldApi
-  let fieldSchema
 
   const { API, notifications } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
-
-  export let files = []
 
   const handleFileTooLarge = fileSizeLimit => {
     notifications.warning(

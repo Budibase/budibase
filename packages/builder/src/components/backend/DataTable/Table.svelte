@@ -18,7 +18,6 @@
   export let title
   export let allowEditing = false
   export let loading = false
-  export let theme = "alpine"
   export let hideAutocolumns
   export let rowCount
 
@@ -147,11 +146,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-  }
-  .table-title h1 {
-    font-size: var(--font-size-m);
-    font-weight: 600;
-    margin: 0;
   }
   .table-title > div {
     margin-left: var(--spacing-xs);
