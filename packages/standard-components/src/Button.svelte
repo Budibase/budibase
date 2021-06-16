@@ -7,31 +7,15 @@
   export let disabled = false
   export let text = ""
   export let onClick
+  export let size = "M"
+  export let type = "primary"
 </script>
 
 <button
-  class="default"
+  class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
   disabled={disabled || false}
   use:styleable={$component.styles}
   on:click={onClick}
 >
   {text || ""}
 </button>
-
-<style>
-  .default {
-    align-items: center;
-    padding: var(--spacing-s) var(--spacing-l);
-    box-sizing: border-box;
-    border-radius: 4px;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.2s ease 0s;
-    overflow: hidden;
-    outline: none;
-    user-select: none;
-    white-space: nowrap;
-    text-align: center;
-    font-family: var(--font-sans);
-  }
-</style>
