@@ -1,9 +1,9 @@
 const internal = require("./internal")
 const external = require("./external")
-const { DocumentTypes } = require("../../../db/utils")
+const { isExternalTable } = require("../../../integrations/utils")
 
 function pickApi(tableId) {
-  if (tableId.includes(DocumentTypes.DATASOURCE)) {
+  if (isExternalTable(tableId)) {
     return external
   }
   return internal
