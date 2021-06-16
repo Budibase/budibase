@@ -73,7 +73,7 @@ const TYPE_MAP = {
 
 async function internalQuery(client, sql) {
   try {
-    return await client.query(sql)
+    return await client.query(sql.sql, sql.bindings)
   } catch (err) {
     throw new Error(err)
   }
