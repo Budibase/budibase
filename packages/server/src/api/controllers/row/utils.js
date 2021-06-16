@@ -18,8 +18,8 @@ validateJs.extend(validateJs.validators.datetime, {
 
 exports.makeExternalQuery = async (appId, json) => {
   const datasourceId = json.endpoint.datasourceId
-  const database = new CouchDB(appId)
-  const datasource = await database.get(datasourceId)
+  const db = new CouchDB(appId)
+  const datasource = await db.get(datasourceId)
   const Integration = integrations[datasource.source]
   // query is the opinionated function
   if (Integration.prototype.query) {

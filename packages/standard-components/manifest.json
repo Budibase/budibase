@@ -136,6 +136,20 @@
         "key": "text"
       },
       {
+        "type": "select",
+        "label": "Button Type",
+        "key": "type",
+        "options": ["primary", "secondary", "cta", "warning"],
+        "defaultValue": "primary"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": ["S", "M", "L", "XL"],
+        "defaultValue": "M"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled"

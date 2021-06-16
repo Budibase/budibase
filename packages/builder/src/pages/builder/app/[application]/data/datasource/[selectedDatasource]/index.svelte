@@ -81,22 +81,24 @@
           on:change={setUnsaved}
         />
       </div>
-        <Divider />
-        <div class="query-header">
-          <Heading size="S">Queries</Heading>
-          <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
-        </div>
-        <div class="query-list">
-          {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
-            <div class="query-list-item" on:click={() => onClickQuery(query)}>
-              <p class="query-name">{query.name}</p>
-              <p>{capitalise(query.queryVerb)}</p>
-              <p>→</p>
-            </div>
-          {/each}
-        </div>
+      <Divider />
+      <div class="query-header">
+        <Heading size="S">Queries</Heading>
+        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+      </div>
+      <div class="query-list">
+        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+          <div class="query-list-item" on:click={() => onClickQuery(query)}>
+            <p class="query-name">{query.name}</p>
+            <p>{capitalise(query.queryVerb)}</p>
+            <p>→</p>
+          </div>
+        {/each}
+      </div>
       {#if datasource.plus}
-        <Button cta on:click={updateDatasourceSchema}>Fetch Tables From Database</Button>
+        <Button cta on:click={updateDatasourceSchema}
+          >Fetch Tables From Database</Button
+        >
       {/if}
     </Layout>
   </section>

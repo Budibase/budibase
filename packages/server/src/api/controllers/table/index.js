@@ -9,13 +9,10 @@ const {
   BudibaseInternalDB,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
-const {
-  TableSaveFunctions,
-  getExternalTable
-} = require("./utils")
+const { TableSaveFunctions, getExternalTable } = require("./utils")
 const {
   isExternalTable,
-  breakExternalTableId
+  breakExternalTableId,
 } = require("../../../integrations/utils")
 
 exports.fetch = async function (ctx) {

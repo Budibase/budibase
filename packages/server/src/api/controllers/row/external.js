@@ -86,8 +86,11 @@ async function handleRequest(
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
   row = inputProcessing(row, table)
-  if (operation === DataSourceOperation.DELETE && Object.keys(filters).length === 0) {
-    throw "Deletion must be filtered in someway"
+  if (
+    operation === DataSourceOperation.DELETE &&
+    Object.keys(filters).length === 0
+  ) {
+    throw "Deletion must be filtered"
   }
   let json = {
     endpoint: {
