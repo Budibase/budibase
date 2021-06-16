@@ -84,14 +84,4 @@
     background-color: var(--grey-2);
     color: var(--grey-8);
   }
-  header i {
-    font-size: 20px;
-  }
-  header i.delete {
-    opacity: 0.5;
-  }
-  header i.delete:hover {
-    cursor: pointer;
-    opacity: 1;
-  }
 </style>

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.9.47",
+  "version": "0.9.48",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -65,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^0.9.47",
-    "@budibase/client": "^0.9.47",
+    "@budibase/bbui": "^0.9.48",
+    "@budibase/client": "^0.9.48",
     "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^0.9.47",
+    "@budibase/string-templates": "^0.9.48",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -97,8 +97,6 @@
     "babel-jest": "^26.6.3",
     "cypress": "^5.1.0",
     "cypress-terminal-report": "^1.4.1",
-    "eslint": "^7.23.0",
-    "eslint-plugin-cypress": "^2.11.2",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.6.3",
     "ncp": "^2.0.0",

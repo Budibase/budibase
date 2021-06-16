@@ -6,7 +6,6 @@
   import { createEventDispatcher, onMount } from "svelte"
 
   export let value
-  export let onChange
 
   const dispatch = createEventDispatcher()
   const getValue = component => `{{ literal ${makePropSafe(component._id)} }}`

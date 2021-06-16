@@ -1,5 +1,5 @@
 <script>
-  import { datasources, tables } from "stores/backend"
+  import { datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 

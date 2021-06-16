@@ -1,14 +1,6 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
-  import {
-    Button,
-    Icon,
-    Modal,
-    notifications,
-    ModalContent,
-  } from "@budibase/bbui"
+  import { Icon, Modal, notifications, ModalContent } from "@budibase/bbui"
   import { store } from "builderStore"
-  import { apps } from "stores/portal"
   import api from "builderStore/api"
 
   let revertModal

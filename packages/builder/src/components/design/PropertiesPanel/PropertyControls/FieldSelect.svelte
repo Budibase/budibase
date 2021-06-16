@@ -9,7 +9,6 @@
 
   export let componentInstance = {}
   export let value = ""
-  export let multiselect = false
   export let placeholder
 
   const dispatch = createEventDispatcher()
