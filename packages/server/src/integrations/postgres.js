@@ -2,7 +2,6 @@ const { Pool } = require("pg")
 const { FIELD_TYPES } = require("./Integration")
 const Sql = require("./base/sql")
 const { FieldTypes } = require("../constants")
-const { SEPARATOR } = require("@budibase/auth/db")
 const { buildExternalTableId } = require("./utils")
 
 const SCHEMA = {
