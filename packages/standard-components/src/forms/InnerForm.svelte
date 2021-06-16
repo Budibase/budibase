@@ -8,11 +8,9 @@
   export let theme
   export let size
   export let disabled = false
-  export let actionType = "Create"
   export let initialValues
 
   const component = getContext("component")
-  const context = getContext("context")
   const { styleable, API, Provider, ActionTypes } = getContext("sdk")
 
   let loaded = false

@@ -81,6 +81,7 @@
       error={$fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
+      {placeholder}
     />
   {/if}
 </Field>

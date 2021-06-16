@@ -1,11 +1,5 @@
 <script>
-  import {
-    ActionMenu,
-    ActionGroup,
-    ActionButton,
-    MenuItem,
-    Icon,
-  } from "@budibase/bbui"
+  import { ActionMenu, ActionButton, MenuItem, Icon } from "@budibase/bbui"
   import { store, currentAssetName } from "builderStore"
   import structure from "./componentStructure.json"
 

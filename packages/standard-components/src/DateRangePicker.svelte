@@ -11,9 +11,8 @@
   export let field
   export let defaultValue
 
-  const dataContext = getContext("context")
   const component = getContext("component")
-  const { styleable, builderStore, ActionTypes, getAction } = getContext("sdk")
+  const { styleable, ActionTypes, getAction } = getContext("sdk")
 
   const setQuery = getAction(dataProvider?.id, ActionTypes.SetDataProviderQuery)
   const options = [

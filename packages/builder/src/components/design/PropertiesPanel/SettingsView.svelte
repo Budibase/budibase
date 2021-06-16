@@ -42,13 +42,6 @@
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
-  const assetProps = [
-    "title",
-    "description",
-    "routing.route",
-    "layoutId",
-    "routing.roleId",
-  ]
   let confirmResetFieldsDialog
 
   $: settings = componentDefinition?.settings ?? []

@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
 
   const fieldGroupContext = getContext("fieldGroup")
-  const labelPosition = fieldGroupContext?.labelPosition || "above"
 </script>
 
 {#if fieldGroupContext}

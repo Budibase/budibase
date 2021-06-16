@@ -33,7 +33,6 @@
   let fieldDefinitions = cloneDeep(FIELDS)
   const { hide } = getContext(Context.Modal)
 
-  export let onClosed = () => {}
   export let field = {
     type: "string",
     constraints: fieldDefinitions.STRING.constraints,

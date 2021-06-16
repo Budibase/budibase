@@ -1,9 +1,6 @@
 const CouchDB = require("../../../db")
-const {
-  generateGlobalUserID,
-  getGlobalUserParams,
-  StaticDatabases,
-} = require("@budibase/auth").db
+const { generateGlobalUserID, getGlobalUserParams, StaticDatabases } =
+  require("@budibase/auth").db
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
