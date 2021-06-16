@@ -1,17 +1,7 @@
-const CouchDB = require("../../../db")
 const { makeExternalQuery } = require("./utils")
 const { DataSourceOperation, SortDirection } = require("../../../constants")
-
-async function getTable(appId, datasourceId, tableName) {
-  const db = new CouchDB(appId)
-  const datasource = await db.get(datasourceId)
-  if (!datasource || !datasource.entities) {
-    throw "Datasource is not configured fully."
-  }
-  return Object.values(datasource.entities).find(
-    entity => entity.name === tableName
-  )
-}
+const { getExternalTable } = require("../table/utils")
+const { breakExternalTableId } = require("../../../integrations/utils")
 
 function inputProcessing(row, table) {
   if (!row) {
@@ -69,10 +59,8 @@ async function handleRequest(
   tableId,
   { id, row, filters, sort, paginate } = {}
 ) {
-  const parts = tableId.split("_")
-  let tableName = parts.pop()
-  let datasourceId = parts.join("_")
-  const table = await getTable(appId, datasourceId, tableName)
+  let { datasourceId, tableName } = breakExternalTableId(tableId)
+  const table = await getExternalTable(appId, datasourceId, tableName)
   if (!table) {
     throw `Unable to process query, table "${tableName}" not defined.`
   }
@@ -205,14 +193,16 @@ exports.search = async ctx => {
       [params.sort]: direction,
     }
   }
-  return handleRequest(appId, DataSourceOperation.READ, tableId, {
+  const rows = await handleRequest(appId, DataSourceOperation.READ, tableId, {
     filters: query,
     sort,
     paginate: paginateObj,
   })
+  // need wrapper object for bookmarks etc when paginating
+  return { rows }
 }
 
-exports.validate = async ctx => {
+exports.validate = async () => {
   // can't validate external right now - maybe in future
   return { valid: true }
 }

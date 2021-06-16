@@ -3,6 +3,7 @@ const { FIELD_TYPES } = require("./Integration")
 const Sql = require("./base/sql")
 const { FieldTypes } = require("../constants")
 const { SEPARATOR } = require("@budibase/auth/db")
+const { buildExternalTableId } = require("./utils")
 
 const SCHEMA = {
   docs: "https://node-postgres.com",
@@ -137,7 +138,7 @@ class PostgresIntegration extends Sql {
       // table key doesn't exist yet
       if (!tables[tableName]) {
         tables[tableName] = {
-          _id: `${datasourceId}${SEPARATOR}${tableName}`,
+          _id: buildExternalTableId(datasourceId, tableName),
           // TODO: this needs to accommodate composite keys
           primary: keys,
           name: tableName,
