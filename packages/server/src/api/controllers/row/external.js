@@ -1,7 +1,11 @@
 const { makeExternalQuery } = require("./utils")
 const { DataSourceOperation, SortDirection } = require("../../../constants")
 const { getExternalTable } = require("../table/utils")
-const { breakExternalTableId } = require("../../../integrations/utils")
+const {
+  breakExternalTableId,
+  generateRowIdField,
+  breakRowIdField,
+} = require("../../../integrations/utils")
 
 function inputProcessing(row, table) {
   if (!row) {
@@ -29,20 +33,35 @@ function outputProcessing(rows, table) {
     for (let field of primary) {
       idParts.push(row[field])
     }
-    row._id = idParts
+    row._id = generateRowIdField(idParts)
+    row.tableId = table._id
   }
   return rows
 }
 
-function buildIDFilter(id, table) {
+function buildFilters(id, filters, table) {
+  const primary = table.primary
+  if (filters) {
+    // need to map over the filters and make sure the _id field isn't present
+    for (let filter of Object.values(filters)) {
+      if (filter._id) {
+        const parts = breakRowIdField(filter._id)
+        for (let field of primary) {
+          filter[field] = parts.shift()
+        }
+      }
+      // make sure this field doesn't exist on any filter
+      delete filter._id
+    }
+  }
+  // there is no id, just use the user provided filters
   if (!id || !table) {
-    return null
+    return filters
   }
   // if used as URL parameter it will have been joined
   if (typeof id === "string") {
-    id = id.split(",")
+    id = breakRowIdField(id)
   }
-  const primary = table.primary
   const equal = {}
   for (let field of primary) {
     // work through the ID and get the parts
@@ -65,14 +84,13 @@ async function handleRequest(
     throw `Unable to process query, table "${tableName}" not defined.`
   }
   // clean up row on ingress using schema
+  filters = buildFilters(id, filters, table)
   row = inputProcessing(row, table)
-  // try and build an id filter if required
-  let idFilters = buildIDFilter(id, table)
   if (
     operation === DataSourceOperation.DELETE &&
-    Object.keys(idFilters).length === 0
+    Object.keys(filters).length === 0
   ) {
-    throw "Deletion must be filtered in someway"
+    throw "Deletion must be filtered"
   }
   let json = {
     endpoint: {
@@ -84,7 +102,7 @@ async function handleRequest(
       // not specifying any fields means "*"
       fields: [],
     },
-    filters: idFilters != null ? idFilters : filters,
+    filters,
     sort,
     paginate,
     body: row,
@@ -106,7 +124,7 @@ exports.patch = async ctx => {
   const appId = ctx.appId
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const id = inputs._id
+  const id = breakRowIdField(inputs._id)
   // don't save the ID to db
   delete inputs._id
   return handleRequest(appId, DataSourceOperation.UPDATE, tableId, {
@@ -153,7 +171,7 @@ exports.destroy = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   return handleRequest(appId, DataSourceOperation.DELETE, tableId, {
-    id: ctx.request.body._id,
+    id: breakRowIdField(ctx.request.body._id),
   })
 }
 
@@ -166,7 +184,7 @@ exports.bulkDestroy = async ctx => {
   for (let row of rows) {
     promises.push(
       handleRequest(appId, DataSourceOperation.DELETE, tableId, {
-        id: row._id,
+        id: breakRowIdField(row._id),
       })
     )
   }
@@ -184,6 +202,10 @@ exports.search = async ctx => {
       limit: params.limit,
       // todo: need to handle bookmarks
       page: params.bookmark,
+    }
+  } else if (params && params.limit) {
+    paginateObj = {
+      limit: params.limit,
     }
   }
   let sort
