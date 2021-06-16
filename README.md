@@ -8,7 +8,7 @@
 </h1>
 
 <h3 align="center">
-  Build internal tools on your own infrastructure in minutes
+  Build, automate and self-host internal tools in minutes
 </h3>
 <p align="center">
   Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship internal tools on their own infrastructure in minutes.
