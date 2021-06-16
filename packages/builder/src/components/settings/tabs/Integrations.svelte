@@ -37,9 +37,4 @@
     font-size: 14px;
     font-weight: bold;
   }
-  .background {
-    border-radius: 5px;
-    background-color: var(--light-grey);
-    padding: 12px 12px 18px 12px;
-  }
 </style>

@@ -6,5 +6,5 @@
   "arrowParens": "avoid",
   "jsxBracketSameLine": false,
   "plugins": ["prettier-plugin-svelte"],
-  "svelteSortOrder" : "options-scripts-markup-styles"
+  "svelteSortOrder": "options-scripts-markup-styles"
 }

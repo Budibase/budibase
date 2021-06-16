@@ -3,16 +3,9 @@
   import { store, selectedComponent, currentAsset } from "builderStore"
   import { Tabs, Tab } from "@budibase/bbui"
   import { FrontendTypes } from "constants"
-  import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
   import SettingsView from "./SettingsView.svelte"
   import { setWith } from "lodash"
-
-  const categories = [
-    { value: "settings", name: "Settings" },
-    { value: "design", name: "Design" },
-  ]
-  let selectedCategory = categories[0]
 
   $: definition = store.actions.components.getDefinition(
     $selectedComponent._component

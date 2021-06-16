@@ -27,7 +27,6 @@
 
   $: tableNames = $tables.list.map(table => table.name)
 
-  let modal
   let name
   let dataImport
   let error = ""

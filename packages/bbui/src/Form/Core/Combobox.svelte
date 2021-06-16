@@ -58,6 +58,7 @@
     class:is-focused={open || focus}
   >
     <input
+      {id}
       type="text"
       on:focus={() => (focus = true)}
       on:blur={() => (focus = false)}

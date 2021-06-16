@@ -10,7 +10,6 @@
   export let value
   export let customRenderers = []
 
-  const plainTypes = ["string", "options", "number", "longform"]
   const typeMap = {
     boolean: BooleanRenderer,
     datetime: DateTimeRenderer,

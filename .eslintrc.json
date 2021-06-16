@@ -11,17 +11,22 @@
     "sourceType": "module",
     "allowImportExportEverywhere": true
   },
-  "ignorePatterns": ["node_modules", "dist", "public", "*.spec.js", "bundle.js"],
-  "plugins": ["prettier", "svelte3"],
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "public",
+    "*.spec.js",
+    "bundle.js"
+  ],
+  "plugins": ["svelte3"],
   "extends": ["eslint:recommended"],
   "overrides": [
     {
-      "files": ["**/*.svelte"],
+      "files": ["*.svelte"],
       "processor": "svelte3/svelte3"
     }
   ],
   "rules": {
-    "prettier/prettier": "error",
     "no-self-assign": "off"
   }
 }

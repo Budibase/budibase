@@ -17,8 +17,11 @@
   }
 
   const getControlProps = props => {
-    const { label, key, control, ...otherProps } = props || {}
-    return otherProps || {}
+    let controlProps = { ...(props || {}) }
+    delete controlProps.label
+    delete controlProps.key
+    delete controlProps.control
+    return controlProps
   }
 </script>
 

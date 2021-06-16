@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { authStore, linkable, styleable, builderStore } = getContext("sdk")
+  const { linkable, styleable } = getContext("sdk")
   const component = getContext("component")
 
   // BB emblem: https://i.imgur.com/Xhdt1YP.png
@@ -46,18 +46,6 @@
   }
   .nav__top img {
     margin-right: 16px;
-  }
-
-  .nav__controls {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 16px;
-  }
-  .nav__controls > div:hover {
-    cursor: pointer;
-    color: #4285f4;
   }
 
   .nav__menu {
