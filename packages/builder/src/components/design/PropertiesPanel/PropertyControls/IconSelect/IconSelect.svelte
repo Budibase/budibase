@@ -57,7 +57,7 @@
   let loading = false
 
   function findIconByTerm(term) {
-    const r = new RegExp(`\^${term}`, "i")
+    const r = new RegExp(`^${term}`, "i")
     return icons.filter(i => r.test(i))
   }
 
@@ -99,7 +99,7 @@
     loading = false
   }
 
-  async function searchForIcon(e) {
+  async function searchForIcon() {
     currentPage = 1
     loading = true
     filteredIcons = findIconByTerm(searchTerm)

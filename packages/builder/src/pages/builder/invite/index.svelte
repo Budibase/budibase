@@ -25,7 +25,7 @@
 <section>
   <div class="container">
     <Layout>
-      <img src={Logo} />
+      <img src={Logo} alt="logo" />
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">Accept Invitation</Heading>
         <Body textAlign="center" size="M">

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { store, currentAsset, selectedComponent } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"

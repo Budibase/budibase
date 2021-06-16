@@ -25,6 +25,7 @@
   <Multiselect
     {error}
     {disabled}
+    {readonly}
     {value}
     {options}
     {placeholder}

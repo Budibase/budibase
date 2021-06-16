@@ -53,8 +53,4 @@
     text-decoration: underline;
     margin-left: var(--spectrum-alias-item-padding-s);
   }
-  i {
-    font-size: 20px;
-    text-decoration: none;
-  }
 </style>

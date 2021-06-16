@@ -131,8 +131,4 @@
     min-height: 120px;
     font-size: var(--font-size-xs);
   }
-
-  option {
-    text-transform: capitalize;
-  }
 </style>

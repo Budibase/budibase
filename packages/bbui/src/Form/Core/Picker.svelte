@@ -22,7 +22,7 @@
   export let quiet = false
 
   const dispatch = createEventDispatcher()
-  const onClick = e => {
+  const onClick = () => {
     dispatch("click")
     if (readonly) {
       return

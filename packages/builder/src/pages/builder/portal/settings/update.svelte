@@ -5,16 +5,9 @@
     Body,
     Button,
     Divider,
-    Label,
-    Input,
-    Toggle,
-    Dropzone,
     notifications,
   } from "@budibase/bbui"
-  import { auth, organisation } from "stores/portal"
-  import { post, get } from "builderStore/api"
-  import analytics from "analytics"
-  import { writable } from "svelte/store"
+  import { auth } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
   // Only admins allowed here
@@ -27,7 +20,7 @@
   async function updateBudibase() {
     try {
       notifications.info("Updating budibase..")
-      const response = await fetch("/v1/update", {
+      await fetch("/v1/update", {
         headers: {
           Authorization: "Bearer budibase",
         },

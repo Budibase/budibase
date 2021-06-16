@@ -8,7 +8,6 @@
   export let component
 
   let confirmDeleteDialog
-  let anchor
 
   $: definition = store.actions.components.getDefinition(component?._component)
   $: noChildrenAllowed = !component || !definition?.hasChildren
@@ -115,12 +114,3 @@
   okText="Delete Component"
   onOk={deleteComponent}
 />
-
-<style>
-  hr {
-    margin: 8px 0;
-    background-color: var(--grey-4);
-    height: 1px;
-    border: none;
-  }
-</style>

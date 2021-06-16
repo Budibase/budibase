@@ -3,7 +3,6 @@
   import { ModalContent } from "@budibase/bbui"
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
-  import analytics from "analytics"
 
   let webhookUrls = []
 

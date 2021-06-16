@@ -1,10 +1,9 @@
 <script>
-  import { Button, Select, ModalContent, notifications } from "@budibase/bbui"
+  import { Select, ModalContent, notifications } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import { FIELDS } from "constants/backend"
 
   export let view = {}
-  export let onClosed
 
   $: viewTable = $tables.list.find(({ _id }) => _id === $views.selected.tableId)
   $: fields =

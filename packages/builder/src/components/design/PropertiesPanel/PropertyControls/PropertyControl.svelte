@@ -1,5 +1,5 @@
 <script>
-  import { Button, Icon, Drawer, Body } from "@budibase/bbui"
+  import { Button, Icon, Drawer } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import {
     getBindableProperties,

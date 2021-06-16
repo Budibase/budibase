@@ -8,7 +8,6 @@
   export let valueColumn
   export let height
   export let width
-  export let color
   export let dataLabels
   export let animate
   export let legend

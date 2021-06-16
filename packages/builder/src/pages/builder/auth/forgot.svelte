@@ -26,7 +26,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src={$organisation.logoUrl || Logo} />
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Forgotten your password?</Heading>

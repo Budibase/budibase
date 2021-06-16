@@ -12,7 +12,7 @@
     notifications,
   } from "@budibase/bbui"
   import { auth, organisation } from "stores/portal"
-  import { post, get } from "builderStore/api"
+  import { post } from "builderStore/api"
   import analytics from "analytics"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"

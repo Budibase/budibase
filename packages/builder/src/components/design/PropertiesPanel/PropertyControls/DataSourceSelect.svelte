@@ -103,8 +103,9 @@
   }
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
-      .source
+    const source = $datasources.list.find(
+      ds => ds._id === query.datasourceId
+    ).source
     return $integrations[source].query[query.queryVerb]
   }
 </script>
@@ -262,12 +263,6 @@
 
   li:hover {
     background-color: var(--spectrum-global-color-gray-200);
-  }
-
-  .drawer-contents {
-    padding: var(--spacing-l);
-    height: calc(40vh - 2 * var(--spacing-l));
-    overflow-y: auto;
   }
 
   i {

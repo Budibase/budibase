@@ -4,7 +4,6 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  export let className = "default"
   export let disabled = false
   export let text = ""
   export let onClick

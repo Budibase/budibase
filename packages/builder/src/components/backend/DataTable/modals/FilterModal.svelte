@@ -56,7 +56,6 @@
   ]
 
   export let view = {}
-  export let onClosed
 
   $: viewTable = $tables.list.find(({ _id }) => _id === $views.selected.tableId)
   $: fields = viewTable && Object.keys(viewTable.schema)

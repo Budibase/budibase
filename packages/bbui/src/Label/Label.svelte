@@ -4,7 +4,7 @@
   export let size = "M"
 </script>
 
-<label class={`spectrum-FieldLabel spectrum-FieldLabel--size${size}`}>
+<label for="" class={`spectrum-FieldLabel spectrum-FieldLabel--size${size}`}>
   <slot />
 </label>
 

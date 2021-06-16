@@ -88,3 +88,7 @@ hosting/.generated-envoy.dev.yaml
 
 # swap files (linux)
 *.swp
+
+# Sublime text
+*.sublime-project
+*.sublime-workspace
