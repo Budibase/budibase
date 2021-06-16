@@ -1,9 +1,6 @@
 const CouchDB = require("../../../db")
-const {
-  getGroupParams,
-  generateGroupID,
-  StaticDatabases,
-} = require("@budibase/auth").db
+const { getGroupParams, generateGroupID, StaticDatabases } =
+  require("@budibase/auth").db
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
