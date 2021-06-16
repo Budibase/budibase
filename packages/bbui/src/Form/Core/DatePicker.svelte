@@ -10,7 +10,6 @@
   export let id = null
   export let disabled = false
   export let error = null
-  export let isPlaceholder = false
   export let enableTime = true
   export let value = null
   export let placeholder = null

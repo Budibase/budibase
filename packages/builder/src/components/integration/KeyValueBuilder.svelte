@@ -46,8 +46,4 @@
     align-items: center;
     margin-bottom: var(--spacing-m);
   }
-
-  .ri-close-circle-fill {
-    cursor: pointer;
-  }
 </style>

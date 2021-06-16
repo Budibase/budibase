@@ -1,7 +1,7 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Button, Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import { get } from "builderStore/api"
@@ -113,11 +113,6 @@
     flex-direction: column;
   }
 
-  a {
-    text-transform: none;
-    color: var(--grey-5);
-  }
-
   .top-nav {
     flex: 0 0 auto;
     background: var(--background);
@@ -150,23 +145,6 @@
     margin-bottom: -1px;
   }
 
-  .topnavitemright a {
-    cursor: pointer;
-    color: var(--grey-7);
-    margin: 0 12px 0 0;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    height: 24px;
-    width: 24px;
-  }
-
-  .topnavitemright a:hover {
-    color: var(--ink);
-    font-weight: 600;
-  }
-
   .home-logo {
     border-style: none;
     background-color: rgba(0, 0, 0, 0);
@@ -183,13 +161,5 @@
 
   .home-logo img {
     height: 30px;
-  }
-
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
-  i:hover {
-    color: var(--ink);
   }
 </style>

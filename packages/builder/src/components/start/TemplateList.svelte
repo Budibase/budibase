@@ -1,6 +1,5 @@
 <script>
   import { Button, Heading, Body } from "@budibase/bbui"
-  import AppCard from "./AppCard.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
 
@@ -27,7 +26,7 @@
           <Heading size="S">{template.name}</Heading>
           <Body size="M" grey>{template.category}</Body>
           <Body size="S" black>{template.description}</Body>
-          <div><img src={template.image} width="100%" /></div>
+          <div><img alt="template" src={template.image} width="100%" /></div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>
               Create

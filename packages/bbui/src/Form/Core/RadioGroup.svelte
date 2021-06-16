@@ -32,7 +32,9 @@
           {disabled}
         />
         <span class="spectrum-Radio-button" />
-        <label class="spectrum-Radio-label">{getOptionLabel(option)}</label>
+        <label for="" class="spectrum-Radio-label">
+          {getOptionLabel(option)}
+        </label>
       </div>
     {/each}
   {/if}

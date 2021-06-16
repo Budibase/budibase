@@ -17,10 +17,6 @@
 </Modal>
 
 <style>
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
@@ -33,8 +29,5 @@
     align-items: center;
     height: 24px;
     width: 24px;
-  }
-  .topnavitemright:hover i {
-    color: var(--ink);
   }
 </style>

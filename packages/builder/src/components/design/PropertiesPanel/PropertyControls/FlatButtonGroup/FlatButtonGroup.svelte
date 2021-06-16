@@ -6,7 +6,7 @@
   export let isMultiSelect = false
   export let value = []
   export let initialValue = ""
-  export let onChange = selected => {}
+  export let onChange = () => {}
 
   onMount(() => {
     if (!value && !!initialValue) {
@@ -28,9 +28,6 @@
     }
     onChange(val)
   }
-
-  const checkSelected = val =>
-    isMultiSelect ? value.includes(val) : value === val
 </script>
 
 <div class="flatbutton-group">

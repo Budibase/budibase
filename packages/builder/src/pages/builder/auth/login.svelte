@@ -50,7 +50,7 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src={Logo} />
+        <img alt="logo" src={Logo} />
         <Heading>Sign in to Budibase</Heading>
       </Layout>
       <GoogleButton />
