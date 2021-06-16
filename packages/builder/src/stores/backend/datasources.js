@@ -28,7 +28,7 @@ export function createDatasourcesStore() {
       update(state => ({ ...state, selected: datasourceId }))
       queries.update(state => ({ ...state, selected: null }))
     },
-    updateSchema: async (datasource) => {
+    updateSchema: async datasource => {
       let url = `/api/datasources/${datasource._id}/schema`
 
       const response = await api.post(url)
@@ -53,7 +53,7 @@ export function createDatasourcesStore() {
       })
       return json
     },
-    save: async (datasource) => {
+    save: async datasource => {
       let url = "/api/datasources"
 
       const response = await api.post(url, datasource)

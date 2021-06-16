@@ -153,17 +153,17 @@ class PostgresIntegration extends Sql {
     this.tables = tables
   }
 
-  async create({ sql }) {
+  async create(sql) {
     const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ created: true }]
   }
 
-  async read({ sql }) {
+  async read(sql) {
     const response = await internalQuery(this.client, sql)
     return response.rows
   }
 
-  async update({ sql }) {
+  async update(sql) {
     const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ updated: true }]
   }
