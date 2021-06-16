@@ -1,5 +1,8 @@
 const CouchDB = require("../db")
-const { isExternalTable, breakExternalTableId } = require("../integrations/utils")
+const {
+  isExternalTable,
+  breakExternalTableId,
+} = require("../integrations/utils")
 const { getExternalTable } = require("../api/controllers/table/utils")
 
 /**

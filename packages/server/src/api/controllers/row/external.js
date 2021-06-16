@@ -4,7 +4,7 @@ const { getExternalTable } = require("../table/utils")
 const {
   breakExternalTableId,
   generateRowIdField,
-  breakRowIdField
+  breakRowIdField,
 } = require("../../../integrations/utils")
 
 function inputProcessing(row, table) {
