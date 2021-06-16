@@ -1,4 +1,6 @@
 const CouchDB = require("../db")
+const { isExternalTable, breakExternalTableId } = require("../integrations/utils")
+const { getExternalTable } = require("../api/controllers/table/utils")
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -60,7 +62,13 @@ module.exports.cleanInputValues = (inputs, schema) => {
  */
 module.exports.cleanUpRow = async (appId, tableId, row) => {
   const db = new CouchDB(appId)
-  const table = await db.get(tableId)
+  let table
+  if (isExternalTable(tableId)) {
+    const { datasourceId, tableName } = breakExternalTableId(tableId)
+    table = await getExternalTable(appId, datasourceId, tableName)
+  } else {
+    table = await db.get(tableId)
+  }
 
   return module.exports.cleanInputValues(row, { properties: table.schema })
 }
