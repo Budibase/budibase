@@ -1,6 +1,6 @@
 <script>
   import { params } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources, entities } from "stores/backend"
 
   if ($params.selectedDatasource) {
     const datasource = $datasources.list.find(

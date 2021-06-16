@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { tables, views, database } from "stores/backend"
+  import { entities, tables, views, database } from "stores/backend"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
@@ -39,7 +39,7 @@
         border={idx > 0}
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
-        selected={selectedView === table._id}
+        selected={$tables.selected?._id === table._id}
         on:click={() => selectTable(table)}
       >
         {#if table._id !== TableNames.USERS}

@@ -55,7 +55,7 @@ function addFilters(query, filters) {
   return query
 }
 
-function buildRelationships() {}
+// function buildRelationships() {}
 
 function buildCreate(knex, json) {
   const { endpoint, body } = json

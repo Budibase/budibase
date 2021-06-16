@@ -23,6 +23,7 @@
     schema,
     name: $views.selected?.name,
   }
+  $: isInternal = $tables.selected.type === "internal"
 
   // Fetch rows for specified table
   $: {
@@ -60,12 +61,16 @@
         modalContentComponent={CreateEditRow}
       />
     {/if}
-    <CreateViewButton />
+    {#if isInternal}
+      <CreateViewButton />
+    {/if}
     <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}
       <EditRolesButton />
     {/if}
-    <HideAutocolumnButton bind:hideAutocolumns />
+    {#if isInternal}
+      <HideAutocolumnButton bind:hideAutocolumns />
+    {/if}
     <!-- always have the export last -->
     <ExportButton view={tableView} />
   {/if}

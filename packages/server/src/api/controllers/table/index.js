@@ -26,6 +26,7 @@ exports.fetch = async function (ctx) {
 
   const internal = internalTables.rows.map(row => ({
     ...row.doc,
+    type: "internal",
     sourceId: BudibaseInternalDB._id,
   }))
 
@@ -38,6 +39,7 @@ exports.fetch = async function (ctx) {
   const external = externalTables.rows.flatMap(row => {
     return Object.values(row.doc.entities || {}).map(entity => ({
       ...entity,
+      type: "external",
       sourceId: row.doc._id,
     }))
   })

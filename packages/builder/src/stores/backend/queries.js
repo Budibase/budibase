@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { datasources, integrations } from "./"
+import { datasources, integrations, tables } from "./"
 import api from "builderStore/api"
 
 export function createQueriesStore() {
@@ -58,6 +58,17 @@ export function createQueriesStore() {
       datasources.update(state => ({
         ...state,
         selected: query.datasourceId,
+      }))
+      tables.update(state => ({
+        ...state,
+        selected: null,
+      }))
+    },
+    unselect: () => {
+      update(state => ({ ...state, selected: null }))
+      datasources.update(state => ({
+        ...state,
+        selected: null,
       }))
     },
     delete: async query => {
