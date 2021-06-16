@@ -1,6 +1,6 @@
 <script>
   import { params } from "@roxi/routify"
-  import { database, queries, entities } from "stores/backend"
+  import { database, queries } from "stores/backend"
   import QueryInterface from "components/integration/QueryViewer.svelte"
 
   $: selectedQuery = $queries.list.find(
