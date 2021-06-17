@@ -60,7 +60,7 @@ function addFilters(query, filters) {
 function buildCreate(knex, json) {
   const { endpoint, body } = json
   let query = knex(endpoint.entityId)
-  return query.insert(body)
+  return query.insert(body).returning("*")
 }
 
 function buildRead(knex, json, limit) {
@@ -98,14 +98,14 @@ function buildUpdate(knex, json) {
   const { endpoint, body, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.update(body)
+  return query.update(body).returning("*")
 }
 
 function buildDelete(knex, json) {
   const { endpoint, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.delete()
+  return query.delete().returning("*")
 }
 
 class SqlQueryBuilder {
