@@ -65,7 +65,9 @@
   >
     <Provider key="user" data={$authStore} {actions}>
       <div id="app-root">
-        <Component instance={$screenStore.activeLayout.props} />
+        {#key $screenStore.activeLayout._id}
+          <Component instance={$screenStore.activeLayout.props} />
+        {/key}
       </div>
       <NotificationDisplay />
       <!-- Key block needs to be outside the if statement or it breaks -->
