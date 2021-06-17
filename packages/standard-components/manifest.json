@@ -45,8 +45,8 @@
       },
       {
         "type": "select",
-        "label": "Content Width",
-        "key": "contentWidth",
+        "label": "Width",
+        "key": "width",
         "options": ["Small", "Medium", "Large"],
         "defaultValue": "Large"
       },
