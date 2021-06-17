@@ -53,7 +53,9 @@
   bind:hideAutocolumns
   {loading}
 >
-  <CreateColumnButton />
+  {#if isInternal}
+    <CreateColumnButton />
+  {/if}
   {#if schema && Object.keys(schema).length > 0}
     {#if !isUsersTable}
       <CreateRowButton
