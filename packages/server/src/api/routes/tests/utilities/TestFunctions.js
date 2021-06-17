@@ -7,6 +7,7 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 function Request(appId, params) {
   this.appId = appId
   this.params = params
+  this.request = {}
 }
 
 exports.getAllTableRows = async config => {
