@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Heading } from "@budibase/bbui"
+  import { ActionButton, Heading, Icon } from "@budibase/bbui"
 
   const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
@@ -11,11 +11,11 @@
   export let hideLogo = false
   export let navigation = "Top"
   export let sticky = true
+  export let links
 
-  export let links = [
-    { text: "Some Text", url: "/" },
-    { text: "Some Text", url: "/" },
-  ]
+  $: validLinks = links?.filter(link => link.text && link.url) || []
+  $: type = navigationClasses[navigation] || "none"
+  let mobileOpen = false
 
   const navigationClasses = {
     Top: "top",
@@ -23,56 +23,76 @@
     None: "none",
   }
 
-  $: type = navigationClasses[navigation] || "none"
-  let mobileOpen = false
+  const isInternal = url => {
+    return url.startsWith("/")
+  }
+
+  const ensureExternal = url => {
+    return !url.startsWith("http") ? `http://${url}` : url
+  }
+
+  const close = () => {
+    mobileOpen = false
+  }
 </script>
 
 <div class="layout layout--{type}" use:styleable={$component.styles}>
   {#if type !== "none"}
     <div class="nav-wrapper" class:sticky>
       <div class="nav nav--{type}">
-        <div class="burger">
-          <ActionButton
-            quiet
-            icon="ShowMenu"
-            on:click={() => (mobileOpen = !mobileOpen)}
-          />
-        </div>
-
-        <div class="logo">
-          {#if !hideLogo}
-            <img src="https://i.imgur.com/Xhdt1YP.png" alt={title} />
+        <div class="nav-header">
+          {#if validLinks?.length}
+            <div class="burger">
+              <Icon
+                hoverable
+                name="ShowMenu"
+                on:click={() => (mobileOpen = !mobileOpen)}
+              />
+            </div>
           {/if}
-          {#if !hideTitle}
-            <Heading>{title}</Heading>
-          {/if}
+          <div class="logo">
+            {#if !hideLogo}
+              <img src={logoUrl} alt={title} />
+            {/if}
+            {#if !hideTitle}
+              <Heading>{title}</Heading>
+            {/if}
+          </div>
+          <div class="portal">
+            <Icon
+              hoverable
+              name="Apps"
+              on:click={() => (window.location.href = "/builder/apps")}
+            />
+          </div>
         </div>
-
-        <div class="portal">
-          <ActionButton quiet icon="Apps" on:click />
-        </div>
-
         <div
           class="mobile-click-handler"
           class:visible={mobileOpen}
           on:click={() => (mobileOpen = false)}
         />
-        <div class="links" class:visible={mobileOpen}>
-          {#each links as { text, url, external }}
-            {#if external}
-              <a class="link" href={url}>{text}</a>
-            {:else}
-              <a class="link" href={url} use:linkable>{text}</a>
-            {/if}
-          {/each}
-          <div class="close">
-            <ActionButton
-              quiet
-              icon="Close"
-              on:click={() => (mobileOpen = false)}
-            />
+        {#if validLinks?.length}
+          <div class="links" class:visible={mobileOpen}>
+            {#each validLinks as { text, url }}
+              {#if isInternal(url)}
+                <a class="link" href={url} use:linkable on:click={close}>
+                  {text}
+                </a>
+              {:else}
+                <a class="link" href={ensureExternal(url)} on:click={close}>
+                  {text}
+                </a>
+              {/if}
+            {/each}
+            <div class="close">
+              <Icon
+                hoverable
+                name="Close"
+                on:click={() => (mobileOpen = false)}
+              />
+            </div>
           </div>
-        </div>
+        {/if}
       </div>
     </div>
   {/if}
@@ -110,11 +130,20 @@
   }
 
   .nav {
-    flex: 1 1 auto;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
     padding: var(--spacing-xl);
-    max-width: 1400px;
-    grid-template-columns: 1fr auto;
+    width: 1400px;
+    max-width: 100%;
+  }
+  .nav-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
   .main-wrapper {
     display: flex;
@@ -124,12 +153,12 @@
     flex: 1 1 auto;
   }
   .main {
-    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    max-width: 1400px;
+    width: 1400px;
+    max-width: 100%;
     position: relative;
   }
 
@@ -143,16 +172,13 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
-    grid-column: 1;
   }
   .logo img {
     height: 48px;
   }
   .portal {
     display: grid;
-    justify-items: center;
-    align-items: center;
-    grid-column: 2;
+    place-items: center;
   }
   .links {
     display: flex;
@@ -160,8 +186,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-l);
-    grid-column: 1 / 3;
-    grid-row: 2;
   }
   .link {
     color: var(--spectrum-alias-text-color);
@@ -175,8 +199,8 @@
   .close {
     display: none;
     position: absolute;
-    top: var(--spacing-m);
-    right: var(--spacing-m);
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
   }
   .mobile-click-handler {
     display: none;
@@ -194,12 +218,9 @@
     }
 
     .nav--top {
-      grid-template-rows: auto auto;
-      justify-content: space-between;
       gap: var(--spacing-xl);
     }
     .nav--left {
-      grid-template-rows: auto 1fr;
       width: 250px;
       gap: var(--spacing-m);
     }
@@ -246,28 +267,17 @@
 
     /* Force standard top bar */
     .nav {
-      justify-content: space-between;
-      gap: var(--spacing-xl);
-      grid-template-columns: auto auto auto;
-      grid-template-rows: auto;
-      padding: var(--spacing-m);
+      padding: var(--spacing-m) var(--spacing-xl);
     }
     .burger {
       display: grid;
       place-items: center;
-      grid-column: 1;
-    }
-    .logo {
-      grid-column: 2;
     }
     .logo img {
       height: 36px;
     }
     .logo :global(h1) {
       display: none;
-    }
-    .portal {
-      grid-column: 3;
     }
 
     /* Transform links into drawer */
@@ -289,6 +299,7 @@
     }
     .link {
       width: calc(100% - 30px);
+      font-size: 120%;
     }
     .links.visible {
       opacity: 1;

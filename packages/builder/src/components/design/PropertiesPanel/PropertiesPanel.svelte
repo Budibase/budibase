@@ -8,7 +8,7 @@
   import { setWith } from "lodash"
 
   $: definition = store.actions.components.getDefinition(
-    $selectedComponent._component
+    $selectedComponent?._component
   )
   $: isComponentOrScreen =
     $store.currentView === "component" ||
