@@ -16,12 +16,18 @@
 
   const flipDurationMs = 150
 
+  $: links.forEach(link => {
+    if (!link.id) {
+      link.id = generate()
+    }
+  })
+
   $: urlOptions = $store.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
 
   const addLink = () => {
-    links = [...links, { id: generate() }]
+    links = [...links, {}]
   }
 
   const removeLink = id => {
