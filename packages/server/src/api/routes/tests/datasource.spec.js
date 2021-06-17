@@ -40,13 +40,7 @@ describe("/datasources", () => {
         .expect(200)
 
       const datasources = res.body
-      expect(datasources).toEqual([
-        {
-          "_id": datasources[0]._id,
-          "_rev": datasources[0]._rev,
-          ...basicDatasource()
-        }
-      ])
+      expect(datasources).toMatchSnapshot()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -93,10 +87,7 @@ describe("/datasources", () => {
         .expect(200)
       // this is mock data, can't test it
       expect(res.body).toBeDefined()
-      expect(pg.queryMock).toHaveBeenCalledWith({
-        bindings: ["John%", 5000],
-        sql: `select "name", "age" from "users" where "name" like $1 limit $2`
-      })
+      expect(pg.queryMock).toHaveBeenCalledWith(`select "name", "age" from "users" where "name" like $1 limit $2`, ["John%", 5000])
     })
   })
 
@@ -115,7 +106,7 @@ describe("/datasources", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.body).toEqual([])
+      expect(res.body.length).toEqual(1)
     })
 
     it("should apply authorization to endpoint", async () => {
