@@ -34,13 +34,11 @@ const EMPTY_LAYOUT = {
     _styles: {
       active: {},
       hover: {},
-      normal: {
-        "background-image": "#f5f5f5",
-      },
+      normal: {},
       selected: {},
     },
     navigation: "Top",
-    contentWidth: "Large",
+    width: "Large",
     links: [
       {
         text: "Home",
@@ -84,13 +82,11 @@ const BASE_LAYOUTS = [
       _styles: {
         active: {},
         hover: {},
-        normal: {
-          background: "#f5f5f5",
-        },
+        normal: {},
         selected: {},
       },
       navigation: "Top",
-      contentWidth: "Large",
+      width: "Large",
       links: [
         {
           text: "Home",
@@ -132,13 +128,11 @@ const BASE_LAYOUTS = [
       _styles: {
         active: {},
         hover: {},
-        normal: {
-          background: "#f5f5f5",
-        },
+        normal: {},
         selected: {},
       },
       navigation: "Top",
-      contentWidth: "Large",
+      width: "Large",
       links: [
         {
           text: "Home",

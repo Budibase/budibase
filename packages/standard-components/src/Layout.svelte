@@ -12,7 +12,7 @@
   export let navigation = "Top"
   export let sticky = false
   export let links
-  export let contentWidth = "Large"
+  export let width = "Large"
 
   const navigationClasses = {
     Top: "top",
@@ -27,7 +27,7 @@
 
   $: validLinks = links?.filter(link => link.text && link.url) || []
   $: typeClass = navigationClasses[navigation] || "none"
-  $: widthClass = widthClasses[contentWidth] || "l"
+  $: widthClass = widthClasses[width] || "l"
   let mobileOpen = false
 
   const isInternal = url => {
@@ -46,7 +46,7 @@
 <div class="layout layout--{typeClass}" use:styleable={$component.styles}>
   {#if typeClass !== "none"}
     <div class="nav-wrapper" class:sticky>
-      <div class="nav nav--{typeClass}">
+      <div class="nav nav--{typeClass} size--{widthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
             <div class="burger">
@@ -104,7 +104,7 @@
     </div>
   {/if}
   <div class="main-wrapper">
-    <div class="main main--{widthClass}">
+    <div class="main size--{widthClass}">
       <slot />
     </div>
   </div>
@@ -142,8 +142,8 @@
     justify-content: flex-start;
     align-items: stretch;
     padding: var(--spacing-xl) 32px;
-    width: 1400px;
     max-width: 100%;
+    gap: var(--spacing-xl);
   }
   .nav-header {
     flex: 0 0 auto;
@@ -168,13 +168,13 @@
     position: relative;
     padding: 32px;
   }
-  .main--s {
+  .size--s {
     width: 800px;
   }
-  .main--m {
+  .size--m {
     width: 1100px;
   }
-  .main--l {
+  .size--l {
     width: 1400px;
   }
 
@@ -201,7 +201,8 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
   }
   .link {
     color: var(--spectrum-alias-text-color);
@@ -233,12 +234,8 @@
       overflow: auto;
     }
 
-    .nav--top {
-      gap: var(--spacing-xl);
-    }
     .nav--left {
       width: 250px;
-      gap: var(--spacing-xl);
       padding: var(--spacing-xl);
     }
 
@@ -246,6 +243,7 @@
       height: 36px;
     }
     .nav--left .links {
+      margin-top: 0;
       flex-direction: column;
       justify-content: flex-start;
       align-items: stretch;
@@ -291,6 +289,7 @@
 
     /* Transform links into drawer */
     .links {
+      margin-top: 0;
       position: fixed;
       top: 0;
       left: -250px;
