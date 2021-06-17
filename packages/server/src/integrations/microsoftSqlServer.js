@@ -85,25 +85,25 @@ class SqlServerIntegration extends Sql {
 
   async read(query) {
     await this.connect()
-    const response = await internalQuery(this.client, query.sql)
+    const response = await internalQuery(this.client, query)
     return response.recordset
   }
 
   async create(query) {
     await this.connect()
-    const response = await internalQuery(this.client, query.sql)
+    const response = await internalQuery(this.client, query)
     return response.recordset || [{ created: true }]
   }
 
   async update(query) {
     await this.connect()
-    const response = await internalQuery(this.client, query.sql)
+    const response = await internalQuery(this.client, query)
     return response.recordset || [{ updated: true }]
   }
 
   async delete(query) {
     await this.connect()
-    const response = await internalQuery(this.client, query.sql)
+    const response = await internalQuery(this.client, query)
     return response.recordset || [{ deleted: true }]
   }
 

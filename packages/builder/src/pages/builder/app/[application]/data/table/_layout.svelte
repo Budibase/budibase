@@ -9,7 +9,7 @@
     if (
       !$leftover &&
       $tables.list.length > 0
-      // (!$tables.selected || !$tables.selected._id)
+      (!$tables.selected || !$tables.selected._id)
     ) {
       $goto(`./${$tables.list[0]._id}`)
     }
