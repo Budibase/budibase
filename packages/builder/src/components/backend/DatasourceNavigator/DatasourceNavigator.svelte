@@ -15,9 +15,6 @@
   }
 
   function onClickQuery(query) {
-    if ($queries.selected === query._id) {
-      return
-    }
     queries.select(query)
     $goto(`./datasource/${query.datasourceId}/${query._id}`)
   }
