@@ -95,11 +95,6 @@ exports.save = async function (ctx) {
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
 
-  // if the row obj had an _id then it will have been retrieved
-  if (inputs._id && inputs._rev) {
-    return exports.patch(ctx)
-  }
-
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)
   }

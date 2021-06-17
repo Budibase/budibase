@@ -24,6 +24,11 @@ function getTableId(ctx) {
 exports.patch = async ctx => {
   const appId = ctx.appId
   const tableId = getTableId(ctx)
+  const body = ctx.request.body
+  // if it doesn't have an _id then its save
+  if (body && !body._id) {
+    return exports.save(ctx)
+  }
   try {
     const { row, table } = await pickApi(tableId).patch(ctx)
     ctx.eventEmitter &&
@@ -38,6 +43,11 @@ exports.patch = async ctx => {
 exports.save = async function (ctx) {
   const appId = ctx.appId
   const tableId = getTableId(ctx)
+  const body = ctx.request.body
+  // if it has an ID already then its a patch
+  if (body && body._id) {
+    return exports.patch(ctx)
+  }
   try {
     const { row, table } = await pickApi(tableId).save(ctx)
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
