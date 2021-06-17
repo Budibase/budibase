@@ -2,9 +2,7 @@
   import { Button, Heading, Body, Layout, Modal } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
-  let modal 
-
-
+  let modal
 </script>
 
 <Modal bind:this={modal}>
@@ -12,14 +10,9 @@
 </Modal>
 
 <Layout>
-<Heading>
-  Budibase Internal DB
-</Heading>
+  <Heading>Budibase Internal DB</Heading>
 
-<Body>
-  Stuff about the internal table
-</Body>
-
-<Button cta on:click={modal.show}>Create new table</Button>
-
+  <div>
+    <Button cta on:click={modal.show}>Create new table</Button>
+  </div>
 </Layout>

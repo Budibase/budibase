@@ -9,7 +9,8 @@ export const SOME_QUERY = {
   queryVerb: "read",
   schema: {},
   name: "Speakers",
-  _id: "query_datasource_04b003a7b4a8428eadd3bb2f7eae0255_bcb8ffc6fcbc484e8d63121fc0bf986f",
+  _id:
+    "query_datasource_04b003a7b4a8428eadd3bb2f7eae0255_bcb8ffc6fcbc484e8d63121fc0bf986f",
   _rev: "2-941f8699eb0adf995f8bd59c99203b26",
   readable: true,
 }
@@ -74,7 +75,8 @@ export const SAVE_QUERY_RESPONSE = {
     },
   },
   name: "Speakers",
-  _id: "query_datasource_04b003a7b4a8428eadd3bb2f7eae0255_bcb8ffc6fcbc484e8d63121fc0bf986f",
+  _id:
+    "query_datasource_04b003a7b4a8428eadd3bb2f7eae0255_bcb8ffc6fcbc484e8d63121fc0bf986f",
   _rev: "3-5a64adef494b1e9c793dc91b51ce73c6",
   readable: true,
 }
