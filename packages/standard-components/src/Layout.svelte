@@ -12,16 +12,23 @@
   export let navigation = "Top"
   export let sticky = false
   export let links
-
-  $: validLinks = links?.filter(link => link.text && link.url) || []
-  $: type = navigationClasses[navigation] || "none"
-  let mobileOpen = false
+  export let contentWidth = "Large"
 
   const navigationClasses = {
     Top: "top",
     Left: "left",
     None: "none",
   }
+  const widthClasses = {
+    Large: "l",
+    Medium: "m",
+    Small: "s",
+  }
+
+  $: validLinks = links?.filter(link => link.text && link.url) || []
+  $: typeClass = navigationClasses[navigation] || "none"
+  $: widthClass = widthClasses[contentWidth] || "l"
+  let mobileOpen = false
 
   const isInternal = url => {
     return url.startsWith("/")
@@ -36,10 +43,10 @@
   }
 </script>
 
-<div class="layout layout--{type}" use:styleable={$component.styles}>
-  {#if type !== "none"}
+<div class="layout layout--{typeClass}" use:styleable={$component.styles}>
+  {#if typeClass !== "none"}
     <div class="nav-wrapper" class:sticky>
-      <div class="nav nav--{type}">
+      <div class="nav nav--{typeClass}">
         <div class="nav-header">
           {#if validLinks?.length}
             <div class="burger">
@@ -97,7 +104,7 @@
     </div>
   {/if}
   <div class="main-wrapper">
-    <div class="main">
+    <div class="main main--{widthClass}">
       <slot />
     </div>
   </div>
@@ -157,10 +164,18 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    width: 1400px;
     max-width: 100%;
     position: relative;
     padding: 32px;
+  }
+  .main--s {
+    width: 800px;
+  }
+  .main--m {
+    width: 1100px;
+  }
+  .main--l {
+    width: 1400px;
   }
 
   /*  Nav components */

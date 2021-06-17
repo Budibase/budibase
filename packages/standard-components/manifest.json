@@ -44,6 +44,13 @@
         "defaultValue": false
       },
       {
+        "type": "select",
+        "label": "Content Width",
+        "key": "contentWidth",
+        "options": ["Small", "Medium", "Large"],
+        "defaultValue": "Large"
+      },
+      {
         "type": "navigation",
         "label": "Links",
         "key": "links"

@@ -40,6 +40,7 @@ const EMPTY_LAYOUT = {
       selected: {},
     },
     navigation: "Top",
+    contentWidth: "Large",
     links: [
       {
         text: "Home",
@@ -89,6 +90,7 @@ const BASE_LAYOUTS = [
         selected: {},
       },
       navigation: "Top",
+      contentWidth: "Large",
       links: [
         {
           text: "Home",
@@ -136,6 +138,7 @@ const BASE_LAYOUTS = [
         selected: {},
       },
       navigation: "Top",
+      contentWidth: "Large",
       links: [
         {
           text: "Home",
