@@ -241,19 +241,16 @@ describe("/rows", () => {
     it("should be able to delete a row", async () => {
       const createdRow = await config.createRow(row)
       const res = await request
-        .delete(`/api/${table._id}/rows/${createdRow._id}/${createdRow._rev}`)
+        .delete(`/api/${table._id}/rows`)
+        .send({
+          rows: [
+            createdRow
+          ]
+        })
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
-      expect(res.body.ok).toEqual(true)
-    })
-
-    it("shouldn't allow deleting a row in a table which is different to the one the row was created on", async () => {
-      const createdRow = await config.createRow(row)
-      await request
-        .delete(`/api/wrong_table/rows/${createdRow._id}/${createdRow._rev}`)
-        .set(config.defaultHeaders())
-        .expect(400)
+      expect(res.body[0]._id).toEqual(createdRow._id)
     })
   })
 
@@ -289,9 +286,8 @@ describe("/rows", () => {
       const row1 = await config.createRow()
       const row2 = await config.createRow()
       const res = await request
-        .post(`/api/${table._id}/rows`)
+        .delete(`/api/${table._id}/rows`)
         .send({
-          type: "delete",
           rows: [
             row1,
             row2,
