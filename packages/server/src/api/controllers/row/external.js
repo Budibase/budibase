@@ -193,16 +193,21 @@ exports.search = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const { paginate, query, ...params } = ctx.request.body
+  let { bookmark, limit } = params
+  if (!bookmark && paginate) {
+    bookmark = 1
+  }
   let paginateObj = {}
+
   if (paginate) {
     paginateObj = {
-      limit: params.limit,
-      // todo: need to handle bookmarks
-      page: params.bookmark,
+      // add one so we can track if there is another page
+      limit: limit,
+      page: bookmark,
     }
-  } else if (params && params.limit) {
+  } else if (params && limit) {
     paginateObj = {
-      limit: params.limit,
+      limit: limit,
     }
   }
   let sort
@@ -220,8 +225,20 @@ exports.search = async ctx => {
     sort,
     paginate: paginateObj,
   })
+  let hasNextPage = false
+  if (paginate && rows.length === limit) {
+    const nextRows = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+      filters: query,
+      sort,
+      paginate: {
+        limit: 1,
+        page: bookmark + 1,
+      }
+    })
+    hasNextPage = nextRows.length > 0
+  }
   // need wrapper object for bookmarks etc when paginating
-  return { rows }
+  return { rows, hasNextPage, bookmark: bookmark + 1 }
 }
 
 exports.validate = async () => {
