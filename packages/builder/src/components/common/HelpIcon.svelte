@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
 </script>
 
-<a target="_blank" href="https://github.com/Budibase/budibase/discussions"> 
+<a target="_blank" href="https://github.com/Budibase/budibase/discussions">
   <Icon hoverable name="Help" size="XXL" />
 </a>
 
