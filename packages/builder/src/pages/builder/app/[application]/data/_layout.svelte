@@ -27,11 +27,7 @@
         <div class="tab-content-padding">
           <DatasourceNavigator />
           <Modal bind:this={modal}>
-            {#if isExternal}
               <CreateDatasourceModal />
-            {:else}
-              <CreateTableModal />
-            {/if}
           </Modal>
         </div>
       </Tab>

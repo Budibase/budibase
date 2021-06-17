@@ -60,7 +60,7 @@ exports.StaticDatabases = {
 const BudibaseInternalDB = {
   _id: "bb_internal",
   type: "budibase",
-  name: "Budibase Internal",
+  name: "Budibase DB",
   source: "BUDIBASE",
   config: {},
 }
