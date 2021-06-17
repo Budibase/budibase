@@ -136,9 +136,6 @@ exports.patch = async ctx => {
 exports.save = async ctx => {
   const appId = ctx.appId
   const inputs = ctx.request.body
-  if (inputs._id) {
-    return exports.patch(ctx)
-  }
   const tableId = ctx.params.tableId
   return handleRequest(appId, DataSourceOperation.CREATE, tableId, {
     row: inputs,
