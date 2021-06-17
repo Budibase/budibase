@@ -1,16 +1,16 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Heading, Icon } from "@budibase/bbui"
+  import { Heading, Icon } from "@budibase/bbui"
 
   const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
 
-  export let title = ""
+  export let title
   export let hideTitle = false
   export let logoUrl = "https://i.imgur.com/Xhdt1YP.png"
   export let hideLogo = false
   export let navigation = "Top"
-  export let sticky = true
+  export let sticky = false
   export let links
 
   $: validLinks = links?.filter(link => link.text && link.url) || []
@@ -54,7 +54,7 @@
             {#if !hideLogo}
               <img src={logoUrl} alt={title} />
             {/if}
-            {#if !hideTitle}
+            {#if navigation === "Top" && !hideTitle && title}
               <Heading>{title}</Heading>
             {/if}
           </div>
@@ -134,7 +134,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-xl) 32px;
     width: 1400px;
     max-width: 100%;
   }
@@ -160,6 +160,7 @@
     width: 1400px;
     max-width: 100%;
     position: relative;
+    padding: 32px;
   }
 
   /*  Nav components */
@@ -189,12 +190,12 @@
   }
   .link {
     color: var(--spectrum-alias-text-color);
-    font-size: var(--spectrum-alias-font-size-default);
+    font-size: var(--spectrum-global-dimension-font-size-200);
     font-weight: 600;
     transition: color 130ms ease-out;
   }
   .link:hover {
-    color: var(--spectrum-alias-text-color-hover);
+    color: var(--spectrum-global-color-blue-600);
   }
   .close {
     display: none;
@@ -222,32 +223,20 @@
     }
     .nav--left {
       width: 250px;
-      gap: var(--spacing-m);
+      gap: var(--spacing-xl);
+      padding: var(--spacing-xl);
     }
 
-    .nav--top .links {
-      margin-top: var(--spacing-l);
-    }
-    .nav--left .logo {
-      gap: var(--spacing-m);
-    }
     .nav--left .logo img {
-      height: 28px;
-    }
-    .nav--left .logo :global(h1) {
-      font-size: var(--spectrum-global-dimension-font-size-100);
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 0;
-      flex: 1 1 auto;
+      height: 36px;
     }
     .nav--left .links {
-      margin-top: var(--spacing-l);
       flex-direction: column;
       justify-content: flex-start;
       align-items: stretch;
+    }
+    .nav--left .link {
+      font-size: var(--spectrum-global-dimension-font-size-150);
     }
   }
 
@@ -267,7 +256,7 @@
 
     /* Force standard top bar */
     .nav {
-      padding: var(--spacing-m) var(--spacing-xl);
+      padding: var(--spacing-m) 16px;
     }
     .burger {
       display: grid;
@@ -278,6 +267,11 @@
     }
     .logo :global(h1) {
       display: none;
+    }
+
+    /* Reduce padding */
+    .main {
+      padding: 16px;
     }
 
     /* Transform links into drawer */

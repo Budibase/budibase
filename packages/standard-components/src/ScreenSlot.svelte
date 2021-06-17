@@ -7,7 +7,7 @@
   const component = getContext("component")
 </script>
 
-<div use:styleable={$component.styles}>
+<div use:styleable={{ ...$component.styles, empty: true }}>
   <h1>Screen Slot</h1>
   <span>
     The screens that you create will be displayed inside this box.
@@ -20,13 +20,16 @@
   div {
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important;
     justify-content: center !important;
-    padding: 20px !important;
+    align-items: center !important;
+    padding: 32px !important;
     text-align: center !important;
-    border-style: dashed !important;
-    border-width: 1px !important;
-    color: #000000 !important;
-    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+  h1 {
+    color: var(--spectrum-alias-text-color);
+  }
+  span {
+    font-size: var(--font-size-s);
+    color: var(--grey-6);
   }
 </style>

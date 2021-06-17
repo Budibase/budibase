@@ -38,6 +38,12 @@
         "defaultValue": "Top"
       },
       {
+        "type": "boolean",
+        "label": "Sticky header",
+        "key": "sticky",
+        "defaultValue": false
+      },
+      {
         "type": "navigation",
         "label": "Links",
         "key": "links"
