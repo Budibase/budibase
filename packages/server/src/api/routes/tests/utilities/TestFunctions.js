@@ -11,7 +11,7 @@ function Request(appId, params) {
 
 exports.getAllTableRows = async config => {
   const req = new Request(config.appId, { tableId: config.table._id })
-  await rowController.fetchTableRows(req)
+  await rowController.fetch(req)
   return req.body
 }
 
