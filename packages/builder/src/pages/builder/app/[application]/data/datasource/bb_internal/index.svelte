@@ -2,7 +2,7 @@
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables, datasources } from "stores/backend"
+  import { tables } from "stores/backend"
   import { goto } from "@roxi/routify"
 
   let modal
@@ -29,7 +29,9 @@
       {#each $tables.list.filter(table => table.type !== "external") as table}
         <div class="table-list-item" on:click={$goto(`../../table/${table._id}`)}>
           <Body size="S">{table.name}</Body>
-          <Body size="S">display column: {table.primaryDisplay}</Body>
+          {#if table.primaryDisplay}
+            <Body size="S">display column: {table.primaryDisplay}</Body>
+          {/if}
         </div>
       {/each}
     </div>
