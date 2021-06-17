@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { queries } from "./"
+import { queries, tables, views } from "./"
 import api from "../../builderStore/api"
 
 export const INITIAL_DATASOURCE_VALUES = {
@@ -26,7 +26,12 @@ export function createDatasourcesStore() {
     },
     select: async datasourceId => {
       update(state => ({ ...state, selected: datasourceId }))
-      queries.update(state => ({ ...state, selected: null }))
+      queries.unselect()
+      tables.unselect()
+      views.unselect()
+    },
+    unselect: () => {
+      update(state => ({ ...state, selected: null }))
     },
     updateSchema: async datasource => {
       let url = `/api/datasources/${datasource._id}/schema`
