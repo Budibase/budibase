@@ -3,7 +3,6 @@
 exports[`/datasources fetch returns all the datasources from the server 1`] = `
 Array [
   Object {
-    "_id": "bb_internal",
     "config": Object {},
     "entities": Array [
       Object {
@@ -81,8 +80,6 @@ Array [
     "type": "budibase",
   },
   Object {
-    "_id": "datasource_f8f81b1f0893478580b863fe96f1f3da",
-    "_rev": "1-1df90f81a2294ba7349f690f4a6df092",
     "config": Object {},
     "name": "Test",
     "source": "POSTGRES",

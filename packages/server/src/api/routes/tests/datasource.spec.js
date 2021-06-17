@@ -40,6 +40,13 @@ describe("/datasources", () => {
         .expect(200)
 
       const datasources = res.body
+
+      // remove non-deterministic fields
+      for (let source of datasources) {
+        delete source._id
+        delete source._rev
+      }
+
       expect(datasources).toMatchSnapshot()
     })
 
