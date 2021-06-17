@@ -37,7 +37,7 @@ Cypress.Commands.add("createApp", name => {
       cy.contains("Create app").click()
     })
     .then(() => {
-      cy.get("[data-cy=new-table]", {
+      cy.contains("Budibase DB", {
         timeout: 20000,
       }).should("be.visible")
     })
@@ -72,7 +72,8 @@ Cypress.Commands.add("createTestTableWithData", () => {
 
 Cypress.Commands.add("createTable", tableName => {
   // Enter table name
-  cy.get("[data-cy=new-table]").click()
+  cy.get("Budibase DB")
+  cy.contains("Create new table").click()
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
