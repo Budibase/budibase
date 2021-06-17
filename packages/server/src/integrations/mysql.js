@@ -79,21 +79,21 @@ class MySQLIntegration extends Sql {
   }
 
   async create(query) {
-    const results = await internalQuery(this.client, query.sql)
+    const results = await internalQuery(this.client, query)
     return results.length ? results : [{ created: true }]
   }
 
   read(query) {
-    return internalQuery(this.client, query.sql)
+    return internalQuery(this.client, query)
   }
 
   async update(query) {
-    const results = await internalQuery(this.client, query.sql)
+    const results = await internalQuery(this.client, query)
     return results.length ? results : [{ updated: true }]
   }
 
   async delete(query) {
-    const results = await internalQuery(this.client, query.sql)
+    const results = await internalQuery(this.client, query)
     return results.length ? results : [{ deleted: true }]
   }
 

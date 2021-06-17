@@ -74,6 +74,6 @@
       <HideAutocolumnButton bind:hideAutocolumns />
     {/if}
     <!-- always have the export last -->
-    <ExportButton view={tableView} />
+    <ExportButton view={$tables.selected?._id} />
   {/if}
 </Table>

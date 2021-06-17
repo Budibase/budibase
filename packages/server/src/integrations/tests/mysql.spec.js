@@ -19,7 +19,7 @@ describe("MySQL Integration", () => {
     await config.integration.create({
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined, expect.any(Function))
   })
 
   it("calls the read method with the correct params", async () => {
@@ -27,7 +27,7 @@ describe("MySQL Integration", () => {
     await config.integration.read({
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined, expect.any(Function))
   })
 
   it("calls the update method with the correct params", async () => {
@@ -35,7 +35,7 @@ describe("MySQL Integration", () => {
     await config.integration.update({
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined, expect.any(Function))
   })
 
   it("calls the delete method with the correct params", async () => {
@@ -43,7 +43,7 @@ describe("MySQL Integration", () => {
     await config.integration.delete({
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, expect.any(Function))
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined, expect.any(Function))
   })
 
   describe("no rows returned", () => {

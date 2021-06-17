@@ -20,7 +20,7 @@ describe("MS SQL Server Integration", () => {
     const response = await config.integration.create({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined)
   })
 
   it("calls the read method with the correct params", async () => {
@@ -28,7 +28,7 @@ describe("MS SQL Server Integration", () => {
     const response = await config.integration.read({ 
       sql
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql)
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, undefined)
   })
 
   describe("no rows returned", () => {
