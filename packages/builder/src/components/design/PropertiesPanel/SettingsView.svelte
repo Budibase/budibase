@@ -16,7 +16,7 @@
   import MultiFieldSelect from "./PropertyControls/MultiFieldSelect.svelte"
   import SchemaSelect from "./PropertyControls/SchemaSelect.svelte"
   import SectionSelect from "./PropertyControls/SectionSelect.svelte"
-  import NavigationSelect from "./PropertyControls/NavigationSelect.svelte"
+  import NavigationEditor from "./PropertyControls/NavigationEditor/NavigationEditor.svelte"
   import EventsEditor from "./PropertyControls/EventsEditor"
   import FilterEditor from "./PropertyControls/FilterEditor/FilterEditor.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
@@ -65,7 +65,7 @@
     multifield: MultiFieldSelect,
     schema: SchemaSelect,
     section: SectionSelect,
-    navigationSelect: NavigationSelect,
+    navigation: NavigationEditor,
     filter: FilterEditor,
     "field/string": StringFieldSelect,
     "field/number": NumberFieldSelect,
