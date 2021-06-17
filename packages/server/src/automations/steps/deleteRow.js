@@ -65,8 +65,8 @@ module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
     },
     request: {
       body: {
-        rowId: inputs.id,
-        revId: inputs.revision,
+        _id: inputs.id,
+        _rev: inputs.revision,
       },
     },
     appId,
