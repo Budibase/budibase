@@ -27,7 +27,7 @@
   async function fetchViewData(name, field, groupBy, calculation) {
     const _tables = $tables.list
     const allTableViews = _tables.map(table => table.views)
-    const thisView = $allTableViews..filter(
+    const thisView = allTableViews.filter(
       views => views != null && views[name] != null
     )[0]
 
