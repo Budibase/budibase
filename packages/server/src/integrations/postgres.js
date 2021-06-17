@@ -168,7 +168,7 @@ class PostgresIntegration extends Sql {
     return response.rows.length ? response.rows : [{ updated: true }]
   }
 
-  async delete({ sql }) {
+  async delete(sql) {
     const response = await internalQuery(this.client, sql)
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
