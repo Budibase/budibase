@@ -15,7 +15,7 @@
     $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
 
   function selectFirstDatasource({ detail }) {
-    $goto("./datasource")
+    $goto("./table")
   }
 </script>
 
@@ -27,7 +27,7 @@
         <div class="tab-content-padding">
           <DatasourceNavigator />
           <Modal bind:this={modal}>
-              <CreateDatasourceModal />
+            <CreateDatasourceModal />
           </Modal>
         </div>
       </Tab>
