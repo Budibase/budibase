@@ -125,7 +125,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [45, "Michael"],
-      sql: `insert into "${TABLE_NAME}" ("age", "name") values ($1, $2)`
+      sql: `insert into "${TABLE_NAME}" ("age", "name") values ($1, $2) returning *`
     })
   })
 
@@ -139,7 +139,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: ["John", 1001],
-      sql: `update "${TABLE_NAME}" set "name" = $1 where "id" = $2`
+      sql: `update "${TABLE_NAME}" set "name" = $1 where "id" = $2 returning *`
     })
   })
 
@@ -151,7 +151,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [1001],
-      sql: `delete from "${TABLE_NAME}" where "id" = $1`
+      sql: `delete from "${TABLE_NAME}" where "id" = $1 returning *`
     })
   })
 
