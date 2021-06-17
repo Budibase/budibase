@@ -21,7 +21,7 @@
     try {
       // Create datasource
       await datasources.save(datasource)
-      notifications.success(`Datasource ${name} saved successfully.`)
+      notifications.success(`Datasource ${name} updated successfully.`)
       unsaved = false
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
@@ -31,7 +31,7 @@
   async function updateDatasourceSchema() {
     try {
       await datasources.updateSchema(datasource)
-      notifications.success(`Datasource ${name} schema saved successfully.`)
+      notifications.success(`Datasource ${name} tables updated successfully.`)
       unsaved = false
       await tables.fetch()
     } catch (err) {
@@ -42,6 +42,11 @@
   function onClickQuery(query) {
     queries.select(query)
     $goto(`./${query._id}`)
+  }
+
+  function onClickTable(table) {
+    tables.select(table)
+    $goto(`../../table/${table._id}`)
   }
 
   function setUnsaved() {
@@ -86,6 +91,27 @@
           on:change={setUnsaved}
         />
       </div>
+      {#if datasource.plus}
+        <Divider />
+        <div class="query-header">
+          <Heading size="S">Tables</Heading>
+          <Button primary on:click={updateDatasourceSchema}
+            >Fetch Tables From Database</Button
+          >
+        </div>
+        <Body>
+          This datasource can determine tables automatically. Budibase can fetch your tables directly from the database and you can use them without having to write any queries at all.
+        </Body>
+        <div class="query-list">
+          {#each Object.keys(datasource.entities) as entity}
+            <div class="query-list-item" on:click={() => onClickTable(datasource.entities[entity])}>
+              <p class="query-name">{entity}</p>
+              <p>Primary Key: {datasource.entities[entity].primary}</p>
+              <p>→</p>
+            </div>
+          {/each}
+        </div>
+      {/if}
       <Divider />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
@@ -100,15 +126,6 @@
           </div>
         {/each}
       </div>
-      {#if datasource.plus}
-        <Divider />
-        <div class="query-header">
-          <Heading size="S">Queries</Heading>
-          <Button cta on:click={updateDatasourceSchema}
-            >Fetch Tables From Database</Button
-          >
-        </div>
-      {/if}
     </Layout>
   </section>
 {/if}
