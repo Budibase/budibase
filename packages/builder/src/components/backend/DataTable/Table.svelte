@@ -9,7 +9,7 @@
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
-  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+  import { TableNames, UNEDITABLE_USER_FIELDS, BUDIBASE_INTERNAL_DB } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
 
   export let schema = {}
@@ -28,6 +28,7 @@
   let editColumnModal
   let customRenderers = []
 
+  $: isInternal = tableId === BUDIBASE_INTERNAL_DB
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
@@ -124,7 +125,7 @@
     bind:selectedRows
     allowSelectRows={allowEditing && !isUsersTable}
     allowEditRows={allowEditing}
-    allowEditColumns={allowEditing}
+    allowEditColumns={allowEditing && isInternal}
     showAutoColumns={!hideAutocolumns}
     on:editcolumn={e => editColumn(e.detail)}
     on:editrow={e => editRow(e.detail)}
