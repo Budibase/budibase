@@ -7,7 +7,7 @@
 
   export let title
   export let hideTitle = false
-  export let logoUrl = "https://i.imgur.com/Xhdt1YP.png"
+  export let logoUrl
   export let hideLogo = false
   export let navigation = "Top"
   export let sticky = false
@@ -59,10 +59,13 @@
           {/if}
           <div class="logo">
             {#if !hideLogo}
-              <img src={logoUrl} alt={title} />
+              <img
+                src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+                alt={title}
+              />
             {/if}
-            {#if navigation === "Top" && !hideTitle && title}
-              <Heading>{title}</Heading>
+            {#if !hideTitle && title}
+              <Heading size="S">{title}</Heading>
             {/if}
           </div>
           <div class="portal">
@@ -128,12 +131,12 @@
     align-items: stretch;
     background: white;
     z-index: 1;
+    box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
   }
   .layout--top .nav-wrapper.sticky {
     position: sticky;
     top: 0;
     left: 0;
-    box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
   }
 
   .nav {
@@ -151,6 +154,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-xl);
   }
   .main-wrapper {
     display: flex;
@@ -187,10 +191,19 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-m);
+    flex: 1 1 auto;
   }
   .logo img {
-    height: 48px;
+    height: 36px;
+  }
+  .logo :global(h1) {
+    font-weight: 600;
+    flex: 1 1 auto;
+    width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .portal {
     display: grid;
@@ -239,11 +252,8 @@
       padding: var(--spacing-xl);
     }
 
-    .nav--left .logo img {
-      height: 36px;
-    }
     .nav--left .links {
-      margin-top: 0;
+      margin-top: var(--spacing-m);
       flex-direction: column;
       justify-content: flex-start;
       align-items: stretch;
@@ -275,8 +285,8 @@
       display: grid;
       place-items: center;
     }
-    .logo img {
-      height: 36px;
+    .logo {
+      flex: 0 0 auto;
     }
     .logo :global(h1) {
       display: none;

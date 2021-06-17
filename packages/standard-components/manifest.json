@@ -19,29 +19,11 @@
         "key": "title"
       },
       {
-        "type": "boolean",
-        "label": "Hide title",
-        "key": "hideTitle",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
-        "label": "Hide logo",
-        "key": "hideLogo",
-        "defaultValue": false
-      },
-      {
         "type": "select",
         "label": "Navigation",
         "key": "navigation",
         "options": ["Top", "Left", "None"],
         "defaultValue": "Top"
-      },
-      {
-        "type": "boolean",
-        "label": "Sticky header",
-        "key": "sticky",
-        "defaultValue": false
       },
       {
         "type": "select",
@@ -54,6 +36,24 @@
         "type": "navigation",
         "label": "Links",
         "key": "links"
+      },
+      {
+        "type": "boolean",
+        "label": "Hide title",
+        "key": "hideTitle",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Hide logo",
+        "key": "hideLogo",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Sticky header",
+        "key": "sticky",
+        "defaultValue": false
       }
     ]
   },
