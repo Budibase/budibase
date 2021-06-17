@@ -1,12 +1,7 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
-  import {
-    datasources,
-    integrations,
-    queries,
-    tables,
-  } from "stores/backend"
+  import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -100,11 +95,16 @@
           >
         </div>
         <Body>
-          This datasource can determine tables automatically. Budibase can fetch your tables directly from the database and you can use them without having to write any queries at all.
+          This datasource can determine tables automatically. Budibase can fetch
+          your tables directly from the database and you can use them without
+          having to write any queries at all.
         </Body>
         <div class="query-list">
           {#each Object.keys(datasource.entities) as entity}
-            <div class="query-list-item" on:click={() => onClickTable(datasource.entities[entity])}>
+            <div
+              class="query-list-item"
+              on:click={() => onClickTable(datasource.entities[entity])}
+            >
               <p class="query-name">{entity}</p>
               <p>Primary Key: {datasource.entities[entity].primary}</p>
               <p>→</p>
