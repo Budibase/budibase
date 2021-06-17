@@ -88,7 +88,7 @@ async function handleRequest(
   row = inputProcessing(row, table)
   if (
     operation === DataSourceOperation.DELETE &&
-    Object.keys(filters).length === 0
+    (filters == null || Object.keys(filters).length === 0)
   ) {
     throw "Deletion must be filtered"
   }
@@ -112,12 +112,10 @@ async function handleRequest(
   // we searched for rows in someway
   if (operation === DataSourceOperation.READ && Array.isArray(response)) {
     return outputProcessing(response, table)
+  } else {
+    row = outputProcessing(response, table)[0]
+    return { row, table }
   }
-  // append tableId back onto row if it exists
-  if (row) {
-    row.tableId = table._id
-  }
-  return { row, table }
 }
 
 exports.patch = async ctx => {
@@ -167,9 +165,11 @@ exports.find = async ctx => {
 exports.destroy = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
-  return handleRequest(appId, DataSourceOperation.DELETE, tableId, {
-    id: breakRowIdField(ctx.request.body._id),
+  const id = ctx.request.body._id
+  const { row } = await handleRequest(appId, DataSourceOperation.DELETE, tableId, {
+    id,
   })
+  return { response: { ok: true }, row }
 }
 
 exports.bulkDestroy = async ctx => {
