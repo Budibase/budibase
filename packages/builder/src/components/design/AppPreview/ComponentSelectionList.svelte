@@ -9,8 +9,7 @@
     const currentComponent = store.actions.components.getDefinition(
       selectedComponent?._component
     )
-
-    return currentComponent?.illegalChildren?.includes(name)
+    return currentComponent?.illegalChildren?.includes(name.toLowerCase())
   }
 
   const enrichStructure = (structure, definitions) => {
