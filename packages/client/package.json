@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.9.48",
+  "version": "0.9.51",
   "license": "MPL-2.0",
   "module": "dist/budibase-client.js",
   "main": "dist/budibase-client.js",
@@ -18,9 +18,9 @@
     "dev:builder": "rollup -cw"
   },
   "dependencies": {
-    "@budibase/bbui": "^0.9.48",
-    "@budibase/standard-components": "^0.9.48",
-    "@budibase/string-templates": "^0.9.48",
+    "@budibase/bbui": "^0.9.51",
+    "@budibase/standard-components": "^0.9.51",
+    "@budibase/string-templates": "^0.9.51",
     "regexparam": "^1.3.0",
     "shortid": "^2.2.15",
     "svelte-spa-router": "^3.0.5"
