@@ -215,14 +215,14 @@
         "key": "text"
       },
       {
-        "type": "boolean",
-        "label": "Disabled",
-        "key": "disabled"
-      },
-      {
         "type": "event",
         "label": "On Click",
         "key": "onClick"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled"
       }
     ]
   },
