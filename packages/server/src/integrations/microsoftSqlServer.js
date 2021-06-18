@@ -51,9 +51,11 @@ const SCHEMA = {
   },
 }
 
-async function internalQuery(client, sql) {
+async function internalQuery(client, query) {
+  const sql = typeof query === "string" ? query : query.sql
+  const bindings = typeof query === "string" ? {} : query.bindings
   try {
-    return await client.query(sql.sql, sql.bindings)
+    return await client.query(sql, bindings)
   } catch (err) {
     throw new Error(err)
   }

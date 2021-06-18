@@ -100,16 +100,18 @@
           having to write any queries at all.
         </Body>
         <div class="query-list">
-          {#each Object.keys(datasource.entities) as entity}
-            <div
-              class="query-list-item"
-              on:click={() => onClickTable(datasource.entities[entity])}
-            >
-              <p class="query-name">{entity}</p>
-              <p>Primary Key: {datasource.entities[entity].primary}</p>
-              <p>→</p>
-            </div>
-          {/each}
+          {#if datasource.entities}
+            {#each Object.keys(datasource.entities) as entity}
+              <div
+                class="query-list-item"
+                on:click={() => onClickTable(datasource.entities[entity])}
+              >
+                <p class="query-name">{entity}</p>
+                <p>Primary Key: {datasource.entities[entity].primary}</p>
+                <p>→</p>
+              </div>
+            {/each}
+          {/if}
         </div>
       {/if}
       <Divider />
