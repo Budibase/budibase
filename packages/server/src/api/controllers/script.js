@@ -3,13 +3,15 @@ const vm = require("vm")
 
 class ScriptExecutor {
   constructor(body) {
-    this.script = new vm.Script(body.script)
+    const code = `let fn = () => {\n${body.script}\n}; out = fn();`
+    this.script = new vm.Script(code)
     this.context = vm.createContext(body.context)
     this.context.fetch = fetch
   }
 
   execute() {
-    return this.script.runInContext(this.context)
+    this.script.runInContext(this.context)
+    return this.context.out
   }
 }
 
