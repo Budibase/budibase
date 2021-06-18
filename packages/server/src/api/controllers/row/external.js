@@ -35,6 +35,7 @@ function outputProcessing(rows, table) {
     }
     row._id = generateRowIdField(idParts)
     row.tableId = table._id
+    row._rev = "rev"
   }
   return rows
 }
@@ -176,7 +177,6 @@ exports.bulkDestroy = async ctx => {
   const appId = ctx.appId
   const { rows } = ctx.request.body
   const tableId = ctx.params.tableId
-  // TODO: this can probably be optimised to a single SQL statement in the future
   let promises = []
   for (let row of rows) {
     promises.push(
@@ -232,7 +232,7 @@ exports.search = async ctx => {
       sort,
       paginate: {
         limit: 1,
-        page: bookmark + 1,
+        page: (bookmark * limit) + 1,
       }
     })
     hasNextPage = nextRows.length > 0
