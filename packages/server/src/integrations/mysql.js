@@ -3,6 +3,7 @@ const { FIELD_TYPES, QUERY_TYPES } = require("./Integration")
 const Sql = require("./base/sql")
 const { buildExternalTableId, convertType } = require("./utils")
 const { FieldTypes } = require("../constants")
+const { Operation } = require("./base/constants")
 
 const TYPE_MAP = {
   text: FieldTypes.LONGFORM,
@@ -101,19 +102,6 @@ function internalQuery(client, query, connect = true) {
 }
 
 class MySQLIntegration extends Sql {
-  GET_TABLES_SQL =
-    "select * from information_schema.columns where table_schema = 'public'"
-
-  PRIMARY_KEYS_SQL = `
-    select tc.table_schema, tc.table_name, kc.column_name as primary_key 
-    from information_schema.table_constraints tc
-    join 
-      information_schema.key_column_usage kc on kc.table_name = tc.table_name 
-      and kc.table_schema = tc.table_schema 
-      and kc.constraint_name = tc.constraint_name
-    where tc.constraint_type = 'PRIMARY KEY';
-  `
-
   constructor(config) {
     super("mysql")
     this.config = config
@@ -134,7 +122,11 @@ class MySQLIntegration extends Sql {
     for (let tableName of tableNames) {
       const primaryKeys = []
       const schema = {}
-      const descResp = await internalQuery(this.client, `DESCRIBE ${tableName};`, false)
+      const descResp = await internalQuery(
+        this.client,
+        `DESCRIBE ${tableName};`,
+        false
+      )
       for (let column of descResp) {
         const columnName = column.Field
         if (column.Key === "PRI") {
@@ -187,11 +179,40 @@ class MySQLIntegration extends Sql {
     return results.length ? results : [{ deleted: true }]
   }
 
+  async getReturningRow(json) {
+    const input = this._query({
+      endpoint: {
+        ...json.endpoint,
+        operation: Operation.READ,
+      },
+      fields: [],
+      filters: json.extra.idFilter,
+      paginate: {
+        limit: 1,
+      }
+    })
+    return internalQuery(this.client, input, false)
+  }
+
   async query(json) {
-    const operation = this._operation(json).toLowerCase()
-    const input = this._query(json)
-    const results = await internalQuery(this.client, input)
-    return results.length ? results : [{ [operation]: true }]
+    const operation = this._operation(json)
+    this.client.connect()
+    const input = this._query(json, { disableReturning: true })
+    let row
+    // need to manage returning, a feature mySQL can't do
+    if (operation === Operation.DELETE) {
+      row = this.getReturningRow(json)
+    }
+    const results = await internalQuery(this.client, input, false)
+    // same as delete, manage returning
+    if (operation === Operation.CREATE || operation === Operation.UPDATE) {
+      row = this.getReturningRow(json)
+    }
+    this.client.end()
+    if (operation !== Operation.READ) {
+      return row
+    }
+    return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 }
 
