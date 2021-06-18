@@ -180,6 +180,9 @@ class MySQLIntegration extends Sql {
   }
 
   async getReturningRow(json) {
+    if (!json.extra.idFilter) {
+      return {}
+    }
     const input = this._query({
       endpoint: {
         ...json.endpoint,
