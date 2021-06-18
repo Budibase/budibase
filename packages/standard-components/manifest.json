@@ -5,7 +5,6 @@
     "icon": "Sandbox",
     "hasChildren": true,
     "styleable": true,
-    "transitionable": true,
     "illegalChildren": [],
     "settings": [
       {
@@ -63,7 +62,6 @@
     "icon": "Sandbox",
     "hasChildren": true,
     "styleable": true,
-    "transitionable": true,
     "illegalChildren": ["section"],
     "showSettingsBar": true,
     "settings": [
@@ -183,7 +181,6 @@
     "icon": "ColumnTwoB",
     "hasChildren": true,
     "styleable": true,
-    "transitionable": true,
     "illegalChildren": ["Section"],
     "showEmptyState": false,
     "settings": [

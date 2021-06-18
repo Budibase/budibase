@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, transition, builderStore } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let type = "mainSidebar"
@@ -31,7 +31,6 @@
 
 <div
   bind:clientWidth={containerWidth}
-  in:transition={{ type: $component.transition }}
   class="{type} columns-{columnsDependingOnSize}"
   use:styleable={$component.styles}
 >

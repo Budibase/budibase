@@ -305,7 +305,6 @@ export const getFrontendStore = () => {
           _id: uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _transition: "",
           _instanceName: `New ${definition.name}`,
           ...cloneDeep(props),
           ...extras,
@@ -506,15 +505,6 @@ export const getFrontendStore = () => {
       resetStyles: async () => {
         const selected = get(selectedComponent)
         selected._styles = { normal: {}, hover: {}, active: {} }
-        await store.actions.preview.saveSelected()
-      },
-      updateTransition: async transition => {
-        const selected = get(selectedComponent)
-        if (transition == null || transition === "") {
-          selected._transition = ""
-        } else {
-          selected._transition = transition
-        }
         await store.actions.preview.saveSelected()
       },
       updateProp: async (name, value) => {

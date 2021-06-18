@@ -8,7 +8,6 @@
   export let componentInstance = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
-  export let onUpdateTransition = () => {}
   export let onResetStyles = () => {}
 
   let selectedCategory = "normal"
@@ -22,14 +21,6 @@
     { value: "normal", text: "Normal" },
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
-  ]
-
-  const transitions = [
-    "none",
-    "fade",
-    "blur",
-    "fly",
-    "scale", // slide is hidden because it does not seem to result in any effect
   ]
 
   const capitalize = ([first, ...rest]) => first.toUpperCase() + rest.join("")
@@ -78,18 +69,6 @@
       {/if}
     </div>
   </div>
-  {#if componentDefinition?.transitionable}
-    <div class="transitions">
-      <Select
-        value={componentInstance._transition}
-        on:change={event => onUpdateTransition(event.detail)}
-        name="transition"
-        label="Transition"
-        options={transitions}
-        getOptionLabel={capitalize}
-      />
-    </div>
-  {/if}
 </div>
 
 <style>
