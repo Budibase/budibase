@@ -8,7 +8,7 @@
 </h1>
 
 <h3 align="center">
-  Build internal tools on your own infrastructure in minutes
+  Build, automate and self-host internal tools in minutes
 </h3>
 <p align="center">
   Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship internal tools on their own infrastructure in minutes.
@@ -64,7 +64,7 @@
 
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infraastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
+- **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
 
 <p align="center">
   <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
