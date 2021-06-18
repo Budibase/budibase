@@ -18,7 +18,6 @@
 
   const onStyleChanged = store.actions.components.updateStyle
   const onCustomStyleChanged = store.actions.components.updateCustomStyle
-  const onUpdateTransition = store.actions.components.updateTransition
   const onResetStyles = store.actions.components.resetStyles
 
   function setAssetProps(name, value) {
@@ -64,7 +63,6 @@
         componentDefinition={definition}
         {onStyleChanged}
         {onCustomStyleChanged}
-        {onUpdateTransition}
         {onResetStyles}
       />
     </div>
