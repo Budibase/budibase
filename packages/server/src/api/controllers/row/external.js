@@ -120,7 +120,7 @@ async function handleRequest(
     // pass an id filter into extra, purely for mysql/returning
     extra: {
       idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
-    }
+    },
   }
   // can't really use response right now
   const response = await makeExternalQuery(appId, json)

@@ -192,7 +192,7 @@ class MySQLIntegration extends Sql {
       filters: json.extra.idFilter,
       paginate: {
         limit: 1,
-      }
+      },
     })
     return internalQuery(this.client, input, false)
   }

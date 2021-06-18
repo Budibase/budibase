@@ -4,7 +4,6 @@ const {
   getRowParams,
   generateRowID,
   DocumentTypes,
-  SEPARATOR,
   InternalTables,
 } = require("../../../db/utils")
 const userController = require("../user")
@@ -16,8 +15,6 @@ const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
-
-const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
 const CALCULATION_TYPES = {
   SUM: "sum",

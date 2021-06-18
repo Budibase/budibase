@@ -6,7 +6,6 @@
 
   export let integration = {}
 
-  let schema
   let integrations = []
 
   async function fetchIntegrations() {

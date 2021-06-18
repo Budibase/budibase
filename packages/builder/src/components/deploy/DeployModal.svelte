@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
+  import FeedbackIframe from "../feedback/FeedbackIframe.svelte"
   import { store } from "builderStore"
   import api from "builderStore/api"
   import analytics from "analytics"
