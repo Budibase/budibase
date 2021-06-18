@@ -6,7 +6,6 @@
   const component = getContext("component")
 
   export let type = "mainSidebar"
-  export let gap = "16px"
   export let minSize = 250
 
   let layoutMap = {
@@ -67,22 +66,6 @@
   .columns-2 {
     grid-template-columns: 1fr 1fr;
   }
-
-  p {
-    background-color: var(--grey-3);
-    color: var(--grey-6);
-    font-size: var(--font-size-s);
-    padding: var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    display: grid;
-    place-items: center;
-  }
-  p i {
-    margin-bottom: var(--spacing-m);
-    font-size: 1.5rem;
-    color: var(--grey-5);
-  }
-
   .placeholder {
     border: 2px dashed var(--grey-5);
     padding: var(--spacing-l);

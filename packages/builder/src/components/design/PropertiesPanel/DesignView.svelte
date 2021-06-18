@@ -1,5 +1,5 @@
 <script>
-  import { TextArea, DetailSummary, Button, Select } from "@budibase/bbui"
+  import { TextArea, DetailSummary, Button } from "@budibase/bbui"
   import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
   import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
   import { allStyles } from "./componentStyles"
@@ -22,8 +22,6 @@
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
   ]
-
-  const capitalize = ([first, ...rest]) => first.toUpperCase() + rest.join("")
 
   $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
 </script>

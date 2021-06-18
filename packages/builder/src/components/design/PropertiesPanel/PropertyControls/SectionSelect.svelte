@@ -29,7 +29,6 @@
 </script>
 
 <ActionButton on:click={modal.show}>{layoutMap[value].name}</ActionButton>
-
 <Modal bind:this={modal}>
   <ModalContent
     onConfirm={() => dispatch("change", selected)}
@@ -65,7 +64,6 @@
     display: grid;
     place-items: center;
     background: var(--background-alt);
-    border-radius: 3px;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
     transition: 0.3s all;

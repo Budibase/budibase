@@ -188,7 +188,6 @@
         "type": "section",
         "label": "Type",
         "key": "type",
-        "options": ["mainSidebar", "sidebarMain", "twoColumns", "threeColumns"],
         "defaultValue": "mainSidebar"
       }
     ]
