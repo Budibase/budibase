@@ -3,10 +3,6 @@
   export let favicon = ""
 
   export let clientLibPath
-
-  function initialise() {
-    alert("Yeet")
-  }
 </script>
 
 <svelte:head>
