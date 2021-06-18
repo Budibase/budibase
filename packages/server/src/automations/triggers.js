@@ -8,7 +8,10 @@ const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 const { utils } = require("@budibase/auth/redis")
 const { JobQueues } = require("../constants")
-const { isExternalTable, breakExternalTableId } = require("../integrations/utils")
+const {
+  isExternalTable,
+  breakExternalTableId,
+} = require("../integrations/utils")
 const { getExternalTable } = require("../api/controllers/table/utils")
 
 const { opts } = utils.getRedisOptions()
