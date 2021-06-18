@@ -1,8 +1,16 @@
 <script>
-  import {goto} from "@roxi/routify"
-  import {allScreens, store} from "builderStore"
-  import {tables} from "stores/backend"
-  import {ActionMenu, Icon, Input, MenuItem, Modal, ModalContent, notifications} from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import { allScreens, store } from "builderStore"
+  import { tables } from "stores/backend"
+  import {
+    ActionMenu,
+    Icon,
+    Input,
+    MenuItem,
+    Modal,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let table
@@ -17,7 +25,9 @@
   $: external = table?.type === "external"
 
   function showDeleteModal() {
-    templateScreens = $allScreens.filter(screen => screen.autoTableId === table._id)
+    templateScreens = $allScreens.filter(
+      screen => screen.autoTableId === table._id
+    )
     willBeDeleted = ["All table data"].concat(
       templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
     )
