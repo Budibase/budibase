@@ -136,7 +136,7 @@ exports.fetchView = async ctx => {
 
   // if this is a table view being looked for just transfer to that
   if (viewName.includes(DocumentTypes.TABLE)) {
-    ctx.params.tableId = viewName 
+    ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }
 

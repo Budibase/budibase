@@ -15,19 +15,21 @@
 <section>
   <Layout>
     <header>
-      <svelte:component
-          this={ICONS.BUDIBASE}
-          height="26"
-          width="26"
-      />
+      <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
       <Heading size="M">Budibase Internal</Heading>
     </header>
-    <Body size="S" grey lh>Budibase internal tables are part of your app, the data will be stored in your apps context.</Body>
+    <Body size="S" grey lh
+      >Budibase internal tables are part of your app, the data will be stored in
+      your apps context.</Body
+    >
     <Divider />
     <Heading size="S">Tables</Heading>
     <div class="table-list">
       {#each $tables.list.filter(table => table.type !== "external") as table}
-        <div class="table-list-item" on:click={$goto(`../../table/${table._id}`)}>
+        <div
+          class="table-list-item"
+          on:click={$goto(`../../table/${table._id}`)}
+        >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
             <Body size="S">display column: {table.primaryDisplay}</Body>

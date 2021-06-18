@@ -55,17 +55,24 @@ function addFilters(query, filters) {
   return query
 }
 
-// function buildRelationships() {}
-
-function buildCreate(knex, json) {
+function buildCreate(knex, json, opts) {
   const { endpoint, body } = json
   let query = knex(endpoint.entityId)
-  return query.insert(body).returning("*")
+  // mysql can't use returning
+  if (opts.disableReturning) {
+    return query.insert(body)
+  } else {
+    return query.insert(body).returning("*")
+  }
 }
 
 function buildRead(knex, json, limit) {
-  const { endpoint, resource, filters, sort, paginate } = json
+  let { endpoint, resource, filters, sort, paginate } = json
   let query = knex(endpoint.entityId)
+  // select all if not specified
+  if (!resource) {
+    resource = { fields: [] }
+  }
   // handle select
   if (resource.fields && resource.fields.length > 0) {
     query = query.select(resource.fields)
@@ -94,18 +101,28 @@ function buildRead(knex, json, limit) {
   return query
 }
 
-function buildUpdate(knex, json) {
+function buildUpdate(knex, json, opts) {
   const { endpoint, body, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.update(body).returning("*")
+  // mysql can't use returning
+  if (opts.disableReturning) {
+    return query.update(body)
+  } else {
+    return query.update(body).returning("*")
+  }
 }
 
-function buildDelete(knex, json) {
+function buildDelete(knex, json, opts) {
   const { endpoint, filters } = json
   let query = knex(endpoint.entityId)
   query = addFilters(query, filters)
-  return query.delete().returning("*")
+  // mysql can't use returning
+  if (opts.disableReturning) {
+    return query.delete()
+  } else {
+    return query.delete().returning("*")
+  }
 }
 
 class SqlQueryBuilder {
@@ -115,28 +132,38 @@ class SqlQueryBuilder {
     this._limit = limit
   }
 
+  /**
+   * @param json the input JSON structure from which an SQL query will be built.
+   * @return {string} the operation that was found in the JSON.
+   */
   _operation(json) {
     if (!json || !json.endpoint) {
-      return null
+      return ""
     }
     return json.endpoint.operation
   }
 
-  _query(json) {
+  /**
+   * @param json The JSON query DSL which is to be converted to SQL.
+   * @param opts extra options which are to be passed into the query builder, e.g. disableReturning
+   * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
+   * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
+   */
+  _query(json, opts = {}) {
     const knex = require("knex")({ client: this._client })
     let query
     switch (this._operation(json)) {
       case DataSourceOperation.CREATE:
-        query = buildCreate(knex, json)
+        query = buildCreate(knex, json, opts)
         break
       case DataSourceOperation.READ:
-        query = buildRead(knex, json, this._limit)
+        query = buildRead(knex, json, this._limit, opts)
         break
       case DataSourceOperation.UPDATE:
-        query = buildUpdate(knex, json)
+        query = buildUpdate(knex, json, opts)
         break
       case DataSourceOperation.DELETE:
-        query = buildDelete(knex, json)
+        query = buildDelete(knex, json, opts)
         break
       default:
         throw `Operation type is not supported by SQL query builder`

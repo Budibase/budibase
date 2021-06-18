@@ -6,6 +6,7 @@ const {
   generateRowIdField,
   breakRowIdField,
 } = require("../../../integrations/utils")
+const { cloneDeep } = require("lodash/fp")
 
 function inputProcessing(row, table) {
   if (!row) {
@@ -42,6 +43,8 @@ function outputProcessing(rows, table) {
 
 function buildFilters(id, filters, table) {
   const primary = table.primary
+  // if passed in array need to copy for shifting etc
+  let idCopy = cloneDeep(id)
   if (filters) {
     // need to map over the filters and make sure the _id field isn't present
     for (let filter of Object.values(filters)) {
@@ -56,17 +59,17 @@ function buildFilters(id, filters, table) {
     }
   }
   // there is no id, just use the user provided filters
-  if (!id || !table) {
+  if (!idCopy || !table) {
     return filters
   }
   // if used as URL parameter it will have been joined
-  if (typeof id === "string") {
-    id = breakRowIdField(id)
+  if (typeof idCopy === "string") {
+    idCopy = breakRowIdField(idCopy)
   }
   const equal = {}
   for (let field of primary) {
     // work through the ID and get the parts
-    equal[field] = id.shift()
+    equal[field] = idCopy.shift()
   }
   return {
     equal,
@@ -86,6 +89,8 @@ async function handleRequest(
   }
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
+  // get the id after building filters, but before it is removed from the row
+  id = id || (row ? row._id : null)
   row = inputProcessing(row, table)
   if (
     operation === DataSourceOperation.DELETE &&
@@ -107,6 +112,10 @@ async function handleRequest(
     sort,
     paginate,
     body: row,
+    // pass an id filter into extra, purely for mysql/returning
+    extra: {
+      idFilter: buildFilters(id, {}, table),
+    }
   }
   // can't really use response right now
   const response = await makeExternalQuery(appId, json)
@@ -167,9 +176,14 @@ exports.destroy = async ctx => {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const id = ctx.request.body._id
-  const { row } = await handleRequest(appId, DataSourceOperation.DELETE, tableId, {
-    id,
-  })
+  const { row } = await handleRequest(
+    appId,
+    DataSourceOperation.DELETE,
+    tableId,
+    {
+      id,
+    }
+  )
   return { response: { ok: true }, row }
 }
 
@@ -185,8 +199,8 @@ exports.bulkDestroy = async ctx => {
       })
     )
   }
-  await Promise.all(promises)
-  return { response: { ok: true }, rows }
+  const responses = await Promise.all(promises)
+  return { response: { ok: true }, rows: responses.map(resp => resp.row) }
 }
 
 exports.search = async ctx => {
@@ -227,14 +241,19 @@ exports.search = async ctx => {
   })
   let hasNextPage = false
   if (paginate && rows.length === limit) {
-    const nextRows = await handleRequest(appId, DataSourceOperation.READ, tableId, {
-      filters: query,
-      sort,
-      paginate: {
-        limit: 1,
-        page: (bookmark * limit) + 1,
+    const nextRows = await handleRequest(
+      appId,
+      DataSourceOperation.READ,
+      tableId,
+      {
+        filters: query,
+        sort,
+        paginate: {
+          limit: 1,
+          page: bookmark * limit + 1,
+        },
       }
-    })
+    )
     hasNextPage = nextRows.length > 0
   }
   // need wrapper object for bookmarks etc when paginating
