@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB } from "constants"
-  import { database, datasources, queries, tables } from "stores/backend"
+  import { database, datasources, queries } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -17,11 +17,6 @@
   function onClickQuery(query) {
     queries.select(query)
     $goto(`./datasource/${query.datasourceId}/${query._id}`)
-  }
-
-  function onClickTable(table) {
-    tables.select(table)
-    $goto(`./table/${table._id}`)
   }
 
   onMount(() => {

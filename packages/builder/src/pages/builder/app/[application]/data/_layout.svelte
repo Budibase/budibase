@@ -1,11 +1,9 @@
 <script>
-  import { isActive, goto, params } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB } from "constants"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
-  import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
   let selected = "Sources"
   let modal
@@ -14,7 +12,7 @@
     $params.selectedDatasource &&
     $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
 
-  function selectFirstDatasource({ detail }) {
+  function selectFirstDatasource() {
     $goto("./table")
   }
 </script>
