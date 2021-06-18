@@ -22,19 +22,26 @@ function inputProcessing(row, table) {
   return newRow
 }
 
+function generateIdForRow(row, table) {
+  if (!row) {
+    return
+  }
+  const primary = table.primary
+  // build id array
+  let idParts = []
+  for (let field of primary) {
+    idParts.push(row[field])
+  }
+  return generateRowIdField(idParts)
+}
+
 function outputProcessing(rows, table) {
   // if no rows this is what is returned? Might be PG only
   if (rows[0].read === true) {
     return []
   }
-  const primary = table.primary
   for (let row of rows) {
-    // build id array
-    let idParts = []
-    for (let field of primary) {
-      idParts.push(row[field])
-    }
-    row._id = generateRowIdField(idParts)
+    row._id = generateIdForRow(row, table)
     row.tableId = table._id
     row._rev = "rev"
   }
@@ -89,8 +96,6 @@ async function handleRequest(
   }
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
-  // get the id after building filters, but before it is removed from the row
-  id = id || (row ? row._id : null)
   row = inputProcessing(row, table)
   if (
     operation === DataSourceOperation.DELETE &&
@@ -114,7 +119,7 @@ async function handleRequest(
     body: row,
     // pass an id filter into extra, purely for mysql/returning
     extra: {
-      idFilter: buildFilters(id, {}, table),
+      idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
     }
   }
   // can't really use response right now
