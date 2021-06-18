@@ -140,7 +140,6 @@ class PostgresIntegration extends Sql {
       if (!tables[tableName]) {
         tables[tableName] = {
           _id: buildExternalTableId(datasourceId, tableName),
-          // TODO: this needs to accommodate composite keys
           primary: keys,
           name: tableName,
           schema: {},
