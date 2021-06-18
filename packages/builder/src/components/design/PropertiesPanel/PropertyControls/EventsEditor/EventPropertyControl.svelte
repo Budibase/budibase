@@ -1,5 +1,5 @@
 <script>
-  import { Button, Drawer } from "@budibase/bbui"
+  import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
   import EventEditor from "./EventEditor.svelte"
@@ -51,7 +51,7 @@
   }
 </script>
 
-<Button secondary on:click={drawer.show}>Define Actions</Button>
+<ActionButton on:click={drawer.show}>Define Actions</ActionButton>
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.

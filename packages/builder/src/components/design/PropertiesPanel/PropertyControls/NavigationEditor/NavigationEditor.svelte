@@ -1,5 +1,5 @@
 <script>
-  import { Button, Drawer } from "@budibase/bbui"
+  import { Button, ActionButton, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import NavigationDrawer from "./NavigationDrawer.svelte"
 
@@ -13,7 +13,7 @@
   }
 </script>
 
-<Button secondary on:click={drawer.show}>Configure Links</Button>
+<ActionButton on:click={drawer.show}>Configure Links</ActionButton>
 <Drawer bind:this={drawer} title={"Navigation Links"}>
   <svelte:fragment slot="description">
     Configure the links in your navigation bar.
