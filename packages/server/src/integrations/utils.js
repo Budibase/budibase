@@ -1,4 +1,5 @@
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
+const { FieldTypes } = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 
@@ -32,4 +33,13 @@ exports.breakRowIdField = _id => {
     return null
   }
   return JSON.parse(decodeURIComponent(_id))
+}
+
+exports.convertType = (type, map) => {
+  for (let [external, internal] of Object.entries(map)) {
+    if (type.toLowerCase().includes(external)) {
+      return internal
+    }
+  }
+  return FieldTypes.STRING
 }

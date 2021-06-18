@@ -2,7 +2,7 @@ const { Pool } = require("pg")
 const { FIELD_TYPES } = require("./Integration")
 const Sql = require("./base/sql")
 const { FieldTypes } = require("../constants")
-const { buildExternalTableId } = require("./utils")
+const { buildExternalTableId, convertType } = require("./utils")
 
 const SCHEMA = {
   docs: "https://node-postgres.com",
@@ -71,9 +71,11 @@ const TYPE_MAP = {
   json: FIELD_TYPES.JSON,
 }
 
-async function internalQuery(client, sql) {
+async function internalQuery(client, query) {
+  const sql = typeof query === "string" ? query : query.sql
+  const bindings = typeof query === "string" ? {} : query.bindings
   try {
-    return await client.query(sql.sql, sql.bindings)
+    return await client.query(sql, bindings)
   } catch (err) {
     throw new Error(err)
   }
@@ -147,7 +149,7 @@ class PostgresIntegration extends Sql {
 
       tables[tableName].schema[columnName] = {
         name: columnName,
-        type: TYPE_MAP[column.data_type] || FIELD_TYPES.STRING,
+        type: convertType(column.data_type, TYPE_MAP),
       }
     }
     this.tables = tables
