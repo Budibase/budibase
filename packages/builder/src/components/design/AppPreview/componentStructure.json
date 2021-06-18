@@ -62,8 +62,7 @@
     "name": "Other",
     "icon": "More",
     "children": [
-      "screenslot",
-      "navigation"
+      "screenslot"
     ]
   }
 ]
