@@ -17,7 +17,7 @@ function generateSaveValidator() {
   return joiValidator.body(Joi.object({
     _id: Joi.string(),
     _rev: Joi.string(),
-    type: Joi.string().valid("table"),
+    type: Joi.string().valid("table", "internal", "external"),
     primaryDisplay: Joi.string(),
     schema: Joi.object().required(),
     name: Joi.string().required(),
