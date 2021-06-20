@@ -218,7 +218,10 @@ class LinkController {
                 rowId: linkId,
                 includeDocs: IncludeDocs.EXCLUDE,
               })
-            ).filter(link => link.id !== row._id && link.fieldName === linkedSchema.name)
+            ).filter(
+              link =>
+                link.id !== row._id && link.fieldName === linkedSchema.name
+            )
 
             // The 1 side of 1:N is already related to something else
             // You must remove the existing relationship
