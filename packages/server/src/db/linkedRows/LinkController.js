@@ -211,14 +211,14 @@ class LinkController {
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
           if (linkedSchema.relationshipType === RelationshipTypes.ONE_TO_MANY) {
-            const links = (
+            let links = (
               await getLinkDocuments({
                 appId: this._appId,
                 tableId: field.tableId,
                 rowId: linkId,
                 includeDocs: IncludeDocs.EXCLUDE,
               })
-            ).filter(link => link.id !== row._id)
+            ).filter(link => link.id !== row._id && link.fieldName === linkedSchema.name)
 
             // The 1 side of 1:N is already related to something else
             // You must remove the existing relationship
