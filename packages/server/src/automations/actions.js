@@ -7,6 +7,7 @@ const executeScript = require("./steps/executeScript")
 const bash = require("./steps/bash")
 const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
+const serverLog = require("./steps/serverLog")
 const env = require("../environment")
 const Sentry = require("@sentry/node")
 const {
@@ -24,6 +25,7 @@ const BUILTIN_ACTIONS = {
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_BASH: bash.run,
   EXECUTE_QUERY: executeQuery.run,
+  SERVER_LOG: serverLog.run,
 }
 const BUILTIN_DEFINITIONS = {
   SEND_EMAIL: sendgridEmail.definition,
@@ -35,6 +37,7 @@ const BUILTIN_DEFINITIONS = {
   EXECUTE_SCRIPT: executeScript.definition,
   EXECUTE_QUERY: executeQuery.definition,
   EXECUTE_BASH: bash.definition,
+  SERVER_LOG: serverLog.definition,
 }
 
 let MANIFEST = null
