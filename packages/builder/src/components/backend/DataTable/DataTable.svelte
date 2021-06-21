@@ -23,14 +23,14 @@
     schema,
     name: $views.selected?.name,
   }
-  $: type = $tables.selected.type
+  $: type = $tables.selected?.type
   $: isInternal = type === "internal"
 
   // Fetch rows for specified table
   $: {
     loading = true
     const loadingTableId = $tables.selected?._id
-    api.fetchDataForTable($tables.selected._id).then(rows => {
+    api.fetchDataForTable($tables.selected?._id).then(rows => {
       loading = false
 
       // If we started a slow request then quickly change table, sometimes
