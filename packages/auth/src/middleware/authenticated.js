@@ -22,6 +22,12 @@ function buildNoAuthRegex(patterns) {
   })
 }
 
+function finalise(ctx, { authenticated, user, internal } = {}) {
+  ctx.isAuthenticated = authenticated || false
+  ctx.user = user
+  ctx.internal = internal || false
+}
+
 module.exports = (noAuthPatterns = [], opts) => {
   const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
   return async (ctx, next) => {
@@ -36,35 +42,40 @@ module.exports = (noAuthPatterns = [], opts) => {
       return next()
     }
     try {
-      const apiKey = ctx.request.headers["x-budibase-api-key"]
       // check the actual user is authenticated first
       const authCookie = getCookie(ctx, Cookies.Auth)
-
-      // this is an internal request, no user made it
-      if (apiKey && apiKey === env.INTERNAL_API_KEY) {
-        ctx.isAuthenticated = true
-        ctx.internal = true
-      } else if (authCookie) {
+      let authenticated = false,
+        user = null,
+        internal = false
+      if (authCookie) {
         try {
           const db = database.getDB(StaticDatabases.GLOBAL.name)
-          const user = await db.get(authCookie.userId)
-          delete user.password
-          ctx.isAuthenticated = true
-          ctx.user = user
+          const foundUser = await db.get(authCookie.userId)
+          delete foundUser.password
+          authenticated = true
+          user = foundUser
         } catch (err) {
           // remove the cookie as the use does not exist anymore
           clearCookie(ctx, Cookies.Auth)
         }
       }
-      // be explicit
-      if (ctx.isAuthenticated !== true) {
-        ctx.isAuthenticated = false
+      const apiKey = ctx.request.headers["x-budibase-api-key"]
+      // this is an internal request, no user made it
+      if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
+        authenticated = true
+        internal = true
       }
+      // be explicit
+      if (authenticated !== true) {
+        authenticated = false
+      }
+      // isAuthenticated is a function, so use a variable to be able to check authed state
+      finalise(ctx, { authenticated, user, internal })
       return next()
     } catch (err) {
       // allow configuring for public access
       if (opts && opts.publicAllowed) {
-        ctx.isAuthenticated = false
+        finalise(ctx, { authenticated: false })
       } else {
         ctx.throw(err.status || 403, err)
       }
