@@ -18,9 +18,8 @@
   )
 
   function fetchQueryDefinition(query) {
-    const source = $datasources.list.find(
-      ds => ds._id === query.datasourceId
-    ).source
+    const source = $datasources.list.find(ds => ds._id === query.datasourceId)
+      .source
     return $integrations[source].query[query.queryVerb]
   }
 </script>
