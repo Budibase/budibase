@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import { getBindableProperties } from "builderStore/dataBinding"
@@ -35,6 +35,17 @@
     value={parameters.revId}
     on:change={value => (parameters.revId = value.detail)}
   />
+
+  <Label small />
+  <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+
+  {#if parameters.confirm}
+    <Label small>Confirm text</Label>
+    <Input
+      placeholder="Are you sure you want to delete this row?"
+      bind:value={parameters.confirmText}
+    />
+  {/if}
 </div>
 
 <style>
@@ -42,8 +53,8 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: auto 1fr;
-    align-items: baseline;
+    grid-template-columns: 60px 1fr;
+    align-items: center;
     max-width: 800px;
     margin: 0 auto;
   }
