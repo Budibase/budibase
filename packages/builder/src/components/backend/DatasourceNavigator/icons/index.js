@@ -9,8 +9,10 @@ import SqlServer from "./SQLServer.svelte"
 import MySQL from "./MySQL.svelte"
 import ArangoDB from "./ArangoDB.svelte"
 import Rest from "./Rest.svelte"
+import Budibase from "./Budibase.svelte"
 
 export default {
+  BUDIBASE: Budibase,
   POSTGRES: Postgres,
   DYNAMODB: DynamoDB,
   MONGODB: MongoDB,

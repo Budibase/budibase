@@ -22,6 +22,7 @@ async function activate() {
   if (sentryConfigured) Sentry.init({ dsn: process.env.SENTRY_DSN })
   if (posthogConfigured) {
     posthog.init(process.env.POSTHOG_TOKEN, {
+      autocapture: false,
       api_host: process.env.POSTHOG_URL,
     })
     posthog.set_config({ persistence: "cookie" })

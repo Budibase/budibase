@@ -1,5 +1,6 @@
 const sqlServer = require("mssql")
 const { FIELD_TYPES } = require("./Integration")
+const Sql = require("./base/sql")
 
 const SCHEMA = {
   docs: "https://github.com/tediousjs/node-mssql",
@@ -50,10 +51,21 @@ const SCHEMA = {
   },
 }
 
-class SqlServerIntegration {
+async function internalQuery(client, query) {
+  const sql = typeof query === "string" ? query : query.sql
+  const bindings = typeof query === "string" ? {} : query.bindings
+  try {
+    return await client.query(sql, bindings)
+  } catch (err) {
+    throw new Error(err)
+  }
+}
+
+class SqlServerIntegration extends Sql {
   static pool
 
   constructor(config) {
+    super("mssql")
     this.config = config
     this.config.options = {
       encrypt: this.config.encrypt,
@@ -65,52 +77,43 @@ class SqlServerIntegration {
   }
 
   async connect() {
-    const client = await this.pool.connect()
-    this.client = client.request()
+    try {
+      const client = await this.pool.connect()
+      this.client = client.request()
+    } catch (err) {
+      throw new Error(err)
+    }
   }
 
   async read(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query)
+    return response.recordset
   }
 
   async create(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset || [{ created: true }]
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query)
+    return response.recordset || [{ created: true }]
   }
 
   async update(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query)
+    return response.recordset || [{ updated: true }]
   }
 
   async delete(query) {
-    try {
-      await this.connect()
-      const response = await this.client.query(query.sql)
-      return response.recordset
-    } catch (err) {
-      console.error("Error querying MS SQL Server", err)
-      throw err
-    }
+    await this.connect()
+    const response = await internalQuery(this.client, query)
+    return response.recordset || [{ deleted: true }]
+  }
+
+  async query(json) {
+    const operation = this._operation(json).toLowerCase()
+    const input = this._query(json)
+    const response = await internalQuery(this.client, input)
+    return response.recordset ? response.recordset : [{ [operation]: true }]
   }
 }
 

@@ -45,7 +45,7 @@ export const searchTable = async ({
     }
   }
   const res = await API.post({
-    url: `/api/search/${tableId}/rows`,
+    url: `/api/${tableId}/search`,
     body: {
       query,
       bookmark,

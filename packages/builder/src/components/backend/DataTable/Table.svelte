@@ -20,6 +20,7 @@
   export let loading = false
   export let hideAutocolumns
   export let rowCount
+  export let type
 
   let selectedRows = []
   let editableColumn
@@ -28,6 +29,7 @@
   let editColumnModal
   let customRenderers = []
 
+  $: isInternal = type !== "external"
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
@@ -73,9 +75,8 @@
   }
 
   const deleteRows = async () => {
-    await api.post(`/api/${tableId}/rows`, {
+    await api.delete(`/api/${tableId}/rows`, {
       rows: selectedRows,
-      type: "delete",
     })
     data = data.filter(row => !selectedRows.includes(row))
     notifications.success(`Successfully deleted ${selectedRows.length} rows`)
@@ -125,7 +126,7 @@
     bind:selectedRows
     allowSelectRows={allowEditing && !isUsersTable}
     allowEditRows={allowEditing}
-    allowEditColumns={allowEditing}
+    allowEditColumns={allowEditing && isInternal}
     showAutoColumns={!hideAutocolumns}
     on:editcolumn={e => editColumn(e.detail)}
     on:editrow={e => editRow(e.detail)}

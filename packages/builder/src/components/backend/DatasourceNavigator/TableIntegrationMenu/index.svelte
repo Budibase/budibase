@@ -6,7 +6,6 @@
 
   export let integration = {}
 
-  let schema
   let integrations = []
 
   async function fetchIntegrations() {
@@ -18,13 +17,18 @@
   }
 
   function selectIntegration(integrationType) {
-    schema = integrations[integrationType].datasource
+    const selected = integrations[integrationType]
+
+    // build the schema
+    const schema = {}
+    for (let key in selected.datasource) {
+      schema[key] = selected.datasource[key].default
+    }
+
     integration = {
       type: integrationType,
-      ...Object.keys(schema).reduce(
-        (acc, next) => ({ ...acc, [next]: schema[next].default }),
-        {}
-      ),
+      plus: selected.plus,
+      ...schema,
     }
   }
 

@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { tables } from "./"
+import { tables, datasources, queries } from "./"
 import api from "builderStore/api"
 
 export function createViewsStore() {
@@ -10,10 +10,19 @@ export function createViewsStore() {
 
   return {
     subscribe,
+    update,
     select: async view => {
       update(state => ({
         ...state,
         selected: view,
+      }))
+      queries.unselect()
+      datasources.unselect()
+    },
+    unselect: () => {
+      update(state => ({
+        ...state,
+        selected: null,
       }))
     },
     delete: async view => {

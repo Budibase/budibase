@@ -2,6 +2,9 @@ let setup = require("./utilities")
 let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 
+jest.mock("pg")
+const pg = require("pg")
+
 describe("/datasources", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -37,13 +40,14 @@ describe("/datasources", () => {
         .expect(200)
 
       const datasources = res.body
-      expect(datasources).toEqual([
-        {
-          "_id": datasources[0]._id,
-          "_rev": datasources[0]._rev,
-          ...basicDatasource()
-        }
-      ])
+
+      // remove non-deterministic fields
+      for (let source of datasources) {
+        delete source._id
+        delete source._rev
+      }
+
+      expect(datasources).toMatchSnapshot()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -66,6 +70,34 @@ describe("/datasources", () => {
     })
   })
 
+  describe("query", () => {
+    it("should be able to query a pg datasource", async () => {
+      const res = await request
+        .post(`/api/datasources/query`)
+        .send({
+          endpoint: {
+            datasourceId: datasource._id,
+            operation: "READ",
+            // table name below
+            entityId: "users",
+          },
+          resource: {
+            fields: ["name", "age"],
+          },
+          filters: {
+            string: {
+              name: "John",
+            },
+          },
+        })
+        .set(config.defaultHeaders())
+        .expect(200)
+      // this is mock data, can't test it
+      expect(res.body).toBeDefined()
+      expect(pg.queryMock).toHaveBeenCalledWith(`select "name", "age" from "users" where "name" like $1 limit $2`, ["John%", 5000])
+    })
+  })
+
   describe("destroy", () => {
     it("deletes queries for the datasource after deletion and returns a success message", async () => {
       await config.createQuery()
@@ -81,7 +113,7 @@ describe("/datasources", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.body).toEqual([])
+      expect(res.body.length).toEqual(1)
     })
 
     it("should apply authorization to endpoint", async () => {

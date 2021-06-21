@@ -37,7 +37,7 @@ Cypress.Commands.add("createApp", name => {
       cy.contains("Create app").click()
     })
     .then(() => {
-      cy.get("[data-cy=new-table]", {
+      cy.get(".selected > .content", {
         timeout: 20000,
       }).should("be.visible")
     })
@@ -51,7 +51,7 @@ Cypress.Commands.add("deleteApp", () => {
     .then(val => {
       console.log(val)
       if (val.length > 0) {
-        cy.get(".hoverable > use").click()
+        cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
         cy.contains("Delete").click()
         cy.get(".spectrum-Button--warning").click()
       }
@@ -72,7 +72,8 @@ Cypress.Commands.add("createTestTableWithData", () => {
 
 Cypress.Commands.add("createTable", tableName => {
   // Enter table name
-  cy.get("[data-cy=new-table]").click()
+  cy.contains("Budibase DB").click()
+  cy.contains("Create new table").click()
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()

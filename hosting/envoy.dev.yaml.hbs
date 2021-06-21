@@ -38,6 +38,11 @@ static_resources:
                 route:
                   cluster: server-dev
 
+              - match: { prefix: "/app/" }
+                route:
+                  cluster: server-dev
+                  prefix_rewrite: "/"
+
               # the below three cases are needed to make sure
               # all traffic prefixed for the builder is passed through
               # correctly.
