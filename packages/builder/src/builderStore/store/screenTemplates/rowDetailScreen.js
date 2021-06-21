@@ -62,6 +62,7 @@ function generateTitleContainer(table, title, formId, repeaterId) {
             tableId: table._id,
             rowId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_id")} }}`,
             revId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_rev")} }}`,
+            confirm: true,
           },
           "##eventHandlerType": "Delete Row",
         },

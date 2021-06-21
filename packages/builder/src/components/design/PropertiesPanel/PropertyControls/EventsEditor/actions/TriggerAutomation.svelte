@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Input } from "@budibase/bbui"
+  import { Select, Label, Input, Checkbox } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
 
@@ -72,7 +72,7 @@
     </div>
   </div>
 
-  <div class="fields">
+  <div class="params">
     <Label small>Automation</Label>
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
@@ -90,6 +90,19 @@
       />
     {/if}
 
+    <Label small />
+    <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+
+    {#if parameters.confirm}
+      <Label small>Confirm text</Label>
+      <Input
+        placeholder="Are you sure you want to trigger this automation?"
+        bind:value={parameters.confirmText}
+      />
+    {/if}
+  </div>
+
+  <div class="fields">
     {#key parameters.automationId}
       <SaveFields
         schemaFields={selectedSchema}
@@ -107,16 +120,21 @@
     margin: 0 auto;
   }
 
-  .fields {
+  .params {
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: auto 1fr auto 1fr auto;
-    align-items: baseline;
+    grid-template-columns: 60px 1fr;
+    align-items: center;
   }
 
-  .fields :global(> div:nth-child(2)) {
-    grid-column: 2 / span 4;
+  .fields {
+    margin-top: var(--spacing-l);
+    display: grid;
+    column-gap: var(--spacing-l);
+    row-gap: var(--spacing-s);
+    grid-template-columns: 60px 1fr auto 1fr auto;
+    align-items: center;
   }
 
   .radios,
