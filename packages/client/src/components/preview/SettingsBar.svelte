@@ -34,7 +34,7 @@
       // Vertically, always render above unless no room, then render inside
       let newTop = elBounds.top + scrollY - verticalOffset - height
       if (newTop < 0) {
-        newTop = elBounds.top + scrollY + verticalOffset
+        newTop = 0
       }
 
       // Horizontally, try to center first.

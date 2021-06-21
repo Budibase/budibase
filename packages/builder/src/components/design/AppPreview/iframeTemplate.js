@@ -12,16 +12,24 @@ export default `
       rel="stylesheet"
     />
     <style>
-      html,
-      body {
-        margin: 0;
+      html, body {
         padding: 0;
-        height: 100%;
-        width: 100%;
+        margin: 0;
+      }
+      html {
+        height: calc(100% - 16px);
+        width: calc(100% - 16px);
         overflow: hidden;
+        margin: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
       }
       body {
-        padding: 2px;
+        flex: 1 1 auto;
+        overflow: hidden;
       }
   
       *,

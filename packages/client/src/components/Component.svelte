@@ -54,7 +54,6 @@
     children: children.length,
     styles: { ...instance._styles, id, empty, interactive },
     empty,
-    transition: instance._transition,
     selected,
     props: componentProps,
     name,

@@ -1,9 +1,16 @@
 <script>
   import { ActionMenu, ActionButton, MenuItem, Icon } from "@budibase/bbui"
-  import { store, currentAssetName } from "builderStore"
+  import { store, currentAssetName, selectedComponent } from "builderStore"
   import structure from "./componentStructure.json"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
+
+  const isChildAllowed = ({ name }, selectedComponent) => {
+    const currentComponent = store.actions.components.getDefinition(
+      selectedComponent?._component
+    )
+    return currentComponent?.illegalChildren?.includes(name.toLowerCase())
+  }
 
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
@@ -39,6 +46,7 @@
     <ActionMenu disabled={!item.isCategory}>
       <ActionButton
         icon={item.icon}
+        disabled={isChildAllowed(item, $selectedComponent)}
         quiet
         size="S"
         slot="control"
