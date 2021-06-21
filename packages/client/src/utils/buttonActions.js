@@ -107,15 +107,19 @@ export const enrichButtonActions = (actions, context) => {
         if (action.parameters?.confirm) {
           const defaultText = confirmTextMap[action["##eventHandlerType"]]
           const confirmText = action.parameters?.confirmText || defaultText
-          confirmationStore.actions.showConfirmation(confirmText, async () => {
-            // When confirmed, execute this action immediately,
-            // then execute the rest of the actions in the chain
-            const result = await callback()
-            if (result !== false) {
-              const next = enrichButtonActions(actions.slice(i + 1), context)
-              await next()
+          confirmationStore.actions.showConfirmation(
+            action["##eventHandlerType"],
+            confirmText,
+            async () => {
+              // When confirmed, execute this action immediately,
+              // then execute the rest of the actions in the chain
+              const result = await callback()
+              if (result !== false) {
+                const next = enrichButtonActions(actions.slice(i + 1), context)
+                await next()
+              }
             }
-          })
+          )
 
           // Stop enriching actions when encountering a confirmable action,
           // as the callback continues the action chain

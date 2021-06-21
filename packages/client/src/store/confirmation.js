@@ -2,6 +2,7 @@ import { writable, get } from "svelte/store"
 
 const initialState = {
   showConfirmation: false,
+  title: null,
   text: null,
   callback: null,
 }
@@ -9,9 +10,10 @@ const initialState = {
 const createConfirmationStore = () => {
   const store = writable(initialState)
 
-  const showConfirmation = (text, callback) => {
+  const showConfirmation = (title, text, callback) => {
     store.set({
       showConfirmation: true,
+      title,
       text,
       callback,
     })
