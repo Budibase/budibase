@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { Heading, Icon } from "@budibase/bbui"
 
-  const { styleable, linkable } = getContext("sdk")
+  const { styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let title
@@ -41,6 +41,11 @@
   const close = () => {
     mobileOpen = false
   }
+
+  const navigateToPortal = () => {
+    if ($builderStore.inBuilder) return
+    window.location.href = "/builder/apps"
+  }
 </script>
 
 <div class="layout layout--{typeClass}" use:styleable={$component.styles}>
@@ -69,11 +74,7 @@
             {/if}
           </div>
           <div class="portal">
-            <Icon
-              hoverable
-              name="Apps"
-              on:click={() => (window.location.href = "/builder/apps")}
-            />
+            <Icon hoverable name="Apps" on:click={navigateToPortal} />
           </div>
         </div>
         <div
