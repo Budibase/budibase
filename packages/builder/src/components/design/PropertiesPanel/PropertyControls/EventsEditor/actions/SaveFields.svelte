@@ -79,7 +79,7 @@
       on:click={() => removeField(field[0])}
     />
   {/each}
-  <div>
+  <div style="margin-top: 10px">
     <Button icon="AddCircle" secondary on:click={addField}>
       Add
       {fieldLabel}

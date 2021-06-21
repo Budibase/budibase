@@ -3,6 +3,7 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
+  import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
   import Provider from "./Provider.svelte"
   import SDK from "../sdk"
   import {
@@ -70,6 +71,7 @@
         {/key}
       </div>
       <NotificationDisplay />
+      <ConfirmationDisplay />
       <!-- Key block needs to be outside the if statement or it breaks -->
       {#key $builderStore.selectedComponentId}
         {#if $builderStore.inBuilder}

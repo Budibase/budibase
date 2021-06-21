@@ -1,5 +1,5 @@
 <script>
-  import { Select, Layout } from "@budibase/bbui"
+  import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { datasources, integrations, queries } from "stores/backend"
   import { getBindableProperties } from "builderStore/dataBinding"
@@ -25,7 +25,7 @@
   }
 </script>
 
-<Layout>
+<Layout gap="XS">
   <Select
     label="Datasource"
     bind:value={parameters.datasourceId}
@@ -44,22 +44,34 @@
       getOptionLabel={query => query.name}
       getOptionValue={query => query._id}
     />
-  {/if}
 
-  {#if query?.parameters?.length > 0}
-    <div>
-      <ParameterBuilder
-        bind:customParams={parameters.queryParams}
-        parameters={query.parameters}
-        bindings={bindableProperties}
-      />
-      <IntegrationQueryEditor
-        height={200}
-        {query}
-        schema={fetchQueryDefinition(query)}
-        editable={false}
-        {datasource}
-      />
-    </div>
+    {#if parameters.queryId}
+      <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+
+      {#if parameters.confirm}
+        <Input
+          label="Confirm text"
+          placeholder="Are you sure you want to execute this query?"
+          bind:value={parameters.confirmText}
+        />
+      {/if}
+
+      {#if query?.parameters?.length > 0}
+        <div>
+          <ParameterBuilder
+            bind:customParams={parameters.queryParams}
+            parameters={query.parameters}
+            bindings={bindableProperties}
+          />
+          <IntegrationQueryEditor
+            height={200}
+            {query}
+            schema={fetchQueryDefinition(query)}
+            editable={false}
+            {datasource}
+          />
+        </div>
+      {/if}
+    {/if}
   {/if}
 </Layout>
