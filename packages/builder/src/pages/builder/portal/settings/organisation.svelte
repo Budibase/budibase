@@ -57,11 +57,17 @@
       await organisation.init()
     }
 
-    // Update settings
-    const res = await organisation.save({
+    const config = {
       company: $values.company ?? "",
       platformUrl: $values.platformUrl ?? "",
-    })
+    }
+    // remove logo if required
+    if (!$values.logo) {
+      config.logoUrl = ""
+    }
+
+    // Update settings
+    const res = await organisation.save(config)
     if (res.status === 200) {
       notifications.success("Settings saved successfully")
     } else {
@@ -98,7 +104,11 @@
           <Dropzone
             value={[$values.logo]}
             on:change={e => {
-              $values.logo = e.detail?.[0]
+              if (!e.detail || e.detail.length === 0) {
+                $values.logo = null
+              } else {
+                $values.logo = e.detail[0]
+              }
             }}
           />
         </div>

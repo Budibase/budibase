@@ -37,6 +37,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/apps",
     method: "GET",
   },
+  {
+    route: "/api/admin/configs/public",
+    method: "GET",
+  },
 ]
 
 const router = new Router()

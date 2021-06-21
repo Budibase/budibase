@@ -13,7 +13,7 @@ export function createOrganisationStore() {
   const { subscribe, set } = store
 
   async function init() {
-    const res = await api.get(`/api/admin/configs/settings`)
+    const res = await api.get(`/api/admin/configs/public`)
     const json = await res.json()
 
     if (json.status === 400) {

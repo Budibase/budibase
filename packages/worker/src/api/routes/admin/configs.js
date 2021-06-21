@@ -26,7 +26,7 @@ function settingValidation() {
   // prettier-ignore
   return Joi.object({
     platformUrl: Joi.string().optional(),
-    logoUrl: Joi.string().optional(),
+    logoUrl: Joi.string().optional().allow("", null),
     docsUrl: Joi.string().optional(),
     company: Joi.string().required(),
   }).unknown(true)
@@ -91,6 +91,7 @@ router
     buildConfigGetValidation(),
     controller.fetch
   )
+  .get("/api/admin/configs/public", controller.publicSettings)
   .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
   .post(
     "/api/admin/configs/upload/:type/:name",
