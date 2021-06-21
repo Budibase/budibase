@@ -17,13 +17,14 @@
   let data = []
   let loading = false
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: title = $tables.selected.name
-  $: schema = $tables.selected.schema
+  $: title = $tables.selected?.name
+  $: schema = $tables.selected?.schema
   $: tableView = {
     schema,
     name: $views.selected?.name,
   }
-  $: isInternal = $tables.selected.type === "internal"
+  $: type = $tables.selected.type
+  $: isInternal = type === "internal"
 
   // Fetch rows for specified table
   $: {
@@ -49,6 +50,7 @@
   {schema}
   tableId={$tables.selected?._id}
   {data}
+  {type}
   allowEditing={true}
   bind:hideAutocolumns
   {loading}

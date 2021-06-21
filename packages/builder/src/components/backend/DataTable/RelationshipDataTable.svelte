@@ -15,6 +15,7 @@
   $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
   $: schema = linkedTable?.schema
   $: table = $tables.list.find(table => table._id === tableId)
+  $: type = table?.type
   $: fetchData(tableId, rowId)
   $: {
     let rowLabel = row?.[table?.primaryDisplay]
@@ -33,5 +34,5 @@
 </script>
 
 {#if row && row._id === rowId}
-  <Table {title} {schema} {data} />
+  <Table {title} {schema} {data} {type} />
 {/if}
