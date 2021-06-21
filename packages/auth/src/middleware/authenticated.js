@@ -50,10 +50,9 @@ module.exports = (noAuthPatterns = [], opts) => {
       if (authCookie) {
         try {
           const db = database.getDB(StaticDatabases.GLOBAL.name)
-          const foundUser = await db.get(authCookie.userId)
-          delete foundUser.password
+          user = await db.get(authCookie.userId)
+          delete user.password
           authenticated = true
-          user = foundUser
         } catch (err) {
           // remove the cookie as the use does not exist anymore
           clearCookie(ctx, Cookies.Auth)
