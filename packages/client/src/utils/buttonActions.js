@@ -117,12 +117,12 @@ export const enrichButtonActions = (actions, context) => {
             }
           })
 
-          // Stop enriching actions when encountering a confirmable actions,
+          // Stop enriching actions when encountering a confirmable action,
           // as the callback continues the action chain
           return
         }
 
-        // For non-confirmable actions, execute this immediately
+        // For non-confirmable actions, execute the handler immediately
         else {
           const result = await callback()
           if (result === false) {
