@@ -12,7 +12,6 @@
   import {
     TableNames,
     UNEDITABLE_USER_FIELDS,
-    BUDIBASE_INTERNAL_DB,
   } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
 
@@ -24,6 +23,7 @@
   export let loading = false
   export let hideAutocolumns
   export let rowCount
+  export let type
 
   let selectedRows = []
   let editableColumn
@@ -32,7 +32,7 @@
   let editColumnModal
   let customRenderers = []
 
-  $: isInternal = tableId === BUDIBASE_INTERNAL_DB
+  $: isInternal = type !== "external"
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
