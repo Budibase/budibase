@@ -40,10 +40,12 @@ router
   )
   // DEPRECATED - this is an old API, but for backwards compat it needs to be
   // supported still
-  .post("/api/search/:tableId/rows",
+  .post(
+    "/api/search/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-    rowController.search)
+    rowController.search
+  )
   .post(
     "/api/:tableId/rows",
     paramResource("tableId"),

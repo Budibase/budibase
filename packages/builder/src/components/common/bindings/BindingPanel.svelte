@@ -59,7 +59,9 @@
         <section>
           <Heading size="XS">Columns</Heading>
           <ul>
-            {#each context.filter( context => context.readableBinding.match(searchRgx) ) as { readableBinding }}
+            {#each context.filter(context =>
+              context.readableBinding.match(searchRgx)
+            ) as { readableBinding }}
               <li
                 on:click={() => {
                   value = addToText(value, getCaretPosition(), readableBinding)
@@ -75,7 +77,9 @@
         <section>
           <Heading size="XS">Components</Heading>
           <ul>
-            {#each instance.filter( instance => instance.readableBinding.match(searchRgx) ) as { readableBinding }}
+            {#each instance.filter(instance =>
+              instance.readableBinding.match(searchRgx)
+            ) as { readableBinding }}
               <li on:click={() => addToText(readableBinding)}>
                 {readableBinding}
               </li>
