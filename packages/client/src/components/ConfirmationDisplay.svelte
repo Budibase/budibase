@@ -6,7 +6,7 @@
 {#if $confirmationStore.showConfirmation}
   <Modal fixed on:cancel={confirmationStore.actions.cancel}>
     <ModalContent
-      title="Confirm Action"
+      title={$confirmationStore.title}
       onConfirm={confirmationStore.actions.confirm}
     >
       {$confirmationStore.text}
