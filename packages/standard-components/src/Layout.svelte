@@ -74,11 +74,7 @@
             {/if}
           </div>
           <div class="portal">
-            <Icon
-              hoverable
-              name="Apps"
-              on:click={navigateToPortal}
-            />
+            <Icon hoverable name="Apps" on:click={navigateToPortal} />
           </div>
         </div>
         <div
