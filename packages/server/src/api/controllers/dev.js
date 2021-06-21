@@ -14,7 +14,7 @@ async function redirect(ctx, method) {
     request(ctx, {
       method,
       body: ctx.request.body,
-    })
+    }, true)
   )
   if (response.status !== 200) {
     ctx.throw(response.status, response.statusText)

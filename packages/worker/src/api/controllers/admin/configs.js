@@ -102,9 +102,14 @@ exports.publicSettings = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   try {
     // Find the config with the most granular scope based on context
-    ctx.body = await getScopedFullConfig(db, {
+    const config = await getScopedFullConfig(db, {
       type: Configs.SETTINGS,
     })
+    if (!config) {
+      ctx.body = {}
+    } else {
+      ctx.body = config
+    }
   } catch (err) {
     ctx.throw(err.status, err)
   }
