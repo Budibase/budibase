@@ -1,6 +1,7 @@
 <script>
   import {
     notifications,
+    ActionButton,
     Button,
     Drawer,
     Body,
@@ -46,7 +47,7 @@
   }
 </script>
 
-<Button secondary on:click={drawer.show}>Define Filters</Button>
+<ActionButton on:click={drawer.show}>Define Filters</ActionButton>
 <Drawer bind:this={drawer} title="Filtering">
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <DrawerContent slot="body">

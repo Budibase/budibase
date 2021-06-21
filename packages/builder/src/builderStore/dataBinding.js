@@ -333,7 +333,7 @@ const buildFormSchema = component => {
  */
 export function removeBindings(obj) {
   for (let [key, value] of Object.entries(obj)) {
-    if (typeof value === "object") {
+    if (value && typeof value === "object") {
       obj[key] = removeBindings(value)
     } else if (typeof value === "string") {
       obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, "Invalid binding")

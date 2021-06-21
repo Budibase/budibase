@@ -1,5 +1,5 @@
 <script>
-  import { TextArea, DetailSummary, Button, Select } from "@budibase/bbui"
+  import { TextArea, DetailSummary, Button } from "@budibase/bbui"
   import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
   import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
   import { allStyles } from "./componentStyles"
@@ -8,7 +8,6 @@
   export let componentInstance = {}
   export let onStyleChanged = () => {}
   export let onCustomStyleChanged = () => {}
-  export let onUpdateTransition = () => {}
   export let onResetStyles = () => {}
 
   let selectedCategory = "normal"
@@ -23,16 +22,6 @@
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
   ]
-
-  const transitions = [
-    "none",
-    "fade",
-    "blur",
-    "fly",
-    "scale", // slide is hidden because it does not seem to result in any effect
-  ]
-
-  const capitalize = ([first, ...rest]) => first.toUpperCase() + rest.join("")
 
   $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
 </script>
@@ -78,18 +67,6 @@
       {/if}
     </div>
   </div>
-  {#if componentDefinition?.transitionable}
-    <div class="transitions">
-      <Select
-        value={componentInstance._transition}
-        on:change={event => onUpdateTransition(event.detail)}
-        name="transition"
-        label="Transition"
-        options={transitions}
-        getOptionLabel={capitalize}
-      />
-    </div>
-  {/if}
 </div>
 
 <style>
