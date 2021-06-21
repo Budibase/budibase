@@ -287,10 +287,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.36":
-  version "0.9.36"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.36.tgz#8111890390fb57a513ea1fc0b209db474460ea59"
-  integrity sha512-pGDd3d5/MwEDrSQI7NZNfekXlywuxjKNOfQHi5+5cbpje3DdWxRu2ILpvYj0TdmIk8K3vd4TsZLL0APVaB/mhg==
+"@budibase/auth@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.53.tgz#7b84aef4a7683c1da7d872c7e0f29d5897b2331c"
+  integrity sha512-0WO7LVrNfjkvIguVeHWnSeQOvY90EPyKLx9rXpS0etYD52WjdL8dwpydtTmh/pGHhoqiikuLTAgre2F6CZCOTg==
   dependencies:
     aws-sdk "^2.901.0"
     bcryptjs "^2.4.3"
@@ -308,10 +308,10 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-"@budibase/handlebars-helpers@^0.11.3":
-  version "0.11.3"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.3.tgz#b6e5c91b83e8906e7d7ff10ddde277a3d561016e"
-  integrity sha512-MS1ptZEYq8o9J3tNLM7cZ2RGSSJIer4GiMIUHtbBI3sC9UKqZebao1JYNfmZKpNjntuqhZKgjqc5GfnVIEjsYQ==
+"@budibase/handlebars-helpers@^0.11.4":
+  version "0.11.4"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.4.tgz#8acfa2ee84134f7be4b2906e710fce6d25c5d000"
+  integrity sha512-AJNJYlJnxZmn9QJ8tBl8nrm4YxbwHP4AR0pbiVGK+EoOylkNBlUnZ/QDL1VyqM5fTkAE/Z2IZVLKrrG3kxuWLA==
   dependencies:
     arr-flatten "^1.1.0"
     array-sort "^0.1.4"
@@ -340,12 +340,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.36":
-  version "0.9.36"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.36.tgz#a8391d01fec9587b8b0873f6bdc402a6d8375e8a"
-  integrity sha512-OtuwJZkwgGD/pu0I0duCqiC4djGhc3olMvROq9JHIs6jm7qWLRxud53S1TdgHFFZPdEsuUGHGLRlZrIZaPujQw==
+"@budibase/string-templates@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.53.tgz#9228965afcef4cc19f7d016b291d5f298bb3b725"
+  integrity sha512-TL3Zx6VN+YpbIT5vtuTXEv2SOAwmx+YN42pbWxH3ExHj54bvhmRxSS+xJySs75kWdvQU4OMnYywQcMeMsqkOqg==
   dependencies:
-    "@budibase/handlebars-helpers" "^0.11.3"
+    "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"
     handlebars "^4.7.6"
     handlebars-utils "^1.0.6"
@@ -5875,9 +5875,9 @@ set-blocking@^2.0.0:
   integrity sha1-BF+XgtARrppoA93TgrJDkrPYkPc=
 
 set-getter@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/set-getter/-/set-getter-0.1.0.tgz#d769c182c9d5a51f409145f2fba82e5e86e80376"
-  integrity sha1-12nBgsnVpR9AkUXy+6guXoboA3Y=
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/set-getter/-/set-getter-0.1.1.tgz#a3110e1b461d31a9cfc8c5c9ee2e9737ad447102"
+  integrity sha512-9sVWOy+gthr+0G9DzqqLaYNA7+5OKkSmcqjL9cBpDEaZrr3ShQlyX2cZ/O/ozE41oxn/Tt0LGEM/w4Rub3A3gw==
   dependencies:
     to-object-path "^0.3.0"
 
