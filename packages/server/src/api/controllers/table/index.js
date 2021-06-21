@@ -5,23 +5,57 @@ const {
   getRowParams,
   getTableParams,
   generateTableID,
+  getDatasourceParams,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
-const { TableSaveFunctions } = require("./utils")
+const { TableSaveFunctions, getExternalTable } = require("./utils")
+const {
+  isExternalTable,
+  breakExternalTableId,
+} = require("../../../integrations/utils")
 
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  const body = await db.allDocs(
+
+  const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = body.rows.map(row => row.doc)
+
+  const internal = internalTables.rows.map(row => ({
+    ...row.doc,
+    type: "internal",
+    sourceId: BudibaseInternalDB._id,
+  }))
+
+  const externalTables = await db.allDocs(
+    getDatasourceParams("plus", {
+      include_docs: true,
+    })
+  )
+
+  const external = externalTables.rows.flatMap(row => {
+    return Object.values(row.doc.entities || {}).map(entity => ({
+      ...entity,
+      type: "external",
+      sourceId: row.doc._id,
+    }))
+  })
+
+  ctx.body = [...internal, ...external]
 }
 
 exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  ctx.body = await db.get(ctx.params.id)
+  const tableId = ctx.params.id
+  if (isExternalTable(tableId)) {
+    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    ctx.body = await getExternalTable(ctx.appId, datasourceId, tableName)
+  } else {
+    ctx.body = await db.get(ctx.params.id)
+  }
 }
 
 exports.save = async function (ctx) {

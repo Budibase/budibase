@@ -1,7 +1,7 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -13,15 +13,35 @@
   $: integration = datasource && $integrations[datasource.source]
 
   async function saveDatasource() {
-    // Create datasource
-    await datasources.save(datasource)
-    notifications.success(`Datasource ${name} saved successfully.`)
-    unsaved = false
+    try {
+      // Create datasource
+      await datasources.save(datasource)
+      notifications.success(`Datasource ${name} updated successfully.`)
+      unsaved = false
+    } catch (err) {
+      notifications.error(`Error saving datasource: ${err}`)
+    }
+  }
+
+  async function updateDatasourceSchema() {
+    try {
+      await datasources.updateSchema(datasource)
+      notifications.success(`Datasource ${name} tables updated successfully.`)
+      unsaved = false
+      await tables.fetch()
+    } catch (err) {
+      notifications.error(`Error updating datasource schema: ${err}`)
+    }
   }
 
   function onClickQuery(query) {
     queries.select(query)
     $goto(`./${query._id}`)
+  }
+
+  function onClickTable(table) {
+    tables.select(table)
+    $goto(`../../table/${table._id}`)
   }
 
   function setUnsaved() {
@@ -39,7 +59,7 @@
   })
 </script>
 
-{#if datasource}
+{#if datasource && integration}
   <section>
     <Layout>
       <header>
@@ -66,6 +86,34 @@
           on:change={setUnsaved}
         />
       </div>
+      {#if datasource.plus}
+        <Divider />
+        <div class="query-header">
+          <Heading size="S">Tables</Heading>
+          <Button primary on:click={updateDatasourceSchema}
+            >Fetch Tables From Database</Button
+          >
+        </div>
+        <Body>
+          This datasource can determine tables automatically. Budibase can fetch
+          your tables directly from the database and you can use them without
+          having to write any queries at all.
+        </Body>
+        <div class="query-list">
+          {#if datasource.entities}
+            {#each Object.keys(datasource.entities) as entity}
+              <div
+                class="query-list-item"
+                on:click={() => onClickTable(datasource.entities[entity])}
+              >
+                <p class="query-name">{entity}</p>
+                <p>Primary Key: {datasource.entities[entity].primary}</p>
+                <p>→</p>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      {/if}
       <Divider />
       <div class="query-header">
         <Heading size="S">Queries</Heading>

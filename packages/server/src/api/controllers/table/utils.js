@@ -204,4 +204,15 @@ class TableSaveFunctions {
   }
 }
 
+exports.getExternalTable = async (appId, datasourceId, tableName) => {
+  const db = new CouchDB(appId)
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    throw "Datasource is not configured fully."
+  }
+  return Object.values(datasource.entities).find(
+    entity => entity.name === tableName
+  )
+}
+
 exports.TableSaveFunctions = TableSaveFunctions

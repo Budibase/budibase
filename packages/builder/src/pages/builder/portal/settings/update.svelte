@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import {
     Layout,
     Heading,
@@ -7,8 +8,11 @@
     Divider,
     notifications,
   } from "@budibase/bbui"
+  import api from "builderStore/api"
   import { auth } from "stores/portal"
   import { redirect } from "@roxi/routify"
+
+  let version
 
   // Only admins allowed here
   $: {
@@ -26,10 +30,20 @@
         },
       })
       notifications.success("Your budibase installation is up to date.")
+      getVersion()
     } catch (err) {
       notifications.error(`Error installing budibase update ${err}`)
     }
   }
+
+  async function getVersion() {
+    const response = await api.get("/api/dev/version")
+    version = await response.text()
+  }
+
+  onMount(() => {
+    getVersion()
+  })
 </script>
 
 {#if $auth.isAdmin}
@@ -43,6 +57,11 @@
     </Layout>
     <Divider size="S" />
     <div class="fields">
+      <div class="field">
+        {#if version}
+          Current Version: {version}
+        {/if}
+      </div>
       <div class="field">
         <Button cta on:click={updateBudibase}>Check For Updates</Button>
       </div>

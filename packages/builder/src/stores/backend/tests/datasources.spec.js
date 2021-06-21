@@ -24,10 +24,10 @@ describe("Datasources Store", () => {
   })
 
   it("fetches all the datasources and updates the store", async () => {
-    api.get.mockReturnValue({ json: () => [SOME_DATASOURCE]})
+    api.get.mockReturnValue({ json: () => [SOME_DATASOURCE] })
 
     await store.fetch()
-    expect(get(store)).toEqual({ list: [SOME_DATASOURCE], selected: null})  
+    expect(get(store)).toEqual({ list: [SOME_DATASOURCE], selected: null })  
   })
 
   it("selects a datasource", async () => {
@@ -44,7 +44,7 @@ describe("Datasources Store", () => {
   })
 
   it("saves the datasource, updates the store and returns status message", async () => {
-    api.post.mockReturnValue({ json: () => SAVE_DATASOURCE})    
+    api.post.mockReturnValue({ status: 200, json: () => SAVE_DATASOURCE})    
 
     await store.save({
       name: 'CoolDB',

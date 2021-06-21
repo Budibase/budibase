@@ -1,15 +1,15 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { store, allScreens } from "builderStore"
+  import { allScreens, store } from "builderStore"
   import { tables } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import {
     ActionMenu,
-    MenuItem,
     Icon,
+    Input,
+    MenuItem,
     Modal,
     ModalContent,
-    Input,
+    notifications,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
@@ -22,9 +22,12 @@
   let templateScreens
   let willBeDeleted
 
+  $: external = table?.type === "external"
+
   function showDeleteModal() {
-    const screens = $allScreens
-    templateScreens = screens.filter(screen => screen.autoTableId === table._id)
+    templateScreens = $allScreens.filter(
+      screen => screen.autoTableId === table._id
+    )
     willBeDeleted = ["All table data"].concat(
       templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
     )
@@ -61,7 +64,9 @@
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+  {#if !external}
+    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+  {/if}
 </ActionMenu>
 
 <Modal bind:this={editorModal}>

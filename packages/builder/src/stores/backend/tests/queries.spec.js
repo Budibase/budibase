@@ -30,13 +30,6 @@ describe("Queries Store", () => {
     expect(get(store)).toEqual({ list: [SOME_QUERY], selected: null})  
   })
 
-  it("selects a query and updates selected datasource", async () => {
-    await store.select(SOME_QUERY)
-  
-    expect(get(store).selected).toEqual(SOME_QUERY._id) 
-    expect(get(datasources).selected).toEqual(SOME_QUERY.datasourceId)
-  })
-
   it("saves the query, updates the store and returns status message", async () => {
     api.post.mockReturnValue({ json: () => SAVE_QUERY_RESPONSE})    
 

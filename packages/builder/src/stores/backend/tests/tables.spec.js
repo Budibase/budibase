@@ -41,14 +41,6 @@ describe("Tables Store", () => {
     expect(get(store).draft).toEqual({}) 
   })
 
-  it("selecting a table updates the view store", async () => {
-    const tableToSelect = SOME_TABLES[0]
-    await store.select(tableToSelect)
-  
-    expect(get(store).selected).toEqual(tableToSelect) 
-    expect(get(views).selected).toEqual({ name: `all_${tableToSelect._id}` })
-  })
-
   it("saving a table also selects it", async () => {
     api.post.mockReturnValue({ json: () => SAVE_TABLES_RESPONSE})    
 
