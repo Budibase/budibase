@@ -14,7 +14,6 @@
   "scripts": {
     "run:docker": "node src/index.js",
     "build:docker": "docker build . -t worker-service",
-    "build:docker:develop": "docker build . -t worker-service:develop",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon src/index.js",
     "test": "jest --runInBand"
