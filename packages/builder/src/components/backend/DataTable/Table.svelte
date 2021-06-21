@@ -9,10 +9,7 @@
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
-  import {
-    TableNames,
-    UNEDITABLE_USER_FIELDS,
-  } from "constants"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
 
   export let schema = {}
