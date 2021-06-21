@@ -28,10 +28,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^0.9.46":
-  version "0.9.46"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.46.tgz#3109666b618daa65b29d1c7c45549420c62e6489"
-  integrity sha512-PRW8kR9+QrMiom6hVzisMYd268dj03ojC0ruzEkDhKMONg2I021ST62hzKXdb7zh5LgoYXtapmM9qsKwoHfkPg==
+"@budibase/bbui@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.53.tgz#b6841a31ff2c28feb929c57f7f10a1dae1b3aea3"
+  integrity sha512-jO11Ky1KhPGRv922jMRO49FeTY1TeF3u2JaBJYBkVY95il3uPOI20M1AdA6w2emppDlyP6FSEHk+prdra4Lndw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -108,12 +108,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/standard-components@^0.9.46":
-  version "0.9.46"
-  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.46.tgz#a31a253ca51a2029c3aaf5d8aca5c953358e1d67"
-  integrity sha512-QjW4tukMw4Xa477wGTle2UPz85ygodQ3KG+WEdPAWKq7j0IDv0Fad0oDmWtzLvGxxB+AiRbEnM6T1QV6X1ItCA==
+"@budibase/standard-components@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.53.tgz#5e8d84bf4c3b1ceadfc40b5b5b6c0513b6283fc5"
+  integrity sha512-8QJmjwF51vh+rCiLbk+JLqCNZZBq9M8/LuyQOGvjnhB8l6DNrfjnCypP/xYoBf0uUvlki8TeNuZKQmDpBBnR7A==
   dependencies:
-    "@budibase/bbui" "^0.9.46"
+    "@budibase/bbui" "^0.9.53"
     "@spectrum-css/page" "^3.0.1"
     "@spectrum-css/vars" "^3.0.1"
     apexcharts "^3.22.1"
@@ -121,10 +121,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.46":
-  version "0.9.46"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.46.tgz#e43f87513977879a892ae52f3941d3320cb9ff88"
-  integrity sha512-yOVS7Y/QLATj31QuBu8KP78Oyzhs60V09JEQKa7n4vRP8TBemcev/LFShln8Iiv70YZSpdJviguQuJ6Ow0aUNA==
+"@budibase/string-templates@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.53.tgz#9228965afcef4cc19f7d016b291d5f298bb3b725"
+  integrity sha512-TL3Zx6VN+YpbIT5vtuTXEv2SOAwmx+YN42pbWxH3ExHj54bvhmRxSS+xJySs75kWdvQU4OMnYywQcMeMsqkOqg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"
@@ -4030,9 +4030,9 @@ serialize-javascript@^4.0.0:
     randombytes "^2.1.0"
 
 set-getter@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/set-getter/-/set-getter-0.1.0.tgz#d769c182c9d5a51f409145f2fba82e5e86e80376"
-  integrity sha1-12nBgsnVpR9AkUXy+6guXoboA3Y=
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/set-getter/-/set-getter-0.1.1.tgz#a3110e1b461d31a9cfc8c5c9ee2e9737ad447102"
+  integrity sha512-9sVWOy+gthr+0G9DzqqLaYNA7+5OKkSmcqjL9cBpDEaZrr3ShQlyX2cZ/O/ozE41oxn/Tt0LGEM/w4Rub3A3gw==
   dependencies:
     to-object-path "^0.3.0"
 
