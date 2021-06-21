@@ -2,8 +2,9 @@
   import { Body, Button, Heading, Layout, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import { auth } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
+  import { onMount } from "svelte"
 
   const resetCode = $params["?code"]
   let password, error
@@ -28,13 +29,17 @@
       notifications.error("Unable to reset password")
     }
   }
+
+  onMount(async () => {
+    await organisation.init()
+  })
 </script>
 
 <div class="login">
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img src={Logo} alt="Organisation logo" />
+        <img src={$organisation.logoUrl || Logo} alt="Organisation logo" />
       </Layout>
       <Layout gap="XS" noPadding>
         <Heading textAlign="center">Reset your password</Heading>

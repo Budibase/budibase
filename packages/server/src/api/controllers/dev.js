@@ -11,10 +11,14 @@ async function redirect(ctx, method) {
   const { devPath } = ctx.params
   const response = await fetch(
     checkSlashesInUrl(`${env.WORKER_URL}/api/admin/${devPath}`),
-    request(ctx, {
-      method,
-      body: ctx.request.body,
-    })
+    request(
+      ctx,
+      {
+        method,
+        body: ctx.request.body,
+      },
+      true
+    )
   )
   if (response.status !== 200) {
     ctx.throw(response.status, response.statusText)
