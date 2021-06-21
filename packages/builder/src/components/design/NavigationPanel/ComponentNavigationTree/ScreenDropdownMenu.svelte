@@ -10,11 +10,10 @@
 
   $: screen = $allScreens.find(screen => screen._id === screenId)
 
-  const deleteScreen = () => {
+  const deleteScreen = async () => {
     try {
-      store.actions.screens.delete(screen)
-      store.actions.routing.fetch()
-      confirmDeleteDialog.hide()
+      await store.actions.screens.delete(screen)
+      await store.actions.routing.fetch()
       $goto("../")
       notifications.success("Deleted screen successfully.")
     } catch (err) {

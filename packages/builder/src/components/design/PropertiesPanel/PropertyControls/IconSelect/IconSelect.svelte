@@ -8,7 +8,7 @@
 </script>
 
 <script>
-  import { Popover, Button, Input } from "@budibase/bbui"
+  import { Popover, ActionButton, Button, Input } from "@budibase/bbui"
   import { createEventDispatcher, tick } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -117,7 +117,7 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <Button secondary small on:click={dropdown.show}>{displayValue}</Button>
+  <ActionButton on:click={dropdown.show}>{displayValue}</ActionButton>
 </div>
 <Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">
