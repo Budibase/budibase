@@ -90,7 +90,8 @@ exports.find = async function (ctx) {
     if (scopedConfig) {
       ctx.body = scopedConfig
     } else {
-      ctx.throw(400, "No configuration exists.")
+      // don't throw an error, there simply is nothing to return
+      ctx.body = {}
     }
   } catch (err) {
     ctx.throw(err.status, err)
