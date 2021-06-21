@@ -40,12 +40,10 @@ export function makeMainForm() {
       padding: "0px",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      "margin-top": "20px",
       "padding-top": "48px",
       "padding-bottom": "48px",
       "padding-right": "48px",
       "padding-left": "48px",
-      "margin-bottom": "20px",
     })
     .instanceName("Form")
 }
@@ -58,6 +56,8 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .normalStyle({
       "margin-right": "4px",
       "margin-left": "4px",
+      "margin-top": "0px",
+      "margin-bottom": "0px",
     })
     .customStyle(spectrumColor(700))
     .text(">")
@@ -65,6 +65,8 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
 
   const textStyling = {
     color: "#000000",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
   }
   if (capitalise) {
     textStyling["text-transform"] = "capitalize"
@@ -140,10 +142,6 @@ export function makeTitleContainer(title) {
   const heading = new Component("@budibase/standard-components/heading")
     .normalStyle({
       margin: "0px",
-      "margin-bottom": "0px",
-      "margin-right": "0px",
-      "margin-top": "0px",
-      "margin-left": "0px",
       flex: "1 1 auto",
     })
     .customStyle(spectrumColor(900))

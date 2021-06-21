@@ -1,11 +1,67 @@
 {
+  "layout": {
+    "name": "Layout",
+    "description": "This component is specific only to layouts",
+    "icon": "Sandbox",
+    "hasChildren": true,
+    "styleable": true,
+    "illegalChildren": [],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Logo URL",
+        "key": "logoUrl"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "select",
+        "label": "Navigation",
+        "key": "navigation",
+        "options": ["Top", "Left", "None"],
+        "defaultValue": "Top"
+      },
+      {
+        "type": "select",
+        "label": "Width",
+        "key": "width",
+        "options": ["Small", "Medium", "Large"],
+        "defaultValue": "Large"
+      },
+      {
+        "type": "navigation",
+        "label": "Links",
+        "key": "links"
+      },
+      {
+        "type": "boolean",
+        "label": "Hide title",
+        "key": "hideTitle",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Hide logo",
+        "key": "hideLogo",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Sticky header",
+        "key": "sticky",
+        "defaultValue": false
+      }
+    ]
+  },
   "container": {
     "name": "Container",
     "description": "This component contains things within itself",
     "icon": "Sandbox",
     "hasChildren": true,
     "styleable": true,
-    "transitionable": true,
     "showSettingsBar": true,
     "settings": [
       {
@@ -118,6 +174,23 @@
       }
     ]
   },
+  "section": {
+    "name": "Section",
+    "description": "Add a section to your application",
+    "icon": "ColumnTwoB",
+    "hasChildren": true,
+    "styleable": true,
+    "illegalChildren": ["section"],
+    "showEmptyState": false,
+    "settings": [
+      {
+        "type": "section",
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "mainSidebar"
+      }
+    ]
+  },
   "screenslot": {
     "name": "Screenslot",
     "icon": "WebPage",
@@ -128,6 +201,7 @@
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
+    "illegalChildren": ["section"],
     "styleable": true,
     "settings": [
       {
@@ -158,6 +232,11 @@
         "type": "event",
         "label": "On Click",
         "key": "onClick"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled"
       }
     ]
   },
@@ -166,6 +245,7 @@
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "ViewList",
     "styleable": true,
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
       {
@@ -194,6 +274,7 @@
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -223,6 +304,7 @@
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -283,6 +365,7 @@
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -296,6 +379,7 @@
     "icon": "TextBold",
     "description": "A component for displaying heading text",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -316,6 +400,7 @@
     "description": "A basic component for displaying images",
     "icon": "Image",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -329,6 +414,7 @@
     "description": "A background image",
     "icon": "Images",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -386,6 +472,7 @@
     "description": "A basic component for displaying icons",
     "icon": "Bell",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "icon",
@@ -433,6 +520,7 @@
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
     "styleable": true,
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
       {
@@ -453,6 +541,7 @@
     "description": "A basic link component for internal and external links",
     "icon": "Link",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -482,6 +571,7 @@
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewRow",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -554,6 +644,7 @@
     "description": "A card component for displaying numbers.",
     "icon": "Card",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -580,6 +671,7 @@
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -593,6 +685,7 @@
     "description": "Bar chart",
     "icon": "GraphBarVertical",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -693,6 +786,7 @@
     "description": "Line chart",
     "icon": "GraphTrend",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -794,6 +888,7 @@
     "description": "Line chart",
     "icon": "GraphAreaStacked",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -907,6 +1002,7 @@
     "description": "Pie chart",
     "icon": "GraphPie",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -984,6 +1080,7 @@
     "description": "Donut chart",
     "icon": "GraphDonut",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -1061,6 +1158,7 @@
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -1143,6 +1241,7 @@
     "icon": "Form",
     "styleable": true,
     "hasChildren": true,
+    "illegalChildren": ["section"],
     "actions": [
       "ValidateForm"
     ],
@@ -1214,6 +1313,7 @@
     "name": "Field Group",
     "icon": "Group",
     "styleable": true,
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
       {
@@ -1242,6 +1342,7 @@
     "name": "Text Field",
     "icon": "Text",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/string",
@@ -1270,6 +1371,7 @@
     "name": "Number Field",
     "icon": "123",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/number",
@@ -1298,6 +1400,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/string",
@@ -1326,6 +1429,7 @@
     "name": "Options Picker",
     "icon": "ViewList",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/options",
@@ -1355,6 +1459,7 @@
     "name": "Checkbox",
     "icon": "Checkmark",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/boolean",
@@ -1383,6 +1488,7 @@
     "name": "Rich Text",
     "icon": "TextParagraph",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/longform",
@@ -1412,6 +1518,7 @@
     "name": "Date Picker",
     "icon": "DateInput",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/datetime",
@@ -1446,6 +1553,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/attachment",
@@ -1469,6 +1577,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styleable": true,
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/link",
@@ -1498,6 +1607,7 @@
     "info": "Pagination is only available for data stored in internal tables.",
     "icon": "Data",
     "styleable": false,
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
       {
@@ -1561,6 +1671,7 @@
     "name": "Table",
     "icon": "Table",
     "styleable": true,
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
     "settings": [

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable, transition } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   export let direction
@@ -17,7 +17,6 @@
 
 <div
   class={[directionClass, hAlignClass, vAlignClass, sizeClass].join(" ")}
-  in:transition={{ type: $component.transition }}
   use:styleable={$component.styles}
 >
   <slot />
