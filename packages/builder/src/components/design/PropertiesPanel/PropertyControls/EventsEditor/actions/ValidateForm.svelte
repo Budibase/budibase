@@ -24,15 +24,12 @@
 
 <style>
   .root {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    column-gap: var(--spacing-l);
+    row-gap: var(--spacing-s);
+    grid-template-columns: 60px 1fr;
     align-items: center;
     max-width: 800px;
     margin: 0 auto;
-  }
-
-  .root :global(> div) {
-    flex: 1;
-    margin-left: var(--spacing-l);
   }
 </style>
