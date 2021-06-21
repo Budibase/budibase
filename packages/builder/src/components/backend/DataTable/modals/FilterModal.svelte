@@ -57,7 +57,9 @@
 
   export let view = {}
 
-  $: viewTable = $tables.list.find(({ _id }) => _id === $views.selected?.tableId)
+  $: viewTable = $tables.list.find(
+    ({ _id }) => _id === $views.selected?.tableId
+  )
   $: fields = viewTable && Object.keys(viewTable.schema)
 
   function saveView() {
