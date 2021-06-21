@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Body } from "@budibase/bbui"
+  import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import {
@@ -33,7 +33,8 @@
     optional.<br />
     You can always add or override fields manually.
   </Body>
-  <div class="fields">
+
+  <div class="params">
     <Label small>Data Source</Label>
     <Select
       bind:value={parameters.providerId}
@@ -51,37 +52,58 @@
       getOptionValue={option => option._id}
     />
 
-    {#if parameters.tableId}
+    <Label small />
+    <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+
+    {#if parameters.confirm}
+      <Label small>Confirm text</Label>
+      <Input
+        placeholder="Are you sure you want to save this row?"
+        bind:value={parameters.confirmText}
+      />
+    {/if}
+  </div>
+
+  {#if parameters.tableId}
+    <div class="fields">
       <SaveFields
         parameterFields={parameters.fields}
         {schemaFields}
         on:change={onFieldsChanged}
       />
-    {/if}
-  </div>
+    </div>
+  {/if}
 </div>
 
 <style>
   .root {
+    width: 100%;
     max-width: 800px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-xl);
   }
 
   .root :global(p) {
     line-height: 1.5;
   }
 
+  .params {
+    display: grid;
+    column-gap: var(--spacing-l);
+    row-gap: var(--spacing-s);
+    grid-template-columns: 60px 1fr;
+    align-items: center;
+  }
+
   .fields {
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: auto 1fr auto 1fr auto;
+    grid-template-columns: 60px 1fr auto 1fr auto;
     align-items: center;
-  }
-
-  .fields :global(> div:nth-child(2)),
-  .fields :global(> div:nth-child(4)) {
-    grid-column-start: 2;
-    grid-column-end: 6;
   }
 </style>
