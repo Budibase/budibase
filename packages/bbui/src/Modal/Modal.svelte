@@ -27,9 +27,17 @@
     visible = false
   }
 
+  export function cancel() {
+    if (!visible) {
+      return
+    }
+    dispatch("cancel")
+    hide()
+  }
+
   function handleKey(e) {
     if (visible && e.key === "Escape") {
-      hide()
+      cancel()
     }
   }
 
@@ -41,7 +49,7 @@
     }
   }
 
-  setContext(Context.Modal, { show, hide })
+  setContext(Context.Modal, { show, hide, cancel })
 </script>
 
 <svelte:window on:keydown={handleKey} />
@@ -56,15 +64,17 @@
   <Portal target=".modal-container">
     <div
       class="spectrum-Underlay is-open"
-      transition:fade|local={{ duration: 200 }}
-      on:mousedown|self={hide}
+      in:fade={{ duration: 200 }}
+      out:fade|local={{ duration: 200 }}
+      on:mousedown|self={cancel}
     >
-      <div class="modal-wrapper" on:mousedown|self={hide}>
-        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
+      <div class="modal-wrapper" on:mousedown|self={cancel}>
+        <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
           <div
             use:focusFirstInput
             class="spectrum-Modal is-open"
-            transition:fly|local={{ y: 30, duration: 200 }}
+            in:fly={{ y: 30, duration: 200 }}
+            out:fly|local={{ y: 30, duration: 200 }}
           >
             <slot />
           </div>

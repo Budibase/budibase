@@ -16,7 +16,7 @@
   export let onConfirm = undefined
   export let disabled = false
 
-  const { hide } = getContext(Context.Modal)
+  const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
 
@@ -56,7 +56,7 @@
       >
         <slot name="footer" />
         {#if showCancelButton}
-          <Button group secondary on:click={hide}>{cancelText}</Button>
+          <Button group secondary on:click={cancel}>{cancelText}</Button>
         {/if}
         {#if showConfirmButton}
           <Button
