@@ -1,49 +1,27 @@
 <script>
-  import { isActive, goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import { BUDIBASE_INTERNAL_DB } from "constants"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
-  import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
-  const tabs = [
-    {
-      title: "Internal",
-      key: "table",
-    },
-    {
-      title: "External",
-      key: "datasource",
-    },
-  ]
-
-  let selected = $isActive("./datasource") ? "External" : "Internal"
-
-  function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find(t => t.title === detail)
-    if (key === "datasource") {
-      $goto("./datasource")
-    } else {
-      $goto("./table")
-    }
-  }
-
+  let selected = "Sources"
   let modal
+
+  $: isExternal =
+    $params.selectedDatasource &&
+    $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
+
+  function selectFirstDatasource() {
+    $goto("./table")
+  }
 </script>
 
 <!-- routify:options index=0 -->
 <div class="root">
   <div class="nav">
-    <Tabs {selected} on:select={selectFirstTableOrSource}>
-      <Tab title="Internal">
-        <div class="tab-content-padding">
-          <TableNavigator />
-          <Modal bind:this={modal}>
-            <CreateTableModal />
-          </Modal>
-        </div>
-      </Tab>
-      <Tab title="External">
+    <Tabs {selected} on:select={selectFirstDatasource}>
+      <Tab title="Sources">
         <div class="tab-content-padding">
           <DatasourceNavigator />
           <Modal bind:this={modal}>
@@ -54,7 +32,7 @@
     </Tabs>
     <div
       class="add-button"
-      data-cy={`new-${selected === "External" ? "datasource" : "table"}`}
+      data-cy={`new-${isExternal ? "datasource" : "table"}`}
     >
       <Icon hoverable name="AddCircle" on:click={modal.show} />
     </div>

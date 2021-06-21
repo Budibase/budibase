@@ -8,6 +8,11 @@ const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
 const { utils } = require("@budibase/auth/redis")
 const { JobQueues } = require("../constants")
+const {
+  isExternalTable,
+  breakExternalTableId,
+} = require("../integrations/utils")
+const { getExternalTable } = require("../api/controllers/table/utils")
 
 const { opts } = utils.getRedisOptions()
 let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
@@ -288,9 +293,15 @@ emitter.on("row:delete", async function (event) {
 async function fillRowOutput(automation, params) {
   let triggerSchema = automation.definition.trigger
   let tableId = triggerSchema.inputs.tableId
-  const db = new CouchDB(params.appId)
   try {
-    let table = await db.get(tableId)
+    let table
+    if (!isExternalTable(tableId)) {
+      const db = new CouchDB(params.appId)
+      table = await db.get(tableId)
+    } else {
+      const { datasourceId, tableName } = breakExternalTableId(tableId)
+      table = await getExternalTable(params.appId, datasourceId, tableName)
+    }
     let row = {}
     for (let schemaKey of Object.keys(table.schema)) {
       const paramValue = params[schemaKey]

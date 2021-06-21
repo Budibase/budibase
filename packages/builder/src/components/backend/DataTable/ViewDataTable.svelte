@@ -11,19 +11,18 @@
   import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
 
   export let view = {}
-  let hideAutocolumns = true
 
+  let hideAutocolumns = true
   let data = []
   let loading = false
+  let type = "internal"
 
   $: name = view.name
 
   // Fetch rows for specified view
   $: {
-    if (!name.startsWith("all_")) {
-      loading = true
-      fetchViewData(name, view.field, view.groupBy, view.calculation)
-    }
+    loading = true
+    fetchViewData(name, view.field, view.groupBy, view.calculation)
   }
 
   async function fetchViewData(name, field, groupBy, calculation) {
@@ -32,6 +31,7 @@
     const thisView = allTableViews.filter(
       views => views != null && views[name] != null
     )[0]
+
     // don't fetch view data if the view no longer exists
     if (!thisView) {
       return
@@ -57,6 +57,7 @@
   tableId={view.tableId}
   {data}
   {loading}
+  {type}
   allowEditing={!view?.calculation}
   bind:hideAutocolumns
 >

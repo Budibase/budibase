@@ -108,7 +108,7 @@ describe("/tables", () => {
         .expect(200)
       const fetchedTable = res.body[0]
       expect(fetchedTable.name).toEqual(testTable.name)
-      expect(fetchedTable.type).toEqual("table")
+      expect(fetchedTable.type).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {

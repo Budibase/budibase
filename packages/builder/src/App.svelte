@@ -5,6 +5,7 @@
   import { initialise } from "builderStore"
   import { NotificationDisplay } from "@budibase/bbui"
   import { parse, stringify } from "qs"
+  import HelpIcon from "components/common/HelpIcon.svelte"
 
   onMount(async () => {
     await initialise()
@@ -16,6 +17,7 @@
 <NotificationDisplay />
 <Router {routes} config={{ queryHandler }} />
 <div class="modal-container" />
+<HelpIcon />
 
 <style>
   .modal-container {
