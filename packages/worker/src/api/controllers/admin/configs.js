@@ -98,6 +98,18 @@ exports.find = async function (ctx) {
   }
 }
 
+exports.publicSettings = async function (ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+  try {
+    // Find the config with the most granular scope based on context
+    ctx.body = await getScopedFullConfig(db, {
+      type: Configs.SETTINGS,
+    })
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
 exports.upload = async function (ctx) {
   if (ctx.request.files == null || ctx.request.files.file.length > 1) {
     ctx.throw(400, "One file must be uploaded.")

@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
+  import { onMount } from "svelte"
 
   let email = ""
 
@@ -20,6 +21,10 @@
       notifications.error("Unable to send reset password link")
     }
   }
+
+  onMount(async () => {
+    await organisation.init()
+  })
 </script>
 
 <div class="login">
