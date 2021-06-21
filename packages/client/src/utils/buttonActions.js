@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { routeStore, builderStore, authStore } from "../store"
+import { routeStore, builderStore, confirmationStore } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
 
@@ -68,15 +68,6 @@ const refreshDatasourceHandler = async (action, context) => {
   )
 }
 
-const loginHandler = async action => {
-  const { email, password } = action.parameters
-  await authStore.actions.logIn({ email, password })
-}
-
-const logoutHandler = async () => {
-  await authStore.actions.logOut()
-}
-
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -85,13 +76,19 @@ const handlerMap = {
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
-  ["Log In"]: loginHandler,
-  ["Log Out"]: logoutHandler,
+}
+
+const confirmTextMap = {
+  ["Delete Row"]: "Are you sure you want to delete this row?",
+  ["Save Row"]: "Are you sure you want to save this row?",
+  ["Execute Query"]: "Are you sure you want to execute this query?",
+  ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
 }
 
 /**
  * Parses an array of actions and returns a function which will execute the
  * actions in the current context.
+ * A handler returning `false` is a flag to stop execution of handlers
  */
 export const enrichButtonActions = (actions, context) => {
   // Prevent button actions in the builder preview
@@ -102,15 +99,40 @@ export const enrichButtonActions = (actions, context) => {
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
       try {
-        const result = await handlers[i](actions[i], context)
-        // A handler returning `false` is a flag to stop execution of handlers
-        if (result === false) {
+        const action = actions[i]
+        const callback = async () => handlers[i](action, context)
+
+        // If this action is confirmable, show confirmation and await a
+        // callback to execute further actions
+        if (action.parameters?.confirm) {
+          const defaultText = confirmTextMap[action["##eventHandlerType"]]
+          const confirmText = action.parameters?.confirmText || defaultText
+          confirmationStore.actions.showConfirmation(confirmText, async () => {
+            // When confirmed, execute this action immediately,
+            // then execute the rest of the actions in the chain
+            const result = await callback()
+            if (result !== false) {
+              const next = enrichButtonActions(actions.slice(i + 1), context)
+              await next()
+            }
+          })
+
+          // Stop enriching actions when encountering a confirmable actions,
+          // as the callback continues the action chain
           return
+        }
+
+        // For non-confirmable actions, execute this immediately
+        else {
+          const result = await callback()
+          if (result === false) {
+            return
+          }
         }
       } catch (error) {
         console.error("Error while executing button handler")
         console.error(error)
-        // Stop executing on an error
+        // Stop executing further actions on error
         return
       }
     }
