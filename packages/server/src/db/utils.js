@@ -32,6 +32,7 @@ const DocumentTypes = {
   LAYOUT: "layout",
   SCREEN: "screen",
   DATASOURCE: "datasource",
+  DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
 }
 
@@ -56,6 +57,14 @@ exports.StaticDatabases = {
   ...StaticDatabases,
 }
 
+const BudibaseInternalDB = {
+  _id: "bb_internal",
+  type: "budibase",
+  name: "Budibase DB",
+  source: "BUDIBASE",
+  config: {},
+}
+
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
@@ -67,6 +76,7 @@ exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
+exports.BudibaseInternalDB = BudibaseInternalDB
 
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
@@ -283,8 +293,10 @@ exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
  * Generates a new datasource ID.
  * @returns {string} The new datasource ID which the webhook doc can be stored under.
  */
-exports.generateDatasourceID = () => {
-  return `${DocumentTypes.DATASOURCE}${SEPARATOR}${newid()}`
+exports.generateDatasourceID = ({ plus = false } = {}) => {
+  return `${
+    plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE
+  }${SEPARATOR}${newid()}`
 }
 
 /**

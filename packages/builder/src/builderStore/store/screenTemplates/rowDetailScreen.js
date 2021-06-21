@@ -85,7 +85,7 @@ const createScreen = table => {
     .customProps({
       dataSource: {
         label: table.name,
-        name: `all_${table._id}`,
+        name: table._id,
         tableId: table._id,
         type: "table",
       },

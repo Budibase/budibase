@@ -14,6 +14,7 @@ if (env.isDev() || env.isTest()) {
 }
 
 router
+  .get("/api/dev/version", authorized(BUILDER), controller.getBudibaseVersion)
   .delete("/api/dev/:appId/lock", authorized(BUILDER), controller.clearLock)
   .post("/api/dev/:appId/revert", authorized(BUILDER), controller.revert)
 

@@ -160,6 +160,8 @@ exports.execute = async function (ctx) {
   )
 
   const integration = new Integration(datasource.config)
+  console.log(query)
+  // ctx.body = {}
   // call the relevant CRUD method on the integration class
   ctx.body = formatResponse(await integration[query.queryVerb](enrichedQuery))
   // cleanup

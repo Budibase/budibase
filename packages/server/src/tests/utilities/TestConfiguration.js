@@ -215,7 +215,7 @@ class TestConfiguration {
     if (!tableId && this.table) {
       tableId = this.table._id
     }
-    return this._req(null, { tableId }, controllers.row.fetchTableRows)
+    return this._req(null, { tableId }, controllers.row.fetch)
   }
 
   async createRole(config = null) {
