@@ -72,6 +72,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
 </style>

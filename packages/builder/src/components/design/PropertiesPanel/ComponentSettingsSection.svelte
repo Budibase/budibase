@@ -1,8 +1,7 @@
 <script>
-  import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
   import { Checkbox, Input, Select, DetailSummary } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { selectedComponent, store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
@@ -26,12 +25,11 @@
   import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
   import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
   import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
+  import { FrontendTypes } from "constants"
 
-  export let componentDefinition = {}
-  export let componentInstance = {}
+  export let componentDefinition
+  export let componentInstance
   export let assetInstance
-  export let onScreenPropChange = () => {}
-  export let showDisplayName = false
   export let openSection
 
   const layoutDefinition = []
@@ -90,33 +88,15 @@
   }
 </script>
 
-<DetailSummary
-  name={componentDefinition.name}
-  on:open
-  show={openSection === "settings"}
->
-  {#if assetInstance}
-    {#each assetDefinition as def (`${componentInstance._id}-${def.key}`)}
-      <PropertyControl
-        bindable={false}
-        control={def.control}
-        label={def.label}
-        key={def.key}
-        value={get(assetInstance, def.key)}
-        onChange={val => onScreenPropChange(def.key, val)}
-      />
-    {/each}
-  {/if}
-  {#if showDisplayName}
-    <PropertyControl
-      bindable={false}
-      control={Input}
-      label="Name"
-      key="_instanceName"
-      value={componentInstance._instanceName}
-      onChange={val => updateProp("_instanceName", val)}
-    />
-  {/if}
+<DetailSummary name="Component" on:open show={openSection === "settings"}>
+  <PropertyControl
+    bindable={false}
+    control={Input}
+    label="Name"
+    key="_instanceName"
+    value={componentInstance._instanceName}
+    onChange={val => updateProp("_instanceName", val)}
+  />
   {#if settings && settings.length > 0}
     {#each settings as setting (`${componentInstance._id}-${setting.key}`)}
       {#if canRenderControl(setting)}
