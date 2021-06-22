@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { views } from "./"
+import { views, queries, datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
 
@@ -25,7 +25,9 @@ export function createTablesStore() {
         selected: table,
         draft: cloneDeep(table),
       }))
-      views.select({ name: `all_${table._id}` })
+      views.unselect()
+      queries.unselect()
+      datasources.unselect()
     }
   }
 
@@ -66,8 +68,15 @@ export function createTablesStore() {
 
   return {
     subscribe,
+    update,
     fetch,
     select,
+    unselect: () => {
+      update(state => ({
+        ...state,
+        selected: null,
+      }))
+    },
     save,
     init: async () => {
       const response = await api.get("/api/tables")

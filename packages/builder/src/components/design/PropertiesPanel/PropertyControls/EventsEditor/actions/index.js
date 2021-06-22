@@ -4,6 +4,7 @@ import DeleteRow from "./DeleteRow.svelte"
 import ExecuteQuery from "./ExecuteQuery.svelte"
 import TriggerAutomation from "./TriggerAutomation.svelte"
 import ValidateForm from "./ValidateForm.svelte"
+import LogOut from "./LogOut.svelte"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -36,5 +37,9 @@ export default [
   {
     name: "Validate Form",
     component: ValidateForm,
+  },
+  {
+    name: "Log Out",
+    component: LogOut,
   },
 ]

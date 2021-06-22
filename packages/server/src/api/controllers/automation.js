@@ -59,7 +59,7 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
 
   const cronTriggerActivated = isLive(newAuto) && !isLive(oldAuto)
 
-  if (cronTriggerRemoved || cronTriggerDeactivated) {
+  if (cronTriggerRemoved || (cronTriggerDeactivated && oldTrigger.cronJobId)) {
     await triggers.automationQueue.removeRepeatableByKey(oldTrigger.cronJobId)
   }
   // need to create cron job
