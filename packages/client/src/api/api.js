@@ -44,7 +44,9 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
         return handleError(`${url}: Bad Request`)
       case 403:
         // reload the page incase the token has expired
-        location.reload()
+        if (!url.includes("self")) {
+          location.reload()
+        }
         return handleError(`${url}: Forbidden`)
       default:
         if (response.status >= 200 && response.status < 400) {
