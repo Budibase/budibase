@@ -128,7 +128,7 @@ const BASE_LAYOUTS = [
         normal: {},
         selected: {},
       },
-      navigation: "Top",
+      navigation: "None",
       width: "Large",
       links: [
         {
