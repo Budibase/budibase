@@ -14,6 +14,8 @@ const apiCall =
     })
     if (resp.status === 403) {
       removeCookie(Cookies.Auth)
+      // reload after removing cookie, go to login
+      location.reload()
     }
     return resp
   }
