@@ -1,11 +1,8 @@
 <script>
   import { get } from "lodash"
   import { isEmpty } from "lodash/fp"
-  import { Button, Checkbox, Input, Select } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { currentAsset } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/storeUtils"
-  import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
+  import { Checkbox, Input, Select, DetailSummary } from "@budibase/bbui"
+  import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
@@ -33,9 +30,9 @@
   export let componentDefinition = {}
   export let componentInstance = {}
   export let assetInstance
-  export let onChange = () => {}
   export let onScreenPropChange = () => {}
   export let showDisplayName = false
+  export let openSection
 
   const layoutDefinition = []
   const screenDefinition = [
@@ -44,12 +41,12 @@
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
-  let confirmResetFieldsDialog
 
   $: settings = componentDefinition?.settings ?? []
   $: isLayout = assetInstance && assetInstance.favicon
   $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
+  const updateProp = store.actions.components.updateProp
   const controlMap = {
     text: Input,
     select: Select,
@@ -91,27 +88,13 @@
     }
     return true
   }
-
-  const onInstanceNameChange = name => {
-    onChange("_instanceName", name)
-  }
-
-  const resetFormFields = () => {
-    const form = findClosestMatchingComponent(
-      $currentAsset.props,
-      componentInstance._id,
-      component => component._component.endsWith("/form")
-    )
-    const dataSource = form?.dataSource
-    const fields = makeDatasourceFormComponents(dataSource)
-    onChange(
-      "_children",
-      fields.map(field => field.json())
-    )
-  }
 </script>
 
-<div class="settings-view-container">
+<DetailSummary
+  name={componentDefinition.name}
+  on:open
+  show={openSection === "settings"}
+>
   {#if assetInstance}
     {#each assetDefinition as def (`${componentInstance._id}-${def.key}`)}
       <PropertyControl
@@ -124,7 +107,6 @@
       />
     {/each}
   {/if}
-
   {#if showDisplayName}
     <PropertyControl
       bindable={false}
@@ -132,10 +114,9 @@
       label="Name"
       key="_instanceName"
       value={componentInstance._instanceName}
-      onChange={onInstanceNameChange}
+      onChange={val => updateProp("_instanceName", val)}
     />
   {/if}
-
   {#if settings && settings.length > 0}
     {#each settings as setting (`${componentInstance._id}-${setting.key}`)}
       {#if canRenderControl(setting)}
@@ -147,8 +128,11 @@
           value={componentInstance[setting.key] ??
             componentInstance[setting.key]?.defaultValue}
           {componentInstance}
-          onChange={val => onChange(setting.key, val)}
-          props={{ options: setting.options, placeholder: setting.placeholder }}
+          onChange={val => updateProp(setting.key, val)}
+          props={{
+            options: setting.options,
+            placeholder: setting.placeholder,
+          }}
         />
       {/if}
     {/each}
@@ -160,39 +144,11 @@
       {@html componentDefinition?.info}
     </div>
   {/if}
-
-  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
-    <div class="buttonWrapper">
-      <Button secondary wide on:click={() => confirmResetFieldsDialog?.show()}>
-        Update Form Fields
-      </Button>
-    </div>
-  {/if}
-</div>
-<ConfirmDialog
-  bind:this={confirmResetFieldsDialog}
-  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to update this Field Group?`}
-  okText="Update"
-  onOk={resetFormFields}
-  title="Confirm Form Field Update"
-/>
+</DetailSummary>
 
 <style>
-  .settings-view-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    gap: var(--spacing-s);
-  }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
-    margin-top: var(--spacing-m);
     color: var(--grey-6);
-  }
-  .buttonWrapper {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
   }
 </style>

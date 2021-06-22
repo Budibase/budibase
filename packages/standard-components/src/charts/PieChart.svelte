@@ -18,7 +18,7 @@
 
   // Fetch data on mount
   const setUpChart = provider => {
-    if (!provider || !labelColumn || !valueColumn) {
+    if (!provider || !provider.rows?.length || !labelColumn || !valueColumn) {
       return null
     }
 
