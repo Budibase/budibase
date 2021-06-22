@@ -43,7 +43,10 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
       case 400:
         return handleError(`${url}: Bad Request`)
       case 403:
-        notificationStore.danger("Forbidden")
+        // reload the page incase the token has expired
+        if (!url.includes("self")) {
+          location.reload()
+        }
         return handleError(`${url}: Forbidden`)
       default:
         if (response.status >= 200 && response.status < 400) {

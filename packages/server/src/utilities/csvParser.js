@@ -4,13 +4,35 @@ const { FieldTypes } = require("../constants")
 const VALIDATORS = {
   [FieldTypes.STRING]: () => true,
   [FieldTypes.OPTIONS]: () => true,
-  [FieldTypes.NUMBER]: attribute => !isNaN(Number(attribute)),
-  [FieldTypes.DATETIME]: attribute => !isNaN(new Date(attribute).getTime()),
+  [FieldTypes.NUMBER]: attribute => {
+    // allow not to be present
+    if (!attribute) {
+      return true
+    }
+    return !isNaN(Number(attribute))
+  },
+  [FieldTypes.DATETIME]: attribute => {
+    // allow not to be present
+    if (!attribute) {
+      return true
+    }
+    return !isNaN(new Date(attribute).getTime())
+  },
 }
 
 const PARSERS = {
-  [FieldTypes.NUMBER]: attribute => Number(attribute),
-  [FieldTypes.DATETIME]: attribute => new Date(attribute).toISOString(),
+  [FieldTypes.NUMBER]: attribute => {
+    if (!attribute) {
+      return attribute
+    }
+    return Number(attribute)
+  },
+  [FieldTypes.DATETIME]: attribute => {
+    if (!attribute) {
+      return attribute
+    }
+    return new Date(attribute).toISOString()
+  },
 }
 
 function parse(csvString, parsers) {
