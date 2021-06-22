@@ -29,6 +29,7 @@ services:
       - ./logs:/logs
     depends_on:
       - worker-service
+      - redis-service
 
   worker-service:
     restart: always
