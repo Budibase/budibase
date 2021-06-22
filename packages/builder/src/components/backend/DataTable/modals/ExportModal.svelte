@@ -20,7 +20,7 @@
   async function exportView() {
     download(
       `/api/views/export?view=${encodeURIComponent(
-        view.name
+        view
       )}&format=${exportFormat}`
     )
   }

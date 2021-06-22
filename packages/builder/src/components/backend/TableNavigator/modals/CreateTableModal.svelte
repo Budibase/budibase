@@ -91,7 +91,7 @@
     }
 
     // Navigate to new table
-    $goto(`./table/${table._id}`)
+    $goto(`../../table/${table._id}`)
   }
 </script>
 

@@ -63,9 +63,9 @@
       on:focus={() => (focus = true)}
       on:blur={() => (focus = false)}
       on:change={onChange}
-      {value}
+      value={value || ""}
+      placeholder={placeholder || ""}
       {disabled}
-      {placeholder}
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>

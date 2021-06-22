@@ -55,7 +55,6 @@
     if (routeError) return false
 
     draftScreen.props._instanceName = name
-    draftScreen.props._transition = "fade"
     draftScreen.props._component = baseComponent
     draftScreen.routing = { route, roleId }
 

@@ -3,6 +3,7 @@
   import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
+  import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
   import Provider from "./Provider.svelte"
   import SDK from "../sdk"
   import {
@@ -65,9 +66,12 @@
   >
     <Provider key="user" data={$authStore} {actions}>
       <div id="app-root">
-        <Component instance={$screenStore.activeLayout.props} />
+        {#key $screenStore.activeLayout._id}
+          <Component instance={$screenStore.activeLayout.props} />
+        {/key}
       </div>
       <NotificationDisplay />
+      <ConfirmationDisplay />
       <!-- Key block needs to be outside the if statement or it breaks -->
       {#key $builderStore.selectedComponentId}
         {#if $builderStore.inBuilder}
@@ -95,8 +99,6 @@
   #app-root {
     height: 100%;
     width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
     position: relative;
   }
 </style>

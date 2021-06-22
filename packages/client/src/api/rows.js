@@ -44,7 +44,7 @@ export const updateRow = async row => {
     return
   }
   const res = await API.patch({
-    url: `/api/${row.tableId}/rows/${row._id}`,
+    url: `/api/${row.tableId}/rows`,
     body: row,
   })
   res.error
@@ -65,7 +65,11 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
     return
   }
   const res = await API.del({
-    url: `/api/${tableId}/rows/${rowId}/${revId}`,
+    url: `/api/${tableId}/rows`,
+    body: {
+      _id: rowId,
+      _rev: revId,
+    },
   })
   res.error
     ? notificationStore.danger("An error has occurred")
@@ -84,11 +88,10 @@ export const deleteRows = async ({ tableId, rows }) => {
   if (!tableId || !rows) {
     return
   }
-  const res = await API.post({
+  const res = await API.del({
     url: `/api/${tableId}/rows`,
     body: {
       rows,
-      type: "delete",
     },
   })
   res.error

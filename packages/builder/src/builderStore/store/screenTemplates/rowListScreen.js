@@ -76,7 +76,7 @@ const createScreen = table => {
     .customProps({
       dataSource: {
         label: table.name,
-        name: `all_${table._id}`,
+        name: table._id,
         tableId: table._id,
         type: "table",
       },
@@ -128,7 +128,6 @@ const createScreen = table => {
       background: "white",
       "border-radius": "0.5rem",
       "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      "margin-top": "20px",
       "border-width": "2px",
       "border-color": "rgba(0, 0, 0, 0.1)",
       "border-style": "None",
@@ -136,7 +135,6 @@ const createScreen = table => {
       "padding-bottom": "48px",
       "padding-right": "48px",
       "padding-left": "48px",
-      "margin-bottom": "20px",
     })
     .customProps({
       direction: "column",

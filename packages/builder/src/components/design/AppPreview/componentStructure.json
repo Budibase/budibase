@@ -1,4 +1,5 @@
 [
+  "section",
   "container",
   "dataprovider",
   "table",
@@ -61,8 +62,7 @@
     "name": "Other",
     "icon": "More",
     "children": [
-      "screenslot",
-      "navigation"
+      "screenslot"
     ]
   }
 ]

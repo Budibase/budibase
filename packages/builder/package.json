@@ -78,7 +78,7 @@
     "posthog-js": "1.4.5",
     "remixicon": "2.5.0",
     "shortid": "2.2.15",
-    "svelte-dnd-action": "^0.8.9",
+    "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "0.1.0",
     "uuid": "8.3.1",

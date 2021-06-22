@@ -7,11 +7,12 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 function Request(appId, params) {
   this.appId = appId
   this.params = params
+  this.request = {}
 }
 
 exports.getAllTableRows = async config => {
   const req = new Request(config.appId, { tableId: config.table._id })
-  await rowController.fetchTableRows(req)
+  await rowController.fetch(req)
   return req.body
 }
 

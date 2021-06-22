@@ -10,12 +10,15 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { onMount } from "svelte"
 
   let username = ""
   let password = ""
+
+  $: company = $organisation.company || "Budibase"
 
   async function login() {
     try {
@@ -43,6 +46,10 @@
   function handleKeydown(evt) {
     if (evt.key === "Enter") login()
   }
+
+  onMount(async () => {
+    await organisation.init()
+  })
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -50,8 +57,8 @@
   <div class="main">
     <Layout>
       <Layout noPadding justifyItems="center">
-        <img alt="logo" src={Logo} />
-        <Heading>Sign in to Budibase</Heading>
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
+        <Heading>Sign in to {company}</Heading>
       </Layout>
       <GoogleButton />
       <Divider noGrid />
@@ -66,7 +73,7 @@
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>Sign in to Budibase</Button>
+        <Button cta on:click={login}>Sign in to {company}</Button>
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>

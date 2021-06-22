@@ -130,6 +130,9 @@ exports.removeAppRole = async ctx => {
 }
 
 exports.getSelf = async ctx => {
+  if (!ctx.user) {
+    ctx.throw(403, "User not logged in")
+  }
   ctx.params = {
     id: ctx.user._id,
   }

@@ -305,7 +305,6 @@ export const getFrontendStore = () => {
           _id: uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _transition: "",
           _instanceName: `New ${definition.name}`,
           ...cloneDeep(props),
           ...extras,
@@ -508,15 +507,6 @@ export const getFrontendStore = () => {
         selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
-      updateTransition: async transition => {
-        const selected = get(selectedComponent)
-        if (transition == null || transition === "") {
-          selected._transition = ""
-        } else {
-          selected._transition = transition
-        }
-        await store.actions.preview.saveSelected()
-      },
       updateProp: async (name, value) => {
         let component = get(selectedComponent)
         if (!name || !component) {
@@ -536,37 +526,50 @@ export const getFrontendStore = () => {
             return
           }
 
-          // Find a nav bar in the main layout
-          const nav = findComponentType(
-            layout.props,
-            "@budibase/standard-components/navigation"
-          )
-          if (!nav) {
-            return
-          }
-
-          let newLink
-          if (nav._children && nav._children.length) {
-            // Clone an existing link if one exists
-            newLink = cloneDeep(nav._children[0])
-
-            // Set our new props
-            newLink._id = uuid()
-            newLink._instanceName = `${title} Link`
-            newLink.url = url
-            newLink.text = title
-          } else {
-            // Otherwise create vanilla new link
-            newLink = {
-              ...store.actions.components.createInstance("link"),
-              url,
+          // Add link setting to main layout
+          if (layout.props._component.endsWith("layout")) {
+            // If using a new SDK, add to the layout component settings
+            if (!layout.props.links) {
+              layout.props.links = []
+            }
+            layout.props.links.push({
               text: title,
-              _instanceName: `${title} Link`,
+              url,
+            })
+          } else {
+            // If using an old SDK, add to the navigation component
+            // TODO: remove this when we can assume everyone has updated
+            const nav = findComponentType(
+              layout.props,
+              "@budibase/standard-components/navigation"
+            )
+            if (!nav) {
+              return
+            }
+
+            let newLink
+            if (nav._children && nav._children.length) {
+              // Clone an existing link if one exists
+              newLink = cloneDeep(nav._children[0])
+
+              // Set our new props
+              newLink._id = uuid()
+              newLink._instanceName = `${title} Link`
+              newLink.url = url
+              newLink.text = title
+            } else {
+              // Otherwise create vanilla new link
+              newLink = {
+                ...store.actions.components.createInstance("link"),
+                url,
+                text: title,
+                _instanceName: `${title} Link`,
+              }
+              nav._children = [...nav._children, newLink]
             }
           }
 
           // Save layout
-          nav._children = [...nav._children, newLink]
           await store.actions.layouts.save(layout)
         },
       },

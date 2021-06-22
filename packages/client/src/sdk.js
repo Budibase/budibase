@@ -7,7 +7,6 @@ import {
   builderStore,
 } from "./store"
 import { styleable } from "./utils/styleable"
-import transition from "./utils/transition"
 import { linkable } from "./utils/linkable"
 import { getAction } from "./utils/getAction"
 import Provider from "./components/Provider.svelte"
@@ -21,7 +20,6 @@ export default {
   screenStore,
   builderStore,
   styleable,
-  transition,
   linkable,
   getAction,
   Provider,

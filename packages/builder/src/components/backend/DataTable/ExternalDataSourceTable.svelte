@@ -6,12 +6,13 @@
 
   let loading = false
   let error = false
+  let type = "external"
 </script>
 
 {#if error}
   <div class="errors">{error}</div>
 {/if}
-<Table schema={query.schema} {data} {loading} rowCount={5} />
+<Table schema={query.schema} {data} {loading} {type} rowCount={5} />
 
 <style>
   .errors {
