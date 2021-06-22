@@ -359,7 +359,7 @@
     background-color: var(--spectrum-alias-background-color-secondary);
     overflow: hidden;
     position: relative;
-    z-index: 1;
+    z-index: 0;
   }
 
   .container {

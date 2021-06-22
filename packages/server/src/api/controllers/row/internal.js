@@ -1,23 +1,20 @@
-const CouchDB = require("../../db")
-const validateJs = require("validate.js")
-const linkRows = require("../../db/linkedRows")
+const CouchDB = require("../../../db")
+const linkRows = require("../../../db/linkedRows")
 const {
   getRowParams,
   generateRowID,
   DocumentTypes,
-  SEPARATOR,
   InternalTables,
-} = require("../../db/utils")
-const userController = require("./user")
+} = require("../../../db/utils")
+const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
-} = require("../../utilities/rowProcessor")
-const { FieldTypes } = require("../../constants")
+} = require("../../../utilities/rowProcessor")
+const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
-const { cloneDeep } = require("lodash/fp")
-
-const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
+const { validate, findRow } = require("./utils")
+const { fullSearch, paginatedSearch } = require("./internalSearch")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -25,35 +22,7 @@ const CALCULATION_TYPES = {
   STATS: "stats",
 }
 
-validateJs.extend(validateJs.validators.datetime, {
-  parse: function (value) {
-    return new Date(value).getTime()
-  },
-  // Input is a unix timestamp
-  format: function (value) {
-    return new Date(value).toISOString()
-  },
-})
-
-async function findRow(ctx, db, tableId, rowId) {
-  let row
-  // TODO remove special user case in future
-  if (tableId === InternalTables.USER_METADATA) {
-    ctx.params = {
-      id: rowId,
-    }
-    await userController.findMetadata(ctx)
-    row = ctx.body
-  } else {
-    row = await db.get(rowId)
-  }
-  if (row.tableId !== tableId) {
-    throw "Supplied tableId does not match the rows tableId"
-  }
-  return row
-}
-
-exports.patch = async function (ctx) {
+exports.patch = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const inputs = ctx.request.body
@@ -61,7 +30,7 @@ exports.patch = async function (ctx) {
   const isUserTable = tableId === InternalTables.USER_METADATA
   let dbRow
   try {
-    dbRow = await db.get(ctx.params.rowId)
+    dbRow = await db.get(inputs._id)
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -70,7 +39,7 @@ exports.patch = async function (ctx) {
         _id: inputs._id,
       }
     } else {
-      ctx.throw(400, "Row does not exist")
+      throw "Row does not exist"
     }
   }
   let dbTable = await db.get(tableId)
@@ -88,12 +57,7 @@ exports.patch = async function (ctx) {
   })
 
   if (!validateResult.valid) {
-    ctx.status = 400
-    ctx.body = {
-      status: 400,
-      errors: validateResult.errors,
-    }
-    return
+    throw validateResult.errors
   }
 
   // returned row is cleaned and prepared for writing to DB
@@ -109,7 +73,7 @@ exports.patch = async function (ctx) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
     await userController.updateMetadata(ctx)
-    return
+    return { row: ctx.body, table }
   }
 
   const response = await db.put(row)
@@ -119,10 +83,7 @@ exports.patch = async function (ctx) {
   }
   row._rev = response.rev
   row.type = "row"
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
-  ctx.body = row
-  ctx.status = 200
-  ctx.message = `${table.name} updated successfully.`
+  return { row, table }
 }
 
 exports.save = async function (ctx) {
@@ -130,20 +91,6 @@ exports.save = async function (ctx) {
   const db = new CouchDB(appId)
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
-
-  // TODO: find usage of this and break out into own endpoint
-  if (inputs.type === "delete") {
-    await bulkDelete(ctx)
-    ctx.body = inputs.rows
-    return
-  }
-
-  // if the row obj had an _id then it will have been retrieved
-  if (inputs._id && inputs._rev) {
-    ctx.params.rowId = inputs._id
-    await exports.patch(ctx)
-    return
-  }
 
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)
@@ -158,12 +105,7 @@ exports.save = async function (ctx) {
   })
 
   if (!validateResult.valid) {
-    ctx.status = 400
-    ctx.body = {
-      status: 400,
-      errors: validateResult.errors,
-    }
-    return
+    throw validateResult.errors
   }
 
   // make sure link rows are up to date
@@ -182,21 +124,17 @@ exports.save = async function (ctx) {
     await db.put(table)
   }
   row._rev = response.rev
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
-  ctx.body = row
-  ctx.status = 200
-  ctx.message = `${table.name} saved successfully`
+  return { row, table }
 }
 
-exports.fetchView = async function (ctx) {
+exports.fetchView = async ctx => {
   const appId = ctx.appId
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.startsWith(TABLE_VIEW_BEGINS_WITH)) {
-    ctx.params.tableId = viewName.substring(4)
-    await exports.fetchTableRows(ctx)
-    return
+  if (viewName.includes(DocumentTypes.TABLE)) {
+    ctx.params.tableId = viewName
+    return exports.fetch(ctx)
   }
 
   const db = new CouchDB(appId)
@@ -204,13 +142,14 @@ exports.fetchView = async function (ctx) {
   const designDoc = await db.get("_design/database")
   const viewInfo = designDoc.views[viewName]
   if (!viewInfo) {
-    ctx.throw(400, "View does not exist.")
+    throw "View does not exist."
   }
   const response = await db.query(`database/${viewName}`, {
     include_docs: !calculation,
     group: !!group,
   })
 
+  let rows
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
     let table
@@ -222,7 +161,7 @@ exports.fetchView = async function (ctx) {
         schema: {},
       }
     }
-    ctx.body = await outputProcessing(appId, table, response.rows)
+    rows = await outputProcessing(appId, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -232,26 +171,26 @@ exports.fetchView = async function (ctx) {
       ...row.value,
       avg: row.value.sum / row.value.count,
     }))
-    ctx.body = response.rows
+    rows = response.rows
   }
 
   if (
     calculation === CALCULATION_TYPES.COUNT ||
     calculation === CALCULATION_TYPES.SUM
   ) {
-    ctx.body = response.rows.map(row => ({
+    rows = response.rows.map(row => ({
       group: row.key,
       field,
       value: row.value,
     }))
   }
+  return rows
 }
 
-exports.fetchTableRows = async function (ctx) {
+exports.fetch = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
-  // TODO remove special user case in future
   let rows,
     table = await db.get(ctx.params.tableId)
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -265,27 +204,26 @@ exports.fetchTableRows = async function (ctx) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  ctx.body = await outputProcessing(appId, table, rows)
+  return outputProcessing(appId, table, rows)
 }
 
-exports.find = async function (ctx) {
+exports.find = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  try {
-    const table = await db.get(ctx.params.tableId)
-    const row = await findRow(ctx, db, ctx.params.tableId, ctx.params.rowId)
-    ctx.body = await outputProcessing(appId, table, row)
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  const table = await db.get(ctx.params.tableId)
+  let row = await findRow(ctx, db, ctx.params.tableId, ctx.params.rowId)
+  row = await outputProcessing(appId, table, row)
+  return row
 }
 
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const row = await db.get(ctx.params.rowId)
+  const { _id, _rev } = ctx.request.body
+  const row = await db.get(_id)
+
   if (row.tableId !== ctx.params.tableId) {
-    ctx.throw(400, "Supplied tableId doesn't match the row's tableId")
+    throw "Supplied tableId doesn't match the row's tableId"
   }
   await linkRows.updateLinks({
     appId,
@@ -293,54 +231,80 @@ exports.destroy = async function (ctx) {
     row,
     tableId: row.tableId,
   })
-  // TODO remove special user case in future
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     ctx.params = {
-      id: ctx.params.rowId,
+      id: _id,
     }
     await userController.destroyMetadata(ctx)
+    return { response: ctx.body, row }
   } else {
-    ctx.body = await db.remove(ctx.params.rowId, ctx.params.revId)
+    const response = await db.remove(_id, _rev)
+    return { response, row }
   }
-
-  // for automations include the row that was deleted
-  ctx.row = row
-  ctx.status = 200
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
 }
 
-exports.validate = async function (ctx) {
-  const errors = await validate({
+exports.bulkDestroy = async ctx => {
+  const appId = ctx.appId
+  const { rows } = ctx.request.body
+  const db = new CouchDB(appId)
+
+  let updates = rows.map(row =>
+    linkRows.updateLinks({
+      appId,
+      eventType: linkRows.EventType.ROW_DELETE,
+      row,
+      tableId: row.tableId,
+    })
+  )
+  // TODO remove special user case in future
+  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+    updates = updates.concat(
+      rows.map(row => {
+        ctx.params = {
+          id: row._id,
+        }
+        return userController.destroyMetadata(ctx)
+      })
+    )
+  } else {
+    await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
+  }
+  await Promise.all(updates)
+  return { response: { ok: true }, rows }
+}
+
+exports.search = async ctx => {
+  const appId = ctx.appId
+  const { tableId } = ctx.params
+  const db = new CouchDB(appId)
+  const { paginate, query, ...params } = ctx.request.body
+  params.tableId = tableId
+
+  let response
+  if (paginate) {
+    response = await paginatedSearch(appId, query, params)
+  } else {
+    response = await fullSearch(appId, query, params)
+  }
+
+  // Enrich search results with relationships
+  if (response.rows && response.rows.length) {
+    const table = await db.get(tableId)
+    response.rows = await outputProcessing(appId, table, response.rows)
+  }
+
+  return response
+}
+
+exports.validate = async ctx => {
+  return validate({
     appId: ctx.appId,
     tableId: ctx.params.tableId,
     row: ctx.request.body,
   })
-  ctx.status = 200
-  ctx.body = errors
 }
 
-async function validate({ appId, tableId, row, table }) {
-  if (!table) {
-    const db = new CouchDB(appId)
-    table = await db.get(tableId)
-  }
-  const errors = {}
-  for (let fieldName of Object.keys(table.schema)) {
-    const constraints = cloneDeep(table.schema[fieldName].constraints)
-    // special case for options, need to always allow unselected (null)
-    if (
-      table.schema[fieldName].type === FieldTypes.OPTIONS &&
-      constraints.inclusion
-    ) {
-      constraints.inclusion.push(null)
-    }
-    const res = validateJs.single(row[fieldName], constraints)
-    if (res) errors[fieldName] = res
-  }
-  return { valid: Object.keys(errors).length === 0, errors }
-}
-
-exports.fetchEnrichedRow = async function (ctx) {
+exports.fetchEnrichedRow = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const tableId = ctx.params.tableId
@@ -381,39 +345,5 @@ exports.fetchEnrichedRow = async function (ctx) {
       )
     }
   }
-  ctx.body = row
-  ctx.status = 200
-}
-
-async function bulkDelete(ctx) {
-  const appId = ctx.appId
-  const { rows } = ctx.request.body
-  const db = new CouchDB(appId)
-
-  let updates = rows.map(row =>
-    linkRows.updateLinks({
-      appId,
-      eventType: linkRows.EventType.ROW_DELETE,
-      row,
-      tableId: row.tableId,
-    })
-  )
-  // TODO remove special user case in future
-  if (ctx.params.tableId === InternalTables.USER_METADATA) {
-    updates = updates.concat(
-      rows.map(row => {
-        ctx.params = {
-          id: row._id,
-        }
-        return userController.destroyMetadata(ctx)
-      })
-    )
-  } else {
-    await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
-  }
-  await Promise.all(updates)
-
-  rows.forEach(row => {
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-  })
+  return row
 }

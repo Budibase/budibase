@@ -20,6 +20,7 @@ process.env.MINIO_ACCESS_KEY = "budibase"
 process.env.MINIO_SECRET_KEY = "budibase"
 process.env.COUCH_DB_USER = "budibase"
 process.env.COUCH_DB_PASSWORD = "budibase"
+process.env.INTERNAL_API_KEY = "budibase"
 
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"

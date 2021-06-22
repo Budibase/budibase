@@ -62,6 +62,7 @@ function generateTitleContainer(table, title, formId, repeaterId) {
             tableId: table._id,
             rowId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_id")} }}`,
             revId: `{{ ${makePropSafe(repeaterId)}.${makePropSafe("_rev")} }}`,
+            confirm: true,
           },
           "##eventHandlerType": "Delete Row",
         },
@@ -84,7 +85,7 @@ const createScreen = table => {
     .customProps({
       dataSource: {
         label: table.name,
-        name: `all_${table._id}`,
+        name: table._id,
         tableId: table._id,
         type: "table",
       },

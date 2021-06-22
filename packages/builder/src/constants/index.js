@@ -31,3 +31,5 @@ export const LAYOUT_NAMES = {
     PUBLIC: "layout_private_master",
   },
 }
+
+export const BUDIBASE_INTERNAL_DB = "bb_internal"

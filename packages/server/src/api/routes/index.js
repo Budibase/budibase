@@ -23,7 +23,6 @@ const queryRoutes = require("./query")
 const hostingRoutes = require("./hosting")
 const backupRoutes = require("./backup")
 const devRoutes = require("./dev")
-const searchRoutes = require("./search")
 
 exports.mainRoutes = [
   authRoutes,
@@ -52,7 +51,6 @@ exports.mainRoutes = [
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
   rowRoutes,
-  searchRoutes,
 ]
 
 exports.staticRoutes = staticRoutes

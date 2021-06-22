@@ -1,39 +1,10 @@
 import * as API from "../api"
 import { writable, get } from "svelte/store"
-import { initialise } from "./initialise"
-import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { TableNames } from "../constants"
 
 const createAuthStore = () => {
   const store = writable(null)
-
-  const goToDefaultRoute = () => {
-    // Setting the active route forces an update of the active screen ID,
-    // even if we're on the same URL
-    routeStore.actions.setActiveRoute("/")
-
-    // Navigating updates the URL to reflect this route
-    routeStore.actions.navigate("/")
-  }
-
-  // Logs a user in
-  const logIn = async ({ email, password }) => {
-    const auth = await API.logIn({ email, password })
-    if (auth.success) {
-      await fetchUser()
-      await initialise()
-      goToDefaultRoute()
-    }
-  }
-
-  // Logs a user out
-  const logOut = async () => {
-    store.set(null)
-    window.document.cookie = `budibase:auth=; budibase:currentapp=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
-    await initialise()
-    goToDefaultRoute()
-  }
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
@@ -54,7 +25,7 @@ const createAuthStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: { logIn, logOut, fetchUser },
+    actions: { fetchUser },
   }
 }
 
