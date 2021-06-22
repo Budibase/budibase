@@ -127,6 +127,10 @@ function processAutoColumn(user, table, row) {
  * Looks through the rows provided and finds formulas - which it then processes.
  */
 function processFormulas(table, rows) {
+  const single = !Array.isArray(rows)
+  if (single) {
+    rows = [rows]
+  }
   for (let [column, schema] of Object.entries(table.schema)) {
     if (schema.type !== FieldTypes.FORMULA) {
       continue
@@ -137,8 +141,9 @@ function processFormulas(table, rows) {
       [column]: processStringSync(schema.formula, row),
     }))
   }
-  return rows
+  return single ? rows[0] : rows
 }
+exports.processFormulas = processFormulas
 
 /**
  * This will coerce a value to the correct types based on the type transform map
