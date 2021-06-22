@@ -1,13 +1,11 @@
 <script>
-  import { get } from "svelte/store"
   import { store, selectedComponent, currentAsset } from "builderStore"
   import { Tabs, Tab } from "@budibase/bbui"
-  import { FrontendTypes } from "constants"
-  import SettingsSection from "./SettingsSection.svelte"
+  import ScreenSettingsSection from "./ScreenSettingsSection.svelte"
+  import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ActionsSection from "./ActionsSection.svelte"
-  import { setWith } from "lodash"
 
   let openSection = "settings"
 
@@ -15,37 +13,19 @@
   $: componentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
-  $: isComponentOrScreen =
-    $store.currentView === "component" ||
-    $store.currentFrontEndType === FrontendTypes.SCREEN
-  $: isNotScreenslot = !$selectedComponent._component.endsWith("screenslot")
-  $: showDisplayName = isComponentOrScreen && isNotScreenslot
-
-  function setAssetProps(name, value) {
-    const selectedAsset = get(currentAsset)
-    store.update(state => {
-      if (
-        name === "_instanceName" &&
-        state.currentFrontEndType === FrontendTypes.SCREEN
-      ) {
-        selectedAsset.props._instanceName = value
-      } else {
-        setWith(selectedAsset, name.split("."), value, Object)
-      }
-      return state
-    })
-    store.actions.preview.saveSelected()
-  }
 </script>
 
 <Tabs selected="Settings" noPadding>
   <Tab title="Settings">
-    <SettingsSection
+    <ScreenSettingsSection
       {componentInstance}
       {componentDefinition}
-      {showDisplayName}
-      onScreenPropChange={setAssetProps}
-      assetInstance={$store.currentView !== "component" && $currentAsset}
+      {openSection}
+      on:open={() => (openSection = "settings")}
+    />
+    <ComponentSettingsSection
+      {componentInstance}
+      {componentDefinition}
       {openSection}
       on:open={() => (openSection = "settings")}
     />
