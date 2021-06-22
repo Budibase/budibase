@@ -53,7 +53,6 @@ describe("/api/admin/email", () => {
 
   it("should be able to send a welcome email", async () => {
     await sendRealEmail(EmailTemplatePurpose.WELCOME)
-
   })
 
   it("should be able to send a invitation email", async () => {

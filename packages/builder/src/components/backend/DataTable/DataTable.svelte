@@ -17,31 +17,31 @@
   let data = []
   let loading = false
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: title = $tables.selected.name
-  $: schema = $tables.selected.schema
+  $: title = $tables.selected?.name
+  $: schema = $tables.selected?.schema
   $: tableView = {
     schema,
     name: $views.selected?.name,
   }
+  $: type = $tables.selected?.type
+  $: isInternal = type === "internal"
 
   // Fetch rows for specified table
   $: {
-    if ($views.selected?.name?.startsWith("all_")) {
-      loading = true
-      const loadingTableId = $tables.selected?._id
-      api.fetchDataForView($views.selected).then(rows => {
-        loading = false
+    loading = true
+    const loadingTableId = $tables.selected?._id
+    api.fetchDataForTable($tables.selected?._id).then(rows => {
+      loading = false
 
-        // If we started a slow request then quickly change table, sometimes
-        // the old data overwrites the new data.
-        // This check ensures that we don't do that.
-        if (loadingTableId !== $tables.selected?._id) {
-          return
-        }
+      // If we started a slow request then quickly change table, sometimes
+      // the old data overwrites the new data.
+      // This check ensures that we don't do that.
+      if (loadingTableId !== $tables.selected?._id) {
+        return
+      }
 
-        data = rows || []
-      })
-    }
+      data = rows || []
+    })
   }
 </script>
 
@@ -50,11 +50,14 @@
   {schema}
   tableId={$tables.selected?._id}
   {data}
+  {type}
   allowEditing={true}
   bind:hideAutocolumns
   {loading}
 >
-  <CreateColumnButton />
+  {#if isInternal}
+    <CreateColumnButton />
+  {/if}
   {#if schema && Object.keys(schema).length > 0}
     {#if !isUsersTable}
       <CreateRowButton
@@ -62,13 +65,17 @@
         modalContentComponent={CreateEditRow}
       />
     {/if}
-    <CreateViewButton />
+    {#if isInternal}
+      <CreateViewButton />
+    {/if}
     <ManageAccessButton resourceId={$tables.selected?._id} />
     {#if isUsersTable}
       <EditRolesButton />
     {/if}
-    <HideAutocolumnButton bind:hideAutocolumns />
+    {#if isInternal}
+      <HideAutocolumnButton bind:hideAutocolumns />
+    {/if}
     <!-- always have the export last -->
-    <ExportButton view={tableView} />
+    <ExportButton view={$tables.selected?._id} />
   {/if}
 </Table>

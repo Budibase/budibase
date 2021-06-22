@@ -25,6 +25,7 @@ app.use(
     jsonLimit: "10mb",
     textLimit: "10mb",
     enableTypes: ["json", "form", "text"],
+    parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
 )
 

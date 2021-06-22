@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.47":
-  version "0.9.47"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.47.tgz#d8664a05203432d522cd91a0bad1cdd8518baf93"
-  integrity sha512-LXvJCgUSoc4EJKafBaKfUzU4GUOQGmts/8F4V6LTFtTyMZavgq2/KFAgPbR3QeYvidLsshtwop/pQfoszXTQnQ==
+"@budibase/bbui@^0.9.53":
+  version "0.9.53"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.53.tgz#b6841a31ff2c28feb929c57f7f10a1dae1b3aea3"
+  integrity sha512-jO11Ky1KhPGRv922jMRO49FeTY1TeF3u2JaBJYBkVY95il3uPOI20M1AdA6w2emppDlyP6FSEHk+prdra4Lndw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"

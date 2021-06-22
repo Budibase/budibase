@@ -90,7 +90,25 @@ exports.find = async function (ctx) {
     if (scopedConfig) {
       ctx.body = scopedConfig
     } else {
-      ctx.throw(400, "No configuration exists.")
+      // don't throw an error, there simply is nothing to return
+      ctx.body = {}
+    }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
+exports.publicSettings = async function (ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+  try {
+    // Find the config with the most granular scope based on context
+    const config = await getScopedFullConfig(db, {
+      type: Configs.SETTINGS,
+    })
+    if (!config) {
+      ctx.body = {}
+    } else {
+      ctx.body = config
     }
   } catch (err) {
     ctx.throw(err.status, err)

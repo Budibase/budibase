@@ -1,13 +1,13 @@
 import { writable, get } from "svelte/store"
-import { views } from "./"
+import { tables } from "./"
 
 export function createRowsStore() {
   const { subscribe } = writable([])
 
   return {
     subscribe,
-    save: () => views.select(get(views).selected),
-    delete: () => views.select(get(views).selected),
+    save: () => tables.select(get(tables).selected),
+    delete: () => tables.select(get(tables).selected),
   }
 }
 
