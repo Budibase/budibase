@@ -1,6 +1,6 @@
-import { Input, Select } from "@budibase/bbui"
+import { Input, Select, ColorPicker } from "@budibase/bbui"
 import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
-import Colorpicker from "./PropertyControls/ColorPicker.svelte"
+// import Colorpicker from "./PropertyControls/ColorPicker.svelte"
 
 export const layout = [
   {
@@ -274,61 +274,6 @@ export const size = {
   ],
 }
 
-export const position = [
-  {
-    label: "Position",
-    key: "position",
-    control: Select,
-    options: [
-      { label: "Static", value: "static" },
-      { label: "Relative", value: "relative" },
-      { label: "Fixed", value: "fixed" },
-      { label: "Absolute", value: "absolute" },
-      { label: "Sticky", value: "sticky" },
-    ],
-  },
-  {
-    label: "Top",
-    key: "top",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Right",
-    key: "right",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Bottom",
-    key: "bottom",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Left",
-    key: "left",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Z-index",
-    key: "z-index",
-    control: Select,
-    options: [
-      { label: "-9999", value: "-9999" },
-      { label: "-3", value: "-3" },
-      { label: "-2", value: "-2" },
-      { label: "-1", value: "-1" },
-      { label: "0", value: "0" },
-      { label: "1", value: "1" },
-      { label: "2", value: "2" },
-      { label: "3", value: "3" },
-      { label: "9999", value: "9999" },
-    ],
-  },
-]
-
 export const typography = [
   {
     label: "Font",
@@ -401,7 +346,7 @@ export const typography = [
   {
     label: "Color",
     key: "color",
-    control: Colorpicker,
+    control: ColorPicker,
   },
   {
     label: "align",
@@ -445,14 +390,13 @@ export const background = {
     {
       label: "Color",
       key: "background",
-      control: Colorpicker,
+      control: ColorPicker,
     },
     {
       label: "Gradient",
       key: "background-image",
       control: Select,
       options: [
-        { label: "None", value: "none" },
         {
           label: "Warm Flame",
           value:
@@ -534,21 +478,17 @@ export const border = {
     {
       label: "Color",
       key: "border-color",
-      control: Colorpicker,
+      control: ColorPicker,
     },
     {
       label: "Radius",
       key: "border-radius",
       control: Select,
       options: [
-        { label: "None", value: "0" },
-        { label: "X Small", value: "0.125rem" },
         { label: "Small", value: "0.25rem" },
         { label: "Medium", value: "0.5rem" },
         { label: "Large", value: "1rem" },
-        { label: "X Large", value: "2rem" },
-        { label: "XX Large", value: "4rem" },
-        { label: "Round", value: "5678px" },
+        { label: "Round", value: "100%" },
       ],
     },
     {
@@ -556,12 +496,9 @@ export const border = {
       key: "border-width",
       control: Select,
       options: [
-        { label: "None", value: "0" },
-        { label: "X Small", value: "0.5px" },
         { label: "Small", value: "1px" },
         { label: "Medium", value: "2px" },
         { label: "Large", value: "4px" },
-        { label: "X large", value: "8px" },
       ],
     },
     {
@@ -569,8 +506,6 @@ export const border = {
       key: "box-shadow",
       control: Select,
       options: [
-        { label: "None", value: "none" },
-        { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
         {
           label: "Small",
           value:
@@ -584,12 +519,7 @@ export const border = {
         {
           label: "Large",
           value:
-            "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-        },
-        {
-          label: "X Large",
-          value:
-            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            "0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
         },
       ],
     },
