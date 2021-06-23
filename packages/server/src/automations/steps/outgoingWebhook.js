@@ -77,7 +77,10 @@ module.exports.run = async function ({ inputs }) {
     requestBody.length !== 0 &&
     BODY_REQUESTS.indexOf(requestMethod) !== -1
   ) {
-    request.body = requestBody
+    request.body =
+      typeof requestBody === "string"
+        ? requestBody
+        : JSON.stringify(requestBody)
     request.headers = {
       "Content-Type": "application/json",
     }
