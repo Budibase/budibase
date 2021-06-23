@@ -18,9 +18,8 @@
  🤖 🎨 🚀
 </h3>
 
-
 <p align="center">
-  <img src="https://i.imgur.com/k9ANC3b.png">
+  <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
 </p>
 
 <p align="center">
@@ -65,10 +64,6 @@
 - **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 - **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
-
-<p align="center">
-  <img alt="Budibase design ui" src="https://i.imgur.com/5BnXPsN.png">
-</p>
 
 
 ---
