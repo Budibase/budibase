@@ -118,15 +118,18 @@ class PostgresIntegration extends Sql {
    * @param {*} datasourceId - datasourceId to fetch
    */
   async buildSchema(datasourceId) {
-    let keys = []
+    let tableKeys = {}
     try {
       const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
       for (let table of primaryKeysResponse.rows) {
-        keys.push(table.column_name || table.primary_key)
+        const tableName = table.table_name
+        if (!tableKeys[tableName]) {
+          tableKeys[tableName] = []
+        }
+        tableKeys[tableName].push(table.column_name || table.primary_key)
       }
     } catch (err) {
-      // TODO: this try catch method isn't right
-      keys = ["id"]
+      tableKeys = {}
     }
 
     const columnsResponse = await this.client.query(this.COLUMNS_SQL)
@@ -140,7 +143,7 @@ class PostgresIntegration extends Sql {
       if (!tables[tableName]) {
         tables[tableName] = {
           _id: buildExternalTableId(datasourceId, tableName),
-          primary: keys,
+          primary: tableKeys[tableName] || ["id"],
           name: tableName,
           schema: {},
         }
