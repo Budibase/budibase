@@ -5,7 +5,7 @@
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
-  import { capitalise } from "helpers"
+  import { capitalise } from "../utils/helpers"
 
   export let value
 
@@ -108,55 +108,65 @@
   }
 </script>
 
-<div
-  class="preview"
-  style="background: {color};"
-  on:click={() => (open = true)}
-/>
-{#if open}
+<div class="container">
   <div
-    use:clickOutside={() => (open = false)}
-    transition:fly={{ y: -20, duration: 200 }}
-    class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
-  >
-    {#each categories as category}
-      <div class="category">
-        <div class="heading">{category.label}</div>
-        <div class="colors">
-          {#each category.colors as color}
-            <div
-              on:click={() => {
-                onChange(`var(--spectrum-global-color-static-${color})`)
-              }}
-              class="color"
-              style="background: var(--spectrum-global-color-static-{color}); color: {checkColor};"
-              title={prettyPrint(color)}
-            >
-              {#if value === `var(--spectrum-global-color-static-${color})`}
-                <Icon name="Checkmark" size="S" />
-              {/if}
-            </div>
-          {/each}
+    class="preview"
+    style="background: {color};"
+    on:click={() => (open = true)}
+  />
+  {#if open}
+    <div
+      use:clickOutside={() => (open = false)}
+      transition:fly={{ y: -20, duration: 200 }}
+      class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+    >
+      {#each categories as category}
+        <div class="category">
+          <div class="heading">{category.label}</div>
+          <div class="colors">
+            {#each category.colors as color}
+              <div
+                on:click={() => {
+                  onChange(`var(--spectrum-global-color-static-${color})`)
+                }}
+                class="color"
+                style="background: var(--spectrum-global-color-static-{color}); color: {checkColor};"
+                title={prettyPrint(color)}
+              >
+                {#if value === `var(--spectrum-global-color-static-${color})`}
+                  <Icon name="Checkmark" size="S" />
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/each}
+      <div class="category category--custom">
+        <div class="heading">Custom</div>
+        <div class="custom">
+          <Input
+            updateOnChange={false}
+            quiet
+            placeholder="Hex, RGB, HSL..."
+            value={customValue}
+            on:change
+          />
+          <Icon
+            size="S"
+            name="Close"
+            hoverable
+            on:click={() => onChange(null)}
+          />
         </div>
       </div>
-    {/each}
-    <div class="category category--custom">
-      <div class="heading">Custom</div>
-      <div class="custom">
-        <Input
-          updateOnChange={false}
-          quiet
-          placeholder="Hex, RGB, HSL..."
-          value={customValue}
-          on:change
-        />
-        <Icon size="S" name="Close" hoverable on:click={() => onChange(null)} />
-      </div>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
+  .container {
+    position: relative;
+  }
   .preview {
     width: 32px;
     height: 32px;
@@ -169,7 +179,7 @@
     box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-300);
   }
   .spectrum-Popover {
-    width: 100%;
+    width: 210px;
     z-index: 999;
     top: 100%;
     padding: var(--spacing-l) var(--spacing-xl);
