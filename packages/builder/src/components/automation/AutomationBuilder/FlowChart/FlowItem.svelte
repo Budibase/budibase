@@ -14,7 +14,6 @@
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
-    console.log("Running")
     automationStore.actions.deleteAutomationBlock(block)
   }
 </script>
