@@ -1,6 +1,6 @@
 const { makeExternalQuery } = require("./utils")
-const { DataSourceOperation, SortDirection } = require("../../../constants")
-const { getExternalTable } = require("../table/utils")
+const { DataSourceOperation, SortDirection, FieldTypes, RelationshipTypes } = require("../../../constants")
+const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
   generateRowIdField,
@@ -35,17 +35,56 @@ function generateIdForRow(row, table) {
   return generateRowIdField(idParts)
 }
 
-function outputProcessing(rows, table) {
+function updateRelationshipColumns(rows, row, relationships, allTables) {
+  const columns = {}
+  for (let relationship of relationships) {
+    const linkedTable = allTables[relationship.tableName]
+    if (!linkedTable) {
+      continue
+    }
+    const display = linkedTable.primaryDisplay
+    const related = {}
+    if (display && row[display]) {
+      related.primaryDisplay = row[display]
+    }
+    related._id = row[relationship.to]
+    columns[relationship.from] = related
+  }
+  for (let [column, related] of Object.entries(columns)) {
+    if (!Array.isArray(rows[row._id][column])) {
+      rows[row._id][column] = []
+    }
+    rows[row._id][column].push(related)
+  }
+  return rows
+}
+
+function outputProcessing(rows, table, relationships, allTables) {
   // if no rows this is what is returned? Might be PG only
   if (rows[0].read === true) {
     return []
   }
+  let finalRows = {}
   for (let row of rows) {
     row._id = generateIdForRow(row, table)
-    row.tableId = table._id
-    row._rev = "rev"
+    // this is a relationship of some sort
+    if (finalRows[row._id]) {
+      finalRows = updateRelationshipColumns(finalRows, row, relationships, allTables)
+      continue
+    }
+    const thisRow = {}
+    // filter the row down to what is actually the row (not joined)
+    for (let fieldName of Object.keys(table.schema)) {
+      thisRow[fieldName] = row[fieldName]
+    }
+    thisRow._id = row._id
+    thisRow.tableId = table._id
+    thisRow._rev = "rev"
+    finalRows[thisRow._id] = thisRow
+    // do this at end once its been added to the final rows
+    finalRows = updateRelationshipColumns(finalRows, row, relationships, allTables)
   }
-  return rows
+  return Object.values(finalRows)
 }
 
 function buildFilters(id, filters, table) {
@@ -83,6 +122,26 @@ function buildFilters(id, filters, table) {
   }
 }
 
+function buildRelationships(table) {
+  const relationships = []
+  for (let [fieldName, field] of Object.entries(table.schema)) {
+    if (field.type !== FieldTypes.LINK) {
+      continue
+    }
+    // TODO: through field
+    if (field.relationshipType === RelationshipTypes.MANY_TO_MANY) {
+      continue
+    }
+    const broken = breakExternalTableId(field.tableId)
+    relationships.push({
+      from: fieldName,
+      to: field.fieldName,
+      tableName: broken.tableName,
+    })
+  }
+  return relationships
+}
+
 async function handleRequest(
   appId,
   operation,
@@ -90,12 +149,14 @@ async function handleRequest(
   { id, row, filters, sort, paginate } = {}
 ) {
   let { datasourceId, tableName } = breakExternalTableId(tableId)
-  const table = await getExternalTable(appId, datasourceId, tableName)
+  const tables = await getAllExternalTables(appId, datasourceId)
+  const table = tables[tableName]
   if (!table) {
     throw `Unable to process query, table "${tableName}" not defined.`
   }
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
+  const relationships = buildRelationships(table)
   row = inputProcessing(row, table)
   if (
     operation === DataSourceOperation.DELETE &&
@@ -116,6 +177,7 @@ async function handleRequest(
     filters,
     sort,
     paginate,
+    relationships,
     body: row,
     // pass an id filter into extra, purely for mysql/returning
     extra: {
@@ -126,9 +188,9 @@ async function handleRequest(
   const response = await makeExternalQuery(appId, json)
   // we searched for rows in someway
   if (operation === DataSourceOperation.READ && Array.isArray(response)) {
-    return outputProcessing(response, table)
+    return outputProcessing(response, table, relationships, tables)
   } else {
-    row = outputProcessing(response, table)[0]
+    row = outputProcessing(response, table, relationships, tables)[0]
     return { row, table }
   }
 }
@@ -270,7 +332,4 @@ exports.validate = async () => {
   return { valid: true }
 }
 
-exports.fetchEnrichedRow = async () => {
-  // TODO: How does this work
-  throw "Not Implemented"
-}
+exports.fetchEnrichedRow = async () => {}
