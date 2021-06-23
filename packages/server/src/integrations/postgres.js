@@ -153,6 +153,20 @@ class PostgresIntegration extends Sql {
         name: columnName,
         type: convertType(column.data_type, TYPE_MAP),
       }
+
+      // // TODO: hack for testing
+      // if (tableName === "persons") {
+      //   tables[tableName].primaryDisplay = "firstname"
+      // }
+      // if (columnName.toLowerCase() === "personid" && tableName === "tasks") {
+      //   tables[tableName].schema[columnName] = {
+      //     name: columnName,
+      //     type: "link",
+      //     tableId: buildExternalTableId(datasourceId, "persons"),
+      //     relationshipType: "one-to-many",
+      //     fieldName: "personid",
+      //   }
+      // }
     }
     this.tables = tables
   }

@@ -55,6 +55,25 @@ function addFilters(query, filters) {
   return query
 }
 
+function addRelationships(query, fromTable, relationships) {
+  if (!relationships) {
+    return query
+  }
+  for (let relationship of relationships) {
+    const from = `${fromTable}.${relationship.from}`
+    const to = `${relationship.tableName}.${relationship.to}`
+    if (!relationship.through) {
+      query = query.innerJoin(relationship.tableName, from, to)
+    } else {
+      const through = relationship
+      query = query
+        .innerJoin(through.tableName, from, through.from)
+        .innerJoin(relationship.tableName, to, through.to)
+    }
+  }
+  return query
+}
+
 function buildCreate(knex, json, opts) {
   const { endpoint, body } = json
   let query = knex(endpoint.entityId)
@@ -67,8 +86,9 @@ function buildCreate(knex, json, opts) {
 }
 
 function buildRead(knex, json, limit) {
-  let { endpoint, resource, filters, sort, paginate } = json
-  let query = knex(endpoint.entityId)
+  let { endpoint, resource, filters, sort, paginate, relationships } = json
+  const tableName = endpoint.entityId
+  let query = knex(tableName)
   // select all if not specified
   if (!resource) {
     resource = { fields: [] }
@@ -81,6 +101,8 @@ function buildRead(knex, json, limit) {
   }
   // handle where
   query = addFilters(query, filters)
+  // handle join
+  query = addRelationships(query, tableName, relationships)
   // handle sorting
   if (sort) {
     for (let [key, value] of Object.entries(sort)) {
