@@ -4,6 +4,11 @@ module.exports = async (url, opts) => {
   function json(body, status = 200) {
     return {
       status,
+      headers: {
+        get: () => {
+          return ["application/json"]
+        },
+      },
       json: async () => {
         return body
       },
