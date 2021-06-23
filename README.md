@@ -50,7 +50,7 @@
   Support: <a href="https://github.com/Budibase/budibase/discussions">Discussions</a>
 </h3>
 
-
+<br /><br />
 ## ✨ Features
 
 - **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
@@ -65,12 +65,27 @@
 
 - **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
 
+<br />
 
 ---
 
+<br />
 
 ## 🏁 Getting Started with Budibase in 5 minutes
 
+Currently there are two ways to get started with Budibase; Digital Ocean, and Docker.
+<br /><br />
+
+### Get started with Digital Ocean
+The easiest and quickest way to get started, is to use Digital Ocean:
+<a href="https://marketplace.digitalocean.com/apps/budibase">1-click Digital Ocean deploy</a>
+
+<a href="https://marketplace.digitalocean.com/apps/budibase">
+  <img src="https://user-images.githubusercontent.com/552074/87779219-5c3b7600-c824-11ea-9898-981a8ba94f6c.png" alt="digital ocean badge">
+</a>  
+<br /><br />
+
+### Get started with Docker
 To get started, you must have docker and docker compose installed on your machine. 
 Once you have Docker installed, the process takes 5 minutes, with these four steps:
 
@@ -101,47 +116,41 @@ Enter the email and password for the new admin user.
 
 Done! You are now ready to build powerful internal tools in minutes. For additional information on how to get started and learn Budibase, visit our [docs](https://docs.budibase.com/getting-started).
 
+<br />
 
 ---
 
+<br />
 
 ## 🎓 Learning Budibase
 
-The Budibase [documentation lives here](https://docs.budibase.com).
-
-
----
-
-## ⌛ Status
-- [x] Alpha: We are demoing Budibase to users and receiving feedback
-- [x] Private Beta: We are testing Budibase with a closed set of customers
-- [x] Public Beta: Anyone can [get started](https://docs.budibase.com/getting-started).
-- [ ] Official Launch
-
-Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there.
-
-<p align="center">
-  <img src="https://i.imgur.com/cJpgqm8.png">
-</p>
-
+The Budibase documentation [lives here](https://docs.budibase.com).
+<br />
 
 ---
 
-## Stargazers over time
+<br /><br />
 
-[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
+## 💬 Community
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
 
+<img src="https://d33wubrfki0l68.cloudfront.net/e9241201fd89f9abbbdaac4fe44bb16312752abe/84013/img/hero-images/community.webp" />
+
+<br /><br />
 
 ---
 
+<br />
 
 ## ❗ Code of Conduct
 
 Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+<br />
 
 ---
+
+<br />
 
 ## 🙌 Contributing to Budibase
 
@@ -160,26 +169,33 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 - [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
 For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
-
+<br /><br />
 
 ---
 
+<br /><br />
 
 ## 📝 License
 
 Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps that you build can be licensed however you like.
-
-
----
-
-
-## 💬 Get in touch
-
-If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
-
+<br /><br />
 
 ---
 
+
+<br />
+
+## ⭐ Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
+
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+
+<br />
+
+---
+
+<br /><br />
 
 ## Contributors ✨
 
