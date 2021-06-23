@@ -4,41 +4,83 @@
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let type
   export let text
+  export let color
+  export let align
+  export let bold
+  export let italic
+  export let underline
+  export let size
 
   $: placeholder = $builderStore.inBuilder && !text
   $: componentText = $builderStore.inBuilder
     ? text || "Placeholder text"
     : text || ""
+
+  // Add color styles to main styles object, otherwise the styleable helper
+  // overrides the color when it's passed as inline style.
+  $: styles = {
+    ...$component.styles,
+    normal: {
+      ...$component.styles?.normal,
+      color,
+    },
+  }
 </script>
 
-{#if type === "h1"}
-  <h1 class:placeholder use:styleable={$component.styles}>{componentText}</h1>
-{:else if type === "h2"}
-  <h2 class:placeholder use:styleable={$component.styles}>{componentText}</h2>
-{:else if type === "h3"}
-  <h3 class:placeholder use:styleable={$component.styles}>{componentText}</h3>
-{:else if type === "h4"}
-  <h4 class:placeholder use:styleable={$component.styles}>{componentText}</h4>
-{:else if type === "h5"}
-  <h5 class:placeholder use:styleable={$component.styles}>{componentText}</h5>
-{:else if type === "h6"}
-  <h6 class:placeholder use:styleable={$component.styles}>{componentText}</h6>
-{/if}
+<h1
+  use:styleable={styles}
+  class:placeholder
+  class:bold
+  class:italic
+  class:underline
+  class="align--{align || 'left'} size--{size || 'M'}"
+>
+  {#if bold}
+    <strong>{componentText}</strong>
+  {:else}
+    {componentText}
+  {/if}
+</h1>
 
 <style>
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1 {
+    display: inline-block;
     white-space: pre-wrap;
+    font-weight: 600;
   }
-
   .placeholder {
     font-style: italic;
     color: var(--grey-6);
+  }
+  .bold {
+    font-weight: 700;
+  }
+  .italic {
+    font-style: italic;
+  }
+  .underline {
+    text-decoration: underline;
+  }
+  .size--S {
+    font-size: 18px;
+  }
+  .size--M {
+    font-size: 22px;
+  }
+  .size--L {
+    font-size: 28px;
+  }
+  .align--left {
+    text-align: left;
+  }
+  .align--center {
+    text-align: center;
+  }
+  .align--right {
+    text-align: right;
+  }
+  .align-justify {
+    text-align: justify;
   }
 </style>

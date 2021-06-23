@@ -1,6 +1,12 @@
 <script>
   import { isEmpty } from "lodash/fp"
-  import { Checkbox, Input, Select, DetailSummary } from "@budibase/bbui"
+  import {
+    Checkbox,
+    Input,
+    Select,
+    DetailSummary,
+    ColorPicker,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -16,7 +22,6 @@
   import EventsEditor from "./PropertyControls/EventsEditor"
   import FilterEditor from "./PropertyControls/FilterEditor/FilterEditor.svelte"
   import { IconSelect } from "./PropertyControls/IconSelect"
-  import ColorPicker from "./PropertyControls/ColorPicker.svelte"
   import StringFieldSelect from "./PropertyControls/StringFieldSelect.svelte"
   import NumberFieldSelect from "./PropertyControls/NumberFieldSelect.svelte"
   import OptionsFieldSelect from "./PropertyControls/OptionsFieldSelect.svelte"

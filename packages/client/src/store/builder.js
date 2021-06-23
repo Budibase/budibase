@@ -56,12 +56,13 @@ const createBuilderStore = () => {
 
   const actions = {
     selectComponent: id => {
-      if (id) {
-        dispatchEvent("select-component", { id })
-      }
+      dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
+    },
+    deleteComponent: id => {
+      dispatchEvent("delete-component", { id })
     },
   }
   return {

@@ -14,6 +14,7 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let quiet = false
+  export let autoWidth = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -37,6 +38,7 @@
     {value}
     {options}
     {placeholder}
+    {autoWidth}
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}

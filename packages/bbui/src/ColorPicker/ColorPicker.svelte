@@ -8,6 +8,7 @@
   import { capitalise } from "../utils/helpers"
 
   export let value
+  export let size = "M"
 
   let open = false
 
@@ -110,7 +111,7 @@
 
 <div class="container">
   <div
-    class="preview"
+    class="preview size--{size || 'M'}"
     style="background: {color};"
     on:click={() => (open = true)}
   />
@@ -177,6 +178,18 @@
   .preview:hover {
     cursor: pointer;
     box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-300);
+  }
+  .size--S {
+    width: 20px;
+    height: 20px;
+  }
+  .size--M {
+    width: 32px;
+    height: 32px;
+  }
+  .size--L {
+    width: 48px;
+    height: 48px;
   }
   .spectrum-Popover {
     width: 210px;
