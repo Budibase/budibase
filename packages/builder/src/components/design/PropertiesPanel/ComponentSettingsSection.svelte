@@ -1,7 +1,7 @@
 <script>
   import { isEmpty } from "lodash/fp"
   import { Checkbox, Input, Select, DetailSummary } from "@budibase/bbui"
-  import { selectedComponent, store } from "builderStore"
+  import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
@@ -25,12 +25,10 @@
   import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
   import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
   import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
-  import { FrontendTypes } from "constants"
 
   export let componentDefinition
   export let componentInstance
   export let assetInstance
-  export let openSection
 
   const layoutDefinition = []
   const screenDefinition = [
@@ -88,7 +86,7 @@
   }
 </script>
 
-<DetailSummary name="Component" on:open show={openSection === "settings"}>
+<DetailSummary name="General" collapsible={false}>
   <PropertyControl
     bindable={false}
     control={Input}
