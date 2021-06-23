@@ -43,6 +43,7 @@
   p {
     display: inline-block;
     white-space: pre-wrap;
+    margin: 0;
   }
   .placeholder {
     font-style: italic;

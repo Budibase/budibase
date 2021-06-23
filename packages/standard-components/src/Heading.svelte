@@ -48,6 +48,7 @@
     display: inline-block;
     white-space: pre-wrap;
     font-weight: 600;
+    margin: 0;
   }
   .placeholder {
     font-style: italic;
