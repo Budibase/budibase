@@ -57,6 +57,7 @@ const BASE_LAYOUTS = [
     name: "Navigation Layout",
     props: {
       _id: "4f569166-a4f3-47ea-a09e-6d218c75586f",
+      _instanceName: "Navigation Layout",
       _component: "@budibase/standard-components/layout",
       _children: [
         {
@@ -102,6 +103,7 @@ const BASE_LAYOUTS = [
     name: "Empty Layout",
     props: {
       _id: "3723ffa1-f9e0-4c05-8013-98195c788ed6",
+      _instanceName: "Empty Layout",
       _component: "@budibase/standard-components/layout",
       _children: [
         {

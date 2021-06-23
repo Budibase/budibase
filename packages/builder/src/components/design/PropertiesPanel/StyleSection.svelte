@@ -1,10 +1,10 @@
 <script>
-  import PropertyControl from "./PropertyControl.svelte"
+  import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import { DetailSummary } from "@budibase/bbui"
   import { store } from "builderStore"
 
   export let name
-  export let inline = false
+  export let columns
   export let properties
   export let componentInstance
 
@@ -25,31 +25,27 @@
 </script>
 
 <DetailSummary collapsible={false} name={`${name}${changed ? " *" : ""}`}>
-  <div class="group-content" class:inline>
+  <div class="group-content" style="grid-template-columns: {columns || '1fr'}">
     {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
-      <PropertyControl
-        bindable={false}
-        label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
-        control={prop.control}
-        key={prop.key}
-        value={style[prop.key]}
-        onChange={val => store.actions.components.updateStyle(prop.key, val)}
-        props={getControlProps(prop)}
-      />
+      <div style="grid-column: {prop.column || 'auto'}">
+        <PropertyControl
+          bindable={false}
+          label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
+          control={prop.control}
+          key={prop.key}
+          value={style[prop.key]}
+          onChange={val => store.actions.components.updateStyle(prop.key, val)}
+          props={getControlProps(prop)}
+        />
+      </div>
     {/each}
   </div>
 </DetailSummary>
 
 <style>
   .group-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    display: grid;
     align-items: stretch;
     gap: var(--spacing-l);
-  }
-  .inline {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
   }
 </style>

@@ -1,5 +1,5 @@
 <script>
-  import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
+  import StyleSection from "./StyleSection.svelte"
   import * as ComponentStyles from "./componentStyles"
 
   export let componentDefinition
@@ -23,10 +23,10 @@
 
 {#if styles?.length > 0}
   {#each styles as style}
-    <PropertyGroup
+    <StyleSection
       {style}
       name={style.label}
-      inline={style.inline}
+      columns={style.columns}
       properties={style.settings}
       {componentInstance}
     />

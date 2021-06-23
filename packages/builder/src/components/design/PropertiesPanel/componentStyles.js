@@ -83,7 +83,7 @@ export const layout = [
 
 export const margin = {
   label: "Margin",
-  inline: true,
+  columns: "1fr 1fr",
   settings: [
     {
       label: "Top",
@@ -170,7 +170,7 @@ export const margin = {
 
 export const padding = {
   label: "Padding",
-  inline: true,
+  columns: "1fr 1fr",
   settings: [
     {
       label: "Top",
@@ -257,19 +257,19 @@ export const padding = {
 
 export const size = {
   label: "Size",
-  inline: true,
+  columns: "1fr 1fr",
   settings: [
     {
       label: "Width",
       key: "width",
       control: Input,
-      placeholder: "px",
+      placeholder: "Auto",
     },
     {
       label: "Height",
       key: "height",
       control: Input,
-      placeholder: "px",
+      placeholder: "Auto",
     },
   ],
 }
@@ -386,6 +386,8 @@ export const typography = [
 
 export const background = {
   label: "Background",
+  inline: true,
+  columns: "auto 1fr",
   settings: [
     {
       label: "Color",
@@ -474,22 +476,12 @@ export const background = {
 
 export const border = {
   label: "Border",
+  columns: "auto 1fr",
   settings: [
     {
       label: "Color",
       key: "border-color",
       control: ColorPicker,
-    },
-    {
-      label: "Radius",
-      key: "border-radius",
-      control: Select,
-      options: [
-        { label: "Small", value: "0.25rem" },
-        { label: "Medium", value: "0.5rem" },
-        { label: "Large", value: "1rem" },
-        { label: "Round", value: "100%" },
-      ],
     },
     {
       label: "Width",
@@ -502,9 +494,22 @@ export const border = {
       ],
     },
     {
+      label: "Radius",
+      key: "border-radius",
+      control: Select,
+      column: "1 / 3",
+      options: [
+        { label: "Small", value: "0.25rem" },
+        { label: "Medium", value: "0.5rem" },
+        { label: "Large", value: "1rem" },
+        { label: "Round", value: "100%" },
+      ],
+    },
+    {
       label: "Shadow",
       key: "box-shadow",
       control: Select,
+      column: "1 / 3",
       options: [
         {
           label: "Small",
