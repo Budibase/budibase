@@ -87,14 +87,16 @@
 </script>
 
 <DetailSummary name="General" collapsible={false}>
-  <PropertyControl
-    bindable={false}
-    control={Input}
-    label="Name"
-    key="_instanceName"
-    value={componentInstance._instanceName}
-    onChange={val => updateProp("_instanceName", val)}
-  />
+  {#if !componentInstance._component.endsWith("/layout")}
+    <PropertyControl
+      bindable={false}
+      control={Input}
+      label="Name"
+      key="_instanceName"
+      value={componentInstance._instanceName}
+      onChange={val => updateProp("_instanceName", val)}
+    />
+  {/if}
   {#if settings && settings.length > 0}
     {#each settings as setting (`${componentInstance._id}-${setting.key}`)}
       {#if canRenderControl(setting)}
@@ -114,8 +116,6 @@
         />
       {/if}
     {/each}
-  {:else}
-    <div class="text">This component doesn't have any additional settings.</div>
   {/if}
   {#if componentDefinition?.info}
     <div class="text">

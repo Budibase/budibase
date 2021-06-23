@@ -5,7 +5,7 @@
     "icon": "Sandbox",
     "hasChildren": true,
     "styleable": true,
-    "illegalChildren": [],
+    "styles": ["padding", "background"],
     "settings": [
       {
         "type": "text",
@@ -62,6 +62,7 @@
     "icon": "Sandbox",
     "hasChildren": true,
     "showSettingsBar": true,
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
       {
         "type": "select",
@@ -171,8 +172,7 @@
         ],
         "defaultValue": "shrink"
       }
-    ],
-    "styles": ["padding", "size", "background", "border", "shadow"]
+    ]
   },
   "section": {
     "name": "Section",
@@ -679,7 +679,6 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -780,7 +779,6 @@
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -882,7 +880,6 @@
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -996,7 +993,6 @@
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1074,7 +1070,6 @@
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1152,7 +1147,6 @@
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1665,7 +1659,6 @@
   "table": {
     "name": "Table",
     "icon": "Table",
-    "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
@@ -1722,11 +1715,6 @@
         ]
       },
       {
-        "type": "boolean",
-        "label": "Quiet",
-        "key": "quiet"
-      },
-      {
         "type": "multifield",
         "label": "Columns",
         "key": "columns",
@@ -1735,7 +1723,12 @@
       },
       {
         "type": "boolean",
-        "label": "Auto Cols.",
+        "label": "Quiet",
+        "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Auto Columns",
         "key": "showAutoColumns",
         "defaultValue": false
       }
