@@ -7,8 +7,6 @@
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ActionsSection from "./ActionsSection.svelte"
 
-  let openSection = "settings"
-
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
@@ -17,35 +15,21 @@
 
 <Tabs selected="Settings" noPadding>
   <Tab title="Settings">
-    <ScreenSettingsSection
-      {componentInstance}
-      {componentDefinition}
-      {openSection}
-      on:open={() => (openSection = "settings")}
-    />
-    <ComponentSettingsSection
-      {componentInstance}
-      {componentDefinition}
-      {openSection}
-      on:open={() => (openSection = "settings")}
-    />
-    <DesignSection
-      {componentInstance}
-      {componentDefinition}
-      {openSection}
-      on:open={() => (openSection = "design")}
-    />
-    <CustomStylesSection
-      {componentInstance}
-      {componentDefinition}
-      {openSection}
-      on:open={() => (openSection = "custom")}
-    />
-    <ActionsSection
-      {componentInstance}
-      {componentDefinition}
-      {openSection}
-      on:open={() => (openSection = "actions")}
-    />
+    <div class="container">
+      <ScreenSettingsSection {componentInstance} {componentDefinition} />
+      <ComponentSettingsSection {componentInstance} {componentDefinition} />
+      <DesignSection {componentInstance} {componentDefinition} />
+      <CustomStylesSection {componentInstance} {componentDefinition} />
+      <ActionsSection {componentInstance} {componentDefinition} />
+    </div>
   </Tab>
 </Tabs>
+
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+</style>

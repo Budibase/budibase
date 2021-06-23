@@ -1,33 +1,60 @@
 <script>
-  import { TextArea, DetailSummary } from "@budibase/bbui"
+  import {
+    TextArea,
+    DetailSummary,
+    ActionButton,
+    Drawer,
+    DrawerContent,
+    Layout,
+    Body,
+    Button,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
 
   export let componentInstance
-  export let openSection
 
-  function onChange(css) {
-    store.actions.components.updateCustomStyle(css)
+  let tempValue
+  let drawer
+
+  const openDrawer = () => {
+    tempValue = componentInstance?._styles?.custom
+    drawer.show()
+  }
+
+  const save = () => {
+    store.actions.components.updateCustomStyle(tempValue)
+    drawer.hide()
   }
 </script>
 
 <DetailSummary
-  name={`Custom Styles${componentInstance?._styles?.custom ? " *" : ""}`}
-  on:open
-  show={openSection === "custom"}
+  name={`Custom CSS${componentInstance?._styles?.custom ? " *" : ""}`}
+  collapsible={false}
 >
-  <div class="custom-styles">
-    <TextArea
-      value={componentInstance?._styles?.custom}
-      on:change={event => onChange(event.detail)}
-      placeholder="Enter some CSS..."
-    />
+  <div>
+    <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
   </div>
 </DetailSummary>
+<Drawer bind:this={drawer} title="Custom CSS">
+  <Button cta slot="buttons" on:click={save}>Save</Button>
+  <DrawerContent slot="body">
+    <div class="content">
+      <Layout gap="S">
+        <Body size="S">Custom CSS overrides all other component styles.</Body>
+        <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
+      </Layout>
+    </div>
+  </DrawerContent>
+</Drawer>
 
 <style>
-  .custom-styles :global(textarea) {
+  .content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .content :global(textarea) {
     font-family: monospace;
-    min-height: 120px;
-    font-size: var(--font-size-xs);
+    min-height: 240px !important;
+    font-size: var(--font-size-s);
   }
 </style>

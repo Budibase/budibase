@@ -1,42 +1,34 @@
 <script>
-  import { DetailSummary } from "@budibase/bbui"
   import PropertyGroup from "./PropertyControls/PropertyGroup.svelte"
-  import { allStyles } from "./componentStyles"
-  import { store } from "builderStore"
+  import * as ComponentStyles from "./componentStyles"
 
   export let componentDefinition
   export let componentInstance
-  export let openSection
 
-  let selectedCategory = "normal"
-  let currentGroup
+  const getStyles = def => {
+    if (!def?.styles?.length) {
+      return [...ComponentStyles.all]
+    }
+    let styles = [...ComponentStyles.all]
+    def.styles.forEach(style => {
+      if (ComponentStyles[style]) {
+        styles.push(ComponentStyles[style])
+      }
+    })
+    return styles
+  }
 
-  $: groups = componentDefinition?.styleable ? Object.keys(allStyles) : []
+  $: styles = getStyles(componentDefinition)
 </script>
 
-<DetailSummary name="Design" show={openSection === "design"} on:open>
-  {#if groups.length > 0}
-    {#each groups as groupName}
-      <PropertyGroup
-        name={groupName}
-        properties={allStyles[groupName]}
-        styleCategory={selectedCategory}
-        onStyleChanged={store.actions.components.updateStyle}
-        {componentInstance}
-        open={currentGroup === groupName}
-        on:open={() => (currentGroup = groupName)}
-      />
-    {/each}
-  {:else}
-    <div class="no-design">
-      This component doesn't have any design properties.
-    </div>
-  {/if}
-</DetailSummary>
-
-<style>
-  .no-design {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
-  }
-</style>
+{#if styles?.length > 0}
+  {#each styles as style}
+    <PropertyGroup
+      {style}
+      name={style.label}
+      inline={style.inline}
+      properties={style.settings}
+      {componentInstance}
+    />
+  {/each}
+{/if}

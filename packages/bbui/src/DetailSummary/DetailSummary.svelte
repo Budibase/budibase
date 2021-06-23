@@ -4,9 +4,13 @@
 
   export let name
   export let show = false
+  export let collapsible = true
 
   const dispatch = createEventDispatcher()
   const onHeaderClick = () => {
+    if (!collapsible) {
+      return
+    }
     show = !show
     if (show) {
       dispatch("open")
@@ -17,9 +21,11 @@
 <div class="property-group-container">
   <div class="property-group-name" on:click={onHeaderClick}>
     <div class="name">{name}</div>
-    <Icon size="S" name={show ? "Remove" : "Add"} />
+    {#if collapsible}
+      <Icon size="S" name={show ? "Remove" : "Add"} />
+    {/if}
   </div>
-  <div class="property-panel" class:show>
+  <div class="property-panel" class:show={show || !collapsible}>
     <slot />
   </div>
 </div>

@@ -61,7 +61,6 @@
     "description": "This component contains things within itself",
     "icon": "Sandbox",
     "hasChildren": true,
-    "styleable": true,
     "showSettingsBar": true,
     "settings": [
       {
@@ -172,7 +171,8 @@
         ],
         "defaultValue": "shrink"
       }
-    ]
+    ],
+    "styles": ["padding", "size", "background", "border", "shadow"]
   },
   "section": {
     "name": "Section",

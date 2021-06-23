@@ -81,239 +81,198 @@ export const layout = [
   },
 ]
 
-export const margin = [
-  {
-    label: "All sides",
-    key: "margin",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "128px", value: "128px" },
-      { label: "256px", value: "256px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Top",
-    key: "margin-top",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "128px", value: "128px" },
-      { label: "256px", value: "256px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Right",
-    key: "margin-right",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "128px", value: "128px" },
-      { label: "256px", value: "256px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Bottom",
-    key: "margin-bottom",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "128px", value: "128px" },
-      { label: "256px", value: "256px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Left",
-    key: "margin-left",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "128px", value: "128px" },
-      { label: "256px", value: "256px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-]
+export const margin = {
+  label: "Margin",
+  inline: true,
+  settings: [
+    {
+      label: "Top",
+      key: "margin-top",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Right",
+      key: "margin-right",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Bottom",
+      key: "margin-bottom",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Left",
+      key: "margin-left",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+  ],
+}
 
-export const padding = [
-  {
-    label: "All sides",
-    key: "padding",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Top",
-    key: "padding-top",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Right",
-    key: "padding-right",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Bottom",
-    key: "padding-bottom",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-  {
-    label: "Left",
-    key: "padding-left",
-    control: Select,
-    options: [
-      { label: "None", value: "0px" },
-      { label: "4px", value: "4px" },
-      { label: "8px", value: "8px" },
-      { label: "16px", value: "16px" },
-      { label: "20px", value: "20px" },
-      { label: "32px", value: "32px" },
-      { label: "48px", value: "48px" },
-      { label: "64px", value: "64px" },
-      { label: "Auto", value: "auto" },
-      { label: "100%", value: "100%" },
-    ],
-  },
-]
+export const padding = {
+  label: "Padding",
+  inline: true,
+  settings: [
+    {
+      label: "Top",
+      key: "padding-top",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Right",
+      key: "padding-right",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Bottom",
+      key: "padding-bottom",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+    {
+      label: "Left",
+      key: "padding-left",
+      control: Select,
+      bindable: false,
+      placeholder: "None",
+      options: [
+        { label: "4px", value: "4px" },
+        { label: "8px", value: "8px" },
+        { label: "16px", value: "16px" },
+        { label: "20px", value: "20px" },
+        { label: "32px", value: "32px" },
+        { label: "48px", value: "48px" },
+        { label: "64px", value: "64px" },
+        { label: "128px", value: "128px" },
+        { label: "256px", value: "256px" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ],
+    },
+  ],
+}
 
-export const size = [
-  {
-    label: "Flex",
-    key: "flex",
-    control: Select,
-    options: [
-      { label: "Shrink", value: "0 1 auto" },
-      { label: "Grow", value: "1 1 auto" },
-    ],
-  },
-  {
-    label: "Width",
-    key: "width",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Height",
-    key: "height",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Min Width",
-    key: "min-width",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Max Width",
-    key: "max-width",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Min Height",
-    key: "min-height",
-    control: Input,
-    placeholder: "px",
-  },
-  {
-    label: "Max Height",
-    key: "max-height",
-    control: Input,
-    placeholder: "px",
-  },
-]
+export const size = {
+  label: "Size",
+  inline: true,
+  settings: [
+    {
+      label: "Width",
+      key: "width",
+      control: Input,
+      placeholder: "px",
+    },
+    {
+      label: "Height",
+      key: "height",
+      control: Input,
+      placeholder: "px",
+    },
+  ],
+}
 
 export const position = [
   {
@@ -480,210 +439,162 @@ export const typography = [
   },
 ]
 
-export const background = [
-  {
-    label: "Color",
-    key: "background",
-    control: Colorpicker,
-  },
-  {
-    label: "Gradient",
-    key: "background-image",
-    control: Select,
-    options: [
-      { label: "None", value: "none" },
-      {
-        label: "Warm Flame",
-        value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);",
-      },
-      {
-        label: "Night Fade",
-        value: "linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%);",
-      },
-      {
-        label: "Spring Warmth",
-        value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%);",
-      },
-      {
-        label: "Sunny Morning",
-        value: "linear-gradient(120deg, #f6d365 0%, #fda085 100%);",
-      },
-      {
-        label: "Winter Neva",
-        value: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);",
-      },
-      {
-        label: "Tempting Azure",
-        value: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);",
-      },
-      {
-        label: "Heavy Rain",
-        value: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);",
-      },
-      {
-        label: "Deep Blue",
-        value: "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);",
-      },
-      {
-        label: "Near Moon",
-        value: "linear-gradient(to top, #5ee7df 0%, #b490ca 100%);",
-      },
-      {
-        label: "Wild Apple",
-        value: "linear-gradient(to top, #d299c2 0%, #fef9d7 100%);",
-      },
-      {
-        label: "Plum Plate",
-        value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
-      },
-      {
-        label: "Peach Kiss",
-        value:
-          "radial-gradient(circle farthest-corner at 50% 100%,rgba(255,173,138,.50), rgba(255,248,247,1) 100%);",
-      },
-      {
-        label: "Flamingo Sunrise",
-        value:
-          "-webkit-radial-gradient(center top, rgb(255, 250, 245), rgb(255, 242, 242))",
-      },
-      {
-        label: "Budi Mist",
-        value:
-          "radial-gradient(circle, rgba(252,215,212,1) 0%, rgba(255,227,214,1) 50%, rgba(207,218,255,1) 100%);",
-      },
-      {
-        label: "Ballet Slipper",
-        value:
-          "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);",
-      },
-      {
-        label: "Black Noir",
-        value:
-          "linear-gradient(312deg, rgba(60,60,60,1) 0%, rgba(42,42,42,1) 100%);",
-      },
-    ],
-  },
-  {
-    label: "Image",
-    key: "background",
-    control: Input,
-    placeholder: "URL",
-  },
-]
+export const background = {
+  label: "Background",
+  settings: [
+    {
+      label: "Color",
+      key: "background",
+      control: Colorpicker,
+    },
+    {
+      label: "Gradient",
+      key: "background-image",
+      control: Select,
+      options: [
+        { label: "None", value: "none" },
+        {
+          label: "Warm Flame",
+          value:
+            "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);",
+        },
+        {
+          label: "Night Fade",
+          value: "linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%);",
+        },
+        {
+          label: "Spring Warmth",
+          value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%);",
+        },
+        {
+          label: "Sunny Morning",
+          value: "linear-gradient(120deg, #f6d365 0%, #fda085 100%);",
+        },
+        {
+          label: "Winter Neva",
+          value: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);",
+        },
+        {
+          label: "Tempting Azure",
+          value: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);",
+        },
+        {
+          label: "Heavy Rain",
+          value: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);",
+        },
+        {
+          label: "Deep Blue",
+          value: "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);",
+        },
+        {
+          label: "Near Moon",
+          value: "linear-gradient(to top, #5ee7df 0%, #b490ca 100%);",
+        },
+        {
+          label: "Wild Apple",
+          value: "linear-gradient(to top, #d299c2 0%, #fef9d7 100%);",
+        },
+        {
+          label: "Plum Plate",
+          value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
+        },
+        {
+          label: "Peach Kiss",
+          value:
+            "radial-gradient(circle farthest-corner at 50% 100%,rgba(255,173,138,.50), rgba(255,248,247,1) 100%);",
+        },
+        {
+          label: "Flamingo Sunrise",
+          value:
+            "-webkit-radial-gradient(center top, rgb(255, 250, 245), rgb(255, 242, 242))",
+        },
+        {
+          label: "Budi Mist",
+          value:
+            "radial-gradient(circle, rgba(252,215,212,1) 0%, rgba(255,227,214,1) 50%, rgba(207,218,255,1) 100%);",
+        },
+        {
+          label: "Ballet Slipper",
+          value:
+            "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);",
+        },
+        {
+          label: "Black Noir",
+          value:
+            "linear-gradient(312deg, rgba(60,60,60,1) 0%, rgba(42,42,42,1) 100%);",
+        },
+      ],
+    },
+  ],
+}
 
-export const border = [
-  {
-    label: "Radius",
-    key: "border-radius",
-    control: Select,
-    options: [
-      { label: "None", value: "0" },
-      { label: "X Small", value: "0.125rem" },
-      { label: "Small", value: "0.25rem" },
-      { label: "Medium", value: "0.5rem" },
-      { label: "Large", value: "1rem" },
-      { label: "X Large", value: "2rem" },
-      { label: "XX Large", value: "4rem" },
-      { label: "Round", value: "5678px" },
-    ],
-  },
-  {
-    label: "Width",
-    key: "border-width",
-    control: Select,
-    options: [
-      { label: "None", value: "0" },
-      { label: "X Small", value: "0.5px" },
-      { label: "Small", value: "1px" },
-      { label: "Medium", value: "2px" },
-      { label: "Large", value: "4px" },
-      { label: "X large", value: "8px" },
-    ],
-  },
-  {
-    label: "Color",
-    key: "border-color",
-    control: Colorpicker,
-  },
-  {
-    label: "Style",
-    key: "border-style",
-    control: Select,
-    options: [
-      { label: "None", value: "none" },
-      { label: "Hidden", value: "hidden" },
-      { label: "Dotted", value: "dotted" },
-      { label: "Dashed", value: "dashed" },
-      { label: "Solid", value: "solid" },
-      { label: "Double", value: "double" },
-      { label: "Groove", value: "groove" },
-      { label: "Ridge", value: "ridge" },
-      { label: "Inset", value: "inset" },
-      { label: "Outset", value: "outset" },
-    ],
-  },
-]
-
-export const effects = [
-  {
-    label: "Opacity",
-    key: "opacity",
-    control: Select,
-    options: [
-      { label: "0", value: "0" },
-      { label: "0.2", value: "0.2" },
-      { label: "0.4", value: "0.4" },
-      { label: "0.6", value: "0.6" },
-      { label: "0.8", value: "0.8" },
-      { label: "1", value: "1" },
-    ],
-  },
-  {
-    label: "Rotate",
-    key: "transform",
-    control: Select,
-    options: [
-      { label: "None", value: "0" },
-      { label: "45 deg", value: "rotate(45deg)" },
-      { label: "90 deg", value: "rotate(90deg)" },
-      { label: "135 deg", value: "rotate(135deg)" },
-      { label: "180 deg", value: "rotate(180deg)" },
-      { label: "225 deg", value: "rotate(225deg)" },
-      { label: "270 deg", value: "rotate(270deg)" },
-      { label: "315 deg", value: "rotate(315deg)" },
-      { label: "360 deg", value: "rotate(360deg)" },
-    ],
-  },
-  {
-    label: "Shadow",
-    key: "box-shadow",
-    control: Select,
-    options: [
-      { label: "None", value: "none" },
-      { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
-      {
-        label: "Small",
-        value:
-          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-      },
-      {
-        label: "Medium",
-        value:
-          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-      },
-      {
-        label: "Large",
-        value:
-          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      },
-      {
-        label: "X Large",
-        value:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      },
-    ],
-  },
-]
+export const border = {
+  label: "Border",
+  settings: [
+    {
+      label: "Color",
+      key: "border-color",
+      control: Colorpicker,
+    },
+    {
+      label: "Radius",
+      key: "border-radius",
+      control: Select,
+      options: [
+        { label: "None", value: "0" },
+        { label: "X Small", value: "0.125rem" },
+        { label: "Small", value: "0.25rem" },
+        { label: "Medium", value: "0.5rem" },
+        { label: "Large", value: "1rem" },
+        { label: "X Large", value: "2rem" },
+        { label: "XX Large", value: "4rem" },
+        { label: "Round", value: "5678px" },
+      ],
+    },
+    {
+      label: "Width",
+      key: "border-width",
+      control: Select,
+      options: [
+        { label: "None", value: "0" },
+        { label: "X Small", value: "0.5px" },
+        { label: "Small", value: "1px" },
+        { label: "Medium", value: "2px" },
+        { label: "Large", value: "4px" },
+        { label: "X large", value: "8px" },
+      ],
+    },
+    {
+      label: "Shadow",
+      key: "box-shadow",
+      control: Select,
+      options: [
+        { label: "None", value: "none" },
+        { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
+        {
+          label: "Small",
+          value:
+            "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        },
+        {
+          label: "Medium",
+          value:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        },
+        {
+          label: "Large",
+          value:
+            "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        },
+        {
+          label: "X Large",
+          value:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        },
+      ],
+    },
+  ],
+}
 
 export const transitions = [
   {
@@ -734,15 +645,4 @@ export const transitions = [
   },
 ]
 
-export const allStyles = {
-  layout,
-  margin,
-  padding,
-  size,
-  position,
-  typography,
-  background,
-  border,
-  effects,
-  transitions,
-}
+export const all = [margin]

@@ -9,7 +9,6 @@
   import { FrontendTypes } from "constants"
 
   export let componentInstance
-  export let openSection
 
   function setAssetProps(name, value) {
     const selectedAsset = get(currentAsset)
@@ -28,15 +27,15 @@
   }
 
   const screenSettings = [
-    { key: "description", label: "Description", control: Input },
+    // { key: "description", label: "Description", control: Input },
     { key: "routing.route", label: "Route", control: Input },
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 </script>
 
-{#if $currentAsset && $store.currentFrontEndType === FrontendTypes.SCREEN}
-  <DetailSummary name="Screen" on:open show={openSection === "screen"}>
+{#if $store.currentView !== "component" && $currentAsset && $store.currentFrontEndType === FrontendTypes.SCREEN}
+  <DetailSummary name="Screen" collapsible={false}>
     {#each screenSettings as def (`${componentInstance._id}-${def.key}`)}
       <PropertyControl
         bindable={false}

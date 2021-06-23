@@ -1,11 +1,10 @@
 <script>
-  import { DetailSummary, ActionButton } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
-  export let openSection
   export let componentDefinition
   export let componentInstance
 
@@ -26,20 +25,15 @@
   }
 </script>
 
-<DetailSummary name="Actions" on:open show={openSection === "actions"}>
-  <ActionButton secondary wide on:click={store.actions.components.resetStyles}>
-    Reset styles
+{#if componentDefinition?.component?.endsWith("/fieldgroup")}
+  <ActionButton
+    secondary
+    wide
+    on:click={() => confirmResetFieldsDialog?.show()}
+  >
+    Update form fields
   </ActionButton>
-  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
-    <ActionButton
-      secondary
-      wide
-      on:click={() => confirmResetFieldsDialog?.show()}
-    >
-      Update form fields
-    </ActionButton>
-  {/if}
-</DetailSummary>
+{/if}
 
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}
