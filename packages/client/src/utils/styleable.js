@@ -31,6 +31,7 @@ export const styleable = (node, styles = {}) => {
     if (newStyles.empty) {
       baseStyles.border = "2px dashed var(--grey-5)"
       baseStyles.padding = "var(--spacing-l)"
+      baseStyles.overflow = "hidden"
     }
 
     const componentId = newStyles.id
