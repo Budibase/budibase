@@ -239,6 +239,7 @@
   .dropdown {
     padding: var(--spacing-m) 0;
     z-index: 99999999;
+    overflow-y: scroll;
   }
   .title {
     padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);

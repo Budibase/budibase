@@ -72,10 +72,7 @@
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
     field.type !== FORMULA_TYPE
-  $: canBeDisplay =
-    field.type !== LINK_TYPE &&
-    field.type !== AUTO_TYPE &&
-    field.type !== FORMULA_TYPE
+  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_TYPE
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
