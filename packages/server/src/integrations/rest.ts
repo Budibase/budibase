@@ -1,12 +1,16 @@
-import { Integration, DatasourceFieldTypes, QueryTypes } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+} from "./base/definitions"
 
 module RestModule {
   const fetch = require("node-fetch")
 
   interface RestConfig {
-    url: string,
+    url: string
     defaultHeaders: {
-      [key: string]: any,
+      [key: string]: any
     }
   }
 
@@ -143,7 +147,7 @@ module RestModule {
       return await this.parseResponse(response)
     }
 
-    async read({path = "", queryString = "", headers = {}}) {
+    async read({ path = "", queryString = "", headers = {} }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
@@ -156,7 +160,7 @@ module RestModule {
       return await this.parseResponse(response)
     }
 
-    async update({path = "", queryString = "", headers = {}, json = {}}) {
+    async update({ path = "", queryString = "", headers = {}, json = {} }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
@@ -171,7 +175,7 @@ module RestModule {
       return await this.parseResponse(response)
     }
 
-    async delete({path = "", queryString = "", headers = {}}) {
+    async delete({ path = "", queryString = "", headers = {} }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,

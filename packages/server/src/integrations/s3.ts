@@ -4,9 +4,9 @@ module S3Module {
   const AWS = require("aws-sdk")
 
   interface S3Config {
-    region: string,
-    accessKeyId: string,
-    secretAccessKey: string,
+    region: string
+    accessKeyId: string
+    secretAccessKey: string
   }
 
   const SCHEMA: Integration = {

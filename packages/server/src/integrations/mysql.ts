@@ -1,4 +1,10 @@
-import { Integration, DatasourceFieldTypes, QueryTypes, Operation, QueryJson } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+  Operation,
+  QueryJson,
+} from "./base/definitions"
 
 module MySQLModule {
   const mysql = require("mysql")
@@ -141,7 +147,9 @@ module MySQLModule {
         { sql: "SHOW TABLES;" },
         false
       )
-      const tableNames = tablesResp.map((obj: any) => obj[`Tables_in_${database}`])
+      const tableNames = tablesResp.map(
+        (obj: any) => obj[`Tables_in_${database}`]
+      )
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: any = {}

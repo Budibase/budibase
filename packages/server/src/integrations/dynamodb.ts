@@ -1,4 +1,8 @@
-import { Integration, DatasourceFieldTypes, QueryTypes } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+} from "./base/definitions"
 
 module DynamoModule {
   const AWS = require("aws-sdk")

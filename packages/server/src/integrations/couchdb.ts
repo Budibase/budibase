@@ -1,4 +1,8 @@
-import { Integration, DatasourceFieldTypes, QueryTypes } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+} from "./base/definitions"
 
 module CouchDBModule {
   const PouchDB = require("pouchdb")
