@@ -1,4 +1,8 @@
-import { Integration, DatasourceFieldTypes, QueryTypes } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+} from "./base/definitions"
 
 module ElasticsearchModule {
   const { Client } = require("@elastic/elasticsearch")

@@ -1,4 +1,9 @@
-import { Integration, DatasourceFieldTypes, QueryTypes, QueryJson } from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+  QueryJson,
+} from "./base/definitions"
 import { Table } from "../constants/definitions"
 
 module PostgresModule {
@@ -8,12 +13,12 @@ module PostgresModule {
   const { buildExternalTableId, convertType } = require("./utils")
 
   interface PostgresConfig {
-    host: string,
-    port: number,
-    database: string,
-    user: string,
-    password: string,
-    ssl?: boolean,
+    host: string
+    port: number
+    database: string
+    user: string
+    password: string
+    ssl?: boolean
   }
 
   const SCHEMA: Integration = {
@@ -83,7 +88,10 @@ module PostgresModule {
     json: FieldTypes.JSON,
   }
 
-  async function internalQuery(client: any, query: { sql: string, bindings?: object }) {
+  async function internalQuery(
+    client: any,
+    query: { sql: string; bindings?: object }
+  ) {
     try {
       return await client.query(query.sql, query.bindings || {})
     } catch (err) {
@@ -129,9 +137,11 @@ module PostgresModule {
      * @param {*} datasourceId - datasourceId to fetch
      */
     async buildSchema(datasourceId: string) {
-      let tableKeys: { [key: string]: string[] }  = {}
+      let tableKeys: { [key: string]: string[] } = {}
       try {
-        const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+        const primaryKeysResponse = await this.client.query(
+          this.PRIMARY_KEYS_SQL
+        )
         for (let table of primaryKeysResponse.rows) {
           const tableName = table.table_name
           if (!tableKeys[tableName]) {
@@ -171,7 +181,7 @@ module PostgresModule {
 
     async create(sql: string) {
       const response = await internalQuery(this.client, { sql })
-      return response.rows.length ? response.rows : [{created: true}]
+      return response.rows.length ? response.rows : [{ created: true }]
     }
 
     async read(sql: string) {
@@ -181,19 +191,19 @@ module PostgresModule {
 
     async update(sql: string) {
       const response = await internalQuery(this.client, { sql })
-      return response.rows.length ? response.rows : [{updated: true}]
+      return response.rows.length ? response.rows : [{ updated: true }]
     }
 
     async delete(sql: string) {
       const response = await internalQuery(this.client, { sql })
-      return response.rows.length ? response.rows : [{deleted: true}]
+      return response.rows.length ? response.rows : [{ deleted: true }]
     }
 
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
       const response = await internalQuery(this.client, input)
-      return response.rows.length ? response.rows : [{[operation]: true}]
+      return response.rows.length ? response.rows : [{ [operation]: true }]
     }
   }
 

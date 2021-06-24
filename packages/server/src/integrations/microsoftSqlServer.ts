@@ -1,4 +1,9 @@
-import {Integration, DatasourceFieldTypes, QueryTypes, QueryJson} from "./base/definitions"
+import {
+  Integration,
+  DatasourceFieldTypes,
+  QueryTypes,
+  QueryJson,
+} from "./base/definitions"
 
 module MSSQLModule {
   const sqlServer = require("mssql")

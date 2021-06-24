@@ -1,10 +1,21 @@
 import { Knex, knex } from "knex"
 const BASE_LIMIT = 5000
-import { QueryJson, SearchFilters, QueryOptions, SortDirection, Operation } from "./definitions"
+import {
+  QueryJson,
+  SearchFilters,
+  QueryOptions,
+  SortDirection,
+  Operation,
+} from "./definitions"
 
-
-function addFilters(query: any, filters: SearchFilters | undefined): Knex.QueryBuilder {
-  function iterate(structure: { [key: string]: any }, fn: (key: string, value: any) => void) {
+function addFilters(
+  query: any,
+  filters: SearchFilters | undefined
+): Knex.QueryBuilder {
+  function iterate(
+    structure: { [key: string]: any },
+    fn: (key: string, value: any) => void
+  ) {
     for (let [key, value] of Object.entries(structure)) {
       fn(key, value)
     }
