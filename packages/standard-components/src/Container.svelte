@@ -8,17 +8,23 @@
   export let hAlign
   export let vAlign
   export let size
+  export let gap
 
   $: directionClass = direction ? `valid-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
+  $: gapClass = gap ? `gap-${gap}` : ""
+  $: classNames = [
+    directionClass,
+    hAlignClass,
+    vAlignClass,
+    sizeClass,
+    gapClass,
+  ].join(" ")
 </script>
 
-<div
-  class={[directionClass, hAlignClass, vAlignClass, sizeClass].join(" ")}
-  use:styleable={$component.styles}
->
+<div class={classNames} use:styleable={$component.styles}>
   <slot />
 </div>
 
@@ -82,5 +88,15 @@
   .direction-row.vAlign-stretch,
   .direction-column.hAlign-stretch {
     align-items: stretch;
+  }
+
+  .gap-S {
+    gap: 8px;
+  }
+  .gap-M {
+    gap: 16px;
+  }
+  .gap-L {
+    gap: 32px;
   }
 </style>

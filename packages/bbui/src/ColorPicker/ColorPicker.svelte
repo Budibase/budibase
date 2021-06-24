@@ -22,8 +22,6 @@
       label: "Grays",
       colors: [
         "white",
-        "gray-50",
-        "gray-75",
         "gray-100",
         "gray-200",
         "gray-300",
