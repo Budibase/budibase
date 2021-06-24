@@ -123,7 +123,7 @@
         "type": "select",
         "label": "Vert. Align",
         "key": "vAlign",
-        "showInBar": "true",
+        "showInBar": true,
         "barStyle": "buttons",
         "options": [
           {
@@ -200,6 +200,14 @@
           }
         ],
         "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Wrap",
+        "key": "wrap",
+        "showInBar": true,
+        "barIcon": "ModernGridView",
+        "barTitle": "Wrap"
       }
     ]
   },
@@ -290,6 +298,7 @@
         "label": "Direction",
         "key": "direction",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Column",
@@ -311,6 +320,7 @@
         "label": "Horiz. Align",
         "key": "hAlign",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Left",
@@ -343,7 +353,8 @@
         "type": "select",
         "label": "Vert. Align",
         "key": "vAlign",
-        "showInBar": "true",
+        "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Top",
@@ -371,6 +382,32 @@
           }
         ],
         "defaultValue": "top"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
       }
     ],
     "context": {

@@ -9,6 +9,7 @@
   export let vAlign
   export let size
   export let gap
+  export let wrap
 
   $: directionClass = direction ? `valid-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
@@ -24,7 +25,7 @@
   ].join(" ")
 </script>
 
-<div class={classNames} use:styleable={$component.styles}>
+<div class={classNames} use:styleable={$component.styles} class:wrap>
   <slot />
 </div>
 
@@ -98,5 +99,9 @@
   }
   .gap-L {
     gap: 32px;
+  }
+
+  .wrap {
+    flex-wrap: wrap;
   }
 </style>
