@@ -24,7 +24,7 @@ exports.generateRowIdField = (keyProps = []) => {
     keyProps = [keyProps]
   }
   // this conserves order and types
-  return encodeURIComponent(JSON.stringify(keyProps))
+  return encodeURIComponent(JSON.stringify(keyProps).replace(/"/g, "'"))
 }
 
 // should always return an array
