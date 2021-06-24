@@ -123,6 +123,7 @@
     align-items: stretch;
     height: 100%;
     overflow: auto;
+    overflow-x: hidden;
   }
 
   .nav-wrapper {
