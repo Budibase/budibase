@@ -9,6 +9,9 @@
   $: appUrl = $hostingStore.appUrl
 
   function fullWebhookURL(uri) {
+    if (!uri) {
+      return ""
+    }
     if (production) {
       return `${appUrl}/${uri}`
     } else {
