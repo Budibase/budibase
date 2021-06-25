@@ -5,6 +5,7 @@
   "table",
   "repeater",
   "button",
+  "pdfreport",
   {
     "name": "Form",
     "icon": "Form",
