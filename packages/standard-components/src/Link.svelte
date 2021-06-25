@@ -1,31 +1,105 @@
 <script>
   import { getContext } from "svelte"
 
-  const { linkable, styleable } = getContext("sdk")
+  const { linkable, styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let url = ""
-  export let text = ""
-  export let openInNewTab = false
-  export let external = false
+  export let url
+  export let text
+  export let openInNewTab
+  export let color
+  export let align
+  export let bold
+  export let italic
+  export let underline
+  export let size
 
+  $: external = url && !url.startsWith("/")
   $: target = openInNewTab ? "_blank" : "_self"
+  $: placeholder = $builderStore.inBuilder && !text
+  $: componentText = $builderStore.inBuilder
+    ? text || "Placeholder link"
+    : text || ""
+
+  // Add color styles to main styles object, otherwise the styleable helper
+  // overrides the color when it's passed as inline style.
+  $: styles = {
+    ...$component.styles,
+    normal: {
+      ...$component.styles?.normal,
+      color,
+    },
+  }
 </script>
 
-{#if external}
-  <a href={url || "/"} {target} use:styleable={$component.styles}>
-    {text}
-    <slot />
-  </a>
-{:else}
-  <a href={url || "/"} use:linkable {target} use:styleable={$component.styles}>
-    {text}
-    <slot />
-  </a>
+{#if $builderStore.inBuilder || componentText}
+  {#if external}
+    <a
+      {target}
+      href={url || "/"}
+      use:styleable={styles}
+      class:placeholder
+      class:bold
+      class:italic
+      class:underline
+      class="align--{align || 'left'} size--{size || 'M'}"
+    >
+      {componentText}
+    </a>
+  {:else}
+    <a
+      use:linkable
+      href={url || "/"}
+      use:styleable={styles}
+      class:placeholder
+      class:bold
+      class:italic
+      class:underline
+      class="align--{align || 'left'} size--{size || 'M'}"
+    >
+      {componentText}
+    </a>
+  {/if}
 {/if}
 
 <style>
   a {
     color: var(--spectrum-alias-text-color);
+    display: inline-block;
+    white-space: pre-wrap;
+  }
+  .placeholder {
+    font-style: italic;
+    color: var(--grey-6);
+  }
+  .bold {
+    font-weight: 600;
+  }
+  .italic {
+    font-style: italic;
+  }
+  .underline {
+    text-decoration: underline;
+  }
+  .size--S {
+    font-size: 14px;
+  }
+  .size--M {
+    font-size: 16px;
+  }
+  .size--L {
+    font-size: 18px;
+  }
+  .align--left {
+    text-align: left;
+  }
+  .align--center {
+    text-align: center;
+  }
+  .align--right {
+    text-align: right;
+  }
+  .align-justify {
+    text-align: justify;
   }
 </style>
