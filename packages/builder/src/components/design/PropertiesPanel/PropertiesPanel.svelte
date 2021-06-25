@@ -1,5 +1,5 @@
 <script>
-  import { store, selectedComponent, currentAsset } from "builderStore"
+  import { store, selectedComponent } from "builderStore"
   import { Tabs, Tab } from "@budibase/bbui"
   import ScreenSettingsSection from "./ScreenSettingsSection.svelte"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
