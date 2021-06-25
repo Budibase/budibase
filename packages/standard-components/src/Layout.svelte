@@ -124,6 +124,7 @@
     height: 100%;
     overflow: auto;
     overflow-x: hidden;
+    position: relative;
   }
 
   .nav-wrapper {
@@ -132,7 +133,7 @@
     justify-content: center;
     align-items: stretch;
     background: white;
-    z-index: 1;
+    z-index: 2;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
   }
   .layout--top .nav-wrapper.sticky {
@@ -164,6 +165,7 @@
     justify-content: center;
     align-items: stretch;
     flex: 1 1 auto;
+    z-index: 1;
   }
   .main {
     display: flex;
