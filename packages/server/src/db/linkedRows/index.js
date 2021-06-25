@@ -87,33 +87,27 @@ async function getFullLinkedDocs(appId, links) {
 
 /**
  * Update link documents for a row or table - this is to be called by the API controller when a change is occurring.
- * @param {string} eventType states what type of change which is occurring, means this can be expanded upon in the
+ * @param {string} args.eventType states what type of change which is occurring, means this can be expanded upon in the
  * future quite easily (all updates go through one function).
- * @param {string} appId The ID of the instance in which the change is occurring.
- * @param {string} tableId The ID of the of the table which is being changed.
- * @param {object|null} row The row which is changing, e.g. created, updated or deleted.
- * @param {object|null} table If the table has already been retrieved this can be used to reduce database gets.
- * @param {object|null} oldTable If the table is being updated then the old table can be provided for differencing.
+ * @param {string} args.appId The ID of the instance in which the change is occurring.
+ * @param {string} args.tableId The ID of the of the table which is being changed.
+ * @param {object|null} args.row The row which is changing, e.g. created, updated or deleted.
+ * @param {object|null} args.table If the table has already been retrieved this can be used to reduce database gets.
+ * @param {object|null} args.oldTable If the table is being updated then the old table can be provided for differencing.
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
-exports.updateLinks = async function ({
-  eventType,
-  appId,
-  row,
-  tableId,
-  table,
-  oldTable,
-}) {
+exports.updateLinks = async function (args) {
+  const { eventType, appId, row, tableId, table, oldTable } = args
   const baseReturnObj = row == null ? table : row
   if (appId == null) {
     throw "Cannot operate without an instance ID."
   }
   // make sure table ID is set
   if (tableId == null && table != null) {
-    arguments[0].tableId = table._id
+    args.tableId = table._id
   }
-  let linkController = new LinkController(arguments[0])
+  let linkController = new LinkController(args)
   try {
     if (
       !(await linkController.doesTableHaveLinkedFields()) &&

@@ -1,17 +1,18 @@
+import { SqlQuery } from "./base/definitions"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 
-exports.isExternalTable = tableId => {
+export function isExternalTable(tableId: string) {
   return tableId.includes(DocumentTypes.DATASOURCE)
 }
 
-exports.buildExternalTableId = (datasourceId, tableName) => {
+export function buildExternalTableId(datasourceId: string, tableName: string) {
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
-exports.breakExternalTableId = tableId => {
+export function breakExternalTableId(tableId: string) {
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let tableName = parts.pop()
   // if they need joined
@@ -19,7 +20,7 @@ exports.breakExternalTableId = tableId => {
   return { datasourceId, tableName }
 }
 
-exports.generateRowIdField = (keyProps = []) => {
+export function generateRowIdField(keyProps: any[] = []) {
   if (!Array.isArray(keyProps)) {
     keyProps = [keyProps]
   }
@@ -28,18 +29,26 @@ exports.generateRowIdField = (keyProps = []) => {
 }
 
 // should always return an array
-exports.breakRowIdField = _id => {
+export function breakRowIdField(_id: string) {
   if (!_id) {
     return null
   }
   return JSON.parse(decodeURIComponent(_id))
 }
 
-exports.convertType = (type, map) => {
+export function convertType(type: string, map: { [key: string]: any }) {
   for (let [external, internal] of Object.entries(map)) {
     if (type.toLowerCase().includes(external)) {
       return internal
     }
   }
   return FieldTypes.STRING
+}
+
+export function getSqlQuery(query: SqlQuery | string): SqlQuery {
+  if (typeof query === "string") {
+    return { sql: query }
+  } else {
+    return query
+  }
 }
