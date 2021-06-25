@@ -196,7 +196,6 @@ export const size = {
 
 export const background = {
   label: "Background",
-  inline: true,
   columns: "auto 1fr",
   settings: [
     {
