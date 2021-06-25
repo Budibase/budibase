@@ -27,95 +27,95 @@ export enum DatasourceFieldTypes {
 }
 
 export interface QueryDefinition {
-  type: QueryTypes,
-  displayName?: string,
-  readable?: boolean,
-  customisable?: boolean,
-  fields?: object,
-  urlDisplay?: boolean,
+  type: QueryTypes
+  displayName?: string
+  readable?: boolean
+  customisable?: boolean
+  fields?: object
+  urlDisplay?: boolean
 }
 
 export interface Integration {
-  docs: string,
-  plus?: boolean,
-  description: string,
-  friendlyName: string,
-  datasource: {},
+  docs: string
+  plus?: boolean
+  description: string
+  friendlyName: string
+  datasource: {}
   query: {
-    [key: string]: QueryDefinition,
-  },
+    [key: string]: QueryDefinition
+  }
 }
 
 export interface SearchFilters {
-  allOr: boolean,
+  allOr: boolean
   string?: {
-    [key: string]: string,
-  },
+    [key: string]: string
+  }
   fuzzy?: {
-    [key: string]: string,
-  },
+    [key: string]: string
+  }
   range?: {
     [key: string]: {
-      high: number | string,
-      low: number | string,
-    },
-  },
+      high: number | string
+      low: number | string
+    }
+  }
   equal?: {
-    [key: string]: any,
-  },
+    [key: string]: any
+  }
   notEqual?: {
-    [key: string]: any,
-  },
+    [key: string]: any
+  }
   empty?: {
-    [key: string]: any,
-  },
+    [key: string]: any
+  }
   notEmpty?: {
-    [key: string]: any,
-  },
+    [key: string]: any
+  }
 }
 
 export interface RelationshipsJson {
   through?: {
-    from: string,
-    to: string,
-    tableName: string,
-  },
-  from: string,
-  to: string,
-  tableName: string,
+    from: string
+    to: string
+    tableName: string
+  }
+  from: string
+  to: string
+  tableName: string
 }
 
 export interface QueryJson {
   endpoint: {
-    datasourceId: string,
-    entityId: string,
-    operation: Operation,
-  },
+    datasourceId: string
+    entityId: string
+    operation: Operation
+  }
   resource: {
-    fields: string[],
-  },
-  filters?: SearchFilters,
+    fields: string[]
+  }
+  filters?: SearchFilters
   sort?: {
-    [key: string]: SortDirection,
-  },
+    [key: string]: SortDirection
+  }
   paginate?: {
-    limit: number,
-    page: string | number,
-  },
-  body?: object,
+    limit: number
+    page: string | number
+  }
+  body?: object
   extra?: {
-    idFilter?: SearchFilters,
-  },
-  relationships?: RelationshipsJson[],
+    idFilter?: SearchFilters
+  }
+  relationships?: RelationshipsJson[]
 }
 
 export interface SqlQuery {
-  sql: string,
+  sql: string
   bindings?: {
-    [key: string]: any,
-  },
+    [key: string]: any
+  }
 }
 
 export interface QueryOptions {
-  disableReturning?: boolean,
+  disableReturning?: boolean
 }

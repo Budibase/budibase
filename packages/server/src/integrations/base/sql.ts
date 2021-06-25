@@ -70,7 +70,11 @@ function addFilters(
   return query
 }
 
-function addRelationships(query: KnexQuery, fromTable: string, relationships: RelationshipsJson[] | undefined): KnexQuery {
+function addRelationships(
+  query: KnexQuery,
+  fromTable: string,
+  relationships: RelationshipsJson[] | undefined
+): KnexQuery {
   if (!relationships) {
     return query
   }
@@ -91,7 +95,11 @@ function addRelationships(query: KnexQuery, fromTable: string, relationships: Re
   return query
 }
 
-function buildCreate(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+function buildCreate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body } = json
   let query: KnexQuery = knex(endpoint.entityId)
   // mysql can't use returning
@@ -141,7 +149,11 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   return query
 }
 
-function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+function buildUpdate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body, filters } = json
   let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
@@ -153,7 +165,11 @@ function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery
   }
 }
 
-function buildDelete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+function buildDelete(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, filters } = json
   let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
