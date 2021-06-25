@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let url
@@ -10,7 +10,7 @@
 
 {#if url}
   <img src={url} alt={$component.name} use:styleable={$component.styles} />
-{:else}
+{:else if $builderStore.inBuilder}
   <div
     class="placeholder"
     use:styleable={{ ...$component.styles, empty: true }}

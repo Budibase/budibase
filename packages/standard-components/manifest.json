@@ -867,6 +867,7 @@
     "name": "Link",
     "description": "A basic link component for internal and external links",
     "icon": "Link",
+    "showSettingsBar": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -886,9 +887,84 @@
         "key": "openInNewTab"
       },
       {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
         "type": "boolean",
-        "label": "External",
-        "key": "external"
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Italic",
+        "key": "italic",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Italic text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Underline",
+        "key": "underline",
+        "showInBar": true,
+        "barIcon": "TagUnderline",
+        "barTitle": "Underline text"
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [{
+          "label": "Left",
+          "value": "left",
+          "barIcon": "TextAlignLeft",
+          "barTitle": "Align left"
+        }, {
+          "label": "Center",
+          "value": "center",
+          "barIcon": "TextAlignCenter",
+          "barTitle": "Align center"
+        }, {
+          "label": "Right",
+          "value": "right",
+          "barIcon": "TextAlignRight",
+          "barTitle": "Align right"
+        }, {
+          "label": "Justify",
+          "value": "justify",
+          "barIcon": "TextAlignJustify",
+          "barTitle": "Justify text"
+        }]
       }
     ]
   },
