@@ -14,18 +14,32 @@
   const newContext = createContextStore(context)
   setContext("context", newContext)
 
-  $: providerKey = key || $component.id
+  const providerKey = key || $component.id
 
-  // Add data context
-  $: newContext.actions.provideData(providerKey, data)
+  // Generate a permanent unique ID for this component and use it to register
+  // any datasource actions
+  const instanceId = generate()
 
-  // Instance ID is unique to each instance of a provider
-  let instanceId
+  // Keep previous state around so we can avoid updating unless necessary
+  let lastDataKey
+  let lastActionsKey
 
-  // Add actions context
-  $: {
-    if (instanceId) {
-      actions?.forEach(({ type, callback, metadata }) => {
+  $: provideData(data)
+  $: provideActions(actions, instanceId)
+
+  const provideData = newData => {
+    const dataKey = JSON.stringify(newData)
+    if (dataKey !== lastDataKey) {
+      newContext.actions.provideData(providerKey, newData)
+      lastDataKey = dataKey
+    }
+  }
+
+  const provideActions = newActions => {
+    const actionsKey = JSON.stringify(newActions)
+    if (actionsKey !== lastActionsKey) {
+      lastActionsKey = actionsKey
+      newActions?.forEach(({ type, callback, metadata }) => {
         newContext.actions.provideAction(providerKey, type, callback)
 
         // Register any "refresh datasource" actions with a singleton store
@@ -43,10 +57,6 @@
   }
 
   onMount(() => {
-    // Generate a permanent unique ID for this component and use it to register
-    // any datasource actions
-    instanceId = generate()
-
     // Unregister all datasource instances when unmounting this provider
     return () => dataSourceStore.actions.unregisterInstance(instanceId)
   })
