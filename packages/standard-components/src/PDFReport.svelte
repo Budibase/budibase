@@ -102,6 +102,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    padding: 1px;
   }
   .footer {
     display: flex;
