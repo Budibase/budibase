@@ -26,7 +26,8 @@ const PASSWORD = "babs_password"
 class TestConfiguration {
   constructor(openServer = true) {
     if (openServer) {
-      env.PORT = 4002
+      // use a random port because it doesn't matter
+      env.PORT = 0
       this.server = require("../../app")
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
