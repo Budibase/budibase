@@ -3,7 +3,9 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
   QueryJson,
+  SqlQuery,
 } from "./base/definitions"
+import { getSqlQuery } from "./utils"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
@@ -67,10 +69,7 @@ module MSSQLModule {
     },
   }
 
-  async function internalQuery(
-    client: any,
-    query: { sql: string; bindings?: object }
-  ) {
+  async function internalQuery(client: any, query: SqlQuery) {
     try {
       return await client.query(query.sql, query.bindings || {})
     } catch (err) {
@@ -106,27 +105,27 @@ module MSSQLModule {
       }
     }
 
-    async read(query: string) {
+    async read(query: SqlQuery | string) {
       await this.connect()
-      const response = await internalQuery(this.client, { sql: query })
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.recordset
     }
 
-    async create(query: string) {
+    async create(query: SqlQuery | string) {
       await this.connect()
-      const response = await internalQuery(this.client, { sql: query })
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.recordset || [{ created: true }]
     }
 
-    async update(query: string) {
+    async update(query: SqlQuery | string) {
       await this.connect()
-      const response = await internalQuery(this.client, { sql: query })
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.recordset || [{ updated: true }]
     }
 
-    async delete(query: string) {
+    async delete(query: SqlQuery | string) {
       await this.connect()
-      const response = await internalQuery(this.client, { sql: query })
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.recordset || [{ deleted: true }]
     }
 

@@ -1,7 +1,3 @@
-const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { AppStatus } = require("../../../db/utils")
-
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
   getAllLocks: () => {
@@ -14,6 +10,10 @@ jest.mock("../../../utilities/redis", () => ({
   setDebounce: jest.fn(),
   checkDebounce: jest.fn(),
 }))
+
+const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const setup = require("./utilities")
+const { AppStatus } = require("../../../db/utils")
 
 describe("/applications", () => {
   let request = setup.getRequest()

@@ -139,11 +139,11 @@ function buildDelete(knex: Knex, json: QueryJson, opts: QueryOptions) {
 }
 
 class SqlQueryBuilder {
-  private readonly client: any
+  private readonly sqlClient: string
   private readonly limit: number
   // pass through client to get flavour of SQL
-  constructor(client: any, limit: number = BASE_LIMIT) {
-    this.client = client
+  constructor(client: string, limit: number = BASE_LIMIT) {
+    this.sqlClient = client
     this.limit = limit
   }
 
@@ -162,7 +162,7 @@ class SqlQueryBuilder {
    * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
-    const client = knex({ client: this.client })
+    const client = knex({ client: this.sqlClient })
     let query
     switch (this._operation(json)) {
       case Operation.CREATE:
