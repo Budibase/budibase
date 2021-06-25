@@ -245,16 +245,49 @@
       },
       {
         "type": "select",
-        "label": "Button Type",
+        "label": "Variant",
         "key": "type",
-        "options": ["primary", "secondary", "cta", "warning"],
+        "options": [
+          {
+            "label": "Primary",
+            "value": "primary"
+          }, {
+            "label": "Secondary",
+            "value": "secondary"
+          },
+          {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
+            "label": "Warning",
+            "value": "warning"
+          }
+        ],
         "defaultValue": "primary"
       },
       {
         "type": "select",
         "label": "Size",
         "key": "size",
-        "options": ["S", "M", "L", "XL"],
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
         "defaultValue": "M"
       },
       {
