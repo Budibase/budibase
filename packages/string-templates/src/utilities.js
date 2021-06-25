@@ -1,4 +1,3 @@
-const _ = require("lodash")
 const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 module.exports.FIND_HBS_REGEX = /{{([^{].*?)}}/g

@@ -1,5 +1,4 @@
 import { Input, Select, ColorPicker } from "@budibase/bbui"
-import FlatButtonGroup from "./PropertyControls/FlatButtonGroup"
 
 export const margin = {
   label: "Margin",
