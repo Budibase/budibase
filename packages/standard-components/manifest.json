@@ -1071,6 +1071,7 @@
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "settings": [
       {
         "type": "text",
