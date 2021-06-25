@@ -52,6 +52,6 @@
     display: grid;
     place-items: center;
     height: 75px;
-    width: 150px;
+    width: 300px;
   }
 </style>
