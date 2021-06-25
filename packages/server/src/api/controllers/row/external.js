@@ -1,5 +1,10 @@
 const { makeExternalQuery } = require("./utils")
-const { DataSourceOperation, SortDirection, FieldTypes, RelationshipTypes } = require("../../../constants")
+const {
+  DataSourceOperation,
+  SortDirection,
+  FieldTypes,
+  RelationshipTypes,
+} = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
@@ -69,7 +74,12 @@ function outputProcessing(rows, table, relationships, allTables) {
     row._id = generateIdForRow(row, table)
     // this is a relationship of some sort
     if (finalRows[row._id]) {
-      finalRows = updateRelationshipColumns(finalRows, row, relationships, allTables)
+      finalRows = updateRelationshipColumns(
+        finalRows,
+        row,
+        relationships,
+        allTables
+      )
       continue
     }
     const thisRow = {}
@@ -82,7 +92,12 @@ function outputProcessing(rows, table, relationships, allTables) {
     thisRow._rev = "rev"
     finalRows[thisRow._id] = thisRow
     // do this at end once its been added to the final rows
-    finalRows = updateRelationshipColumns(finalRows, row, relationships, allTables)
+    finalRows = updateRelationshipColumns(
+      finalRows,
+      row,
+      relationships,
+      allTables
+    )
   }
   return Object.values(finalRows)
 }
