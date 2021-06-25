@@ -18,6 +18,8 @@ function connectionError(timeout, err) {
   if (CLOSED) {
     return
   }
+  CLIENT.end()
+  CLOSED = true
   // always clear this on error
   clearTimeout(timeout)
   CONNECTED = false
@@ -41,7 +43,7 @@ function init() {
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
     if (!CONNECTED) {
-      connectionError(timeout)
+      connectionError(timeout, "Did not successfully connect in timeout")
     }
   }, STARTUP_TIMEOUT_MS)
 

@@ -442,4 +442,15 @@ describe("Cover a few complex use cases", () => {
     const output = await processObject(input, tableJson)
     expect(output.dataProvider).not.toBe("Invalid Binding")
   })
+
+  it("should be able to handle external ids", async () => {
+    const input = {
+      dataProvider: "{{ literal [_id] }}",
+    }
+    const context = {
+      _id: "%5B%221%22%2C%221%22%5D",
+    }
+    const output = await processObject(input, context)
+    expect(output.dataProvider).toBe("%5B%221%22%2C%221%22%5D")
+  })
 })

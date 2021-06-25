@@ -1,4 +1,6 @@
 // need to load environment first
+import { ExtendableContext } from "koa"
+
 const env = require("./environment")
 const CouchDB = require("./db")
 require("@budibase/auth").init(CouchDB)
@@ -40,7 +42,7 @@ app.use(
 
 if (!env.isTest()) {
   const bullApp = bullboard.init()
-  app.use(async (ctx, next) => {
+  app.use(async (ctx: ExtendableContext, next: () => any) => {
     if (ctx.path.startsWith(bullboard.pathPrefix)) {
       ctx.status = 200
       ctx.respond = false
@@ -61,9 +63,9 @@ if (env.isProd()) {
   env._set("NODE_ENV", "production")
   Sentry.init()
 
-  app.on("error", (err, ctx) => {
-    Sentry.withScope(function (scope) {
-      scope.addEventProcessor(function (event) {
+  app.on("error", (err: any, ctx: ExtendableContext) => {
+    Sentry.withScope(function (scope: any) {
+      scope.addEventProcessor(function (event: any) {
         return Sentry.Handlers.parseRequest(event, ctx.request)
       })
       Sentry.captureException(err)

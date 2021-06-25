@@ -1,6 +1,6 @@
+jest.mock("node-fetch", () => jest.fn(() => ({ json: jest.fn(), text: jest.fn() })))
 const fetch = require("node-fetch")
 const RestIntegration = require("../rest")
-jest.mock("node-fetch", () => jest.fn(() => ({ json: jest.fn(), text: jest.fn() })))
 
 class TestConfiguration {
   constructor(config = {}) {

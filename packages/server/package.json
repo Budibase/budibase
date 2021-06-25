@@ -1,27 +1,30 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.60",
+  "version": "0.9.65",
   "description": "Budibase Web Server",
-  "main": "src/electron.js",
+  "main": "src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "test": "jest --testPathIgnorePatterns=routes && yarn run test:integration",
-    "test:integration": "jest --coverage --detectOpenHandles",
+    "build": "rm -rf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/",
+    "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "build:docker": "docker build . -t app-service",
-    "run:docker": "node src/index",
+    "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
-    "dev:builder": "yarn run dev:stack:up && nodemon src/index.js",
+    "dev:builder": "yarn run dev:stack:up && ts-node src/index.ts",
+    "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
+    "lint:fix": "yarn run format && yarn run lint",
     "initialise": "node scripts/initialise.js"
   },
   "jest": {
+    "preset": "ts-jest",
     "testEnvironment": "node",
     "setupFiles": [
       "./scripts/jestSetup.js"
@@ -55,9 +58,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.60",
-    "@budibase/client": "^0.9.60",
-    "@budibase/string-templates": "^0.9.60",
+    "@budibase/auth": "^0.9.65",
+    "@budibase/client": "^0.9.65",
+    "@budibase/string-templates": "^0.9.65",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -110,16 +113,26 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.60",
+    "@budibase/standard-components": "^0.9.65",
     "@jest/test-sequencer": "^24.8.0",
+    "@types/bull": "^3.15.1",
+    "@types/jest": "^26.0.23",
+    "@types/koa": "^2.13.3",
+    "@types/koa-router": "^7.4.2",
+    "@types/node": "^15.12.4",
+    "@typescript-eslint/parser": "^4.28.0",
     "babel-jest": "^27.0.2",
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
     "express": "^4.17.1",
-    "jest": "^24.8.0",
+    "jest": "^27.0.5",
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
-    "supertest": "^4.0.2"
+    "prettier": "^2.3.1",
+    "supertest": "^4.0.2",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

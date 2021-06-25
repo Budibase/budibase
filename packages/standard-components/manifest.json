@@ -242,6 +242,7 @@
     "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "dataProvider",
@@ -258,6 +259,93 @@
         "type": "filter",
         "label": "Filtering",
         "key": "filter"
+      },
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Column",
+            "value": "column",
+            "barIcon": "ViewRow",
+            "barTitle": "Column layout"
+          },
+          {
+            "label": "Row",
+            "value": "row",
+            "barIcon": "ViewColumn",
+            "barTitle": "Row layout"
+          }
+        ],
+        "defaultValue": "column"
+      },
+      {
+        "type": "select",
+        "label": "Horiz. Align",
+        "key": "hAlign",
+        "showInBar": true,
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "AlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "AlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "AlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveLeftRight",
+            "barTitle": "Align stretched horizontally"
+          }
+        ],
+        "defaultValue": "stretch"
+      },
+      {
+        "type": "select",
+        "label": "Vert. Align",
+        "key": "vAlign",
+        "showInBar": "true",
+        "options": [
+          {
+            "label": "Top",
+            "value": "top",
+            "barIcon": "AlignTop",
+            "barTitle": "Align top"
+          },
+          {
+            "label": "Middle",
+            "value": "middle",
+            "barIcon": "AlignMiddle",
+            "barTitle": "Align middle"
+          },
+          {
+            "label": "Bottom",
+            "value": "bottom",
+            "barIcon": "AlignBottom",
+            "barTitle": "Align bottom"
+          },
+          {
+            "label": "Stretch",
+            "value": "stretch",
+            "barIcon": "MoveUpDown",
+            "barTitle": "Align stretched vertically"
+          }
+        ],
+        "defaultValue": "top"
       }
     ],
     "context": {
