@@ -1,21 +1,29 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  export let className = ""
-  export let url = ""
-  export let description = ""
-  export let height
-  export let width
+  export let url
 </script>
 
-<img
-  {height}
-  {width}
-  class={className}
-  src={url}
-  alt={description}
-  use:styleable={$component.styles}
-/>
+{#if url}
+  <img src={url} alt={$component.name} use:styleable={$component.styles} />
+{:else}
+  <div
+    class="placeholder"
+    use:styleable={{ ...$component.styles, empty: true }}
+  >
+    <Placeholder />
+  </div>
+{/if}
+
+<style>
+  .placeholder {
+    display: grid;
+    place-items: center;
+    height: 75px;
+    width: 150px;
+  }
+</style>

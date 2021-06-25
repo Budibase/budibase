@@ -729,6 +729,7 @@
     "description": "A basic component for displaying images",
     "icon": "Image",
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "settings": [
       {
         "type": "text",
