@@ -6,12 +6,15 @@ import {
   QueryOptions,
   SortDirection,
   Operation,
+  RelationshipsJson,
 } from "./definitions"
 
+type KnexQuery = Knex.QueryBuilder | Knex
+
 function addFilters(
-  query: any,
+  query: KnexQuery,
   filters: SearchFilters | undefined
-): Knex.QueryBuilder {
+): KnexQuery {
   function iterate(
     structure: { [key: string]: any },
     fn: (key: string, value: any) => void
@@ -67,9 +70,38 @@ function addFilters(
   return query
 }
 
-function buildCreate(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function addRelationships(
+  query: KnexQuery,
+  fromTable: string,
+  relationships: RelationshipsJson[] | undefined
+): KnexQuery {
+  if (!relationships) {
+    return query
+  }
+  for (let relationship of relationships) {
+    const from = `${fromTable}.${relationship.from}`
+    const to = `${relationship.tableName}.${relationship.to}`
+    if (!relationship.through) {
+      // @ts-ignore
+      query = query.innerJoin(relationship.tableName, from, to)
+    } else {
+      const through = relationship
+      query = query
+        // @ts-ignore
+        .innerJoin(through.tableName, from, through.from)
+        .innerJoin(relationship.tableName, to, through.to)
+    }
+  }
+  return query
+}
+
+function buildCreate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.insert(body)
@@ -78,9 +110,10 @@ function buildCreate(knex: Knex, json: QueryJson, opts: QueryOptions) {
   }
 }
 
-function buildRead(knex: Knex, json: QueryJson, limit: number) {
-  let { endpoint, resource, filters, sort, paginate } = json
-  let query: Knex.QueryBuilder = knex(endpoint.entityId)
+function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
+  let { endpoint, resource, filters, sort, paginate, relationships } = json
+  const tableName = endpoint.entityId
+  let query: KnexQuery = knex(tableName)
   // select all if not specified
   if (!resource) {
     resource = { fields: [] }
@@ -93,6 +126,8 @@ function buildRead(knex: Knex, json: QueryJson, limit: number) {
   }
   // handle where
   query = addFilters(query, filters)
+  // handle join
+  query = addRelationships(query, tableName, relationships)
   // handle sorting
   if (sort) {
     for (let [key, value] of Object.entries(sort)) {
@@ -114,9 +149,13 @@ function buildRead(knex: Knex, json: QueryJson, limit: number) {
   return query
 }
 
-function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function buildUpdate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body, filters } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
@@ -126,9 +165,13 @@ function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions) {
   }
 }
 
-function buildDelete(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function buildDelete(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, filters } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
@@ -180,6 +223,8 @@ class SqlQueryBuilder {
       default:
         throw `Operation type is not supported by SQL query builder`
     }
+
+    // @ts-ignore
     return query.toSQL().toNative()
   }
 }

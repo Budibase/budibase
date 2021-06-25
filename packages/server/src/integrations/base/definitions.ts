@@ -74,6 +74,17 @@ export interface SearchFilters {
   }
 }
 
+export interface RelationshipsJson {
+  through?: {
+    from: string
+    to: string
+    tableName: string
+  }
+  from: string
+  to: string
+  tableName: string
+}
+
 export interface QueryJson {
   endpoint: {
     datasourceId: string
@@ -92,9 +103,10 @@ export interface QueryJson {
     page: string | number
   }
   body?: object
-  extra: {
+  extra?: {
     idFilter?: SearchFilters
   }
+  relationships?: RelationshipsJson[]
 }
 
 export interface SqlQuery {
