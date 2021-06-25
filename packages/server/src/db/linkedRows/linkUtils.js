@@ -30,12 +30,7 @@ exports.createLinkView = createLinkView
  * (if any).
  */
 exports.getLinkDocuments = async function (args) {
-  const {
-    appId,
-    tableId,
-    rowId,
-    includeDocs,
-  } = args
+  const { appId, tableId, rowId, includeDocs } = args
   const db = new CouchDB(appId)
   let params
   if (rowId != null) {

@@ -98,14 +98,7 @@ async function getFullLinkedDocs(appId, links) {
  * row operations and the table for table operations.
  */
 exports.updateLinks = async function (args) {
-  const {
-    eventType,
-    appId,
-    row,
-    tableId,
-    table,
-    oldTable,
-  } = args
+  const { eventType, appId, row, tableId, table, oldTable } = args
   const baseReturnObj = row == null ? table : row
   if (appId == null) {
     throw "Cannot operate without an instance ID."
