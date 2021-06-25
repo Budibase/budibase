@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "tsc && mv dist/src/* dist/ && rmdir dist/src/",
+    "build": "rm -r dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "build:docker": "docker build . -t app-service",
