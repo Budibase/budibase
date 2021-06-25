@@ -742,6 +742,7 @@
     "name": "Background Image",
     "description": "A background image",
     "icon": "Images",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
