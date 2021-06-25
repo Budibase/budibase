@@ -4,6 +4,8 @@ const path = require("path")
 const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
 // these run on ports we don't normally use so that they can run alongside the
+const fs = require("fs")
+
 // normal development system
 const WORKER_PORT = "10002"
 const MAIN_PORT = cypressConfig.env.PORT
@@ -27,10 +29,14 @@ process.env.LOG_LEVEL = "error"
 
 async function run() {
   // require("dotenv").config({ path: resolve(dir, ".env") })
+  if (!fs.existsSync("../server/dist")) {
+    console.error("Unable to run cypress, need to build server first")
+    process.exit(-1)
+  }
 
   // dont make this a variable or top level require
   // it will cause environment module to be loaded prematurely
-  const server = require("../../server/src/app")
+  const server = require("../../server/dist/app")
   process.env.PORT = WORKER_PORT
   const worker = require("../../worker/src/index")
   // reload main port for rest of system

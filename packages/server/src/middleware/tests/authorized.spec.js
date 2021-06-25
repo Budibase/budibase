@@ -1,6 +1,3 @@
-const authorizedMiddleware = require("../authorized")
-const env = require("../../environment")
-const { PermissionTypes, PermissionLevels } = require("@budibase/auth/permissions")
 jest.mock("../../environment", () => ({
     prod: false,
     isTest: () => true,
@@ -10,6 +7,9 @@ jest.mock("../../environment", () => ({
     }
   })
 )
+const authorizedMiddleware = require("../authorized")
+const env = require("../../environment")
+const { PermissionTypes, PermissionLevels } = require("@budibase/auth/permissions")
 
 class TestConfiguration {
   constructor(role) {
@@ -75,17 +75,6 @@ describe("Authorization middleware", () => {
 
   beforeEach(() => {
     config = new TestConfiguration()
-  })
-
-  describe("external web hook call", () => {
-    beforeEach(() => {
-      config = new TestConfiguration()
-      config.setEnvironment(true)
-      config.setRequestHeaders({
-        "x-api-key": "abc123",
-        "x-instanceid": "instance123",
-      })
-    })
   })
 
   describe("non-webhook call", () => {
