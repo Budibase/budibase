@@ -9,7 +9,8 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rm -rf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/",
+    "build": "rm -rf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
+    "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "build:docker": "docker build . -t app-service",
@@ -122,6 +123,7 @@
     "@types/node": "^15.12.4",
     "@typescript-eslint/parser": "^4.28.0",
     "babel-jest": "^27.0.2",
+    "copyfiles": "^2.4.1",
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
     "express": "^4.17.1",
