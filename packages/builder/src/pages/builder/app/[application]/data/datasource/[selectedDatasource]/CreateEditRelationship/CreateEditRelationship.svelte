@@ -2,33 +2,44 @@
   import { RelationshipTypes } from "constants/backend"
   import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading } from "@budibase/bbui"
 
+  //  "tasks_something": {
+  //          "name": "tasks_something",
+  //          "type": "link",
+  //          "tableId": "whatever/othertable",
+  //          "relationshipType": "one-to-many",
+  //       },
+
   export let save
   export let datasource
+  export let from
   export let tables
-
-  let relationship = {}
+  export let relationship = {}
 
   $: console.log(relationship)
-  $: console.log("ds", datasource)
-  $: valid = relationship.name && relationship.from && relationship.to && relationship.relationshipType
+  $: valid = relationship.name && relationship.tableId && relationship.relationshipType
+  $: from = tables.find(table => table._id === relationship.source)
+  $: to = tables.find(table => table._id === relationship.tableId)
+  $: through = tables.find(table => table._id === relationship.through)
+  $: linkTable = through || to
 
-  $: relationshipOptions = relationship.from && relationship.to ?  [
+  $: relationshipOptions = from && to ?  [
       {
-        name: `Many ${relationship.from.name} rows → many ${relationship.to.name} rows`,
-        alt: `Many ${relationship.from.name} rows → many ${relationship.to.name} rows`,
+        name: `Many ${from.name} rows → many ${to.name} rows`,
+        alt: `Many ${from.name} rows → many ${to.name} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: `One ${relationship.from.name} row → many ${relationship.to.name} rows`,
-        alt: `One ${relationship.from.name} rows → many ${relationship.to.name} rows`,
+        name: `One ${from.name} row → many ${to.name} rows`,
+        alt: `One ${from.name} rows → many ${to.name} rows`,
         value: RelationshipTypes.ONE_TO_MANY,
-      },
-      {
-        name: `One ${relationship.from.name} row → many ${relationship.to.name} rows`,
-        alt: `One ${relationship.from.name} row → many ${relationship.to.name} rows`,
-        value: RelationshipTypes.MANY_TO_ONE,
-      },
+      }
     ] : []
+  
+  function onChangeRelationshipType(evt) {
+    if (evt.detail === RelationshipTypes.ONE_TO_MANY) {
+      relationship.through = null
+    }
+  }
 
   // save the relationship on to the datasource
   function saveRelationship() {
@@ -67,9 +78,9 @@
     <Menu>
       <MenuSection heading="From">
         {#each tables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.from = table)}>
+          <MenuItem noClose icon="Table" on:click={() => (relationship.source = table._id)}>
             {table.name}
-             {#if relationship.from?._id === table._id}
+             {#if relationship.source === table._id}
               <Icon size="S" name="Checkmark" />
              {/if}
           </MenuItem>
@@ -79,9 +90,9 @@
     <Menu>
       <MenuSection heading="To">
         {#each tables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.to = table)}>
+          <MenuItem noClose icon="Table" on:click={() => (relationship.tableId = table._id)}>
             {table.name}
-             {#if relationship.to?._id === table._id}
+             {#if relationship.tableId === table._id}
               <Icon size="S" name="Checkmark" />
              {/if}
           </MenuItem>
@@ -90,61 +101,50 @@
     </Menu>
   </div>
 
-  {#if relationship.from && relationship.to}
+  {#if from && to}
     <div class="cardinality">
       <RadioGroup
         label="Define the relationship"
         bind:value={relationship.relationshipType}
+        on:change={onChangeRelationshipType}
         options={relationshipOptions}
         getOptionLabel={option => option.name}
         getOptionValue={option => option.value}
       />
     </div>
-  {/if}
 
   {#if relationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
     <Menu>
       <MenuSection heading="Join Table">
         {#each tables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.through = table)}>
+          <MenuItem noClose icon="Table" on:click={() => (relationship.through = table._id)}>
             {table.name}
-              {#if relationship.through?._id === table._id}
+              {#if relationship.through === table._id}
               <Icon size="S" name="Checkmark" />
               {/if}
           </MenuItem>
         {/each}
       </MenuSection>
     </Menu>
-
-    {#if relationship.through}
-      <div class="table-selector">
-        <Menu>
-          <MenuSection heading={`${relationship.from.name} Column`}>
-            {#each Object.keys(relationship.through) as column}
-              <MenuItem noClose icon="Table" on:click={() => (relationship.through.from = column)}>
-                {column}
-                  {#if relationship.through.from?._id === column._id}
-                  <Icon size="S" name="Checkmark" />
-                  {/if}
-              </MenuItem>
-            {/each}
-          </MenuSection>
-        </Menu>
-        <Menu>
-          <MenuSection heading={`${relationship.to.name} Column`}>
-            {#each Object.keys(relationship.through) as column}
-              <MenuItem noClose icon="Table" on:click={() => (relationship.through.to = column)}>
-                {column}
-                  {#if relationship.through.to?._id === column._id}
-                  <Icon size="S" name="Checkmark" />
-                  {/if}
-              </MenuItem>
-            {/each}
-          </MenuSection>
-        </Menu>
-      </div>
-    {/if}
   {/if}
+
+
+    <div class="table-selector">
+      <Menu>
+        <MenuSection heading={`${linkTable.name} Column`}>
+          {#each Object.keys(linkTable.schema) as column}
+            <MenuItem noClose icon="Table" on:click={() => (relationship.foreignKey = column)}>
+              {column}
+                {#if relationship.foreignKey === column}
+                  <Icon size="S" name="Checkmark" />
+                {/if}
+            </MenuItem>
+          {/each}
+        </MenuSection>
+      </Menu>
+    </div>
+  {/if}
+
 </ModalContent>
 
 <style>

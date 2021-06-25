@@ -4,7 +4,7 @@
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import CreateEditRelationship from "./CreateEditRelationship.svelte"
+  import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
