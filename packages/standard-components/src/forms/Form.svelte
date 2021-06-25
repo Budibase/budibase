@@ -16,7 +16,7 @@
     if (type !== "Update") {
       return {}
     }
-    // Only inherit values for forms targetting internal tables
+    // Only inherit values for forms targeting internal tables
     if (!dataSource?.tableId) {
       return {}
     }
