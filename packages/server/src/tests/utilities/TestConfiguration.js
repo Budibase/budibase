@@ -90,6 +90,9 @@ class TestConfiguration {
   }
 
   end() {
+    if (!this) {
+      return
+    }
     if (this.server) {
       this.server.close()
     }

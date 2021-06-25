@@ -3,8 +3,10 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
   QueryJson,
+  SqlQuery,
 } from "./base/definitions"
 import { Table } from "../constants/definitions"
+import { getSqlQuery } from "./utils"
 
 module PostgresModule {
   const { Pool } = require("pg")
@@ -88,10 +90,7 @@ module PostgresModule {
     json: FieldTypes.JSON,
   }
 
-  async function internalQuery(
-    client: any,
-    query: { sql: string; bindings?: object }
-  ) {
+  async function internalQuery(client: any, query: SqlQuery) {
     try {
       return await client.query(query.sql, query.bindings || {})
     } catch (err) {
@@ -179,23 +178,23 @@ module PostgresModule {
       this.tables = tables
     }
 
-    async create(sql: string) {
-      const response = await internalQuery(this.client, { sql })
+    async create(query: SqlQuery | string) {
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.rows.length ? response.rows : [{ created: true }]
     }
 
-    async read(sql: string) {
-      const response = await internalQuery(this.client, { sql })
+    async read(query: SqlQuery | string) {
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.rows
     }
 
-    async update(sql: string) {
-      const response = await internalQuery(this.client, { sql })
+    async update(query: SqlQuery | string) {
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.rows.length ? response.rows : [{ updated: true }]
     }
 
-    async delete(sql: string) {
-      const response = await internalQuery(this.client, { sql })
+    async delete(query: SqlQuery | string) {
+      const response = await internalQuery(this.client, getSqlQuery(query))
       return response.rows.length ? response.rows : [{ deleted: true }]
     }
 

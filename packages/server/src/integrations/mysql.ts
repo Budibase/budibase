@@ -4,7 +4,9 @@ import {
   QueryTypes,
   Operation,
   QueryJson,
+  SqlQuery,
 } from "./base/definitions"
+import { getSqlQuery } from "./utils"
 
 module MySQLModule {
   const mysql = require("mysql")
@@ -98,7 +100,7 @@ module MySQLModule {
 
   function internalQuery(
     client: any,
-    query: { sql: string; bindings?: object },
+    query: SqlQuery,
     connect: boolean = true
   ): Promise<any[]> {
     // Node MySQL is callback based, so we must wrap our call in a promise
@@ -190,22 +192,22 @@ module MySQLModule {
       this.tables = tables
     }
 
-    async create(query: string) {
-      const results = await internalQuery(this.client, { sql: query })
+    async create(query: SqlQuery | string) {
+      const results = await internalQuery(this.client, getSqlQuery(query))
       return results.length ? results : [{ created: true }]
     }
 
-    read(query: string) {
-      return internalQuery(this.client, { sql: query })
+    read(query: SqlQuery | string) {
+      return internalQuery(this.client, getSqlQuery(query))
     }
 
-    async update(query: string) {
-      const results = await internalQuery(this.client, { sql: query })
+    async update(query: SqlQuery | string) {
+      const results = await internalQuery(this.client, getSqlQuery(query))
       return results.length ? results : [{ updated: true }]
     }
 
-    async delete(query: string) {
-      const results = await internalQuery(this.client, { sql: query })
+    async delete(query: SqlQuery | string) {
+      const results = await internalQuery(this.client, getSqlQuery(query))
       return results.length ? results : [{ deleted: true }]
     }
 

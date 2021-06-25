@@ -97,6 +97,13 @@ export interface QueryJson {
   }
 }
 
+export interface SqlQuery {
+  sql: string
+  bindings?: {
+    [key: string]: any
+  }
+}
+
 export interface QueryOptions {
   disableReturning?: boolean
 }

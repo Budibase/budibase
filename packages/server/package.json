@@ -10,8 +10,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest --testPathIgnorePatterns=routes && yarn run test:integration",
-    "test:integration": "jest --coverage --detectOpenHandles",
+    "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "build:docker": "docker build . -t app-service",
     "run:docker": "node dist/src/index.js",
@@ -25,6 +24,7 @@
     "initialise": "node scripts/initialise.js"
   },
   "jest": {
+    "preset": "ts-jest",
     "testEnvironment": "node",
     "setupFiles": [
       "./scripts/jestSetup.js"
@@ -116,6 +116,7 @@
     "@budibase/standard-components": "^0.9.63",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
+    "@types/jest": "^26.0.23",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
     "@types/node": "^15.12.4",
@@ -124,11 +125,12 @@
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
     "express": "^4.17.1",
-    "jest": "^24.8.0",
+    "jest": "^27.0.5",
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
     "prettier": "^2.3.1",
     "supertest": "^4.0.2",
+    "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.4"
   },
