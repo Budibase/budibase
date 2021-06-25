@@ -1,9 +1,24 @@
-const { DataSourceOperation, SortDirection } = require("../../constants")
-
+import { Knex, knex } from "knex"
 const BASE_LIMIT = 5000
+import {
+  QueryJson,
+  SearchFilters,
+  QueryOptions,
+  SortDirection,
+  Operation,
+  RelationshipsJson,
+} from "./definitions"
 
-function addFilters(query, filters) {
-  function iterate(structure, fn) {
+type KnexQuery = Knex.QueryBuilder | Knex
+
+function addFilters(
+  query: KnexQuery,
+  filters: SearchFilters | undefined
+): KnexQuery {
+  function iterate(
+    structure: { [key: string]: any },
+    fn: (key: string, value: any) => void
+  ) {
     for (let [key, value] of Object.entries(structure)) {
       fn(key, value)
     }
@@ -12,7 +27,7 @@ function addFilters(query, filters) {
     return query
   }
   // if all or specified in filters, then everything is an or
-  const allOr = !!filters.allOr
+  const allOr = filters.allOr
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       const fnc = allOr ? "orWhere" : "where"
@@ -55,7 +70,7 @@ function addFilters(query, filters) {
   return query
 }
 
-function addRelationships(query, fromTable, relationships) {
+function addRelationships(query: KnexQuery, fromTable: string, relationships: RelationshipsJson[] | undefined): KnexQuery {
   if (!relationships) {
     return query
   }
@@ -63,10 +78,12 @@ function addRelationships(query, fromTable, relationships) {
     const from = `${fromTable}.${relationship.from}`
     const to = `${relationship.tableName}.${relationship.to}`
     if (!relationship.through) {
+      // @ts-ignore
       query = query.innerJoin(relationship.tableName, from, to)
     } else {
       const through = relationship
       query = query
+        // @ts-ignore
         .innerJoin(through.tableName, from, through.from)
         .innerJoin(relationship.tableName, to, through.to)
     }
@@ -74,9 +91,9 @@ function addRelationships(query, fromTable, relationships) {
   return query
 }
 
-function buildCreate(knex, json, opts) {
+function buildCreate(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
   const { endpoint, body } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.insert(body)
@@ -85,10 +102,10 @@ function buildCreate(knex, json, opts) {
   }
 }
 
-function buildRead(knex, json, limit) {
+function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   let { endpoint, resource, filters, sort, paginate, relationships } = json
   const tableName = endpoint.entityId
-  let query = knex(tableName)
+  let query: KnexQuery = knex(tableName)
   // select all if not specified
   if (!resource) {
     resource = { fields: [] }
@@ -112,6 +129,7 @@ function buildRead(knex, json, limit) {
   }
   // handle pagination
   if (paginate && paginate.page && paginate.limit) {
+    // @ts-ignore
     const page = paginate.page <= 1 ? 0 : paginate.page - 1
     const offset = page * paginate.limit
     query = query.offset(offset).limit(paginate.limit)
@@ -123,9 +141,9 @@ function buildRead(knex, json, limit) {
   return query
 }
 
-function buildUpdate(knex, json, opts) {
+function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
   const { endpoint, body, filters } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
@@ -135,9 +153,9 @@ function buildUpdate(knex, json, opts) {
   }
 }
 
-function buildDelete(knex, json, opts) {
+function buildDelete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
   const { endpoint, filters } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
   query = addFilters(query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
@@ -148,20 +166,19 @@ function buildDelete(knex, json, opts) {
 }
 
 class SqlQueryBuilder {
+  private readonly sqlClient: string
+  private readonly limit: number
   // pass through client to get flavour of SQL
-  constructor(client, limit = BASE_LIMIT) {
-    this._client = client
-    this._limit = limit
+  constructor(client: string, limit: number = BASE_LIMIT) {
+    this.sqlClient = client
+    this.limit = limit
   }
 
   /**
    * @param json the input JSON structure from which an SQL query will be built.
    * @return {string} the operation that was found in the JSON.
    */
-  _operation(json) {
-    if (!json || !json.endpoint) {
-      return ""
-    }
+  _operation(json: QueryJson): Operation {
     return json.endpoint.operation
   }
 
@@ -171,25 +188,27 @@ class SqlQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
    */
-  _query(json, opts = {}) {
-    const knex = require("knex")({ client: this._client })
+  _query(json: QueryJson, opts: QueryOptions = {}) {
+    const client = knex({ client: this.sqlClient })
     let query
     switch (this._operation(json)) {
-      case DataSourceOperation.CREATE:
-        query = buildCreate(knex, json, opts)
+      case Operation.CREATE:
+        query = buildCreate(client, json, opts)
         break
-      case DataSourceOperation.READ:
-        query = buildRead(knex, json, this._limit, opts)
+      case Operation.READ:
+        query = buildRead(client, json, this.limit)
         break
-      case DataSourceOperation.UPDATE:
-        query = buildUpdate(knex, json, opts)
+      case Operation.UPDATE:
+        query = buildUpdate(client, json, opts)
         break
-      case DataSourceOperation.DELETE:
-        query = buildDelete(knex, json, opts)
+      case Operation.DELETE:
+        query = buildDelete(client, json, opts)
         break
       default:
         throw `Operation type is not supported by SQL query builder`
     }
+
+    // @ts-ignore
     return query.toSQL().toNative()
   }
 }

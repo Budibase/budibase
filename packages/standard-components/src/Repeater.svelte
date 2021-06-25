@@ -1,18 +1,22 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
+  import Container from "./Container.svelte"
 
   export let dataProvider
   export let noRowsMessage
+  export let direction
+  export let hAlign
+  export let vAlign
 
-  const { styleable, Provider } = getContext("sdk")
+  const { Provider } = getContext("sdk")
   const component = getContext("component")
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? true
 </script>
 
-<div use:styleable={$component.styles}>
+<Container {direction} {hAlign} {vAlign}>
   {#if $component.empty}
     <Placeholder />
   {:else if rows.length > 0}
@@ -24,7 +28,7 @@
   {:else if loaded && noRowsMessage}
     <div class="noRows"><i class="ri-list-check-2" />{noRowsMessage}</div>
   {/if}
-</div>
+</Container>
 
 <style>
   .noRows {

@@ -17,24 +17,20 @@ exports.createLinkView = createLinkView
 
 /**
  * Gets the linking documents, not the linked documents themselves.
- * @param {string} appId The instance in which we are searching for linked rows.
- * @param {string} tableId The table which we are searching for linked rows against.
- * @param {string|null} fieldName The name of column/field which is being altered, only looking for
+ * @param {string} args.appId The instance in which we are searching for linked rows.
+ * @param {string} args.tableId The table which we are searching for linked rows against.
+ * @param {string|null} args.fieldName The name of column/field which is being altered, only looking for
  * linking documents that are related to it. If this is not specified then the table level will be assumed.
- * @param {string|null} rowId The ID of the row which we want to find linking documents for -
+ * @param {string|null} args.rowId The ID of the row which we want to find linking documents for -
  * if this is not specified then it will assume table or field level depending on whether the
  * field name has been specified.
- * @param {boolean|null} includeDocs whether to include docs in the response call, this is considerably slower so only
+ * @param {boolean|null} args.includeDocs whether to include docs in the response call, this is considerably slower so only
  * use this if actually interested in the docs themselves.
  * @returns {Promise<object[]>} This will return an array of the linking documents that were found
  * (if any).
  */
-exports.getLinkDocuments = async function ({
-  appId,
-  tableId,
-  rowId,
-  includeDocs,
-}) {
+exports.getLinkDocuments = async function (args) {
+  const { appId, tableId, rowId, includeDocs } = args
   const db = new CouchDB(appId)
   let params
   if (rowId != null) {

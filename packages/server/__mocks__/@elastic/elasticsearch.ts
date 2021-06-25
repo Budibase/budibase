@@ -1,4 +1,4 @@
-const elastic = {}
+const elastic: any = {}
 
 elastic.Client = function () {
   this.index = jest.fn().mockResolvedValue({ body: [] })

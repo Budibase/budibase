@@ -1,8 +1,3 @@
-const usageQuotaMiddleware = require("../usageQuota")
-const usageQuota = require("../../utilities/usageQuota")
-const CouchDB = require("../../db")
-const env = require("../../environment")
-
 jest.mock("../../db")
 jest.mock("../../utilities/usageQuota")
 jest.mock("../../environment", () => ({
@@ -11,6 +6,11 @@ jest.mock("../../environment", () => ({
   isDev: () => true,
   _set: () => {},
 }))
+
+const usageQuotaMiddleware = require("../usageQuota")
+const usageQuota = require("../../utilities/usageQuota")
+const CouchDB = require("../../db")
+const env = require("../../environment")
 
 class TestConfiguration {
   constructor() {

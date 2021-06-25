@@ -1,8 +1,8 @@
+jest.mock("pg")
+
 let setup = require("./utilities")
 let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-
-jest.mock("pg")
 const pg = require("pg")
 
 describe("/datasources", () => {

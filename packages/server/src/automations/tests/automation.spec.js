@@ -1,18 +1,4 @@
-require("../../environment")
-const automation = require("../index")
-const usageQuota = require("../../utilities/usageQuota")
-const thread = require("../thread")
-const triggers = require("../triggers")
-const { basicAutomation, basicTable } = require("../../tests/utilities/structures")
-const { wait } = require("../../utilities")
-const { makePartial } = require("../../tests/utilities")
-const { cleanInputValues } = require("../automationUtils")
-const setup = require("./utilities")
-
-let workerJob
-
 jest.mock("../../utilities/usageQuota")
-usageQuota.getAPIKey.mockReturnValue({ apiKey: "test" })
 jest.mock("../thread")
 jest.spyOn(global.console, "error")
 jest.mock("worker-farm", () => {
@@ -29,6 +15,21 @@ jest.mock("worker-farm", () => {
     }
   }
 })
+
+require("../../environment")
+const automation = require("../index")
+const usageQuota = require("../../utilities/usageQuota")
+const thread = require("../thread")
+const triggers = require("../triggers")
+const { basicAutomation, basicTable } = require("../../tests/utilities/structures")
+const { wait } = require("../../utilities")
+const { makePartial } = require("../../tests/utilities")
+const { cleanInputValues } = require("../automationUtils")
+const setup = require("./utilities")
+
+let workerJob
+
+usageQuota.getAPIKey.mockReturnValue({ apiKey: "test" })
 
 describe("Run through some parts of the automations system", () => {
   let config = setup.getConfig()
