@@ -77,14 +77,34 @@ module.exports.run = async function ({ inputs }) {
     requestBody.length !== 0 &&
     BODY_REQUESTS.indexOf(requestMethod) !== -1
   ) {
-    request.body = JSON.parse(requestBody)
+    request.body =
+      typeof requestBody === "string"
+        ? requestBody
+        : JSON.stringify(requestBody)
+    request.headers = {
+      "Content-Type": "application/json",
+    }
   }
 
   try {
+    // do a quick JSON parse if there is a body, to generate an error if its invalid
+    if (request.body) {
+      JSON.parse(request.body)
+    }
     const response = await fetch(url, request)
+    const contentType = response.headers.get("content-type")
+    const success = response.status === 200
+    let resp
+    if (!success) {
+      resp = response.statusText
+    } else if (contentType && contentType.indexOf("application/json") !== -1) {
+      resp = await response.json()
+    } else {
+      resp = await response.text()
+    }
     return {
-      response: await response.json(),
-      success: response.status === 200,
+      response: resp,
+      success: success,
     }
   } catch (err) {
     /* istanbul ignore next */

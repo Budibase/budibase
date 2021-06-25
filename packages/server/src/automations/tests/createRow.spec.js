@@ -1,8 +1,7 @@
-const usageQuota = require("../../utilities/usageQuota")
-const env = require("../../environment")
-const setup = require("./utilities")
-
 jest.mock("../../utilities/usageQuota")
+
+const usageQuota = require("../../utilities/usageQuota")
+const setup = require("./utilities")
 
 describe("test the create row action", () => {
   let table, row

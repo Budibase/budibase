@@ -88,6 +88,8 @@ async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
 async function checkForWebhooks({ appId, oldAuto, newAuto }) {
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
   const newTrigger = newAuto ? newAuto.definition.trigger : null
+  const triggerChanged =
+    oldTrigger && newTrigger && oldTrigger.id !== newTrigger.id
   function isWebhookTrigger(auto) {
     return (
       auto &&
@@ -98,25 +100,32 @@ async function checkForWebhooks({ appId, oldAuto, newAuto }) {
   // need to delete webhook
   if (
     isWebhookTrigger(oldAuto) &&
-    !isWebhookTrigger(newAuto) &&
+    (!isWebhookTrigger(newAuto) || triggerChanged) &&
     oldTrigger.webhookId
   ) {
-    let db = new CouchDB(appId)
-    // need to get the webhook to get the rev
-    const webhook = await db.get(oldTrigger.webhookId)
-    const ctx = {
-      appId,
-      params: { id: webhook._id, rev: webhook._rev },
+    try {
+      let db = new CouchDB(appId)
+      // need to get the webhook to get the rev
+      const webhook = await db.get(oldTrigger.webhookId)
+      const ctx = {
+        appId,
+        params: { id: webhook._id, rev: webhook._rev },
+      }
+      // might be updating - reset the inputs to remove the URLs
+      if (newTrigger) {
+        delete newTrigger.webhookId
+        newTrigger.inputs = {}
+      }
+      await webhooks.destroy(ctx)
+    } catch (err) {
+      // don't worry about not being able to delete, if it doesn't exist all good
     }
-    // might be updating - reset the inputs to remove the URLs
-    if (newTrigger) {
-      delete newTrigger.webhookId
-      newTrigger.inputs = {}
-    }
-    await webhooks.destroy(ctx)
   }
   // need to create webhook
-  else if (!isWebhookTrigger(oldAuto) && isWebhookTrigger(newAuto)) {
+  if (
+    (!isWebhookTrigger(oldAuto) || triggerChanged) &&
+    isWebhookTrigger(newAuto)
+  ) {
     const ctx = {
       appId,
       request: {
