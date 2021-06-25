@@ -20,10 +20,13 @@ const HELPERS = [
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, value => {
     // null/undefined values produce bad results
-    if (value == null) {
-      return ""
+    if (value == null || typeof value !== "string") {
+      return value || ""
     }
-    let text = new SafeString(unescape(value).replace(/&amp;/g, "&"))
+    if (value && value.string) {
+      value = value.string
+    }
+    let text = new SafeString(value.replace(/&amp;/g, "&"))
     if (text == null || typeof text !== "string") {
       return text
     }

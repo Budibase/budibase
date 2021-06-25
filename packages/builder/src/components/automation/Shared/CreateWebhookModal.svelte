@@ -16,11 +16,13 @@
   $: automation = $automationStore.selectedAutomation?.automation
 
   onMount(async () => {
-    // save the automation initially
-    await automationStore.actions.save({
-      instanceId,
-      automation,
-    })
+    if (!automation?.definition?.trigger?.inputs.schemaUrl) {
+      // save the automation initially
+      await automationStore.actions.save({
+        instanceId,
+        automation,
+      })
+    }
     interval = setInterval(async () => {
       await automationStore.actions.fetch()
       const outputs = automation?.definition?.trigger.schema.outputs?.properties

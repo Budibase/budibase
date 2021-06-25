@@ -17,6 +17,7 @@ exports.FieldTypes = {
   LINK: "link",
   FORMULA: "formula",
   AUTO: "auto",
+  JSON: "json",
 }
 
 exports.RelationshipTypes = {
