@@ -4,8 +4,8 @@ import {
   QueryTypes,
   QueryJson,
   SqlQuery,
-} from "./base/definitions"
-import { Table } from "../constants/definitions"
+} from "../definitions/datasource"
+import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module PostgresModule {
