@@ -2,7 +2,7 @@ const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 const { StaticDatabases } = require("./db/utils")
-const { jwt, local, authenticated, google, auditLog } = require("./middleware")
+const { jwt, local, authenticated, google, oidc, auditLog } = require("./middleware")
 const { setDB, getDB } = require("./db")
 
 // Strategies
@@ -44,6 +44,7 @@ module.exports = {
     buildAuthMiddleware: authenticated,
     passport,
     google,
+    oidc,
     jwt: require("jsonwebtoken"),
     auditLog,
   },

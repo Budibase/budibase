@@ -1,5 +1,6 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
+const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
@@ -118,6 +119,30 @@ exports.googleAuth = async (ctx, next) => {
     group: ctx.query.group,
   })
   const strategy = await google.strategyFactory(config)
+
+  return passport.authenticate(
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
+    async (err, user) => {
+      authInternal(ctx, user, err)
+
+      ctx.redirect("/")
+    }
+  )(ctx, next)
+}
+
+// Minimal OIDC attempt
+
+exports.oidcPreAuth = async (ctx, next) => {
+  const strategy = await oidc.strategyFactory()
+
+  return passport.authenticate(strategy, {
+    scope: ["profile", "email"],
+  })(ctx, next)
+}
+
+exports.oidcAuth = async (ctx, next) => {
+  const strategy = await oidc.strategyFactory()
 
   return passport.authenticate(
     strategy,

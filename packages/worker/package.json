@@ -39,6 +39,7 @@
     "koa-static": "^5.0.0",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.5.0",
+    "@techpass/passport-openidconnect": "^0.3.0",
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
