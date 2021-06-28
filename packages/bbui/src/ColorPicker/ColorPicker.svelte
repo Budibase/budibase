@@ -9,6 +9,9 @@
 
   export let value
   export let size = "M"
+  export let spectrumTheme
+
+  $: console.log(spectrumTheme)
 
   let open = false
 
@@ -21,7 +24,8 @@
     {
       label: "Grays",
       colors: [
-        "white",
+        "gray-50",
+        "gray-75",
         "gray-100",
         "gray-200",
         "gray-300",
@@ -31,7 +35,6 @@
         "gray-700",
         "gray-800",
         "gray-900",
-        "black",
       ],
     },
     {
@@ -86,7 +89,7 @@
       return value
     }
     let found = false
-    const comparisonValue = value.substring(35, value.length - 1)
+    const comparisonValue = value.substring(28, value.length - 1)
     for (let category of categories) {
       found = category.colors.includes(comparisonValue)
       if (found) {
@@ -102,17 +105,19 @@
 
   const getCheckColor = value => {
     return /^.*(white|(gray-(50|75|100|200|300|400|500)))\)$/.test(value)
-      ? "black"
-      : "white"
+      ? "var(--spectrum-global-color-gray-900)"
+      : "var(--spectrum-global-color-gray-50)"
   }
 </script>
 
 <div class="container">
-  <div
-    class="preview size--{size || 'M'}"
-    style="background: {color};"
-    on:click={() => (open = true)}
-  />
+  <div class="spectrum-wrapper {spectrumTheme || ''}">
+    <div
+      class="preview size--{size || 'M'}"
+      style="background: {color};"
+      on:click={() => (open = true)}
+    />
+  </div>
   {#if open}
     <div
       use:clickOutside={() => (open = false)}
@@ -124,17 +129,19 @@
           <div class="heading">{category.label}</div>
           <div class="colors">
             {#each category.colors as color}
-              <div
-                on:click={() => {
-                  onChange(`var(--spectrum-global-color-static-${color})`)
-                }}
-                class="color"
-                style="background: var(--spectrum-global-color-static-{color}); color: {checkColor};"
-                title={prettyPrint(color)}
-              >
-                {#if value === `var(--spectrum-global-color-static-${color})`}
-                  <Icon name="Checkmark" size="S" />
-                {/if}
+              <div class="spectrum-wrapper {spectrumTheme || ''}">
+                <div
+                  on:click={() => {
+                    onChange(`var(--spectrum-global-color-${color})`)
+                  }}
+                  class="color"
+                  style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
+                  title={prettyPrint(color)}
+                >
+                  {#if value === `var(--spectrum-global-color-${color})`}
+                    <Icon name="Checkmark" size="S" />
+                  {/if}
+                </div>
               </div>
             {/each}
           </div>
@@ -235,5 +242,9 @@
   }
   .category--custom .heading {
     margin-bottom: var(--spacing-xs);
+  }
+
+  .spectrum-wrapper {
+    background-color: transparent;
   }
 </style>
