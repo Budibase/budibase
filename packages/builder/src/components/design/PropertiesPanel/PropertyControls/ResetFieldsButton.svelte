@@ -5,7 +5,6 @@
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
-  export let componentDefinition
   export let componentInstance
 
   let confirmResetFieldsDialog
@@ -25,7 +24,7 @@
   }
 </script>
 
-{#if componentDefinition?.component?.endsWith("/fieldgroup")}
+<div>
   <ActionButton
     secondary
     wide
@@ -33,7 +32,7 @@
   >
     Update form fields
   </ActionButton>
-{/if}
+</div>
 
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}

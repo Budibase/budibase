@@ -30,6 +30,7 @@
   import DateTimeFieldSelect from "./PropertyControls/DateTimeFieldSelect.svelte"
   import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
   import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
+  import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -121,6 +122,9 @@
         />
       {/if}
     {/each}
+  {/if}
+  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
+    <ResetFieldsButton {componentInstance} />
   {/if}
   {#if componentDefinition?.info}
     <div class="text">

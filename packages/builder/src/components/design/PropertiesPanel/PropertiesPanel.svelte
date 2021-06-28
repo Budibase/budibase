@@ -5,7 +5,6 @@
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
-  import ActionsSection from "./ActionsSection.svelte"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
@@ -20,7 +19,6 @@
       <ComponentSettingsSection {componentInstance} {componentDefinition} />
       <DesignSection {componentInstance} {componentDefinition} />
       <CustomStylesSection {componentInstance} {componentDefinition} />
-      <ActionsSection {componentInstance} {componentDefinition} />
     </div>
   </Tab>
 </Tabs>
