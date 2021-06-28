@@ -2,18 +2,13 @@
   import { RelationshipTypes } from "constants/backend"
   import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading } from "@budibase/bbui"
 
-  //  "tasks_something": {
-  //          "name": "tasks_something",
-  //          "type": "link",
-  //          "tableId": "whatever/othertable",
-  //          "relationshipType": "one-to-many",
-  //       },
-
   export let save
   export let datasource
   export let from
   export let tables
   export let relationship = {}
+
+  let originalName = relationship.name
 
   $: console.log(relationship)
   $: valid = relationship.name && relationship.tableId && relationship.relationshipType
@@ -43,24 +38,15 @@
 
   // save the relationship on to the datasource
   function saveRelationship() {
-    let key
-
-    // find the entity on the datasource
-
-    for (let entity in datasource.entities) {
-      // TODO: update with _id instead of name
-      if (relationship.from.name === entity) {
-        key = entity
-      }
-    }
-
-    datasource.entities[key].schema[relationship.name] = {
-      name: relationship.name,
+    datasource.entities[from.name].schema[relationship.name] = {
       type: "link",
-      relationshipType: relationship.relationshipType,
-      tableId: relationship.to._id,
-      through: relationship.through
+      ...relationship
     }
+    if (originalName) {
+      // TODO: possible bug if you change name
+      delete datasource.entities[from.name][originalName]
+    }
+
     save()
   }
 </script>
