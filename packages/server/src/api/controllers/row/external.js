@@ -12,18 +12,40 @@ const {
 } = require("../../../integrations/utils")
 const { cloneDeep } = require("lodash/fp")
 
-function inputProcessing(row, table) {
+function inputProcessing(row, table, allTables) {
   if (!row) {
     return row
   }
-  let newRow = {}
-  for (let key of Object.keys(table.schema)) {
+  let newRow = {}, manyRelationships = []
+  for (let [key, field] of Object.entries(table.schema)) {
     // currently excludes empty strings
-    if (row[key]) {
+    if (!row[key]) {
+      continue
+    }
+    const isLink = field.type === FieldTypes.LINK
+    if (isLink && !field.through) {
+      // we don't really support composite keys for relationships, this is why [0] is used
+      newRow[key] = breakRowIdField(row[key][0])[0]
+    } else if (isLink && field.through) {
+      const linkTable = allTables.find(table => table._id === field.tableId)
+      // table has to exist for many to many
+      if (!linkTable) {
+        continue
+      }
+      row[key].map(relationship => {
+        // we don't really support composite keys for relationships, this is why [0] is used
+        manyRelationships.push({
+          tableId: field.through,
+          [linkTable.primary]: breakRowIdField(relationship)[0],
+          // leave the ID for enrichment later
+          [table.primary]: `{{ id }}`,
+        })
+      })
+    } else {
       newRow[key] = row[key]
     }
   }
-  return newRow
+  return { row: newRow, manyRelationships }
 }
 
 function generateIdForRow(row, table) {
@@ -61,6 +83,22 @@ function updateRelationshipColumns(rows, row, relationships, allTables) {
     rows[row._id][column].push(related)
   }
   return rows
+}
+
+async function insertManyRelationships(appId, json, relationships) {
+  const promises = []
+  for (let relationship of relationships) {
+    const newJson = {
+      // copy over datasource stuff
+      endpoint: json.endpoint,
+    }
+    const { tableName } = breakExternalTableId(relationship.tableId)
+    delete relationship.tableId
+    newJson.endpoint.entityId = tableName
+    newJson.body = relationship
+    promises.push(makeExternalQuery(appId, newJson))
+  }
+  await Promise.all(promises)
 }
 
 function outputProcessing(rows, table, relationships, allTables) {
@@ -178,7 +216,8 @@ async function handleRequest(
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
   const relationships = buildRelationships(table, tables)
-  row = inputProcessing(row, table)
+  const processed = inputProcessing(row, table)
+  row = processed.row
   if (
     operation === DataSourceOperation.DELETE &&
     (filters == null || Object.keys(filters).length === 0)
@@ -207,6 +246,8 @@ async function handleRequest(
   }
   // can't really use response right now
   const response = await makeExternalQuery(appId, json)
+  // handle many to many relationships now if we know the ID (could be auto increment)
+  await insertManyRelationships(appId, json, processed.manyRelationships)
   // we searched for rows in someway
   if (operation === DataSourceOperation.READ && Array.isArray(response)) {
     return outputProcessing(response, table, relationships, tables)
