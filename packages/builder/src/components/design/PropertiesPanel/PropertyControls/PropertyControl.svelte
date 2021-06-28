@@ -1,5 +1,5 @@
 <script>
-  import { Button, Icon, Drawer } from "@budibase/bbui"
+  import { Button, Icon, Drawer, Label } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import {
     getBindableProperties,
@@ -70,7 +70,11 @@
 </script>
 
 <div class="property-control" bind:this={anchor} data-cy={`setting-${key}`}>
-  <div class="label">{label}</div>
+  {#if type !== "boolean"}
+    <div class="label">
+      <Label>{label}</Label>
+    </div>
+  {/if}
   <div data-cy={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
@@ -79,63 +83,55 @@
       updateOnChange={false}
       on:change={handleChange}
       onChange={handleChange}
+      name={key}
+      text={label}
       {type}
       {...props}
-      name={key}
     />
-  </div>
-  {#if bindable && !key.startsWith("_") && type === "text"}
-    <div
-      class="icon"
-      data-cy={`${key}-binding-button`}
-      on:click={bindingDrawer.show}
-    >
-      <Icon size="S" name="FlashOn" />
-    </div>
-    <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
-      <svelte:fragment slot="description">
-        Add the objects on the left to enrich your text.
-      </svelte:fragment>
-      <Button cta slot="buttons" disabled={!valid} on:click={handleClose}
-        >Save</Button
+    {#if bindable && !key.startsWith("_") && type === "text"}
+      <div
+        class="icon"
+        data-cy={`${key}-binding-button`}
+        on:click={bindingDrawer.show}
       >
-      <BindingPanel
-        slot="body"
-        bind:valid
-        value={safeValue}
-        close={handleClose}
-        on:update={e => (temporaryBindableValue = e.detail)}
-        {bindableProperties}
-      />
-    </Drawer>
-  {/if}
+        <Icon size="S" name="FlashOn" />
+      </div>
+      <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
+        <svelte:fragment slot="description">
+          Add the objects on the left to enrich your text.
+        </svelte:fragment>
+        <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>
+          Save
+        </Button>
+        <BindingPanel
+          slot="body"
+          bind:valid
+          value={safeValue}
+          close={handleClose}
+          on:update={e => (temporaryBindableValue = e.detail)}
+          {bindableProperties}
+        />
+      </Drawer>
+    {/if}
+  </div>
 </div>
 
 <style>
   .property-control {
     position: relative;
     display: flex;
-    flex-flow: row;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 
   .label {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 400;
-    flex: 0 0 80px;
-    text-align: left;
-    color: var(--ink);
-    margin-right: auto;
     text-transform: capitalize;
+    padding-bottom: var(--spectrum-global-dimension-size-65);
   }
 
   .control {
-    flex: 1;
-    display: inline-block;
-    padding-left: 2px;
-    width: 0;
+    position: relative;
   }
 
   .icon {

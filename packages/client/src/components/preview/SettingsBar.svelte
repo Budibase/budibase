@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import SettingsButton from "./SettingsButton.svelte"
+  import SettingsColorPicker from "./SettingsColorPicker.svelte"
+  import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore } from "../../store"
   import { domDebounce } from "../../utils/domDebounce"
 
@@ -87,19 +89,44 @@
   >
     {#each settings as setting, idx}
       {#if setting.type === "select"}
-        {#each setting.options as option}
-          <SettingsButton
+        {#if setting.barStyle === "buttons"}
+          {#each setting.options as option}
+            <SettingsButton
+              prop={setting.key}
+              value={option.value}
+              icon={option.barIcon}
+              title={option.barTitle}
+            />
+          {/each}
+        {:else}
+          <SettingsPicker
             prop={setting.key}
-            value={option.value}
-            icon={option.barIcon}
-            title={option.barTitle}
+            options={setting.options}
+            label={setting.label}
           />
-        {/each}
+        {/if}
+      {:else if setting.type === "boolean"}
+        <SettingsButton
+          prop={setting.key}
+          icon={setting.barIcon}
+          title={setting.barTitle}
+          bool
+        />
+      {:else if setting.type === "color"}
+        <SettingsColorPicker prop={setting.key} />
       {/if}
-      {#if idx < settings.length - 1}
+      {#if setting.barSeparator !== false}
         <div class="divider" />
       {/if}
     {/each}
+    <SettingsButton
+      icon="Delete"
+      on:click={() => {
+        builderStore.actions.deleteComponent(
+          $builderStore.selectedComponent._id
+        )
+      }}
+    />
   </div>
 {/if}
 

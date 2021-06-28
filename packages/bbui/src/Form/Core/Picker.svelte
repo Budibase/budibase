@@ -20,6 +20,7 @@
   export let open = false
   export let readonly = false
   export let quiet = false
+  export let autoWidth = false
 
   const dispatch = createEventDispatcher()
   const onClick = () => {
@@ -41,7 +42,11 @@
   aria-haspopup="listbox"
   on:mousedown={onClick}
 >
-  <span class="spectrum-Picker-label" class:is-placeholder={isPlaceholder}>
+  <span
+    class="spectrum-Picker-label"
+    class:is-placeholder={isPlaceholder}
+    class:auto-width={autoWidth}
+  >
     {fieldText}
   </span>
   {#if error}
@@ -67,11 +72,12 @@
     use:clickOutside={() => (open = false)}
     transition:fly={{ y: -20, duration: 200 }}
     class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+    class:auto-width={autoWidth}
   >
     <ul class="spectrum-Menu" role="listbox">
       {#if placeholderOption}
         <li
-          class="spectrum-Menu-item"
+          class="spectrum-Menu-item placeholder"
           class:is-selected={isPlaceholder}
           role="option"
           aria-selected="true"
@@ -118,17 +124,28 @@
 <style>
   .spectrum-Popover {
     max-height: 240px;
-    width: 100%;
     z-index: 999;
     top: 100%;
+  }
+  .spectrum-Popover:not(.auto-width) {
+    width: 100%;
+  }
+  .spectrum-Popover.auto-width :global(.spectrum-Menu-itemLabel) {
+    white-space: nowrap;
   }
   .spectrum-Picker {
     width: 100%;
   }
-  .spectrum-Picker-label {
+  .spectrum-Picker-label:not(.auto-width) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     width: 0;
+  }
+  .placeholder {
+    font-style: italic;
+  }
+  .spectrum-Picker-label.auto-width.is-placeholder {
+    padding-right: 2px;
   }
 </style>

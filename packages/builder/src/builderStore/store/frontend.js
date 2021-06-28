@@ -488,12 +488,12 @@ export const getFrontendStore = () => {
         })
         await Promise.all(promises)
       },
-      updateStyle: async (type, name, value) => {
+      updateStyle: async (name, value) => {
         const selected = get(selectedComponent)
         if (value == null || value === "") {
-          delete selected._styles[type][name]
+          delete selected._styles.normal[name]
         } else {
-          selected._styles[type][name] = value
+          selected._styles.normal[name] = value
         }
         await store.actions.preview.saveSelected()
       },
