@@ -1652,46 +1652,6 @@
         "key": "dataSource"
       },
       {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "defaultValue": "spectrum--light",
-        "options": [
-          {
-            "label": "Lightest",
-            "value": "spectrum--lightest"
-          },
-          {
-            "label": "Light",
-            "value": "spectrum--light"
-          },
-          {
-            "label": "Dark",
-            "value": "spectrum--dark"
-          },
-          {
-            "label": "Darkest",
-            "value": "spectrum--darkest"
-          }
-        ]
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      },
-      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2066,46 +2026,6 @@
         "label": "Row Count",
         "key": "rowCount",
         "defaultValue": 8
-      },
-      {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "defaultValue": "spectrum--light",
-        "options": [
-          {
-            "label": "Lightest",
-            "value": "spectrum--lightest"
-          },
-          {
-            "label": "Light",
-            "value": "spectrum--light"
-          },
-          {
-            "label": "Dark",
-            "value": "spectrum--dark"
-          },
-          {
-            "label": "Darkest",
-            "value": "spectrum--darkest"
-          }
-        ]
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
       },
       {
         "type": "multifield",
