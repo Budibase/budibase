@@ -14,14 +14,16 @@
 
 <section>
   <Layout>
-    <header>
-      <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-      <Heading size="M">Budibase Internal</Heading>
-    </header>
-    <Body size="S" grey lh
-      >Budibase internal tables are part of your app, the data will be stored in
-      your apps context.</Body
-    >
+    <Layout gap="XS" noPadding>
+      <header>
+        <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
+        <Heading size="M">Budibase Internal</Heading>
+      </header>
+      <Body size="M">
+        Budibase internal tables are part of your app, so the data will be
+        stored in your apps context.
+      </Body>
+    </Layout>
     <Divider />
     <Heading size="S">Tables</Heading>
     <div class="table-list">
@@ -32,7 +34,7 @@
         >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
-            <Body size="S">display column: {table.primaryDisplay}</Body>
+            <Body size="S">Display column: {table.primaryDisplay}</Body>
           {/if}
         </div>
       {/each}
@@ -50,7 +52,6 @@
   }
 
   header {
-    margin: 0 0 var(--spacing-xs) 0;
     display: flex;
     gap: var(--spacing-l);
     align-items: center;
