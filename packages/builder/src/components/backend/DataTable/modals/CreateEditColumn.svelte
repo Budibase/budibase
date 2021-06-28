@@ -53,7 +53,7 @@
   let deletion
 
   $: tableOptions = $tables.list.filter(
-    table => table._id !== $tables.draft._id
+    table => table._id !== $tables.draft._id && table.type !== "external"
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =

@@ -3,7 +3,6 @@ const {
   DataSourceOperation,
   SortDirection,
   FieldTypes,
-  RelationshipTypes,
 } = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
@@ -137,22 +136,29 @@ function buildFilters(id, filters, table) {
   }
 }
 
-function buildRelationships(table) {
+function buildRelationships(table, allTables) {
   const relationships = []
   for (let [fieldName, field] of Object.entries(table.schema)) {
     if (field.type !== FieldTypes.LINK) {
       continue
     }
-    // TODO: through field
-    if (field.relationshipType === RelationshipTypes.MANY_TO_MANY) {
+    const { tableName: linkTableName } = breakExternalTableId(field.tableId)
+    const linkTable = allTables.find(table => table._id === field.tableId)
+    // no table to link to, this is not a valid relationships
+    if (!linkTable) {
       continue
     }
-    const broken = breakExternalTableId(field.tableId)
-    relationships.push({
-      from: fieldName,
-      to: field.fieldName,
-      tableName: broken.tableName,
-    })
+    const definition = {
+      from: fieldName || table.primary,
+      to: field.fieldName || linkTable.primary,
+      tableName: linkTableName,
+      through: undefined,
+    }
+    if (field.through) {
+      const { tableName: throughTableName } = breakExternalTableId(field.through)
+      definition.through = throughTableName
+    }
+    relationships.push(definition)
   }
   return relationships
 }
@@ -171,7 +177,7 @@ async function handleRequest(
   }
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
-  const relationships = buildRelationships(table)
+  const relationships = buildRelationships(table, tables)
   row = inputProcessing(row, table)
   if (
     operation === DataSourceOperation.DELETE &&
