@@ -36,6 +36,7 @@ exports.createHomeScreen = () => ({
     hAlign: "stretch",
     vAlign: "top",
     size: "grow",
+    gap: "M",
   },
   routing: {
     route: "/",
