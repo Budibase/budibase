@@ -6,10 +6,7 @@ import {
   QueryJson,
   SqlQuery,
 } from "../definitions/datasource"
-import {
-  Table,
-  TableSchema,
-} from "../definitions/common"
+import { Table, TableSchema } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module MySQLModule {

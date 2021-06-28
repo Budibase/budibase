@@ -1,78 +1,78 @@
 interface Base {
-  _id?: string,
-  _rev?: string,
+  _id?: string
+  _rev?: string
 }
 
 export interface TableSchema {
   [key: string]: {
     // TODO: replace with field types enum when done
-    type: string,
-    fieldName?: string,
-    name: string,
+    type: string
+    fieldName?: string
+    name: string
     constraints?: {
-      type?: string,
-      email?: boolean,
-      inclusion?: string[],
+      type?: string
+      email?: boolean
+      inclusion?: string[]
       length?: {
-        minimum?: string | number,
-        maximum?: string | number,
-      },
-      presence?: boolean,
-    },
-  },
+        minimum?: string | number
+        maximum?: string | number
+      }
+      presence?: boolean
+    }
+  }
 }
 
 export interface Table extends Base {
-  type?: string,
-  views?: {},
-  name?: string,
-  primary?: string[],
-  schema: TableSchema,
-  primaryDisplay?: string,
-  sourceId?: string,
+  type?: string
+  views?: {}
+  name?: string
+  primary?: string[]
+  schema: TableSchema
+  primaryDisplay?: string
+  sourceId?: string
 }
 
 export interface Row extends Base {
-  type?: string,
-  tableId: string,
-  [key: string]: any,
+  type?: string
+  tableId: string
+  [key: string]: any
 }
 
 interface JsonSchemaField {
   properties: {
     [key: string]: {
-      type: string,
-      title: string,
-      customType?: string,
-    },
-  },
-  required?: string[],
+      type: string
+      title: string
+      customType?: string
+    }
+  }
+  required?: string[]
 }
 
 export interface AutomationStep {
-  description: string,
-  event?: string,
-  icon: string,
-  id: string,
+  description: string
+  event?: string
+  icon: string
+  id: string
   inputs: {
-    [key: string]: any,
-  },
-  name: string,
+    [key: string]: any
+  }
+  name: string
   schema: {
-    inputs: JsonSchemaField,
-    outputs: JsonSchemaField,
-  },
-  stepId: string,
-  tagline: string,
-  type: string,
+    inputs: JsonSchemaField
+    outputs: JsonSchemaField
+  }
+  stepId: string
+  tagline: string
+  type: string
 }
 
 export interface Automation extends Base {
-  name: string,
-  type: string,
-  appId?: string,
+  name: string
+  type: string
+  appId?: string
   definition: {
-    steps: AutomationStep[],
-    trigger?: AutomationStep,
-  },
+    steps: AutomationStep[]
+    trigger?: AutomationStep
+  }
 }
