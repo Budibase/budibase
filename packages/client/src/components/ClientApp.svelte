@@ -55,6 +55,8 @@
       }
     }
   }
+
+  $: themeClass = $builderStore.theme || "spectrum--lightest"
 </script>
 
 {#if dataLoaded && $screenStore.activeLayout}
@@ -62,7 +64,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium spectrum--light"
+    class="spectrum spectrum--medium {themeClass}"
   >
     <Provider key="user" data={$authStore} {actions}>
       <div id="app-root">

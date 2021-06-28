@@ -8,7 +8,6 @@ import {
   selectedComponent,
   selectedAccessRole,
 } from "builderStore"
-// Backendstores
 import {
   datasources,
   integrations,
@@ -43,6 +42,7 @@ const INITIAL_FRONTEND_STATE = {
   appId: "",
   routes: {},
   clientLibPath: "",
+  theme: "",
 }
 
 export const getFrontendStore = () => {
@@ -62,6 +62,7 @@ export const getFrontendStore = () => {
         url: application.url,
         layouts,
         screens,
+        theme: application.theme,
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,
@@ -78,6 +79,20 @@ export const getFrontendStore = () => {
       queries.init()
       database.set(application.instance)
       tables.init()
+    },
+    theme: {
+      save: async theme => {
+        const appId = get(store).appId
+        const response = await api.put(`/api/applications/${appId}`, { theme })
+        if (response.status === 200) {
+          store.update(state => {
+            state.theme = theme
+            return state
+          })
+        } else {
+          throw new Error("Error updating theme")
+        }
+      },
     },
     routing: {
       fetch: async () => {
