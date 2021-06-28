@@ -31,8 +31,14 @@ const triggerAutomationHandler = async action => {
 }
 
 const navigationHandler = action => {
-  if (action.parameters.url) {
-    routeStore.actions.navigate(action.parameters.url)
+  const { url } = action.parameters
+  if (url) {
+    const external = !url.startsWith("/")
+    if (external) {
+      window.location.href = url
+    } else {
+      routeStore.actions.navigate(action.parameters.url)
+    }
   }
 }
 

@@ -14,6 +14,7 @@ exports.save = async function (ctx) {
       ...EMPTY_LAYOUT,
       ...layout,
     }
+    layout.props._instanceName = layout.name
   }
 
   layout._id = layout._id || generateLayoutID()
