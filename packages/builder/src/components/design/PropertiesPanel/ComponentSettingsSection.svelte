@@ -1,12 +1,6 @@
 <script>
   import { isEmpty } from "lodash/fp"
-  import {
-    Checkbox,
-    Input,
-    Select,
-    DetailSummary,
-    ColorPicker,
-  } from "@budibase/bbui"
+  import { Checkbox, Input, Select, DetailSummary } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -31,6 +25,7 @@
   import AttachmentFieldSelect from "./PropertyControls/AttachmentFieldSelect.svelte"
   import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
+  import ColorPicker from "./PropertyControls/ColorPicker.svelte"
 
   export let componentDefinition
   export let componentInstance
