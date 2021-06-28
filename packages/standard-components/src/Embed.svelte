@@ -1,23 +1,29 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let embed
 </script>
 
-<div use:styleable={$component.styles}>
-  {@html embed}
-</div>
+{#if embed}
+  <div class="embed" use:styleable={$component.styles}>
+    {@html embed}
+  </div>
+{:else if $builderStore.inBuilder}
+  <div use:styleable={{ ...$component.styles, empty: true }}>
+    <Placeholder />
+  </div>
+{/if}
 
 <style>
-  div {
+  .embed {
     position: relative;
   }
-  div :global(> *) {
+  .embed :global(> *) {
     width: 100%;
     height: 100%;
-    position: absolute;
   }
 </style>

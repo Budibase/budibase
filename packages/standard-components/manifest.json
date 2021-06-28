@@ -4,8 +4,7 @@
     "description": "This component is specific only to layouts",
     "icon": "Sandbox",
     "hasChildren": true,
-    "styleable": true,
-    "illegalChildren": [],
+    "styles": ["padding", "background"],
     "settings": [
       {
         "type": "text",
@@ -61,14 +60,15 @@
     "description": "This component contains things within itself",
     "icon": "Sandbox",
     "hasChildren": true,
-    "styleable": true,
     "showSettingsBar": true,
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
       {
         "type": "select",
         "label": "Direction",
         "key": "direction",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Column",
@@ -90,6 +90,7 @@
         "label": "Horiz. Align",
         "key": "hAlign",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Left",
@@ -122,7 +123,8 @@
         "type": "select",
         "label": "Vert. Align",
         "key": "vAlign",
-        "showInBar": "true",
+        "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Top",
@@ -156,6 +158,7 @@
         "label": "Size",
         "key": "size",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Shrink",
@@ -171,6 +174,40 @@
           }
         ],
         "defaultValue": "shrink"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Wrap",
+        "key": "wrap",
+        "showInBar": true,
+        "barIcon": "ModernGridView",
+        "barTitle": "Wrap"
       }
     ]
   },
@@ -179,7 +216,6 @@
     "description": "Add a section to your application",
     "icon": "ColumnTwoB",
     "hasChildren": true,
-    "styleable": true,
     "illegalChildren": ["section"],
     "showEmptyState": false,
     "settings": [
@@ -194,15 +230,13 @@
   "screenslot": {
     "name": "Screenslot",
     "icon": "WebPage",
-    "description": "Contains your app screens",
-    "styleable": true
+    "description": "Contains your app screens"
   },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
     "illegalChildren": ["section"],
-    "styleable": true,
     "settings": [
       {
         "type": "text",
@@ -211,16 +245,49 @@
       },
       {
         "type": "select",
-        "label": "Button Type",
+        "label": "Variant",
         "key": "type",
-        "options": ["primary", "secondary", "cta", "warning"],
+        "options": [
+          {
+            "label": "Primary",
+            "value": "primary"
+          }, {
+            "label": "Secondary",
+            "value": "secondary"
+          },
+          {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
+            "label": "Warning",
+            "value": "warning"
+          }
+        ],
         "defaultValue": "primary"
       },
       {
         "type": "select",
         "label": "Size",
         "key": "size",
-        "options": ["S", "M", "L", "XL"],
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
         "defaultValue": "M"
       },
       {
@@ -239,7 +306,6 @@
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "ViewList",
-    "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showSettingsBar": true,
@@ -265,6 +331,7 @@
         "label": "Direction",
         "key": "direction",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Column",
@@ -286,6 +353,7 @@
         "label": "Horiz. Align",
         "key": "hAlign",
         "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Left",
@@ -318,7 +386,8 @@
         "type": "select",
         "label": "Vert. Align",
         "key": "vAlign",
-        "showInBar": "true",
+        "showInBar": true,
+        "barStyle": "buttons",
         "options": [
           {
             "label": "Top",
@@ -346,6 +415,32 @@
           }
         ],
         "defaultValue": "top"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
       }
     ],
     "context": {
@@ -356,7 +451,6 @@
     "name": "Stacked List",
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -386,7 +480,6 @@
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -447,13 +540,93 @@
     "name": "Paragraph",
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
-    "styleable": true,
     "illegalChildren": ["section"],
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
         "label": "Text",
         "key": "text"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Italic",
+        "key": "italic",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Italic text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Underline",
+        "key": "underline",
+        "showInBar": true,
+        "barIcon": "TagUnderline",
+        "barTitle": "Underline text"
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [{
+          "label": "Left",
+          "value": "left",
+          "barIcon": "TextAlignLeft",
+          "barTitle": "Align left"
+        }, {
+          "label": "Center",
+          "value": "center",
+          "barIcon": "TextAlignCenter",
+          "barTitle": "Align center"
+        }, {
+          "label": "Right",
+          "value": "right",
+          "barIcon": "TextAlignRight",
+          "barTitle": "Align right"
+        }, {
+          "label": "Justify",
+          "value": "justify",
+          "barIcon": "TextAlignJustify",
+          "barTitle": "Justify text"
+        }]
       }
     ]
   },
@@ -461,8 +634,8 @@
     "name": "Headline",
     "icon": "TextBold",
     "description": "A component for displaying heading text",
-    "styleable": true,
     "illegalChildren": ["section"],
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
@@ -471,10 +644,83 @@
       },
       {
         "type": "select",
-        "key": "type",
-        "label": "Type",
-        "options": ["h1", "h2", "h3", "h4", "h5", "h6"],
-        "defaultValue": "h1"
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Italic",
+        "key": "italic",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Italic text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Underline",
+        "key": "underline",
+        "showInBar": true,
+        "barIcon": "TagUnderline",
+        "barTitle": "Underline text"
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [{
+          "label": "Left",
+          "value": "left",
+          "barIcon": "TextAlignLeft",
+          "barTitle": "Align left"
+        }, {
+          "label": "Center",
+          "value": "center",
+          "barIcon": "TextAlignCenter",
+          "barTitle": "Align center"
+        }, {
+          "label": "Right",
+          "value": "right",
+          "barIcon": "TextAlignRight",
+          "barTitle": "Align right"
+        }, {
+          "label": "Justify",
+          "value": "justify",
+          "barIcon": "TextAlignJustify",
+          "barTitle": "Justify text"
+        }]
       }
     ]
   },
@@ -482,8 +728,8 @@
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "Image",
-    "styleable": true,
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "settings": [
       {
         "type": "text",
@@ -496,7 +742,7 @@
     "name": "Background Image",
     "description": "A background image",
     "icon": "Images",
-    "styleable": true,
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -554,7 +800,6 @@
     "name": "Icon",
     "description": "A basic component for displaying icons",
     "icon": "Bell",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -602,7 +847,6 @@
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
-    "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
@@ -623,7 +867,7 @@
     "name": "Link",
     "description": "A basic link component for internal and external links",
     "icon": "Link",
-    "styleable": true,
+    "showSettingsBar": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -643,9 +887,84 @@
         "key": "openInNewTab"
       },
       {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
         "type": "boolean",
-        "label": "External",
-        "key": "external"
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Italic",
+        "key": "italic",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Italic text",
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Underline",
+        "key": "underline",
+        "showInBar": true,
+        "barIcon": "TagUnderline",
+        "barTitle": "Underline text"
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [{
+          "label": "Left",
+          "value": "left",
+          "barIcon": "TextAlignLeft",
+          "barTitle": "Align left"
+        }, {
+          "label": "Center",
+          "value": "center",
+          "barIcon": "TextAlignCenter",
+          "barTitle": "Align center"
+        }, {
+          "label": "Right",
+          "value": "right",
+          "barIcon": "TextAlignRight",
+          "barTitle": "Align right"
+        }, {
+          "label": "Justify",
+          "value": "justify",
+          "barIcon": "TextAlignJustify",
+          "barTitle": "Justify text"
+        }]
       }
     ]
   },
@@ -653,7 +972,6 @@
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewRow",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -726,7 +1044,6 @@
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
     "icon": "Card",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -753,8 +1070,8 @@
     "name": "Embed",
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
-    "styleable": true,
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "settings": [
       {
         "type": "text",
@@ -767,7 +1084,6 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -868,7 +1184,6 @@
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -970,7 +1285,6 @@
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1084,7 +1398,6 @@
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1162,7 +1475,6 @@
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1240,7 +1552,6 @@
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1322,7 +1633,6 @@
   "form": {
     "name": "Form",
     "icon": "Form",
-    "styleable": true,
     "hasChildren": true,
     "illegalChildren": ["section"],
     "actions": [
@@ -1395,7 +1705,6 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
-    "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
@@ -1424,7 +1733,6 @@
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1453,7 +1761,6 @@
   "numberfield": {
     "name": "Number Field",
     "icon": "123",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1482,7 +1789,6 @@
   "passwordfield": {
     "name": "Password Field",
     "icon": "LockClosed",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1511,7 +1817,6 @@
   "optionsfield": {
     "name": "Options Picker",
     "icon": "ViewList",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1541,7 +1846,6 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1570,7 +1874,6 @@
   "longformfield": {
     "name": "Rich Text",
     "icon": "TextParagraph",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1600,7 +1903,6 @@
   "datetimefield": {
     "name": "Date Picker",
     "icon": "DateInput",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1635,7 +1937,6 @@
   "attachmentfield": {
     "name": "Attachment",
     "icon": "Attach",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1659,7 +1960,6 @@
   "relationshipfield": {
     "name": "Relationship Picker",
     "icon": "TaskList",
-    "styleable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1689,7 +1989,6 @@
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in internal tables.",
     "icon": "Data",
-    "styleable": false,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
@@ -1753,7 +2052,6 @@
   "table": {
     "name": "Table",
     "icon": "Table",
-    "styleable": true,
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
@@ -1810,11 +2108,6 @@
         ]
       },
       {
-        "type": "boolean",
-        "label": "Quiet",
-        "key": "quiet"
-      },
-      {
         "type": "multifield",
         "label": "Columns",
         "key": "columns",
@@ -1823,7 +2116,12 @@
       },
       {
         "type": "boolean",
-        "label": "Auto Cols.",
+        "label": "Quiet",
+        "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Auto Columns",
         "key": "showAutoColumns",
         "defaultValue": false
       }
@@ -1835,7 +2133,6 @@
   "daterangepicker": {
     "name": "Date Range",
     "icon": "Date",
-    "styleable": true,
     "hasChildren": false,
     "info": "Your data provider will be automatically filtered to the given date range.",
     "settings": [
