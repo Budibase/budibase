@@ -25,11 +25,8 @@ export function makeLinkComponent(tableName) {
     .customProps({
       url: `/${tableName.toLowerCase()}`,
       openInNewTab: false,
-      color: "",
-      hoverColor: "",
-      underline: false,
-      fontSize: "",
-      fontFamily: "initial",
+      size: "S",
+      align: "left",
     })
 }
 
@@ -62,6 +59,10 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .customStyle(spectrumColor(700))
     .text(">")
     .instanceName("Arrow")
+    .customProps({
+      size: "S",
+      align: "left",
+    })
 
   const textStyling = {
     color: "#000000",
@@ -77,6 +78,10 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .customStyle(spectrumColor(700))
     .text(text)
     .instanceName("Identifier")
+    .customProps({
+      size: "S",
+      align: "left",
+    })
 
   return new Component("@budibase/standard-components/container")
     .normalStyle({
@@ -148,6 +153,10 @@ export function makeTitleContainer(title) {
     .type("h2")
     .instanceName("Title")
     .text(title)
+    .customProps({
+      size: "M",
+      align: "left",
+    })
 
   return new Component("@budibase/standard-components/container")
     .normalStyle({

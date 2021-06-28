@@ -54,6 +54,10 @@ function generateTitleContainer(table) {
     .type("h2")
     .instanceName("Title")
     .text(table.name)
+    .customProps({
+      size: "M",
+      align: "left",
+    })
 
   return new Component("@budibase/standard-components/container")
     .normalStyle({
