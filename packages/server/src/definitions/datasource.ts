@@ -75,11 +75,7 @@ export interface SearchFilters {
 }
 
 export interface RelationshipsJson {
-  through?: {
-    from: string
-    to: string
-    tableName: string
-  }
+  through?: string
   from: string
   to: string
   tableName: string
