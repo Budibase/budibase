@@ -5,6 +5,8 @@
 
   export let selected
   export let vertical = false
+  export let noPadding = false
+
   let _id = id()
   const tab = writable({ title: selected, id: _id })
   setContext("tab", tab)
@@ -63,14 +65,17 @@
   {/if}
 </div>
 
-<div class="spectrum-Tabs-content spectrum-Tabs-content-{_id}" />
+<div
+  class="spectrum-Tabs-content spectrum-Tabs-content-{_id}"
+  class:noPadding
+/>
 
 <style>
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
     position: relative;
-    border-width: 1px !important;
+    border-bottom: var(--border-light);
   }
   .spectrum-Tabs-content {
     margin-top: var(--spectrum-global-dimension-static-size-150);
@@ -80,5 +85,8 @@
   }
   .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
     bottom: 0 !important;
+  }
+  .noPadding {
+    margin: 0;
   }
 </style>

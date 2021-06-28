@@ -4,10 +4,13 @@
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   let iframe
   let layout
   let screen
+  let confirmDeleteDialog
+  let idToDelete
 
   // Create screen slot placeholder for use when a page is selected rather
   // than a screen
@@ -73,15 +76,26 @@
     // Add listener for events sent by cliebt library in preview
     iframe.contentWindow.addEventListener("bb-event", event => {
       const { type, data } = event.detail
-      if (type === "select-component") {
+      if (type === "select-component" && data.id) {
         store.actions.components.select({ _id: data.id })
       } else if (type === "update-prop") {
         store.actions.components.updateProp(data.prop, data.value)
+      } else if (type === "delete-component" && data.id) {
+        idToDelete = data.id
+        confirmDeleteDialog.show()
       } else {
         console.log(data)
       }
     })
   })
+
+  const deleteComponent = () => {
+    store.actions.components.delete({ _id: idToDelete })
+    idToDelete = null
+  }
+  const cancelDeleteComponent = () => {
+    idToDelete = null
+  }
 </script>
 
 <div class="component-container">
@@ -92,6 +106,14 @@
     srcdoc={template}
   />
 </div>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  title="Confirm Deletion"
+  body={`Are you sure you want to delete this component?`}
+  okText="Delete component"
+  onOk={deleteComponent}
+  onCancel={cancelDeleteComponent}
+/>
 
 <style>
   .component-container {

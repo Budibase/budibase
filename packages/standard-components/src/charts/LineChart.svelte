@@ -28,7 +28,7 @@
   // Fetch data on mount
   const setUpChart = provider => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || allCols.find(x => x == null)) {
+    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
       return null
     }
 
