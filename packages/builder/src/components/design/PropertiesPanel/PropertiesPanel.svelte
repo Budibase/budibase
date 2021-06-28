@@ -1,84 +1,33 @@
 <script>
-  import { get } from "svelte/store"
-  import { store, selectedComponent, currentAsset } from "builderStore"
+  import { store, selectedComponent } from "builderStore"
   import { Tabs, Tab } from "@budibase/bbui"
-  import { FrontendTypes } from "constants"
-  import DesignView from "./DesignView.svelte"
-  import SettingsView from "./SettingsView.svelte"
-  import { setWith } from "lodash"
+  import ScreenSettingsSection from "./ScreenSettingsSection.svelte"
+  import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
+  import DesignSection from "./DesignSection.svelte"
+  import CustomStylesSection from "./CustomStylesSection.svelte"
 
-  $: definition = store.actions.components.getDefinition(
+  $: componentInstance = $selectedComponent
+  $: componentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
-  $: isComponentOrScreen =
-    $store.currentView === "component" ||
-    $store.currentFrontEndType === FrontendTypes.SCREEN
-  $: isNotScreenslot = !$selectedComponent._component.endsWith("screenslot")
-  $: showDisplayName = isComponentOrScreen && isNotScreenslot
-
-  const onStyleChanged = store.actions.components.updateStyle
-  const onCustomStyleChanged = store.actions.components.updateCustomStyle
-  const onResetStyles = store.actions.components.resetStyles
-
-  function setAssetProps(name, value) {
-    const selectedAsset = get(currentAsset)
-    store.update(state => {
-      if (
-        name === "_instanceName" &&
-        state.currentFrontEndType === FrontendTypes.SCREEN
-      ) {
-        selectedAsset.props._instanceName = value
-      } else {
-        setWith(selectedAsset, name.split("."), value, Object)
-      }
-      return state
-    })
-    store.actions.preview.saveSelected()
-  }
 </script>
 
-<Tabs selected="Settings">
+<Tabs selected="Settings" noPadding>
   <Tab title="Settings">
-    <div class="tab-content-padding">
-      {#if definition && definition.name}
-        <div class="instance-name">{definition.name}</div>
-      {/if}
-      <SettingsView
-        componentInstance={$selectedComponent}
-        componentDefinition={definition}
-        {showDisplayName}
-        onChange={store.actions.components.updateProp}
-        onScreenPropChange={setAssetProps}
-        assetInstance={$store.currentView !== "component" && $currentAsset}
-      />
-    </div>
-  </Tab>
-  <Tab title="Design">
-    <div class="tab-content-padding">
-      {#if definition && definition.name}
-        <div class="instance-name">{definition.name}</div>
-      {/if}
-      <DesignView
-        componentInstance={$selectedComponent}
-        componentDefinition={definition}
-        {onStyleChanged}
-        {onCustomStyleChanged}
-        {onResetStyles}
-      />
+    <div class="container">
+      <ScreenSettingsSection {componentInstance} {componentDefinition} />
+      <ComponentSettingsSection {componentInstance} {componentDefinition} />
+      <DesignSection {componentInstance} {componentDefinition} />
+      <CustomStylesSection {componentInstance} {componentDefinition} />
     </div>
   </Tab>
 </Tabs>
 
 <style>
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
-  }
-
-  .instance-name {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    margin-bottom: var(--spacing-m);
-    margin-top: var(--spacing-xs);
-    font-weight: 600;
-    color: var(--grey-7);
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 </style>

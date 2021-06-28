@@ -92,8 +92,6 @@ module.exports.processStringSync = (string, context) => {
   }
   // take a copy of input incase error
   const input = string
-  const clonedContext = removeNull(updateContext(cloneDeep(context)))
-  // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
@@ -103,7 +101,10 @@ module.exports.processStringSync = (string, context) => {
     const template = hbsInstance.compile(string, {
       strict: false,
     })
-    return processors.postprocess(template(clonedContext))
+    return processors.postprocess(template({
+      now: new Date().toISOString(),
+      ...context,
+    }))
   } catch (err) {
     return removeHandlebarsStatements(input)
   }
