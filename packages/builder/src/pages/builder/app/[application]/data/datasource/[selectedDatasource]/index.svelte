@@ -15,6 +15,19 @@
   $: integration = datasource && $integrations[datasource.source]
   $: plusTables = datasource?.plus ? Object.values(datasource.entities) : []
 
+  function buildRelationshipDisplayString(fromTable, toTable) {
+    let displayString = fromTable.name
+    const toTableName = toTable.tableId?.split("_").pop()
+
+    displayString += `→ ${toTableName} (${toTable.relationshipType})`
+
+    if (toTable.through) {
+      // TODO: Through stuff
+    }
+
+    return displayString
+  }
+
   async function saveDatasource() {
     try {
       // Create datasource
@@ -133,14 +146,15 @@
           </Body>
           <div class="query-list">
               {#each plusTables as table}
-                {#each Object.keys(table) as column}
-                  {#if table[column].type === "link"}
+                {#each Object.keys(table.schema) as column}
+                  {#if table.schema[column].type === "link"}
                     <div
                       class="query-list-item"
-                      on:click={() => onClickTable(table[column])}
+                      on:click={() => onClickTable(table.schema[column])}
                     >
-                      <p class="query-name">{table[column].name}</p>
-                      <p>Primary Key: {table[column].primary}</p>
+                      <p class="query-name">{table.schema[column].name}</p>
+                      <p>{buildRelationshipDisplayString(table, table.schema[column])}</p>
+                      <!-- <p>{table.name} → {getTableNameFromId(table.schema[column].tableId)} ({table.schema[column].relationshipType}) </p> -->
                       <p>→</p>
                     </div>
                   {/if}
