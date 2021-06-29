@@ -11,8 +11,6 @@
   export let size = "M"
   export let spectrumTheme
 
-  $: console.log(spectrumTheme)
-
   let open = false
 
   $: color = value || "transparent"
@@ -111,12 +109,8 @@
 </script>
 
 <div class="container">
-  <div class="spectrum-wrapper {spectrumTheme || ''}">
-    <div
-      class="preview size--{size || 'M'}"
-      style="background: {color};"
-      on:click={() => (open = true)}
-    />
+  <div class="preview size--{size || 'M'}" on:click={() => (open = true)}>
+    <div class="fill {spectrumTheme || ''}" style="background: {color};" />
   </div>
   {#if open}
     <div
@@ -129,14 +123,16 @@
           <div class="heading">{category.label}</div>
           <div class="colors">
             {#each category.colors as color}
-              <div class="spectrum-wrapper {spectrumTheme || ''}">
+              <div
+                on:click={() => {
+                  onChange(`var(--spectrum-global-color-${color})`)
+                }}
+                class="color"
+                title={prettyPrint(color)}
+              >
                 <div
-                  on:click={() => {
-                    onChange(`var(--spectrum-global-color-${color})`)
-                  }}
-                  class="color"
+                  class="fill {spectrumTheme || ''}"
                   style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
-                  title={prettyPrint(color)}
                 >
                   {#if value === `var(--spectrum-global-color-${color})`}
                     <Icon name="Checkmark" size="S" />
@@ -177,12 +173,23 @@
     width: 32px;
     height: 32px;
     border-radius: 100%;
+    position: relative;
     transition: border-color 130ms ease-in-out;
     box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-300);
   }
   .preview:hover {
     cursor: pointer;
     box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-300);
+  }
+  .fill {
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
   }
   .size--S {
     width: 20px;
@@ -226,8 +233,7 @@
     width: 16px;
     border-radius: 100%;
     box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-300);
-    display: grid;
-    place-items: center;
+    position: relative;
   }
   .color:hover {
     cursor: pointer;
