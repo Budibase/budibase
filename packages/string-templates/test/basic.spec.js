@@ -111,7 +111,7 @@ describe("check the utility functions", () => {
   it("should be able to handle an input date object", async () => {
     const date = new Date()
     const output = await processString("{{ dateObj }}", { dateObj: date })
-    expect(date.toISOString()).toEqual(output)
+    expect(date.toString()).toEqual(output)
   })
 })
 

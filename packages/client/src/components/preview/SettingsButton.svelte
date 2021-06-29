@@ -1,6 +1,7 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { builderStore } from "../../store"
+  import { createEventDispatcher } from "svelte"
 
   export let prop
   export let value
@@ -9,6 +10,7 @@
   export let rotate = false
   export let bool = false
 
+  const dispatch = createEventDispatcher()
   $: currentValue = $builderStore.selectedComponent?.[prop]
   $: active = prop && (bool ? !!currentValue : currentValue === value)
 </script>
@@ -22,6 +24,7 @@
       const newValue = bool ? !currentValue : value
       builderStore.actions.updateProp(prop, newValue)
     }
+    dispatch("click")
   }}
 >
   <Icon name={icon} size="S" />

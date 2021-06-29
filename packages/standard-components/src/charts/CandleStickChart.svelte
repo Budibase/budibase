@@ -21,7 +21,7 @@
   // Fetch data on mount
   const setUpChart = provider => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (!provider || allCols.find(x => x == null)) {
+    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
       return null
     }
 

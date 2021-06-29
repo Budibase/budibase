@@ -91,14 +91,15 @@
 {/if}
 
 <style>
-  #spectrum-root {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
+  #spectrum-root,
   #app-root {
     height: 100%;
     width: 100%;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+  #app-root {
     position: relative;
   }
 </style>

@@ -62,15 +62,17 @@
 {#if datasource && integration}
   <section>
     <Layout>
-      <header>
-        <svelte:component
-          this={ICONS[datasource.source]}
-          height="26"
-          width="26"
-        />
-        <Heading size="M">{datasource.name}</Heading>
-      </header>
-      <Body size="S" grey lh>{integration.description}</Body>
+      <Layout gap="XS" noPadding>
+        <header>
+          <svelte:component
+            this={ICONS[datasource.source]}
+            height="26"
+            width="26"
+          />
+          <Heading size="M">{datasource.name}</Heading>
+        </header>
+        <Body size="M">{integration.description}</Body>
+      </Layout>
       <Divider />
       <div class="container">
         <div class="config-header">
@@ -139,7 +141,6 @@
   }
 
   header {
-    margin: 0 0 var(--spacing-xs) 0;
     display: flex;
     gap: var(--spacing-l);
     align-items: center;

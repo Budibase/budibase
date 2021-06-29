@@ -1,7 +1,7 @@
+jest.mock("../../../utilities/fileSystem/utilities")
+
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-
-jest.mock("../../../utilities/fileSystem/utilities")
 
 describe("/backups", () => {
   let request = setup.getRequest()

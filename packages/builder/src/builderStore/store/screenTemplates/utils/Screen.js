@@ -21,6 +21,7 @@ export class Screen extends BaseStructure {
         hAlign: "stretch",
         vAlign: "top",
         size: "grow",
+        gap: "M",
       },
       routing: {
         route: "",

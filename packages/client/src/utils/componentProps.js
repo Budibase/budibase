@@ -22,14 +22,6 @@ export const propsAreSame = (a, b) => {
  * Data bindings are enriched, and button actions are enriched.
  */
 export const enrichProps = (props, context) => {
-  // Exclude all private props that start with an underscore
-  let validProps = {}
-  Object.entries(props)
-    .filter(([name]) => !name.startsWith("_"))
-    .forEach(([key, value]) => {
-      validProps[key] = value
-    })
-
   // Create context of all bindings and data contexts
   // Duplicate the closest context as "data" which the builder requires
   const totalContext = {
@@ -41,7 +33,7 @@ export const enrichProps = (props, context) => {
   }
 
   // Enrich all data bindings in top level props
-  let enrichedProps = enrichDataBindings(validProps, totalContext)
+  let enrichedProps = enrichDataBindings(props, totalContext)
 
   // Enrich click actions if they exist
   if (enrichedProps.onClick) {

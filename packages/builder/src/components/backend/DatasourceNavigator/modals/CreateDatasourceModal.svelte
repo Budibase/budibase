@@ -45,7 +45,7 @@
   size="L"
   confirmText="Create"
   onConfirm={saveDatasource}
-  disabled={error || !name}
+  disabled={error || !name || !integration?.type}
 >
   <Input
     data-cy="datasource-name-input"
