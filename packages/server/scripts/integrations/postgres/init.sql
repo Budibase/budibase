@@ -32,9 +32,11 @@ CREATE TABLE Products_Tasks (
 );
 INSERT INTO Persons (PersonID, FirstName, LastName, Address, City) VALUES (1, 'Mike', 'Hughes', '123 Fake Street', 'Belfast');
 INSERT INTO Tasks (TaskID, PersonID, TaskName) VALUES (1, 1, 'assembling');
+INSERT INTO Tasks (TaskID, PersonID, TaskName) VALUES (2, 1, 'processing');
 INSERT INTO Products (ProductID, ProductName) VALUES (1, 'Computers');
 INSERT INTO Products (ProductID, ProductName) VALUES (2, 'Laptops');
 INSERT INTO Products (ProductID, ProductName) VALUES (3, 'Chairs');
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (1, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (2, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (3, 1);
+INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (1, 2);

@@ -9,6 +9,10 @@ export interface TableSchema {
     type: string
     fieldName?: string
     name: string
+    tableId?: string
+    relationshipType?: string
+    through?: string
+    foreignKey?: string
     constraints?: {
       type?: string
       email?: boolean

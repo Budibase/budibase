@@ -2,204 +2,20 @@ const { makeExternalQuery } = require("./utils")
 const {
   DataSourceOperation,
   SortDirection,
-  FieldTypes,
 } = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
-  generateRowIdField,
   breakRowIdField,
 } = require("../../../integrations/utils")
-const { cloneDeep } = require("lodash/fp")
-
-function inputProcessing(row, table, allTables) {
-  if (!row) {
-    return row
-  }
-  let newRow = {}, manyRelationships = []
-  for (let [key, field] of Object.entries(table.schema)) {
-    // currently excludes empty strings
-    if (!row[key]) {
-      continue
-    }
-    const isLink = field.type === FieldTypes.LINK
-    if (isLink && !field.through) {
-      // we don't really support composite keys for relationships, this is why [0] is used
-      newRow[key] = breakRowIdField(row[key][0])[0]
-    } else if (isLink && field.through) {
-      const linkTable = allTables.find(table => table._id === field.tableId)
-      // table has to exist for many to many
-      if (!linkTable) {
-        continue
-      }
-      row[key].map(relationship => {
-        // we don't really support composite keys for relationships, this is why [0] is used
-        manyRelationships.push({
-          tableId: field.through,
-          [linkTable.primary]: breakRowIdField(relationship)[0],
-          // leave the ID for enrichment later
-          [table.primary]: `{{ id }}`,
-        })
-      })
-    } else {
-      newRow[key] = row[key]
-    }
-  }
-  return { row: newRow, manyRelationships }
-}
-
-function generateIdForRow(row, table) {
-  if (!row) {
-    return
-  }
-  const primary = table.primary
-  // build id array
-  let idParts = []
-  for (let field of primary) {
-    idParts.push(row[field])
-  }
-  return generateRowIdField(idParts)
-}
-
-function updateRelationshipColumns(rows, row, relationships, allTables) {
-  const columns = {}
-  for (let relationship of relationships) {
-    const linkedTable = allTables[relationship.tableName]
-    if (!linkedTable) {
-      continue
-    }
-    const display = linkedTable.primaryDisplay
-    const related = {}
-    if (display && row[display]) {
-      related.primaryDisplay = row[display]
-    }
-    related._id = row[relationship.to]
-    columns[relationship.from] = related
-  }
-  for (let [column, related] of Object.entries(columns)) {
-    if (!Array.isArray(rows[row._id][column])) {
-      rows[row._id][column] = []
-    }
-    rows[row._id][column].push(related)
-  }
-  return rows
-}
-
-async function insertManyRelationships(appId, json, relationships) {
-  const promises = []
-  for (let relationship of relationships) {
-    const newJson = {
-      // copy over datasource stuff
-      endpoint: json.endpoint,
-    }
-    const { tableName } = breakExternalTableId(relationship.tableId)
-    delete relationship.tableId
-    newJson.endpoint.entityId = tableName
-    newJson.body = relationship
-    promises.push(makeExternalQuery(appId, newJson))
-  }
-  await Promise.all(promises)
-}
-
-function outputProcessing(rows, table, relationships, allTables) {
-  // if no rows this is what is returned? Might be PG only
-  if (rows[0].read === true) {
-    return []
-  }
-  let finalRows = {}
-  for (let row of rows) {
-    row._id = generateIdForRow(row, table)
-    // this is a relationship of some sort
-    if (finalRows[row._id]) {
-      finalRows = updateRelationshipColumns(
-        finalRows,
-        row,
-        relationships,
-        allTables
-      )
-      continue
-    }
-    const thisRow = {}
-    // filter the row down to what is actually the row (not joined)
-    for (let fieldName of Object.keys(table.schema)) {
-      thisRow[fieldName] = row[fieldName]
-    }
-    thisRow._id = row._id
-    thisRow.tableId = table._id
-    thisRow._rev = "rev"
-    finalRows[thisRow._id] = thisRow
-    // do this at end once its been added to the final rows
-    finalRows = updateRelationshipColumns(
-      finalRows,
-      row,
-      relationships,
-      allTables
-    )
-  }
-  return Object.values(finalRows)
-}
-
-function buildFilters(id, filters, table) {
-  const primary = table.primary
-  // if passed in array need to copy for shifting etc
-  let idCopy = cloneDeep(id)
-  if (filters) {
-    // need to map over the filters and make sure the _id field isn't present
-    for (let filter of Object.values(filters)) {
-      if (filter._id) {
-        const parts = breakRowIdField(filter._id)
-        for (let field of primary) {
-          filter[field] = parts.shift()
-        }
-      }
-      // make sure this field doesn't exist on any filter
-      delete filter._id
-    }
-  }
-  // there is no id, just use the user provided filters
-  if (!idCopy || !table) {
-    return filters
-  }
-  // if used as URL parameter it will have been joined
-  if (typeof idCopy === "string") {
-    idCopy = breakRowIdField(idCopy)
-  }
-  const equal = {}
-  for (let field of primary) {
-    // work through the ID and get the parts
-    equal[field] = idCopy.shift()
-  }
-  return {
-    equal,
-  }
-}
-
-function buildRelationships(table, allTables) {
-  const relationships = []
-  for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldTypes.LINK) {
-      continue
-    }
-    const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-    const linkTable = allTables.find(table => table._id === field.tableId)
-    // no table to link to, this is not a valid relationships
-    if (!linkTable) {
-      continue
-    }
-    const definition = {
-      from: fieldName || table.primary,
-      to: field.fieldName || linkTable.primary,
-      tableName: linkTableName,
-      through: undefined,
-    }
-    if (field.through) {
-      const { tableName: throughTableName } = breakExternalTableId(field.through)
-      definition.through = throughTableName
-    }
-    relationships.push(definition)
-  }
-  return relationships
-}
+const {
+  buildRelationships,
+  buildFilters,
+  inputProcessing,
+  outputProcessing,
+  generateIdForRow,
+} = require("./externalUtils")
+const { processObjectSync } = require("@budibase/string-templates")
 
 async function handleRequest(
   appId,
@@ -207,7 +23,7 @@ async function handleRequest(
   tableId,
   { id, row, filters, sort, paginate } = {}
 ) {
-  let { datasourceId, tableName } = breakExternalTableId(tableId)
+  let {datasourceId, tableName} = breakExternalTableId(tableId)
   const tables = await getAllExternalTables(appId, datasourceId)
   const table = tables[tableName]
   if (!table) {
@@ -247,7 +63,21 @@ async function handleRequest(
   // can't really use response right now
   const response = await makeExternalQuery(appId, json)
   // handle many to many relationships now if we know the ID (could be auto increment)
-  await insertManyRelationships(appId, json, processed.manyRelationships)
+  if (processed.manyRelationships) {
+    const promises = []
+    for (let toInsert of processed.manyRelationships) {
+      const {tableName} = breakExternalTableId(toInsert.tableId)
+      delete toInsert.tableId
+      promises.push(makeExternalQuery(appId, {
+        endpoint: {
+          ...json.endpoint,
+          entityId: tableName,
+        },
+        body: toInsert,
+      }))
+    }
+    await Promise.all(promises)
+  }
   // we searched for rows in someway
   if (operation === DataSourceOperation.READ && Array.isArray(response)) {
     return outputProcessing(response, table, relationships, tables)
