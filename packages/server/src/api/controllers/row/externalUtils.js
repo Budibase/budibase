@@ -10,7 +10,8 @@ exports.inputProcessing = (row, table, allTables) => {
   if (!row) {
     return { row, manyRelationships: [] }
   }
-  let newRow = {}, manyRelationships = []
+  let newRow = {},
+    manyRelationships = []
   for (let [key, field] of Object.entries(table.schema)) {
     // currently excludes empty strings
     if (!row[key]) {
@@ -21,18 +22,19 @@ exports.inputProcessing = (row, table, allTables) => {
       // we don't really support composite keys for relationships, this is why [0] is used
       newRow[key] = breakRowIdField(row[key][0])[0]
     } else if (isLink && field.through) {
-      const linkTable = allTables.find(table => table._id === field.tableId)
+      const { tableName: linkTableName } = breakExternalTableId(field.tableId)
       // table has to exist for many to many
-      if (!linkTable) {
+      if (!allTables[linkTableName]) {
         continue
       }
+      const linkTable = allTables[linkTableName]
       row[key].map(relationship => {
         // we don't really support composite keys for relationships, this is why [0] is used
         manyRelationships.push({
           tableId: field.through,
           [linkTable.primary]: breakRowIdField(relationship)[0],
           // leave the ID for enrichment later
-          [table.primary]: `{{ id }}`,
+          [table.primary]: `{{ _id }}`,
         })
       })
     } else {
@@ -120,6 +122,42 @@ exports.outputProcessing = (rows, table, relationships, allTables) => {
   return Object.values(finalRows)
 }
 
+/**
+ * This function is a bit crazy, but the exact purpose of it is to protect against the scenario in which
+ * you have column overlap in relationships, e.g. we join a few different tables and they all have the
+ * concept of an ID, but for some of them it will be null (if they say don't have a relationship).
+ * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
+ * is more performant and has the added benefit of protecting against this scenario.
+ * @param {Object} table The table we are retrieving fields for.
+ * @param {Object[]} allTables All of the tables that exist in the external data source, this is
+ * needed to work out what is needed from other tables based on relationships.
+ * @return {string[]} A list of fields like ["products.productid"] which can be used for an SQL select.
+ */
+exports.buildFields = (table, allTables) => {
+  function extractNonLinkFieldNames(table, existing = []) {
+    return Object.entries(table.schema)
+      .filter(
+        column =>
+          column[1].type !== FieldTypes.LINK &&
+          !existing.find(field => field.includes(column[0]))
+      )
+      .map(column => `${table.name}.${column[0]}`)
+  }
+  let fields = extractNonLinkFieldNames(table)
+  for (let field of Object.values(table.schema)) {
+    if (field.type !== FieldTypes.LINK) {
+      continue
+    }
+    const { tableName: linkTableName } = breakExternalTableId(field.tableId)
+    const linkTable = allTables[linkTableName]
+    if (linkTable) {
+      const linkedFields = extractNonLinkFieldNames(linkTable, fields)
+      fields = fields.concat(linkedFields)
+    }
+  }
+  return fields
+}
+
 exports.buildFilters = (id, filters, table) => {
   const primary = table.primary
   // if passed in array need to copy for shifting etc
@@ -177,7 +215,9 @@ exports.buildRelationships = (table, allTables) => {
       column: fieldName,
     }
     if (field.through) {
-      const { tableName: throughTableName } = breakExternalTableId(field.through)
+      const { tableName: throughTableName } = breakExternalTableId(
+        field.through
+      )
       definition.through = throughTableName
       // don't support composite keys for relationships
       definition.from = table.primary[0]
