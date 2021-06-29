@@ -67,15 +67,18 @@ async function getAppUrlIfNotInUse(ctx) {
   let url
   if (ctx.request.body.url) {
     url = encodeURI(ctx.request.body.url)
-  } else {
+  } else if (ctx.request.body.name) {
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  if (url) {
+    url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  }
   if (!env.SELF_HOSTED) {
     return url
   }
   const deployedApps = await getDeployedApps(ctx)
   if (
+    url &&
     deployedApps[url] != null &&
     deployedApps[url].appId !== ctx.params.appId
   ) {
