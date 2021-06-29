@@ -2,7 +2,7 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-} from "./base/definitions"
+} from "../definitions/datasource"
 
 module RestModule {
   const fetch = require("node-fetch")

@@ -1,4 +1,4 @@
-import { SqlQuery } from "./base/definitions"
+import { SqlQuery } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
