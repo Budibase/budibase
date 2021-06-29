@@ -7,7 +7,7 @@ import {
   SortDirection,
   Operation,
   RelationshipsJson,
-} from "./definitions"
+} from "../../definitions/datasource"
 
 type KnexQuery = Knex.QueryBuilder | Knex
 
