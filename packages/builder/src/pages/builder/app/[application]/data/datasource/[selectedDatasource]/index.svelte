@@ -67,7 +67,7 @@
 </script>
 
 <Modal bind:this={relationshipModal}>
-  <CreateEditRelationship save={saveDatasource} tables={plusTables} />
+  <CreateEditRelationship {datasource} save={saveDatasource} tables={plusTables} />
 </Modal>
 
 {#if datasource && integration}
