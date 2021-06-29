@@ -1,8 +1,5 @@
 const { makeExternalQuery } = require("./utils")
-const {
-  DataSourceOperation,
-  SortDirection,
-} = require("../../../constants")
+const { DataSourceOperation, SortDirection } = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
@@ -14,6 +11,7 @@ const {
   inputProcessing,
   outputProcessing,
   generateIdForRow,
+  buildFields,
 } = require("./externalUtils")
 const { processObjectSync } = require("@budibase/string-templates")
 
@@ -23,7 +21,7 @@ async function handleRequest(
   tableId,
   { id, row, filters, sort, paginate } = {}
 ) {
-  let {datasourceId, tableName} = breakExternalTableId(tableId)
+  let { datasourceId, tableName } = breakExternalTableId(tableId)
   const tables = await getAllExternalTables(appId, datasourceId)
   const table = tables[tableName]
   if (!table) {
@@ -32,7 +30,7 @@ async function handleRequest(
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
   const relationships = buildRelationships(table, tables)
-  const processed = inputProcessing(row, table)
+  const processed = inputProcessing(row, table, tables)
   row = processed.row
   if (
     operation === DataSourceOperation.DELETE &&
@@ -47,8 +45,8 @@ async function handleRequest(
       operation,
     },
     resource: {
-      // not specifying any fields means "*"
-      fields: [],
+      // have to specify the fields to avoid column overlap
+      fields: buildFields(table, tables),
     },
     filters,
     sort,
@@ -66,15 +64,17 @@ async function handleRequest(
   if (processed.manyRelationships) {
     const promises = []
     for (let toInsert of processed.manyRelationships) {
-      const {tableName} = breakExternalTableId(toInsert.tableId)
+      const { tableName } = breakExternalTableId(toInsert.tableId)
       delete toInsert.tableId
-      promises.push(makeExternalQuery(appId, {
-        endpoint: {
-          ...json.endpoint,
-          entityId: tableName,
-        },
-        body: toInsert,
-      }))
+      promises.push(
+        makeExternalQuery(appId, {
+          endpoint: {
+            ...json.endpoint,
+            entityId: processObjectSync(tableName, row),
+          },
+          body: toInsert,
+        })
+      )
     }
     await Promise.all(promises)
   }

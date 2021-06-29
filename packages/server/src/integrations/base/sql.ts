@@ -84,7 +84,7 @@ function addRelationships(
       toTable = relationship.tableName
     if (!relationship.through) {
       // @ts-ignore
-      query = query.innerJoin(
+      query = query.leftJoin(
         toTable,
         `${fromTable}.${from}`,
         `${relationship.tableName}.${to}`
@@ -93,8 +93,12 @@ function addRelationships(
       const throughTable = relationship.through
       query = query
         // @ts-ignore
-        .innerJoin(throughTable, `${fromTable}.${from}`, `${throughTable}.${from}`)
-        .innerJoin(toTable, `${toTable}.${to}`, `${throughTable}.${to}`)
+        .leftJoin(
+          throughTable,
+          `${fromTable}.${from}`,
+          `${throughTable}.${from}`
+        )
+        .leftJoin(toTable, `${toTable}.${to}`, `${throughTable}.${to}`)
     }
   }
   return query
