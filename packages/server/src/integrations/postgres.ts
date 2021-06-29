@@ -175,19 +175,53 @@ module PostgresModule {
           type,
         }
 
-        // // TODO: hack for testing
-        // if (tableName === "persons") {
-        //   tables[tableName].primaryDisplay = "firstname"
-        // }
-        // if (columnName.toLowerCase() === "personid" && tableName === "tasks") {
-        //   tables[tableName].schema[columnName] = {
-        //     name: columnName,
-        //     type: "link",
-        //     tableId: buildExternalTableId(datasourceId, "persons"),
-        //     relationshipType: "one-to-many",
-        //     fieldName: "personid",
-        //   }
-        // }
+        // TODO: hack for testing
+        if (tableName === "persons") {
+          tables[tableName].primaryDisplay = "firstname"
+        }
+        if (tableName === "products") {
+          tables[tableName].primaryDisplay = "productname"
+        }
+        if (tableName === "tasks") {
+          tables[tableName].primaryDisplay = "taskname"
+        }
+        if (tableName === "products") {
+          tables[tableName].schema["tasks"] = {
+            name: "tasks",
+            type: "link",
+            tableId: buildExternalTableId(datasourceId, "tasks"),
+            relationshipType: "many-to-many",
+            through: buildExternalTableId(datasourceId, "products_tasks"),
+            fieldName: "taskid",
+          }
+        }
+        if (tableName === "persons") {
+          tables[tableName].schema["tasks"] = {
+            name: "tasks",
+            type: "link",
+            tableId: buildExternalTableId(datasourceId, "tasks"),
+            relationshipType: "many-to-one",
+            fieldName: "personid",
+          }
+        }
+        if (tableName === "tasks") {
+          tables[tableName].schema["products"] = {
+            name: "products",
+            type: "link",
+            tableId: buildExternalTableId(datasourceId, "products"),
+            relationshipType: "many-to-many",
+            through: buildExternalTableId(datasourceId, "products_tasks"),
+            fieldName: "productid",
+          }
+          tables[tableName].schema["people"] = {
+            name: "people",
+            type: "link",
+            tableId: buildExternalTableId(datasourceId, "persons"),
+            relationshipType: "one-to-many",
+            fieldName: "personid",
+            foreignKey: "personid",
+          }
+        }
       }
       this.tables = tables
     }
