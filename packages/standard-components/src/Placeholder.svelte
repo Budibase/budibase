@@ -4,12 +4,12 @@
   const { builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let text = $component.name || "Placeholder"
+  export let text
 </script>
 
 {#if $builderStore.inBuilder}
   <div>
-    {text}
+    {text || $component.name || "Placeholder"}
   </div>
 {/if}
 

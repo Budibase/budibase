@@ -12,6 +12,7 @@
   export let getOptionValue = option => option
   export let readonly = false
   export let quiet = false
+  export let autoWidth = false
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -51,6 +52,7 @@
   {readonly}
   {fieldText}
   {options}
+  {autoWidth}
   {getOptionLabel}
   {getOptionValue}
   isPlaceholder={value == null || value === ""}

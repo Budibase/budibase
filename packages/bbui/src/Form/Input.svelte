@@ -12,6 +12,7 @@
   export let readonly = false
   export let error = null
   export let updateOnChange = true
+  export let quiet = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +30,7 @@
     {value}
     {placeholder}
     {type}
+    {quiet}
     on:change={onChange}
     on:click
     on:input
