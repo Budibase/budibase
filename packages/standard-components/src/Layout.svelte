@@ -135,7 +135,12 @@
     align-items: stretch;
     background: var(--spectrum-alias-background-color-primary);
     z-index: 2;
-    box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.075);
+  }
+  :global(.spectrum--dark) .nav-wrapper,
+  :global(.spectrum-darkest) .nav-wrapper {
+    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.15);
   }
   .layout--top .nav-wrapper.sticky {
     position: sticky;

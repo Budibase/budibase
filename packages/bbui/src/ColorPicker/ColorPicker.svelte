@@ -175,11 +175,11 @@
     border-radius: 100%;
     position: relative;
     transition: border-color 130ms ease-in-out;
-    box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-300);
+    box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-400);
   }
   .preview:hover {
     cursor: pointer;
-    box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-300);
+    box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-400);
   }
   .fill {
     width: 100%;
