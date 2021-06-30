@@ -31,6 +31,9 @@
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+    if ($builderStore.inBuilder) {
+      builderStore.actions.notifyLoaded()
+    }
   })
 
   // Register this as a refreshable datasource so that user changes cause
