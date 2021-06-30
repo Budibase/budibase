@@ -330,15 +330,6 @@ export const getFrontendStore = () => {
         const asset = get(currentAsset)
         const state = get(store)
 
-        // Only allow one screen slot, and in the layout
-        if (componentName.endsWith("screenslot")) {
-          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
-          const slot = findComponentType(asset.props, componentName)
-          if (!isLayout || slot != null) {
-            return
-          }
-        }
-
         // Create new component
         const componentInstance = store.actions.components.createInstance(
           componentName,

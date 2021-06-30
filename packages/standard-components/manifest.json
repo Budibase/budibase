@@ -230,7 +230,8 @@
   "screenslot": {
     "name": "Screenslot",
     "icon": "WebPage",
-    "description": "Contains your app screens"
+    "description": "Contains your app screens",
+    "editable": false
   },
   "button": {
     "name": "Button",
