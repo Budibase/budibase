@@ -66,11 +66,11 @@
   a {
     color: var(--spectrum-alias-text-color);
     display: inline-block;
-    white-space: pre-wrap;
+    white-space: nowrap;
     transition: color 130ms ease-in-out;
   }
   a:hover {
-    color: var(--spectrum-global-color-blue-600);
+    color: var(--spectrum-global-color-blue-600) !important;
   }
   .placeholder {
     font-style: italic;
