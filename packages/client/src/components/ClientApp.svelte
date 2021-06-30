@@ -108,4 +108,25 @@
     position: relative;
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
+
+  /* Custom scrollbars */
+  :global(::-webkit-scrollbar) {
+    width: 8px;
+    height: 8px;
+  }
+  :global(::-webkit-scrollbar-track) {
+    background: var(--spectrum-alias-background-color-default);
+  }
+  :global(::-webkit-scrollbar-thumb) {
+    background-color: var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+  :global(::-webkit-scrollbar-corner) {
+    background: var(--spectrum-alias-background-color-default);
+  }
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--spectrum-global-color-gray-400)
+      var(--spectrum-alias-background-color-default);
+  }
 </style>
