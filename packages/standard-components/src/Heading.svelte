@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import "@spectrum-css/typography/dist/index-vars.css"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -16,6 +17,8 @@
   $: componentText = $builderStore.inBuilder
     ? text || $component.name || "Placeholder text"
     : text || ""
+  $: sizeClass = `spectrum-Heading--size${size || "M"}`
+  $: alignClass = `align--${align || "left"}`
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
@@ -34,21 +37,15 @@
   class:bold
   class:italic
   class:underline
-  class="align--{align || 'left'} size--{size || 'M'}"
+  class="spectrum-Heading {sizeClass} {alignClass}"
 >
-  {#if bold}
-    <strong>{componentText}</strong>
-  {:else}
-    {componentText}
-  {/if}
+  {componentText}
 </h1>
 
 <style>
   h1 {
-    display: inline-block;
     white-space: pre-wrap;
     font-weight: 600;
-    margin: 0;
   }
   .placeholder {
     font-style: italic;
@@ -63,15 +60,7 @@
   .underline {
     text-decoration: underline;
   }
-  .size--S {
-    font-size: 18px;
-  }
-  .size--M {
-    font-size: 22px;
-  }
-  .size--L {
-    font-size: 28px;
-  }
+
   .align--left {
     text-align: left;
   }
