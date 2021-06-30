@@ -86,6 +86,7 @@ const BASE_LAYOUTS = [
         normal: {},
         selected: {},
       },
+      title: "{{ name }}",
       navigation: "Top",
       width: "Large",
       links: [
