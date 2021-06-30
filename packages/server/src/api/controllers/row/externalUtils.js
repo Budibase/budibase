@@ -30,7 +30,9 @@ exports.inputProcessing = (row, table, allTables) => {
     const linkTable = allTables[linkTableName]
     if (!field.through) {
       // we don't really support composite keys for relationships, this is why [0] is used
-      newRow[field.foreignKey || linkTable.primary] = breakRowIdField(row[key][0])[0]
+      newRow[field.foreignKey || linkTable.primary] = breakRowIdField(
+        row[key][0]
+      )[0]
     } else {
       row[key].map(relationship => {
         // we don't really support composite keys for relationships, this is why [0] is used
