@@ -5,12 +5,16 @@
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
+  import ErrorSVG from "assets/error.svg?raw"
 
   let iframe
   let layout
   let screen
   let confirmDeleteDialog
   let idToDelete
+  let loading = true
+  let error
 
   // Create screen slot placeholder for use when a page is selected rather
   // than a screen
@@ -68,8 +72,18 @@
   onMount(() => {
     // Initialise the app when mounted
     iframe.contentWindow.addEventListener(
-      "bb-ready",
+      "ready",
       () => refreshContent(strippedJson),
+      { once: true }
+    )
+
+    // Catch any app errors
+    iframe.contentWindow.addEventListener(
+      "error",
+      event => {
+        loading = false
+        error = event.detail || "An unknown error occurred"
+      },
       { once: true }
     )
 
@@ -83,8 +97,10 @@
       } else if (type === "delete-component" && data.id) {
         idToDelete = data.id
         confirmDeleteDialog.show()
+      } else if (type === "preview-loaded") {
+        loading = false
       } else {
-        console.log(data)
+        console.warning(`Client sent unknown event type: ${type}`)
       }
     })
   })
@@ -99,11 +115,25 @@
 </script>
 
 <div class="component-container">
+  {#if loading}
+    <div class="center">
+      <ProgressCircle />
+    </div>
+  {:else if error}
+    <div class="center error">
+      <Layout justifyItems="center" gap="S">
+        {@html ErrorSVG}
+        <Heading size="L">App preview failed to load</Heading>
+        <Body size="S">{error}</Body>
+      </Layout>
+    </div>
+  {/if}
   <iframe
     style="height: 100%; width: 100%"
     title="componentPreview"
     bind:this={iframe}
     srcdoc={template}
+    class:hidden={loading || error}
   />
 </div>
 <ConfirmDialog
@@ -130,5 +160,33 @@
     top: 0;
     width: 100%;
     background-color: transparent;
+  }
+  .center {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+  }
+  .hidden {
+    opacity: 0;
+  }
+  .error :global(svg) {
+    fill: var(--spectrum-global-color-gray-500);
+    width: 80px;
+    height: 80px;
+  }
+  .error :global(h1),
+  .error :global(p) {
+    color: var(--spectrum-global-color-gray-800);
+  }
+  .error :global(p) {
+    font-style: italic;
+    margin-top: -0.5em;
+  }
+  .error :global(h1) {
+    font-weight: 400;
+    margin: 0;
   }
 </style>
