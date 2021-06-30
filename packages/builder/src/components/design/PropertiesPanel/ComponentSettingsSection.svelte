@@ -26,6 +26,7 @@
   import RelationshipFieldSelect from "./PropertyControls/RelationshipFieldSelect.svelte"
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
   import ColorPicker from "./PropertyControls/ColorPicker.svelte"
+  import URLSelect from "./PropertyControls/URLSelect.svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -61,6 +62,7 @@
     section: SectionSelect,
     navigation: NavigationEditor,
     filter: FilterEditor,
+    url: URLSelect,
     "field/string": StringFieldSelect,
     "field/number": NumberFieldSelect,
     "field/options": OptionsFieldSelect,

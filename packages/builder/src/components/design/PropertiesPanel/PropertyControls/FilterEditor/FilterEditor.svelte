@@ -47,7 +47,7 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define Filters</ActionButton>
+<ActionButton on:click={drawer.show}>Define filters</ActionButton>
 <Drawer bind:this={drawer} title="Filtering">
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <DrawerContent slot="body">
