@@ -76,7 +76,13 @@ exports.generateIdForRow = (row, table) => {
   return generateRowIdField(idParts)
 }
 
-exports.updateRelationshipColumns = (row, rows, relationships, allTables, fullDocs) => {
+exports.updateRelationshipColumns = (
+  row,
+  rows,
+  relationships,
+  allTables,
+  fullDocs
+) => {
   const columns = {}
   for (let relationship of relationships) {
     const linkedTable = allTables[relationship.tableName]
@@ -106,7 +112,13 @@ exports.updateRelationshipColumns = (row, rows, relationships, allTables, fullDo
   return rows
 }
 
-exports.outputProcessing = (rows, table, relationships, allTables, fullDocs) => {
+exports.outputProcessing = (
+  rows,
+  table,
+  relationships,
+  allTables,
+  fullDocs
+) => {
   // if no rows this is what is returned? Might be PG only
   if (rows[0].read === true) {
     return []

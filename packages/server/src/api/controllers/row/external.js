@@ -79,9 +79,17 @@ async function handleRequest(
     }
     await Promise.all(promises)
   }
-  const output = outputProcessing(response, table, relationships, tables, fullDocs)
+  const output = outputProcessing(
+    response,
+    table,
+    relationships,
+    tables,
+    fullDocs
+  )
   // if reading it'll just be an array of rows, return whole thing
-  return operation === DataSourceOperation.READ && Array.isArray(response) ? output : { row: output[0], table }
+  return operation === DataSourceOperation.READ && Array.isArray(response)
+    ? output
+    : { row: output[0], table }
 }
 
 exports.patch = async ctx => {
@@ -123,9 +131,14 @@ exports.find = async ctx => {
   const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  const response = await handleRequest(appId, DataSourceOperation.READ, tableId, {
-    id,
-  })
+  const response = await handleRequest(
+    appId,
+    DataSourceOperation.READ,
+    tableId,
+    {
+      id,
+    }
+  )
   return response ? response[0] : response
 }
 
@@ -227,9 +240,14 @@ exports.fetchEnrichedRow = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   // TODO: this only enriches the full docs 1 layer deep, need to join those as well
-  const response = await handleRequest(appId, DataSourceOperation.READ, tableId, {
-    id,
-    fullDocs: true,
-  })
+  const response = await handleRequest(
+    appId,
+    DataSourceOperation.READ,
+    tableId,
+    {
+      id,
+      fullDocs: true,
+    }
+  )
   return response ? response[0] : response
 }
