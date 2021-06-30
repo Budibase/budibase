@@ -449,6 +449,7 @@
     }
   },
   "stackedlist": {
+    "deprecated": true,
     "name": "Stacked List",
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
@@ -844,6 +845,7 @@
     ]
   },
   "navigation": {
+    "deprecated": true,
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
@@ -2079,6 +2081,38 @@
           "Last 1 year"
         ],
         "defaultValue": "Last 30 days"
+      }
+    ]
+  },
+  "spectrumcard": {
+    "name": "Card (Spectrum)",
+    "icon": "Card",
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "text",
+        "key": "title",
+        "label": "Title"
+      },
+      {
+        "type": "text",
+        "key": "subtitle",
+        "label": "Subtitle"
+      },
+      {
+        "type": "text",
+        "key": "footer",
+        "label": "Footer"
+      },
+      {
+        "type": "text",
+        "key": "imageURL",
+        "label": "Image URL"
+      },
+      {
+        "type": "boolean",
+        "key": "quiet",
+        "label": "Quiet"
       }
     ]
   }
