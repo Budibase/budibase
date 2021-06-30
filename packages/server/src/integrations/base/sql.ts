@@ -11,7 +11,9 @@ import {
 
 type KnexQuery = Knex.QueryBuilder | Knex
 
+// right now we only do filters on the specific table being queried
 function addFilters(
+  tableName: string,
   query: KnexQuery,
   filters: SearchFilters | undefined
 ): KnexQuery {
@@ -20,7 +22,7 @@ function addFilters(
     fn: (key: string, value: any) => void
   ) {
     for (let [key, value] of Object.entries(structure)) {
-      fn(key, value)
+      fn(`${tableName}.${key}`, value)
     }
   }
   if (!filters) {
@@ -134,7 +136,7 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     query = query.select("*")
   }
   // handle where
-  query = addFilters(query, filters)
+  query = addFilters(tableName, query, filters)
   // handle join
   query = addRelationships(query, tableName, relationships)
   // handle sorting
@@ -165,7 +167,7 @@ function buildUpdate(
 ): KnexQuery {
   const { endpoint, body, filters } = json
   let query: KnexQuery = knex(endpoint.entityId)
-  query = addFilters(query, filters)
+  query = addFilters(endpoint.entityId, query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.update(body)
@@ -181,7 +183,7 @@ function buildDelete(
 ): KnexQuery {
   const { endpoint, filters } = json
   let query: KnexQuery = knex(endpoint.entityId)
-  query = addFilters(query, filters)
+  query = addFilters(endpoint.entityId, query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.delete()
