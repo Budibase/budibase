@@ -55,6 +55,7 @@ export { default as Search } from "./Form/Search.svelte"
 export { default as Pagination } from "./Pagination/Pagination.svelte"
 export { default as Badge } from "./Badge/Badge.svelte"
 export { default as StatusLight } from "./StatusLight/StatusLight.svelte"
+export { default as ColorPicker } from "./ColorPicker/ColorPicker.svelte"
 
 // Typography
 export { default as Body } from "./Typography/Body.svelte"

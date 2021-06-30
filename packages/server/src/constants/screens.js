@@ -20,15 +20,13 @@ exports.createHomeScreen = () => ({
         _id: "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
         _component: "@budibase/standard-components/heading",
         _styles: {
-          normal: {
-            "text-align": "left",
-          },
           hover: {},
           active: {},
           selected: {},
         },
         text: "Welcome to your Budibase App 👋",
-        type: "h2",
+        size: "M",
+        align: "left",
         _instanceName: "Heading",
         _children: [],
       },
@@ -38,6 +36,7 @@ exports.createHomeScreen = () => ({
     hAlign: "stretch",
     vAlign: "top",
     size: "grow",
+    gap: "M",
   },
   routing: {
     route: "/",

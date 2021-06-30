@@ -19,3 +19,10 @@
 >
   {text || ""}
 </button>
+
+<style>
+  button {
+    width: fit-content;
+    width: -moz-fit-content;
+  }
+</style>

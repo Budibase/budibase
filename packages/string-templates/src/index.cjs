@@ -1,12 +1,7 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
-const { cloneDeep } = require("lodash/fp")
-const {
-  removeNull,
-  updateContext,
-  removeHandlebarsStatements,
-} = require("./utilities")
+const { removeHandlebarsStatements } = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
@@ -92,8 +87,6 @@ module.exports.processStringSync = (string, context) => {
   }
   // take a copy of input incase error
   const input = string
-  const clonedContext = removeNull(updateContext(cloneDeep(context)))
-  // remove any null/undefined properties
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
@@ -103,7 +96,10 @@ module.exports.processStringSync = (string, context) => {
     const template = hbsInstance.compile(string, {
       strict: false,
     })
-    return processors.postprocess(template(clonedContext))
+    return processors.postprocess(template({
+      now: new Date().toISOString(),
+      ...context,
+    }))
   } catch (err) {
     return removeHandlebarsStatements(input)
   }
