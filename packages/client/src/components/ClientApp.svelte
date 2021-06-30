@@ -13,6 +13,7 @@
     authStore,
     routeStore,
     builderStore,
+    appStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
   import SettingsBar from "./preview/SettingsBar.svelte"
@@ -59,7 +60,8 @@
     }
   }
 
-  $: themeClass = $builderStore.theme || "spectrum--light"
+  $: themeClass =
+    $builderStore.theme || $appStore.application?.theme || "spectrum--light"
 </script>
 
 {#if dataLoaded && $screenStore.activeLayout}
