@@ -8,6 +8,7 @@
   export let direction
   export let hAlign
   export let vAlign
+  export let gap
 
   const { Provider } = getContext("sdk")
   const component = getContext("component")
@@ -16,7 +17,7 @@
   $: loaded = dataProvider?.loaded ?? true
 </script>
 
-<Container {direction} {hAlign} {vAlign}>
+<Container {direction} {hAlign} {vAlign} {gap} wrap>
   {#if $component.empty}
     <Placeholder />
   {:else if rows.length > 0}

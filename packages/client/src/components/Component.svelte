@@ -23,6 +23,11 @@
   // props with old ones, depending on how long enrichment takes.
   let latestUpdateTime
 
+  // Keep track of stringified representations of context and instance
+  // to avoid enriching bindings as much as possible
+  let lastContextKey
+  let lastInstanceKey
+
   // Get contexts
   const context = getContext("context")
   const insideScreenslot = !!getContext("screenslot")
@@ -42,7 +47,9 @@
     definition?.hasChildren &&
     definition?.showEmptyState !== false &&
     $builderStore.inBuilder
-  $: updateComponentProps(instance, $context)
+  $: rawProps = getRawProps(instance)
+  $: instanceKey = JSON.stringify(rawProps)
+  $: updateComponentProps(rawProps, instanceKey, $context)
   $: selected =
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
@@ -58,6 +65,16 @@
     props: componentProps,
     name,
   })
+
+  const getRawProps = instance => {
+    let validProps = {}
+    Object.entries(instance)
+      .filter(([name]) => !name.startsWith("_"))
+      .forEach(([key, value]) => {
+        validProps[key] = value
+      })
+    return validProps
+  }
 
   // Gets the component constructor for the specified component
   const getComponentConstructor = component => {
@@ -76,13 +93,23 @@
   }
 
   // Enriches any string component props using handlebars
-  const updateComponentProps = (instance, context) => {
+  const updateComponentProps = (rawProps, instanceKey, context) => {
+    const instanceSame = instanceKey === lastInstanceKey
+    const contextSame = context.key === lastContextKey
+
+    if (instanceSame && contextSame) {
+      return
+    } else {
+      lastInstanceKey = instanceKey
+      lastContextKey = context.key
+    }
+
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich props with context
-    const enrichedProps = enrichProps(instance, context)
+    const enrichedProps = enrichProps(rawProps, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {

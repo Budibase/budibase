@@ -1,161 +1,19 @@
 const { makeExternalQuery } = require("./utils")
-const {
-  DataSourceOperation,
-  SortDirection,
-  FieldTypes,
-  RelationshipTypes,
-} = require("../../../constants")
+const { DataSourceOperation, SortDirection } = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
-  generateRowIdField,
   breakRowIdField,
 } = require("../../../integrations/utils")
-const { cloneDeep } = require("lodash/fp")
-
-function inputProcessing(row, table) {
-  if (!row) {
-    return row
-  }
-  let newRow = {}
-  for (let key of Object.keys(table.schema)) {
-    // currently excludes empty strings
-    if (row[key]) {
-      newRow[key] = row[key]
-    }
-  }
-  return newRow
-}
-
-function generateIdForRow(row, table) {
-  if (!row) {
-    return
-  }
-  const primary = table.primary
-  // build id array
-  let idParts = []
-  for (let field of primary) {
-    idParts.push(row[field])
-  }
-  return generateRowIdField(idParts)
-}
-
-function updateRelationshipColumns(rows, row, relationships, allTables) {
-  const columns = {}
-  for (let relationship of relationships) {
-    const linkedTable = allTables[relationship.tableName]
-    if (!linkedTable) {
-      continue
-    }
-    const display = linkedTable.primaryDisplay
-    const related = {}
-    if (display && row[display]) {
-      related.primaryDisplay = row[display]
-    }
-    related._id = row[relationship.to]
-    columns[relationship.from] = related
-  }
-  for (let [column, related] of Object.entries(columns)) {
-    if (!Array.isArray(rows[row._id][column])) {
-      rows[row._id][column] = []
-    }
-    rows[row._id][column].push(related)
-  }
-  return rows
-}
-
-function outputProcessing(rows, table, relationships, allTables) {
-  // if no rows this is what is returned? Might be PG only
-  if (rows[0].read === true) {
-    return []
-  }
-  let finalRows = {}
-  for (let row of rows) {
-    row._id = generateIdForRow(row, table)
-    // this is a relationship of some sort
-    if (finalRows[row._id]) {
-      finalRows = updateRelationshipColumns(
-        finalRows,
-        row,
-        relationships,
-        allTables
-      )
-      continue
-    }
-    const thisRow = {}
-    // filter the row down to what is actually the row (not joined)
-    for (let fieldName of Object.keys(table.schema)) {
-      thisRow[fieldName] = row[fieldName]
-    }
-    thisRow._id = row._id
-    thisRow.tableId = table._id
-    thisRow._rev = "rev"
-    finalRows[thisRow._id] = thisRow
-    // do this at end once its been added to the final rows
-    finalRows = updateRelationshipColumns(
-      finalRows,
-      row,
-      relationships,
-      allTables
-    )
-  }
-  return Object.values(finalRows)
-}
-
-function buildFilters(id, filters, table) {
-  const primary = table.primary
-  // if passed in array need to copy for shifting etc
-  let idCopy = cloneDeep(id)
-  if (filters) {
-    // need to map over the filters and make sure the _id field isn't present
-    for (let filter of Object.values(filters)) {
-      if (filter._id) {
-        const parts = breakRowIdField(filter._id)
-        for (let field of primary) {
-          filter[field] = parts.shift()
-        }
-      }
-      // make sure this field doesn't exist on any filter
-      delete filter._id
-    }
-  }
-  // there is no id, just use the user provided filters
-  if (!idCopy || !table) {
-    return filters
-  }
-  // if used as URL parameter it will have been joined
-  if (typeof idCopy === "string") {
-    idCopy = breakRowIdField(idCopy)
-  }
-  const equal = {}
-  for (let field of primary) {
-    // work through the ID and get the parts
-    equal[field] = idCopy.shift()
-  }
-  return {
-    equal,
-  }
-}
-
-function buildRelationships(table) {
-  const relationships = []
-  for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldTypes.LINK) {
-      continue
-    }
-    // TODO: through field
-    if (field.relationshipType === RelationshipTypes.MANY_TO_MANY) {
-      continue
-    }
-    const broken = breakExternalTableId(field.tableId)
-    relationships.push({
-      from: fieldName,
-      to: field.fieldName,
-      tableName: broken.tableName,
-    })
-  }
-  return relationships
-}
+const {
+  buildRelationships,
+  buildFilters,
+  inputProcessing,
+  outputProcessing,
+  generateIdForRow,
+  buildFields,
+} = require("./externalUtils")
+const { processObjectSync } = require("@budibase/string-templates")
 
 async function handleRequest(
   appId,
@@ -171,8 +29,9 @@ async function handleRequest(
   }
   // clean up row on ingress using schema
   filters = buildFilters(id, filters, table)
-  const relationships = buildRelationships(table)
-  row = inputProcessing(row, table)
+  const relationships = buildRelationships(table, tables)
+  const processed = inputProcessing(row, table, tables)
+  row = processed.row
   if (
     operation === DataSourceOperation.DELETE &&
     (filters == null || Object.keys(filters).length === 0)
@@ -186,8 +45,8 @@ async function handleRequest(
       operation,
     },
     resource: {
-      // not specifying any fields means "*"
-      fields: [],
+      // have to specify the fields to avoid column overlap
+      fields: buildFields(table, tables),
     },
     filters,
     sort,
@@ -201,6 +60,25 @@ async function handleRequest(
   }
   // can't really use response right now
   const response = await makeExternalQuery(appId, json)
+  // handle many to many relationships now if we know the ID (could be auto increment)
+  if (processed.manyRelationships) {
+    const promises = []
+    for (let toInsert of processed.manyRelationships) {
+      const { tableName } = breakExternalTableId(toInsert.tableId)
+      delete toInsert.tableId
+      promises.push(
+        makeExternalQuery(appId, {
+          endpoint: {
+            ...json.endpoint,
+            entityId: tableName,
+          },
+          // if we're doing many relationships then we're writing, only one response
+          body: processObjectSync(toInsert, response[0]),
+        })
+      )
+    }
+    await Promise.all(promises)
+  }
   // we searched for rows in someway
   if (operation === DataSourceOperation.READ && Array.isArray(response)) {
     return outputProcessing(response, table, relationships, tables)

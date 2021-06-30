@@ -10,6 +10,7 @@
   export let id = null
   export let readonly = false
   export let updateOnChange = true
+  export let quiet = false
 
   const dispatch = createEventDispatcher()
   let focus = false
@@ -59,6 +60,7 @@
 
 <div
   class="spectrum-Textfield"
+  class:spectrum-Textfield--quiet={quiet}
   class:is-invalid={!!error}
   class:is-disabled={disabled}
   class:is-focused={focus}
