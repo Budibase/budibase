@@ -138,11 +138,11 @@
     padding: 6px 8px;
     opacity: 0;
     flex-direction: row;
-    background: var(--background);
+    background: var(--spectrum-alias-background-color-primary);
     justify-content: center;
     align-items: center;
     border-radius: 4px;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     gap: 2px;
     transition: opacity 0.13s ease-in-out;
   }
@@ -154,5 +154,15 @@
     align-self: stretch;
     margin: 0 4px;
     background-color: var(--spectrum-global-color-gray-300);
+  }
+
+  /* Theme overrides */
+  :global(.spectrum--dark) .bar,
+  :global(.spectrum--darkest) .bar {
+    background: var(--spectrum-global-color-gray-200);
+  }
+  :global(.spectrum--dark) .divider,
+  :global(.spectrum--darkest) .divider {
+    background: var(--spectrum-global-color-gray-400);
   }
 </style>

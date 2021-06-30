@@ -25,7 +25,7 @@ export default `
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
-        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
       }
       body {
         flex: 1 1 auto;
