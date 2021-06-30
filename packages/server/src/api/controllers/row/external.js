@@ -70,9 +70,10 @@ async function handleRequest(
         makeExternalQuery(appId, {
           endpoint: {
             ...json.endpoint,
-            entityId: processObjectSync(tableName, row),
+            entityId: tableName,
           },
-          body: toInsert,
+          // if we're doing many relationships then we're writing, only one response
+          body: processObjectSync(toInsert, response[0]),
         })
       )
     }
