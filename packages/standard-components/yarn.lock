@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.65":
+"@budibase/bbui@^0.9.67":
   version "0.9.67"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.67.tgz#9e242cbf25c04d9843d64cd676f5c293f531f18f"
   integrity sha512-XwwwPuOG4y/bV9psjOjYBvAqVaVJ56nklKOm2snaSS0P9WlQ17TWVcixQo5Ol9ecvzl9iVD2Wi2rWTX6y6sYaA==
@@ -252,7 +252,7 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/treeview/-/treeview-3.0.3.tgz#aeda5175158b9f8d7529cb2b394428eb2a428046"
   integrity sha512-D5gGzZC/KtRArdx86Mesc9+99W9nTbUOeyYGqoJoAfJSOttoT6Tk5CrDvlCmAqjKf5rajemAkGri1ChqvUIwkw==
 
-"@spectrum-css/typography@^3.0.1":
+"@spectrum-css/typography@^3.0.1", "@spectrum-css/typography@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.2.tgz#ea3ca0a60e18064527819d48c8c4364cab4fcd38"
   integrity sha512-5ZOLmQe0edzsDMyhghUd4hBb5uxGsFrxzf+WasfcUw9klSfTsRZ09n1BsaaWbgrLjlMQ+EEHS46v5VNo0Ms2CA==
