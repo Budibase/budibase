@@ -5,7 +5,6 @@
   "table",
   "repeater",
   "button",
-  "spectrumcard",
   {
     "name": "Form",
     "icon": "Form",
@@ -22,6 +21,14 @@
       "attachmentfield",
       "relationshipfield",
       "daterangepicker"
+    ]
+  },
+  {
+    "name": "Card",
+    "icon": "Card",
+    "children": [
+      "spectrumcard",
+      "cardstat"
     ]
   },
   {

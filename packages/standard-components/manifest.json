@@ -878,7 +878,7 @@
         "key": "text"
       },
       {
-        "type": "text",
+        "type": "url",
         "label": "URL",
         "key": "url",
         "placeholder": "/screen"
@@ -2085,7 +2085,7 @@
     ]
   },
   "spectrumcard": {
-    "name": "Card (Spectrum)",
+    "name": "Card",
     "icon": "Card",
     "styles": ["size"],
     "settings": [
@@ -2101,8 +2101,8 @@
       },
       {
         "type": "text",
-        "key": "footer",
-        "label": "Footer"
+        "key": "description",
+        "label": "Description"
       },
       {
         "type": "text",
@@ -2110,9 +2110,14 @@
         "label": "Image URL"
       },
       {
+        "type": "url",
+        "key": "linkURL",
+        "label": "Link URL"
+      },
+      {
         "type": "boolean",
-        "key": "quiet",
-        "label": "Quiet"
+        "key": "horizontal",
+        "label": "Horizontal"
       }
     ]
   }

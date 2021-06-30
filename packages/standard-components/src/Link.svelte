@@ -67,6 +67,10 @@
     color: var(--spectrum-alias-text-color);
     display: inline-block;
     white-space: pre-wrap;
+    transition: color 130ms ease-in-out;
+  }
+  a:hover {
+    color: var(--spectrum-global-color-blue-600);
   }
   .placeholder {
     font-style: italic;
