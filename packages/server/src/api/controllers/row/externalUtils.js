@@ -6,6 +6,18 @@ const {
 const { FieldTypes } = require("../../../constants")
 const { cloneDeep } = require("lodash/fp")
 
+function basicProcessing(row, table) {
+  const thisRow = {}
+  // filter the row down to what is actually the row (not joined)
+  for (let fieldName of Object.keys(table.schema)) {
+    thisRow[fieldName] = row[fieldName]
+  }
+  thisRow._id = exports.generateIdForRow(row, table)
+  thisRow.tableId = table._id
+  thisRow._rev = "rev"
+  return thisRow
+}
+
 exports.inputProcessing = (row, table, allTables) => {
   if (!row) {
     return { row, manyRelationships: [] }
@@ -64,20 +76,29 @@ exports.generateIdForRow = (row, table) => {
   return generateRowIdField(idParts)
 }
 
-exports.updateRelationshipColumns = (rows, row, relationships, allTables) => {
+exports.updateRelationshipColumns = (
+  row,
+  rows,
+  relationships,
+  allTables,
+  fullDocs
+) => {
   const columns = {}
   for (let relationship of relationships) {
     const linkedTable = allTables[relationship.tableName]
     if (!linkedTable) {
       continue
     }
-    const display = linkedTable.primaryDisplay
-    const related = {}
-    if (display && row[display]) {
-      related.primaryDisplay = row[display]
+    let linked = basicProcessing(row, linkedTable)
+    // if not returning full docs then get the minimal links out
+    if (!fullDocs) {
+      const display = linkedTable.primaryDisplay
+      linked = {
+        primaryDisplay: display ? linked[display] : undefined,
+        _id: linked._id,
+      }
     }
-    related._id = row[relationship.to]
-    columns[relationship.column] = related
+    columns[relationship.column] = linked
   }
   for (let [column, related] of Object.entries(columns)) {
     if (!Array.isArray(rows[row._id][column])) {
@@ -91,7 +112,13 @@ exports.updateRelationshipColumns = (rows, row, relationships, allTables) => {
   return rows
 }
 
-exports.outputProcessing = (rows, table, relationships, allTables) => {
+exports.outputProcessing = (
+  rows,
+  table,
+  relationships,
+  allTables,
+  fullDocs
+) => {
   // if no rows this is what is returned? Might be PG only
   if (rows[0].read === true) {
     return []
@@ -102,28 +129,23 @@ exports.outputProcessing = (rows, table, relationships, allTables) => {
     // this is a relationship of some sort
     if (finalRows[row._id]) {
       finalRows = exports.updateRelationshipColumns(
-        finalRows,
         row,
+        finalRows,
         relationships,
-        allTables
+        allTables,
+        fullDocs
       )
       continue
     }
-    const thisRow = {}
-    // filter the row down to what is actually the row (not joined)
-    for (let fieldName of Object.keys(table.schema)) {
-      thisRow[fieldName] = row[fieldName]
-    }
-    thisRow._id = row._id
-    thisRow.tableId = table._id
-    thisRow._rev = "rev"
+    const thisRow = basicProcessing(row, table)
     finalRows[thisRow._id] = thisRow
     // do this at end once its been added to the final rows
     finalRows = exports.updateRelationshipColumns(
-      finalRows,
       row,
+      finalRows,
       relationships,
-      allTables
+      allTables,
+      fullDocs
     )
   }
   return Object.values(finalRows)
