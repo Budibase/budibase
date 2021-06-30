@@ -19,7 +19,7 @@ async function handleRequest(
   appId,
   operation,
   tableId,
-  { id, row, filters, sort, paginate } = {}
+  { id, row, filters, sort, paginate, fullDocs } = {}
 ) {
   let { datasourceId, tableName } = breakExternalTableId(tableId)
   const tables = await getAllExternalTables(appId, datasourceId)
@@ -79,13 +79,9 @@ async function handleRequest(
     }
     await Promise.all(promises)
   }
-  // we searched for rows in someway
-  if (operation === DataSourceOperation.READ && Array.isArray(response)) {
-    return outputProcessing(response, table, relationships, tables)
-  } else {
-    row = outputProcessing(response, table, relationships, tables)[0]
-    return { row, table }
-  }
+  const output = outputProcessing(response, table, relationships, tables, fullDocs)
+  // if reading it'll just be an array of rows, return whole thing
+  return operation === DataSourceOperation.READ && Array.isArray(response) ? output : { row: output[0], table }
 }
 
 exports.patch = async ctx => {
@@ -127,9 +123,10 @@ exports.find = async ctx => {
   const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  return handleRequest(appId, DataSourceOperation.READ, tableId, {
+  const response = await handleRequest(appId, DataSourceOperation.READ, tableId, {
     id,
   })
+  return response ? response[0] : response
 }
 
 exports.destroy = async ctx => {
@@ -225,4 +222,14 @@ exports.validate = async () => {
   return { valid: true }
 }
 
-exports.fetchEnrichedRow = async () => {}
+exports.fetchEnrichedRow = async ctx => {
+  const appId = ctx.appId
+  const id = ctx.params.rowId
+  const tableId = ctx.params.tableId
+  // TODO: this only enriches the full docs 1 layer deep, need to join those as well
+  const response = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+    id,
+    fullDocs: true,
+  })
+  return response ? response[0] : response
+}
