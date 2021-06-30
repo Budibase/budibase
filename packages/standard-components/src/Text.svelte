@@ -14,7 +14,7 @@
 
   $: placeholder = $builderStore.inBuilder && !text
   $: componentText = $builderStore.inBuilder
-    ? text || "Placeholder text"
+    ? text || $component.name || "Placeholder text"
     : text || ""
 
   // Add color styles to main styles object, otherwise the styleable helper
