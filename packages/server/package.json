@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.65",
+  "version": "0.9.67",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -59,9 +59,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.65",
-    "@budibase/client": "^0.9.65",
-    "@budibase/string-templates": "^0.9.65",
+    "@budibase/auth": "^0.9.67",
+    "@budibase/client": "^0.9.67",
+    "@budibase/string-templates": "^0.9.67",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -114,14 +114,14 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.65",
+    "@budibase/standard-components": "^0.9.67",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
     "@types/jest": "^26.0.23",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
     "@types/node": "^15.12.4",
-    "@typescript-eslint/parser": "^4.28.0",
+    "@typescript-eslint/parser": "4.28.0",
     "babel-jest": "^27.0.2",
     "copyfiles": "^2.4.1",
     "docker-compose": "^0.23.6",
