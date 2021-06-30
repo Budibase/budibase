@@ -164,7 +164,15 @@ exports.fetchAppDefinition = async function (ctx) {
 exports.fetchAppPackage = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
-  const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
+  const layouts = await getLayouts(db)
+  let screens = await getScreens(db)
+
+  // Only filter screens if the user is not a builder
+  if (!ctx.user.builder?.global) {
+    const userRoleId = getUserRoleId(ctx)
+    const accessController = new AccessController(ctx.params.appId)
+    screens = await accessController.checkScreensAccess(screens, userRoleId)
+  }
 
   ctx.body = {
     application,
