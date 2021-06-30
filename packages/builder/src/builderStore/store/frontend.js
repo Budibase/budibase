@@ -211,6 +211,11 @@ export const getFrontendStore = () => {
         const response = await api.post(`/api/layouts`, layoutToSave)
         const savedLayout = await response.json()
 
+        // Abort if saving failed
+        if (response.status !== 200) {
+          return
+        }
+
         store.update(state => {
           const layoutIdx = state.layouts.findIndex(
             stateLayout => stateLayout._id === savedLayout._id
