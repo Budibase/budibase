@@ -24,7 +24,7 @@
 
 <div>
   <Select
-    value={$store.theme || "spectrum--lightest"}
+    value={$store.theme || "spectrum--light"}
     options={themeOptions}
     placeholder={null}
     on:change={e => store.actions.theme.save(e.detail)}

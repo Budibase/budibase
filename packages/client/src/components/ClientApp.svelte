@@ -59,7 +59,7 @@
     }
   }
 
-  $: themeClass = $builderStore.theme || "spectrum--lightest"
+  $: themeClass = $builderStore.theme || "spectrum--light"
 </script>
 
 {#if dataLoaded && $screenStore.activeLayout}
