@@ -30,6 +30,12 @@ function addFilters(
   }
   // if all or specified in filters, then everything is an or
   const allOr = filters.allOr
+  if (filters.oneOf) {
+    iterate(filters.oneOf, (key, array) => {
+      const fnc = allOr ? "orWhereIn" : "whereIn"
+      query = query[fnc](key, array)
+    })
+  }
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       const fnc = allOr ? "orWhere" : "where"
