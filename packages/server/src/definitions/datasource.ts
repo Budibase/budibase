@@ -47,7 +47,7 @@ export interface Integration {
 }
 
 export interface SearchFilters {
-  allOr: boolean
+  allOr?: boolean
   string?: {
     [key: string]: string
   }
@@ -77,11 +77,21 @@ export interface SearchFilters {
   }
 }
 
+export interface SortJson {
+  [key: string]: SortDirection
+}
+
+export interface PaginationJson {
+  limit: number
+  page: string | number
+}
+
 export interface RelationshipsJson {
   through?: string
-  from: string
-  to: string
+  from?: string
+  to?: string
   tableName: string
+  column: string
 }
 
 export interface QueryJson {
@@ -94,13 +104,8 @@ export interface QueryJson {
     fields: string[]
   }
   filters?: SearchFilters
-  sort?: {
-    [key: string]: SortDirection
-  }
-  paginate?: {
-    limit: number
-    page: string | number
-  }
+  sort?: SortJson
+  paginate?: PaginationJson
   body?: object
   extra?: {
     idFilter?: SearchFilters

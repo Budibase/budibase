@@ -3,27 +3,29 @@ interface Base {
   _rev?: string
 }
 
-export interface TableSchema {
-  [key: string]: {
-    // TODO: replace with field types enum when done
-    type: string
-    fieldName?: string
-    name: string
-    tableId?: string
-    relationshipType?: string
-    through?: string
-    foreignKey?: string
-    constraints?: {
-      type?: string
-      email?: boolean
-      inclusion?: string[]
-      length?: {
-        minimum?: string | number
-        maximum?: string | number
-      }
-      presence?: boolean
+export interface FieldSchema {
+  // TODO: replace with field types enum when done
+  type: string
+  fieldName?: string
+  name: string
+  tableId?: string
+  relationshipType?: string
+  through?: string
+  foreignKey?: string
+  constraints?: {
+    type?: string
+    email?: boolean
+    inclusion?: string[]
+    length?: {
+      minimum?: string | number
+      maximum?: string | number
     }
+    presence?: boolean
   }
+}
+
+export interface TableSchema {
+  [key: string]: FieldSchema
 }
 
 export interface Table extends Base {
@@ -38,7 +40,7 @@ export interface Table extends Base {
 
 export interface Row extends Base {
   type?: string
-  tableId: string
+  tableId?: string
   [key: string]: any
 }
 
