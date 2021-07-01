@@ -18,6 +18,10 @@ function basicProcessing(row, table) {
   return thisRow
 }
 
+function isMany(field) {
+  return field.relationshipType.split("-")[0] === "many"
+}
+
 exports.inputProcessing = (row, table, allTables) => {
   if (!row) {
     return { row, manyRelationships: [] }
@@ -40,19 +44,24 @@ exports.inputProcessing = (row, table, allTables) => {
       continue
     }
     const linkTable = allTables[linkTableName]
-    if (!field.through) {
+    if (!isMany(field)) {
       // we don't really support composite keys for relationships, this is why [0] is used
       newRow[field.foreignKey || linkTable.primary] = breakRowIdField(
         row[key][0]
       )[0]
     } else {
+      // we're not inserting a doc, will be a bunch of update calls
+      const isUpdate = !field.through
+      const thisKey = isUpdate ? "id" : linkTable.primary
+      const otherKey = isUpdate ? field.foreignKey : table.primary
       row[key].map(relationship => {
         // we don't really support composite keys for relationships, this is why [0] is used
         manyRelationships.push({
-          tableId: field.through,
-          [linkTable.primary]: breakRowIdField(relationship)[0],
+          tableId: field.through || field.tableId,
+          isUpdate,
+          [thisKey]: breakRowIdField(relationship)[0],
           // leave the ID for enrichment later
-          [table.primary]: `{{ ${table.primary} }}`,
+          [otherKey]: `{{ ${table.primary} }}`,
         })
       })
     }
@@ -65,13 +74,18 @@ exports.inputProcessing = (row, table, allTables) => {
 
 exports.generateIdForRow = (row, table) => {
   if (!row) {
-    return
+    return null
   }
   const primary = table.primary
   // build id array
   let idParts = []
   for (let field of primary) {
-    idParts.push(row[field])
+    if (row[field]) {
+      idParts.push(row[field])
+    }
+  }
+  if (idParts.length === 0) {
+    return null
   }
   return generateRowIdField(idParts)
 }
@@ -84,6 +98,9 @@ exports.updateRelationshipColumns = (row, rows, relationships, allTables) => {
       continue
     }
     let linked = basicProcessing(row, linkedTable)
+    if (!linked._id) {
+      continue
+    }
     // if not returning full docs then get the minimal links out
     const display = linkedTable.primaryDisplay
     linked = {
@@ -193,7 +210,7 @@ exports.buildFilters = (id, filters, table) => {
     return filters
   }
   // if used as URL parameter it will have been joined
-  if (typeof idCopy === "string") {
+  if (!Array.isArray(idCopy)) {
     idCopy = breakRowIdField(idCopy)
   }
   const equal = {}

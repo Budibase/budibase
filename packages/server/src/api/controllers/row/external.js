@@ -19,77 +19,103 @@ const {
 } = require("./externalUtils")
 const { processObjectSync } = require("@budibase/string-templates")
 
-async function handleRequest(
-  appId,
-  operation,
-  tableId,
-  { id, row, filters, sort, paginate, tables } = {}
-) {
-  let { datasourceId, tableName } = breakExternalTableId(tableId)
-  if (!tables) {
-    tables = await getAllExternalTables(appId, datasourceId)
+class ExternalRequest {
+  constructor(appId, operation, tableId, tables) {
+    this.appId = appId
+    this.operation = operation
+    this.tableId = tableId
+    this.tables = tables
   }
-  const table = tables[tableName]
-  if (!table) {
-    throw `Unable to process query, table "${tableName}" not defined.`
-  }
-  // clean up row on ingress using schema
-  filters = buildFilters(id, filters, table)
-  const relationships = buildRelationships(table, tables)
-  const processed = inputProcessing(row, table, tables)
-  row = processed.row
-  if (
-    operation === DataSourceOperation.DELETE &&
-    (filters == null || Object.keys(filters).length === 0)
-  ) {
-    throw "Deletion must be filtered"
-  }
-  let json = {
-    endpoint: {
-      datasourceId,
-      entityId: tableName,
-      operation,
-    },
-    resource: {
-      // have to specify the fields to avoid column overlap
-      fields: buildFields(table, tables),
-    },
-    filters,
-    sort,
-    paginate,
-    relationships,
-    body: row,
-    // pass an id filter into extra, purely for mysql/returning
-    extra: {
-      idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
-    },
-  }
-  // can't really use response right now
-  const response = await makeExternalQuery(appId, json)
-  // handle many to many relationships now if we know the ID (could be auto increment)
-  if (processed.manyRelationships) {
+
+  async handleManyRelationships(row, relationships) {
+    const { appId, tables } = this
     const promises = []
-    for (let toInsert of processed.manyRelationships) {
-      const { tableName } = breakExternalTableId(toInsert.tableId)
-      delete toInsert.tableId
+    for (let relationship of relationships) {
+      const { tableId, isUpdate, id, ...rest } = relationship
+      const { datasourceId, tableName } = breakExternalTableId(tableId)
+      const linkedTable = tables[tableName]
+      if (!linkedTable) {
+        continue
+      }
+      const endpoint = {
+        datasourceId,
+        entityId: tableName,
+        operation: isUpdate ? DataSourceOperation.UPDATE : DataSourceOperation.CREATE,
+      }
       promises.push(
         makeExternalQuery(appId, {
-          endpoint: {
-            ...json.endpoint,
-            entityId: tableName,
-          },
+          endpoint,
           // if we're doing many relationships then we're writing, only one response
-          body: processObjectSync(toInsert, response[0]),
+          body: processObjectSync(rest, row),
+          filters: buildFilters(id, {}, linkedTable)
         })
       )
     }
     await Promise.all(promises)
   }
-  const output = outputProcessing(response, table, relationships, tables)
-  // if reading it'll just be an array of rows, return whole thing
-  return operation === DataSourceOperation.READ && Array.isArray(response)
-    ? output
-    : { row: output[0], table }
+
+  async run({ id, row, filters, sort, paginate }) {
+    const { appId, operation, tableId } = this
+    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    if (!this.tables) {
+      this.tables = await getAllExternalTables(appId, datasourceId)
+    }
+    const table = this.tables[tableName]
+    if (!table) {
+      throw `Unable to process query, table "${tableName}" not defined.`
+    }
+    // clean up row on ingress using schema
+    filters = buildFilters(id, filters, table)
+    const relationships = buildRelationships(table, this.tables)
+    const processed = inputProcessing(row, table, this.tables)
+    row = processed.row
+    if (
+      operation === DataSourceOperation.DELETE &&
+      (filters == null || Object.keys(filters).length === 0)
+    ) {
+      throw "Deletion must be filtered"
+    }
+    let json = {
+      endpoint: {
+        datasourceId,
+        entityId: tableName,
+        operation,
+      },
+      resource: {
+        // have to specify the fields to avoid column overlap
+        fields: buildFields(table, this.tables),
+      },
+      filters,
+      sort,
+      paginate,
+      relationships,
+      body: row,
+      // pass an id filter into extra, purely for mysql/returning
+      extra: {
+        idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
+      },
+    }
+    // can't really use response right now
+    const response = await makeExternalQuery(appId, json)
+    // handle many to many relationships now if we know the ID (could be auto increment)
+    if (processed.manyRelationships) {
+      await this.handleManyRelationships(response[0], processed.manyRelationships)
+    }
+    const output = outputProcessing(response, table, relationships, this.tables)
+    // if reading it'll just be an array of rows, return whole thing
+    return operation === DataSourceOperation.READ && Array.isArray(response)
+      ? output
+      : { row: output[0], table }
+  }
+}
+
+async function handleRequest(
+  appId,
+  operation,
+  tableId,
+  opts = {}
+) {
+  return new ExternalRequest(appId, operation, tableId, opts.tables).run(opts)
 }
 
 exports.patch = async ctx => {
