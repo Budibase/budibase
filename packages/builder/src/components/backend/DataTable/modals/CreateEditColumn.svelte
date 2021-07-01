@@ -173,11 +173,6 @@
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
-      },
-      {
         name: `One ${thisName} row → many ${linkName} rows`,
         alt: `One ${table.name} rows → many ${linkTable.name} rows`,
         value: RelationshipTypes.MANY_TO_ONE,

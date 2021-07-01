@@ -8,7 +8,19 @@
         "type": "node",
         "request": "launch",
         "name": "Start Server",
-        "program": "${workspaceFolder}/src/index.js"
+        "sourceMaps": true,
+        "program": "${workspaceFolder}/src/index.ts",
+        "preLaunchTask": "npm: build",
+        "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+      },
+      {
+        "name": "TS",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "node",
+        "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+        "args": ["src/index.ts"],
+        "cwd": "${workspaceRoot}",
       },
       {
         "type": "node",
