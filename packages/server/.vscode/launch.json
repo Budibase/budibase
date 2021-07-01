@@ -14,15 +14,6 @@
         "outFiles": ["${workspaceFolder}/dist/**/*.js"]
       },
       {
-        "name": "TS",
-        "type": "node",
-        "request": "launch",
-        "runtimeExecutable": "node",
-        "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
-        "args": ["src/index.ts"],
-        "cwd": "${workspaceRoot}",
-      },
-      {
         "type": "node",
         "request": "launch",
         "name": "Jest - All",

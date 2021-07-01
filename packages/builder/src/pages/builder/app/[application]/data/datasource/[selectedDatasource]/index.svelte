@@ -2,6 +2,7 @@
   import { goto, beforeUrlChange } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
+  import { RelationshipTypes } from "constants/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
@@ -66,7 +67,9 @@
   }
 
   function openRelationshipModal(relationship) {
-    selectedRelationship = relationship
+    if (relationship.type === "link") {
+      selectedRelationship = relationship
+    }
     relationshipModal.show()
   }
 
@@ -82,7 +85,7 @@
 </script>
 
 <Modal bind:this={relationshipModal}>
-  <CreateEditRelationship {datasource} save={saveDatasource} {plusTables} relationship={selectedRelationship} />
+  <CreateEditRelationship {datasource} save={saveDatasource} close={relationshipModal.hide} {plusTables} relationship={selectedRelationship} />
 </Modal>
 
 {#if datasource && integration}
@@ -151,7 +154,7 @@
           <div class="query-list">
               {#each plusTables as table}
                 {#each Object.keys(table.schema) as column}
-                  {#if table.schema[column].type === "link"}
+                  {#if table.schema[column].type === "link" && table.schema[column].relationshipType !== RelationshipTypes.MANY_TO_ONE}
                     <div
                       class="query-list-item"
                       on:click={() => openRelationshipModal(table.schema[column])}>

@@ -8,10 +8,10 @@
   export let from
   export let plusTables
   export let relationship = {}
+  export let close
 
   let originalName = relationship.name
 
-  $: console.log(relationship)
   $: tableOptions = plusTables.map(table => ({ label: table.name, value: table._id }))
   $: valid = relationship.name && relationship.tableId && relationship.relationshipType
   $: from = plusTables.find(table => table._id === relationship.source)
@@ -19,18 +19,6 @@
   $: through = plusTables.find(table => table._id === relationship.through)
   $: linkTable = through || to
 
-  $: relationshipOptions = from && to ?  [
-      {
-        name: `Many ${from.name} rows → many ${to.name} rows`,
-        alt: `Many ${from.name} rows → many ${to.name} rows`,
-        value: RelationshipTypes.MANY_TO_MANY,
-      },
-      {
-        name: `One ${from.name} row → many ${to.name} rows`,
-        alt: `One ${from.name} rows → many ${to.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
-      }
-    ] : []
 
   $: relationshipTypes = [
       {
@@ -51,24 +39,43 @@
 
   // save the relationship on to the datasource
   async function saveRelationship() {
+    const manyToMany = relationship.relationshipType === RelationshipTypes.MANY_TO_MANY
     // source of relationship
     datasource.entities[from.name].schema[relationship.name] = {
       type: "link",
       ...relationship
     }
-    // if (originalName !== from.name) {
-    //   delete datasource.entities[from.name].schema[originalName]
-    // }
-
     // save other side of relationship in the other schema
     datasource.entities[to.name].schema[relationship.name] = {
+      name: relationship.name,
       type: "link",
-      relationshipType: relationship.relationshipType === RelationshipTypes.MANY_TO_MANY ? RelationshipTypes.MANY_TO_MANY : RelationshipTypes.MANY_TO_ONE,
-      tableId: to._id
+      relationshipType: manyToMany ? RelationshipTypes.MANY_TO_MANY : RelationshipTypes.MANY_TO_ONE,
+      tableId: from._id,
+      fieldName: relationship.fieldName,
+      foreignKey: relationship.foreignKey
     }
+
+    // If relationship has been renamed
+    if (originalName !== relationship.name) {
+      delete datasource.entities[from.name].schema[originalName]
+      delete datasource.entities[to.name].schema[originalName]
+    }
+
+    console.log({
+      from: datasource.entities[from.name].schema[relationship.name],
+      to: datasource.entities[to.name].schema[relationship.name],
+    })
 
     await save()
     await tables.fetch()
+  }
+
+  async function deleteRelationship() {
+    delete datasource.entities[from.name].schema[relationship.name]
+    delete datasource.entities[to.name].schema[relationship.name]
+    await save()
+    await tables.fetch()
+    close()
   }
 </script>
 
@@ -108,71 +115,19 @@
       />
     {/if}
 
-    {#if relationship?.relationshipType === RelationshipTypes.ONE_TO_MANY}
+    {#if relationship?.relationshipType === RelationshipTypes.ONE_TO_MANY && to}
       <Select 
-        label={"Foreign Key"}
-        options={Object.keys(linkTable.schema)}
+        label={`Foreign Key (${to.name})`}
+        options={Object.keys(to.schema)}
         bind:value={relationship.foreignKey}
       />
     {/if}
+  </div>
 
-    <!-- <Menu>
-      <MenuSection heading="From">
-        {#each plusTables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.source = table._id)}>
-            {table.name}
-             {#if relationship.source === table._id}
-              <Icon size="S" name="Checkmark" />
-             {/if}
-          </MenuItem>
-        {/each}
-      </MenuSection>
-    </Menu> -->
-    <!-- <Menu>
-      <MenuSection heading="To">
-        {#each plusTables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.tableId = table._id)}>
-            {table.name}
-             {#if relationship.tableId === table._id}
-              <Icon size="S" name="Checkmark" />
-             {/if}
-          </MenuItem>
-        {/each}
-      </MenuSection>
-    </Menu> -->
-  {#if from && to}
-    <!-- <div class="cardinality">
-      <RadioGroup
-        label="Define the relationship"
-        bind:value={relationship.relationshipType}
-        on:change={onChangeRelationshipType}
-        options={relationshipOptions}
-        getOptionLabel={option => option.name}
-        getOptionValue={option => option.value}
-      />
-    </div> -->
-
-    <!-- <Select 
-      label={`${linkTable.name} Column`}
-      options={Object.keys(linkTable.schema)}
-      bind:value={relationship.fieldName}
-    /> -->
-
-    <!-- <div class="table-selector">
-      <Menu>
-        <MenuSection heading={`${linkTable.name} Column`}>
-          {#each Object.keys(linkTable.schema) as column}
-            <MenuItem noClose icon="Table" on:click={() => (relationship.fieldName = column)}>
-              {column}
-                {#if relationship.fieldName === column}
-                  <Icon size="S" name="Checkmark" />
-                {/if}
-            </MenuItem>
-          {/each}
-        </MenuSection>
-      </Menu>
-    </div> -->
-  {/if}
+  <div slot="footer">
+    {#if originalName !== null}
+      <Button warning text on:click={deleteRelationship}>Delete</Button>
+    {/if}
   </div>
 
 
