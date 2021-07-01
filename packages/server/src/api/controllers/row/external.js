@@ -1,5 +1,9 @@
 const { makeExternalQuery } = require("./utils")
-const { DataSourceOperation, SortDirection, FieldTypes } = require("../../../constants")
+const {
+  DataSourceOperation,
+  SortDirection,
+  FieldTypes,
+} = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
@@ -81,12 +85,7 @@ async function handleRequest(
     }
     await Promise.all(promises)
   }
-  const output = outputProcessing(
-    response,
-    table,
-    relationships,
-    tables
-  )
+  const output = outputProcessing(response, table, relationships, tables)
   // if reading it'll just be an array of rows, return whole thing
   return operation === DataSourceOperation.READ && Array.isArray(response)
     ? output
@@ -256,7 +255,11 @@ exports.fetchEnrichedRow = async ctx => {
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldTypes.LINK || !row[fieldName] || row[fieldName].length === 0) {
+    if (
+      field.type !== FieldTypes.LINK ||
+      !row[fieldName] ||
+      row[fieldName].length === 0
+    ) {
       continue
     }
     const links = row[fieldName]
@@ -275,7 +278,7 @@ exports.fetchEnrichedRow = async ctx => {
             [linkedTable.primary]: linkedIds,
           },
         },
-      },
+      }
     )
   }
   return row

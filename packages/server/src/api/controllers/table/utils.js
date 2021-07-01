@@ -1,5 +1,3 @@
-import {breakExternalTableId} from "../../../integrations/utils"
-
 const CouchDB = require("../../../db")
 const csvParser = require("../../../utilities/csvParser")
 const {
