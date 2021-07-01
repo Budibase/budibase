@@ -157,7 +157,6 @@ module External {
         // @ts-ignore
         const linkTablePrimary = linkTable.primary[0]
         if (!isMany(field)) {
-
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(
             row[key][0]
           )[0]
@@ -166,9 +165,7 @@ module External {
           const isUpdate = !field.through
           const thisKey: string = isUpdate ? "id" : linkTablePrimary
           // @ts-ignore
-          const otherKey: string = isUpdate
-            ? field.foreignKey
-            : tablePrimary
+          const otherKey: string = isUpdate ? field.foreignKey : tablePrimary
           row[key].map((relationship: any) => {
             // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
