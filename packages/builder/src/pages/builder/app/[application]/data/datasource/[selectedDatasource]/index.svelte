@@ -10,10 +10,11 @@
 
   let unsaved = false
   let relationshipModal
+  let selectedRelationship
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
-  $: plusTables = datasource?.plus ? Object.values(datasource.entities) : []
+  $: plusTables = datasource?.plus ? Object.values(datasource.entities || {}) : []
 
   function buildRelationshipDisplayString(fromTable, toTable) {
     let displayString = fromTable.name
@@ -64,7 +65,8 @@
     unsaved = true
   }
 
-  function openRelationshipModal() {
+  function openRelationshipModal(relationship) {
+    selectedRelationship = relationship
     relationshipModal.show()
   }
 
@@ -80,7 +82,7 @@
 </script>
 
 <Modal bind:this={relationshipModal}>
-  <CreateEditRelationship {datasource} save={saveDatasource} tables={plusTables} />
+  <CreateEditRelationship {datasource} save={saveDatasource} {plusTables} relationship={selectedRelationship} />
 </Modal>
 
 {#if datasource && integration}
@@ -152,11 +154,9 @@
                   {#if table.schema[column].type === "link"}
                     <div
                       class="query-list-item"
-                      on:click={() => onClickTable(table.schema[column])}
-                    >
+                      on:click={() => openRelationshipModal(table.schema[column])}>
                       <p class="query-name">{table.schema[column].name}</p>
                       <p>{buildRelationshipDisplayString(table, table.schema[column])}</p>
-                      <!-- <p>{table.name} → {getTableNameFromId(table.schema[column].tableId)} ({table.schema[column].relationshipType}) </p> -->
                       <p>→</p>
                     </div>
                   {/if}

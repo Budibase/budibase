@@ -1,20 +1,21 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
   import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading } from "@budibase/bbui"
+  import { tables } from "stores/backend"
 
   export let save
   export let datasource
   export let from
-  export let tables
+  export let plusTables
   export let relationship = {}
 
   let originalName = relationship.name
 
   $: console.log(relationship)
   $: valid = relationship.name && relationship.tableId && relationship.relationshipType
-  $: from = tables.find(table => table._id === relationship.source)
-  $: to = tables.find(table => table._id === relationship.tableId)
-  $: through = tables.find(table => table._id === relationship.through)
+  $: from = plusTables.find(table => table._id === relationship.source)
+  $: to = plusTables.find(table => table._id === relationship.tableId)
+  $: through = plusTables.find(table => table._id === relationship.through)
   $: linkTable = through || to
 
   $: relationshipOptions = from && to ?  [
@@ -43,11 +44,11 @@
       ...relationship
     }
     if (originalName) {
-      // TODO: possible bug if you change name
-      delete datasource.entities[from.name][originalName]
+      delete datasource.entities[from.name].schema[originalName]
     }
 
     save()
+    tables.fetch()
   }
 </script>
 
@@ -63,7 +64,7 @@
   <div class="table-selector">
     <Menu>
       <MenuSection heading="From">
-        {#each tables as table}
+        {#each plusTables as table}
           <MenuItem noClose icon="Table" on:click={() => (relationship.source = table._id)}>
             {table.name}
              {#if relationship.source === table._id}
@@ -75,7 +76,7 @@
     </Menu>
     <Menu>
       <MenuSection heading="To">
-        {#each tables as table}
+        {#each plusTables as table}
           <MenuItem noClose icon="Table" on:click={() => (relationship.tableId = table._id)}>
             {table.name}
              {#if relationship.tableId === table._id}
@@ -102,7 +103,7 @@
   {#if relationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
     <Menu>
       <MenuSection heading="Join Table">
-        {#each tables as table}
+        {#each plusTables as table}
           <MenuItem noClose icon="Table" on:click={() => (relationship.through = table._id)}>
             {table.name}
               {#if relationship.through === table._id}
@@ -119,9 +120,9 @@
       <Menu>
         <MenuSection heading={`${linkTable.name} Column`}>
           {#each Object.keys(linkTable.schema) as column}
-            <MenuItem noClose icon="Table" on:click={() => (relationship.foreignKey = column)}>
+            <MenuItem noClose icon="Table" on:click={() => (relationship.fieldName = column)}>
               {column}
-                {#if relationship.foreignKey === column}
+                {#if relationship.fieldName === column}
                   <Icon size="S" name="Checkmark" />
                 {/if}
             </MenuItem>
