@@ -179,10 +179,6 @@ module PostgresModule {
                 tables[tableName].schema[key] = existingTableSchema[key]
               }
             }
-            console.log({
-              existingTableSchema,
-              tables
-            })
           }
         }
 

@@ -48,7 +48,7 @@ exports.buildSchemaFromDb = async function (ctx) {
 
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)
-  await connector.buildSchema(datasource._id)
+  await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
 
   const response = await db.post(datasource)
