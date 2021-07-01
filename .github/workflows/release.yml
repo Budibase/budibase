@@ -20,8 +20,8 @@ jobs:
         with:
           node-version: 12.x
       - run: yarn 
-      - run: yarn lint 
       - run: yarn bootstrap 
+      - run: yarn lint 
       - run: yarn build 
       - run: yarn test
 
