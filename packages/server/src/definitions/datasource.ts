@@ -72,6 +72,9 @@ export interface SearchFilters {
   notEmpty?: {
     [key: string]: any
   }
+  oneOf?: {
+    [key: string]: any[]
+  }
 }
 
 export interface RelationshipsJson {
