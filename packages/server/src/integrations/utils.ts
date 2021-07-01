@@ -30,10 +30,9 @@ export function generateRowIdField(keyProps: any[] = []) {
 
 // should always return an array
 export function breakRowIdField(_id: string) {
-  if (!_id) {
-    return null
-  }
-  return JSON.parse(decodeURIComponent(_id))
+  const decoded = decodeURIComponent(_id)
+  const parsed = JSON.parse(decoded)
+  return Array.isArray(parsed) ? parsed : [parsed]
 }
 
 export function convertType(type: string, map: { [key: string]: any }) {
