@@ -1,5 +1,5 @@
 const { makeExternalQuery } = require("./utils")
-const { DataSourceOperation, SortDirection } = require("../../../constants")
+const { DataSourceOperation, SortDirection, FieldTypes } = require("../../../constants")
 const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
@@ -19,10 +19,12 @@ async function handleRequest(
   appId,
   operation,
   tableId,
-  { id, row, filters, sort, paginate, fullDocs } = {}
+  { id, row, filters, sort, paginate, tables } = {}
 ) {
   let { datasourceId, tableName } = breakExternalTableId(tableId)
-  const tables = await getAllExternalTables(appId, datasourceId)
+  if (!tables) {
+    tables = await getAllExternalTables(appId, datasourceId)
+  }
   const table = tables[tableName]
   if (!table) {
     throw `Unable to process query, table "${tableName}" not defined.`
@@ -83,8 +85,7 @@ async function handleRequest(
     response,
     table,
     relationships,
-    tables,
-    fullDocs
+    tables
   )
   // if reading it'll just be an array of rows, return whole thing
   return operation === DataSourceOperation.READ && Array.isArray(response)
@@ -239,15 +240,43 @@ exports.fetchEnrichedRow = async ctx => {
   const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  // TODO: this only enriches the full docs 1 layer deep, need to join those as well
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const tables = await getAllExternalTables(appId, datasourceId)
   const response = await handleRequest(
     appId,
     DataSourceOperation.READ,
     tableId,
     {
       id,
-      fullDocs: true,
+      tables,
     }
   )
-  return response ? response[0] : response
+  const table = tables[tableName]
+  const row = response[0]
+  // this seems like a lot of work, but basically we need to dig deeper for the enrich
+  // for a single row, there is probably a better way to do this with some smart multi-layer joins
+  for (let [fieldName, field] of Object.entries(table.schema)) {
+    if (field.type !== FieldTypes.LINK || !row[fieldName] || row[fieldName].length === 0) {
+      continue
+    }
+    const links = row[fieldName]
+    const linkedTableId = field.tableId
+    const linkedTable = tables[breakExternalTableId(linkedTableId).tableName]
+    // don't support composite keys right now
+    const linkedIds = links.map(link => breakRowIdField(link._id)[0])
+    row[fieldName] = await handleRequest(
+      appId,
+      DataSourceOperation.READ,
+      linkedTableId,
+      {
+        tables,
+        filters: {
+          oneOf: {
+            [linkedTable.primary]: linkedIds,
+          },
+        },
+      },
+    )
+  }
+  return row
 }

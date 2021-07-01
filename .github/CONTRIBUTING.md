@@ -152,7 +152,7 @@ The HTML and CSS for your apps runtime pages, as well as the budibase client lib
 
 #### Backend
 
-The backend schema, tables and rows are stored using PouchDB when developing locally, and in [CouchDB](https://pouchdb.com/) when running in production.
+For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [Envoy](https://www.envoyproxy.io/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then ran separately as Node services with nodemon so that they can be debugged outside of Docker.
 
 ### Publishing Budibase to NPM
 

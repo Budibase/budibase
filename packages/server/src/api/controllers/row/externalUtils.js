@@ -80,8 +80,7 @@ exports.updateRelationshipColumns = (
   row,
   rows,
   relationships,
-  allTables,
-  fullDocs
+  allTables
 ) => {
   const columns = {}
   for (let relationship of relationships) {
@@ -91,12 +90,10 @@ exports.updateRelationshipColumns = (
     }
     let linked = basicProcessing(row, linkedTable)
     // if not returning full docs then get the minimal links out
-    if (!fullDocs) {
-      const display = linkedTable.primaryDisplay
-      linked = {
-        primaryDisplay: display ? linked[display] : undefined,
-        _id: linked._id,
-      }
+    const display = linkedTable.primaryDisplay
+    linked = {
+      primaryDisplay: display ? linked[display] : undefined,
+      _id: linked._id,
     }
     columns[relationship.column] = linked
   }
@@ -116,8 +113,7 @@ exports.outputProcessing = (
   rows,
   table,
   relationships,
-  allTables,
-  fullDocs
+  allTables
 ) => {
   // if no rows this is what is returned? Might be PG only
   if (rows[0].read === true) {
@@ -132,8 +128,7 @@ exports.outputProcessing = (
         row,
         finalRows,
         relationships,
-        allTables,
-        fullDocs
+        allTables
       )
       continue
     }
@@ -144,8 +139,7 @@ exports.outputProcessing = (
       row,
       finalRows,
       relationships,
-      allTables,
-      fullDocs
+      allTables
     )
   }
   return Object.values(finalRows)
