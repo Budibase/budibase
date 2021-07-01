@@ -23,12 +23,21 @@
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
-  $: styles = {
-    ...$component.styles,
-    normal: {
-      ...$component.styles?.normal,
-      color,
-    },
+  // Add color styles to main styles object, otherwise the styleable helper
+  // overrides the color when it's passed as inline style.
+  $: styles = enrichStyles($component.styles, color)
+
+  const enrichStyles = (styles, color) => {
+    if (!color) {
+      return styles
+    }
+    return {
+      ...styles,
+      normal: {
+        ...styles?.normal,
+        color,
+      },
+    }
   }
 </script>
 
