@@ -1,6 +1,6 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
-  import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading } from "@budibase/bbui"
+  import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading, Select } from "@budibase/bbui"
   import { tables } from "stores/backend"
 
   export let save
@@ -12,6 +12,7 @@
   let originalName = relationship.name
 
   $: console.log(relationship)
+  $: tableOptions = plusTables.map(table => ({ label: table.name, value: table._id }))
   $: valid = relationship.name && relationship.tableId && relationship.relationshipType
   $: from = plusTables.find(table => table._id === relationship.source)
   $: to = plusTables.find(table => table._id === relationship.tableId)
@@ -30,6 +31,17 @@
         value: RelationshipTypes.ONE_TO_MANY,
       }
     ] : []
+
+  $: relationshipTypes = [
+      {
+        label: "Many",
+        value: RelationshipTypes.MANY_TO_MANY,
+      },
+      {
+        label: "One",
+        value: RelationshipTypes.ONE_TO_MANY,
+      }
+    ]
   
   function onChangeRelationshipType(evt) {
     if (evt.detail === RelationshipTypes.ONE_TO_MANY) {
@@ -38,17 +50,25 @@
   }
 
   // save the relationship on to the datasource
-  function saveRelationship() {
+  async function saveRelationship() {
+    // source of relationship
     datasource.entities[from.name].schema[relationship.name] = {
       type: "link",
       ...relationship
     }
-    if (originalName) {
-      delete datasource.entities[from.name].schema[originalName]
+    // if (originalName !== from.name) {
+    //   delete datasource.entities[from.name].schema[originalName]
+    // }
+
+    // save other side of relationship in the other schema
+    datasource.entities[to.name].schema[relationship.name] = {
+      type: "link",
+      relationshipType: relationship.relationshipType === RelationshipTypes.MANY_TO_MANY ? RelationshipTypes.MANY_TO_MANY : RelationshipTypes.MANY_TO_ONE,
+      tableId: to._id
     }
 
-    save()
-    tables.fetch()
+    await save()
+    await tables.fetch()
   }
 </script>
 
@@ -62,7 +82,41 @@
   <Input label="Relationship Name" bind:value={relationship.name} />
 
   <div class="table-selector">
-    <Menu>
+    <Select 
+      label="Relationship"
+      options={relationshipTypes}
+      bind:value={relationship.relationshipType}
+    />
+
+    <Select 
+      label="From"
+      options={tableOptions}
+      bind:value={relationship.source}
+    />
+
+    <Select 
+      label={"Has many"}
+      options={tableOptions}
+      bind:value={relationship.tableId}
+    />
+
+    {#if relationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
+      <Select 
+        label={"Through"}
+        options={tableOptions}
+        bind:value={relationship.through}
+      />
+    {/if}
+
+    {#if relationship?.relationshipType === RelationshipTypes.ONE_TO_MANY}
+      <Select 
+        label={"Foreign Key"}
+        options={Object.keys(linkTable.schema)}
+        bind:value={relationship.foreignKey}
+      />
+    {/if}
+
+    <!-- <Menu>
       <MenuSection heading="From">
         {#each plusTables as table}
           <MenuItem noClose icon="Table" on:click={() => (relationship.source = table._id)}>
@@ -73,8 +127,8 @@
           </MenuItem>
         {/each}
       </MenuSection>
-    </Menu>
-    <Menu>
+    </Menu> -->
+    <!-- <Menu>
       <MenuSection heading="To">
         {#each plusTables as table}
           <MenuItem noClose icon="Table" on:click={() => (relationship.tableId = table._id)}>
@@ -85,11 +139,9 @@
           </MenuItem>
         {/each}
       </MenuSection>
-    </Menu>
-  </div>
-
+    </Menu> -->
   {#if from && to}
-    <div class="cardinality">
+    <!-- <div class="cardinality">
       <RadioGroup
         label="Define the relationship"
         bind:value={relationship.relationshipType}
@@ -98,25 +150,15 @@
         getOptionLabel={option => option.name}
         getOptionValue={option => option.value}
       />
-    </div>
+    </div> -->
 
-  {#if relationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
-    <Menu>
-      <MenuSection heading="Join Table">
-        {#each plusTables as table}
-          <MenuItem noClose icon="Table" on:click={() => (relationship.through = table._id)}>
-            {table.name}
-              {#if relationship.through === table._id}
-              <Icon size="S" name="Checkmark" />
-              {/if}
-          </MenuItem>
-        {/each}
-      </MenuSection>
-    </Menu>
-  {/if}
+    <!-- <Select 
+      label={`${linkTable.name} Column`}
+      options={Object.keys(linkTable.schema)}
+      bind:value={relationship.fieldName}
+    /> -->
 
-
-    <div class="table-selector">
+    <!-- <div class="table-selector">
       <Menu>
         <MenuSection heading={`${linkTable.name} Column`}>
           {#each Object.keys(linkTable.schema) as column}
@@ -129,15 +171,21 @@
           {/each}
         </MenuSection>
       </Menu>
-    </div>
+    </div> -->
   {/if}
+  </div>
+
 
 </ModalContent>
 
 <style>
   .table-selector {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     grid-gap: var(--spacing-xl);
+  }
+
+  .cardinality {
+    padding: 10px;
   }
 </style>
