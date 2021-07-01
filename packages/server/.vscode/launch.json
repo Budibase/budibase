@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Start Server",
         "type": "node",
         "request": "launch",
-        "name": "Start Server",
-        "sourceMaps": true,
-        "program": "${workspaceFolder}/src/index.ts",
-        "preLaunchTask": "npm: build",
-        "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+        "runtimeExecutable": "node",
+        "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+        "args": ["src/index.ts"],
+        "cwd": "${workspaceRoot}",
       },
       {
         "type": "node",

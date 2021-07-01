@@ -43,6 +43,7 @@
     // source of relationship
     datasource.entities[from.name].schema[relationship.name] = {
       type: "link",
+      foreignKey: relationship.fieldName,
       ...relationship
     }
     // save other side of relationship in the other schema
@@ -52,7 +53,7 @@
       relationshipType: manyToMany ? RelationshipTypes.MANY_TO_MANY : RelationshipTypes.MANY_TO_ONE,
       tableId: from._id,
       fieldName: relationship.fieldName,
-      foreignKey: relationship.foreignKey
+      foreignKey: relationship.fieldName
     }
 
     // If relationship has been renamed
@@ -113,13 +114,19 @@
         options={tableOptions}
         bind:value={relationship.through}
       />
+
+      <Select 
+        label={"Key"}
+        options={Object.keys(through.schema || {})}
+        bind:value={relationship.fieldName}
+      />
     {/if}
 
     {#if relationship?.relationshipType === RelationshipTypes.ONE_TO_MANY && to}
       <Select 
         label={`Foreign Key (${to.name})`}
         options={Object.keys(to.schema)}
-        bind:value={relationship.foreignKey}
+        bind:value={relationship.fieldName}
       />
     {/if}
   </div>
@@ -136,11 +143,7 @@
 <style>
   .table-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     grid-gap: var(--spacing-xl);
-  }
-
-  .cardinality {
-    padding: 10px;
   }
 </style>

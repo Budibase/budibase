@@ -67,9 +67,7 @@
   }
 
   function openRelationshipModal(relationship) {
-    if (relationship.type === "link") {
-      selectedRelationship = relationship
-    }
+    selectedRelationship = relationship || {}
     relationshipModal.show()
   }
 
@@ -146,7 +144,7 @@
                 <Divider />
         <div class="query-header">
           <Heading size="S">Relationships</Heading>
-          <Button primary on:click={openRelationshipModal}>Create Relationship</Button>
+          <Button primary on:click={() => openRelationshipModal()}>Create Relationship</Button>
         </div>
           <Body>
             Tell budibase how your tables are related to get even more smart features.
