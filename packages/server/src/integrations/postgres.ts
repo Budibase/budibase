@@ -135,10 +135,7 @@ module PostgresModule {
      * Fetches the tables from the postgres table and assigns them to the datasource.
      * @param {*} datasourceId - datasourceId to fetch
      */
-    async buildSchema(
-      datasourceId: string,
-      entities: Record<string, Table>
-    ) {
+    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       let tableKeys: { [key: string]: string[] } = {}
       try {
         const primaryKeysResponse = await this.client.query(
@@ -173,7 +170,7 @@ module PostgresModule {
 
           // add the existing relationships from the entities if they exist, to prevent them from being overridden
           if (entities) {
-            const existingTableSchema = entities[tableName].schema 
+            const existingTableSchema = entities[tableName].schema
             for (let key in existingTableSchema) {
               if (existingTableSchema[key].type === "link") {
                 tables[tableName].schema[key] = existingTableSchema[key]

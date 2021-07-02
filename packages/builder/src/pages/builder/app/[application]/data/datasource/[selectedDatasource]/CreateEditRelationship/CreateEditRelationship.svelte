@@ -1,25 +1,31 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
-  import { Menu, MenuItem, MenuSection, Button, Input, Icon, ModalContent, RadioGroup, Heading, Select } from "@budibase/bbui"
+  import { Button, Input, ModalContent, Select } from "@budibase/bbui"
   import { tables } from "stores/backend"
+  import { uuid } from "builderStore/uuid"
 
   export let save
   export let datasource
-  export let from
-  export let plusTables
-  export let relationship = {}
+  export let plusTables = []
+  export let fromRelationship = {}
+  export let toRelationship = {}
   export let close
 
-  let originalName = relationship.name
+  let originalFromName = fromRelationship.name, originalToName = toRelationship.name
+
+  function isValid(relationship) {
+    if (relationship.relationshipType === RelationshipTypes.MANY_TO_MANY && !relationship.through) {
+      return false
+    }
+    return relationship.name && relationship.tableId && relationship.relationshipType
+  }
 
   $: tableOptions = plusTables.map(table => ({ label: table.name, value: table._id }))
-  $: valid = relationship.name && relationship.tableId && relationship.relationshipType
-  $: from = plusTables.find(table => table._id === relationship.source)
-  $: to = plusTables.find(table => table._id === relationship.tableId)
-  $: through = plusTables.find(table => table._id === relationship.through)
-  $: linkTable = through || to
-
-
+  $: fromTable = plusTables.find(table => table._id === toRelationship?.tableId)
+  $: toTable = plusTables.find(table => table._id === fromRelationship?.tableId)
+  $: through = plusTables.find(table => table._id === fromRelationship?.through)
+  $: valid = toTable && fromTable && isValid(fromRelationship)
+  $: linkTable = through || toTable
   $: relationshipTypes = [
       {
         label: "Many",
@@ -27,53 +33,89 @@
       },
       {
         label: "One",
-        value: RelationshipTypes.ONE_TO_MANY,
+        value: RelationshipTypes.MANY_TO_ONE,
       }
     ]
-  
-  function onChangeRelationshipType(evt) {
-    if (evt.detail === RelationshipTypes.ONE_TO_MANY) {
-      relationship.through = null
+  $: updateRelationshipType(fromRelationship?.relationshipType)
+
+  function updateRelationshipType(fromType) {
+    if (fromType === RelationshipTypes.MANY_TO_MANY) {
+      toRelationship.relationshipType = RelationshipTypes.MANY_TO_MANY
+    } else {
+      toRelationship.relationshipType = RelationshipTypes.MANY_TO_ONE
     }
+  }
+
+  function buildRelationships() {
+    // if any to many only need to check from
+    const manyToMany = fromRelationship.relationshipType === RelationshipTypes.MANY_TO_MANY
+    // main is simply used to know this is the side the user configured it from
+    const id = uuid()
+    let relateFrom = {
+      ...fromRelationship,
+      type: "link",
+      main: true,
+      _id: id,
+    }
+    let relateTo = {
+      ...toRelationship,
+      type: "link",
+      _id: id,
+    }
+
+    // [0] is because we don't support composite keys for relationships right now
+    if (manyToMany) {
+      relateFrom = {
+        ...relateFrom,
+        through: through._id,
+        fieldName: toTable.primary[0],
+      }
+      relateTo = {
+        ...relateTo,
+        through: through._id,
+        fieldName: fromTable.primary[0],
+      }
+    } else {
+      relateFrom = {
+        ...relateFrom,
+        foreignKey: relateFrom.fieldName,
+        fieldName: fromTable.primary[0],
+      }
+      relateTo = {
+        ...relateTo,
+        relationshipType: RelationshipTypes.ONE_TO_MANY,
+        foreignKey: relateFrom.fieldName,
+        fieldName: fromTable.primary[0],
+      }
+    }
+
+    fromRelationship = relateFrom
+    toRelationship = relateTo
   }
 
   // save the relationship on to the datasource
   async function saveRelationship() {
-    const manyToMany = relationship.relationshipType === RelationshipTypes.MANY_TO_MANY
+    buildRelationships()
     // source of relationship
-    datasource.entities[from.name].schema[relationship.name] = {
-      type: "link",
-      foreignKey: relationship.fieldName,
-      ...relationship
-    }
+    datasource.entities[fromTable.name].schema[fromRelationship.name] = fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[to.name].schema[relationship.name] = {
-      name: relationship.name,
-      type: "link",
-      relationshipType: manyToMany ? RelationshipTypes.MANY_TO_MANY : RelationshipTypes.MANY_TO_ONE,
-      tableId: from._id,
-      fieldName: relationship.fieldName,
-      foreignKey: relationship.fieldName
-    }
+    datasource.entities[toTable.name].schema[toRelationship.name] = toRelationship
 
     // If relationship has been renamed
-    if (originalName !== relationship.name) {
-      delete datasource.entities[from.name].schema[originalName]
-      delete datasource.entities[to.name].schema[originalName]
+    if (originalFromName !== fromRelationship.name) {
+      delete datasource.entities[fromTable.name].schema[originalFromName]
     }
-
-    console.log({
-      from: datasource.entities[from.name].schema[relationship.name],
-      to: datasource.entities[to.name].schema[relationship.name],
-    })
+    if (originalToName !== toRelationship.name) {
+      delete datasource.entities[toTable.name].schema[originalToName]
+    }
 
     await save()
     await tables.fetch()
   }
 
   async function deleteRelationship() {
-    delete datasource.entities[from.name].schema[relationship.name]
-    delete datasource.entities[to.name].schema[relationship.name]
+    delete datasource.entities[fromTable.name].schema[fromRelationship.name]
+    delete datasource.entities[toTable.name].schema[toRelationship.name]
     await save()
     await tables.fetch()
     close()
@@ -87,57 +129,54 @@
   onConfirm={saveRelationship}
   disabled={!valid}
 >
-  <Input label="Relationship Name" bind:value={relationship.name} />
+  <div class="relationship-names">
+    <div class="left-name">
+      <Input label="From name" bind:value={fromRelationship.name} />
+    </div>
+    <div class="right-name">
+      <Input label="To name" bind:value={toRelationship.name} />
+    </div>
+  </div>
 
   <div class="table-selector">
     <Select 
       label="Relationship"
       options={relationshipTypes}
-      bind:value={relationship.relationshipType}
+      bind:value={fromRelationship.relationshipType}
     />
 
     <Select 
       label="From"
       options={tableOptions}
-      bind:value={relationship.source}
+      bind:value={toRelationship.tableId}
     />
 
     <Select 
       label={"Has many"}
       options={tableOptions}
-      bind:value={relationship.tableId}
+      bind:value={fromRelationship.tableId}
     />
 
-    {#if relationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
+    {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
       <Select 
         label={"Through"}
         options={tableOptions}
-        bind:value={relationship.through}
+        bind:value={fromRelationship.through}
       />
-
-      <Select 
-        label={"Key"}
-        options={Object.keys(through.schema || {})}
-        bind:value={relationship.fieldName}
-      />
-    {/if}
-
-    {#if relationship?.relationshipType === RelationshipTypes.ONE_TO_MANY && to}
-      <Select 
-        label={`Foreign Key (${to.name})`}
-        options={Object.keys(to.schema)}
-        bind:value={relationship.fieldName}
+    {:else if toTable}
+      <Select
+          label={`Foreign Key (${toTable?.name})`}
+          options={Object.keys(toTable?.schema)}
+          bind:value={fromRelationship.fieldName}
       />
     {/if}
   </div>
 
   <div slot="footer">
-    {#if originalName !== null}
+    {#if originalFromName !== null}
       <Button warning text on:click={deleteRelationship}>Delete</Button>
     {/if}
   </div>
-
-
 </ModalContent>
 
 <style>
@@ -145,5 +184,15 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-gap: var(--spacing-xl);
+  }
+  .relationship-names {
+    display: grid;
+    grid-gap: var(--spacing-xl);
+  }
+  .left-name {
+    grid-column: 1;
+  }
+  .right-name {
+    grid-column: 2;
   }
 </style>

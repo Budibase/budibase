@@ -12,9 +12,9 @@
     {#each tables as table}
       <MenuItem noClose icon="Table" on:click={() => select(table)}>
         {table.name}
-          {#if selected}
-            <Icon size="S" name="Checkmark" />
-          {/if}
+        {#if selected}
+          <Icon size="S" name="Checkmark" />
+        {/if}
       </MenuItem>
     {/each}
   </MenuSection>

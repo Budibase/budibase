@@ -10,9 +10,10 @@
 
   export let sourceId
 
-
   $: selectedView = $views.selected && $views.selected.name
-  $: sortedTables = $tables.list.filter(table => table.sourceId === sourceId).sort(alphabetical)
+  $: sortedTables = $tables.list
+    .filter(table => table.sourceId === sourceId)
+    .sort(alphabetical)
 
   function selectTable(table) {
     tables.select(table)
