@@ -325,7 +325,11 @@ module External {
      * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
      * information.
      */
-    async lookup(row: Row, relationship: ManyRelationship, cache: {[key: string]: Row[]} = {}) {
+    async lookup(
+      row: Row,
+      relationship: ManyRelationship,
+      cache: { [key: string]: Row[] } = {}
+    ) {
       const { tableId, isUpdate, id, ...rest } = relationship
       const { tableName } = breakExternalTableId(tableId)
       const table = this.tables[tableName]
@@ -333,7 +337,8 @@ module External {
         return { rows: [], table }
       }
       // if not updating need to make sure we have a list of all possible options
-      let fullKey: string = tableId + "/", rowKey: string = ""
+      let fullKey: string = tableId + "/",
+        rowKey: string = ""
       for (let key of Object.keys(rest)) {
         if (row[key]) {
           fullKey += key
@@ -370,13 +375,15 @@ module External {
       }
       // if we're creating (in a through table) need to wipe the existing ones first
       const promises = []
-      const cache: { [key:string]: Row[] } = {}
+      const cache: { [key: string]: Row[] } = {}
       for (let relationship of relationships) {
         const { tableId, isUpdate, id, ...rest } = relationship
         const body = processObjectSync(rest, row)
         const { table, rows } = await this.lookup(row, relationship, cache)
         const found = rows.find(row => isEqual(body, row))
-        const operation = isUpdate ? DataSourceOperation.UPDATE : DataSourceOperation.CREATE
+        const operation = isUpdate
+          ? DataSourceOperation.UPDATE
+          : DataSourceOperation.CREATE
         if (!found) {
           promises.push(
             makeExternalQuery(appId, {
@@ -398,10 +405,12 @@ module External {
         const { tableName } = breakExternalTableId(tableId)
         const table = this.tables[tableName]
         for (let row of rows) {
-          promises.push(makeExternalQuery(this.appId, {
-            endpoint: getEndpoint(tableId, DataSourceOperation.DELETE),
-            filters: buildFilters(generateIdForRow(row, table), {}, table)
-          }))
+          promises.push(
+            makeExternalQuery(this.appId, {
+              endpoint: getEndpoint(tableId, DataSourceOperation.DELETE),
+              filters: buildFilters(generateIdForRow(row, table), {}, table),
+            })
+          )
         }
       }
       await Promise.all(promises)
