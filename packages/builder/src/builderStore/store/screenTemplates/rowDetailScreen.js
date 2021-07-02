@@ -98,7 +98,6 @@ const createScreen = table => {
           valueType: "Binding",
         },
       ],
-      limit: 1,
       paginate: false,
     })
 
