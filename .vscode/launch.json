@@ -21,6 +21,27 @@
             "args": [],
             "cwd":"C:/code/my-apps",
             "console": "externalTerminal" 
+        },
+        {
+            "name": "Budibase Server",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+            "args": ["${workspaceFolder}/packages/server/src/index.ts"],
+            "cwd": "${workspaceFolder}/packages/server"
+          },
+          {
+            "name": "Budibase Worker",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/packages/worker/src/index.js",
+            "cwd": "${workspaceFolder}/packages/worker"
+          }
+    ],
+    "compounds": [
+        {
+          "name": "Start Budibase",
+          "configurations": ["Budibase Server", "Budibase Worker"]
         }
     ]
 }
