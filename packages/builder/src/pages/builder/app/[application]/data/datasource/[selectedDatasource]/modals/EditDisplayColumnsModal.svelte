@@ -19,20 +19,25 @@
     if (!table || !table.schema) {
       return []
     }
-    return Object.entries(table.schema).filter(field => field[1].type !== "link").map(([fieldName]) => fieldName)
+    return Object.entries(table.schema)
+      .filter(field => field[1].type !== "link")
+      .map(([fieldName]) => fieldName)
   }
 </script>
+
 <ModalContent
-    title="Edit display columns"
-    confirmText="Save"
-    onConfirm={saveDisplayColumns}
+  title="Edit display columns"
+  confirmText="Save"
+  onConfirm={saveDisplayColumns}
 >
-  <Body>Select the columns that will be shown when displaying relationships.</Body>
+  <Body
+    >Select the columns that will be shown when displaying relationships.</Body
+  >
   {#each plusTables as table}
     <Select
-        label={table.name}
-        options={getColumnOptions(table)}
-        bind:value={table.primaryDisplay}
+      label={table.name}
+      options={getColumnOptions(table)}
+      bind:value={table.primaryDisplay}
     />
   {/each}
 </ModalContent>
