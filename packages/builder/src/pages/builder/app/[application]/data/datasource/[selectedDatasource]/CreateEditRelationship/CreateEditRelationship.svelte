@@ -11,31 +11,40 @@
   export let toRelationship = {}
   export let close
 
-  let originalFromName = fromRelationship.name, originalToName = toRelationship.name
+  let originalFromName = fromRelationship.name,
+    originalToName = toRelationship.name
 
   function isValid(relationship) {
-    if (relationship.relationshipType === RelationshipTypes.MANY_TO_MANY && !relationship.through) {
+    if (
+      relationship.relationshipType === RelationshipTypes.MANY_TO_MANY &&
+      !relationship.through
+    ) {
       return false
     }
-    return relationship.name && relationship.tableId && relationship.relationshipType
+    return (
+      relationship.name && relationship.tableId && relationship.relationshipType
+    )
   }
 
-  $: tableOptions = plusTables.map(table => ({ label: table.name, value: table._id }))
+  $: tableOptions = plusTables.map(table => ({
+    label: table.name,
+    value: table._id,
+  }))
   $: fromTable = plusTables.find(table => table._id === toRelationship?.tableId)
   $: toTable = plusTables.find(table => table._id === fromRelationship?.tableId)
   $: through = plusTables.find(table => table._id === fromRelationship?.through)
   $: valid = toTable && fromTable && isValid(fromRelationship)
   $: linkTable = through || toTable
   $: relationshipTypes = [
-      {
-        label: "Many",
-        value: RelationshipTypes.MANY_TO_MANY,
-      },
-      {
-        label: "One",
-        value: RelationshipTypes.MANY_TO_ONE,
-      }
-    ]
+    {
+      label: "Many",
+      value: RelationshipTypes.MANY_TO_MANY,
+    },
+    {
+      label: "One",
+      value: RelationshipTypes.MANY_TO_ONE,
+    },
+  ]
   $: updateRelationshipType(fromRelationship?.relationshipType)
 
   function updateRelationshipType(fromType) {
@@ -48,7 +57,8 @@
 
   function buildRelationships() {
     // if any to many only need to check from
-    const manyToMany = fromRelationship.relationshipType === RelationshipTypes.MANY_TO_MANY
+    const manyToMany =
+      fromRelationship.relationshipType === RelationshipTypes.MANY_TO_MANY
     // main is simply used to know this is the side the user configured it from
     const id = uuid()
     let relateFrom = {
@@ -97,9 +107,11 @@
   async function saveRelationship() {
     buildRelationships()
     // source of relationship
-    datasource.entities[fromTable.name].schema[fromRelationship.name] = fromRelationship
+    datasource.entities[fromTable.name].schema[fromRelationship.name] =
+      fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[toTable.name].schema[toRelationship.name] = toRelationship
+    datasource.entities[toTable.name].schema[toRelationship.name] =
+      toRelationship
 
     // If relationship has been renamed
     if (originalFromName !== fromRelationship.name) {
@@ -139,35 +151,35 @@
   </div>
 
   <div class="table-selector">
-    <Select 
+    <Select
       label="Relationship"
       options={relationshipTypes}
       bind:value={fromRelationship.relationshipType}
     />
 
-    <Select 
+    <Select
       label="From"
       options={tableOptions}
       bind:value={toRelationship.tableId}
     />
 
-    <Select 
+    <Select
       label={"Has many"}
       options={tableOptions}
       bind:value={fromRelationship.tableId}
     />
 
     {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
-      <Select 
+      <Select
         label={"Through"}
         options={tableOptions}
         bind:value={fromRelationship.through}
       />
     {:else if toTable}
       <Select
-          label={`Foreign Key (${toTable?.name})`}
-          options={Object.keys(toTable?.schema)}
-          bind:value={fromRelationship.fieldName}
+        label={`Foreign Key (${toTable?.name})`}
+        options={Object.keys(toTable?.schema)}
+        bind:value={fromRelationship.fieldName}
       />
     {/if}
   </div>
