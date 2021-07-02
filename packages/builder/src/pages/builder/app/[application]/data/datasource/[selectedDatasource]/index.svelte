@@ -31,7 +31,6 @@
         if (column.type !== "link") {
           continue
         }
-        console.log(`table - ${table.name} - ${column.name} - id: ${column._id} - ${column.main}`)
         // these relationships have an id to pair them to each other
         // one has a main for the from side
         const key = column.main ? "from" : "to"
@@ -57,15 +56,12 @@
     const fromTableName = getTableName(toCol.tableId)
     const toTableName = getTableName(fromCol.tableId)
     const throughTableName = getTableName(fromCol.through)
-    console.log(throughTableName)
 
-    let displayFrom = `${fromTableName} (${fromCol.name})`
-    let displayTo = `${toTableName} (${toCol.name})`
     let displayString
     if (throughTableName) {
-      displayString = `${displayFrom} through ${throughTableName} → ${displayTo}`
+      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
     } else {
-      displayString = `${displayFrom} → ${displayTo}`
+      displayString = `${fromTableName} → ${toTableName}`
     }
     return displayString
   }
@@ -219,13 +215,13 @@
               on:click={() =>
                 openRelationshipModal(relationship.from, relationship.to)}
             >
-              <p>
+              <p class="query-name">
                 {buildRelationshipDisplayString(
                   relationship.from,
                   relationship.to
                 )}
               </p>
-              <p class="query-name">{relationship.from?.name} to {relationship.to?.name}</p>
+              <p>{relationship.from?.name} to {relationship.to?.name}</p>
               <p>→</p>
             </div>
           {/each}
