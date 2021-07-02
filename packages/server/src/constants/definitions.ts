@@ -37,6 +37,6 @@ export interface BudibaseAppMetadata {
   name: string
   url: string
   instance: { _id: string }
-  updatedAt: Date,
+  updatedAt: Date
   createdAt: Date
 }
