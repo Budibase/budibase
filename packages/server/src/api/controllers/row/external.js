@@ -9,9 +9,10 @@ const {
   breakRowIdField,
 } = require("../../../integrations/utils")
 const ExternalRequest = require("./ExternalRequest")
+const CouchDB = require("../../../db")
 
 async function handleRequest(appId, operation, tableId, opts = {}) {
-  return new ExternalRequest(appId, operation, tableId, opts.tables).run(opts)
+  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(opts)
 }
 
 exports.patch = async ctx => {
@@ -162,14 +163,19 @@ exports.fetchEnrichedRow = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const tables = await getAllExternalTables(appId, datasourceId)
+  const db = new CouchDB(appId)
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    ctx.throw(400, "Datasource has not been configured for plus API.")
+  }
+  const tables = datasource.entities
   const response = await handleRequest(
     appId,
     DataSourceOperation.READ,
     tableId,
     {
       id,
-      tables,
+      datasource,
     }
   )
   const table = tables[tableName]

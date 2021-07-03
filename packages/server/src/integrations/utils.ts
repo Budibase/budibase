@@ -1,4 +1,6 @@
 import { SqlQuery } from "../definitions/datasource"
+import { Datasource } from "../definitions/common"
+import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
@@ -50,4 +52,12 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   } else {
     return query
   }
+}
+
+export function isSQL(datasource: Datasource): boolean {
+  if (!datasource || !datasource.source) {
+    return false
+  }
+  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  return SQL.indexOf(datasource.source) !== -1
 }
