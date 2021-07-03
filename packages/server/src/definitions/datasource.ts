@@ -26,6 +26,20 @@ export enum DatasourceFieldTypes {
   JSON = "json",
 }
 
+export enum SourceNames {
+  POSTGRES = "POSTGRES",
+  DYNAMODB = "DYNAMODB",
+  MONGODB = "MONGODB",
+  ELASTICSEARCH = "ELASTICSEARCH",
+  COUCHDB = "COUCHDB",
+  SQL_SERVER = "SQL_SERVER",
+  S3 = "S3",
+  AIRTABLE = "AIRTABLE",
+  MYSQL = "MYSQL",
+  ARANGODB = "ARANGODB",
+  REST = "REST",
+}
+
 export interface QueryDefinition {
   type: QueryTypes
   displayName?: string

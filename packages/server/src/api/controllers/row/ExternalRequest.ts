@@ -5,7 +5,7 @@ import {
   PaginationJson,
   RelationshipsJson,
 } from "../../../definitions/datasource"
-import { Row, Table, FieldSchema } from "../../../definitions/common"
+import {Row, Table, FieldSchema, Datasource} from "../../../definitions/common"
 import {
   breakRowIdField,
   generateRowIdField,
@@ -29,11 +29,11 @@ interface RunConfig {
 module External {
   const { makeExternalQuery } = require("./utils")
   const { DataSourceOperation, FieldTypes } = require("../../../constants")
-  const { getAllExternalTables } = require("../table/utils")
-  const { breakExternalTableId } = require("../../../integrations/utils")
+  const { breakExternalTableId, isSQL } = require("../../../integrations/utils")
   const { processObjectSync } = require("@budibase/string-templates")
   const { cloneDeep } = require("lodash/fp")
   const { isEqual } = require("lodash")
+  const CouchDB = require("../../../db")
 
   function buildFilters(
     id: string | undefined,
@@ -128,18 +128,22 @@ module External {
     private readonly appId: string
     private operation: Operation
     private tableId: string
-    private tables: { [key: string]: Table }
+    private datasource: Datasource
+    private tables: { [key: string]: Table } = {}
 
     constructor(
       appId: string,
       operation: Operation,
       tableId: string,
-      tables: { [key: string]: Table }
+      datasource: Datasource
     ) {
       this.appId = appId
       this.operation = operation
       this.tableId = tableId
-      this.tables = tables
+      this.datasource = datasource
+      if (datasource && datasource.entities) {
+        this.tables = datasource.entities
+      }
     }
 
     inputProcessing(row: Row, table: Table) {
@@ -451,10 +455,16 @@ module External {
     async run({ id, row, filters, sort, paginate }: RunConfig) {
       const { appId, operation, tableId } = this
       let { datasourceId, tableName } = breakExternalTableId(tableId)
-      if (!this.tables) {
-        this.tables = await getAllExternalTables(appId, datasourceId)
+      if (!this.datasource) {
+        const db = new CouchDB(appId)
+        this.datasource = await db.get(datasourceId)
+        if (!this.datasource || !this.datasource.entities) {
+          throw "No tables found, fetch tables before query."
+        }
+        this.tables = this.datasource.entities
       }
       const table = this.tables[tableName]
+      let isSql = isSQL(this.datasource)
       if (!table) {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
@@ -476,8 +486,8 @@ module External {
           operation,
         },
         resource: {
-          // have to specify the fields to avoid column overlap
-          fields: this.buildFields(table),
+          // have to specify the fields to avoid column overlap (for SQL)
+          fields: isSql ? this.buildFields(table) : [],
         },
         filters,
         sort,
