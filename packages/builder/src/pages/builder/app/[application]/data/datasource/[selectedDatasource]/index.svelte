@@ -177,9 +177,11 @@
                 Update display columns
               </Button>
             {/if}
-            <Button primary on:click={updateDatasourceSchema}
-              >Fetch Tables From Database</Button
-            >
+            <div>
+              <Button primary on:click={updateDatasourceSchema}>
+                Fetch Tables From Database
+              </Button>
+            </div>
           </div>
         </div>
         <Body>
@@ -318,5 +320,9 @@
     display: grid;
     grid-gap: var(--spacing-l);
     grid-template-columns: 1fr 1fr;
+  }
+
+  .table-buttons div {
+    grid-column-end: -1;
   }
 </style>
