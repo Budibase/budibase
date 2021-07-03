@@ -5,7 +5,12 @@ import {
   PaginationJson,
   RelationshipsJson,
 } from "../../../definitions/datasource"
-import {Row, Table, FieldSchema, Datasource} from "../../../definitions/common"
+import {
+  Row,
+  Table,
+  FieldSchema,
+  Datasource,
+} from "../../../definitions/common"
 import {
   breakRowIdField,
   generateRowIdField,

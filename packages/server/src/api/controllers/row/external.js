@@ -3,7 +3,6 @@ const {
   SortDirection,
   FieldTypes,
 } = require("../../../constants")
-const { getAllExternalTables } = require("../table/utils")
 const {
   breakExternalTableId,
   breakRowIdField,
@@ -12,7 +11,9 @@ const ExternalRequest = require("./ExternalRequest")
 const CouchDB = require("../../../db")
 
 async function handleRequest(appId, operation, tableId, opts = {}) {
-  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(opts)
+  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
+    opts
+  )
 }
 
 exports.patch = async ctx => {
