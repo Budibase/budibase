@@ -34,11 +34,6 @@ export const styleable = (node, styles = {}) => {
       baseStyles.overflow = "hidden"
     }
 
-    // Append border-style css if border-width is specified
-    if (newStyles.normal?.["border-width"]) {
-      baseStyles["border-style"] = "solid"
-    }
-
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
     const normalStyles = { ...baseStyles, ...newStyles.normal }
