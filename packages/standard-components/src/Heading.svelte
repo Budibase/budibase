@@ -56,7 +56,7 @@
   }
   .placeholder {
     font-style: italic;
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-600);
   }
   .bold {
     font-weight: 700;
