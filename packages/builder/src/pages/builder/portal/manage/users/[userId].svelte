@@ -60,6 +60,16 @@
 
   let toggleDisabled = false
 
+  async function updateUserFirstName(evt) {
+    await users.save({ ...$userFetch?.data, firstName: evt.target.value })
+    await userFetch.refresh()
+  }
+
+  async function updateUserLastName(evt) {
+    await users.save({ ...$userFetch?.data, lastName: evt.target.value })
+    await userFetch.refresh()
+  }
+
   async function toggleFlag(flagName, detail) {
     toggleDisabled = true
     await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
@@ -113,11 +123,19 @@
       </div>
       <div class="field">
         <Label size="L">First name</Label>
-        <Input disabled thin value={$userFetch?.data?.firstName} />
+        <Input
+          thin
+          value={$userFetch?.data?.firstName}
+          on:blur={updateUserFirstName}
+        />
       </div>
       <div class="field">
         <Label size="L">Last name</Label>
-        <Input disabled thin value={$userFetch?.data?.lastName} />
+        <Input
+          thin
+          value={$userFetch?.data?.lastName}
+          on:blur={updateUserLastName}
+        />
       </div>
       <!-- don't let a user remove the privileges that let them be here -->
       {#if userId !== $auth.user._id}
