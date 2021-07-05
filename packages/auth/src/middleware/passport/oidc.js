@@ -103,23 +103,27 @@ exports.strategyFactory = async function (callbackUrl) {
     }
 
     const response = await fetch(configurationUrl)
-    if (response.ok) {
-      const body = await response.json()
 
-      return new OIDCStrategy(
-        {
-          issuer: body.issuer,
-          authorizationURL: body.authorization_endpoint,
-          tokenURL: body.token_endpoint,
-          userInfoURL: body.userinfo_endpoint,
-          clientID: clientId,
-          clientSecret: clientSecret,
-          callbackURL: callbackUrl,
-          scope: "profile email",
-        },
-        authenticate
-      )
+    if (!response.ok) {
+      throw new Error(`Unexpected response when fetching openid-configuration: ${response.statusText}`)
     }
+
+    const body = await response.json()
+
+    return new OIDCStrategy(
+      {
+        issuer: body.issuer,
+        authorizationURL: body.authorization_endpoint,
+        tokenURL: body.token_endpoint,
+        userInfoURL: body.userinfo_endpoint,
+        clientID: clientId,
+        clientSecret: clientSecret,
+        callbackURL: callbackUrl,
+        scope: "profile email",
+      },
+      authenticate
+    )
+    
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC authentication strategy", err)
