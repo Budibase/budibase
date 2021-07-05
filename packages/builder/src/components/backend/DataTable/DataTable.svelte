@@ -72,9 +72,7 @@
     {#if isUsersTable}
       <EditRolesButton />
     {/if}
-    {#if isInternal}
-      <HideAutocolumnButton bind:hideAutocolumns />
-    {/if}
+    <HideAutocolumnButton bind:hideAutocolumns />
     <!-- always have the export last -->
     <ExportButton view={$tables.selected?._id} />
   {/if}
