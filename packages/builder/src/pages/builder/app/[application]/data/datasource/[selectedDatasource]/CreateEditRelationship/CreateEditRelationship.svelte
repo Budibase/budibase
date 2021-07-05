@@ -61,6 +61,10 @@
       fromRelationship.relationshipType === RelationshipTypes.MANY_TO_MANY
     // main is simply used to know this is the side the user configured it from
     const id = uuid()
+    if (!manyToMany) {
+      delete fromRelationship.through
+      delete toRelationship.through
+    }
     let relateFrom = {
       ...fromRelationship,
       type: "link",
@@ -154,21 +158,21 @@
     bind:value={toRelationship.tableId}
   />
   <Select
-      label={"Select to table"}
-      options={tableOptions}
-      bind:value={fromRelationship.tableId}
+    label={"Select to table"}
+    options={tableOptions}
+    bind:value={fromRelationship.tableId}
   />
   {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
     <Select
-        label={"Through"}
-        options={tableOptions}
-        bind:value={fromRelationship.through}
+      label={"Through"}
+      options={tableOptions}
+      bind:value={fromRelationship.through}
     />
   {:else if toTable}
     <Select
-        label={`Foreign Key (${toTable?.name})`}
-        options={Object.keys(toTable?.schema)}
-        bind:value={fromRelationship.fieldName}
+      label={`Foreign Key (${toTable?.name})`}
+      options={Object.keys(toTable?.schema)}
+      bind:value={fromRelationship.fieldName}
     />
   {/if}
   <div class="headings">

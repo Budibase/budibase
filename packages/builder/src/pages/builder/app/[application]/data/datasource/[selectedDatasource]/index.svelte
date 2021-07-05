@@ -198,18 +198,19 @@
             </div>
           {/each}
         </div>
-
-        <Divider />
-        <div class="query-header">
-          <Heading size="S">Relationships</Heading>
-          <Button primary on:click={() => openRelationshipModal()}
-            >Create Relationship</Button
-          >
-        </div>
-        <Body>
+        {#if plusTables?.length !== 0}
+          <Divider />
+          <div class="query-header">
+            <Heading size="S">Relationships</Heading>
+            <Button primary on:click={() => openRelationshipModal()}
+              >Create Relationship</Button
+            >
+          </div>
+          <Body>
           Tell budibase how your tables are related to get even more smart
           features.
-        </Body>
+          </Body>
+        {/if}
         <div class="query-list">
           {#each Object.values(relationships) as relationship}
             <div
