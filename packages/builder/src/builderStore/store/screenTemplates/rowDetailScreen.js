@@ -8,7 +8,6 @@ import {
   makeTitleContainer,
   makeSaveButton,
   makeMainForm,
-  spectrumColor,
   makeDatasourceFormComponents,
 } from "./utils/commonComponents"
 
