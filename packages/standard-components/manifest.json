@@ -293,6 +293,11 @@
       },
       {
         "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet"
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled"
       },
@@ -1640,6 +1645,7 @@
     "actions": [
       "ValidateForm"
     ],
+    "styles": ["size"],
     "settings": [
       {
         "type": "select",
