@@ -1,6 +1,6 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
-  import { Button, Input, ModalContent, Select } from "@budibase/bbui"
+  import { Button, Input, ModalContent, Select, Detail } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import { uuid } from "builderStore/uuid"
 
@@ -135,55 +135,47 @@
 </script>
 
 <ModalContent
-  size="XL"
   title="Create Relationship"
   confirmText="Save"
   onConfirm={saveRelationship}
   disabled={!valid}
 >
-  <div class="relationship-names">
-    <div class="left-name">
-      <Input label="From name" bind:value={fromRelationship.name} />
-    </div>
-    <div class="right-name">
-      <Input label="To name" bind:value={toRelationship.name} />
-    </div>
+  <Select
+    label="Relationship type"
+    options={relationshipTypes}
+    bind:value={fromRelationship.relationshipType}
+  />
+  <div class="headings">
+    <Detail>Tables</Detail>
   </div>
-
-  <div class="table-selector">
-    <Select
-      label="Relationship"
-      options={relationshipTypes}
-      bind:value={fromRelationship.relationshipType}
-    />
-
-    <Select
-      label="From"
-      options={tableOptions}
-      bind:value={toRelationship.tableId}
-    />
-
-    <Select
-      label={"Has many"}
+  <Select
+    label="Select from table"
+    options={tableOptions}
+    bind:value={toRelationship.tableId}
+  />
+  <Select
+      label={"Select to table"}
       options={tableOptions}
       bind:value={fromRelationship.tableId}
-    />
-
-    {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
-      <Select
+  />
+  {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
+    <Select
         label={"Through"}
         options={tableOptions}
         bind:value={fromRelationship.through}
-      />
-    {:else if toTable}
-      <Select
+    />
+  {:else if toTable}
+    <Select
         label={`Foreign Key (${toTable?.name})`}
         options={Object.keys(toTable?.schema)}
         bind:value={fromRelationship.fieldName}
-      />
-    {/if}
+    />
+  {/if}
+  <div class="headings">
+    <Detail>Column names</Detail>
   </div>
-
+  <Input label="From table column" bind:value={fromRelationship.name} />
+  <Input label="To table column" bind:value={toRelationship.name} />
   <div slot="footer">
     {#if originalFromName !== null}
       <Button warning text on:click={deleteRelationship}>Delete</Button>
@@ -192,19 +184,7 @@
 </ModalContent>
 
 <style>
-  .table-selector {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-gap: var(--spacing-xl);
-  }
-  .relationship-names {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-  }
-  .left-name {
-    grid-column: 1;
-  }
-  .right-name {
-    grid-column: 2;
+  .headings {
+    margin-top: var(--spacing-s);
   }
 </style>
