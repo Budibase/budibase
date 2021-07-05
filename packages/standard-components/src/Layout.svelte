@@ -314,7 +314,7 @@
       transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
       height: 100vh;
       opacity: 0;
-      background: white;
+      background: var(--spectrum-alias-background-color-secondary);
       z-index: 999;
       flex-direction: column;
       justify-content: flex-start;
@@ -328,7 +328,8 @@
     .links.visible {
       opacity: 1;
       transform: translateX(250px);
-      box-shadow: 0 0 40px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.2);
+      border-right: 1px solid var(--spectrum-global-color-gray-300);
     }
     .mobile-click-handler.visible {
       position: fixed;
