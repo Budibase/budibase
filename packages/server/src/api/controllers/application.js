@@ -168,7 +168,7 @@ exports.fetchAppPackage = async function (ctx) {
   let screens = await getScreens(db)
 
   // Only filter screens if the user is not a builder
-  if (!ctx.user.builder?.global) {
+  if (!(ctx.user.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new AccessController(ctx.params.appId)
     screens = await accessController.checkScreensAccess(screens, userRoleId)
