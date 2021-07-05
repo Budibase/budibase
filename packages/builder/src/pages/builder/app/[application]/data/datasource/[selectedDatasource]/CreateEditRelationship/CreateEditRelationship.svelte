@@ -181,7 +181,7 @@
   <Input label="From table column" bind:value={fromRelationship.name} />
   <Input label="To table column" bind:value={toRelationship.name} />
   <div slot="footer">
-    {#if originalFromName !== null}
+    {#if originalFromName != null}
       <Button warning text on:click={deleteRelationship}>Delete</Button>
     {/if}
   </div>
