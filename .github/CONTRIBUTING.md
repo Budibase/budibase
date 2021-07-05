@@ -126,7 +126,16 @@ To run the budibase server and builder in dev mode (i.e. with live reloading):
 
 This will enable watch mode for both the builder app, server, client library and any component libraries.
 
-### 5. Cleanup
+### 5. Debugging using VS Code
+
+To debug the budibase server and worker a VS Code launch configuration has been provided. 
+
+Visit the debug window and select `Budibase Server` or `Budibase Worker` to debug the respective component. 
+Alternatively to start both components simultaneously select `Start Budibase`.
+
+In addition to the above, the remaining budibase components may be ran in dev mode using: `yarn dev:noserver`.
+
+### 6. Cleanup
 
 If you wish to delete all the apps created in development and reset the environment then run the following:
 
