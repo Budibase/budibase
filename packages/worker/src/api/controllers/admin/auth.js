@@ -131,10 +131,17 @@ exports.googleAuth = async (ctx, next) => {
   )(ctx, next)
 }
 
-// Minimal OIDC attempt
+async function oidcStrategyFactory(ctx) {
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  return oidc.strategyFactory(callbackUrl)
+}
 
+/**
+ * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
+ * On a successful login, you will be redirected to the oidcAuth callback route.
+ */
 exports.oidcPreAuth = async (ctx, next) => {
-  const strategy = await oidc.strategyFactory()
+  const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -142,7 +149,7 @@ exports.oidcPreAuth = async (ctx, next) => {
 }
 
 exports.oidcAuth = async (ctx, next) => {
-  const strategy = await oidc.strategyFactory()
+  const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(
     strategy,
