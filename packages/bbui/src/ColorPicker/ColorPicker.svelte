@@ -13,7 +13,6 @@
 
   let open = false
 
-  $: color = value || "transparent"
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
 
@@ -110,7 +109,11 @@
 
 <div class="container">
   <div class="preview size--{size || 'M'}" on:click={() => (open = true)}>
-    <div class="fill {spectrumTheme || ''}" style="background: {color};" />
+    <div
+      class="fill {spectrumTheme || ''}"
+      style={value ? `background: ${value};` : ""}
+      class:placeholder={!value}
+    />
   </div>
   {#if open}
     <div
@@ -190,6 +193,26 @@
     left: 0;
     display: grid;
     place-items: center;
+  }
+  .fill.placeholder {
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+    background-image: linear-gradient(
+        45deg,
+        #eee 25%,
+        transparent 25%,
+        transparent 75%,
+        #eee 75%,
+        #eee 100%
+      ),
+      linear-gradient(
+        45deg,
+        #eee 25%,
+        white 25%,
+        white 75%,
+        #eee 75%,
+        #eee 100%
+      );
   }
   .size--S {
     width: 20px;
