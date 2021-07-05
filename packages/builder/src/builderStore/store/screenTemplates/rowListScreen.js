@@ -100,9 +100,6 @@ const createScreen = table => {
   return new Screen()
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)
-    .normalStyle({
-      ["padding-top"]: "32px",
-    })
     .addChild(generateTitleContainer(table))
     .addChild(provider)
     .json()

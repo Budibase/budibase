@@ -26,36 +26,13 @@ export const ROW_DETAIL_TEMPLATE = "ROW_DETAIL_TEMPLATE"
 export const rowDetailUrl = table => sanitizeUrl(`/${table.name}/:id`)
 
 function generateTitleContainer(table, title, formId, repeaterId) {
-  // have to override style for this, its missing margin
-  const saveButton = makeSaveButton(table, formId).normalStyle({
-    background: "#000000",
-    "border-width": "0",
-    "border-style": "None",
-    color: "#fff",
-    "font-weight": "600",
-    "font-size": "14px",
-  })
-
+  const saveButton = makeSaveButton(table, formId)
   const deleteButton = new Component("@budibase/standard-components/button")
-    .normalStyle({
-      background: "transparent",
-      "border-width": "0",
-      "border-style": "None",
-      color: "#9e9e9e",
-      "font-weight": "600",
-      "font-size": "14px",
-      "margin-right": "8px",
-      "margin-left": "16px",
-    })
-    .hoverStyle({
-      background: "transparent",
-      color: "#4285f4",
-    })
-    .customStyle(spectrumColor(700))
     .text("Delete")
     .customProps({
-      className: "",
-      disabled: false,
+      type: "secondary",
+      quiet: true,
+      size: "M",
       onClick: [
         {
           parameters: {
@@ -76,7 +53,19 @@ function generateTitleContainer(table, title, formId, repeaterId) {
     })
     .instanceName("Delete Button")
 
-  return makeTitleContainer(title).addChild(deleteButton).addChild(saveButton)
+  const buttons = new Component("@budibase/standard-components/container")
+    .instanceName("Button Container")
+    .customProps({
+      direction: "row",
+      hAlign: "right",
+      vAlign: "middle",
+      size: "shrink",
+      gap: "M",
+    })
+    .addChild(deleteButton)
+    .addChild(saveButton)
+
+  return makeTitleContainer(title).addChild(buttons)
 }
 
 const createScreen = table => {
