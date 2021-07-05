@@ -1,6 +1,7 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
+const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const {
   StaticDatabases,
@@ -9,7 +10,17 @@ const {
 } = require("../../db/utils")
 
 // async function authenticate(token, tokenSecret, profile, done) {
-async function authenticate(issuer, sub, profile, jwtClaims, accessToken, refreshToken, idToken, params, done) {
+async function authenticate(
+  issuer,
+  sub,
+  profile,
+  jwtClaims,
+  accessToken,
+  refreshToken,
+  idToken,
+  params,
+  done
+) {
   // Check the user exists in the instance DB by email
   const db = database.getDB(StaticDatabases.GLOBAL.name)
 
@@ -18,7 +29,7 @@ async function authenticate(issuer, sub, profile, jwtClaims, accessToken, refres
   const userId = generateGlobalUserID(profile.id)
 
   try {
-    // use the google profile id
+    // use the OIDC profile id
     dbUser = await db.get(userId)
   } catch (err) {
     const user = {
@@ -28,13 +39,13 @@ async function authenticate(issuer, sub, profile, jwtClaims, accessToken, refres
       ...profile._json,
     }
 
-    // check if an account with the google email address exists locally
+    // check if an account with the OIDC email address exists locally
     const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
       key: profile._json.email,
       include_docs: true,
     })
 
-    // Google user already exists by email
+    // OIDC user already exists by email
     if (users.rows.length > 0) {
       const existing = users.rows[0].doc
 
@@ -74,36 +85,41 @@ async function authenticate(issuer, sub, profile, jwtClaims, accessToken, refres
 }
 
 /**
- * Create an instance of the google passport strategy. This wrapper fetches the configuration
+ * Create an instance of the oidc passport strategy. This wrapper fetches the configuration
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
- * @returns Dynamically configured Passport Google Strategy
+ * @returns Dynamically configured Passport OIDC Strategy
  */
-exports.strategyFactory = async function () {
+exports.strategyFactory = async function (callbackUrl) {
   try {
+    const configurationUrl =
+      "https://login.microsoftonline.com/2668c0dd-7ed2-4db3-b387-05b6f9204a70/v2.0/.well-known/openid-configuration"
+    const clientSecret = "g-ty~2iW.bo.88xj_QI6~hdc-H8mP2Xbnd"
+    const clientId = "bed2017b-2f53-42a9-8ef9-e58918935e07"
 
-    /*
-    const { clientID, clientSecret, callbackURL } = config
-
-    if (!clientID || !clientSecret || !callbackURL) {
+    if (!clientId || !clientSecret || !callbackUrl || !configurationUrl) {
       throw new Error(
-        "Configuration invalid. Must contain google clientID, clientSecret and callbackURL"
+        "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configurationUrl"
       )
     }
-    */
 
-    return new OIDCStrategy(
-      {
-        issuer: "https://base.uri/auth/realms/realm_name",
-        authorizationURL: "https://base.uri/auth/realms/realm_name/protocol/openid-connect/auth",
-        tokenURL: "https://base.uri/auth/realms/realm_name/protocol/openid-connect/token",
-        userInfoURL: "https://base.uri/auth/realms/realm_name/protocol/openid-connect/userinfo",
-        clientID: "my_client_id",
-        clientSecret: "my_client_secret",
-        callbackURL: "http://localhost:10000/api/admin/auth/oidc/callback",
-        scope: "openid profile email",
-      },
-      authenticate
-    )
+    const response = await fetch(configurationUrl)
+    if (response.ok) {
+      const body = await response.json()
+
+      return new OIDCStrategy(
+        {
+          issuer: body.issuer,
+          authorizationURL: body.authorization_endpoint,
+          tokenURL: body.token_endpoint,
+          userInfoURL: body.userinfo_endpoint,
+          clientID: clientId,
+          clientSecret: clientSecret,
+          callbackURL: callbackUrl,
+          scope: "profile email",
+        },
+        authenticate
+      )
+    }
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC authentication strategy", err)

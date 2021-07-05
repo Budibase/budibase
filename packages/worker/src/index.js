@@ -14,7 +14,7 @@ const redis = require("./utilities/redis")
 
 const app = new Koa()
 
-app.keys = ['secret', 'key'];
+app.keys = ["secret", "key"]
 
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
