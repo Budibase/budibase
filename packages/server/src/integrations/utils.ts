@@ -27,12 +27,19 @@ export function generateRowIdField(keyProps: any[] = []) {
     keyProps = [keyProps]
   }
   // this conserves order and types
+  // we have to swap the double quotes to single quotes for use in HBS statements
+  // when using the literal helper the double quotes can break things
   return encodeURIComponent(JSON.stringify(keyProps).replace(/"/g, "'"))
 }
 
 // should always return an array
 export function breakRowIdField(_id: string) {
-  const decoded = decodeURIComponent(_id)
+  if (!_id) {
+    return null
+  }
+  // have to replace on the way back as we swapped out the double quotes
+  // when encoding, but JSON can't handle the single quotes
+  const decoded = decodeURIComponent(_id).replace(/'/g, '"')
   const parsed = JSON.parse(decoded)
   return Array.isArray(parsed) ? parsed : [parsed]
 }
