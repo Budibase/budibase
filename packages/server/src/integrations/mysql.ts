@@ -169,8 +169,10 @@ module MySQLModule {
           const constraints = {
             presence: column.Null !== "YES",
           }
+          const isAuto: boolean = typeof column.Extra === "string" && (column.Extra === "auto_increment" || column.Extra.toLowerCase().includes("generated"))
           schema[columnName] = {
             name: columnName,
+            autocolumn: isAuto,
             type: convertType(column.Type, TYPE_MAP),
             constraints,
           }
