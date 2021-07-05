@@ -5,7 +5,8 @@ import {
   Operation,
   QueryJson,
   SqlQuery,
-} from "./base/definitions"
+} from "../definitions/datasource"
+import { Table, TableSchema } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module MySQLModule {
@@ -139,7 +140,7 @@ module MySQLModule {
     }
 
     async buildSchema(datasourceId: string) {
-      const tables: any = {}
+      const tables: { [key: string]: Table } = {}
       const database = this.config.database
       this.client.connect()
 
@@ -154,7 +155,7 @@ module MySQLModule {
       )
       for (let tableName of tableNames) {
         const primaryKeys = []
-        const schema: any = {}
+        const schema: TableSchema = {}
         const descResp = await internalQuery(
           this.client,
           { sql: `DESCRIBE ${tableName};` },
@@ -166,7 +167,7 @@ module MySQLModule {
             primaryKeys.push(columnName)
           }
           const constraints = {
-            required: column.Null !== "YES",
+            presence: column.Null !== "YES",
           }
           schema[columnName] = {
             name: columnName,
@@ -212,7 +213,7 @@ module MySQLModule {
     }
 
     async getReturningRow(json: QueryJson) {
-      if (!json.extra.idFilter) {
+      if (!json.extra || !json.extra.idFilter) {
         return {}
       }
       const input = this._query({

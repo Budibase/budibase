@@ -1,4 +1,4 @@
-import { Integration, QueryTypes } from "./base/definitions"
+import { Integration, QueryTypes } from "../definitions/datasource"
 
 module S3Module {
   const AWS = require("aws-sdk")

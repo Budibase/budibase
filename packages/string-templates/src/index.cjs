@@ -1,12 +1,7 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
-const { cloneDeep } = require("lodash/fp")
-const {
-  removeNull,
-  updateContext,
-  removeHandlebarsStatements,
-} = require("./utilities")
+const { removeHandlebarsStatements } = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
