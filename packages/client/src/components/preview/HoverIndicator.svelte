@@ -31,7 +31,7 @@
 
 <IndicatorSet
   {componentId}
-  color="var(--spectrum-global-color-gray-600)"
+  color="var(--spectrum-global-color-static-blue-200)"
   transition
   {zIndex}
 />
