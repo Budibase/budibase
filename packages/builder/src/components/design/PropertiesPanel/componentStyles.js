@@ -285,7 +285,7 @@ export const background = {
 
 export const border = {
   label: "Border",
-  columns: "auto 1fr",
+  columns: "1fr 1fr",
   settings: [
     {
       label: "Color",
@@ -296,6 +296,8 @@ export const border = {
       label: "Width",
       key: "border-width",
       control: Select,
+      column: "1 / 2",
+      placeholder: "None",
       options: [
         { label: "Small", value: "1px" },
         { label: "Medium", value: "2px" },
@@ -303,10 +305,22 @@ export const border = {
       ],
     },
     {
+      label: "Style",
+      key: "border-style",
+      control: Select,
+      column: "2 / 3",
+      placeholder: "None",
+      options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dotted", value: "dotted" },
+        { label: "Dashed", value: "dashed" },
+      ],
+    },
+    {
       label: "Radius",
       key: "border-radius",
       control: Select,
-      column: "1 / 3",
+      placeholder: "None",
       options: [
         { label: "Small", value: "0.25rem" },
         { label: "Medium", value: "0.5rem" },
@@ -318,7 +332,7 @@ export const border = {
       label: "Shadow",
       key: "box-shadow",
       control: Select,
-      column: "1 / 3",
+      placeholder: "None",
       options: [
         {
           label: "Small",

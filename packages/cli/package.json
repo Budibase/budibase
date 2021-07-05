@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "0.9.67",
+  "version": "0.9.69",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -24,7 +24,7 @@
     "docker-compose": "^0.23.6",
     "inquirer": "^8.0.0",
     "lookpath": "^1.1.0",
-    "pkg": "^4.4.9",
+    "pkg": "^5.3.0",
     "posthog-node": "1.0.7",
     "randomstring": "^1.1.5"
   },
