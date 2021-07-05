@@ -89,6 +89,7 @@
   }
   .spectrum-Card-footer {
     word-wrap: anywhere;
+    white-space: pre-wrap;
   }
   a {
     transition: color 130ms ease-in-out;
