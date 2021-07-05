@@ -1,4 +1,6 @@
-import { SqlQuery } from "./base/definitions"
+import { SqlQuery } from "../definitions/datasource"
+import { Datasource } from "../definitions/common"
+import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
@@ -30,10 +32,9 @@ export function generateRowIdField(keyProps: any[] = []) {
 
 // should always return an array
 export function breakRowIdField(_id: string) {
-  if (!_id) {
-    return null
-  }
-  return JSON.parse(decodeURIComponent(_id))
+  const decoded = decodeURIComponent(_id)
+  const parsed = JSON.parse(decoded)
+  return Array.isArray(parsed) ? parsed : [parsed]
 }
 
 export function convertType(type: string, map: { [key: string]: any }) {
@@ -51,4 +52,12 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   } else {
     return query
   }
+}
+
+export function isSQL(datasource: Datasource): boolean {
+  if (!datasource || !datasource.source) {
+    return false
+  }
+  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  return SQL.indexOf(datasource.source) !== -1
 }
