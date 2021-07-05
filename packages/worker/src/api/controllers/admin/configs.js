@@ -188,6 +188,12 @@ exports.configChecklist = async function (ctx) {
       type: Configs.GOOGLE,
     })
 
+    // They have set up OIDC
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
+    
+
     // They have set up an admin user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
