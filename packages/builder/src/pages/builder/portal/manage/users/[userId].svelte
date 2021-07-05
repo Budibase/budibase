@@ -123,11 +123,19 @@
       </div>
       <div class="field">
         <Label size="L">First name</Label>
-        <Input thin value={$userFetch?.data?.firstName} on:blur={updateUserFirstName} />
+        <Input
+          thin
+          value={$userFetch?.data?.firstName}
+          on:blur={updateUserFirstName}
+        />
       </div>
       <div class="field">
         <Label size="L">Last name</Label>
-        <Input thin value={$userFetch?.data?.lastName} on:blur={updateUserLastName} />
+        <Input
+          thin
+          value={$userFetch?.data?.lastName}
+          on:blur={updateUserLastName}
+        />
       </div>
       <!-- don't let a user remove the privileges that let them be here -->
       {#if userId !== $auth.user._id}
