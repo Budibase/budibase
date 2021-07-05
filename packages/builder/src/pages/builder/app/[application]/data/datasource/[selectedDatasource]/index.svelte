@@ -179,7 +179,7 @@
             {/if}
             <div>
               <Button primary on:click={updateDatasourceSchema}>
-                Fetch Tables From Database
+                Fetch tables from database
               </Button>
             </div>
           </div>
@@ -203,12 +203,12 @@
           <div class="query-header">
             <Heading size="S">Relationships</Heading>
             <Button primary on:click={() => openRelationshipModal()}
-              >Create Relationship</Button
+              >Create relationship</Button
             >
           </div>
           <Body>
-          Tell budibase how your tables are related to get even more smart
-          features.
+            Tell budibase how your tables are related to get even more smart
+            features.
           </Body>
         {/if}
         <div class="query-list">
