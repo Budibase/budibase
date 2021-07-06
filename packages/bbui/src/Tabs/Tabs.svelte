@@ -15,8 +15,12 @@
 
   const dispatch = createEventDispatcher()
 
-  $: selected = $tab.title
-  $: selected = dispatch("select", selected)
+  $: {
+    if ($tab.title !== selected) {
+      selected = $tab.title
+      dispatch("select", selected)
+    }
+  }
 
   let top, left, width, height
   $: calculateIndicatorLength($tab)
