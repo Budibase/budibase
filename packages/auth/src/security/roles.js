@@ -147,7 +147,7 @@ exports.getRole = async (appId, roleId) => {
  */
 async function getAllUserRoles(appId, userRoleId) {
   if (!userRoleId) {
-    return [BUILTIN_IDS.PUBLIC]
+    return [BUILTIN_IDS.BASIC]
   }
   let currentRole = await exports.getRole(appId, userRoleId)
   let roles = currentRole ? [currentRole] : []
@@ -226,7 +226,7 @@ exports.getAllRoles = async appId => {
       dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
     )[0]
     if (dbBuiltin == null) {
-      roles.push(builtinRole || builtinRoles.PUBLIC)
+      roles.push(builtinRole || builtinRoles.BASIC)
     } else {
       // remove role and all back after combining with the builtin
       roles = roles.filter(role => role._id !== dbBuiltin._id)
