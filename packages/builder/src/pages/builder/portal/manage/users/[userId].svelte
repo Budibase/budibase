@@ -33,7 +33,7 @@
     role: {},
   }
 
-  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : ""
+  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : "PUBLIC"
   // Merge the Apps list and the roles response to get something that makes sense for the table
   $: appList = Object.keys($apps?.data).map(id => {
     const role = $userFetch?.data?.roles?.[id] || defaultRoleId

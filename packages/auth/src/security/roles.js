@@ -226,7 +226,7 @@ exports.getAllRoles = async appId => {
       dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
     )[0]
     if (dbBuiltin == null) {
-      roles.push(builtinRole || builtinRoles.PUBLIC)
+      roles.push(builtinRole)
     } else {
       // remove role and all back after combining with the builtin
       roles = roles.filter(role => role._id !== dbBuiltin._id)
