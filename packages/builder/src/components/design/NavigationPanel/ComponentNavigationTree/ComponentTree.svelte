@@ -3,14 +3,13 @@
   import { DropEffect, DropPosition } from "./dragDropStore"
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import { capitalise } from "helpers"
 
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
   export let dragDropStore
-
-  const isScreenslot = name => name?.endsWith("screenslot")
 
   const selectComponent = component => {
     store.actions.components.select(component)
@@ -42,6 +41,16 @@
 
     return false
   }
+
+  const getComponentText = component => {
+    if (component._instanceName) {
+      return component._instanceName
+    }
+    const type =
+      component._component.replace("@budibase/standard-components/", "") ||
+      "component"
+    return capitalise(type)
+  }
 </script>
 
 <ul>
@@ -63,9 +72,7 @@
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:drop={dragDropStore.actions.drop}
-        text={isScreenslot(component._component)
-          ? "Screenslot"
-          : component._instanceName}
+        text={getComponentText(component)}
         withArrow
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
