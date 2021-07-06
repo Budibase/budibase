@@ -184,7 +184,11 @@ module PostgresModule {
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
+        const isAuto: boolean =
+          typeof column.column_default === "string" &&
+          column.column_default.startsWith("nextval")
         tables[tableName].schema[columnName] = {
+          autocolumn: isAuto,
           name: columnName,
           type,
         }
