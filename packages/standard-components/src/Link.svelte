@@ -74,7 +74,6 @@
 <style>
   a {
     color: var(--spectrum-alias-text-color);
-    display: inline-block;
     white-space: nowrap;
     transition: color 130ms ease-in-out;
   }
