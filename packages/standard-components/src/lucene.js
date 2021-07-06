@@ -13,9 +13,12 @@ export const buildLuceneQuery = filter => {
     notEmpty: {},
   }
   if (Array.isArray(filter)) {
-    // Build up proper range filters
     filter.forEach(expression => {
-      const { operator, field, type, value } = expression
+      let { operator, field, type, value } = expression
+      // Ensure date fields are transformed into ISO strings
+      if (type === "datetime" && value) {
+        value = new Date(value).toISOString()
+      }
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
           query.range[field] = {
