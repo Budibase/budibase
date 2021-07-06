@@ -5,6 +5,8 @@ const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
+const { user: userCache } = require("@budibase/auth/cache")
+const { invalidateSessions } = require("@budibase/auth/sessions")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -62,6 +64,7 @@ exports.save = async ctx => {
       password: hashedPassword,
       ...user,
     })
+    await userCache.invalidateUser(response.id)
     ctx.body = {
       _id: response.id,
       _rev: response.rev,
@@ -107,6 +110,8 @@ exports.destroy = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
+  await userCache.invalidateUser(dbUser._id)
+  await invalidateSessions(dbUser._id)
   ctx.body = {
     message: `User ${ctx.params.id} deleted.`,
   }

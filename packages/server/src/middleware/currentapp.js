@@ -6,6 +6,7 @@ const { getGlobalSelf } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
 const { dbExists } = require("@budibase/auth/db")
+const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 
 module.exports = async (ctx, next) => {
@@ -26,29 +27,16 @@ module.exports = async (ctx, next) => {
     }
   }
 
-  let updateCookie = false,
-    appId,
-    roleId = BUILTIN_ROLE_IDS.PUBLIC
+  let appId, roleId = BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user) {
     // not logged in, try to set a cookie for public apps
-    updateCookie = true
     appId = requestAppId
-  } else if (
-    requestAppId != null &&
-    (appCookie == null ||
-      requestAppId !== appCookie.appId ||
-      appCookie.roleId === BUILTIN_ROLE_IDS.PUBLIC ||
-      !appCookie.roleId)
-  ) {
+  } else if (requestAppId != null) {
     // Different App ID means cookie needs reset, or if the same public user has logged in
-    const globalUser = await getGlobalSelf(ctx, requestAppId)
-    updateCookie = true
+    const globalUser = await getCachedSelf(ctx, requestAppId)
     appId = requestAppId
     // retrieving global user gets the right role
     roleId = globalUser.roleId || BUILTIN_ROLE_IDS.PUBLIC
-  } else if (appCookie != null) {
-    appId = appCookie.appId
-    roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
   }
   // nothing more to do
   if (!appId) {
@@ -68,8 +56,8 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, roleId),
     }
   }
-  if (updateCookie) {
-    setCookie(ctx, { appId, roleId }, Cookies.CurrentApp)
+  if (requestAppId !== appId) {
+    setCookie(ctx, { appId }, Cookies.CurrentApp)
   }
   return next()
 }
