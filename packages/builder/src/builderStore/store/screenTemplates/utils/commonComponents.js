@@ -8,23 +8,16 @@ export function spectrumColor(number) {
   // God knows why. It seems to think optional chaining further down the
   // file is invalid if the word g-l-o-b-a-l is found - hence the reason this
   // statement is split into parts.
-  return "color: var(--spectrum-glo" + `bal-color-gray-${number});`
+  return "var(--spectrum-glo" + `bal-color-gray-${number})`
 }
 
 export function makeLinkComponent(tableName) {
   return new Component("@budibase/standard-components/link")
-    .normalStyle({
-      color: "#757575",
-      "text-transform": "capitalize",
-    })
-    .hoverStyle({
-      color: "#4285f4",
-    })
-    .customStyle(spectrumColor(700))
     .text(tableName)
     .customProps({
       url: `/${tableName.toLowerCase()}`,
       openInNewTab: false,
+      color: spectrumColor(700),
       size: "S",
       align: "left",
     })
@@ -33,19 +26,12 @@ export function makeLinkComponent(tableName) {
 export function makeMainForm() {
   return new Component("@budibase/standard-components/form")
     .normalStyle({
-      width: "700px",
-      padding: "0px",
-      "border-radius": "0.5rem",
-      "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      "padding-top": "48px",
-      "padding-bottom": "48px",
-      "padding-right": "48px",
-      "padding-left": "48px",
+      width: "600px",
     })
     .instanceName("Form")
 }
 
-export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
+export function makeBreadcrumbContainer(tableName, text) {
   const link = makeLinkComponent(tableName).instanceName("Back Link")
 
   const arrowText = new Component("@budibase/standard-components/text")
@@ -53,42 +39,27 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
     .normalStyle({
       "margin-right": "4px",
       "margin-left": "4px",
-      "margin-top": "0px",
-      "margin-bottom": "0px",
     })
-    .customStyle(spectrumColor(700))
     .text(">")
     .instanceName("Arrow")
     .customProps({
+      color: spectrumColor(700),
       size: "S",
       align: "left",
     })
 
-  const textStyling = {
-    color: "#000000",
-    "margin-top": "0px",
-    "margin-bottom": "0px",
-  }
-  if (capitalise) {
-    textStyling["text-transform"] = "capitalize"
-  }
   const identifierText = new Component("@budibase/standard-components/text")
-    .type("none")
-    .normalStyle(textStyling)
-    .customStyle(spectrumColor(700))
     .text(text)
     .instanceName("Identifier")
     .customProps({
+      color: spectrumColor(700),
       size: "S",
       align: "left",
     })
 
   return new Component("@budibase/standard-components/container")
-    .normalStyle({
-      "font-size": "14px",
-      color: "#757575",
-    })
     .customProps({
+      gap: "N",
       direction: "row",
       hAlign: "left",
       vAlign: "middle",
@@ -102,22 +73,10 @@ export function makeBreadcrumbContainer(tableName, text, capitalise = false) {
 
 export function makeSaveButton(table, formId) {
   return new Component("@budibase/standard-components/button")
-    .normalStyle({
-      background: "#000000",
-      "border-width": "0",
-      "border-style": "None",
-      color: "#fff",
-      "font-weight": "600",
-      "font-size": "14px",
-      "margin-left": "16px",
-    })
-    .hoverStyle({
-      background: "#4285f4",
-    })
     .text("Save")
     .customProps({
-      className: "",
-      disabled: false,
+      type: "primary",
+      size: "M",
       onClick: [
         {
           "##eventHandlerType": "Validate Form",
@@ -145,12 +104,6 @@ export function makeSaveButton(table, formId) {
 
 export function makeTitleContainer(title) {
   const heading = new Component("@budibase/standard-components/heading")
-    .normalStyle({
-      margin: "0px",
-      flex: "1 1 auto",
-    })
-    .customStyle(spectrumColor(900))
-    .type("h2")
     .instanceName("Title")
     .text(title)
     .customProps({
@@ -168,6 +121,7 @@ export function makeTitleContainer(title) {
       hAlign: "stretch",
       vAlign: "middle",
       size: "shrink",
+      gap: "M",
     })
     .instanceName("Title Container")
     .addChild(heading)

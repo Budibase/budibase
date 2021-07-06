@@ -230,7 +230,8 @@
   "screenslot": {
     "name": "Screenslot",
     "icon": "WebPage",
-    "description": "Contains your app screens"
+    "description": "Contains your app screens",
+    "editable": false
   },
   "button": {
     "name": "Button",
@@ -289,6 +290,11 @@
           }
         ],
         "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet"
       },
       {
         "type": "boolean",
@@ -448,6 +454,7 @@
     }
   },
   "stackedlist": {
+    "deprecated": true,
     "name": "Stacked List",
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
@@ -811,30 +818,29 @@
         "type": "select",
         "label": "Size",
         "key": "size",
-        "defaultValue": "md",
+        "defaultValue": "ri-1x",
         "options": [
-          { "value": "ri-xxs", "label": "xxs" },
-          { "value": "ri-xs", "label": "xs" },
-          { "value": "ri-sm", "label": "sm" },
-          { "value": "ri-1x", "label": "md" },
-          { "value": "ri-lg", "label": "lg" },
-          { "value": "ri-xl", "label": "xl" },
-          { "value": "ri-2x", "label": "2x" },
-          { "value": "ri-3x", "label": "3x" },
-          { "value": "ri-4x", "label": "4x" },
-          { "value": "ri-5x", "label": "5x" },
-          { "value": "ri-6x", "label": "6x" },
-          { "value": "ri-7x", "label": "7x" },
-          { "value": "ri-8x", "label": "8x" },
-          { "value": "ri-9x", "label": "9x" },
-          { "value": "ri-10x", "label": "10x" }
+          { "value": "ri-xxs", "label": "XXS" },
+          { "value": "ri-xs", "label": "XS" },
+          { "value": "ri-sm", "label": "Small" },
+          { "value": "ri-1x", "label": "Medium" },
+          { "value": "ri-lg", "label": "Large" },
+          { "value": "ri-xl", "label": "XL" },
+          { "value": "ri-2x", "label": "2XL" },
+          { "value": "ri-3x", "label": "3XL" },
+          { "value": "ri-4x", "label": "4XL" },
+          { "value": "ri-5x", "label": "5XL" },
+          { "value": "ri-6x", "label": "6XL" },
+          { "value": "ri-7x", "label": "7XL" },
+          { "value": "ri-8x", "label": "8XL" },
+          { "value": "ri-9x", "label": "9XL" },
+          { "value": "ri-10x", "label": "10XL" }
         ]
       },
       {
         "type": "color",
         "label": "Color",
-        "key": "color",
-        "defaultValue": "#000"
+        "key": "color"
       },
       {
         "type": "event",
@@ -844,6 +850,7 @@
     ]
   },
   "navigation": {
+    "deprecated": true,
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
@@ -876,7 +883,7 @@
         "key": "text"
       },
       {
-        "type": "text",
+        "type": "url",
         "label": "URL",
         "key": "url",
         "placeholder": "/screen"
@@ -1638,6 +1645,7 @@
     "actions": [
       "ValidateForm"
     ],
+    "styles": ["size"],
     "settings": [
       {
         "type": "select",
@@ -1650,46 +1658,6 @@
         "type": "schema",
         "label": "Schema",
         "key": "dataSource"
-      },
-      {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "defaultValue": "spectrum--light",
-        "options": [
-          {
-            "label": "Lightest",
-            "value": "spectrum--lightest"
-          },
-          {
-            "label": "Light",
-            "value": "spectrum--light"
-          },
-          {
-            "label": "Dark",
-            "value": "spectrum--dark"
-          },
-          {
-            "label": "Darkest",
-            "value": "spectrum--darkest"
-          }
-        ]
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
       },
       {
         "type": "boolean",
@@ -2068,46 +2036,6 @@
         "defaultValue": 8
       },
       {
-        "type": "select",
-        "label": "Theme",
-        "key": "theme",
-        "defaultValue": "spectrum--light",
-        "options": [
-          {
-            "label": "Lightest",
-            "value": "spectrum--lightest"
-          },
-          {
-            "label": "Light",
-            "value": "spectrum--light"
-          },
-          {
-            "label": "Dark",
-            "value": "spectrum--dark"
-          },
-          {
-            "label": "Darkest",
-            "value": "spectrum--darkest"
-          }
-        ]
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      },
-      {
         "type": "multifield",
         "label": "Columns",
         "key": "columns",
@@ -2159,6 +2087,43 @@
           "Last 1 year"
         ],
         "defaultValue": "Last 30 days"
+      }
+    ]
+  },
+  "spectrumcard": {
+    "name": "Card",
+    "icon": "Card",
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "text",
+        "key": "title",
+        "label": "Title"
+      },
+      {
+        "type": "text",
+        "key": "subtitle",
+        "label": "Subtitle"
+      },
+      {
+        "type": "text",
+        "key": "description",
+        "label": "Description"
+      },
+      {
+        "type": "text",
+        "key": "imageURL",
+        "label": "Image URL"
+      },
+      {
+        "type": "url",
+        "key": "linkURL",
+        "label": "Link URL"
+      },
+      {
+        "type": "boolean",
+        "key": "horizontal",
+        "label": "Horizontal"
       }
     ]
   }

@@ -1,16 +1,12 @@
-import { writable, derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
-import * as API from "../api"
+import { appStore } from "./app"
 
 const createScreenStore = () => {
-  const config = writable({
-    screens: [],
-    layouts: [],
-  })
   const store = derived(
-    [config, routeStore, builderStore],
-    ([$config, $routeStore, $builderStore]) => {
+    [appStore, routeStore, builderStore],
+    ([$appStore, $routeStore, $builderStore]) => {
       let activeLayout
       let activeScreen
       if ($builderStore.inBuilder) {
@@ -21,7 +17,7 @@ const createScreenStore = () => {
         activeLayout = { props: { _component: "screenslot" } }
 
         // Find the correct screen by matching the current route
-        const { screens, layouts } = $config
+        const { screens, layouts } = $appStore
         if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
@@ -37,17 +33,8 @@ const createScreenStore = () => {
     }
   )
 
-  const fetchScreens = async () => {
-    const appDefinition = await API.fetchAppDefinition(get(builderStore).appId)
-    config.set({
-      screens: appDefinition.screens,
-      layouts: appDefinition.layouts,
-    })
-  }
-
   return {
     subscribe: store.subscribe,
-    actions: { fetchScreens },
   }
 }
 

@@ -29,7 +29,7 @@ export const styleable = (node, styles = {}) => {
     // overridden by any user specified styles
     let baseStyles = {}
     if (newStyles.empty) {
-      baseStyles.border = "2px dashed var(--grey-5)"
+      baseStyles.border = "2px dashed var(--spectrum-global-color-gray-600)"
       baseStyles.padding = "var(--spacing-l)"
       baseStyles.overflow = "hidden"
     }
