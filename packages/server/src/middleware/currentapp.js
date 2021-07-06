@@ -45,10 +45,10 @@ module.exports = async (ctx, next) => {
     updateCookie = true
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId || BUILTIN_ROLE_IDS.PUBLIC
+    roleId = globalUser.roleId || BUILTIN_ROLE_IDS.BASIC
   } else if (appCookie != null) {
     appId = appCookie.appId
-    roleId = appCookie.roleId || BUILTIN_ROLE_IDS.PUBLIC
+    roleId = appCookie.roleId || BUILTIN_ROLE_IDS.BASIC
   }
   // nothing more to do
   if (!appId) {
