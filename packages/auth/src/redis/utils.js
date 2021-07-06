@@ -11,7 +11,11 @@ exports.Databases = {
   INVITATIONS: "invitation",
   DEV_LOCKS: "devLocks",
   DEBOUNCE: "debounce",
+  SESSIONS: "session",
+  USER_CACHE: "users",
 }
+
+exports.SEPARATOR = SEPARATOR
 
 exports.getRedisOptions = (clustered = false) => {
   const [host, port] = REDIS_URL.split(":")

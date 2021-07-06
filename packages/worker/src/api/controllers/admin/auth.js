@@ -10,7 +10,7 @@ const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
-function authInternal(ctx, user, err = null) {
+async function authInternal(ctx, user, err = null) {
   if (err) {
     return ctx.throw(403, "Unauthorized")
   }
@@ -22,6 +22,7 @@ function authInternal(ctx, user, err = null) {
     return ctx.throw(403, "Unauthorized")
   }
 
+  // just store the user ID
   ctx.cookies.set(Cookies.Auth, user.token, {
     expires,
     path: "/",
@@ -32,7 +33,7 @@ function authInternal(ctx, user, err = null) {
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user) => {
-    authInternal(ctx, user, err)
+    await authInternal(ctx, user, err)
 
     delete user.token
 
@@ -123,7 +124,7 @@ exports.googleAuth = async (ctx, next) => {
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, user) => {
-      authInternal(ctx, user, err)
+      await authInternal(ctx, user, err)
 
       ctx.redirect("/")
     }
