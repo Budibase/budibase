@@ -1,6 +1,13 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
-  import { Button, Input, ModalContent, Select, Detail, Body } from "@budibase/bbui"
+  import {
+    Button,
+    Input,
+    ModalContent,
+    Select,
+    Detail,
+    Body,
+  } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import { uuid } from "builderStore/uuid"
   import { writable } from "svelte/store"
@@ -25,8 +32,15 @@
 
   const touched = writable({})
 
-  function checkForErrors(fromTable, toTable, throughTable, fromRelate, toRelate) {
-    const isMany = fromRelate.relationshipType === RelationshipTypes.MANY_TO_MANY
+  function checkForErrors(
+    fromTable,
+    toTable,
+    throughTable,
+    fromRelate,
+    toRelate
+  ) {
+    const isMany =
+      fromRelate.relationshipType === RelationshipTypes.MANY_TO_MANY
     const tableNotSet = "Please specify a table"
     const errors = {}
     if ($touched.from && !fromTable) {
@@ -55,7 +69,10 @@
     if (toTable && (toTable === fromTable || toTable === throughTable)) {
       errors.to = tableError
     }
-    if (throughTable && (throughTable === fromTable || throughTable === toTable)) {
+    if (
+      throughTable &&
+      (throughTable === fromTable || throughTable === toTable)
+    ) {
       errors.through = tableError
     }
     const colError = "Column name cannot be an existing column"
@@ -75,8 +92,15 @@
   $: fromTable = plusTables.find(table => table._id === toRelationship?.tableId)
   $: toTable = plusTables.find(table => table._id === fromRelationship?.tableId)
   $: through = plusTables.find(table => table._id === fromRelationship?.through)
-  $: errors = checkForErrors(fromTable, toTable, through, fromRelationship, toRelationship)
-  $: valid = Object.keys(errors).length === 0 && Object.keys($touched).length !== 0
+  $: errors = checkForErrors(
+    fromTable,
+    toTable,
+    through,
+    fromRelationship,
+    toRelationship
+  )
+  $: valid =
+    Object.keys(errors).length === 0 && Object.keys($touched).length !== 0
   $: linkTable = through || toTable
   $: relationshipTypes = [
     {
@@ -230,12 +254,22 @@
     <Detail>Column names</Detail>
   </div>
   <Body>
-    Budibase manages SQL relationships as a new column in the table, please provide a name for these columns.
+    Budibase manages SQL relationships as a new column in the table, please
+    provide a name for these columns.
   </Body>
-  <Input on:blur={() => ($touched.fromCol = true)} bind:error={errors.fromCol} label="From table column" bind:value={fromRelationship.name} />
-  <Input on:blur={() => ($touched.toCol = true)} bind:error={errors.toCol} label="To table column" bind:value={toRelationship.name} />
+  <Input
+    on:blur={() => ($touched.fromCol = true)}
+    bind:error={errors.fromCol}
+    label="From table column"
+    bind:value={fromRelationship.name}
+  />
+  <Input
+    on:blur={() => ($touched.toCol = true)}
+    bind:error={errors.toCol}
+    label="To table column"
+    bind:value={toRelationship.name}
+  />
   <div slot="footer">
-
     {#if originalFromName != null}
       <Button warning text on:click={deleteRelationship}>Delete</Button>
     {/if}
