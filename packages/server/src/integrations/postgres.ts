@@ -147,7 +147,11 @@ module PostgresModule {
           if (!tableKeys[tableName]) {
             tableKeys[tableName] = []
           }
-          tableKeys[tableName].push(table.column_name || table.primary_key)
+          const key = table.column_name || table.primary_key
+          // only add the unique keys
+          if (key && tableKeys[tableName].indexOf(key) === -1) {
+            tableKeys[tableName].push(key)
+          }
         }
       } catch (err) {
         tableKeys = {}
