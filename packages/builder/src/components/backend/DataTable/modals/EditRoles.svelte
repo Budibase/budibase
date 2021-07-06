@@ -13,7 +13,7 @@
   // Don't allow editing of public role
   $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $editableRoles.filter(role => role._id !== selectedRoleId)
+  $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
   const fetchBasePermissions = async () => {
