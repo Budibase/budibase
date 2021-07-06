@@ -62,6 +62,7 @@
     if ($touched.toCol && !toRelate.name) {
       errors.toCol = colNotSet
     }
+    // currently don't support relationships back onto the table itself, needs to relate out
     const tableError = "From/to/through tables must be different"
     if (fromTable && (fromTable === toTable || fromTable === throughTable)) {
       errors.from = tableError
@@ -241,10 +242,10 @@
       bind:error={errors.through}
       bind:value={fromRelationship.through}
     />
-  {:else if toTable}
+  {:else if fromRelationship?.relationshipType && toTable}
     <Select
       label={`Foreign Key (${toTable?.name})`}
-      options={Object.keys(toTable?.schema)}
+      options={Object.keys(toTable?.schema).filter(field => toTable?.primary.indexOf(field) === -1)}
       on:change={() => ($touched.foreign = true)}
       bind:error={errors.foreign}
       bind:value={fromRelationship.fieldName}
