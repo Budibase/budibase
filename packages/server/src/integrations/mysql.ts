@@ -163,7 +163,7 @@ module MySQLModule {
         )
         for (let column of descResp) {
           const columnName = column.Field
-          if (column.Key === "PRI") {
+          if (column.Key === "PRI" && primaryKeys.indexOf(column.Key) === -1) {
             primaryKeys.push(columnName)
           }
           const constraints = {
