@@ -24,7 +24,12 @@ export const logIn = async ({ email, password }) => {
 export const fetchSelf = async () => {
   const user = await API.get({ url: "/api/self" })
   if (user?._id) {
-    return (await enrichRows([user], TableNames.USERS))[0]
+    if (user.roleId === "PUBLIC") {
+      // Don't try to enrich a public user as it will 403
+      return user
+    } else {
+      return (await enrichRows([user], TableNames.USERS))[0]
+    }
   } else {
     return null
   }
