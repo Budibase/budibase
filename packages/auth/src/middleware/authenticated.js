@@ -68,7 +68,7 @@ module.exports = (noAuthPatterns = [], opts) => {
           clearCookie(ctx, Cookies.Auth)
         } else {
           // make sure we denote that the session is still in use
-          await updateSessionTTL(userId, sessionId)
+          await updateSessionTTL(session)
         }
       }
       const apiKey = ctx.request.headers["x-budibase-api-key"]

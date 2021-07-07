@@ -4,16 +4,23 @@ const EXPIRY_SECONDS = 86400
 
 async function getSessionsForUser(userId) {
   const client = await redis.getSessionClient()
-  return client.scan(userId)
+  const sessions = await client.scan(userId)
+  return sessions.map(session => session.value)
 }
 
 function makeSessionID(userId, sessionId) {
   return `${userId}/${sessionId}`
 }
 
-exports.createASession = async (userId, sessionId, token) => {
+exports.createASession = async (userId, sessionId) => {
   const client = await redis.getSessionClient()
-  await client.store(makeSessionID(userId, sessionId), token, EXPIRY_SECONDS)
+  const session = {
+    createdAt: (new Date()).toISOString(),
+    lastAccessedAt: (new Date()).toISOString(),
+    sessionId,
+    userId,
+  }
+  await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
 }
 
 exports.invalidateSessions = async (userId, sessionId = null) => {
@@ -31,15 +38,19 @@ exports.invalidateSessions = async (userId, sessionId = null) => {
   await Promise.all(promises)
 }
 
-exports.updateSessionTTL = async (userId, sessionId) => {
+exports.updateSessionTTL = async session => {
   const client = await redis.getSessionClient()
-  await client.setExpiry(makeSessionID(userId, sessionId), EXPIRY_SECONDS)
+  const key = makeSessionID(session.userId, session.sessionId)
+  session.lastAccessedAt = (new Date()).toISOString()
+  await client.store(key, session, EXPIRY_SECONDS)
 }
 
 exports.endSession = async (userId, sessionId) => {
   const client = await redis.getSessionClient()
   await client.delete(makeSessionID(userId, sessionId))
 }
+
+exports.getUserSessions = getSessionsForUser
 
 exports.getSession = async (userId, sessionId) => {
   try {
@@ -53,5 +64,6 @@ exports.getSession = async (userId, sessionId) => {
 
 exports.getAllSessions = async () => {
   const client = await redis.getSessionClient()
-  return client.scan()
+  const sessions = await client.scan()
+  return sessions.map(session => session.value)
 }

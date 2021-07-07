@@ -34,14 +34,12 @@ exports.authenticate = async function (email, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
-    const payload = {
+    await createASession(dbUser._id, sessionId)
+
+    dbUser.token = jwt.sign({
       userId: dbUser._id,
       sessionId,
-    }
-    await createASession(dbUser._id, sessionId, payload)
-    dbUser.sessionId = sessionId
-
-    dbUser.token = jwt.sign(payload, env.JWT_SECRET)
+    }, env.JWT_SECRET)
     // Remove users password in payload
     delete dbUser.password
 
