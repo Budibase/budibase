@@ -205,6 +205,7 @@ exports.configChecklist = async function (ctx) {
       smtp: !!smtpConfig,
       adminUser,
       oauth: !!oauthConfig,
+      oidc: !!oidcConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)
