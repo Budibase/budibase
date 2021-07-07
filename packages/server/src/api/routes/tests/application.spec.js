@@ -9,9 +9,13 @@ jest.mock("../../../utilities/redis", () => ({
   updateLock: jest.fn(),
   setDebounce: jest.fn(),
   checkDebounce: jest.fn(),
+  shutdown: jest.fn(),
 }))
 
-const { clearAllApps, checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const {
+  clearAllApps,
+  checkBuilderEndpoint,
+} = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { AppStatus } = require("../../../db/utils")
 
@@ -32,7 +36,7 @@ describe("/applications", () => {
         .post("/api/applications")
         .send({ name: "My App" })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
     })
@@ -42,7 +46,7 @@ describe("/applications", () => {
         config,
         method: "POST",
         url: `/api/applications`,
-        body: { name: "My App" }
+        body: { name: "My App" },
       })
     })
   })
@@ -55,7 +59,7 @@ describe("/applications", () => {
       const res = await request
         .get(`/api/applications?status=${AppStatus.DEV}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       // two created apps + the inited app
@@ -68,7 +72,7 @@ describe("/applications", () => {
       const res = await request
         .get(`/api/applications/${config.getAppId()}/definition`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       // should have empty packages
       expect(res.body.screens.length).toEqual(1)
@@ -81,7 +85,7 @@ describe("/applications", () => {
       const res = await request
         .get(`/api/applications/${config.getAppId()}/appPackage`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.application).toBeDefined()
       expect(res.body.screens.length).toEqual(1)
@@ -94,10 +98,10 @@ describe("/applications", () => {
       const res = await request
         .put(`/api/applications/${config.getAppId()}`)
         .send({
-          name: "TEST_APP"
+          name: "TEST_APP",
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
     })
@@ -113,14 +117,14 @@ describe("/applications", () => {
           name: "UPDATED_NAME",
         })
         .set(headers)
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
       // retrieve the app to check it
       const getRes = await request
         .get(`/api/applications/${config.getAppId()}/appPackage`)
         .set(headers)
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(getRes.body.application.updatedAt).toBeDefined()
     })
