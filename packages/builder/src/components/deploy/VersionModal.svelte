@@ -5,6 +5,7 @@
     notifications,
     ModalContent,
     Body,
+    Button,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import api from "builderStore/api"
@@ -14,6 +15,19 @@
 
   $: appId = $store.appId
   $: updateAvailable = clientPackage.version !== $store.version
+  $: revertAvailable = $store.revertableVersion != null
+
+  const refreshAppPackage = async () => {
+    const applicationPkg = await api.get(
+      `/api/applications/${appId}/appPackage`
+    )
+    const pkg = await applicationPkg.json()
+    if (applicationPkg.ok) {
+      await store.actions.initialise(pkg)
+    } else {
+      throw new Error(pkg)
+    }
+  }
 
   const update = async () => {
     try {
@@ -24,24 +38,32 @@
       if (response.status !== 200) {
         throw json.message
       }
-
-      // Reset frontend state after revert
-      const applicationPkg = await api.get(
-        `/api/applications/${appId}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-      } else {
-        throw new Error(pkg)
-      }
-
+      await refreshAppPackage()
       notifications.success(
         `App updated successfully to version ${clientPackage.version}`
       )
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }
+  }
+
+  const revert = async () => {
+    try {
+      const response = await api.post(
+        `/api/applications/${appId}/client/revert`
+      )
+      const json = await response.json()
+      if (response.status !== 200) {
+        throw json.message
+      }
+      await refreshAppPackage()
+      notifications.success(
+        `App reverted successfully to version ${$store.revertableVersion}`
+      )
+    } catch (err) {
+      notifications.error(`Error reverting app: ${err}`)
+    }
+    updateModal.hide()
   }
 </script>
 
@@ -56,18 +78,28 @@
     onConfirm={update}
     showConfirmButton={updateAvailable}
   >
+    <div slot="footer">
+      {#if revertAvailable}
+        <Button quiet secondary on:click={revert}>Revert</Button>
+      {/if}
+    </div>
     {#if updateAvailable}
       <Body size="S">
         This app is currently using version <b>{$store.version}</b>, but version
-        <b>{clientPackage.version}</b> is available. Updates can contain new
-        features, performance improvements and bug fixes.
-        <br /><br />
-        Would you like to update this app?
+        <b>{clientPackage.version}</b> is available. Updates can contain new features,
+        performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
         This app is currently using version <b>{$store.version}</b> which is the
         latest version available.
+      </Body>
+    {/if}
+    {#if revertAvailable}
+      <Body size="S">
+        You can revert this app to version
+        <b>{$store.revertableVersion}</b>
+        if you're experiencing issues with the current version.
       </Body>
     {/if}
   </ModalContent>

@@ -241,8 +241,19 @@ exports.update = async function (ctx) {
 }
 
 exports.updateClient = async function (ctx) {
+  // Get current app version
+  const db = new CouchDB(ctx.params.appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
+  const currentVersion = application.version
+
+  // Update client library and manifest
   await uploadClientLibrary(ctx.params.appId)
-  const appPackageUpdates = { version: packageJson.version }
+
+  // Update versions in app package
+  const appPackageUpdates = {
+    version: packageJson.version,
+    revertableVersion: currentVersion,
+  }
   const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
