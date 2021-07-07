@@ -33,6 +33,10 @@ const {
 } = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
+const {
+  uploadClientLibrary,
+  downloadLibraries,
+} = require("../../utilities/fileSystem/newApp")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -231,27 +235,17 @@ exports.create = async function (ctx) {
 }
 
 exports.update = async function (ctx) {
-  const url = await getAppUrlIfNotInUse(ctx)
-  const db = new CouchDB(ctx.params.appId)
-  const application = await db.get(DocumentTypes.APP_METADATA)
-
-  const data = ctx.request.body
-  const newData = { ...application, ...data, url }
-  if (ctx.request.body._rev !== application._rev) {
-    newData._rev = application._rev
-  }
-
-  // the locked by property is attached by server but generated from
-  // Redis, shouldn't ever store it
-  if (newData.lockedBy) {
-    delete newData.lockedBy
-  }
-
-  const response = await db.put(newData)
-  data._rev = response.rev
-
+  const data = await updateAppPackage(ctx, ctx.request.body, ctx.params.appId)
   ctx.status = 200
-  ctx.body = response
+  ctx.body = data
+}
+
+exports.updateClient = async function (ctx) {
+  await uploadClientLibrary(ctx.params.appId)
+  const appPackageUpdates = { version: packageJson.version }
+  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  ctx.status = 200
+  ctx.body = data
 }
 
 exports.delete = async function (ctx) {
@@ -267,6 +261,28 @@ exports.delete = async function (ctx) {
 
   ctx.status = 200
   ctx.body = result
+}
+
+const updateAppPackage = async (ctx, appPackage, appId) => {
+  const url = await getAppUrlIfNotInUse(ctx)
+  const db = new CouchDB(appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
+
+  const newAppPackage = { ...application, ...appPackage, url }
+  if (appPackage._rev !== application._rev) {
+    newAppPackage._rev = application._rev
+  }
+
+  // the locked by property is attached by server but generated from
+  // Redis, shouldn't ever store it
+  if (newAppPackage.lockedBy) {
+    delete newAppPackage.lockedBy
+  }
+
+  const response = await db.put(newAppPackage)
+  console.log(response)
+
+  return response
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
