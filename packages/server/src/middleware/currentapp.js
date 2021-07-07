@@ -2,7 +2,6 @@ const { getAppId, setCookie, getCookie, clearCookie } =
   require("@budibase/auth").utils
 const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
-const { getGlobalSelf } = require("../utilities/workerRequests")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
 const { dbExists } = require("@budibase/auth/db")
@@ -27,7 +26,8 @@ module.exports = async (ctx, next) => {
     }
   }
 
-  let appId, roleId = BUILTIN_ROLE_IDS.PUBLIC
+  let appId,
+    roleId = BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user) {
     // not logged in, try to set a cookie for public apps
     appId = requestAppId
