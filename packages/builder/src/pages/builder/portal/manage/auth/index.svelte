@@ -1,6 +1,11 @@
 <script>
-  import GoogleLogo from "./_logos/Google.svelte"
-  import OIDCLogo from "./_logos/OIDC.svelte"
+  import GoogleLogo from "./_logos/Google.svelte"  
+  import OidcLogo from "./_logos/OIDC.svelte"
+  import MicrosoftLogo from "assets/microsoft-logo.png"
+  import OracleLogo from "assets/oracle-logo.png"
+  import Auth0Logo from "assets/auth0-logo.png"
+  import OidcLogoPng from "assets/oidc-logo.png"
+
   import {
     Button,
     Heading,
@@ -10,10 +15,13 @@
     Layout,
     Input,
     Body,
-    Select
+    Select,
+    Dropzone,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
+  import { writable } from "svelte/store"
+  import { organisation } from "stores/portal"
 
   const ConfigTypes = {
     Google: "google",
@@ -34,51 +42,70 @@
   }
 
   const OIDCConfigFields = {
-    Oidc: [
-      "issuer",
-      "authUrl",
-      "tokenUrl",
-      "userInfoUrl",
-      "clientId",
-      "clientSecret",
-      "callbackUrl",
-      "name"
-    ],
+    Oidc: ["configUrl", "clientId", "clientSecret"],
   }
   const OIDCConfigLabels = {
     Oidc: {
-      issuer: "Issuer",
-      authUrl: "Authorization URL",
-      tokenUrl: "Token URL",
-      userInfoUrl: "User Info URL",
+      configUrl: "Config URL",
       clientId: "Client ID",
       clientSecret: "Client Secret",
-      callbackUrl: "Callback URL",
-      name: "Name"
     },
   }
-  
+
+  let iconDropdownOptions = [
+    {
+      label: "Azure AD",
+      value: "Active Directory",
+      icon: MicrosoftLogo,
+    },
+    { label: "Oracle", value: "Oracle", icon: OracleLogo },
+    { label: "Auth0", value: "Auth0", icon: Auth0Logo },
+    { label: "OIDC", value: "Auth0", icon: OidcLogoPng },
+
+    { label: "Upload your own", value: "Upload" },
+  ]
+
+  let fileinput
+  let image
   let google
   let oidc
-  const providers = {google, oidc}
+
+  async function uploadLogo(file) {
+    let data = new FormData()
+    data.append("file", file)
+    const res = await api.post(
+      `/api/admin/configs/upload/oidc_logos/${file.name}`,
+      data,
+      {}
+    )
+    return await res.json()
+  }
+
+  const onFileSelected = e => {
+    image = e.target.files[0]
+  }
+
+  const providers = { google, oidc }
 
   async function save(docs) {
+    uploadLogo(image)
     let calls = []
     docs.forEach(element => {
       calls.push(api.post(`/api/admin/configs`, element))
     })
     Promise.all(calls)
       .then(responses => {
-        return Promise.all(responses.map(response => {
-          return response.json()
-        }))
-      }).then(data => {
+        return Promise.all(
+          responses.map(response => {
+            return response.json()
+          })
+        )
+      })
+      .then(data => {
         data.forEach(res => {
           providers[res.type]._rev = res._rev
           providers[res.type]._id = res._id
         })
-          //res.json()._rev = res.json()._rev
-          //res.json().id = res.json().id
         notifications.success(`Settings saved.`)
       })
       .catch(err => {
@@ -114,8 +141,15 @@
     } else {
       providers.oidc = oidcDoc
     }
-  })  
-  let fileInput
+    const res = await api.get(`/api/admin/configs/oidc_logos`)
+    const configSettings = await res.json()
+    console.log(configSettings)
+    const logoKeys = Object.keys(configSettings.config)
+    logoKeys.map(logoKey => {
+      const logoUrl = configSettings.config[logoKey]
+      iconDropdownOptions.unshift({label: logoKey, value: logoUrl, icon: logoUrl})
+    })
+  })
 
 </script>
 
@@ -156,7 +190,7 @@
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <span>
-          <GoogleLogo />
+          <OidcLogo />
           OpenID Connect
         </span>
       </Heading>
@@ -171,21 +205,37 @@
           <Input bind:value={providers.oidc.config[field]} />
         </div>
       {/each}
+      <br />
       <Body size="S">
-        To customize your login button, fill out the fields below. 
+        To customize your login button, fill out the fields below.
       </Body>
       <div class="form-row">
-        <Label size="L">{OIDCConfigLabels.Oidc['name']}</Label>
-        <Select
-          options={["Upload File"]}
-          placeholder={null}
-        />
+        <Label size="L">Name</Label>
+        <Input bind:value={providers.oidc.config["name"]} />
+      </div>
+      <div class="form-row">
+        <Label size="L">Icon</Label>
 
-      </div>      
+        <Select
+          label=""
+          bind:value={providers.oidc.config["iconName"]}
+          options={iconDropdownOptions}
+          on:change={e => (e.detail === "Upload" && fileinput.click())}
+        />
+      </div>
+      <input
+        style="display:none"
+        type="file"
+        accept=".jpg, .jpeg, .png"
+        on:change={e => onFileSelected(e)}
+        bind:this={fileinput}
+      />
     </Layout>
   {/if}
   <div>
-    <Button cta on:click={() => save([providers.google, providers.oidc])}>Save</Button>
+    <Button cta on:click={() => save([providers.google, providers.oidc])}
+      >Save</Button
+    >
   </div>
 </Layout>
 
@@ -200,5 +250,9 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  input {
+    display: none;
   }
 </style>

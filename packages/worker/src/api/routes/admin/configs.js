@@ -79,7 +79,7 @@ function buildUploadValidation() {
   // prettier-ignore
   return joiValidator.params(Joi.object({
     type: Joi.string().valid(...Object.values(Configs)).required(),
-    name: Joi.string().valid(...Object.values(ConfigUploads)).required(),
+    name: Joi.string().required(),
   }).required())
 }
 
