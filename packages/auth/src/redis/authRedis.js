@@ -1,4 +1,5 @@
-const { Client, utils } = require("./index")
+const Client = require("./index")
+const utils = require("./utils")
 
 let userClient, sessionClient
 

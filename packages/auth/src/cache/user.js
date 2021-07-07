@@ -4,7 +4,6 @@ const redis = require("../redis/authRedis")
 
 const EXPIRY_SECONDS = 3600
 
-
 exports.getUser = async userId => {
   const client = await redis.getUserClient()
   // try cache

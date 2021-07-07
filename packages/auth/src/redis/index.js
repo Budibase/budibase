@@ -1,7 +1,12 @@
 const env = require("../environment")
 // ioredis mock is all in memory
 const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
-const { addDbPrefix, removeDbPrefix, getRedisOptions, SEPARATOR } = require("./utils")
+const {
+  addDbPrefix,
+  removeDbPrefix,
+  getRedisOptions,
+  SEPARATOR,
+} = require("./utils")
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
