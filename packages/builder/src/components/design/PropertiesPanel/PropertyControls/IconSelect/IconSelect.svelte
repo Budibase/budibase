@@ -107,7 +107,7 @@
     loading = false
   }
 
-  $: displayValue = value ? value.substring(3) : "Pick Icon"
+  $: displayValue = value ? value.substring(3) : "Pick icon"
 
   $: totalPages = Math.ceil(filteredIcons.length / maxIconsPerPage)
   $: pageEndIdx = maxIconsPerPage * currentPage

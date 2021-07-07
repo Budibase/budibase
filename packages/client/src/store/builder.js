@@ -1,7 +1,7 @@
 import { writable, derived } from "svelte/store"
 import Manifest from "@budibase/standard-components/manifest.json"
 
-const dispatchEvent = (type, data) => {
+const dispatchEvent = (type, data = {}) => {
   window.dispatchEvent(
     new CustomEvent("bb-event", {
       detail: { type, data },
@@ -63,6 +63,9 @@ const createBuilderStore = () => {
     },
     deleteComponent: id => {
       dispatchEvent("delete-component", { id })
+    },
+    notifyLoaded: () => {
+      dispatchEvent("preview-loaded")
     },
   }
   return {

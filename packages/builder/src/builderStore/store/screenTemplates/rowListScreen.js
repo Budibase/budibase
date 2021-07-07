@@ -19,21 +19,10 @@ export const rowListUrl = table => sanitizeUrl(`/${table.name}`)
 
 function generateTitleContainer(table) {
   const newButton = new Component("@budibase/standard-components/button")
-    .normalStyle({
-      background: "#000000",
-      "border-width": "0",
-      "border-style": "None",
-      color: "#fff",
-      "font-weight": "600",
-      "font-size": "14px",
-    })
-    .hoverStyle({
-      background: "#4285f4",
-    })
     .text("Create New")
     .customProps({
-      className: "",
-      disabled: false,
+      size: "M",
+      type: "primary",
       onClick: [
         {
           parameters: {
@@ -46,12 +35,6 @@ function generateTitleContainer(table) {
     .instanceName("New Button")
 
   const heading = new Component("@budibase/standard-components/heading")
-    .normalStyle({
-      margin: "0px",
-      flex: "1 1 auto",
-      "text-transform": "capitalize",
-    })
-    .type("h2")
     .instanceName("Title")
     .text(table.name)
     .customProps({
@@ -60,14 +43,12 @@ function generateTitleContainer(table) {
     })
 
   return new Component("@budibase/standard-components/container")
-    .normalStyle({
-      "margin-bottom": "32px",
-    })
     .customProps({
       direction: "row",
       hAlign: "stretch",
       vAlign: "middle",
       size: "shrink",
+      gap: "M",
     })
     .instanceName("Title Container")
     .addChild(heading)
@@ -91,68 +72,35 @@ const createScreen = table => {
   const spectrumTable = new Component("@budibase/standard-components/table")
     .customProps({
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
-      theme: "spectrum--lightest",
       showAutoColumns: false,
-      quiet: true,
-      size: "spectrum--medium",
+      quiet: false,
       rowCount: 8,
     })
     .instanceName(`${table.name} Table`)
 
   const safeTableId = makePropSafe(spectrumTable._json._id)
   const safeRowId = makePropSafe("_id")
-  const viewButton = new Component("@budibase/standard-components/button")
+  const viewLink = new Component("@budibase/standard-components/link")
     .customProps({
       text: "View",
-      onClick: [
-        {
-          "##eventHandlerType": "Navigate To",
-          parameters: {
-            url: `${rowListUrl(table)}/{{ ${safeTableId}.${safeRowId} }}`,
-          },
-        },
-      ],
+      url: `${rowListUrl(table)}/{{ ${safeTableId}.${safeRowId} }}`,
+      size: "S",
+      color: "var(--spectrum-global-color-gray-600)",
+      align: "left",
     })
-    .instanceName("View Button")
     .normalStyle({
-      background: "transparent",
-      "font-weight": "600",
-      color: "#888",
-      "border-width": "0",
+      ["margin-left"]: "16px",
+      ["margin-right"]: "16px",
     })
-    .hoverStyle({
-      color: "#4285f4",
-    })
+    .instanceName("View Link")
 
-  spectrumTable.addChild(viewButton)
+  spectrumTable.addChild(viewLink)
   provider.addChild(spectrumTable)
-
-  const mainContainer = new Component("@budibase/standard-components/container")
-    .normalStyle({
-      background: "white",
-      "border-radius": "0.5rem",
-      "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-      "border-width": "2px",
-      "border-color": "rgba(0, 0, 0, 0.1)",
-      "border-style": "None",
-      "padding-top": "48px",
-      "padding-bottom": "48px",
-      "padding-right": "48px",
-      "padding-left": "48px",
-    })
-    .customProps({
-      direction: "column",
-      hAlign: "stretch",
-      vAlign: "top",
-      size: "shrink",
-    })
-    .instanceName("Container")
-    .addChild(generateTitleContainer(table))
-    .addChild(provider)
 
   return new Screen()
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)
-    .addChild(mainContainer)
+    .addChild(generateTitleContainer(table))
+    .addChild(provider)
     .json()
 }
