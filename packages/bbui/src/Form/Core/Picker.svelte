@@ -14,7 +14,6 @@
   export let isPlaceholder = false
   export let placeholderOption = null
   export let options = []
-  export let callbackOptionValue = null
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
   export let getOptionLabel = option => option
@@ -47,7 +46,7 @@
 >
   {#if fieldIcon}
     <span class="icon-Placeholder-Padding">
-      <img src={fieldIcon} alt="test" width="20" height="15" />
+      <img src={fieldIcon} alt="OpenID Icon" width="20" height="15" />
     </span>
   {/if}
 
