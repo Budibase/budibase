@@ -64,6 +64,7 @@ export default `
           if (window.loadBudibase) {
             window.loadBudibase()
             document.documentElement.classList.add("loaded")
+            window.dispatchEvent(new Event("iframe-loaded"))
           } else {
             throw "The client library couldn't be loaded"
           }
