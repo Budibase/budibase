@@ -9,7 +9,40 @@ const {
   ViewNames,
 } = require("../../db/utils")
 
-// async function authenticate(token, tokenSecret, profile, done) {
+/**
+ * Attempt to parse the users email address. 
+ * 
+ * It is not guaranteed that the email will be returned by the user info endpoint (e.g. github connected account used in azure ad).
+ * Fallback to the id token where possible.
+ * 
+ * @param {*} profile The structured profile created by passport using the user info endpoint
+ * @param {*} jwtClaims The raw claims returned in the id token
+ */
+function getEmail(profile, jwtClaims) {
+  if (profile._json.email) {
+    return profile._json.email
+  }
+
+  if (jwtClaims.email) {
+    return jwtClaims.email
+  }
+
+  return null;
+}
+
+/**
+ * 
+ * @param {*} issuer The identity provider base URL
+ * @param {*} sub The user ID
+ * @param {*} profile The user profile information. Created by passport from the /userinfo response
+ * @param {*} jwtClaims The parsed id_token claims
+ * @param {*} accessToken The access_token for contacting the identity provider - may or may not be a JWT
+ * @param {*} refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
+ * @param {*} idToken The id_token - always a JWT
+ * @param {*} params The response body from requesting an access_token
+ * @param {*} done The passport callback: err, user, info
+ * @returns 
+ */
 async function authenticate(
   issuer,
   sub,
@@ -40,8 +73,13 @@ async function authenticate(
     }
 
     // check if an account with the OIDC email address exists locally
+    const email = getEmail(profile, jwtClaims)
+    if (!email) {
+      return done(null, false, { message: "No email address found" })
+    }
+
     const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-      key: profile._json.email,
+      key: email,
       include_docs: true,
     })
 
@@ -61,12 +99,7 @@ async function authenticate(
       dbUser = user
       dbUser._rev = response.rev
     } else {
-      return done(
-        new Error(
-          "email does not yet exist. You must set up your local budibase account first."
-        ),
-        false
-      )
+      return done(null, false, { message: "Email does not yet exist. You must set up your local budibase account first." })
     }
   }
 
