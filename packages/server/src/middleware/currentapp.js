@@ -56,7 +56,11 @@ module.exports = async (ctx, next) => {
       role: await getRole(appId, roleId),
     }
   }
-  if (requestAppId !== appId) {
+  if (
+    requestAppId !== appId ||
+    appCookie == null ||
+    appCookie.appId !== requestAppId
+  ) {
     setCookie(ctx, { appId }, Cookies.CurrentApp)
   }
   return next()
