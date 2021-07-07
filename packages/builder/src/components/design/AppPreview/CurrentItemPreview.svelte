@@ -74,7 +74,17 @@
     // Initialise the app when mounted
     iframe.contentWindow.addEventListener(
       "ready",
-      () => refreshContent(strippedJson),
+      () => {
+        loading = false
+        refreshContent(strippedJson)
+      },
+      { once: true }
+    )
+
+    // Use iframe loading event to support old client versions
+    iframe.contentWindow.addEventListener(
+      "iframe-loaded",
+      () => (loading = false),
       { once: true }
     )
 
@@ -99,7 +109,7 @@
         idToDelete = data.id
         confirmDeleteDialog.show()
       } else if (type === "preview-loaded") {
-        loading = false
+        // loading = false
       } else {
         console.warning(`Client sent unknown event type: ${type}`)
       }
