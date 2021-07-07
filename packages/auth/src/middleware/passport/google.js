@@ -62,14 +62,12 @@ async function authenticate(token, tokenSecret, profile, done) {
 
   // authenticate
   const sessionId = newid()
-  const payload = {
+  await createASession(dbUser._id, sessionId)
+
+  dbUser.token = jwt.sign({
     userId: dbUser._id,
     sessionId,
-  }
-  await createASession(dbUser._id, sessionId, payload)
-  dbUser.sessionId = sessionId
-
-  dbUser.token = jwt.sign(payload, env.JWT_SECRET)
+  }, env.JWT_SECRET)
 
   return done(null, dbUser)
 }
