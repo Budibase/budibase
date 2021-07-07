@@ -16,7 +16,7 @@ exports.Configs = Configs
 
 exports.ConfigUploads = {
   LOGO: "logo",
-  OIDC_LOGO: "oidc_logo"
+  OIDC_LOGO: "oidc_logo",
 }
 
 const TemplateTypes = {

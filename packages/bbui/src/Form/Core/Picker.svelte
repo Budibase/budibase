@@ -10,18 +10,20 @@
   export let disabled = false
   export let error = null
   export let fieldText = ""
+  export let fieldIcon = ""
   export let isPlaceholder = false
   export let placeholderOption = null
   export let options = []
+  export let callbackOptionValue = null
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let getOptionIcon = option => option
   export let open = false
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
-
   const dispatch = createEventDispatcher()
   const onClick = () => {
     dispatch("click")
@@ -30,6 +32,7 @@
     }
     open = true
   }
+  console.log(fieldIcon)
 </script>
 
 <button
@@ -42,6 +45,12 @@
   aria-haspopup="listbox"
   on:mousedown={onClick}
 >
+  {#if fieldIcon}
+    <span class="icon-Placeholder-Padding">
+      <img src={fieldIcon} alt="test" width="20" height="15" />
+    </span>
+  {/if}
+
   <span
     class="spectrum-Picker-label"
     class:is-placeholder={isPlaceholder}
@@ -104,6 +113,16 @@
             tabindex="0"
             on:click={() => onSelectOption(getOptionValue(option, idx))}
           >
+            {#if getOptionIcon(option, idx)}
+              <span class="icon-Padding">
+                <img
+                  src={getOptionIcon(option, idx)}
+                  alt="test"
+                  width="20"
+                  height="15"
+                />
+              </span>
+            {/if}
             <span class="spectrum-Menu-itemLabel"
               >{getOptionLabel(option, idx)}</span
             >
@@ -147,5 +166,13 @@
   }
   .spectrum-Picker-label.auto-width.is-placeholder {
     padding-right: 2px;
+  }
+
+  .icon-Padding {
+    padding-right: 10px;
+  }
+  .icon-Placeholder-Padding {
+    padding-top: 5px;
+    padding-right: 10px;
   }
 </style>

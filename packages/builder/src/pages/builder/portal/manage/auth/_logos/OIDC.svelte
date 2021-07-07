@@ -1,7 +1,7 @@
 <svg
-  width="18"
-  height="18"
-  viewBox="0 0 268 268"
+  width="25"
+  height="25 "
+  viewBox="0 0 100 100"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
 >
@@ -12,9 +12,4 @@
     />
     <path d="M43,90v-75l14,-9v75z" fill="#f60" />
   </g>
-  <defs>
-    <clipPath id="clip0">
-      <rect width="268" height="268" fill="white" />
-    </clipPath>
-  </defs>
 </svg>
