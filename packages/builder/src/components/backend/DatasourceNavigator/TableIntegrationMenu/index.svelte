@@ -13,7 +13,7 @@
     const json = await response.json()
 
     integrations = {
-      [INTERNAL]: { datasource: {} },
+      [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
       ...json,
     }
     return json
@@ -42,7 +42,7 @@
 
 <section>
   <div class="integration-list">
-    {#each Object.keys(integrations) as integrationType}
+    {#each Object.entries(integrations) as [integrationType, schema]}
       <div
         class="integration hoverable"
         class:selected={integration.type === integrationType}
@@ -53,7 +53,7 @@
           height="50"
           width="50"
         />
-        <Body size="XS">{integrationType}</Body>
+        <Body size="XS">{schema.name || integrationType}</Body>
       </div>
     {/each}
   </div>
