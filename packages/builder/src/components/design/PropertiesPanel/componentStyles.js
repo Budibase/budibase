@@ -1,4 +1,5 @@
-import { Input, Select, ColorPicker } from "@budibase/bbui"
+import { Input, Select } from "@budibase/bbui"
+import ColorPicker from "./PropertyControls/ColorPicker.svelte"
 
 export const margin = {
   label: "Margin",

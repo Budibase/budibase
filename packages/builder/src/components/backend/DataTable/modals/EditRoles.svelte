@@ -10,8 +10,10 @@
   let selectedRole = {}
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+  // Don't allow editing of public role
+  $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $roles.filter(role => role._id !== selectedRoleId)
+  $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
   const fetchBasePermissions = async () => {
@@ -96,7 +98,7 @@
     label="Role"
     value={selectedRoleId}
     on:change={changeRole}
-    options={$roles}
+    options={editableRoles}
     placeholder="Create new role"
     getOptionValue={role => role._id}
     getOptionLabel={role => role.name}

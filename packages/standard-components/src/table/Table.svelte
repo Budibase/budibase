@@ -3,8 +3,6 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
 
-  export let theme
-  export let size
   export let dataProvider
   export let columns
   export let showAutoColumns
@@ -73,12 +71,7 @@
   }
 </script>
 
-<div
-  lang="en"
-  dir="ltr"
-  use:styleable={$component.styles}
-  class={`spectrum ${size || "spectrum--medium"} ${theme || "spectrum--light"}`}
->
+<div use:styleable={$component.styles}>
   <Table
     {data}
     {schema}

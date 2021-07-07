@@ -162,7 +162,7 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if (!row[key] || newRow[key]) {
+        if (!row[key] || newRow[key] || field.autocolumn) {
           continue
         }
         // if its not a link then just copy it over
