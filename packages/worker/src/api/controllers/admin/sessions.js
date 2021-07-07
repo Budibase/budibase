@@ -1,4 +1,8 @@
-const { getAllSessions, getUserSessions, invalidateSessions } = require("@budibase/auth/sessions")
+const {
+  getAllSessions,
+  getUserSessions,
+  invalidateSessions,
+} = require("@budibase/auth/sessions")
 
 exports.fetch = async ctx => {
   ctx.body = await getAllSessions()
@@ -14,7 +18,7 @@ exports.invalidateUser = async ctx => {
   const { userId } = ctx.params
   await invalidateSessions(userId)
   ctx.body = {
-    message: "User sessions invalidated"
+    message: "User sessions invalidated",
   }
 }
 
@@ -28,6 +32,6 @@ exports.invalidateSession = async ctx => {
   const { sessionId } = ctx.params
   await invalidateSessions(userId, sessionId)
   ctx.body = {
-    message: "Session invalidated successfully."
+    message: "Session invalidated successfully.",
   }
 }

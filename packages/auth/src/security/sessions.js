@@ -15,8 +15,8 @@ function makeSessionID(userId, sessionId) {
 exports.createASession = async (userId, sessionId) => {
   const client = await redis.getSessionClient()
   const session = {
-    createdAt: (new Date()).toISOString(),
-    lastAccessedAt: (new Date()).toISOString(),
+    createdAt: new Date().toISOString(),
+    lastAccessedAt: new Date().toISOString(),
     sessionId,
     userId,
   }
@@ -41,7 +41,7 @@ exports.invalidateSessions = async (userId, sessionId = null) => {
 exports.updateSessionTTL = async session => {
   const client = await redis.getSessionClient()
   const key = makeSessionID(session.userId, session.sessionId)
-  session.lastAccessedAt = (new Date()).toISOString()
+  session.lastAccessedAt = new Date().toISOString()
   await client.store(key, session, EXPIRY_SECONDS)
 }
 
