@@ -11,16 +11,16 @@ const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
-function authInternal(ctx, user, err = null) {
+function authInternal(ctx, user, err = null, info = null) {
   if (err) {
-    return ctx.throw(403, "Unauthorized")
+    return ctx.throw(403, info? info : "Unauthorized")
   }
 
   const expires = new Date()
   expires.setDate(expires.getDate() + 1)
 
   if (!user) {
-    return ctx.throw(403, "Unauthorized")
+    return ctx.throw(403, info? info : "Unauthorized")
   }
 
   ctx.cookies.set(Cookies.Auth, user.token, {
@@ -154,8 +154,8 @@ exports.oidcAuth = async (ctx, next) => {
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err, user) => {
-      authInternal(ctx, user, err)
+    async (err, user, info) => {
+      authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }
