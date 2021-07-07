@@ -9,33 +9,34 @@ const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
 const rest = require("./rest")
+const { SourceNames } = require("../definitions/datasource")
 
 const DEFINITIONS = {
-  POSTGRES: postgres.schema,
-  DYNAMODB: dynamodb.schema,
-  MONGODB: mongodb.schema,
-  ELASTICSEARCH: elasticsearch.schema,
-  COUCHDB: couchdb.schema,
-  SQL_SERVER: sqlServer.schema,
-  S3: s3.schema,
-  AIRTABLE: airtable.schema,
-  MYSQL: mysql.schema,
-  ARANGODB: arangodb.schema,
-  REST: rest.schema,
+  [SourceNames.POSTGRES]: postgres.schema,
+  [SourceNames.DYNAMODB]: dynamodb.schema,
+  [SourceNames.MONGODB]: mongodb.schema,
+  [SourceNames.ELASTICSEARCH]: elasticsearch.schema,
+  [SourceNames.COUCHDB]: couchdb.schema,
+  [SourceNames.SQL_SERVER]: sqlServer.schema,
+  [SourceNames.S3]: s3.schema,
+  [SourceNames.AIRTABLE]: airtable.schema,
+  [SourceNames.MYSQL]: mysql.schema,
+  [SourceNames.ARANGODB]: arangodb.schema,
+  [SourceNames.REST]: rest.schema,
 }
 
 const INTEGRATIONS = {
-  POSTGRES: postgres.integration,
-  DYNAMODB: dynamodb.integration,
-  MONGODB: mongodb.integration,
-  ELASTICSEARCH: elasticsearch.integration,
-  COUCHDB: couchdb.integration,
-  S3: s3.integration,
-  SQL_SERVER: sqlServer.integration,
-  AIRTABLE: airtable.integration,
-  MYSQL: mysql.integration,
-  ARANGODB: arangodb.integration,
-  REST: rest.integration,
+  [SourceNames.POSTGRES]: postgres.integration,
+  [SourceNames.DYNAMODB]: dynamodb.integration,
+  [SourceNames.MONGODB]: mongodb.integration,
+  [SourceNames.ELASTICSEARCH]: elasticsearch.integration,
+  [SourceNames.COUCHDB]: couchdb.integration,
+  [SourceNames.SQL_SERVER]: s3.integration,
+  [SourceNames.S3]: sqlServer.integration,
+  [SourceNames.AIRTABLE]: airtable.integration,
+  [SourceNames.MYSQL]: mysql.integration,
+  [SourceNames.ARANGODB]: arangodb.integration,
+  [SourceNames.REST]: rest.integration,
 }
 
 module.exports = {

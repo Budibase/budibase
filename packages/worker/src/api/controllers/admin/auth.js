@@ -1,5 +1,6 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
+const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
@@ -10,16 +11,16 @@ const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
-function authInternal(ctx, user, err = null) {
+function authInternal(ctx, user, err = null, info = null) {
   if (err) {
-    return ctx.throw(403, "Unauthorized")
+    return ctx.throw(403, info? info : "Unauthorized")
   }
 
   const expires = new Date()
   expires.setDate(expires.getDate() + 1)
 
   if (!user) {
-    return ctx.throw(403, "Unauthorized")
+    return ctx.throw(403, info? info : "Unauthorized")
   }
 
   ctx.cookies.set(Cookies.Auth, user.token, {
@@ -124,6 +125,37 @@ exports.googleAuth = async (ctx, next) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, user) => {
       authInternal(ctx, user, err)
+
+      ctx.redirect("/")
+    }
+  )(ctx, next)
+}
+
+async function oidcStrategyFactory(ctx) {
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  return oidc.strategyFactory(callbackUrl)
+}
+
+/**
+ * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
+ * On a successful login, you will be redirected to the oidcAuth callback route.
+ */
+exports.oidcPreAuth = async (ctx, next) => {
+  const strategy = await oidcStrategyFactory(ctx)
+
+  return passport.authenticate(strategy, {
+    scope: ["profile", "email"],
+  })(ctx, next)
+}
+
+exports.oidcAuth = async (ctx, next) => {
+  const strategy = await oidcStrategyFactory(ctx)
+
+  return passport.authenticate(
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
+    async (err, user, info) => {
+      authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }

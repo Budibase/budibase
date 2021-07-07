@@ -26,3 +26,17 @@ export interface Table {
   primaryDisplay?: string
   sourceId?: string
 }
+
+export interface BudibaseAppMetadata {
+  _id: string
+  _rev?: string
+  appId: string
+  type: string
+  version: string
+  componentlibraries: string[]
+  name: string
+  url: string
+  instance: { _id: string }
+  updatedAt: Date
+  createdAt: Date
+}

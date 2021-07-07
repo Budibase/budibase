@@ -1,4 +1,6 @@
-import { SqlQuery } from "./base/definitions"
+import { SqlQuery } from "../definitions/datasource"
+import { Datasource } from "../definitions/common"
+import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
@@ -25,15 +27,21 @@ export function generateRowIdField(keyProps: any[] = []) {
     keyProps = [keyProps]
   }
   // this conserves order and types
+  // we have to swap the double quotes to single quotes for use in HBS statements
+  // when using the literal helper the double quotes can break things
   return encodeURIComponent(JSON.stringify(keyProps).replace(/"/g, "'"))
 }
 
 // should always return an array
-export function breakRowIdField(_id: string) {
+export function breakRowIdField(_id: string): any[] {
   if (!_id) {
-    return null
+    return []
   }
-  return JSON.parse(decodeURIComponent(_id))
+  // have to replace on the way back as we swapped out the double quotes
+  // when encoding, but JSON can't handle the single quotes
+  const decoded: string = decodeURIComponent(_id).replace(/'/g, '"')
+  const parsed = JSON.parse(decoded)
+  return Array.isArray(parsed) ? parsed : [parsed]
 }
 
 export function convertType(type: string, map: { [key: string]: any }) {
@@ -51,4 +59,12 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   } else {
     return query
   }
+}
+
+export function isSQL(datasource: Datasource): boolean {
+  if (!datasource || !datasource.source) {
+    return false
+  }
+  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  return SQL.indexOf(datasource.source) !== -1
 }

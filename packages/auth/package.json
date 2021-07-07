@@ -1,6 +1,6 @@
 {
   "name": "@budibase/auth",
-  "version": "0.9.67",
+  "version": "0.9.70",
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
   "author": "Budibase",
@@ -13,6 +13,7 @@
     "koa-passport": "^4.1.4",
     "lodash": "^4.17.21",
     "node-fetch": "^2.6.1",
+    "@techpass/passport-openidconnect": "^0.3.0",
     "passport-google-auth": "^1.0.2",
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
