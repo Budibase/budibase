@@ -1,5 +1,5 @@
 <script>
-  import GoogleLogo from "./_logos/Google.svelte"  
+  import GoogleLogo from "./_logos/Google.svelte"
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
   import OracleLogo from "assets/oracle-logo.png"
@@ -60,7 +60,7 @@
     },
     { label: "Oracle", value: "Oracle", icon: OracleLogo },
     { label: "Auth0", value: "Auth0", icon: Auth0Logo },
-    { label: "OIDC", value: "Auth0", icon: OidcLogoPng },
+    { label: "OIDC", value: "Oidc", icon: OidcLogoPng },
 
     { label: "Upload your own", value: "Upload" },
   ]
@@ -82,13 +82,17 @@
   }
 
   const onFileSelected = e => {
+    let fileName = e.target.files[0].name
     image = e.target.files[0]
+    providers.oidc.config["iconName"] = fileName
+    iconDropdownOptions.unshift({label: fileName, value: fileName})
   }
 
   const providers = { google, oidc }
 
   async function save(docs) {
-    uploadLogo(image)
+    // only if the user has provided an image, upload it.
+    image && uploadLogo(image)
     let calls = []
     docs.forEach(element => {
       calls.push(api.post(`/api/admin/configs`, element))
@@ -130,6 +134,21 @@
       providers.google = googleDoc
     }
 
+    //Get the list of user uploaded logos and push it to the dropdown options.
+    //This needs to be done before the config callso they're available when the dropdown renders
+    const res = await api.get(`/api/admin/configs/oidc_logos`)
+    const configSettings = await res.json()
+    const logoKeys = Object.keys(configSettings.config)
+
+    logoKeys.map(logoKey => {
+      const logoUrl = configSettings.config[logoKey]
+      iconDropdownOptions.unshift({
+        label: logoKey,
+        value: logoKey,
+        icon: logoUrl,
+      })
+    })
+
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
 
@@ -141,16 +160,7 @@
     } else {
       providers.oidc = oidcDoc
     }
-    const res = await api.get(`/api/admin/configs/oidc_logos`)
-    const configSettings = await res.json()
-    console.log(configSettings)
-    const logoKeys = Object.keys(configSettings.config)
-    logoKeys.map(logoKey => {
-      const logoUrl = configSettings.config[logoKey]
-      iconDropdownOptions.unshift({label: logoKey, value: logoUrl, icon: logoUrl})
-    })
   })
-
 </script>
 
 <Layout>
@@ -215,12 +225,11 @@
       </div>
       <div class="form-row">
         <Label size="L">Icon</Label>
-
         <Select
           label=""
           bind:value={providers.oidc.config["iconName"]}
           options={iconDropdownOptions}
-          on:change={e => (e.detail === "Upload" && fileinput.click())}
+          on:change={e => e.detail === "Upload" && fileinput.click()}
         />
       </div>
       <input
