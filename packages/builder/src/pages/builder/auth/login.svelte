@@ -12,7 +12,7 @@
   import { goto, params } from "@roxi/routify"
   import { auth, organisation } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
-  import OidcButton from "./_components/OidcButton.svelte"
+  import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
 
@@ -62,7 +62,7 @@
         <Heading>Sign in to {company}</Heading>
       </Layout>
       <GoogleButton />
-      <OidcButton />
+      <OIDCButton />
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
