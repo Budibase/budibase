@@ -74,14 +74,11 @@
     // Initialise the app when mounted
     iframe.contentWindow.addEventListener(
       "ready",
-      () => {
-        loading = false
-        refreshContent(strippedJson)
-      },
+      () => refreshContent(strippedJson),
       { once: true }
     )
 
-    // Use iframe loading event to support old client versions
+    // Display the client app once the iframe is initialised
     iframe.contentWindow.addEventListener(
       "iframe-loaded",
       () => (loading = false),
@@ -109,7 +106,11 @@
         idToDelete = data.id
         confirmDeleteDialog.show()
       } else if (type === "preview-loaded") {
-        // loading = false
+        // We can use this in future to delay displaying the preview
+        // until the client app has actually initialised.
+        // This makes a smoother loading experience, but is not backwards
+        // compatible with old client library versions.
+        // So do nothing with this for now.
       } else {
         console.warning(`Client sent unknown event type: ${type}`)
       }
