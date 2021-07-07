@@ -86,6 +86,7 @@ const createScreen = table => {
           valueType: "Binding",
         },
       ],
+      limit: table.type === "external" ? undefined : 1,
       paginate: false,
     })
 

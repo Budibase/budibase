@@ -5,14 +5,17 @@
   import ICONS from "../icons"
 
   export let integration = {}
-
   let integrations = []
+  const INTERNAL = "BUDIBASE"
 
   async function fetchIntegrations() {
     const response = await api.get("/api/integrations")
     const json = await response.json()
 
-    integrations = json
+    integrations = {
+      [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
+      ...json,
+    }
     return json
   }
 
@@ -21,7 +24,7 @@
 
     // build the schema
     const schema = {}
-    for (let key in selected.datasource) {
+    for (let key of Object.keys(selected.datasource)) {
       schema[key] = selected.datasource[key].default
     }
 
@@ -39,7 +42,7 @@
 
 <section>
   <div class="integration-list">
-    {#each Object.keys(integrations) as integrationType}
+    {#each Object.entries(integrations) as [integrationType, schema]}
       <div
         class="integration hoverable"
         class:selected={integration.type === integrationType}
@@ -50,7 +53,7 @@
           height="50"
           width="50"
         />
-        <Body size="XS">{integrationType}</Body>
+        <Body size="XS">{schema.name || integrationType}</Body>
       </div>
     {/each}
   </div>
