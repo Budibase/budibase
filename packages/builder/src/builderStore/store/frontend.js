@@ -76,6 +76,7 @@ export const getFrontendStore = () => {
         clientLibPath,
         previousTopNavPath: {},
         version: application.version,
+        revertableVersion: application.revertableVersion,
       }))
       await hostingStore.actions.fetch()
 
