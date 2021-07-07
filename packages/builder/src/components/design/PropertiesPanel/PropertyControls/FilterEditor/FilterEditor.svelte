@@ -21,7 +21,7 @@
   export let value = []
   export let componentInstance
   let drawer
-  let tempValue = value
+  let tempValue = value || []
 
   $: numFilters = Array.isArray(tempValue)
     ? tempValue.length
@@ -30,15 +30,6 @@
   $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
   $: schemaFields = Object.values(schema || {})
   $: internalTable = dataSource?.type === "table"
-
-  // Reset value if value is wrong type for the datasource.
-  // Lucene editor needs an array, and simple editor needs an object.
-  $: {
-    if (!Array.isArray(value)) {
-      tempValue = []
-      dispatch("change", [])
-    }
-  }
 
   const saveFilter = async () => {
     dispatch("change", tempValue)

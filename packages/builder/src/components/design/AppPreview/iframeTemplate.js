@@ -25,7 +25,9 @@ export default `
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
-        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+      }
+      html.loaded {
+        box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
       }
       body {
         flex: 1 1 auto;
@@ -58,13 +60,20 @@ export default `
         window["##BUDIBASE_PREVIEW_TYPE##"] = previewType
 
         // Initialise app
-        if (window.loadBudibase) {
-          loadBudibase()
+        try {
+          if (window.loadBudibase) {
+            window.loadBudibase()
+            document.documentElement.classList.add("loaded")
+          } else {
+            throw "The client library couldn't be loaded"
+          }
+        } catch (error) {
+          window.dispatchEvent(new CustomEvent("error", { detail: error }))
         }
       }
 
       window.addEventListener("message", receiveMessage)
-      window.dispatchEvent(new Event("bb-ready"))
+      window.dispatchEvent(new Event("ready"))
     </script>
   </head>
   <body/>
