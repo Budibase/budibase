@@ -150,7 +150,9 @@
     {#if $currentAsset}
       <div class="preview-header">
         <ComponentSelectionList />
-        <AppThemeSelect />
+        {#if $store.clientFeatures.spectrumThemes}
+          <AppThemeSelect />
+        {/if}
       </div>
       <div class="preview-content">
         <CurrentItemPreview />
