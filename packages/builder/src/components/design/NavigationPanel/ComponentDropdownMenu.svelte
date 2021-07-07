@@ -65,7 +65,7 @@
   }
 </script>
 
-{#if definition.editable !== false}
+{#if definition?.editable !== false}
   <ActionMenu>
     <div slot="control" class="icon">
       <Icon size="S" hoverable name="MoreSmallList" />
