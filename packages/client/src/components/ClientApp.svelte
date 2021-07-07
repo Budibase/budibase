@@ -19,6 +19,8 @@
   import SettingsBar from "./preview/SettingsBar.svelte"
   import SelectionIndicator from "./preview/SelectionIndicator.svelte"
   import HoverIndicator from "./preview/HoverIndicator.svelte"
+  import { Layout, Heading, Body } from "@budibase/bbui"
+  import ErrorSVG from "../../../builder/assets/error.svg"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -26,6 +28,7 @@
   setContext("context", createContextStore())
 
   let dataLoaded = false
+  let permissionError = false
 
   // Load app config
   onMount(async () => {
@@ -47,12 +50,21 @@
     },
   ]
 
-  // Redirect to home layout if no matching route
+  // Handle no matching route - this is likely a permission error
   $: {
     if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
       if ($authStore) {
-        routeStore.actions.navigate("/")
+        // There is a logged in user, so handle them
+        if ($screenStore.screens.length) {
+          // Screens exist so navigate back to the home screen
+          const firstRoute = $screenStore.screens[0].routing?.route ?? "/"
+          routeStore.actions.navigate(firstRoute)
+        } else {
+          // No screens likely means the user has no permissions to view this app
+          permissionError = true
+        }
       } else {
+        // The user is not logged in, redirect them to login
         const returnUrl = `${window.location.pathname}${window.location.hash}`
         const encodedUrl = encodeURIComponent(returnUrl)
         window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
@@ -64,36 +76,46 @@
     $builderStore.theme || $appStore.application?.theme || "spectrum--light"
 </script>
 
-{#if dataLoaded && $screenStore.activeLayout}
+{#if dataLoaded}
   <div
     id="spectrum-root"
     lang="en"
     dir="ltr"
     class="spectrum spectrum--medium {themeClass}"
   >
-    <Provider key="user" data={$authStore} {actions}>
-      <div id="app-root">
-        {#key $screenStore.activeLayout._id}
-          <Component instance={$screenStore.activeLayout.props} />
-        {/key}
+    {#if permissionError}
+      <div class="error">
+        <Layout justifyItems="center" gap="S">
+          {@html ErrorSVG}
+          <Heading size="L">You don't have permission to use this app</Heading>
+          <Body size="S">Ask your administrator to grant you access</Body>
+        </Layout>
       </div>
-      <NotificationDisplay />
-      <ConfirmationDisplay />
-      <!-- Key block needs to be outside the if statement or it breaks -->
-      {#key $builderStore.selectedComponentId}
+    {:else if $screenStore.activeLayout}
+      <Provider key="user" data={$authStore} {actions}>
+        <div id="app-root">
+          {#key $screenStore.activeLayout._id}
+            <Component instance={$screenStore.activeLayout.props} />
+          {/key}
+        </div>
+        <NotificationDisplay />
+        <ConfirmationDisplay />
+        <!-- Key block needs to be outside the if statement or it breaks -->
+        {#key $builderStore.selectedComponentId}
+          {#if $builderStore.inBuilder}
+            <SettingsBar />
+          {/if}
+        {/key}
+        <!--
+            We don't want to key these by componentID as they control their own
+            re-mounting to avoid flashes.
+          -->
         {#if $builderStore.inBuilder}
-          <SettingsBar />
+          <SelectionIndicator />
+          <HoverIndicator />
         {/if}
-      {/key}
-      <!--
-        We don't want to key these by componentID as they control their own
-        re-mounting to avoid flashes.
-      -->
-      {#if $builderStore.inBuilder}
-        <SelectionIndicator />
-        <HoverIndicator />
-      {/if}
-    </Provider>
+      </Provider>
+    {/if}
   </div>
 {/if}
 
@@ -130,5 +152,32 @@
     scrollbar-width: thin;
     scrollbar-color: var(--spectrum-global-color-gray-400)
       var(--spectrum-alias-background-color-default);
+  }
+
+  .error {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+    text-align: center;
+    padding: 20px;
+  }
+  .error :global(svg) {
+    fill: var(--spectrum-global-color-gray-500);
+    width: 80px;
+    height: 80px;
+  }
+  .error :global(h1),
+  .error :global(p) {
+    color: var(--spectrum-global-color-gray-800);
+  }
+  .error :global(p) {
+    font-style: italic;
+    margin-top: -0.5em;
+  }
+  .error :global(h1) {
+    font-weight: 400;
   }
 </style>

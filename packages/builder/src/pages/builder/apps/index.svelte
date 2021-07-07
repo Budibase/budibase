@@ -28,12 +28,7 @@
   onMount(async () => {
     await organisation.init()
     await apps.load()
-    // Skip the portal if you only have one app
-    if (!$auth.isBuilder && $apps.filter(publishedAppsOnly).length === 1) {
-      window.location = `/${publishedApps[0].prodId}`
-    } else {
-      loaded = true
-    }
+    loaded = true
   })
 
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED

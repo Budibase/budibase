@@ -7,17 +7,20 @@ const createScreenStore = () => {
   const store = derived(
     [appStore, routeStore, builderStore],
     ([$appStore, $routeStore, $builderStore]) => {
-      let activeLayout
-      let activeScreen
+      let activeLayout, activeScreen
+      let layouts, screens
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
         activeLayout = $builderStore.layout
         activeScreen = $builderStore.screen
+        layouts = [activeLayout]
+        screens = [activeScreen]
       } else {
         activeLayout = { props: { _component: "screenslot" } }
 
         // Find the correct screen by matching the current route
-        const { screens, layouts } = $appStore
+        screens = $appStore.screens
+        layouts = $appStore.layouts
         if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
@@ -29,7 +32,7 @@ const createScreenStore = () => {
           )
         }
       }
-      return { activeLayout, activeScreen }
+      return { layouts, screens, activeLayout, activeScreen }
     }
   )
 
