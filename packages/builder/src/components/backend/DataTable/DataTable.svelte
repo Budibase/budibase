@@ -24,7 +24,7 @@
     name: $views.selected?.name,
   }
   $: type = $tables.selected?.type
-  $: isInternal = type === "internal"
+  $: isInternal = type !== "external"
 
   // Fetch rows for specified table
   $: {
