@@ -122,6 +122,9 @@ export const getFrontendStore = () => {
       save: async screen => {
         const creatingNewScreen = screen._id === undefined
         const response = await api.post(`/api/screens`, screen)
+        if (response.status !== 200) {
+          return
+        }
         screen = await response.json()
         await store.actions.routing.fetch()
 

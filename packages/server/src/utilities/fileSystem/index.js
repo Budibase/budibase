@@ -238,7 +238,10 @@ exports.readFileSync = (filepath, options = "utf8") => {
  */
 exports.cleanup = appIds => {
   for (let appId of appIds) {
-    fs.rmdirSync(join(budibaseTempDir(), appId), { recursive: true })
+    const path = join(budibaseTempDir(), appId)
+    if (fs.existsSync(path)) {
+      fs.rmdirSync(path, { recursive: true })
+    }
   }
 }
 
