@@ -13,7 +13,7 @@ const {
   deleteFolder,
   downloadTarball,
 } = require("./utilities")
-const { downloadLibraries, uploadClientLibrary } = require("./newApp")
+const { uploadClientLibrary } = require("./newApp")
 const download = require("download")
 const env = require("../../environment")
 const { homedir } = require("os")
@@ -144,7 +144,6 @@ exports.performBackup = async (appId, backupName) => {
  * @return {Promise<void>} once promise completes app resources should be ready in object store.
  */
 exports.createApp = async appId => {
-  await downloadLibraries(appId)
   await uploadClientLibrary(appId)
 }
 
@@ -193,8 +192,17 @@ exports.getComponentLibraryManifest = async (appId, library) => {
     delete require.cache[require.resolve(path)]
     return require(path)
   }
-  const path = join(appId, "node_modules", library, "package", filename)
-  let resp = await retrieve(ObjectStoreBuckets.APPS, path)
+
+  let resp
+  try {
+    // Try to load the manifest from the new file location
+    const path = join(appId, filename)
+    resp = await retrieve(ObjectStoreBuckets.APPS, path)
+  } catch (error) {
+    // Fallback to loading it from the old location for old apps
+    const path = join(appId, "node_modules", library, "package", filename)
+    resp = await retrieve(ObjectStoreBuckets.APPS, path)
+  }
   if (typeof resp !== "string") {
     resp = resp.toString("utf8")
   }
