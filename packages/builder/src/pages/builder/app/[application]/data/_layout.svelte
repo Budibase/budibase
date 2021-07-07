@@ -7,7 +7,6 @@
 
   let selected = "Sources"
   let modal
-
   $: isExternal =
     $params.selectedDatasource &&
     $params.selectedDatasource !== BUDIBASE_INTERNAL_DB

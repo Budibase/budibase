@@ -5,14 +5,17 @@
   import ICONS from "../icons"
 
   export let integration = {}
-
   let integrations = []
+  const INTERNAL = "BUDIBASE"
 
   async function fetchIntegrations() {
     const response = await api.get("/api/integrations")
     const json = await response.json()
 
-    integrations = json
+    integrations = {
+      [INTERNAL]: { datasource: {} },
+      ...json,
+    }
     return json
   }
 
@@ -21,7 +24,7 @@
 
     // build the schema
     const schema = {}
-    for (let key in selected.datasource) {
+    for (let key of Object.keys(selected.datasource)) {
       schema[key] = selected.datasource[key].default
     }
 
