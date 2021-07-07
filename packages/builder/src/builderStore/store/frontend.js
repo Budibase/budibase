@@ -32,6 +32,10 @@ const INITIAL_FRONTEND_STATE = {
   layouts: [],
   screens: [],
   components: [],
+  clientFeatures: {
+    spectrumThemes: false,
+    intelligentLoading: false,
+  },
   currentFrontEndType: "none",
   selectedScreenId: "",
   selectedLayoutId: "",
@@ -56,6 +60,10 @@ export const getFrontendStore = () => {
         ...state,
         libraries: application.componentLibraries,
         components,
+        clientFeatures: {
+          ...state.clientFeatures,
+          ...components.features,
+        },
         name: application.name,
         description: application.description,
         appId: application.appId,
