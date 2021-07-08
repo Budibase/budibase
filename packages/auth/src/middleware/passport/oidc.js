@@ -3,24 +3,6 @@ const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 
 /**
- * @param {*} profile The structured profile created by passport using the user info endpoint
- * @param {*} jwtClaims The claims returned in the id token
- */
-function getEmail(profile, jwtClaims) {
-  // profile not guaranteed to contain email e.g. github connected azure ad account
-  if (profile._json.email) {
-    return profile._json.email
-  }
-
-  // fallback to id token
-  if (jwtClaims.email) {
-    return jwtClaims.email
-  }
-
-  return null;
-}
-
-/**
  * @param {*} issuer The identity provider base URL
  * @param {*} sub The user ID
  * @param {*} profile The user profile information. Created by passport from the /userinfo response
@@ -30,7 +12,6 @@ function getEmail(profile, jwtClaims) {
  * @param {*} idToken The id_token - always a JWT
  * @param {*} params The response body from requesting an access_token
  * @param {*} done The passport callback: err, user, info
- * @returns 
  */
 async function authenticate(
   issuer,
@@ -45,21 +26,55 @@ async function authenticate(
 ) {
   const thirdPartyUser = {
     // store the issuer info to enable sync in future
-    provider: issuer, 
+    provider: issuer,
     providerType: "oidc",
     userId: profile.id,
     profile: profile,
     email: getEmail(profile, jwtClaims),
     oauth2: {
       accessToken: accessToken,
-      refreshToken: refreshToken
-    }
+      refreshToken: refreshToken,
+    },
   }
 
   return authenticateThirdParty(
-    thirdPartyUser, 
+    thirdPartyUser,
     false, // don't require local accounts to exist
-    done)
+    done
+  )
+}
+
+/**
+ * @param {*} profile The structured profile created by passport using the user info endpoint
+ * @param {*} jwtClaims The claims returned in the id token
+ */
+function getEmail(profile, jwtClaims) {
+  // profile not guaranteed to contain email e.g. github connected azure ad account
+  if (profile._json.email) {
+    return profile._json.email
+  }
+
+  // fallback to id token email
+  if (jwtClaims.email) {
+    return jwtClaims.email
+  }
+
+  // fallback to id token preferred username
+  const username = jwtClaims.preferred_username
+  if (username && validEmail(username)) {
+    return username
+  }
+
+  return null
+}
+
+function validEmail(value) {
+  return (
+    value &&
+    !!value.match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    )
+  )
 }
 
 /**
@@ -67,23 +82,22 @@ async function authenticate(
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
  */
-exports.strategyFactory = async function (callbackUrl) {
+exports.strategyFactory = async function (config, callbackUrl) {
   try {
-    const configurationUrl =
-      "https://login.microsoftonline.com/2668c0dd-7ed2-4db3-b387-05b6f9204a70/v2.0/.well-known/openid-configuration"
-    const clientSecret = "g-ty~2iW.bo.88xj_QI6~hdc-H8mP2Xbnd"
-    const clientId = "bed2017b-2f53-42a9-8ef9-e58918935e07"
+    const { clientId, clientSecret, configUrl } = config
 
-    if (!clientId || !clientSecret || !callbackUrl || !configurationUrl) {
+    if (!clientId || !clientSecret || !callbackUrl || !configUrl) {
       throw new Error(
-        "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configurationUrl"
+        "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )
     }
 
-    const response = await fetch(configurationUrl)
+    const response = await fetch(configUrl)
 
     if (!response.ok) {
-      throw new Error(`Unexpected response when fetching openid-configuration: ${response.statusText}`)
+      throw new Error(
+        `Unexpected response when fetching openid-configuration: ${response.statusText}`
+      )
     }
 
     const body = await response.json()
@@ -101,7 +115,6 @@ exports.strategyFactory = async function (callbackUrl) {
       },
       authenticate
     )
-    
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC authentication strategy", err)
