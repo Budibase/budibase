@@ -22,11 +22,13 @@ const CONTENT_TYPE_MAP = {
   html: "text/html",
   css: "text/css",
   js: "application/javascript",
+  json: "application/json",
 }
 const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.html,
   CONTENT_TYPE_MAP.css,
   CONTENT_TYPE_MAP.js,
+  CONTENT_TYPE_MAP.json,
 ]
 
 // does normal sanitization and then swaps dev apps to apps
