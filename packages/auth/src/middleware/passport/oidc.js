@@ -110,8 +110,7 @@ exports.strategyFactory = async function (config, callbackUrl) {
         userInfoURL: body.userinfo_endpoint,
         clientID: clientId,
         clientSecret: clientSecret,
-        callbackURL: callbackUrl,
-        scope: "profile email",
+        callbackURL: callbackUrl
       },
       authenticate
     )

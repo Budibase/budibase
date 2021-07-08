@@ -153,6 +153,7 @@ exports.oidcPreAuth = async (ctx, next) => {
   const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(strategy, {
+    // required 'openid' scope is added by oidc strategy factory
     scope: ["profile", "email"],
   })(ctx, next)
 }
