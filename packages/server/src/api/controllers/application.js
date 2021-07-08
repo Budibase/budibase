@@ -248,8 +248,10 @@ exports.updateClient = async function (ctx) {
   const currentVersion = application.version
 
   // Update client library and manifest
-  await backupClientLibrary(ctx.params.appId)
-  await updateClientLibrary(ctx.params.appId)
+  if (!env.isTest()) {
+    await backupClientLibrary(ctx.params.appId)
+    await updateClientLibrary(ctx.params.appId)
+  }
 
   // Update versions in app package
   const appPackageUpdates = {
@@ -270,7 +272,9 @@ exports.revertClient = async function (ctx) {
   }
 
   // Update client library and manifest
-  await revertClientLibrary(ctx.params.appId)
+  if (!env.isTest()) {
+    await revertClientLibrary(ctx.params.appId)
+  }
 
   // Update versions in app package
   const appPackageUpdates = {
