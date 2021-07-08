@@ -85,7 +85,7 @@
     let fileName = e.target.files[0].name
     image = e.target.files[0]
     providers.oidc.config["iconName"] = fileName
-    iconDropdownOptions.unshift({label: fileName, value: fileName})
+    iconDropdownOptions.unshift({ label: fileName, value: fileName })
   }
 
   const providers = { google, oidc }
@@ -140,17 +140,17 @@
     const configSettings = await res.json()
 
     if (configSettings.config) {
-    const logoKeys = Object.keys(configSettings.config)
+      const logoKeys = Object.keys(configSettings.config)
 
-    logoKeys.map(logoKey => {
-      const logoUrl = configSettings.config[logoKey]
-      iconDropdownOptions.unshift({
-        label: logoKey,
-        value: logoKey,
-        icon: logoUrl,
+      logoKeys.map(logoKey => {
+        const logoUrl = configSettings.config[logoKey]
+        iconDropdownOptions.unshift({
+          label: logoKey,
+          value: logoKey,
+          icon: logoUrl,
+        })
       })
-    })
-  }
+    }
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
 
