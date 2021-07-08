@@ -13,6 +13,7 @@ const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
 function authInternal(ctx, user, err = null, info = null) {
   if (err) {
+    console.error("Authentication error", err)
     return ctx.throw(403, info? info : "Unauthorized")
   }
 
@@ -32,8 +33,8 @@ function authInternal(ctx, user, err = null, info = null) {
 }
 
 exports.authenticate = async (ctx, next) => {
-  return passport.authenticate("local", async (err, user) => {
-    authInternal(ctx, user, err)
+  return passport.authenticate("local", async (err, user, info) => {
+    authInternal(ctx, user, err, info)
 
     delete user.token
 
@@ -123,8 +124,8 @@ exports.googleAuth = async (ctx, next) => {
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err, user) => {
-      authInternal(ctx, user, err)
+    async (err, user, info) => {
+      authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }
