@@ -146,7 +146,7 @@ exports.upload = async function (ctx) {
     }
   }
   const url = `/${bucket}/${key}`
-  cfgStructure.config[`${name}Url`] = url
+  cfgStructure.config[`${name}`] = url
   // write back to db with url updated
   await db.put(cfgStructure)
 
@@ -188,6 +188,10 @@ exports.configChecklist = async function (ctx) {
       type: Configs.GOOGLE,
     })
 
+    // They have set up OIDC
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
     // They have set up an admin user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
@@ -201,6 +205,7 @@ exports.configChecklist = async function (ctx) {
       smtp: !!smtpConfig,
       adminUser,
       oauth: !!oauthConfig,
+      oidc: !!oidcConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)
