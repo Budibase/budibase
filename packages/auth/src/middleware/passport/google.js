@@ -11,14 +11,15 @@ async function authenticate(accessToken, refreshToken, profile, done) {
     email: profile._json.email,
     oauth2: {
       accessToken: accessToken,
-      refreshToken: refreshToken
-    }
+      refreshToken: refreshToken,
+    },
   }
 
   return authenticateThirdParty(
-    thirdPartyUser, 
+    thirdPartyUser,
     true, // require local accounts to exist
-    done)
+    done
+  )
 }
 
 /**
