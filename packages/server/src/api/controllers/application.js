@@ -34,9 +34,10 @@ const {
 const { clientLibraryPath } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 const {
-  uploadClientLibrary,
-  downloadLibraries,
-} = require("../../utilities/fileSystem/newApp")
+  updateClientLibrary,
+  backupClientLibrary,
+  revertClientLibrary,
+} = require("../../utilities/fileSystem/clientLibrary")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -247,12 +248,34 @@ exports.updateClient = async function (ctx) {
   const currentVersion = application.version
 
   // Update client library and manifest
-  await uploadClientLibrary(ctx.params.appId)
+  await backupClientLibrary(ctx.params.appId)
+  await updateClientLibrary(ctx.params.appId)
 
   // Update versions in app package
   const appPackageUpdates = {
     version: packageJson.version,
     revertableVersion: currentVersion,
+  }
+  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  ctx.status = 200
+  ctx.body = data
+}
+
+exports.revertClient = async function (ctx) {
+  // Check app can be reverted
+  const db = new CouchDB(ctx.params.appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
+  if (!application.revertableVersion) {
+    ctx.throw(400, "There is no version to revert to")
+  }
+
+  // Update client library and manifest
+  await revertClientLibrary(ctx.params.appId)
+
+  // Update versions in app package
+  const appPackageUpdates = {
+    version: application.revertableVersion,
+    revertableVersion: null,
   }
   const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
   ctx.status = 200
@@ -290,10 +313,7 @@ const updateAppPackage = async (ctx, appPackage, appId) => {
     delete newAppPackage.lockedBy
   }
 
-  const response = await db.put(newAppPackage)
-  console.log(response)
-
-  return response
+  return await db.put(newAppPackage)
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
