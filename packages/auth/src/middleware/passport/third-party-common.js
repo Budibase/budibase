@@ -30,6 +30,7 @@ exports.authenticateThirdParty = async function (
   // use the third party id
   const userId = generateGlobalUserID(thirdPartyUser.userId)
 
+  // try to load by id
   try {
     dbUser = await db.get(userId)
   } catch (err) {
@@ -41,38 +42,44 @@ exports.authenticateThirdParty = async function (
         err
       )
     }
+  }
 
-    // check user already exists by email
+  // fallback to loading by email
+  if (!dbUser) {
     const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
       key: thirdPartyUser.email,
       include_docs: true,
     })
-    const userExists = users.rows.length > 0
 
-    if (requireLocalAccount && !userExists) {
+    if (users.rows.length > 0) {
+      dbUser = users.rows[0].doc
+    }
+  }
+
+  // exit early if there is still no user and auto creation is disabled
+  if (!dbUser && requireLocalAccount ) {
+    if (requireLocalAccount) {
       return authError(
         done,
         "Email does not yet exist. You must set up your local budibase account first."
       )
     }
-
-    // create the user to save
-    let user
-    if (userExists) {
-      const existing = users.rows[0].doc
-      user = constructMergedUser(userId, existing, thirdPartyUser)
-
-      // remove the local account to avoid conflicts
-      await db.remove(existing._id, existing._rev)
-    } else {
-      user = constructNewUser(userId, thirdPartyUser)
-    }
-
-    // save the user
-    const response = await db.post(user)
-    dbUser = user
-    dbUser._rev = response.rev
   }
+
+  let user
+  // first time creation
+  if (!dbUser) {
+    user = constructNewUser(userId, thirdPartyUser)
+  } else {
+  // existing user
+    user = constructMergedUser(userId, dbUser, thirdPartyUser)
+    await db.remove(dbUser._id, dbUser._rev)
+  }
+
+  // create or sync the user
+  const response = await db.post(user)
+  dbUser = user
+  dbUser._rev = response.rev
 
   // authenticate
   const payload = {
@@ -92,9 +99,10 @@ exports.authenticateThirdParty = async function (
  * @returns a user object constructed from existing and third party information
  */
 function constructMergedUser(userId, existing, thirdPartyUser) {
+  // sync third party fields
   const user = constructNewUser(userId, thirdPartyUser)
 
-  // merge with existing account
+  // merge existing fields
   user.roles = existing.roles
   user.builder = existing.builder
   user.admin = existing.admin
@@ -114,13 +122,27 @@ function constructNewUser(userId, thirdPartyUser) {
     roles: {},
   }
 
-  // persist profile information
-  // @reviewers: Historically stored at the root level of the user
-  //             Nest to prevent conflicts with future fields
-  //             Is this okay to change?
   if (thirdPartyUser.profile) {
+    const profile = thirdPartyUser.profile
+
+    if (profile.name) {
+      const name = profile.name
+      // first name
+      if (name.givenName) {
+        user.firstName = name.givenName
+      }
+      // last name
+      if (name.familyName) {
+        user.lastName = name.familyName
+      }
+    }
+     
+    // profile
+    // @reviewers: Historically stored at the root level of the user
+    //             Nest to prevent conflicts with future fields
+    //             Is this okay to change?
     user.thirdPartyProfile = {
-      ...thirdPartyUser.profile._json,
+      ...profile._json,
     }
   }
 
