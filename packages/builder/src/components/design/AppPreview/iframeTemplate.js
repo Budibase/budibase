@@ -25,7 +25,9 @@ export default `
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
-        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+      }
+      html.loaded {
+        box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
       }
       body {
         flex: 1 1 auto;
@@ -46,7 +48,14 @@ export default `
         }
 
         // Extract data from message
-        const { selectedComponentId, layout, screen, previewType, appId } = JSON.parse(event.data)
+        const {
+          selectedComponentId,
+          layout,
+          screen,
+          previewType,
+          appId,
+          theme
+        } = JSON.parse(event.data)
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true
@@ -56,15 +65,24 @@ export default `
         window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
         window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
         window["##BUDIBASE_PREVIEW_TYPE##"] = previewType
+        window["##BUDIBASE_PREVIEW_THEME##"] = theme
 
         // Initialise app
-        if (window.loadBudibase) {
-          loadBudibase()
+        try {
+          if (window.loadBudibase) {
+            window.loadBudibase()
+            document.documentElement.classList.add("loaded")
+            window.dispatchEvent(new Event("iframe-loaded"))
+          } else {
+            throw "The client library couldn't be loaded"
+          }
+        } catch (error) {
+          window.dispatchEvent(new CustomEvent("error", { detail: error }))
         }
       }
 
       window.addEventListener("message", receiveMessage)
-      window.dispatchEvent(new Event("bb-ready"))
+      window.dispatchEvent(new Event("ready"))
     </script>
   </head>
   <body/>

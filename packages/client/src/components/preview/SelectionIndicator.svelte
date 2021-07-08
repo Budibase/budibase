@@ -5,7 +5,7 @@
 
 <IndicatorSet
   componentId={$builderStore.selectedComponentId}
-  color="rgb(66, 133, 244)"
+  color="var(--spectrum-global-color-static-blue-600)"
   zIndex="910"
   transition
 />

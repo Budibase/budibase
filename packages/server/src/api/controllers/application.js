@@ -67,15 +67,18 @@ async function getAppUrlIfNotInUse(ctx) {
   let url
   if (ctx.request.body.url) {
     url = encodeURI(ctx.request.body.url)
-  } else {
+  } else if (ctx.request.body.name) {
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  if (url) {
+    url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  }
   if (!env.SELF_HOSTED) {
     return url
   }
   const deployedApps = await getDeployedApps(ctx)
   if (
+    url &&
     deployedApps[url] != null &&
     deployedApps[url].appId !== ctx.params.appId
   ) {
@@ -161,7 +164,15 @@ exports.fetchAppDefinition = async function (ctx) {
 exports.fetchAppPackage = async function (ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
-  const [layouts, screens] = await Promise.all([getLayouts(db), getScreens(db)])
+  const layouts = await getLayouts(db)
+  let screens = await getScreens(db)
+
+  // Only filter screens if the user is not a builder
+  if (!(ctx.user.builder && ctx.user.builder.global)) {
+    const userRoleId = getUserRoleId(ctx)
+    const accessController = new AccessController(ctx.params.appId)
+    screens = await accessController.checkScreensAccess(screens, userRoleId)
+  }
 
   ctx.body = {
     application,

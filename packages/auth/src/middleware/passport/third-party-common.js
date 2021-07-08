@@ -7,6 +7,8 @@ const {
   ViewNames,
 } = require("../../db/utils")
 const { authError } = require("./utils")
+const { newid } = require("../../hashing")
+const { createASession } = require("../../security/sessions")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -57,7 +59,7 @@ exports.authenticateThirdParty = async function (
   }
 
   // exit early if there is still no user and auto creation is disabled
-  if (!dbUser && requireLocalAccount ) {
+  if (!dbUser && requireLocalAccount) {
     if (requireLocalAccount) {
       return authError(
         done,
@@ -82,15 +84,16 @@ exports.authenticateThirdParty = async function (
   dbUser._rev = response.rev
 
   // authenticate
-  const payload = {
-    userId: dbUser._id,
-    builder: dbUser.builder,
-    email: dbUser.email,
-  }
+  const sessionId = newid()
+  await createASession(dbUser._id, sessionId)
 
-  dbUser.token = jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: "1 day",
-  })
+  dbUser.token = jwt.sign(
+    {
+      userId: dbUser._id,
+      sessionId,
+    },
+    env.JWT_SECRET
+  )
 
   return done(null, dbUser)
 }
@@ -120,7 +123,7 @@ function syncUser(user, thirdPartyUser) {
         user.lastName = name.familyName
       }
     }
-     
+
     // profile
     // @reviewers: Historically stored at the root level of the user
     //             Nest to prevent conflicts with future fields

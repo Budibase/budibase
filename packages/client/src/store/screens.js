@@ -1,27 +1,26 @@
-import { writable, derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
-import * as API from "../api"
+import { appStore } from "./app"
 
 const createScreenStore = () => {
-  const config = writable({
-    screens: [],
-    layouts: [],
-  })
   const store = derived(
-    [config, routeStore, builderStore],
-    ([$config, $routeStore, $builderStore]) => {
-      let activeLayout
-      let activeScreen
+    [appStore, routeStore, builderStore],
+    ([$appStore, $routeStore, $builderStore]) => {
+      let activeLayout, activeScreen
+      let layouts, screens
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
         activeLayout = $builderStore.layout
         activeScreen = $builderStore.screen
+        layouts = [activeLayout]
+        screens = [activeScreen]
       } else {
         activeLayout = { props: { _component: "screenslot" } }
 
         // Find the correct screen by matching the current route
-        const { screens, layouts } = $config
+        screens = $appStore.screens
+        layouts = $appStore.layouts
         if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
@@ -33,21 +32,12 @@ const createScreenStore = () => {
           )
         }
       }
-      return { activeLayout, activeScreen }
+      return { layouts, screens, activeLayout, activeScreen }
     }
   )
 
-  const fetchScreens = async () => {
-    const appDefinition = await API.fetchAppDefinition(get(builderStore).appId)
-    config.set({
-      screens: appDefinition.screens,
-      layouts: appDefinition.layouts,
-    })
-  }
-
   return {
     subscribe: store.subscribe,
-    actions: { fetchScreens },
   }
 }
 

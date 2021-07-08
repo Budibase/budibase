@@ -9,8 +9,6 @@
       $redirect("../")
     }
   }
-
-  $: console.log($page)
 </script>
 
 {#if $auth.isAdmin}
