@@ -135,9 +135,11 @@
     }
 
     //Get the list of user uploaded logos and push it to the dropdown options.
-    //This needs to be done before the config callso they're available when the dropdown renders
+    //This needs to be done before the config call so they're available when the dropdown renders
     const res = await api.get(`/api/admin/configs/oidc_logos`)
     const configSettings = await res.json()
+
+    if (configSettings.config) {
     const logoKeys = Object.keys(configSettings.config)
 
     logoKeys.map(logoKey => {
@@ -148,7 +150,7 @@
         icon: logoUrl,
       })
     })
-
+  }
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
 
