@@ -3,24 +3,6 @@ const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 
 /**
- * @param {*} profile The structured profile created by passport using the user info endpoint
- * @param {*} jwtClaims The claims returned in the id token
- */
-function getEmail(profile, jwtClaims) {
-  // profile not guaranteed to contain email e.g. github connected azure ad account
-  if (profile._json.email) {
-    return profile._json.email
-  }
-
-  // fallback to id token
-  if (jwtClaims.email) {
-    return jwtClaims.email
-  }
-
-  return null;
-}
-
-/**
  * @param {*} issuer The identity provider base URL
  * @param {*} sub The user ID
  * @param {*} profile The user profile information. Created by passport from the /userinfo response
@@ -63,24 +45,51 @@ async function authenticate(
 }
 
 /**
+ * @param {*} profile The structured profile created by passport using the user info endpoint
+ * @param {*} jwtClaims The claims returned in the id token
+ */
+function getEmail(profile, jwtClaims) {
+  // profile not guaranteed to contain email e.g. github connected azure ad account
+  if (profile._json.email) {
+    return profile._json.email
+  }
+
+  // fallback to id token email
+  if (jwtClaims.email) {
+    return jwtClaims.email
+  }
+
+  // fallback to id token preferred username
+  const username = jwtClaims.preferred_username
+  if (username && validEmail(username)) {
+    return username
+  }
+
+  return null;
+}
+
+function validEmail(value) {
+  return (
+    (value && !!value.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
+  )
+}
+
+/**
  * Create an instance of the oidc passport strategy. This wrapper fetches the configuration
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
  */
-exports.strategyFactory = async function (callbackUrl) {
+exports.strategyFactory = async function (config, callbackUrl) {
   try {
-    const configurationUrl =
-      "https://login.microsoftonline.com/2668c0dd-7ed2-4db3-b387-05b6f9204a70/v2.0/.well-known/openid-configuration"
-    const clientSecret = "g-ty~2iW.bo.88xj_QI6~hdc-H8mP2Xbnd"
-    const clientId = "bed2017b-2f53-42a9-8ef9-e58918935e07"
+    const { clientId, clientSecret, configUrl } = config
 
-    if (!clientId || !clientSecret || !callbackUrl || !configurationUrl) {
+    if (!clientId || !clientSecret || !callbackUrl || !configUrl) {
       throw new Error(
-        "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configurationUrl"
+        "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )
     }
 
-    const response = await fetch(configurationUrl)
+    const response = await fetch(configUrl)
 
     if (!response.ok) {
       throw new Error(`Unexpected response when fetching openid-configuration: ${response.statusText}`)
