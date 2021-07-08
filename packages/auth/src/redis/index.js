@@ -1,7 +1,12 @@
 const env = require("../environment")
 // ioredis mock is all in memory
 const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
-const { addDbPrefix, removeDbPrefix, getRedisOptions } = require("./utils")
+const {
+  addDbPrefix,
+  removeDbPrefix,
+  getRedisOptions,
+  SEPARATOR,
+} = require("./utils")
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
@@ -143,14 +148,15 @@ class RedisWrapper {
     CLIENT.disconnect()
   }
 
-  async scan() {
+  async scan(key = "") {
     const db = this._db
+    key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
       let node = CLIENT.nodes("master")
-      stream = node[0].scanStream({ match: db + "-*", count: 100 })
+      stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
-      stream = CLIENT.scanStream({ match: db + "-*", count: 100 })
+      stream = CLIENT.scanStream({ match: key + "*", count: 100 })
     }
     return promisifyStream(stream)
   }
@@ -180,6 +186,12 @@ class RedisWrapper {
     if (expirySeconds) {
       await CLIENT.expire(prefixedKey, expirySeconds)
     }
+  }
+
+  async setExpiry(key, expirySeconds) {
+    const db = this._db
+    const prefixedKey = addDbPrefix(db, key)
+    await CLIENT.expire(prefixedKey, expirySeconds)
   }
 
   async delete(key) {

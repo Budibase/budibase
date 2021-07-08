@@ -17,6 +17,8 @@ const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
 const { StaticDatabases } = require("@budibase/auth/db")
+const { createASession } = require("@budibase/auth/sessions")
+const { user: userCache } = require("@budibase/auth/cache")
 const CouchDB = require("../../db")
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -62,7 +64,7 @@ class TestConfiguration {
     return request.body
   }
 
-  async globalUser(id = GLOBAL_USER_ID, builder = true) {
+  async globalUser(id = GLOBAL_USER_ID, builder = true, roles) {
     const db = new CouchDB(StaticDatabases.GLOBAL.name)
     let existing
     try {
@@ -73,8 +75,9 @@ class TestConfiguration {
     const user = {
       _id: id,
       ...existing,
-      roles: {},
+      roles: roles || {},
     }
+    await createASession(id, "sessionid")
     if (builder) {
       user.builder = { global: true }
     }
@@ -103,6 +106,7 @@ class TestConfiguration {
   defaultHeaders() {
     const auth = {
       userId: GLOBAL_USER_ID,
+      sessionId: "sessionid",
     }
     const app = {
       roleId: BUILTIN_ROLE_IDS.ADMIN,
@@ -138,13 +142,7 @@ class TestConfiguration {
     roleId = BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
   }) {
-    let user
-    try {
-      user = await this.createUser(email, PASSWORD, roleId)
-    } catch (err) {
-      // allow errors here
-    }
-    return this.login(email, PASSWORD, { roleId, userId: user._id, builder })
+    return this.login(email, PASSWORD, { roleId, builder })
   }
 
   async createApp(appName) {
@@ -313,6 +311,7 @@ class TestConfiguration {
   async createUser(id = null) {
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser(globalId)
+    await userCache.invalidateUser(globalId)
     return {
       ...resp,
       globalId,
@@ -326,14 +325,19 @@ class TestConfiguration {
     }
     // make sure the user exists in the global DB
     if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
-      await this.globalUser(userId, builder)
+      const appId = `app${this.getAppId().split("app_dev")[1]}`
+      await this.globalUser(userId, builder, {
+        [appId]: roleId,
+      })
     }
     if (!email || !password) {
       await this.createUser()
     }
+    await createASession(userId, "sessionid")
     // have to fake this
     const auth = {
       userId,
+      sessionId: "sessionid",
     }
     const app = {
       roleId: roleId,
@@ -343,6 +347,7 @@ class TestConfiguration {
     const appToken = jwt.sign(app, env.JWT_SECRET)
 
     // returning necessary request headers
+    await userCache.invalidateUser(userId)
     return {
       Accept: "application/json",
       Cookie: [
