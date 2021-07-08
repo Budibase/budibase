@@ -12,7 +12,6 @@ const { authenticateThirdParty } = require("./third-party-common")
  * @param {*} idToken The id_token - always a JWT
  * @param {*} params The response body from requesting an access_token
  * @param {*} done The passport callback: err, user, info
- * @returns 
  */
 async function authenticate(
   issuer,
@@ -27,21 +26,22 @@ async function authenticate(
 ) {
   const thirdPartyUser = {
     // store the issuer info to enable sync in future
-    provider: issuer, 
+    provider: issuer,
     providerType: "oidc",
     userId: profile.id,
     profile: profile,
     email: getEmail(profile, jwtClaims),
     oauth2: {
       accessToken: accessToken,
-      refreshToken: refreshToken
-    }
+      refreshToken: refreshToken,
+    },
   }
 
   return authenticateThirdParty(
-    thirdPartyUser, 
+    thirdPartyUser,
     false, // don't require local accounts to exist
-    done)
+    done
+  )
 }
 
 /**
@@ -65,12 +65,15 @@ function getEmail(profile, jwtClaims) {
     return username
   }
 
-  return null;
+  return null
 }
 
 function validEmail(value) {
   return (
-    (value && !!value.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
+    value &&
+    !!value.match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    )
   )
 }
 
@@ -92,7 +95,9 @@ exports.strategyFactory = async function (config, callbackUrl) {
     const response = await fetch(configUrl)
 
     if (!response.ok) {
-      throw new Error(`Unexpected response when fetching openid-configuration: ${response.statusText}`)
+      throw new Error(
+        `Unexpected response when fetching openid-configuration: ${response.statusText}`
+      )
     }
 
     const body = await response.json()
@@ -110,7 +115,6 @@ exports.strategyFactory = async function (config, callbackUrl) {
       },
       authenticate
     )
-    
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC authentication strategy", err)

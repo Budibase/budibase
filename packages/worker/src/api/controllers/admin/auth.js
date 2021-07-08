@@ -14,14 +14,14 @@ const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 function authInternal(ctx, user, err = null, info = null) {
   if (err) {
     console.error("Authentication error", err)
-    return ctx.throw(403, info? info : "Unauthorized")
+    return ctx.throw(403, info ? info : "Unauthorized")
   }
 
   const expires = new Date()
   expires.setDate(expires.getDate() + 1)
 
   if (!user) {
-    return ctx.throw(403, info? info : "Unauthorized")
+    return ctx.throw(403, info ? info : "Unauthorized")
   }
 
   ctx.cookies.set(Cookies.Auth, user.token, {
