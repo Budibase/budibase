@@ -1,7 +1,7 @@
 const { Cookies } = require("../constants")
-const database = require("../db")
 const { getCookie, clearCookie } = require("../utils")
-const { StaticDatabases } = require("../db/utils")
+const { getUser } = require("../cache/user")
+const { getSession, updateSessionTTL } = require("../security/sessions")
 const env = require("../environment")
 
 const PARAM_REGEX = /\/:(.*?)\//g
@@ -48,14 +48,27 @@ module.exports = (noAuthPatterns = [], opts) => {
         user = null,
         internal = false
       if (authCookie) {
-        try {
-          const db = database.getDB(StaticDatabases.GLOBAL.name)
-          user = await db.get(authCookie.userId)
-          delete user.password
-          authenticated = true
-        } catch (err) {
-          // remove the cookie as the use does not exist anymore
+        let error = null
+        const sessionId = authCookie.sessionId,
+          userId = authCookie.userId
+        const session = await getSession(userId, sessionId)
+        if (!session) {
+          error = "No session found"
+        } else {
+          try {
+            user = await getUser(userId)
+            delete user.password
+            authenticated = true
+          } catch (err) {
+            error = err
+          }
+        }
+        if (error) {
+          // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookies.Auth)
+        } else {
+          // make sure we denote that the session is still in use
+          await updateSessionTTL(session)
         }
       }
       const apiKey = ctx.request.headers["x-budibase-api-key"]

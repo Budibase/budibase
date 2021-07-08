@@ -5,6 +5,8 @@ const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
+const { user: userCache } = require("@budibase/auth/cache")
+const { invalidateSessions } = require("@budibase/auth/sessions")
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
@@ -62,6 +64,7 @@ exports.save = async ctx => {
       password: hashedPassword,
       ...user,
     })
+    await userCache.invalidateUser(response.id)
     ctx.body = {
       _id: response.id,
       _rev: response.rev,
@@ -107,6 +110,8 @@ exports.destroy = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
+  await userCache.invalidateUser(dbUser._id)
+  await invalidateSessions(dbUser._id)
   ctx.body = {
     message: `User ${ctx.params.id} deleted.`,
   }
@@ -117,13 +122,16 @@ exports.removeAppRole = async ctx => {
   const db = new CouchDB(GLOBAL_DB)
   const users = await allUsers()
   const bulk = []
+  const cacheInvalidations = []
   for (let user of users) {
     if (user.roles[appId]) {
+      cacheInvalidations.push(userCache.invalidateUser(user._id))
       delete user.roles[appId]
       bulk.push(user)
     }
   }
   await db.bulkDocs(bulk)
+  await Promise.all(cacheInvalidations)
   ctx.body = {
     message: "App role removed from all users",
   }
@@ -153,6 +161,7 @@ exports.updateSelf = async ctx => {
     ...user,
     ...ctx.request.body,
   })
+  await userCache.invalidateUser(user._id)
   ctx.body = {
     _id: response.id,
     _rev: response.rev,

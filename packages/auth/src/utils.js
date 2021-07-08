@@ -64,23 +64,18 @@ exports.getCookie = (ctx, name) => {
 }
 
 /**
- * Store a cookie for the request, has a hardcoded expiry.
+ * Store a cookie for the request - it will not expire.
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to set.
  * @param {string|object} value The value of cookie which will be set.
  */
 exports.setCookie = (ctx, value, name = "builder") => {
-  const expires = new Date()
-  expires.setDate(expires.getDate() + 1)
-
   if (!value) {
     ctx.cookies.set(name)
   } else {
-    value = jwt.sign(value, options.secretOrKey, {
-      expiresIn: "1 day",
-    })
+    value = jwt.sign(value, options.secretOrKey)
     ctx.cookies.set(name, value, {
-      expires,
+      maxAge: Number.MAX_SAFE_INTEGER,
       path: "/",
       httpOnly: false,
       overwrite: true,

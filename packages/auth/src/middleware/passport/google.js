@@ -7,6 +7,8 @@ const {
   generateGlobalUserID,
   ViewNames,
 } = require("../../db/utils")
+const { newid } = require("../../hashing")
+const { createASession } = require("../../security/sessions")
 
 async function authenticate(token, tokenSecret, profile, done) {
   // Check the user exists in the instance DB by email
@@ -59,15 +61,16 @@ async function authenticate(token, tokenSecret, profile, done) {
   }
 
   // authenticate
-  const payload = {
-    userId: dbUser._id,
-    builder: dbUser.builder,
-    email: dbUser.email,
-  }
+  const sessionId = newid()
+  await createASession(dbUser._id, sessionId)
 
-  dbUser.token = jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: "1 day",
-  })
+  dbUser.token = jwt.sign(
+    {
+      userId: dbUser._id,
+      sessionId,
+    },
+    env.JWT_SECRET
+  )
 
   return done(null, dbUser)
 }
