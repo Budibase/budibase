@@ -38,7 +38,9 @@
       if (response.status !== 200) {
         throw json.message
       }
-      await refreshAppPackage()
+
+      // Don't wait for the async refresh, since this causes modal flashing
+      refreshAppPackage()
       notifications.success(
         `App updated successfully to version ${clientPackage.version}`
       )
@@ -49,6 +51,7 @@
 
   const revert = async () => {
     try {
+      const revertableVersion = $store.revertableVersion
       const response = await api.post(
         `/api/applications/${appId}/client/revert`
       )
@@ -56,9 +59,11 @@
       if (response.status !== 200) {
         throw json.message
       }
-      await refreshAppPackage()
+
+      // Don't wait for the async refresh, since this causes modal flashing
+      refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$store.revertableVersion}`
+        `App reverted successfully to version ${revertableVersion}`
       )
     } catch (err) {
       notifications.error(`Error reverting app: ${err}`)
