@@ -1,28 +1,18 @@
-const env = require("../../environment")
-const jwt = require("jsonwebtoken")
-const database = require("../../db")
 const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
-const {
-  StaticDatabases,
-  generateGlobalUserID,
-  ViewNames,
-} = require("../../db/utils")
+const { authenticateThirdParty } = require("./third-party-common")
 
 /**
- * Attempt to parse the users email address. 
- * 
- * It is not guaranteed that the email will be returned by the user info endpoint (e.g. github connected account used in azure ad).
- * Fallback to the id token where possible.
- * 
  * @param {*} profile The structured profile created by passport using the user info endpoint
- * @param {*} jwtClaims The raw claims returned in the id token
+ * @param {*} jwtClaims The claims returned in the id token
  */
 function getEmail(profile, jwtClaims) {
+  // profile not guaranteed to contain email e.g. github connected azure ad account
   if (profile._json.email) {
     return profile._json.email
   }
 
+  // fallback to id token
   if (jwtClaims.email) {
     return jwtClaims.email
   }
@@ -31,7 +21,6 @@ function getEmail(profile, jwtClaims) {
 }
 
 /**
- * 
  * @param {*} issuer The identity provider base URL
  * @param {*} sub The user ID
  * @param {*} profile The user profile information. Created by passport from the /userinfo response
@@ -54,67 +43,23 @@ async function authenticate(
   params,
   done
 ) {
-  // Check the user exists in the instance DB by email
-  const db = database.getDB(StaticDatabases.GLOBAL.name)
-
-  let dbUser
-
-  const userId = generateGlobalUserID(profile.id)
-
-  try {
-    // use the OIDC profile id
-    dbUser = await db.get(userId)
-  } catch (err) {
-    const user = {
-      _id: userId,
-      provider: profile.provider,
-      roles: {},
-      ...profile._json,
-    }
-
-    // check if an account with the OIDC email address exists locally
-    const email = getEmail(profile, jwtClaims)
-    if (!email) {
-      return done(null, false, { message: "No email address found" })
-    }
-
-    const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-      key: email,
-      include_docs: true,
-    })
-
-    // OIDC user already exists by email
-    if (users.rows.length > 0) {
-      const existing = users.rows[0].doc
-
-      // remove the local account to avoid conflicts
-      await db.remove(existing._id, existing._rev)
-
-      // merge with existing account
-      user.roles = existing.roles
-      user.builder = existing.builder
-      user.admin = existing.admin
-
-      const response = await db.post(user)
-      dbUser = user
-      dbUser._rev = response.rev
-    } else {
-      return done(null, false, { message: "Email does not yet exist. You must set up your local budibase account first." })
+  const thirdPartyUser = {
+    // store the issuer info to enable sync in future
+    provider: issuer, 
+    providerType: "oidc",
+    userId: profile.id,
+    profile: profile,
+    email: getEmail(profile, jwtClaims),
+    oauth2: {
+      accessToken: accessToken,
+      refreshToken: refreshToken
     }
   }
 
-  // authenticate
-  const payload = {
-    userId: dbUser._id,
-    builder: dbUser.builder,
-    email: dbUser.email,
-  }
-
-  dbUser.token = jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: "1 day",
-  })
-
-  return done(null, dbUser)
+  return authenticateThirdParty(
+    thirdPartyUser, 
+    false, // don't require local accounts to exist
+    done)
 }
 
 /**
