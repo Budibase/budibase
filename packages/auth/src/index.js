@@ -11,6 +11,7 @@ const {
   auditLog,
 } = require("./middleware")
 const { setDB, getDB } = require("./db")
+const userCache = require("./cache/user")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -54,6 +55,9 @@ module.exports = {
     oidc,
     jwt: require("jsonwebtoken"),
     auditLog,
+  },
+  cache: {
+    user: userCache,
   },
   StaticDatabases,
   constants: require("./constants"),

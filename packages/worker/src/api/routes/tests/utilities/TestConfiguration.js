@@ -5,6 +5,7 @@ const { jwt } = require("@budibase/auth").auth
 const { Cookies } = require("@budibase/auth").constants
 const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
+const { createASession } = require("@budibase/auth/sessions")
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -56,6 +57,7 @@ class TestConfiguration {
         null,
         controllers.users.save
       )
+      await createASession("us_uuid1", "sessionid")
     }
   }
 
@@ -69,6 +71,7 @@ class TestConfiguration {
     const user = {
       _id: "us_uuid1",
       userId: "us_uuid1",
+      sessionId: "sessionid",
     }
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {

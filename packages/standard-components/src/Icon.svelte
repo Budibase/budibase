@@ -1,21 +1,34 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  export let icon = ""
-  export let size = "fa-lg"
-  export let color = "#f00"
+  export let icon
+  export let size
+  export let color
   export let onClick
 
   $: styles = {
     ...$component.styles,
     normal: {
       ...$component.styles.normal,
-      color,
+      color: color || "var(--spectrum-global-color-gray-900)",
     },
   }
 </script>
 
-<i use:styleable={styles} class="{icon} {size}" on:click={onClick} />
+{#if icon}
+  <i use:styleable={styles} class="{icon} {size}" on:click={onClick} />
+{:else if $builderStore.inBuilder}
+  <div use:styleable={styles}>
+    <Placeholder />
+  </div>
+{/if}
+
+<style>
+  div {
+    font-style: italic;
+  }
+</style>

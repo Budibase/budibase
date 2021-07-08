@@ -14,6 +14,7 @@ export interface FieldSchema {
   relationshipType?: string
   through?: string
   foreignKey?: string
+  autocolumn?: boolean
   constraints?: {
     type?: string
     email?: boolean

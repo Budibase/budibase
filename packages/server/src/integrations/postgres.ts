@@ -147,7 +147,11 @@ module PostgresModule {
           if (!tableKeys[tableName]) {
             tableKeys[tableName] = []
           }
-          tableKeys[tableName].push(table.column_name || table.primary_key)
+          const key = table.column_name || table.primary_key
+          // only add the unique keys
+          if (key && tableKeys[tableName].indexOf(key) === -1) {
+            tableKeys[tableName].push(key)
+          }
         }
       } catch (err) {
         tableKeys = {}
@@ -184,7 +188,11 @@ module PostgresModule {
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
+        const isAuto: boolean =
+          typeof column.column_default === "string" &&
+          column.column_default.startsWith("nextval")
         tables[tableName].schema[columnName] = {
+          autocolumn: isAuto,
           name: columnName,
           type,
         }

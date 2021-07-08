@@ -11,7 +11,7 @@ const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
-function authInternal(ctx, user, err = null, info = null) {
+async function authInternal(ctx, user, err = null, info = null) {
   if (err) {
     console.error("Authentication error", err)
     return ctx.throw(403, info ? info : "Unauthorized")
@@ -24,6 +24,7 @@ function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
+  // just store the user ID
   ctx.cookies.set(Cookies.Auth, user.token, {
     expires,
     path: "/",
@@ -34,7 +35,7 @@ function authInternal(ctx, user, err = null, info = null) {
 
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user, info) => {
-    authInternal(ctx, user, err, info)
+    await authInternal(ctx, user, err, info)
 
     delete user.token
 
@@ -125,7 +126,7 @@ exports.googleAuth = async (ctx, next) => {
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, user, info) => {
-      authInternal(ctx, user, err, info)
+      await authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }
@@ -165,7 +166,7 @@ exports.oidcAuth = async (ctx, next) => {
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, user, info) => {
-      authInternal(ctx, user, err, info)
+      await authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }

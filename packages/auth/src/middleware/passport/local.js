@@ -4,6 +4,8 @@ const { compare } = require("../../hashing")
 const env = require("../../environment")
 const { getGlobalUserByEmail } = require("../../utils")
 const { authError } = require("./utils")
+const { newid } = require("../../hashing")
+const { createASession } = require("../../security/sessions")
 
 const INVALID_ERR = "Invalid Credentials"
 
@@ -32,13 +34,16 @@ exports.authenticate = async function (email, password, done) {
 
   // authenticate
   if (await compare(password, dbUser.password)) {
-    const payload = {
-      userId: dbUser._id,
-    }
+    const sessionId = newid()
+    await createASession(dbUser._id, sessionId)
 
-    dbUser.token = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: "1 day",
-    })
+    dbUser.token = jwt.sign(
+      {
+        userId: dbUser._id,
+        sessionId,
+      },
+      env.JWT_SECRET
+    )
     // Remove users password in payload
     delete dbUser.password
 
