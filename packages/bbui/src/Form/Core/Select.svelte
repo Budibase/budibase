@@ -8,8 +8,10 @@
   export let disabled = false
   export let error = null
   export let options = []
+  export let callbackOptionValue = null
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let getOptionIcon = option => option
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
@@ -17,6 +19,7 @@
   const dispatch = createEventDispatcher()
   let open = false
   $: fieldText = getFieldText(value, options, placeholder)
+  $: fieldIcon = getFieldIcon(value, options, placeholder)
 
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
@@ -34,6 +37,17 @@
       (option, idx) => getOptionValue(option, idx) === value
     )
     return index !== -1 ? getOptionLabel(options[index], index) : value
+  }
+
+  const getFieldIcon = (value, options) => {
+    // Wait for options to load if there is a value but no options
+    if (!options?.length) {
+      return ""
+    }
+    const index = options.findIndex(
+      (option, idx) => getOptionValue(option, idx) === value
+    )
+    return index !== -1 ? getOptionIcon(options[index], index) : value
   }
 
   const selectOption = value => {
@@ -55,6 +69,9 @@
   {autoWidth}
   {getOptionLabel}
   {getOptionValue}
+  {getOptionIcon}
+  {fieldIcon}
+  {callbackOptionValue}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
   isOptionSelected={option => option === value}

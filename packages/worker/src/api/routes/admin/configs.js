@@ -41,6 +41,19 @@ function googleValidation() {
   }).unknown(true)
 }
 
+function OidcValidation() {
+  // prettier-ignore
+  return Joi.object({
+    clientID: Joi.string().required(),
+    authUrl: Joi.string().required(),
+    tokenUrl: Joi.string().required(),
+    userInfoUrl: Joi.string().required(),
+    clientId: Joi.string().required(),
+    clientSecret: Joi.string().required(),
+    callbackUrl: Joi.string().required(),
+  }).unknown(true)
+}
+
 function buildConfigSaveValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -54,7 +67,8 @@ function buildConfigSaveValidation() {
           { is: Configs.SMTP, then: smtpValidation() },
           { is: Configs.SETTINGS, then: settingValidation() },
           { is: Configs.ACCOUNT, then: Joi.object().unknown(true) },
-          { is: Configs.GOOGLE, then: googleValidation() }
+          { is: Configs.GOOGLE, then: googleValidation() },
+          { is: Configs.OIDC, then: Joi.object().unknown(true) }
         ],
       }),
     }).required(),
@@ -65,7 +79,7 @@ function buildUploadValidation() {
   // prettier-ignore
   return joiValidator.params(Joi.object({
     type: Joi.string().valid(...Object.values(Configs)).required(),
-    name: Joi.string().valid(...Object.values(ConfigUploads)).required(),
+    name: Joi.string().required(),
   }).required())
 }
 

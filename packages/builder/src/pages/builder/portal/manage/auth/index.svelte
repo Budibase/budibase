@@ -1,5 +1,11 @@
 <script>
   import GoogleLogo from "./_logos/Google.svelte"
+  import OidcLogo from "./_logos/OIDC.svelte"
+  import MicrosoftLogo from "assets/microsoft-logo.png"
+  import OracleLogo from "assets/oracle-logo.png"
+  import Auth0Logo from "assets/auth0-logo.png"
+  import OidcLogoPng from "assets/oidc-logo.png"
+
   import {
     Button,
     Heading,
@@ -9,20 +15,25 @@
     Layout,
     Input,
     Body,
+    Select,
+    Dropzone,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
+  import { writable } from "svelte/store"
+  import { organisation } from "stores/portal"
 
   const ConfigTypes = {
     Google: "google",
+    OIDC: "oidc",
     // Github: "github",
     // AzureAD: "ad",
   }
 
-  const ConfigFields = {
+  const GoogleConfigFields = {
     Google: ["clientID", "clientSecret", "callbackURL"],
   }
-  const ConfigLabels = {
+  const GoogleConfigLabels = {
     Google: {
       clientID: "Client ID",
       clientSecret: "Client secret",
@@ -30,21 +41,81 @@
     },
   }
 
+  const OIDCConfigFields = {
+    Oidc: ["configUrl", "clientId", "clientSecret"],
+  }
+  const OIDCConfigLabels = {
+    Oidc: {
+      configUrl: "Config URL",
+      clientId: "Client ID",
+      clientSecret: "Client Secret",
+    },
+  }
+
+  let iconDropdownOptions = [
+    {
+      label: "Azure AD",
+      value: "Active Directory",
+      icon: MicrosoftLogo,
+    },
+    { label: "Oracle", value: "Oracle", icon: OracleLogo },
+    { label: "Auth0", value: "Auth0", icon: Auth0Logo },
+    { label: "OIDC", value: "Oidc", icon: OidcLogoPng },
+
+    { label: "Upload your own", value: "Upload" },
+  ]
+
+  let fileinput
+  let image
   let google
+  let oidc
 
-  async function save(doc) {
-    try {
-      // Save an oauth config
-      const response = await api.post(`/api/admin/configs`, doc)
-      const json = await response.json()
-      if (response.status !== 200) throw new Error(json.message)
-      google._rev = json._rev
-      google._id = json._id
+  async function uploadLogo(file) {
+    let data = new FormData()
+    data.append("file", file)
+    const res = await api.post(
+      `/api/admin/configs/upload/oidc_logos/${file.name}`,
+      data,
+      {}
+    )
+    return await res.json()
+  }
 
-      notifications.success(`Settings saved.`)
-    } catch (err) {
-      notifications.error(`Failed to update OAuth settings. ${err}`)
-    }
+  const onFileSelected = e => {
+    let fileName = e.target.files[0].name
+    image = e.target.files[0]
+    providers.oidc.config["iconName"] = fileName
+    iconDropdownOptions.unshift({label: fileName, value: fileName})
+  }
+
+  const providers = { google, oidc }
+
+  async function save(docs) {
+    // only if the user has provided an image, upload it.
+    image && uploadLogo(image)
+    let calls = []
+    docs.forEach(element => {
+      calls.push(api.post(`/api/admin/configs`, element))
+    })
+    Promise.all(calls)
+      .then(responses => {
+        return Promise.all(
+          responses.map(response => {
+            return response.json()
+          })
+        )
+      })
+      .then(data => {
+        data.forEach(res => {
+          providers[res.type]._rev = res._rev
+          providers[res.type]._id = res._id
+        })
+        notifications.success(`Settings saved.`)
+      })
+      .catch(err => {
+        notifications.error(`Failed to update OAuth settings. ${err}`)
+        throw new Error(err.message)
+      })
   }
 
   onMount(async () => {
@@ -55,12 +126,39 @@
     const googleDoc = await googleResponse.json()
 
     if (!googleDoc._id) {
-      google = {
+      providers.google = {
         type: ConfigTypes.Google,
         config: {},
       }
     } else {
-      google = googleDoc
+      providers.google = googleDoc
+    }
+
+    //Get the list of user uploaded logos and push it to the dropdown options.
+    //This needs to be done before the config callso they're available when the dropdown renders
+    const res = await api.get(`/api/admin/configs/oidc_logos`)
+    const configSettings = await res.json()
+    const logoKeys = Object.keys(configSettings.config)
+
+    logoKeys.map(logoKey => {
+      const logoUrl = configSettings.config[logoKey]
+      iconDropdownOptions.unshift({
+        label: logoKey,
+        value: logoKey,
+        icon: logoUrl,
+      })
+    })
+
+    const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
+    const oidcDoc = await oidcResponse.json()
+
+    if (!oidcDoc._id) {
+      providers.oidc = {
+        type: ConfigTypes.OIDC,
+        config: {},
+      }
+    } else {
+      providers.oidc = oidcDoc
     }
   })
 </script>
@@ -74,7 +172,7 @@
       below.
     </Body>
   </Layout>
-  {#if google}
+  {#if providers.google}
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
@@ -89,17 +187,65 @@
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
-      {#each ConfigFields.Google as field}
+      {#each GoogleConfigFields.Google as field}
         <div class="form-row">
-          <Label size="L">{ConfigLabels.Google[field]}</Label>
-          <Input bind:value={google.config[field]} />
+          <Label size="L">{GoogleConfigLabels.Google[field]}</Label>
+          <Input bind:value={providers.google.config[field]} />
         </div>
       {/each}
     </Layout>
-    <div>
-      <Button cta on:click={() => save(google)}>Save</Button>
-    </div>
   {/if}
+  {#if providers.oidc}
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">
+        <span>
+          <OidcLogo />
+          OpenID Connect
+        </span>
+      </Heading>
+      <Body size="S">
+        To allow users to authenticate using OIDC, fill out the fields below.
+      </Body>
+    </Layout>
+    <Layout gap="XS" noPadding>
+      {#each OIDCConfigFields.Oidc as field}
+        <div class="form-row">
+          <Label size="L">{OIDCConfigLabels.Oidc[field]}</Label>
+          <Input bind:value={providers.oidc.config[field]} />
+        </div>
+      {/each}
+      <br />
+      <Body size="S">
+        To customize your login button, fill out the fields below.
+      </Body>
+      <div class="form-row">
+        <Label size="L">Name</Label>
+        <Input bind:value={providers.oidc.config["name"]} />
+      </div>
+      <div class="form-row">
+        <Label size="L">Icon</Label>
+        <Select
+          label=""
+          bind:value={providers.oidc.config["iconName"]}
+          options={iconDropdownOptions}
+          on:change={e => e.detail === "Upload" && fileinput.click()}
+        />
+      </div>
+      <input
+        style="display:none"
+        type="file"
+        accept=".jpg, .jpeg, .png"
+        on:change={e => onFileSelected(e)}
+        bind:this={fileinput}
+      />
+    </Layout>
+  {/if}
+  <div>
+    <Button cta on:click={() => save([providers.google, providers.oidc])}
+      >Save</Button
+    >
+  </div>
 </Layout>
 
 <style>
@@ -109,10 +255,13 @@
     grid-gap: var(--spacing-l);
     align-items: center;
   }
-
   span {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  input {
+    display: none;
   }
 </style>

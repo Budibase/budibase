@@ -20,4 +20,6 @@ exports.Configs = {
   ACCOUNT: "account",
   SMTP: "smtp",
   GOOGLE: "google",
+  OIDC: "oidc",
+  OIDC_LOGOS: "oidc_logos",
 }
