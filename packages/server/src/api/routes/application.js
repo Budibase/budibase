@@ -16,6 +16,11 @@ router
     authorized(BUILDER),
     controller.updateClient
   )
+  .post(
+    "/api/applications/:appId/client/revert",
+    authorized(BUILDER),
+    controller.revertClient
+  )
   .delete("/api/applications/:appId", authorized(BUILDER), controller.delete)
 
 module.exports = router

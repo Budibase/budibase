@@ -13,7 +13,7 @@ const {
   deleteFolder,
   downloadTarball,
 } = require("./utilities")
-const { uploadClientLibrary } = require("./newApp")
+const { updateClientLibrary } = require("./clientLibrary")
 const download = require("download")
 const env = require("../../environment")
 const { homedir } = require("os")
@@ -139,12 +139,12 @@ exports.performBackup = async (appId, backupName) => {
 }
 
 /**
- * Downloads required libraries and creates a new path in the object store.
+ * Uploads the latest client library to the object store.
  * @param {string} appId The ID of the app which is being created.
  * @return {Promise<void>} once promise completes app resources should be ready in object store.
  */
 exports.createApp = async appId => {
-  await uploadClientLibrary(appId)
+  await updateClientLibrary(appId)
 }
 
 /**
