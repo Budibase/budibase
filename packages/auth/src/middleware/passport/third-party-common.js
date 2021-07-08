@@ -66,19 +66,19 @@ exports.authenticateThirdParty = async function (
     }
   }
 
-  let user
   // first time creation
   if (!dbUser) {
-    user = constructNewUser(userId, thirdPartyUser)
-  } else {
-  // existing user
-    user = constructMergedUser(userId, dbUser, thirdPartyUser)
-    await db.remove(dbUser._id, dbUser._rev)
+    // setup a blank user using the third party id
+    dbUser = {
+      _id: userId,
+      roles: {},
+    }
   }
 
+  dbUser = syncUser(dbUser, thirdPartyUser)
+
   // create or sync the user
-  const response = await db.post(user)
-  dbUser = user
+  const response = await db.post(dbUser)
   dbUser._rev = response.rev
 
   // authenticate
@@ -96,31 +96,15 @@ exports.authenticateThirdParty = async function (
 }
 
 /**
- * @returns a user object constructed from existing and third party information
+ * @returns a user that has been sync'd with third party information
  */
-function constructMergedUser(userId, existing, thirdPartyUser) {
-  // sync third party fields
-  const user = constructNewUser(userId, thirdPartyUser)
+function syncUser(user, thirdPartyUser) {
+  // provider
+  user.provider = thirdPartyUser.provider
+  user.providerType = thirdPartyUser.providerType
 
-  // merge existing fields
-  user.roles = existing.roles
-  user.builder = existing.builder
-  user.admin = existing.admin
-
-  return user
-}
-
-/**
- * @returns a user object constructed from third party information
- */
-function constructNewUser(userId, thirdPartyUser) {
-  const user = {
-    _id: userId,
-    provider: thirdPartyUser.provider,
-    providerType: thirdPartyUser.providerType,
-    email: thirdPartyUser.email,
-    roles: {},
-  }
+  // email
+  user.email = thirdPartyUser.email
 
   if (thirdPartyUser.profile) {
     const profile = thirdPartyUser.profile
@@ -146,7 +130,7 @@ function constructNewUser(userId, thirdPartyUser) {
     }
   }
 
-  // persist oauth tokens for future use
+  // oauth tokens for future use
   if (thirdPartyUser.oauth2) {
     user.oauth2 = {
       ...thirdPartyUser.oauth2,
