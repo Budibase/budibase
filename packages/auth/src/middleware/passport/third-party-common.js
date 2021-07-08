@@ -40,7 +40,7 @@ exports.authenticateThirdParty = async function (
         key: thirdPartyUser.email,
         include_docs: true,
       })
-      let userExists = users.rows.length > 0
+      const userExists = users.rows.length > 0
 
       if (requireLocalAccount && !userExists) {
         return authError(done, "Email does not yet exist. You must set up your local budibase account first.")         
@@ -100,6 +100,7 @@ function constructNewUser(userId, thirdPartyUser) {
     _id: userId,
     provider: thirdPartyUser.provider,
     providerType: thirdPartyUser.providerType,
+    email: thirdPartyUser.email,
     roles: {}
   }
 
