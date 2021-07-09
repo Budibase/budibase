@@ -62,7 +62,10 @@
         <Heading>Sign in to {company}</Heading>
       </Layout>
       <GoogleButton />
-      <OIDCButton oidcIcon={$organisation.oidcIcon} oidcName={$organisation.oidcName}/>
+      <OIDCButton
+        oidcIcon={$organisation.oidcIcon}
+        oidcName={$organisation.oidcName}
+      />
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>

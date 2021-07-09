@@ -66,7 +66,7 @@ function buildConfigSaveValidation() {
           { is: Configs.SETTINGS, then: settingValidation() },
           { is: Configs.ACCOUNT, then: Joi.object().unknown(true) },
           { is: Configs.GOOGLE, then: googleValidation() },
-          { is: Configs.OIDC, then: Joi.object().unknown(true) }
+          { is: Configs.OIDC, then: oidcValidation() }
         ],
       }),
     }).required(),
