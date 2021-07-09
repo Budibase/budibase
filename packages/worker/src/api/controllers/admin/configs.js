@@ -111,15 +111,24 @@ exports.publicSettings = async function (ctx) {
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
-    if (!publicConfig) {
-      ctx.body = {}
-    } else {
+
+    if (publicConfig && !oidcConfig) {
       ctx.body = publicConfig
-      if (oidcConfig.config) {
-        publicConfig.config.oidcIcon = oidcConfig.config.iconName
-        publicConfig.config.oidcName = oidcConfig.config.name
-      }
     }
+    else if(!publicConfig && oidcConfig) {
+      // Pull out the OIDC icon and name because the other properties shouldn't
+      // be made public
+      let config = {}
+      config.oidcIcon = oidcConfig.config.iconName
+      config.oidcName = oidcConfig.config.name
+      oidcConfig.config = config
+      ctx.body = oidcConfig
+    }
+    else if (publicConfig && oidcConfig) {
+      ctx.body = publicConfig 
+      publicConfig.config.oidcIcon = oidcConfig.config.iconName
+      publicConfig.config.oidcName = oidcConfig.config.name
+  }     
   } catch (err) {
     ctx.throw(err.status, err)
   }

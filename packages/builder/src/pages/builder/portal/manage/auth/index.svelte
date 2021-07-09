@@ -19,8 +19,6 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { writable } from "svelte/store"
-  import { organisation } from "stores/portal"
 
   const ConfigTypes = {
     Google: "google",
@@ -41,12 +39,12 @@
   }
 
   const OIDCConfigFields = {
-    Oidc: ["configUrl", "clientId", "clientSecret"],
+    Oidc: ["configUrl", "clientID", "clientSecret"],
   }
   const OIDCConfigLabels = {
     Oidc: {
       configUrl: "Config URL",
-      clientId: "Client ID",
+      clientID: "Client ID",
       clientSecret: "Client Secret",
     },
   }

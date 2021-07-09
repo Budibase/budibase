@@ -31,7 +31,6 @@
     }
     open = true
   }
-  console.log(fieldIcon)
 </script>
 
 <button
