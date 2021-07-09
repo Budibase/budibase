@@ -46,12 +46,12 @@
   }
 
   const OIDCConfigFields = {
-    Oidc: ["configUrl", "clientId", "clientSecret"],
+    Oidc: ["configUrl", "clientID", "clientSecret"],
   }
   const OIDCConfigLabels = {
     Oidc: {
       configUrl: "Config URL",
-      clientId: "Client ID",
+      clientID: "Client ID",
       clientSecret: "Client Secret",
     },
   }

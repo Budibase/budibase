@@ -24,9 +24,9 @@
   <ActionButton on:click={() => window.open("/api/admin/auth/oidc", "_blank")}>
     <div class="inner">
       <img
-        src={preDefinedIcons[oidcIcon]
+        src={!oidcIcon ? OidcLogo : preDefinedIcons[oidcIcon]
           ? preDefinedIcons[oidcIcon]
-          : `/global/oidc_logos/${oidcIcon}` || OidcLogo}
+          : `/global/oidc_logos/${oidcIcon}`}
         alt="oidc icon"
       />
       <p>{`Sign in with ${oidcName || "OIDC"}`}</p>
