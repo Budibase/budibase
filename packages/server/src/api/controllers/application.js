@@ -313,9 +313,7 @@ const updateAppPackage = async (ctx, appPackage, appId) => {
 
   // the locked by property is attached by server but generated from
   // Redis, shouldn't ever store it
-  if (newAppPackage.lockedBy) {
-    delete newAppPackage.lockedBy
-  }
+  delete newAppPackage.lockedBy
 
   return await db.put(newAppPackage)
 }
