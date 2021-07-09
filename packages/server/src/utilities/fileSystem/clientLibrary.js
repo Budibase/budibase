@@ -91,7 +91,7 @@ exports.backupClientLibrary = async appId => {
 exports.updateClientLibrary = async appId => {
   let manifest, client
 
-  if (false && env.isDev()) {
+  if (env.isDev()) {
     // Load the symlinked version in dev which is always the newest
     manifest = require.resolve("@budibase/standard-components/manifest.json")
     client = require.resolve("@budibase/client")
