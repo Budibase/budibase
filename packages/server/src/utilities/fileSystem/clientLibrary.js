@@ -34,10 +34,8 @@ const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
  * @returns {Promise<void>}
  */
 exports.backupClientLibrary = async appId => {
-  let tmpManifestPath
-  let tmpClientPath
-
   // Copy existing manifest to tmp
+  let tmpManifestPath
   try {
     // Try to load the manifest from the new file location
     tmpManifestPath = await retrieveToTmp(
@@ -60,26 +58,25 @@ exports.backupClientLibrary = async appId => {
   }
 
   // Copy existing client lib to tmp
-  tmpClientPath = await retrieveToTmp(
+  const tmpClientPath = await retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js")
   )
 
-  // Upload manifest as backup
-  await upload({
+  // Upload manifest and client library as backups
+  const manifestUpload = upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json.bak"),
     path: tmpManifestPath,
     type: "application/json",
   })
-
-  // Upload client library as backup
-  await upload({
+  const clientUpload = upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js.bak"),
     path: tmpClientPath,
     type: "application/javascript",
   })
+  await Promise.all([manifestUpload, clientUpload])
 }
 
 /**
@@ -99,13 +96,10 @@ exports.updateClientLibrary = async appId => {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
     client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
-
-    console.log(manifest)
-    console.log(client)
   }
 
-  // Upload latest component manifest
-  await streamUpload(
+  // Upload latest manifest and client library
+  const manifestUpload = streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "manifest.json"),
     fs.createReadStream(manifest),
@@ -113,9 +107,7 @@ exports.updateClientLibrary = async appId => {
       ContentType: "application/json",
     }
   )
-
-  // Upload latest component library
-  await streamUpload(
+  const clientUpload = streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js"),
     fs.createReadStream(client),
@@ -123,6 +115,7 @@ exports.updateClientLibrary = async appId => {
       ContentType: "application/javascript",
     }
   )
+  await Promise.all([manifestUpload, clientUpload])
 }
 
 /**
@@ -132,34 +125,30 @@ exports.updateClientLibrary = async appId => {
  * @returns {Promise<void>}
  */
 exports.revertClientLibrary = async appId => {
-  let tmpManifestPath
-  let tmpClientPath
-
-  // Copy backup manifest to tmp
-  tmpManifestPath = await retrieveToTmp(
+  // Copy backups manifest to tmp directory
+  const tmpManifestPath = await retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "manifest.json.bak")
   )
 
   // Copy backup client lib to tmp
-  tmpClientPath = await retrieveToTmp(
+  const tmpClientPath = await retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js.bak")
   )
 
-  // Upload manifest backup
-  await upload({
+  // Upload backups as new versions
+  const manifestUpload = upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
     path: tmpManifestPath,
     type: "application/json",
   })
-
-  // Upload client library backup
-  await upload({
+  const clientUpload = upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
     path: tmpClientPath,
     type: "application/javascript",
   })
+  await Promise.all([manifestUpload, clientUpload])
 }
