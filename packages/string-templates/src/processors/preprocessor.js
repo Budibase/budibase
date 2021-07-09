@@ -28,7 +28,7 @@ module.exports.processors = [
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
     while (startBraceIdx !== -1) {
-      // if the character previous to the literal specifier is alpha-numeric this should happen
+      // if the character previous to the literal specifier is alphanumeric this should happen
       if (isAlphaNumeric(statement.charAt(startBraceIdx - 1))) {
         statement = swapStrings(statement, startBraceIdx + lastIdx, 1, ".[")
       }
