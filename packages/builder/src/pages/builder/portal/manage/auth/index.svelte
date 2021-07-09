@@ -16,7 +16,6 @@
     Input,
     Body,
     Select,
-    Dropzone,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
@@ -55,7 +54,7 @@
   let iconDropdownOptions = [
     {
       label: "Azure AD",
-      value: "Active Directory",
+      value: "AD",
       icon: MicrosoftLogo,
     },
     { label: "Oracle", value: "Oracle", icon: OracleLogo },
