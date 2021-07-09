@@ -2,6 +2,9 @@ const { join } = require("path")
 const { ObjectStoreBuckets } = require("../../constants")
 const fs = require("fs")
 const { upload, retrieveToTmp, streamUpload } = require("./utilities")
+const { resolve } = require("../centralPath")
+const env = require("../../environment")
+const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 
 /**
  * Client library paths in the object store:
@@ -86,13 +89,26 @@ exports.backupClientLibrary = async appId => {
  * @returns {Promise<void>}
  */
 exports.updateClientLibrary = async appId => {
+  let manifest, client
+
+  if (false && env.isDev()) {
+    // Load the symlinked version in dev which is always the newest
+    manifest = require.resolve("@budibase/standard-components/manifest.json")
+    client = require.resolve("@budibase/client")
+  } else {
+    // Load the bundled version in prod
+    manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")
+    client = resolve(TOP_LEVEL_PATH, "client", "budibase-client.js")
+
+    console.log(manifest)
+    console.log(client)
+  }
+
   // Upload latest component manifest
   await streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "manifest.json"),
-    fs.createReadStream(
-      require.resolve("@budibase/standard-components/manifest.json")
-    ),
+    fs.createReadStream(manifest),
     {
       ContentType: "application/json",
     }
@@ -102,7 +118,7 @@ exports.updateClientLibrary = async appId => {
   await streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js"),
-    fs.createReadStream(require.resolve("@budibase/client")),
+    fs.createReadStream(client),
     {
       ContentType: "application/javascript",
     }
