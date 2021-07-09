@@ -15,18 +15,21 @@
     Oidc: OidcLogo,
     Oracle: OracleLogo,
     Auth0: Auth0Logo,
-    AD: MicrosoftLogo
+    AD: MicrosoftLogo,
   }
   $: show = $admin.checklist?.oidc
 </script>
 
 {#if show}
-  <ActionButton
-    on:click={() => window.open("/api/admin/auth/oidc", "_blank")}
-  >
+  <ActionButton on:click={() => window.open("/api/admin/auth/oidc", "_blank")}>
     <div class="inner">
-      <img src={preDefinedIcons[oidcIcon] ? preDefinedIcons[oidcIcon] : `/global/oidc_logos/${oidcIcon}` || OidcLogo} alt="oidc icon" />
-      <p>{`Sign in with ${oidcName || 'OIDC'}`}</p>
+      <img
+        src={preDefinedIcons[oidcIcon]
+          ? preDefinedIcons[oidcIcon]
+          : `/global/oidc_logos/${oidcIcon}` || OidcLogo}
+        alt="oidc icon"
+      />
+      <p>{`Sign in with ${oidcName || "OIDC"}`}</p>
     </div>
   </ActionButton>
 {/if}
@@ -48,4 +51,3 @@
     margin: 0;
   }
 </style>
-

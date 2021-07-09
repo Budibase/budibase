@@ -19,6 +19,13 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
+  import { writable } from "svelte/store"
+  import { organisation } from "stores/portal"
+
+  const values = writable({
+    oidcIcon: $organisation.oidcIcon,
+    oidcName: $organisation.oidcName,
+  })
 
   const ConfigTypes = {
     Google: "google",
@@ -39,12 +46,12 @@
   }
 
   const OIDCConfigFields = {
-    Oidc: ["configUrl", "clientID", "clientSecret"],
+    Oidc: ["configUrl", "clientId", "clientSecret"],
   }
   const OIDCConfigLabels = {
     Oidc: {
       configUrl: "Config URL",
-      clientID: "Client ID",
+      clientId: "Client ID",
       clientSecret: "Client Secret",
     },
   }
@@ -81,8 +88,9 @@
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
     image = e.target.files[0]
-    providers.oidc.config["iconName"] = fileName
+    $values.oidcIcon = fileName
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
+    image && uploadLogo(image)
   }
 
   const providers = { google, oidc }
@@ -90,6 +98,7 @@
   async function save(docs) {
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
+    await organisation.save($values)
     let calls = []
     docs.forEach(element => {
       calls.push(api.post(`/api/admin/configs`, element))
@@ -116,6 +125,7 @@
   }
 
   onMount(async () => {
+    await organisation.init()
     // fetch the configs for oauth
     const googleResponse = await api.get(
       `/api/admin/configs/${ConfigTypes.Google}`
@@ -220,13 +230,13 @@
       </Body>
       <div class="form-row">
         <Label size="L">Name</Label>
-        <Input bind:value={providers.oidc.config["name"]} />
+        <Input bind:value={$values.oidcName} />
       </div>
       <div class="form-row">
         <Label size="L">Icon</Label>
         <Select
           label=""
-          bind:value={providers.oidc.config["iconName"]}
+          bind:value={$values.oidcIcon}
           options={iconDropdownOptions}
           on:change={e => e.detail === "Upload" && fileinput.click()}
         />
