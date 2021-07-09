@@ -84,9 +84,9 @@ function validEmail(value) {
  */
 exports.strategyFactory = async function (config, callbackUrl) {
   try {
-    const { clientId, clientSecret, configUrl } = config
+    const { clientID, clientSecret, configUrl } = config
 
-    if (!clientId || !clientSecret || !callbackUrl || !configUrl) {
+    if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
       throw new Error(
         "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )
@@ -108,7 +108,7 @@ exports.strategyFactory = async function (config, callbackUrl) {
         authorizationURL: body.authorization_endpoint,
         tokenURL: body.token_endpoint,
         userInfoURL: body.userinfo_endpoint,
-        clientID: clientId,
+        clientID: clientID,
         clientSecret: clientSecret,
         callbackURL: callbackUrl,
       },
