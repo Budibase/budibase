@@ -155,7 +155,9 @@
         {/if}
       </div>
       <div class="preview-content">
-        <CurrentItemPreview />
+        {#key $store.version}
+          <CurrentItemPreview />
+        {/key}
       </div>
     {/if}
   </div>
