@@ -48,7 +48,7 @@
           Add your first filter column.
         {:else}
           Results are filtered to only those which match all of the following
-          constaints.
+          constraints.
         {/if}
       </Body>
       <LuceneFilterBuilder bind:value={tempValue} {schemaFields} />

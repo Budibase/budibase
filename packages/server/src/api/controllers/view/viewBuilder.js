@@ -108,7 +108,7 @@ function parseEmitExpression(field, groupBy) {
  * calculation: an optional calculation to be performed over the view data.
  */
 function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
-  // first filter can't have a conjuction
+  // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
   }

@@ -20,7 +20,7 @@
     if (res.status) {
       notifications.error(res.message)
     } else {
-      notifications.success("Succesfully created user")
+      notifications.success("Successfully created user")
     }
   }
 </script>
