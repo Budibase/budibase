@@ -1,14 +1,33 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
-  // import { admin } from "stores/portal"
+  import OidcLogo from "assets/oidc-logo.png"
+  import Auth0Logo from "assets/auth0-logo.png"
+  import MicrosoftLogo from "assets/microsoft-logo.png"
+  import OracleLogo from "assets/oracle-logo.png"
 
-  let show = true
+  import { admin } from "stores/portal"
+
+  export let oidcIcon
+  export let oidcName
+  let show = false
+
+  let preDefinedIcons = {
+    Oidc: OidcLogo,
+    Oracle: OracleLogo,
+    Auth0: Auth0Logo,
+    AD: MicrosoftLogo
+  }
+  $: show = $admin.checklist?.oidc
+  console.log(preDefinedIcons[oidcIcon])
 </script>
 
 {#if show}
-  <ActionButton on:click={() => window.open("/api/admin/auth/oidc", "_blank")}>
+  <ActionButton
+    on:click={() => window.open("/api/admin/auth/oidc", "_blank")}
+  >
     <div class="inner">
-      <p>Sign in with OIDC</p>
+      <img src={preDefinedIcons[oidcIcon] ? preDefinedIcons[oidcIcon] : `/global/oidc_logos/${oidcIcon}` || OidcLogo} alt="oidc icon" />
+      <p>{`Sign in with ${oidcName || 'OIDC'}`}</p>
     </div>
   </ActionButton>
 {/if}
@@ -22,11 +41,12 @@
     padding-top: var(--spacing-xs);
     padding-bottom: var(--spacing-xs);
   }
-  /* .inner img {
+  .inner img {
     width: 18px;
     margin: 3px 10px 3px 3px;
-  } */
+  }
   .inner p {
     margin: 0;
   }
 </style>
+
