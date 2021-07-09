@@ -85,7 +85,7 @@ exports.update = async (apiKey, property, usage) => {
         await apiKeyTable.put({ item: keyObj })
         return
       }
-      // we have infact breached the reset period
+      // we have in fact breached the reset period
       else if (keyObj && keyObj.quotaReset <= Date.now()) {
         // update the quota reset period and reset the values for all properties
         keyObj.quotaReset = getNewQuotaReset()

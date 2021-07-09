@@ -173,7 +173,7 @@ exports.sendEmail = async (
 }
 
 /**
- * Given an SMTP configuration this runs it through nodemailer to see if it is infact functional.
+ * Given an SMTP configuration this runs it through nodemailer to see if it is in fact functional.
  * @param {object} config an SMTP configuration - this is based on the nodemailer API.
  * @return {Promise<boolean>} returns true if the configuration is valid.
  */
