@@ -102,13 +102,23 @@ exports.publicSettings = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   try {
     // Find the config with the most granular scope based on context
-    const config = await getScopedFullConfig(db, {
+    const publicConfig = await getScopedFullConfig(db, {
       type: Configs.SETTINGS,
     })
-    if (!config) {
+
+    // Pull out the OIDC icon and name because the other properties shouldn't
+    // be made public
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
+    if (!publicConfig) {
       ctx.body = {}
     } else {
-      ctx.body = config
+      ctx.body = publicConfig
+      if (oidcConfig.config) {
+        publicConfig.config.oidcIcon = oidcConfig.config.iconName
+        publicConfig.config.oidcName = oidcConfig.config.name
+      }
     }
   } catch (err) {
     ctx.throw(err.status, err)
@@ -122,12 +132,8 @@ exports.upload = async function (ctx) {
   const file = ctx.request.files.file
   const { type, name } = ctx.params
 
-  const fileExtension = [...file.name.split(".")].pop()
-  // filenames converted to UUIDs so they are unique
-  const processedFileName = `${name}.${fileExtension}`
-
   const bucket = ObjectStoreBuckets.GLOBAL
-  const key = `${type}/${processedFileName}`
+  const key = `${type}/${name}`
   await upload({
     bucket,
     filename: key,
