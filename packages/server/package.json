@@ -13,7 +13,8 @@
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
-    "build:docker": "docker build . -t app-service",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../standard-components/manifest.json client",
+    "build:docker": "yarn run predocker && docker build . -t app-service",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
@@ -61,6 +62,7 @@
   "dependencies": {
     "@budibase/auth": "^0.9.71",
     "@budibase/client": "^0.9.71",
+    "@budibase/standard-components": "^0.9.71",
     "@budibase/string-templates": "^0.9.71",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
@@ -114,7 +116,6 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.71",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
     "@types/jest": "^26.0.23",

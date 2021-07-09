@@ -20,10 +20,14 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
   const definitions = {}
   for (let { manifest, library } of componentManifests) {
     for (let key of Object.keys(manifest)) {
-      const fullComponentName = `${library}/${key}`.toLowerCase()
-      definitions[fullComponentName] = {
-        component: fullComponentName,
-        ...manifest[key],
+      if (key === "features") {
+        definitions[key] = manifest[key]
+      } else {
+        const fullComponentName = `${library}/${key}`.toLowerCase()
+        definitions[fullComponentName] = {
+          component: fullComponentName,
+          ...manifest[key],
+        }
       }
     }
   }

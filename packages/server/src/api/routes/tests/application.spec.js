@@ -94,7 +94,7 @@ describe("/applications", () => {
   })
 
   describe("update", () => {
-    it("should be able to fetch the app package", async () => {
+    it("should be able to update the app package", async () => {
       const res = await request
         .put(`/api/applications/${config.getAppId()}`)
         .send({
@@ -104,6 +104,30 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
+    })
+  })
+
+  describe("manage client library version", () => {
+    it("should be able to update the app client library version", async () => {
+      console.log(config.getAppId())
+      await request
+        .post(`/api/applications/${config.getAppId()}/client/update`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+    })
+    it("should be able to revert the app client library version", async () => {
+      // We need to first update the version so that we can then revert
+      await request
+        .post(`/api/applications/${config.getAppId()}/client/update`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      await request
+        .post(`/api/applications/${config.getAppId()}/client/revert`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
     })
   })
 
