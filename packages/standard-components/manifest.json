@@ -1,4 +1,8 @@
 {
+  "features": {
+    "spectrumThemes": true,
+    "intelligentLoading": true
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",

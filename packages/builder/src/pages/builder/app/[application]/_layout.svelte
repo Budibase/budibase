@@ -4,6 +4,7 @@
   import { Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
+  import VersionModal from "components/deploy/VersionModal.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
@@ -80,6 +81,7 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
+        <VersionModal />
         <RevertModal />
         <Icon
           name="Play"

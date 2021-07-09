@@ -11,6 +11,16 @@ router
   .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
   .put("/api/applications/:appId", authorized(BUILDER), controller.update)
   .post("/api/applications", authorized(BUILDER), controller.create)
+  .post(
+    "/api/applications/:appId/client/update",
+    authorized(BUILDER),
+    controller.updateClient
+  )
+  .post(
+    "/api/applications/:appId/client/revert",
+    authorized(BUILDER),
+    controller.revertClient
+  )
   .delete("/api/applications/:appId", authorized(BUILDER), controller.delete)
 
 module.exports = router
