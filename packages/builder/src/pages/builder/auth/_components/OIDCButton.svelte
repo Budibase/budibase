@@ -18,7 +18,6 @@
     AD: MicrosoftLogo
   }
   $: show = $admin.checklist?.oidc
-  console.log(preDefinedIcons[oidcIcon])
 </script>
 
 {#if show}

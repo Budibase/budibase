@@ -3,7 +3,7 @@ const controller = require("../../controllers/admin/configs")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
-const { Configs, ConfigUploads } = require("../../../constants")
+const { Configs } = require("../../../constants")
 
 const router = Router()
 
@@ -41,16 +41,14 @@ function googleValidation() {
   }).unknown(true)
 }
 
-function OidcValidation() {
+function oidcValidation() {
   // prettier-ignore
   return Joi.object({
     clientID: Joi.string().required(),
-    authUrl: Joi.string().required(),
-    tokenUrl: Joi.string().required(),
-    userInfoUrl: Joi.string().required(),
-    clientId: Joi.string().required(),
     clientSecret: Joi.string().required(),
-    callbackUrl: Joi.string().required(),
+    configUrl: Joi.string().required(),
+    iconName: Joi.string().required(),
+    name: Joi.string().required(),
   }).unknown(true)
 }
 
