@@ -125,9 +125,6 @@ function syncUser(user, thirdPartyUser) {
     }
 
     // profile
-    // @reviewers: Historically stored at the root level of the user
-    //             Nest to prevent conflicts with future fields
-    //             Is this okay to change?
     user.thirdPartyProfile = {
       ...profile._json,
     }
