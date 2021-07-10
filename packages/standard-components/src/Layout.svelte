@@ -20,6 +20,7 @@
     None: "none",
   }
   const widthClasses = {
+    Max: "max",
     Large: "l",
     Medium: "m",
     Small: "s",
@@ -176,6 +177,9 @@
     position: relative;
     padding: 32px;
   }
+  .layout--none .main {
+    padding: 0;
+  }
   .size--s {
     width: 800px;
   }
@@ -184,6 +188,9 @@
   }
   .size--l {
     width: 1400px;
+  }
+  .size--max {
+    width: 100%;
   }
 
   /*  Nav components */
