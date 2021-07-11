@@ -4,6 +4,7 @@ const JwtStrategy = require("passport-jwt").Strategy
 const { StaticDatabases } = require("./db/utils")
 const { jwt, local, authenticated, google, auditLog } = require("./middleware")
 const { setDB, getDB } = require("./db")
+const userCache = require("./cache/user")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -46,6 +47,9 @@ module.exports = {
     google,
     jwt: require("jsonwebtoken"),
     auditLog,
+  },
+  cache: {
+    user: userCache,
   },
   StaticDatabases,
   constants: require("./constants"),

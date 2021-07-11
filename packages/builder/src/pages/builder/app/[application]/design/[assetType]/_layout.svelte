@@ -13,6 +13,7 @@
   import { FrontendTypes } from "constants"
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
   import { get } from "svelte/store"
+  import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -147,9 +148,16 @@
 
   <div class="preview-pane">
     {#if $currentAsset}
-      <ComponentSelectionList />
+      <div class="preview-header">
+        <ComponentSelectionList />
+        {#if $store.clientFeatures.spectrumThemes}
+          <AppThemeSelect />
+        {/if}
+      </div>
       <div class="preview-content">
-        <CurrentItemPreview />
+        {#key $store.version}
+          <CurrentItemPreview />
+        {/key}
       </div>
     {/if}
   </div>
@@ -192,6 +200,10 @@
     align-items: stretch;
     gap: var(--spacing-m);
     padding: var(--spacing-xl) 40px;
+  }
+  .preview-header {
+    display: grid;
+    grid-template-columns: 1fr 100px;
   }
   .preview-content {
     flex: 1 1 auto;

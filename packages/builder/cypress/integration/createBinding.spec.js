@@ -29,7 +29,7 @@ context("Create Bindings", () => {
       // The builder preview pages don't have a real URL, so all we can do
       // is check that we were able to bind to the property, and that the
       // component exists on the page
-      cy.getComponent(componentId).should("have.text", "Placeholder text")
+      cy.getComponent(componentId).should("have.text", "New Paragraph")
     })
   })
 

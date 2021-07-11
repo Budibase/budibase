@@ -14,7 +14,7 @@
 
   $: placeholder = $builderStore.inBuilder && !text
   $: componentText = $builderStore.inBuilder
-    ? text || "Placeholder text"
+    ? text || $component.name || "Placeholder text"
     : text || ""
 
   // Add color styles to main styles object, otherwise the styleable helper
@@ -54,7 +54,7 @@
   }
   .placeholder {
     font-style: italic;
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-600);
   }
   .bold {
     font-weight: 600;

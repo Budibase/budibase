@@ -4,7 +4,7 @@ import {
   QueryTypes,
   QueryJson,
   SqlQuery,
-} from "./base/definitions"
+} from "../definitions/datasource"
 import { getSqlQuery } from "./utils"
 
 module MSSQLModule {

@@ -76,6 +76,28 @@
       ]
     },
     {
+      "login": "Rory-Powell",
+      "name": "Rory Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8755148?v=4",
+      "profile": "https://github.com/Rory-Powell",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "PClmnt",
+      "name": "Peter Clement",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5665926?v=4",
+      "profile": "https://github.com/PClmnt",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
+    },
+    {
       "login": "Conor-Mack",
       "name": "Conor_Mack",
       "avatar_url": "https://avatars1.githubusercontent.com/u/36074859?v=4",

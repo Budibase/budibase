@@ -48,7 +48,14 @@ export default `
         }
 
         // Extract data from message
-        const { selectedComponentId, layout, screen, previewType, appId } = JSON.parse(event.data)
+        const {
+          selectedComponentId,
+          layout,
+          screen,
+          previewType,
+          appId,
+          theme
+        } = JSON.parse(event.data)
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true
@@ -58,6 +65,7 @@ export default `
         window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
         window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
         window["##BUDIBASE_PREVIEW_TYPE##"] = previewType
+        window["##BUDIBASE_PREVIEW_THEME##"] = theme
 
         // Initialise app
         try {

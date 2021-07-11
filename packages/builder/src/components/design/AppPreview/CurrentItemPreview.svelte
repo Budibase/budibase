@@ -48,6 +48,7 @@
     screen,
     selectedComponentId,
     previewType: $store.currentFrontEndType,
+    theme: $store.theme,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -74,16 +75,13 @@
     iframe.contentWindow.addEventListener(
       "ready",
       () => {
-        loading = false
+        // Display preview immediately if the intelligent loading feature
+        // is not supported
+        if (!$store.clientFeatures.intelligentLoading) {
+          loading = false
+        }
         refreshContent(strippedJson)
       },
-      { once: true }
-    )
-
-    // Use iframe loading event to support old client versions
-    iframe.contentWindow.addEventListener(
-      "iframe-loaded",
-      () => (loading = false),
       { once: true }
     )
 
@@ -108,7 +106,9 @@
         idToDelete = data.id
         confirmDeleteDialog.show()
       } else if (type === "preview-loaded") {
-        // loading = false
+        // Wait for this event to show the client library if intelligent
+        // loading is supported
+        loading = false
       } else {
         console.warning(`Client sent unknown event type: ${type}`)
       }

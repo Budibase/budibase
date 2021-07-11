@@ -13,6 +13,7 @@
     authStore,
     routeStore,
     builderStore,
+    appStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
   import SettingsBar from "./preview/SettingsBar.svelte"
@@ -70,6 +71,9 @@
       }
     }
   }
+
+  $: themeClass =
+    $builderStore.theme || $appStore.application?.theme || "spectrum--light"
 </script>
 
 {#if dataLoaded}
@@ -77,7 +81,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium spectrum--light"
+    class="spectrum spectrum--medium {themeClass}"
   >
     {#if permissionError}
       <div class="error">
@@ -126,6 +130,28 @@
   }
   #app-root {
     position: relative;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  /* Custom scrollbars */
+  :global(::-webkit-scrollbar) {
+    width: 8px;
+    height: 8px;
+  }
+  :global(::-webkit-scrollbar-track) {
+    background: var(--spectrum-alias-background-color-default);
+  }
+  :global(::-webkit-scrollbar-thumb) {
+    background-color: var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+  :global(::-webkit-scrollbar-corner) {
+    background: var(--spectrum-alias-background-color-default);
+  }
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--spectrum-global-color-gray-400)
+      var(--spectrum-alias-background-color-default);
   }
 
   .error {
