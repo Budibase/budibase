@@ -155,6 +155,21 @@ class TestConfiguration {
     )
   }
 
+  async saveOIDCConfig() {
+    await this.deleteConfig(Configs.OIDC)
+    const config = {
+      type: Configs.OIDC,
+      config: {
+        configUrl: "http://someconfigurl",
+        clientID: "clientId",
+        clientSecret: "clientSecret",
+      },
+    }
+
+    await this._req(config, null, controllers.config.save)
+    return config
+  }
+
   async saveSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
     await this._req(
