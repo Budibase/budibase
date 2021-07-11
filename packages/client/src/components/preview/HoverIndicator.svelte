@@ -29,4 +29,9 @@
   })
 </script>
 
-<IndicatorSet {componentId} color="rgb(120, 170, 244)" transition {zIndex} />
+<IndicatorSet
+  {componentId}
+  color="var(--spectrum-global-color-static-blue-200)"
+  transition
+  {zIndex}
+/>

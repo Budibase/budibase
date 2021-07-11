@@ -30,6 +30,6 @@
   }
   span {
     font-size: var(--font-size-s);
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

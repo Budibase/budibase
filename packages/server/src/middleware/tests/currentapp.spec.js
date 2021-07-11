@@ -23,6 +23,15 @@ function mockReset() {
 function mockAuthWithNoCookie() {
   jest.resetModules()
   mockWorker()
+  jest.mock("@budibase/auth/cache", () => ({
+    user: {
+      getUser: () => {
+        return {
+          _id: "us_uuid1",
+        }
+      },
+    },
+  }))
   jest.mock("@budibase/auth", () => ({
     utils: {
       getAppId: jest.fn(),

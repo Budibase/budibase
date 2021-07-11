@@ -2,7 +2,6 @@ const setup = require("./utilities")
 const { basicScreen } = setup.structures
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const workerRequests = require("../../../utilities/workerRequests")
 
 const route = "/test"
 

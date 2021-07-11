@@ -27,9 +27,7 @@
     "name": "Card",
     "icon": "Card",
     "children": [
-      "stackedlist",
-      "card",
-      "cardhorizontal",
+      "spectrumcard",
       "cardstat"
     ]
   },
@@ -56,13 +54,6 @@
       "link",
       "icon",
       "embed"
-    ]
-  },
-  {
-    "name": "Other",
-    "icon": "More",
-    "children": [
-      "screenslot"
     ]
   }
 ]

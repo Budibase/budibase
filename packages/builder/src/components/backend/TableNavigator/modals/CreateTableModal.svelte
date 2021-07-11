@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, url } from "@roxi/routify"
   import { store } from "builderStore"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
@@ -27,7 +27,7 @@
 
   $: tableNames = $tables.list.map(table => table.name)
 
-  let name
+  export let name
   let dataImport
   let error = ""
   let createAutoscreens = true
@@ -91,7 +91,11 @@
     }
 
     // Navigate to new table
-    $goto(`../../table/${table._id}`)
+    const currentUrl = $url()
+    const path = currentUrl.endsWith("data")
+      ? `./table/${table._id}`
+      : `../../table/${table._id}`
+    $goto(path)
   }
 </script>
 
