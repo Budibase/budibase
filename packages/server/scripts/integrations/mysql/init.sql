@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS main;
 USE main;
 CREATE TABLE Persons (
     PersonID int NOT NULL AUTO_INCREMENT,
+    CreatedAt datetime,
     LastName varchar(255),
     FirstName varchar(255),
     Address varchar(255),
@@ -17,6 +18,6 @@ CREATE TABLE Tasks (
         FOREIGN KEY(PersonID)
 	    REFERENCES Persons(PersonID)
 );
-INSERT INTO Persons (FirstName, LastName, Address, City) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast');
+INSERT INTO Persons (FirstName, LastName, Address, City, CreatedAt) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', '2021-01-19 03:14:07');
 INSERT INTO Tasks (PersonID, TaskName) VALUES (1, 'assembling');
 INSERT INTO Tasks (PersonID, TaskName) VALUES (1, 'processing');
