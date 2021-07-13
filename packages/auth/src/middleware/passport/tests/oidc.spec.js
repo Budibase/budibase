@@ -1,50 +1,69 @@
+// Mock data
+
+const { data } = require("./utilities")
+
+const issuer = "mockIssuer"
+const sub = "mockSub"
+const profile = {
+  id: "mockId",
+  _json: {
+    email : data.email
+  }
+}
+let jwtClaims = {}  
+const idToken = "mockIdToken"
+const params = {}
+
+const callbackUrl = "http://somecallbackurl"
+
+// response from .well-known/openid-configuration
+const oidcConfigUrlResponse = {
+  issuer: issuer,
+  authorization_endpoint: "mockAuthorizationEndpoint",
+  token_endpoint: "mockTokenEndpoint",
+  userinfo_endpoint: "mockUserInfoEndpoint"
+}
+
+const oidcConfig = {
+  configUrl: "http://someconfigurl",
+  clientID: data.clientID,
+  clientSecret: data.clientSecret,
+}
+
+const user = data.buildThirdPartyUser(issuer, "oidc", profile)
+
 describe("oidc", () => {
   describe("strategyFactory", () => {  
     // mock passport strategy factory
     jest.mock("@techpass/passport-openidconnect")
     const mockStrategy = require("@techpass/passport-openidconnect").Strategy
     
-    // mock the response from .well-known/openid-configuration
-    const configUrlResponse = {
-      issuer: "mockIssuer",
-      authorization_endpoint: "mockAuthorizationEndpoint",
-      token_endpoint: "mockTokenEndpoint",
-      userinfo_endpoint: "mockUserInfoEndpoint"
-    }
-  
     // mock the request to retrieve the oidc configuration
-    jest.mock("node-fetch", () => jest.fn(() => (
-      {
-        ok: true,
-        json: async () => configUrlResponse
-      }
-    )))
+    jest.mock("node-fetch")
     const mockFetch = require("node-fetch")
+    mockFetch.mockReturnValue({
+      ok: true,
+      json: () => oidcConfigUrlResponse
+    })
   
     it("should create successfully create an oidc strategy", async () => {
       const oidc = require("../oidc")
-      
-      // mock the config supplied to the strategy factory
-      config = {
-        configUrl: "http://someconfigurl",
-        clientID: "clientId",
-        clientSecret: "clientSecret",
+  
+      await oidc.strategyFactory(oidcConfig, callbackUrl)
+  
+      expect(mockFetch).toHaveBeenCalledWith(oidcConfig.configUrl)
+
+      const expectedOptions = {
+        issuer: oidcConfigUrlResponse.issuer,
+        authorizationURL: oidcConfigUrlResponse.authorization_endpoint,
+        tokenURL: oidcConfigUrlResponse.token_endpoint,
+        userInfoURL: oidcConfigUrlResponse.userinfo_endpoint,
+        clientID: oidcConfig.clientID,
+        clientSecret: oidcConfig.clientSecret,
+        callbackURL: callbackUrl,
       }
-      callbackUrl = "http://somecallbackurl"
-  
-      await oidc.strategyFactory(config, callbackUrl)
-  
-      expect(mockFetch).toHaveBeenCalledWith("http://someconfigurl")
       expect(mockStrategy).toHaveBeenCalledWith(
-        {
-          issuer: configUrlResponse.issuer,
-          authorizationURL: configUrlResponse.authorization_endpoint,
-          tokenURL: configUrlResponse.token_endpoint,
-          userInfoURL: configUrlResponse.userinfo_endpoint,
-          clientID: config.clientID,
-          clientSecret: config.clientSecret,
-          callbackURL: callbackUrl,
-        },
+        expectedOptions,
         expect.anything()
       )
     })
@@ -58,35 +77,9 @@ describe("oidc", () => {
     // mock third party common authentication
     jest.mock("../third-party-common")
     const authenticateThirdParty = require("../third-party-common").authenticateThirdParty
-
-    // parameters
-    const issuer = "mockIssuer"
-    const sub = "mockSub"
-    const profile = {
-      id: "mockId",
-      _json: {
-        email : "mock@budibase.com"
-      }
-    }
-    let jwtClaims = {}  
-    const accessToken = "mockAccessToken"
-    const refreshToken = "mockRefreshToken"
-    const idToken = "mockIdToken"
-    const params = {}
+    
     // mock the passport callback
     const mockDone = jest.fn()
-
-    const thirdPartyUser = {
-      provider: issuer,
-      providerType: "oidc",
-      userId: profile.id,
-      profile: profile,
-      email: "mock@budibase.com",
-      oauth2: {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      },
-    }
 
     async function doAuthenticate() {
       const oidc = require("../oidc")
@@ -96,8 +89,8 @@ describe("oidc", () => {
         sub,
         profile,
         jwtClaims,
-        accessToken,
-        refreshToken,
+        data.accessToken,
+        data.refreshToken,
         idToken,
         params,
         mockDone
@@ -108,7 +101,7 @@ describe("oidc", () => {
       await doAuthenticate()
 
       expect(authenticateThirdParty).toHaveBeenCalledWith(
-        thirdPartyUser,
+        user,
         false, 
         mockDone)
     }

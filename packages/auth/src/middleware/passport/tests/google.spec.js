@@ -1,3 +1,23 @@
+// Mock data
+
+const { data } = require("./utilities")
+
+const googleConfig = {
+  callbackURL: "http://somecallbackurl",
+  clientID: data.clientID,
+  clientSecret: data.clientSecret,
+}
+
+const profile = {
+  id: "mockId",
+  _json: {
+    email : data.email
+  },
+  provider: "google"
+}
+
+const user = data.buildThirdPartyUser("google", "google", profile)
+
 describe("google", () => {
   describe("strategyFactory", () => {  
     // mock passport strategy factory
@@ -6,22 +26,17 @@ describe("google", () => {
   
     it("should create successfully create a google strategy", async () => {
       const google = require("../google")
-      
-      // mock the config supplied to the strategy factory
-      config = {
-        callbackURL: "http://somecallbackurl",
-        clientID: "clientId",
-        clientSecret: "clientSecret",
+         
+      await google.strategyFactory(googleConfig)
+  
+      const expectedOptions = {
+        clientID: googleConfig.clientID,
+        clientSecret: googleConfig.clientSecret,
+        callbackURL: googleConfig.callbackURL,
       }
-  
-      await google.strategyFactory(config)
-  
+
       expect(mockStrategy).toHaveBeenCalledWith(
-        {
-          clientID: config.clientID,
-          clientSecret: config.clientSecret,
-          callbackURL: config.callbackURL,
-        },
+        expectedOptions,
         expect.anything()
       )
     })
@@ -36,43 +51,21 @@ describe("google", () => {
     jest.mock("../third-party-common")
     const authenticateThirdParty = require("../third-party-common").authenticateThirdParty
 
-    // parameters
-    const profile = {
-      id: "mockId",
-      _json: {
-        email : "mock@budibase.com"
-      },
-      provider: "google"
-    }
-    const accessToken = "mockAccessToken"
-    const refreshToken = "mockRefreshToken"
     // mock the passport callback
     const mockDone = jest.fn()
-
-    const thirdPartyUser = {
-      provider: "google",
-      providerType: "google",
-      userId: profile.id,
-      profile: profile,
-      email: "mock@budibase.com",
-      oauth2: {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      },
-    }
 
     it("delegates authentication to third party common", async () => {
       const google = require("../google")
 
       await google.authenticate(
-        accessToken,
-        refreshToken,
+        data.accessToken,
+        data.refreshToken,
         profile,
         mockDone
       )
 
       expect(authenticateThirdParty).toHaveBeenCalledWith(
-        thirdPartyUser,
+        user,
         true, 
         mockDone)
     })
