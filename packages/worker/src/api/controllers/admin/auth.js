@@ -102,7 +102,7 @@ exports.googlePreAuth = async (ctx, next) => {
   const db = new CouchDB(GLOBAL_DB)
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
-    group: ctx.query.group,
+    workspace: ctx.query.workspace,
   })
   const strategy = await google.strategyFactory(config)
 
@@ -116,7 +116,7 @@ exports.googleAuth = async (ctx, next) => {
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
-    group: ctx.query.group,
+    workspace: ctx.query.workspace,
   })
   const strategy = await google.strategyFactory(config)
 

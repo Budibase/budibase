@@ -12,7 +12,7 @@ exports.GlobalRoles = {
   OWNER: "owner",
   ADMIN: "admin",
   BUILDER: "builder",
-  GROUP_MANAGER: "group_manager",
+  WORKSPACE_MANAGER: "workspace_manager",
 }
 
 exports.Configs = {

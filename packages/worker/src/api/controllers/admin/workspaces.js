@@ -1,20 +1,20 @@
 const CouchDB = require("../../../db")
-const { getGroupParams, generateGroupID, StaticDatabases } =
+const { getWorkspaceParams, generateWorkspaceID, StaticDatabases } =
   require("@budibase/auth").db
 
 const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const groupDoc = ctx.request.body
+  const workspaceDoc = ctx.request.body
 
-  // Group does not exist yet
-  if (!groupDoc._id) {
-    groupDoc._id = generateGroupID()
+  // workspace does not exist yet
+  if (!workspaceDoc._id) {
+    workspaceDoc._id = generateWorkspaceID()
   }
 
   try {
-    const response = await db.post(groupDoc)
+    const response = await db.post(workspaceDoc)
     ctx.body = {
       _id: response.id,
       _rev: response.rev,
@@ -27,7 +27,7 @@ exports.save = async function (ctx) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getGroupParams(undefined, {
+    getWorkspaceParams(undefined, {
       include_docs: true,
     })
   )
@@ -49,7 +49,7 @@ exports.destroy = async function (ctx) {
 
   try {
     await db.remove(id, rev)
-    ctx.body = { message: "Group deleted successfully" }
+    ctx.body = { message: "Workspace deleted successfully" }
   } catch (err) {
     ctx.throw(err.status, err)
   }

@@ -19,7 +19,7 @@ exports.StaticDatabases = {
 
 const DocumentTypes = {
   USER: "us",
-  GROUP: "group",
+  WORKSPACE: "workspace",
   CONFIG: "config",
   TEMPLATE: "template",
   APP: "app",
@@ -61,21 +61,21 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 }
 
 /**
- * Generates a new group ID.
- * @returns {string} The new group ID which the group doc can be stored under.
+ * Generates a new workspace ID.
+ * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
-exports.generateGroupID = () => {
-  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
+exports.generateWorkspaceID = () => {
+  return `${DocumentTypes.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving groups.
+ * Gets parameters for retrieving workspaces.
  */
-exports.getGroupParams = (id = "", otherProps = {}) => {
+exports.getWorkspaceParams = (id = "", otherProps = {}) => {
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}`,
-    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}`,
+    endkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
   }
 }
 
@@ -103,14 +103,14 @@ exports.getGlobalUserParams = (globalId, otherProps = {}) => {
 
 /**
  * Generates a template ID.
- * @param ownerId The owner/user of the template, this could be global or a group level.
+ * @param ownerId The owner/user of the template, this could be global or a workspace level.
  */
 exports.generateTemplateID = ownerId => {
   return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving templates. Owner ID must be specified, either global or a group level.
+ * Gets parameters for retrieving templates. Owner ID must be specified, either global or a workspace level.
  */
 exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
   if (!templateId) {
@@ -214,8 +214,8 @@ exports.dbExists = async (CouchDB, dbName) => {
  * Generates a new configuration ID.
  * @returns {string} The new configuration ID which the config doc can be stored under.
  */
-const generateConfigID = ({ type, group, user }) => {
-  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
+const generateConfigID = ({ type, workspace, user }) => {
+  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
   return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
 }
@@ -223,8 +223,8 @@ const generateConfigID = ({ type, group, user }) => {
 /**
  * Gets parameters for retrieving configurations.
  */
-const getConfigParams = ({ type, group, user }, otherProps = {}) => {
-  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
+const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
+  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
   return {
     ...otherProps,
@@ -234,15 +234,15 @@ const getConfigParams = ({ type, group, user }, otherProps = {}) => {
 }
 
 /**
- * Returns the most granular configuration document from the DB based on the type, group and userID passed.
+ * Returns the most granular configuration document from the DB based on the type, workspace and userID passed.
  * @param {Object} db - db instance to query
- * @param {Object} scopes - the type, group and userID scopes of the configuration.
+ * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
-const getScopedFullConfig = async function (db, { type, user, group }) {
+const getScopedFullConfig = async function (db, { type, user, workspace }) {
   const response = await db.allDocs(
     getConfigParams(
-      { type, user, group },
+      { type, user, workspace },
       {
         include_docs: true,
       }
@@ -252,14 +252,14 @@ const getScopedFullConfig = async function (db, { type, user, group }) {
   function determineScore(row) {
     const config = row.doc
 
-    // Config is specific to a user and a group
-    if (config._id.includes(generateConfigID({ type, user, group }))) {
+    // Config is specific to a user and a workspace
+    if (config._id.includes(generateConfigID({ type, user, workspace }))) {
       return 4
     } else if (config._id.includes(generateConfigID({ type, user }))) {
       // Config is specific to a user only
       return 3
-    } else if (config._id.includes(generateConfigID({ type, group }))) {
-      // Config is specific to a group only
+    } else if (config._id.includes(generateConfigID({ type, workspace }))) {
+      // Config is specific to a workspace only
       return 2
     } else if (config._id.includes(generateConfigID({ type }))) {
       // Config is specific to a type only

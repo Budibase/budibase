@@ -46,7 +46,7 @@ function buildConfigSaveValidation() {
   return joiValidator.body(Joi.object({
     _id: Joi.string().optional(),
     _rev: Joi.string().optional(),
-    group: Joi.string().optional(),
+    workspace: Joi.string().optional(),
     type: Joi.string().valid(...Object.values(Configs)).required(),
     config: Joi.alternatives()
       .conditional("type", {
