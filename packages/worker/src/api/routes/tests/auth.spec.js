@@ -61,37 +61,37 @@ describe("/api/admin/auth", () => {
     auth.oidc.strategyFactory = strategyFactory
 
     const passportSpy = jest.spyOn(auth.passport, "authenticate")
+    let oidcConf
+
+    beforeEach(async () => {
+      oidcConf = await config.saveOIDCConfig()
+    })
+
+    afterEach(() => {
+      expect(strategyFactory).toBeCalledWith(
+        oidcConf.config, 
+        "http://127.0.0.1:4003/api/admin/auth/oidc/callback" // calculated url
+      )
+    })
 
     describe("/api/admin/auth/oidc", () => {
-      it("should load the oidc config and calculate the correct callback url", async () => {
-        const oidcConf = await config.saveOIDCConfig()
-      
+      it("should load strategy and delegate to passport", async () => {
         await request.get(`/api/admin/auth/oidc`)
 
-        expect(strategyFactory).toBeCalledWith(
-          oidcConf.config, 
-          "http://127.0.0.1:4003/api/admin/auth/oidc/callback" // calculated url
-        )
-        
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email"],
         })
-
         expect(passportSpy.mock.calls.length).toBe(1);
       })
     })
 
     describe("/api/admin/auth/oidc/callback", () => {
-      it("should do something", async () => {
-        const oidcConf = await config.saveOIDCConfig()
-        const passportSpy = jest.spyOn(auth.passport, "authenticate")
-
+      it("should load strategy and delegate to passport", async () => {
         await request.get(`/api/admin/auth/oidc/callback`)
       
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           successRedirect: "/", failureRedirect: "/error" 
         }, expect.anything())
-
         expect(passportSpy.mock.calls.length).toBe(1);
       })
     })
