@@ -28,7 +28,8 @@
     "zlib": "^1.0.5"
   },
   "devDependencies": {
-    "ioredis-mock": "^5.5.5"
+    "ioredis-mock": "^5.5.5",
+    "jest": "^26.6.3"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
