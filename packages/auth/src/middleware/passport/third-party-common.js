@@ -60,12 +60,10 @@ exports.authenticateThirdParty = async function (
 
   // exit early if there is still no user and auto creation is disabled
   if (!dbUser && requireLocalAccount) {
-    if (requireLocalAccount) {
-      return authError(
-        done,
-        "Email does not yet exist. You must set up your local budibase account first."
-      )
-    }
+    return authError(
+      done,
+      "Email does not yet exist. You must set up your local budibase account first."
+    )
   }
 
   // first time creation
