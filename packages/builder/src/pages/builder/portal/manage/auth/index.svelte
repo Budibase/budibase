@@ -171,7 +171,7 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading size="M">OAuth</Heading>
+    <Heading size="M">Authentication</Heading>
     <Body>
       Every budibase app comes with basic authentication (email/password)
       included. You can add additional authentication methods from the options
