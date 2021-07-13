@@ -113,6 +113,7 @@ exports.publicOidc = async function (ctx) {
         return {
           logo: config.logo,
           name: config.name,
+          uuid: config.uuid,
         }
       })
       ctx.body = partialOidcCofig

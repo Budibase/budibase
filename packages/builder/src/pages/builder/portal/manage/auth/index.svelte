@@ -19,6 +19,7 @@
   import { onMount } from "svelte"
   import api from "builderStore/api"
   import { organisation } from "stores/portal"
+  import { uuid } from "builderStore/uuid"
 
   const ConfigTypes = {
     Google: "google",
@@ -87,10 +88,17 @@
   const providers = { google, oidc }
 
   async function save(docs) {
+    console.log(docs)
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
     docs.forEach(element => {
+      //Add a UUID here so each config is distinguishable when it arrives at the login page.
+      if (element.type === "oidc") {
+        element.config.configs.forEach(config => {
+          config.uuid = uuid()
+        })
+      }
       calls.push(api.post(`/api/admin/configs`, element))
     })
     Promise.all(calls)
@@ -184,7 +192,7 @@
         To allow users to authenticate using their Google accounts, fill out the
         fields below.
       </Body>
-    </Layout>dddd
+    </Layout>
     <Layout gap="XS" noPadding>
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
