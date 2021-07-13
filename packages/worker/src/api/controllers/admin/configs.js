@@ -206,7 +206,7 @@ exports.configChecklist = async function (ctx) {
     })
 
     // They have set up Google Auth
-    const oauthConfig = await getScopedFullConfig(db, {
+    const googleConfig = await getScopedFullConfig(db, {
       type: Configs.GOOGLE,
     })
 
@@ -226,8 +226,7 @@ exports.configChecklist = async function (ctx) {
       apps: appDbNames.length,
       smtp: !!smtpConfig,
       adminUser,
-      oauth: !!oauthConfig,
-      oidc: !!oidcConfig,
+      sso: !!googleConfig || !!oidcConfig
     }
   } catch (err) {
     ctx.throw(err.status, err)
