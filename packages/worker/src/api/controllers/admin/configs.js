@@ -73,7 +73,9 @@ exports.find = async function (ctx) {
   const { userId, workspaceId } = ctx.query
   if (workspaceId && userId) {
     const workspace = await db.get(workspaceId)
-    const userInWorkspace = workspace.users.some(workspaceUser => workspaceUser === userId)
+    const userInWorkspace = workspace.users.some(
+      workspaceUser => workspaceUser === userId
+    )
     if (!ctx.user.admin && !userInWorkspace) {
       ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
     }
