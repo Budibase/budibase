@@ -4,10 +4,9 @@
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
 
-  import { admin } from "stores/portal"
+  import { admin, oidc } from "stores/portal"
+  import { onMount } from "svelte"
 
-  export let oidcIcon
-  export let oidcName
   let show = false
 
   let preDefinedIcons = {
@@ -15,21 +14,22 @@
     Auth0: Auth0Logo,
     Microsoft: MicrosoftLogo,
   }
+
+  onMount(async () => {
+    await oidc.init()
+  })
+
   $: show = $admin.checklist?.oidc
+  $: src = !$oidc.logo
+    ? OidcLogo
+    : preDefinedIcons[$oidc.logo] || `/global/oidc_logos/${$oidc.logo}`
 </script>
 
 {#if show}
-  <ActionButton on:click={() => window.open("/api/admin/auth/oidc", "_blank")}>
+  <ActionButton on:click={() => window.open("/api/admin/auth/oidc/", "_blank")}>
     <div class="inner">
-      <img
-        src={!oidcIcon
-          ? OidcLogo
-          : preDefinedIcons[oidcIcon]
-          ? preDefinedIcons[oidcIcon]
-          : `/global/oidc_logos/${oidcIcon}`}
-        alt="oidc icon"
-      />
-      <p>{`Sign in with ${oidcName || "OIDC"}`}</p>
+      <img {src} alt="oidc icon" />
+      <p>{`Sign in with ${$oidc.name || "OIDC"}`}</p>
     </div>
   </ActionButton>
 {/if}

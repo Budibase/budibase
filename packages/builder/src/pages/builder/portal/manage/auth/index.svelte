@@ -239,7 +239,6 @@
         />
       </div>
       <input
-        style="display:none"
         type="file"
         accept=".jpg, .jpeg, .png"
         on:change={e => onFileSelected(e)}

@@ -13,7 +13,7 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
-  export let getOptionIcon = option => extractObjectProperty(option, "icon")
+  export let getOptionIcon = option => option?.icon
   export let quiet = false
   export let autoWidth = false
 
@@ -21,12 +21,6 @@
   const onChange = e => {
     value = e.detail
     dispatch("change", e.detail)
-  }
-
-  const extractObjectProperty = (value, property) => {
-    if (value && typeof value === "object") {
-      return value[property]
-    }
   }
 
   const extractProperty = (value, property) => {
