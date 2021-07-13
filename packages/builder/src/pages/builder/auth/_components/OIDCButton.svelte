@@ -3,7 +3,6 @@
   import OidcLogo from "assets/oidc-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
-  import OracleLogo from "assets/oracle-logo.png"
 
   import { admin } from "stores/portal"
 
@@ -13,7 +12,6 @@
 
   let preDefinedIcons = {
     Oidc: OidcLogo,
-    Oracle: OracleLogo,
     Auth0: Auth0Logo,
     AD: MicrosoftLogo,
   }

@@ -88,7 +88,6 @@
   const providers = { google, oidc }
 
   async function save(docs) {
-    console.log(docs)
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
