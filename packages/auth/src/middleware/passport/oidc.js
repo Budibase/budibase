@@ -65,7 +65,11 @@ function getEmail(profile, jwtClaims) {
     return username
   }
 
-  return null
+  throw new Error(
+    `Could not determine user email from profile ${JSON.stringify(
+      profile
+    )} and claims ${JSON.stringify(jwtClaims)}`
+  )
 }
 
 function validEmail(value) {
@@ -119,3 +123,6 @@ exports.strategyFactory = async function (config, callbackUrl) {
     throw new Error("Error constructing OIDC authentication strategy", err)
   }
 }
+
+// expose for testing
+exports.authenticate = authenticate
