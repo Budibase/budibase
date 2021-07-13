@@ -50,7 +50,8 @@ function oidcValidation() {
         clientSecret: Joi.string().required(),
         configUrl: Joi.string().required(),
         logo: Joi.string().optional(),
-        name: Joi.string().optional(),  
+        name: Joi.string().optional(),
+        uuid: Joi.string().required(),
       })
     ).required(true)
   }).unknown(true)

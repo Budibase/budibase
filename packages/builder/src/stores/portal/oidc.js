@@ -4,6 +4,7 @@ import api from "builderStore/api"
 const OIDC_CONFIG = {
   logo: undefined,
   name: undefined,
+  uuid: undefined,
 }
 
 export function createOidcStore() {

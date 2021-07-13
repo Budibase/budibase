@@ -7,14 +7,21 @@ const mockEmail = "mock@budibase.com"
 const mockAccessToken = "mockAccessToken"
 const mockRefreshToken = "mockRefreshToken"
 
-const buildOauth2 = (accessToken=mockAccessToken, refreshToken=mockRefreshToken) => (
-  {
-    accessToken: accessToken,
-    refreshToken: refreshToken,
-  }
-)
+const buildOauth2 = (
+  accessToken = mockAccessToken,
+  refreshToken = mockRefreshToken
+) => ({
+  accessToken: accessToken,
+  refreshToken: refreshToken,
+})
 
-const buildThirdPartyUser = (provider, providerType, profile, email=mockEmail, oauth2=buildOauth2()) => ({
+const buildThirdPartyUser = (
+  provider,
+  providerType,
+  profile,
+  email = mockEmail,
+  oauth2 = buildOauth2()
+) => ({
   provider: provider,
   providerType: providerType,
   userId: profile.id,
@@ -29,5 +36,5 @@ exports.data = {
   email: mockEmail,
   accessToken: mockAccessToken,
   refreshToken: mockRefreshToken,
-  buildThirdPartyUser
+  buildThirdPartyUser,
 }
