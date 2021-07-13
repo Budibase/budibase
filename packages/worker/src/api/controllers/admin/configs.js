@@ -98,6 +98,30 @@ exports.find = async function (ctx) {
   }
 }
 
+exports.publicOidc = async function (ctx) {
+  const db = new CouchDB(GLOBAL_DB)
+  try {
+    // Find the config with the most granular scope based on context
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
+
+    if (!oidcConfig) {
+      ctx.body = {}
+    } else {
+      const partialOidcCofig = oidcConfig.config.configs.map(config => {
+        return {
+          logo: config.logo,
+          name: config.name,
+        }
+      })
+      ctx.body = partialOidcCofig
+    }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
 exports.publicSettings = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
   try {
