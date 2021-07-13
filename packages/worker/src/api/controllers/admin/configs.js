@@ -226,7 +226,7 @@ exports.configChecklist = async function (ctx) {
       apps: appDbNames.length,
       smtp: !!smtpConfig,
       adminUser,
-      sso: !!googleConfig || !!oidcConfig
+      sso: !!googleConfig || !!oidcConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)
