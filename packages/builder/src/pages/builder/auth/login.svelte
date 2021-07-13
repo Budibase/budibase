@@ -50,7 +50,6 @@
 
   onMount(async () => {
     await organisation.init()
-    await oidc.init()
   })
 </script>
 
