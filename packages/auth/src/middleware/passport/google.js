@@ -50,3 +50,5 @@ exports.strategyFactory = async function (config) {
     throw new Error("Error constructing google authentication strategy", err)
   }
 }
+// expose for testing
+exports.authenticate = authenticate
