@@ -13,7 +13,7 @@
   let preDefinedIcons = {
     Oidc: OidcLogo,
     Auth0: Auth0Logo,
-    AD: MicrosoftLogo,
+    Microsoft: MicrosoftLogo,
   }
   $: show = $admin.checklist?.oidc
 </script>
