@@ -62,21 +62,25 @@ describe("/api/admin/auth", () => {
 
     const passportSpy = jest.spyOn(auth.passport, "authenticate")
     let oidcConf
+    let chosenConfig
+    let configId
 
     beforeEach(async () => {
       oidcConf = await config.saveOIDCConfig()
+      chosenConfig = oidcConf.config.configs[0]
+      configId = chosenConfig.uuid
     })
 
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
-        oidcConf.config, 
-        "http://127.0.0.1:4003/api/admin/auth/oidc/callback" // calculated url
+        chosenConfig, 
+        `http://127.0.0.1:4003/api/admin/auth/oidc/callback/${configId}` // calculated url
       )
     })
 
     describe("/api/admin/auth/oidc", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/oidc`)
+        await request.get(`/api/admin/auth/oidc/${configId}`)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email"],
@@ -87,7 +91,7 @@ describe("/api/admin/auth", () => {
 
     describe("/api/admin/auth/oidc/callback", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/oidc/callback`)
+        await request.get(`/api/admin/auth/oidc/callback/${configId}`)
       
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           successRedirect: "/", failureRedirect: "/error" 

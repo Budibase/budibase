@@ -134,6 +134,8 @@ exports.googleAuth = async (ctx, next) => {
 }
 
 async function oidcStrategyFactory(ctx) {
+  const { configId } = ctx.params
+
   const db = new CouchDB(GLOBAL_DB)
 
   const config = await authPkg.db.getScopedConfig(db, {
@@ -141,9 +143,11 @@ async function oidcStrategyFactory(ctx) {
     group: ctx.query.group,
   })
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  return oidc.strategyFactory(config, callbackUrl)
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback/${configId}`
+
+  return oidc.strategyFactory(chosenConfig, callbackUrl)
 }
 
 /**

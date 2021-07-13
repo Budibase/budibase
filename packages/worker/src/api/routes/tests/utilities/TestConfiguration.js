@@ -6,6 +6,7 @@ const { Cookies } = require("@budibase/auth").constants
 const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
 const { createASession } = require("@budibase/auth/sessions")
+const { newid } = require("../../../../../../auth/src/hashing")
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -160,9 +161,16 @@ class TestConfiguration {
     const config = {
       type: Configs.OIDC,
       config: {
-        configUrl: "http://someconfigurl",
-        clientID: "clientId",
-        clientSecret: "clientSecret",
+        configs: [
+          {
+            configUrl: "http://someconfigurl",
+            clientID: "clientId",
+            clientSecret: "clientSecret",
+            logo: "Microsoft",
+            name: "Active Directory",
+            uuid: newid(),
+          },
+        ],
       },
     }
 
