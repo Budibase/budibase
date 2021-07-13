@@ -49,8 +49,8 @@ function oidcValidation() {
         clientID: Joi.string().required(),
         clientSecret: Joi.string().required(),
         configUrl: Joi.string().required(),
-        logo: Joi.string().optional(),
-        name: Joi.string().optional(),
+        logo: Joi.string().allow("", null),
+        name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
       })
     ).required(true)

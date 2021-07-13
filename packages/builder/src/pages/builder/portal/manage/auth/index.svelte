@@ -64,8 +64,20 @@
 
   let fileinput
   let image
+
   let google
   let oidc
+  const providers = { google, oidc }
+
+  // Create a flag so that it will only try to save completed forms
+  $: googleComplete =
+    providers.google?.config.clientID &&
+    providers.google?.config.clientSecret &&
+    providers.google?.config.callbackURL
+  $: oidcComplete =
+    providers.oidc?.config.configs[0].configUrl &&
+    providers.oidc?.config.configs[0].clientID &&
+    providers.oidc?.config.configs[0].clientSecret
 
   async function uploadLogo(file) {
     let data = new FormData()
@@ -85,20 +97,21 @@
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
   }
 
-  const providers = { google, oidc }
-
   async function save(docs) {
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
     docs.forEach(element => {
-      //Add a UUID here so each config is distinguishable when it arrives at the login page.
-      if (element.type === "oidc") {
+      if (element.type === ConfigTypes.OIDC) {
+        //Add a UUID here so each config is distinguishable when it arrives at the login page.
         element.config.configs.forEach(config => {
-          config.uuid = uuid()
+          !config.uuid && (config.uuid = uuid())
         })
+        oidcComplete && calls.push(api.post(`/api/admin/configs`, element))
       }
-      calls.push(api.post(`/api/admin/configs`, element))
+      if (element.type === ConfigTypes.Google) {
+        googleComplete && calls.push(api.post(`/api/admin/configs`, element))
+      }
     })
     Promise.all(calls)
       .then(responses => {
