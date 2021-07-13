@@ -18,7 +18,7 @@
   export let onSelectOption = () => {}
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
-  export let getOptionIcon = option => option
+  export let getOptionIcon = null
   export let open = false
   export let readonly = false
   export let quiet = false
@@ -45,7 +45,7 @@
 >
   {#if fieldIcon}
     <span class="icon-Placeholder-Padding">
-      <img src={fieldIcon} alt="OpenID Icon" width="20" height="15" />
+      <img src={fieldIcon} alt="Picker Icon" width="20" height="15" />
     </span>
   {/if}
 
