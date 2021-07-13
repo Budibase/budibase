@@ -49,6 +49,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/admin/configs/public",
     method: "GET",
   },
+  {
+    route: "/api/admin/configs/publicOidc",
+    method: "GET",
+  },
 ]
 
 const router = new Router()

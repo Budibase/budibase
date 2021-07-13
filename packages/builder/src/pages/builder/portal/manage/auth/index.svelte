@@ -2,7 +2,6 @@
   import GoogleLogo from "./_logos/Google.svelte"
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
-  import OracleLogo from "assets/oracle-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
   import OidcLogoPng from "assets/oidc-logo.png"
 
@@ -19,13 +18,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { writable } from "svelte/store"
   import { organisation } from "stores/portal"
-
-  const values = writable({
-    oidcIcon: $organisation.oidcIcon,
-    oidcName: $organisation.oidcName,
-  })
 
   const ConfigTypes = {
     Google: "google",
@@ -58,11 +51,10 @@
 
   let iconDropdownOptions = [
     {
-      label: "Azure AD",
-      value: "AD",
+      label: "Microsoft",
+      value: "Microsoft",
       icon: MicrosoftLogo,
     },
-    { label: "Oracle", value: "Oracle", icon: OracleLogo },
     { label: "Auth0", value: "Auth0", icon: Auth0Logo },
     { label: "OIDC", value: "Oidc", icon: OidcLogoPng },
 
@@ -88,9 +80,8 @@
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
     image = e.target.files[0]
-    $values.oidcIcon = fileName
+    providers.oidc.config.configs[0].logo = fileName
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
-    image && uploadLogo(image)
   }
 
   const providers = { google, oidc }
@@ -98,7 +89,6 @@
   async function save(docs) {
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
-    await organisation.save($values)
     let calls = []
     docs.forEach(element => {
       calls.push(api.post(`/api/admin/configs`, element))
@@ -164,7 +154,7 @@
     if (!oidcDoc._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: {},
+        config: { configs: [{}] },
       }
     } else {
       providers.oidc = oidcDoc
@@ -194,7 +184,7 @@
         To allow users to authenticate using their Google accounts, fill out the
         fields below.
       </Body>
-    </Layout>
+    </Layout>dddd
     <Layout gap="XS" noPadding>
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
@@ -221,7 +211,7 @@
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
           <Label size="L">{OIDCConfigLabels.Oidc[field]}</Label>
-          <Input bind:value={providers.oidc.config[field]} />
+          <Input bind:value={providers.oidc.config.configs[0][field]} />
         </div>
       {/each}
       <br />
@@ -230,13 +220,13 @@
       </Body>
       <div class="form-row">
         <Label size="L">Name</Label>
-        <Input bind:value={$values.oidcName} />
+        <Input bind:value={providers.oidc.config.configs[0].name} />
       </div>
       <div class="form-row">
         <Label size="L">Icon</Label>
         <Select
           label=""
-          bind:value={$values.oidcIcon}
+          bind:value={providers.oidc.config.configs[0].logo}
           options={iconDropdownOptions}
           on:change={e => e.detail === "Upload" && fileinput.click()}
         />

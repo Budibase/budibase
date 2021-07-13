@@ -44,11 +44,15 @@ function googleValidation() {
 function oidcValidation() {
   // prettier-ignore
   return Joi.object({
-    clientID: Joi.string().required(),
-    clientSecret: Joi.string().required(),
-    configUrl: Joi.string().required(),
-    iconName: Joi.string().optional(),
-    name: Joi.string().optional(),
+    configs: Joi.array().items(
+      Joi.object({
+        clientID: Joi.string().required(),
+        clientSecret: Joi.string().required(),
+        configUrl: Joi.string().required(),
+        logo: Joi.string().optional(),
+        name: Joi.string().optional(),  
+      })
+    ).required(true)
   }).unknown(true)
 }
 
@@ -104,6 +108,7 @@ router
     controller.fetch
   )
   .get("/api/admin/configs/public", controller.publicSettings)
+  .get("/api/admin/configs/publicOidc", controller.publicOidc)
   .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
   .post(
     "/api/admin/configs/upload/:type/:name",
