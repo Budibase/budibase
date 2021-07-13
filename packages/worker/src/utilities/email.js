@@ -101,31 +101,31 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
 /**
  * Utility function for finding most valid SMTP configuration.
  * @param {object} db The CouchDB database which is to be looked up within.
- * @param {string|null} groupId If using finer grain control of configs a group can be used.
+ * @param {string|null} workspaceId If using finer grain control of configs a workspace can be used.
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
-async function getSmtpConfiguration(db, groupId = null) {
+async function getSmtpConfiguration(db, workspaceId = null) {
   const params = {
     type: Configs.SMTP,
   }
-  if (groupId) {
-    params.group = groupId
+  if (workspaceId) {
+    params.workspace = workspaceId
   }
   return getScopedConfig(db, params)
 }
 
 /**
  * Checks if a SMTP config exists based on passed in parameters.
- * @param groupId
+ * @param workspaceId
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-exports.isEmailConfigured = async (groupId = null) => {
+exports.isEmailConfigured = async (workspaceId = null) => {
   // when "testing" simply return true
   if (TEST_MODE) {
     return true
   }
   const db = new CouchDB(GLOBAL_DB)
-  const config = await getSmtpConfiguration(db, groupId)
+  const config = await getSmtpConfiguration(db, workspaceId)
   return config != null
 }
 
@@ -134,7 +134,7 @@ exports.isEmailConfigured = async (groupId = null) => {
  * send an email using it.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
- * @param {string|undefined} groupId If finer grain controls being used then this will lookup config for group.
+ * @param {string|undefined} workspaceId If finer grain controls being used then this will lookup config for workspace.
  * @param {object|undefined} user If sending to an existing user the object can be provided, this is used in the context.
  * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
  * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
@@ -146,10 +146,10 @@ exports.isEmailConfigured = async (groupId = null) => {
 exports.sendEmail = async (
   email,
   purpose,
-  { groupId, user, from, contents, subject, info } = {}
+  { workspaceId, user, from, contents, subject, info } = {}
 ) => {
   const db = new CouchDB(GLOBAL_DB)
-  let config = (await getSmtpConfiguration(db, groupId)) || {}
+  let config = (await getSmtpConfiguration(db, workspaceId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }

@@ -5,7 +5,7 @@ const authPkg = require("@budibase/auth")
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
 exports.sendEmail = async ctx => {
-  const { groupId, email, userId, purpose, contents, from, subject } =
+  const { workspaceId, email, userId, purpose, contents, from, subject } =
     ctx.request.body
   let user
   if (userId) {
@@ -13,7 +13,7 @@ exports.sendEmail = async ctx => {
     user = await db.get(userId)
   }
   const response = await sendEmail(email, purpose, {
-    groupId,
+    workspaceId,
     user,
     contents,
     from,

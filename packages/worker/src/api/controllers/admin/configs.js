@@ -16,13 +16,13 @@ const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
-  const { type, group, user, config } = ctx.request.body
+  const { type, workspace, user, config } = ctx.request.body
 
   // Config does not exist yet
   if (!ctx.request.body._id) {
     ctx.request.body._id = generateConfigID({
       type,
-      group,
+      workspace,
       user,
     })
   }
@@ -65,17 +65,17 @@ exports.fetch = async function (ctx) {
 
 /**
  * Gets the most granular config for a particular configuration type.
- * The hierarchy is type -> group -> user.
+ * The hierarchy is type -> workspace -> user.
  */
 exports.find = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
 
-  const { userId, groupId } = ctx.query
-  if (groupId && userId) {
-    const group = await db.get(groupId)
-    const userInGroup = group.users.some(groupUser => groupUser === userId)
-    if (!ctx.user.admin && !userInGroup) {
-      ctx.throw(400, `User is not in specified group: ${group}.`)
+  const { userId, workspaceId } = ctx.query
+  if (workspaceId && userId) {
+    const workspace = await db.get(workspaceId)
+    const userInWorkspace = workspace.users.some(workspaceUser => workspaceUser === userId)
+    if (!ctx.user.admin && !userInWorkspace) {
+      ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
     }
   }
 
@@ -84,7 +84,7 @@ exports.find = async function (ctx) {
     const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group: groupId,
+      workspace: workspaceId,
     })
 
     if (scopedConfig) {

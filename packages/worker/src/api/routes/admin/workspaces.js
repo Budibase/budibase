@@ -1,12 +1,12 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/groups")
+const controller = require("../../controllers/admin/workspaces")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
 
 const router = Router()
 
-function buildGroupSaveValidation() {
+function buildWorkspaceSaveValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     _id: Joi.string().optional(),
@@ -26,13 +26,13 @@ function buildGroupSaveValidation() {
 
 router
   .post(
-    "/api/admin/groups",
+    "/api/admin/workspaces",
     adminOnly,
-    buildGroupSaveValidation(),
+    buildWorkspaceSaveValidation(),
     controller.save
   )
-  .get("/api/admin/groups", controller.fetch)
-  .delete("/api/admin/groups/:id", adminOnly, controller.destroy)
-  .get("/api/admin/groups/:id", controller.find)
+  .delete("/api/admin/workspaces/:id", adminOnly, controller.destroy)
+  .get("/api/admin/workspaces", controller.fetch)
+  .get("/api/admin/workspaces/:id", controller.find)
 
 module.exports = router
