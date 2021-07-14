@@ -22,7 +22,7 @@
   $: show = $admin.checklist?.oidc
   $: src = !$oidc.logo
     ? OidcLogo
-    : preDefinedIcons[$oidc.logo] || `/global/oidc_logos/${$oidc.logo}`
+    : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
 </script>
 
 {#if show}

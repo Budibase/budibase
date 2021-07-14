@@ -83,7 +83,7 @@
     let data = new FormData()
     data.append("file", file)
     const res = await api.post(
-      `/api/admin/configs/upload/oidc_logos/${file.name}`,
+      `/api/admin/configs/upload/logos_oidc/${file.name}`,
       data,
       {}
     )
@@ -153,7 +153,7 @@
 
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
-    const res = await api.get(`/api/admin/configs/oidc_logos`)
+    const res = await api.get(`/api/admin/configs/logos_oidc`)
     const configSettings = await res.json()
 
     if (configSettings.config) {
