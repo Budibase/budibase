@@ -29,7 +29,7 @@
     category: {
       displayName: "Category",
       editable: false,
-    }
+    },
   }
 
   $: emailInfo = getEmailInfo($email.definitions)
