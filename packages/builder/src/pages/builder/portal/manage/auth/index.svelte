@@ -75,9 +75,13 @@
     providers.google?.config.clientSecret &&
     providers.google?.config.callbackURL
   $: oidcComplete =
-    providers.oidc?.config.configs[0].configUrl &&
-    providers.oidc?.config.configs[0].clientID &&
-    providers.oidc?.config.configs[0].clientSecret
+    providers.oidc?.config?.configs[0].configUrl &&
+    providers.oidc?.config?.configs[0].clientID &&
+    providers.oidc?.config?.configs[0].clientSecret
+
+  $: oidcCallback = providers.oidc?.config.configs[0].uuid
+    ? `/api/admin/auth/oidc/callback/${providers.oidc?.config.configs[0].uuid}`
+    : ""
 
   async function uploadLogo(file) {
     let data = new FormData()
@@ -234,6 +238,10 @@
           <Input bind:value={providers.oidc.config.configs[0][field]} />
         </div>
       {/each}
+      <div class="form-row">
+        <Label size="L">Callback URL</Label>
+        <Input readonly bind:value={oidcCallback} />
+      </div>
       <br />
       <Body size="S">
         To customize your login button, fill out the fields below.
