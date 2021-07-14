@@ -91,8 +91,8 @@
   <Detail>Description</Detail>
   <Body>{description}</Body>
   <Body
-  >Change the email template here. Add dynamic content by using the bindings
-  menu on the right.</Body
+    >Change the email template here. Add dynamic content by using the bindings
+    menu on the right.</Body
   >
 </Layout>
 <Tabs selected="Edit" on:select={fixMountBug}>
