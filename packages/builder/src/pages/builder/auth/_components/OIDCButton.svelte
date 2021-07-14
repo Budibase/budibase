@@ -26,7 +26,9 @@
 </script>
 
 {#if show}
-  <ActionButton on:click={() => window.open("/api/admin/auth/oidc/", "_blank")}>
+  <ActionButton
+    on:click={() => window.open(`/api/admin/auth/oidc/${$oidc.uuid}`, "_blank")}
+  >
     <div class="inner">
       <img {src} alt="oidc icon" />
       <p>{`Sign in with ${$oidc.name || "OIDC"}`}</p>
