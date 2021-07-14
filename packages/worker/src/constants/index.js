@@ -96,7 +96,9 @@ const TemplateBindings = {
 const TemplateMetadata = {
   [TemplateTypes.EMAIL]: [
     {
-      name: "Base Format",
+      name: "Base format",
+      description: "This is the base template, all others are based on it. The {{ body }} will be replaced with another email template.",
+      category: "miscellaneous",
       purpose: EmailTemplatePurpose.BASE,
       bindings: [
         {
@@ -110,7 +112,9 @@ const TemplateMetadata = {
       ],
     },
     {
-      name: "Password Recovery",
+      name: "Password recovery",
+      description: "When a user requests a password reset, this template will be used.",
+      category: "user management",
       purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
       bindings: [
         {
@@ -126,7 +130,16 @@ const TemplateMetadata = {
       ],
     },
     {
-      name: "New User Invitation",
+      name: "User welcome",
+      description: "When a new user is added to the system, the welcome email will use this template.",
+      category: "user management",
+      purpose: EmailTemplatePurpose.WELCOME,
+      bindings: [],
+    },
+    {
+      name: "User invitation",
+      description: "When using the email invitation system, this template will be used.",
+      category: "user management",
       purpose: EmailTemplatePurpose.INVITATION,
       bindings: [
         {
@@ -143,6 +156,8 @@ const TemplateMetadata = {
     },
     {
       name: "Custom",
+      description: "A custom format, this is currently used for SMTP email actions in automations.",
+      category: "automations",
       purpose: EmailTemplatePurpose.CUSTOM,
       bindings: [
         {
