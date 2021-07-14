@@ -34,6 +34,7 @@ const DocumentTypes = {
   DATASOURCE: "datasource",
   DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
+  DEPLOYMENTS: "deployments",
 }
 
 const ViewNames = {
@@ -49,13 +50,7 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
-exports.StaticDatabases = {
-  BUILDER: {
-    name: "builder-db",
-    baseDoc: "builder-doc",
-  },
-  ...StaticDatabases,
-}
+exports.StaticDatabases = StaticDatabases
 
 const BudibaseInternalDB = {
   _id: "bb_internal",
