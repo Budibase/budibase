@@ -38,7 +38,7 @@ async function storeDeploymentHistory(deployment) {
     // theres only one deployment doc per app database
     deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
   } catch (err) {
-    deploymentDoc = { _id: appId, history: {} }
+    deploymentDoc = { _id: DocumentTypes.DEPLOYMENTS, history: {} }
   }
 
   const deploymentId = deploymentJSON._id
