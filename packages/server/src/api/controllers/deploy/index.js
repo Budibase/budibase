@@ -1,6 +1,6 @@
-const PouchDB = require("../../../db")
+const CouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication, StaticDatabases } = require("@budibase/auth/db")
+const { Replication } = require("@budibase/auth/db")
 const { DocumentTypes } = require("../../../db/utils")
 
 // the max time we can wait for an invalidation to complete before considering it failed
@@ -31,11 +31,12 @@ async function checkAllDeployments(deployments) {
 async function storeDeploymentHistory(deployment) {
   const appId = deployment.getAppId()
   const deploymentJSON = deployment.getJSON()
-  const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
+  const db = new CouchDB(appId)
 
   let deploymentDoc
   try {
-    deploymentDoc = await db.get(appId)
+    // theres only one deployment doc per app database
+    deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
   } catch (err) {
     deploymentDoc = { _id: appId, history: {} }
   }
@@ -67,7 +68,7 @@ async function deployApp(deployment) {
     })
 
     await replication.replicate()
-    const db = new PouchDB(productionAppId)
+    const db = new CouchDB(productionAppId)
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
@@ -98,8 +99,9 @@ async function deployApp(deployment) {
 
 exports.fetchDeployments = async function (ctx) {
   try {
-    const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
-    const deploymentDoc = await db.get(ctx.appId)
+    const appId = ctx.appId
+    const db = new CouchDB(appId)
+    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(
       deploymentDoc,
       ctx.user
@@ -115,8 +117,9 @@ exports.fetchDeployments = async function (ctx) {
 
 exports.deploymentProgress = async function (ctx) {
   try {
-    const db = new PouchDB(StaticDatabases.DEPLOYMENTS.name)
-    const deploymentDoc = await db.get(ctx.appId)
+    const appId = ctx.appId
+    const db = new CouchDB(appId)
+    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(

@@ -11,9 +11,13 @@ exports.ViewNames = {
 exports.StaticDatabases = {
   GLOBAL: {
     name: "global-db",
+    docs: {
+      apiKeys: "apikeys",
+    },
   },
-  DEPLOYMENTS: {
-    name: "deployments",
+  // contains information about tenancy and so on
+  PLATFORM_INFO: {
+    name: "global-info",
   },
 }
 
