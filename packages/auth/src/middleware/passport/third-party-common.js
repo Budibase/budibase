@@ -1,14 +1,11 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const database = require("../../db")
-const {
-  StaticDatabases,
-  generateGlobalUserID,
-  ViewNames,
-} = require("../../db/utils")
+const { StaticDatabases, generateGlobalUserID } = require("../../db/utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
+const { getGlobalUserByEmail } = require("../../utils")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -48,14 +45,7 @@ exports.authenticateThirdParty = async function (
 
   // fallback to loading by email
   if (!dbUser) {
-    const users = await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-      key: thirdPartyUser.email,
-      include_docs: true,
-    })
-
-    if (users.rows.length > 0) {
-      dbUser = users.rows[0].doc
-    }
+    dbUser = await getGlobalUserByEmail(thirdPartyUser.email)
   }
 
   // exit early if there is still no user and auto creation is disabled
