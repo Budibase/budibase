@@ -1,23 +1,22 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
-const database = require("../../db")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const {
-  StaticDatabases,
   generateGlobalUserID,
+  getGlobalDB,
   ViewNames,
 } = require("../../db/utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
+const { lookupTenantId } = require("../../utils")
 
 async function authenticate(token, tokenSecret, profile, done) {
   // Check the user exists in the instance DB by email
-  const db = database.getDB(StaticDatabases.GLOBAL.name)
+  const userId = generateGlobalUserID(profile.id)
+  const tenantId = await lookupTenantId({ userId })
+  const db = getGlobalDB(tenantId)
 
   let dbUser
-
-  const userId = generateGlobalUserID(profile.id)
-
   try {
     // use the google profile id
     dbUser = await db.get(userId)
@@ -62,7 +61,7 @@ async function authenticate(token, tokenSecret, profile, done) {
 
   // authenticate
   const sessionId = newid()
-  await createASession(dbUser._id, sessionId)
+  await createASession(dbUser._id, { sessionId, tenantId: dbUser.tenantId })
 
   dbUser.token = jwt.sign(
     {

@@ -60,7 +60,7 @@ async function getLinksForRows(appId, rows) {
   )
 }
 
-async function getFullLinkedDocs(appId, links) {
+async function getFullLinkedDocs(ctx, appId, links) {
   // create DBs
   const db = new CouchDB(appId)
   const linkedRowIds = links.map(link => link.id)
@@ -71,7 +71,7 @@ async function getFullLinkedDocs(appId, links) {
   let [users, other] = partition(linked, linkRow =>
     linkRow._id.startsWith(USER_METDATA_PREFIX)
   )
-  const globalUsers = await getGlobalUsers(appId, users)
+  const globalUsers = await getGlobalUsers(ctx, appId, users)
   users = users.map(user => {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id.includes(globalUser._id)
@@ -166,12 +166,13 @@ exports.attachLinkIDs = async (appId, rows) => {
 /**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
- * @param {string} appId The app in which the tables/rows/links exist.
+ * @param {object} ctx The request which is looking for rows.
  * @param {object} table The table from which the rows originated.
  * @param {array<object>} rows The rows which are to be enriched.
  * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
  */
-exports.attachFullLinkedDocs = async (appId, table, rows) => {
+exports.attachFullLinkedDocs = async (ctx, table, rows) => {
+  const appId = ctx.appId
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -182,7 +183,7 @@ exports.attachFullLinkedDocs = async (appId, table, rows) => {
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
-  let linked = await getFullLinkedDocs(appId, links)
+  let linked = await getFullLinkedDocs(ctx, appId, links)
   const linkedTables = []
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {

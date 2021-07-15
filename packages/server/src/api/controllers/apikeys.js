@@ -1,11 +1,10 @@
 const CouchDB = require("../../db")
-const { StaticDatabases } = require("@budibase/auth/db")
+const { StaticDatabases, getGlobalDBFromCtx } = require("@budibase/auth/db")
 
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const KEYS_DOC = StaticDatabases.GLOBAL.docs.apiKeys
 
-async function getBuilderMainDoc() {
-  const db = new CouchDB(GLOBAL_DB)
+async function getBuilderMainDoc(ctx) {
+  const db = getGlobalDBFromCtx(ctx)
   try {
     return await db.get(KEYS_DOC)
   } catch (err) {
@@ -16,17 +15,17 @@ async function getBuilderMainDoc() {
   }
 }
 
-async function setBuilderMainDoc(doc) {
+async function setBuilderMainDoc(ctx, doc) {
   // make sure to override the ID
   doc._id = KEYS_DOC
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   return db.put(doc)
 }
 
 
 exports.fetch = async function (ctx) {
   try {
-    const mainDoc = await getBuilderMainDoc()
+    const mainDoc = await getBuilderMainDoc(ctx)
     ctx.body = mainDoc.apiKeys ? mainDoc.apiKeys : {}
   } catch (err) {
     /* istanbul ignore next */
@@ -39,12 +38,12 @@ exports.update = async function (ctx) {
   const value = ctx.request.body.value
 
   try {
-    const mainDoc = await getBuilderMainDoc()
+    const mainDoc = await getBuilderMainDoc(ctx)
     if (mainDoc.apiKeys == null) {
       mainDoc.apiKeys = {}
     }
     mainDoc.apiKeys[key] = value
-    const resp = await setBuilderMainDoc(mainDoc)
+    const resp = await setBuilderMainDoc(ctx, mainDoc)
     ctx.body = {
       _id: resp.id,
       _rev: resp.rev,

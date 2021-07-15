@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
 const { getDB } = require("./db")
+const { getGlobalDB } = require("./db/utils")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -100,17 +101,31 @@ exports.isClient = ctx => {
   return ctx.headers["x-budibase-type"] === "client"
 }
 
+exports.lookupTenantId = async ({ email, userId }) => {
+  const toQuery = email || userId
+  const db = getDB(StaticDatabases.PLATFORM_INFO.name)
+  const doc = await db.get(toQuery)
+  if (!doc || !doc.tenantId) {
+    throw "Unable to find tenant"
+  }
+  return doc.tenantId
+}
+
 /**
  * Given an email address this will use a view to search through
  * all the users to find one with this email address.
  * @param {string} email the email to lookup the user by.
+ * @param {string|null} tenantId If tenant ID is known it can be specified
  * @return {Promise<object|null>}
  */
-exports.getGlobalUserByEmail = async email => {
+exports.getGlobalUserByEmail = async (email, tenantId = null) => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
-  const db = getDB(StaticDatabases.GLOBAL.name)
+  if (!tenantId) {
+    tenantId = await exports.lookupTenantId({ email })
+  }
+  const db = getGlobalDB(tenantId)
   try {
     let users = (
       await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
@@ -122,7 +137,7 @@ exports.getGlobalUserByEmail = async email => {
     return users.length <= 1 ? users[0] : users
   } catch (err) {
     if (err != null && err.name === "not_found") {
-      await createUserEmailView()
+      await createUserEmailView(db)
       return exports.getGlobalUserByEmail(email)
     } else {
       throw err

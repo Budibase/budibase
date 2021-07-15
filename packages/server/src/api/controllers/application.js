@@ -295,7 +295,7 @@ exports.delete = async function (ctx) {
     await deleteApp(ctx.params.appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
-  await removeAppFromUserRoles(ctx.params.appId)
+  await removeAppFromUserRoles(ctx, ctx.params.appId)
 
   ctx.status = 200
   ctx.body = result

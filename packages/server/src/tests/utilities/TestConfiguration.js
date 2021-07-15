@@ -16,14 +16,14 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
-const { StaticDatabases } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth/db")
 const { createASession } = require("@budibase/auth/sessions")
 const { user: userCache } = require("@budibase/auth/cache")
-const CouchDB = require("../../db")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
+const TENANT_ID = "tenant1"
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -65,7 +65,7 @@ class TestConfiguration {
   }
 
   async globalUser(id = GLOBAL_USER_ID, builder = true, roles) {
-    const db = new CouchDB(StaticDatabases.GLOBAL.name)
+    const db = getGlobalDB(TENANT_ID)
     let existing
     try {
       existing = await db.get(id)
@@ -76,6 +76,7 @@ class TestConfiguration {
       _id: id,
       ...existing,
       roles: roles || {},
+      tenantId: TENANT_ID,
     }
     await createASession(id, "sessionid")
     if (builder) {

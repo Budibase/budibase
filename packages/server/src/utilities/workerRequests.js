@@ -4,11 +4,11 @@ const { checkSlashesInUrl } = require("./index")
 const { getDeployedAppID } = require("@budibase/auth/db")
 const { updateAppRole, getGlobalUser } = require("./global")
 
-function request(ctx, request, noApiKey) {
+function request(ctx, request) {
   if (!request.headers) {
     request.headers = {}
   }
-  if (!noApiKey) {
+  if (!ctx) {
     request.headers["x-budibase-api-key"] = env.INTERNAL_API_KEY
   }
   if (request.body && Object.keys(request.body).length > 0) {
@@ -28,12 +28,13 @@ function request(ctx, request, noApiKey) {
 
 exports.request = request
 
-exports.sendSmtpEmail = async (to, from, subject, contents) => {
+exports.sendSmtpEmail = async (tenantId, to, from, subject, contents) => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
     request(null, {
       method: "POST",
       body: {
+        tenantId,
         email: to,
         from,
         contents,
@@ -77,7 +78,7 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     // we don't want to use API key when getting self
-    request(ctx, { method: "GET" }, true)
+    request(ctx, { method: "GET" })
   )
   if (response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
@@ -97,7 +98,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     user = await exports.getGlobalSelf(ctx)
     endpoint = `/api/admin/users/self`
   } else {
-    user = await getGlobalUser(appId, userId)
+    user = await getGlobalUser(ctx, appId, userId)
     body._id = userId
     endpoint = `/api/admin/users`
   }
@@ -121,11 +122,11 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
   return response.json()
 }
 
-exports.removeAppFromUserRoles = async appId => {
+exports.removeAppFromUserRoles = async (ctx, appId) => {
   const deployedAppId = getDeployedAppID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/admin/roles/${deployedAppId}`),
-    request(null, {
+    request(ctx, {
       method: "DELETE",
     })
   )

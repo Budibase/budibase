@@ -1,21 +1,18 @@
 const CouchDB = require("../../../db")
 const {
   generateConfigID,
-  StaticDatabases,
   getConfigParams,
   getGlobalUserParams,
   getScopedFullConfig,
-} = require("@budibase/auth").db
+  getGlobalDBFromCtx,
+  getAllApps,
+} = require("@budibase/auth/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
 
-const APP_PREFIX = "app_"
-
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
-
 exports.save = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   const { type, workspace, user, config } = ctx.request.body
 
   // Config does not exist yet
@@ -51,7 +48,7 @@ exports.save = async function (ctx) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   const response = await db.allDocs(
     getConfigParams(
       { type: ctx.params.type },
@@ -68,7 +65,7 @@ exports.fetch = async function (ctx) {
  * The hierarchy is type -> workspace -> user.
  */
 exports.find = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
 
   const { userId, workspaceId } = ctx.query
   if (workspaceId && userId) {
@@ -101,7 +98,7 @@ exports.find = async function (ctx) {
 }
 
 exports.publicSettings = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   try {
     // Find the config with the most granular scope based on context
     const config = await getScopedFullConfig(db, {
@@ -139,7 +136,7 @@ exports.upload = async function (ctx) {
 
   // add to configuration structure
   // TODO: right now this only does a global level
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   let cfgStructure = await getScopedFullConfig(db, { type })
   if (!cfgStructure) {
     cfgStructure = {
@@ -159,7 +156,7 @@ exports.upload = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
   const { id, rev } = ctx.params
 
   try {
@@ -171,14 +168,13 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDBFromCtx(ctx)
 
   try {
     // TODO: Watch get started video
 
     // Apps exist
-    let allDbs = await CouchDB.allDbs()
-    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+    const apps = (await getAllApps({ CouchDB }))
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {
@@ -199,7 +195,7 @@ exports.configChecklist = async function (ctx) {
     const adminUser = users.rows.some(row => row.doc.admin)
 
     ctx.body = {
-      apps: appDbNames.length,
+      apps: apps.length,
       smtp: !!smtpConfig,
       adminUser,
       oauth: !!oauthConfig,

@@ -159,6 +159,7 @@ exports.create = async function (ctx) {
 
   automation._id = generateAutomationID()
 
+  automation.tenantId = ctx.user.tenantId
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({

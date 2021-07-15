@@ -1,14 +1,12 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
-const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { clearCookie, getGlobalUserByEmail, hash } = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
-
-const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
+const { getGlobalDB } = authPkg.db
 
 async function authInternal(ctx, user, err = null) {
   if (err) {
@@ -46,7 +44,8 @@ exports.authenticate = async (ctx, next) => {
  */
 exports.reset = async ctx => {
   const { email } = ctx.request.body
-  const configured = await isEmailConfigured()
+  const tenantId = ctx.params.tenantId
+  const configured = await isEmailConfigured(tenantId)
   if (!configured) {
     ctx.throw(
       400,
@@ -54,10 +53,10 @@ exports.reset = async ctx => {
     )
   }
   try {
-    const user = await getGlobalUserByEmail(email)
+    const user = await getGlobalUserByEmail(email, tenantId)
     // only if user exists, don't error though if they don't
     if (user) {
-      await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
+      await sendEmail(tenantId, email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
         user,
         subject: "{{ company }} platform password reset",
       })
@@ -77,7 +76,7 @@ exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
   try {
     const userId = await checkResetPasswordCode(resetCode)
-    const db = new CouchDB(GLOBAL_DB)
+    const db = new getGlobalDB(ctx.params.tenantId)
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)
@@ -99,7 +98,7 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB(ctx.params.tenantId)
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
@@ -112,7 +111,7 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB(ctx.params.tenantId)
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
