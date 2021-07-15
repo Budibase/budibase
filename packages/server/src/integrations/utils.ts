@@ -68,3 +68,11 @@ export function isSQL(datasource: Datasource): boolean {
   const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
   return SQL.indexOf(datasource.source) !== -1
 }
+
+export function isIsoDateString(str: string) {
+  if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {
+    return false
+  }
+  let d = new Date(str)
+  return d.toISOString() === str
+}

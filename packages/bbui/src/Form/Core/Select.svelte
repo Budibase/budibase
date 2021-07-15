@@ -31,7 +31,7 @@
       return ""
     }
 
-    // Render the label if the selected option is found, otherwide raw value
+    // Render the label if the selected option is found, otherwise raw value
     const index = options.findIndex(
       (option, idx) => getOptionValue(option, idx) === value
     )

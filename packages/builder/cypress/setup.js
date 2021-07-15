@@ -34,7 +34,7 @@ async function run() {
     process.exit(-1)
   }
 
-  // dont make this a variable or top level require
+  // don't make this a variable or top level require
   // it will cause environment module to be loaded prematurely
   const server = require("../../server/dist/app")
   process.env.PORT = WORKER_PORT

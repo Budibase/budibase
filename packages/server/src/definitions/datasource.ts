@@ -129,9 +129,11 @@ export interface QueryJson {
 
 export interface SqlQuery {
   sql: string
-  bindings?: {
-    [key: string]: any
-  }
+  bindings?:
+    | string[]
+    | {
+        [key: string]: any
+      }
 }
 
 export interface QueryOptions {

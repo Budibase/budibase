@@ -33,6 +33,11 @@ const {
 } = require("../../utilities/workerRequests")
 const { clientLibraryPath } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
+const {
+  updateClientLibrary,
+  backupClientLibrary,
+  revertClientLibrary,
+} = require("../../utilities/fileSystem/clientLibrary")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -231,27 +236,54 @@ exports.create = async function (ctx) {
 }
 
 exports.update = async function (ctx) {
-  const url = await getAppUrlIfNotInUse(ctx)
+  const data = await updateAppPackage(ctx, ctx.request.body, ctx.params.appId)
+  ctx.status = 200
+  ctx.body = data
+}
+
+exports.updateClient = async function (ctx) {
+  // Get current app version
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
+  const currentVersion = application.version
 
-  const data = ctx.request.body
-  const newData = { ...application, ...data, url }
-  if (ctx.request.body._rev !== application._rev) {
-    newData._rev = application._rev
+  // Update client library and manifest
+  if (!env.isTest()) {
+    await backupClientLibrary(ctx.params.appId)
+    await updateClientLibrary(ctx.params.appId)
   }
 
-  // the locked by property is attached by server but generated from
-  // Redis, shouldn't ever store it
-  if (newData.lockedBy) {
-    delete newData.lockedBy
+  // Update versions in app package
+  const appPackageUpdates = {
+    version: packageJson.version,
+    revertableVersion: currentVersion,
   }
-
-  const response = await db.put(newData)
-  data._rev = response.rev
-
+  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
   ctx.status = 200
-  ctx.body = response
+  ctx.body = data
+}
+
+exports.revertClient = async function (ctx) {
+  // Check app can be reverted
+  const db = new CouchDB(ctx.params.appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
+  if (!application.revertableVersion) {
+    ctx.throw(400, "There is no version to revert to")
+  }
+
+  // Update client library and manifest
+  if (!env.isTest()) {
+    await revertClientLibrary(ctx.params.appId)
+  }
+
+  // Update versions in app package
+  const appPackageUpdates = {
+    version: application.revertableVersion,
+    revertableVersion: null,
+  }
+  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  ctx.status = 200
+  ctx.body = data
 }
 
 exports.delete = async function (ctx) {
@@ -267,6 +299,23 @@ exports.delete = async function (ctx) {
 
   ctx.status = 200
   ctx.body = result
+}
+
+const updateAppPackage = async (ctx, appPackage, appId) => {
+  const url = await getAppUrlIfNotInUse(ctx)
+  const db = new CouchDB(appId)
+  const application = await db.get(DocumentTypes.APP_METADATA)
+
+  const newAppPackage = { ...application, ...appPackage, url }
+  if (appPackage._rev !== application._rev) {
+    newAppPackage._rev = application._rev
+  }
+
+  // the locked by property is attached by server but generated from
+  // Redis, shouldn't ever store it
+  delete newAppPackage.lockedBy
+
+  return await db.put(newAppPackage)
 }
 
 const createEmptyAppPackage = async (ctx, app) => {

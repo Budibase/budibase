@@ -29,6 +29,7 @@ module MySQLModule {
     blob: FieldTypes.LONGFORM,
     enum: FieldTypes.STRING,
     varchar: FieldTypes.STRING,
+    float: FieldTypes.NUMBER,
     int: FieldTypes.NUMBER,
     numeric: FieldTypes.NUMBER,
     bigint: FieldTypes.NUMBER,
