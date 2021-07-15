@@ -79,10 +79,6 @@
     providers.oidc?.config?.configs[0].clientID &&
     providers.oidc?.config?.configs[0].clientSecret
 
-  $: oidcCallback = providers.oidc?.config.configs[0].uuid
-    ? `/api/admin/auth/oidc/callback/${providers.oidc?.config.configs[0].uuid}`
-    : ""
-
   async function uploadLogo(file) {
     let data = new FormData()
     data.append("file", file)
@@ -240,7 +236,7 @@
       {/each}
       <div class="form-row">
         <Label size="L">Callback URL</Label>
-        <Input readonly bind:value={oidcCallback} />
+        <Input readonly placeholder="/api/admin/auth/oidc/callback" />
       </div>
       <br />
       <Body size="S">

@@ -4,7 +4,8 @@ const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { clearCookie, getGlobalUserByEmail, hash } = authPkg.utils
+const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
+  authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
@@ -133,9 +134,7 @@ exports.googleAuth = async (ctx, next) => {
   )(ctx, next)
 }
 
-async function oidcStrategyFactory(ctx) {
-  const { configId } = ctx.params
-
+async function oidcStrategyFactory(ctx, configId) {
   const db = new CouchDB(GLOBAL_DB)
 
   const config = await authPkg.db.getScopedConfig(db, {
@@ -145,7 +144,7 @@ async function oidcStrategyFactory(ctx) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback/${configId}`
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }
@@ -155,7 +154,10 @@ async function oidcStrategyFactory(ctx) {
  * On a successful login, you will be redirected to the oidcAuth callback route.
  */
 exports.oidcPreAuth = async (ctx, next) => {
-  const strategy = await oidcStrategyFactory(ctx)
+  const { configId } = ctx.params
+  const strategy = await oidcStrategyFactory(ctx, configId)
+
+  setCookie(ctx, configId, Cookies.OIDC_CONFIG)
 
   return passport.authenticate(strategy, {
     // required 'openid' scope is added by oidc strategy factory
@@ -164,7 +166,8 @@ exports.oidcPreAuth = async (ctx, next) => {
 }
 
 exports.oidcAuth = async (ctx, next) => {
-  const strategy = await oidcStrategyFactory(ctx)
+  const configId = getCookie(ctx, Cookies.OIDC_CONFIG)
+  const strategy = await oidcStrategyFactory(ctx, configId)
 
   return passport.authenticate(
     strategy,

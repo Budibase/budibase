@@ -1,4 +1,5 @@
 const setup = require("./utilities")
+const { Cookies } = require("@budibase/auth").constants
 
 jest.mock("nodemailer")
 const sendMailMock = setup.emailMock()
@@ -74,13 +75,13 @@ describe("/api/admin/auth", () => {
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
         chosenConfig, 
-        `http://127.0.0.1:4003/api/admin/auth/oidc/callback/${configId}` // calculated url
+        `http://127.0.0.1:4003/api/admin/auth/oidc/callback` // calculated url
       )
     })
 
-    describe("/api/admin/auth/oidc", () => {
+    describe("/api/admin/auth/oidc/configs", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/oidc/${configId}`)
+        await request.get(`/api/admin/auth/oidc/configs/${configId}`)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email"],
@@ -91,7 +92,8 @@ describe("/api/admin/auth", () => {
 
     describe("/api/admin/auth/oidc/callback", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/oidc/callback/${configId}`)
+        await request.get(`/api/admin/auth/oidc/callback`)
+                     .set(config.getOIDConfigCookie(configId))
       
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           successRedirect: "/", failureRedirect: "/error" 
