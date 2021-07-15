@@ -1,6 +1,6 @@
 // Mock data
 
-const { data } = require("./utilities")
+const { data } = require("./utilities/mock-data")
 
 const googleConfig = {
   callbackURL: "http://somecallbackurl",
