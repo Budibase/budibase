@@ -1,5 +1,4 @@
-const CouchDB = require("../db")
-const { getScopedConfig, StaticDatabases } = require("@budibase/auth").db
+const { getScopedConfig, getGlobalDB } = require("@budibase/auth/db")
 const {
   Configs,
   InternalTemplateBindings,
@@ -12,8 +11,8 @@ const env = require("../environment")
 const LOCAL_URL = `http://localhost:${env.CLUSTER_PORT || 10000}`
 const BASE_COMPANY = "Budibase"
 
-exports.getSettingsTemplateContext = async (purpose, code = null) => {
-  const db = new CouchDB(StaticDatabases.GLOBAL.name)
+exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
+  const db = new getGlobalDB(tenantId)
   // TODO: use more granular settings in the future if required
   let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
   if (!settings || !settings.platformUrl) {

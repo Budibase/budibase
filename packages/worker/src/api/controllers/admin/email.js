@@ -1,18 +1,18 @@
 const { sendEmail } = require("../../../utilities/email")
-const CouchDB = require("../../../db")
-const authPkg = require("@budibase/auth")
-
-const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
+const { getGlobalDBFromCtx } = require("@budibase/auth/db")
 
 exports.sendEmail = async ctx => {
-  const { workspaceId, email, userId, purpose, contents, from, subject } =
+  let { tenantId, workspaceId, email, userId, purpose, contents, from, subject } =
     ctx.request.body
   let user
   if (userId) {
-    const db = new CouchDB(GLOBAL_DB)
+    const db = getGlobalDBFromCtx(ctx)
     user = await db.get(userId)
   }
-  const response = await sendEmail(email, purpose, {
+  if (!tenantId && ctx.user.tenantId) {
+    tenantId = ctx.user.tenantId
+  }
+  const response = await sendEmail(tenantId, email, purpose, {
     workspaceId,
     user,
     contents,

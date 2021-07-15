@@ -34,12 +34,14 @@ exports.authenticate = async function (email, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
-    await createASession(dbUser._id, sessionId)
+    const tenantId = dbUser.tenantId
+    await createASession(dbUser._id, { sessionId, tenantId })
 
     dbUser.token = jwt.sign(
       {
         userId: dbUser._id,
         sessionId,
+        tenantId,
       },
       env.JWT_SECRET
     )

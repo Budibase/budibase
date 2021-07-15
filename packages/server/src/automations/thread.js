@@ -22,6 +22,7 @@ class Orchestrator {
     // step zero is never used as the template string is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
+    this._tenantId = automation.tenantId
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
     this._emitter = new AutomationEmitter(this._chainCount + 1)
@@ -57,6 +58,7 @@ class Orchestrator {
           apiKey: automation.apiKey,
           emitter: this._emitter,
           context: this._context,
+          tenantId: this._tenantId,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break

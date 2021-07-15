@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer")
-const CouchDB = require("../db")
-const { StaticDatabases, getScopedConfig } = require("@budibase/auth").db
+const { getGlobalDB, getScopedConfig } = require("@budibase/auth/db")
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
@@ -8,7 +7,6 @@ const { processString } = require("@budibase/string-templates")
 const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
 
 const TEST_MODE = false
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const TYPE = TemplateTypes.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
@@ -116,15 +114,14 @@ async function getSmtpConfiguration(db, workspaceId = null) {
 
 /**
  * Checks if a SMTP config exists based on passed in parameters.
- * @param workspaceId
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-exports.isEmailConfigured = async (workspaceId = null) => {
+exports.isEmailConfigured = async (tenantId, workspaceId = null) => {
   // when "testing" simply return true
   if (TEST_MODE) {
     return true
   }
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB(tenantId)
   const config = await getSmtpConfiguration(db, workspaceId)
   return config != null
 }
@@ -132,6 +129,7 @@ exports.isEmailConfigured = async (workspaceId = null) => {
 /**
  * Given an email address and an email purpose this will retrieve the SMTP configuration and
  * send an email using it.
+ * @param {string} tenantId The tenant which is sending them email.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
  * @param {string|undefined} workspaceId If finer grain controls being used then this will lookup config for workspace.
@@ -144,11 +142,12 @@ exports.isEmailConfigured = async (workspaceId = null) => {
  * nodemailer response.
  */
 exports.sendEmail = async (
+  tenantId,
   email,
   purpose,
   { workspaceId, user, from, contents, subject, info } = {}
 ) => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = new getGlobalDB(tenantId)
   let config = (await getSmtpConfiguration(db, workspaceId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
@@ -156,7 +155,7 @@ exports.sendEmail = async (
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, user, info)
-  const context = await getSettingsTemplateContext(purpose, code)
+  const context = await getSettingsTemplateContext(tenantId, purpose, code)
   const message = {
     from: from || config.from,
     to: email,

@@ -56,7 +56,7 @@ module.exports = (noAuthPatterns = [], opts) => {
           error = "No session found"
         } else {
           try {
-            user = await getUser(userId)
+            user = await getUser(userId, session.tenantId)
             delete user.password
             authenticated = true
           } catch (err) {

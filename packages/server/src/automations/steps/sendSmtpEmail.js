@@ -46,13 +46,13 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+module.exports.run = async function ({ inputs, tenantId }) {
   let { to, from, subject, contents } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   try {
-    let response = await sendSmtpEmail(to, from, subject, contents)
+    let response = await sendSmtpEmail(tenantId, to, from, subject, contents)
     return {
       success: true,
       response,

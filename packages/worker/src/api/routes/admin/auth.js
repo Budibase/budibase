@@ -30,14 +30,14 @@ function buildResetUpdateValidation() {
 
 router
   .post("/api/admin/auth", buildAuthValidation(), authController.authenticate)
-  .post("/api/admin/auth/reset", buildResetValidation(), authController.reset)
+  .post("/api/admin/auth/:tenantId/reset", buildResetValidation(), authController.reset)
   .post(
-    "/api/admin/auth/reset/update",
+    "/api/admin/auth/:tenantId/reset/update",
     buildResetUpdateValidation(),
     authController.resetUpdate
   )
   .post("/api/admin/auth/logout", authController.logout)
-  .get("/api/admin/auth/google", authController.googlePreAuth)
-  .get("/api/admin/auth/google/callback", authController.googleAuth)
+  .get("/api/admin/auth/:tenantId/google", authController.googlePreAuth)
+  .get("/api/admin/auth/:tenantId/google/callback", authController.googleAuth)
 
 module.exports = router

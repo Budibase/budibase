@@ -1,5 +1,6 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
+const { getDB } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
@@ -18,6 +19,9 @@ exports.StaticDatabases = {
   // contains information about tenancy and so on
   PLATFORM_INFO: {
     name: "global-info",
+    docs: {
+      tenants: "tenants",
+    },
   },
 }
 
@@ -62,6 +66,25 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Gets the name of the global DB to connect to in a multi-tenancy system.
+ */
+exports.getGlobalDB = tenantId => {
+  const globalName = exports.StaticDatabases.GLOBAL.name
+  // fallback for system pre multi-tenancy
+  if (!tenantId) {
+    return globalName
+  }
+  return getDB(`${tenantId}${SEPARATOR}${globalName}`)
+}
+
+/**
+ * Given a koa context this tries to find the correct tenant Global DB.
+ */
+exports.getGlobalDBFromCtx = ctx => {
+  return exports.getGlobalDB(ctx.user.tenantId)
 }
 
 /**

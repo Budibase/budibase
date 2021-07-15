@@ -3,7 +3,7 @@ const { InternalTables } = require("../db/utils")
 const { getGlobalUser } = require("../utilities/global")
 
 exports.getFullUser = async (ctx, userId) => {
-  const global = await getGlobalUser(ctx.appId, userId)
+  const global = await getGlobalUser(ctx, ctx.appId, userId)
   let metadata
   try {
     // this will throw an error if the db doesn't exist, or there is no appId

@@ -22,7 +22,7 @@ exports.fetchSelf = async ctx => {
       const userTable = await db.get(InternalTables.USER_METADATA)
       const metadata = await db.get(userId)
       // specifically needs to make sure is enriched
-      ctx.body = await outputProcessing(appId, userTable, {
+      ctx.body = await outputProcessing(ctx, userTable, {
         ...user,
         ...metadata,
       })
