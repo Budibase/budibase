@@ -125,16 +125,34 @@ exports.publicOidc = async function (ctx) {
 
 exports.publicSettings = async function (ctx) {
   const db = new CouchDB(GLOBAL_DB)
+  let config = {}
   try {
     // Find the config with the most granular scope based on context
     const publicConfig = await getScopedFullConfig(db, {
       type: Configs.SETTINGS,
     })
 
-    if (!publicConfig) {
+    const googleConfig = await getScopedFullConfig(db, {
+      type: Configs.GOOGLE,
+    })
+
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
+
+    // Slightly complex logic here to deal with the fact that
+    // oidc / google might be enabled but org name etc (publicConfig) might not
+    if (publicConfig && !!googleConfig && !!oidcConfig) {
+      ctx.body = publicConfig
+    } else if (!publicConfig && !!googleConfig && !!oidcConfig) {
       ctx.body = {}
     } else {
-      ctx.body = publicConfig
+      if (publicConfig) {
+        config.config = publicConfig.config
+      }
+      config.config.oidc = !!oidcConfig
+      config.config.google = !!googleConfig
+      ctx.body = config
     }
   } catch (err) {
     ctx.throw(err.status, err)
