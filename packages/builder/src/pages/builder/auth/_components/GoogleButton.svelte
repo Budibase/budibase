@@ -1,11 +1,10 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
-  import { admin } from "stores/portal"
+  import { organisation } from "stores/portal"
 
-  let show = false
-
-  $: show = $admin.checklist?.oauth
+  $: show = $organisation.google
+  console.log(show)
 </script>
 
 {#if show}
