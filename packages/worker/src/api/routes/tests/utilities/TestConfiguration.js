@@ -68,6 +68,12 @@ class TestConfiguration {
     }
   }
 
+  cookieHeader(cookies) {
+    return {
+      Cookie: [cookies],
+    }
+  }
+
   defaultHeaders() {
     const user = {
       _id: "us_uuid1",
@@ -77,7 +83,7 @@ class TestConfiguration {
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {
       Accept: "application/json",
-      Cookie: [`${Cookies.Auth}=${authToken}`],
+      ...this.cookieHeader([`${Cookies.Auth}=${authToken}`]),
     }
   }
 
@@ -154,6 +160,11 @@ class TestConfiguration {
       null,
       controllers.config.save
     )
+  }
+
+  getOIDConfigCookie(configId) {
+    const token = jwt.sign(configId, env.JWT_SECRET)
+    return this.cookieHeader([[`${Cookies.OIDC_CONFIG}=${token}`]])
   }
 
   async saveOIDCConfig() {

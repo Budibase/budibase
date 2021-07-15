@@ -4,7 +4,7 @@
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
 
-  import { admin, oidc } from "stores/portal"
+  import { oidc } from "stores/portal"
   import { onMount } from "svelte"
 
   let show = false
@@ -27,7 +27,8 @@
 
 {#if show}
   <ActionButton
-    on:click={() => window.open(`/api/admin/auth/oidc/${$oidc.uuid}`, "_blank")}
+    on:click={() =>
+      window.open(`/api/admin/auth/oidc/configs/${$oidc.uuid}`, "_blank")}
   >
     <div class="inner">
       <img {src} alt="oidc icon" />
