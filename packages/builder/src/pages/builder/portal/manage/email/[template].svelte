@@ -16,6 +16,7 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
 
+  // this is the email purpose
   export let template
 
   let htmlEditor
@@ -24,9 +25,11 @@
   $: selectedTemplate = $email.templates?.find(
     ({ purpose }) => purpose === template
   )
+  $: name = $email.definitions?.info[template]?.name
+  $: description = $email.definitions?.info[template]?.description
   $: baseTemplate = $email.templates?.find(({ purpose }) => purpose === "base")
   $: templateBindings =
-    $email.definitions?.bindings?.[selectedTemplate.purpose] || []
+    $email.definitions?.bindings?.[selectedTemplate?.purpose] || []
   $: previewContent = makePreviewContent(baseTemplate, selectedTemplate)
 
   async function saveTemplate() {
@@ -81,10 +84,12 @@
   </div>
   <header>
     <Heading>
-      Email Template: {template}
+      Email Template: {name}
     </Heading>
     <Button cta on:click={saveTemplate}>Save</Button>
   </header>
+  <Detail>Description</Detail>
+  <Body>{description}</Body>
   <Body
     >Change the email template here. Add dynamic content by using the bindings
     menu on the right.</Body
