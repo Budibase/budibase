@@ -4,10 +4,10 @@
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
 
-  import { admin, oidc } from "stores/portal"
+  import { oidc, organisation } from "stores/portal"
   import { onMount } from "svelte"
 
-  let show = false
+  $: show = $organisation.oidc
 
   let preDefinedIcons = {
     Oidc: OidcLogo,
@@ -19,7 +19,6 @@
     await oidc.init()
   })
 
-  $: show = $admin.checklist?.oidc
   $: src = !$oidc.logo
     ? OidcLogo
     : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`

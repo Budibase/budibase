@@ -6,6 +6,8 @@ const DEFAULT_CONFIG = {
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",
+  oidc: undefined,
+  google: undefined,
 }
 
 export function createOrganisationStore() {
@@ -15,7 +17,7 @@ export function createOrganisationStore() {
   async function init() {
     const res = await api.get(`/api/admin/configs/public`)
     const json = await res.json()
-
+    console.log(json)
     if (json.status === 400) {
       set(DEFAULT_CONFIG)
     } else {
