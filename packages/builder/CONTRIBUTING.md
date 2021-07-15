@@ -9,7 +9,7 @@ Please read this if you are unfamiliar with it.
 
 * Please maintain the existing code style. 
 
-* Please try to keep your commits small and focussed.
+* Please try to keep your commits small and focused.
 
 * If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.
 

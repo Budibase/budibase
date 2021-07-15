@@ -1,4 +1,8 @@
 {
+  "features": {
+    "spectrumThemes": true,
+    "intelligentLoading": true
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
@@ -27,7 +31,7 @@
         "type": "select",
         "label": "Width",
         "key": "width",
-        "options": ["Small", "Medium", "Large"],
+        "options": ["Small", "Medium", "Large", "Max"],
         "defaultValue": "Large"
       },
       {
