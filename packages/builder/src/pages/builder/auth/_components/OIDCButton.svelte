@@ -3,6 +3,8 @@
   import OidcLogo from "assets/oidc-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
+  import OktaLogo from "assets/okta-logo.png"
+  import OneLoginLogo from "assets/onelogin-logo.png"
 
   import { oidc, organisation } from "stores/portal"
   import { onMount } from "svelte"
@@ -13,6 +15,8 @@
     Oidc: OidcLogo,
     Auth0: Auth0Logo,
     Microsoft: MicrosoftLogo,
+    Okta: OktaLogo,
+    OneLogin: OneLoginLogo,
   }
 
   onMount(async () => {

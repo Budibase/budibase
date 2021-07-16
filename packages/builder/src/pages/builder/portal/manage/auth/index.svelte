@@ -3,6 +3,8 @@
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
+  import OktaLogo from "assets/okta-logo.png"
+  import OneLoginLogo from "assets/onelogin-logo.png"
   import OidcLogoPng from "assets/oidc-logo.png"
 
   import {
@@ -56,10 +58,30 @@
       value: "Microsoft",
       icon: MicrosoftLogo,
     },
-    { label: "Auth0", value: "Auth0", icon: Auth0Logo },
-    { label: "OIDC", value: "Oidc", icon: OidcLogoPng },
-
-    { label: "Upload your own", value: "Upload" },
+    {
+      label: "Okta",
+      value: "Okta",
+      icon: OktaLogo,
+    },
+    {
+      label: "OneLogin",
+      value: "OneLogin",
+      icon: OneLoginLogo,
+    },
+    {
+      label: "Auth0",
+      value: "Auth0",
+      icon: Auth0Logo,
+    },
+    {
+      label: "OIDC",
+      value: "Oidc",
+      icon: OidcLogoPng,
+    },
+    {
+      label: "Upload your own",
+      value: "Upload",
+    },
   ]
 
   let fileinput
