@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-const { UserStatus } = require("../../constants")
+const { UserStatus, DEFAULT_TENANT_ID } = require("../../constants")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
 const { getGlobalUserByEmail } = require("../../utils")
@@ -24,10 +24,9 @@ exports.authenticate = async function (ctx, email, password, done) {
   if (!email) return done(null, false, "Email Required.")
   if (!password) return done(null, false, "Password Required.")
   const params = ctx.params || {}
-  const query = ctx.query || {}
 
   // use the request to find the tenantId
-  const tenantId = params.tenantId || query.tenantId
+  let tenantId = params.tenantId || DEFAULT_TENANT_ID
   const dbUser = await getGlobalUserByEmail(email, tenantId)
   if (dbUser == null) {
     return done(null, false, { message: "User not found" })
@@ -41,7 +40,6 @@ exports.authenticate = async function (ctx, email, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
-    const tenantId = dbUser.tenantId
     await createASession(dbUser._id, { sessionId, tenantId })
 
     dbUser.token = jwt.sign(

@@ -169,14 +169,14 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  const tenantId = ctx.query.tenantId
+  const tenantId = ctx.request.query.tenantId
   const db = tenantId ? getGlobalDB(tenantId) : getGlobalDBFromCtx(ctx)
 
   try {
     // TODO: Watch get started video
 
     // Apps exist
-    const apps = (await getAllApps({ CouchDB }))
+    const apps = await getAllApps({ tenantId })
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {

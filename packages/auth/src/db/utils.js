@@ -1,10 +1,10 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { getDB } = require("./index")
+const { getDB, getCouch } = require("./index")
+const { DEFAULT_TENANT_ID } = require("../constants")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
-const DEFAULT_TENANT = "default"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -75,7 +75,7 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 exports.getGlobalDB = tenantId => {
   // fallback for system pre multi-tenancy
   let dbName = exports.StaticDatabases.GLOBAL.name
-  if (tenantId && tenantId !== DEFAULT_TENANT) {
+  if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
     dbName = `${tenantId}${SEPARATOR}${dbName}`
   }
   return getDB(dbName)
@@ -192,7 +192,11 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
+exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
+  if (!tenantId) {
+    tenantId = DEFAULT_TENANT_ID
+  }
+  const CouchDB = getCouch()
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName =>
     dbName.startsWith(exports.APP_PREFIX)
@@ -206,10 +210,15 @@ exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
   } else {
     const response = await Promise.allSettled(appPromises)
     const apps = response
-      .filter(result => result.status === "fulfilled")
+      .filter(result => result.status === "fulfilled" )
       .map(({ value }) => value)
+      .filter(app => {
+        const appTenant = !app.tenantId ? DEFAULT_TENANT_ID : app.tenantId
+        return tenantId === appTenant
+      })
     if (!all) {
       return apps.filter(app => {
+
         if (dev) {
           return isDevApp(app)
         }

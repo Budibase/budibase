@@ -44,6 +44,7 @@
         </Body>
       </Layout>
       <Layout gap="XS" noPadding>
+        <Input label="Organisation" bind:value={adminUser.tenantId} />
         <Input label="Email" bind:value={adminUser.email} />
         <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>

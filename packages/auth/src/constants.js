@@ -21,3 +21,5 @@ exports.Configs = {
   SMTP: "smtp",
   GOOGLE: "google",
 }
+
+exports.DEFAULT_TENANT_ID = "default"
