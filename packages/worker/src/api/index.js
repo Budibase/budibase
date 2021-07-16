@@ -14,27 +14,27 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "/api/admin/auth",
+    route: "/api/admin/auth/:tenantId/login",
     method: "POST",
   },
   {
-    route: "/api/admin/auth/google",
+    route: "/api/admin/auth/:tenantId/google",
     method: "GET",
   },
   {
-    route: "/api/admin/auth/google/callback",
+    route: "/api/admin/auth/:tenantId/google/callback",
     method: "GET",
   },
   {
-    route: "/api/admin/auth/reset",
+    route: "/api/admin/auth/:tenantId/reset",
+    method: "POST",
+  },
+  {
+    route: "/api/admin/auth/:tenantId/reset/update",
     method: "POST",
   },
   {
     route: "/api/admin/configs/checklist",
-    method: "GET",
-  },
-  {
-    route: "/api/apps",
     method: "GET",
   },
   {

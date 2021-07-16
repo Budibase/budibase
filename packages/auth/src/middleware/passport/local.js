@@ -8,20 +8,27 @@ const { createASession } = require("../../security/sessions")
 
 const INVALID_ERR = "Invalid Credentials"
 
-exports.options = {}
+exports.options = {
+  passReqToCallback: true,
+}
 
 /**
  * Passport Local Authentication Middleware.
- * @param {*} email - username to login with
- * @param {*} password - plain text password to log in with
- * @param {*} done - callback from passport to return user information and errors
+ * @param {*} ctx the request structure
+ * @param {*} email username to login with
+ * @param {*} password plain text password to log in with
+ * @param {*} done callback from passport to return user information and errors
  * @returns The authenticated user, or errors if they occur
  */
-exports.authenticate = async function (email, password, done) {
+exports.authenticate = async function (ctx, email, password, done) {
   if (!email) return done(null, false, "Email Required.")
   if (!password) return done(null, false, "Password Required.")
+  const params = ctx.params || {}
+  const query = ctx.query || {}
 
-  const dbUser = await getGlobalUserByEmail(email)
+  // use the request to find the tenantId
+  const tenantId = params.tenantId || query.tenantId
+  const dbUser = await getGlobalUserByEmail(email, tenantId)
   if (dbUser == null) {
     return done(null, false, { message: "User not found" })
   }

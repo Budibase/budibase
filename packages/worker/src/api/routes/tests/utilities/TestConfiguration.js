@@ -7,6 +7,8 @@ const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
 const { createASession } = require("@budibase/auth/sessions")
 
+const TENANT_ID = "default"
+
 class TestConfiguration {
   constructor(openServer = true) {
     if (openServer) {
@@ -72,6 +74,7 @@ class TestConfiguration {
       _id: "us_uuid1",
       userId: "us_uuid1",
       sessionId: "sessionid",
+      tenantId: TENANT_ID,
     }
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {
@@ -81,7 +84,7 @@ class TestConfiguration {
   }
 
   async getUser(email) {
-    return getGlobalUserByEmail(email)
+    return getGlobalUserByEmail(email, TENANT_ID)
   }
 
   async createUser(email = "test@test.com", password = "test") {

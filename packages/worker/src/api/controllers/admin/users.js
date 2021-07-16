@@ -56,7 +56,7 @@ async function saveUser(user, tenantId) {
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
-    dbUser = await getGlobalUserByEmail(email)
+    dbUser = await getGlobalUserByEmail(email, tenantId)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
       throw "Email address already in use."
     }

@@ -13,7 +13,7 @@ const { lookupTenantId } = require("../../utils")
 async function authenticate(token, tokenSecret, profile, done) {
   // Check the user exists in the instance DB by email
   const userId = generateGlobalUserID(profile.id)
-  const tenantId = await lookupTenantId({ userId })
+  const tenantId = await lookupTenantId(userId)
   const db = getGlobalDB(tenantId)
 
   let dbUser

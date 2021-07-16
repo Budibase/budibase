@@ -4,6 +4,7 @@ const { getDB } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
+const DEFAULT_TENANT = "default"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -72,19 +73,20 @@ function getDocParams(docType, docId = null, otherProps = {}) {
  * Gets the name of the global DB to connect to in a multi-tenancy system.
  */
 exports.getGlobalDB = tenantId => {
-  const globalName = exports.StaticDatabases.GLOBAL.name
   // fallback for system pre multi-tenancy
-  if (!tenantId) {
-    return globalName
+  let dbName = exports.StaticDatabases.GLOBAL.name
+  if (tenantId && tenantId !== DEFAULT_TENANT) {
+    dbName = `${tenantId}${SEPARATOR}${dbName}`
   }
-  return getDB(`${tenantId}${SEPARATOR}${globalName}`)
+  return getDB(dbName)
 }
 
 /**
  * Given a koa context this tries to find the correct tenant Global DB.
  */
 exports.getGlobalDBFromCtx = ctx => {
-  return exports.getGlobalDB(ctx.user.tenantId)
+  const user = ctx.user || {}
+  return exports.getGlobalDB(user.tenantId)
 }
 
 /**
