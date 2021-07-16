@@ -15,7 +15,6 @@
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
 
-  let tenantId = ""
   let username = ""
   let password = ""
 
@@ -26,7 +25,6 @@
       await auth.login({
         username,
         password,
-        tenantId,
       })
       notifications.success("Logged in successfully")
       if ($auth?.user?.forceResetPassword) {
@@ -66,7 +64,6 @@
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
-        <Input label="Organisation" bind:value={tenantId} />
         <Input label="Email" bind:value={username} />
         <Input
           label="Password"

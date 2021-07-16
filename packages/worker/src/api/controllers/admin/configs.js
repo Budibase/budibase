@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const {
   generateConfigID,
   getConfigParams,

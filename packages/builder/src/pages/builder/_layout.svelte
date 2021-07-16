@@ -29,7 +29,7 @@
       !$isActive("./invite")
     ) {
       const returnUrl = encodeURIComponent(window.location.pathname)
-      $redirect("./auth/login?", { returnUrl })
+      $redirect("./auth?", { returnUrl })
     } else if ($auth?.user?.forceResetPassword) {
       $redirect("./auth/reset")
     }
