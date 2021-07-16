@@ -67,19 +67,9 @@
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
         <Input label="Organisation" bind:value={tenantId} />
-        <Input label="Email" bind:value={username} />
-        <Input
-          label="Password"
-          type="password"
-          on:change
-          bind:value={password}
-        />
       </Layout>
       <Layout gap="XS" noPadding>
         <Button cta on:click={login}>Sign in to {company}</Button>
-        <ActionButton quiet on:click={() => $goto("./forgot")}>
-          Forgot password?
-        </ActionButton>
       </Layout>
     </Layout>
   </div>

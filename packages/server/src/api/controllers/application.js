@@ -25,7 +25,7 @@ const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
-const { getAllApps } = require("../../utilities")
+const { getAllApps } = require("@budibase/auth/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
   getDeployedApps,
@@ -128,7 +128,8 @@ async function createInstance(template) {
 exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps({ CouchDB, dev, all })
+  const tenantId = ctx.user.tenantId
+  const apps = await getAllApps({ tenantId, dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -188,6 +189,7 @@ exports.fetchAppPackage = async function (ctx) {
 }
 
 exports.create = async function (ctx) {
+  const tenantId = ctx.user.tenantId
   const { useTemplate, templateKey } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -220,6 +222,7 @@ exports.create = async function (ctx) {
     url: url,
     template: ctx.request.body.template,
     instance: instance,
+    tenantId,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

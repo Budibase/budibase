@@ -3,7 +3,7 @@ const {
   getGlobalUserParams,
   getGlobalDB,
   getGlobalDBFromCtx,
-  StaticDatabases
+  StaticDatabases,
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail, newid } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
@@ -16,17 +16,17 @@ const CouchDB = require("../../../db")
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 const tenantDocId = StaticDatabases.PLATFORM_INFO.docs.tenants
 
-async function noTenantsExist() {
-  const db = new CouchDB(PLATFORM_INFO_DB)
-  const tenants = await db.get(tenantDocId)
-  return !tenants || !tenants.tenantIds || tenants.tenantIds.length === 0
-}
-
 async function tryAddTenant(tenantId) {
   const db = new CouchDB(PLATFORM_INFO_DB)
-  let tenants = await db.get(tenantDocId)
+  let tenants
+  try {
+    tenants = await db.get(tenantDocId)
+  } catch (err) {
+    // if theres an error don't worry, we'll just write it in
+  }
   if (!tenants || !Array.isArray(tenants.tenantIds)) {
     tenants = {
+      _id: tenantDocId,
       tenantIds: [],
     }
   }
@@ -120,11 +120,18 @@ exports.save = async ctx => {
 }
 
 exports.adminUser = async ctx => {
-  if (!await noTenantsExist()) {
+  const { email, password, tenantId } = ctx.request.body
+  const db = getGlobalDB(tenantId)
+  const response = await db.allDocs(
+    getGlobalUserParams(null, {
+      include_docs: true,
+    })
+  )
+
+  if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(403, "You cannot initialise once an admin user has been created.")
   }
 
-  const { email, password } = ctx.request.body
   const user = {
     email: email,
     password: password,
@@ -135,9 +142,10 @@ exports.adminUser = async ctx => {
     admin: {
       global: true,
     },
+    tenantId,
   }
   try {
-    ctx.body = await saveUser(user, newid())
+    ctx.body = await saveUser(user, tenantId)
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }

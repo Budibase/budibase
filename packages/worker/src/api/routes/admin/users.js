@@ -11,6 +11,7 @@ function buildAdminInitValidation() {
     Joi.object({
       email: Joi.string().required(),
       password: Joi.string().required(),
+      tenantId: Joi.string().required(),
     })
       .required()
       .unknown(false)

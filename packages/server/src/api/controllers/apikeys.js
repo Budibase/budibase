@@ -1,4 +1,3 @@
-const CouchDB = require("../../db")
 const { StaticDatabases, getGlobalDBFromCtx } = require("@budibase/auth/db")
 
 const KEYS_DOC = StaticDatabases.GLOBAL.docs.apiKeys
@@ -21,7 +20,6 @@ async function setBuilderMainDoc(ctx, doc) {
   const db = getGlobalDBFromCtx(ctx)
   return db.put(doc)
 }
-
 
 exports.fetch = async function (ctx) {
   try {

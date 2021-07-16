@@ -29,8 +29,16 @@ function buildResetUpdateValidation() {
 }
 
 router
-  .post("/api/admin/auth/:tenantId/login", buildAuthValidation(), authController.authenticate)
-  .post("/api/admin/auth/:tenantId/reset", buildResetValidation(), authController.reset)
+  .post(
+    "/api/admin/auth/:tenantId/login",
+    buildAuthValidation(),
+    authController.authenticate
+  )
+  .post(
+    "/api/admin/auth/:tenantId/reset",
+    buildResetValidation(),
+    authController.reset
+  )
   .post(
     "/api/admin/auth/:tenantId/reset/update",
     buildResetUpdateValidation(),

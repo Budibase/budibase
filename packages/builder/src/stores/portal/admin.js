@@ -1,12 +1,14 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import api from "builderStore/api"
+import { auth } from "stores/portal"
 
 export function createAdminStore() {
   const { subscribe, set } = writable({})
 
   async function init() {
     try {
-      const response = await api.get("/api/admin/configs/checklist")
+      const tenantId = get(auth).tenantId
+      const response = await api.get(`/api/admin/configs/checklist?tenantId=${tenantId}`)
       const json = await response.json()
 
       const onboardingSteps = Object.keys(json)

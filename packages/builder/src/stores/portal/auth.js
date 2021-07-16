@@ -21,7 +21,7 @@ export function createAuthStore() {
       }
       isAdmin = !!$user.admin?.global
       isBuilder = !!$user.builder?.global
-      tenantId = $user.tenantId || "default"
+      tenantId = $user.tenantId || tenantId
     }
     return {
       user: $user,
@@ -35,7 +35,6 @@ export function createAuthStore() {
   return {
     subscribe: store.subscribe,
     checkAuth: async () => {
-
       const response = await api.get("/api/admin/users/self")
       if (response.status !== 200) {
         user.set(null)
@@ -45,8 +44,12 @@ export function createAuthStore() {
       }
     },
     login: async creds => {
-      const tenantId = get(store).tenantId
-      const response = await api.post(`/api/admin/auth/${tenantId}/login`, creds)
+      const tenantId = creds.tenantId || get(store).tenantId
+      delete creds.tenantId
+      const response = await api.post(
+        `/api/admin/auth/${tenantId}/login`,
+        creds
+      )
       const json = await response.json()
       if (response.status === 200) {
         user.set(json.user)
@@ -84,10 +87,13 @@ export function createAuthStore() {
     },
     resetPassword: async (password, code) => {
       const tenantId = get(store).tenantId
-      const response = await api.post(`/api/admin/auth/${tenantId}/reset/update`, {
-        password,
-        resetCode: code,
-      })
+      const response = await api.post(
+        `/api/admin/auth/${tenantId}/reset/update`,
+        {
+          password,
+          resetCode: code,
+        }
+      )
       if (response.status !== 200) {
         throw "Unable to reset password"
       }

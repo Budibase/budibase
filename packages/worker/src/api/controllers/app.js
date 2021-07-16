@@ -1,10 +1,10 @@
 const { getAllApps } = require("@budibase/auth/db")
-const CouchDB = require("../../db")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
 exports.getApps = async ctx => {
-  const apps = await getAllApps({ CouchDB })
+  const tenantId = ctx.user.tenantId
+  const apps = await getAllApps({ tenantId })
 
   const body = {}
   for (let app of apps) {

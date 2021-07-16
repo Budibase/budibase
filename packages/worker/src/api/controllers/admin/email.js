@@ -2,8 +2,16 @@ const { sendEmail } = require("../../../utilities/email")
 const { getGlobalDBFromCtx } = require("@budibase/auth/db")
 
 exports.sendEmail = async ctx => {
-  let { tenantId, workspaceId, email, userId, purpose, contents, from, subject } =
-    ctx.request.body
+  let {
+    tenantId,
+    workspaceId,
+    email,
+    userId,
+    purpose,
+    contents,
+    from,
+    subject,
+  } = ctx.request.body
   let user
   if (userId) {
     const db = getGlobalDBFromCtx(ctx)
