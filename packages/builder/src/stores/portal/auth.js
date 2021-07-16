@@ -81,7 +81,7 @@ export function createAuthStore() {
       setUser(null)
     },
     updateSelf: async fields => {
-      const newUser = { ...get(user), ...fields }
+      const newUser = { ...get(auth).user, ...fields }
       const response = await api.post("/api/admin/users/self", newUser)
       if (response.status === 200) {
         setUser(newUser)
