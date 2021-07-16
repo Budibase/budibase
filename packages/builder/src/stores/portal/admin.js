@@ -8,7 +8,9 @@ export function createAdminStore() {
   async function init() {
     try {
       const tenantId = get(auth).tenantId
-      const response = await api.get(`/api/admin/configs/checklist?tenantId=${tenantId}`)
+      const response = await api.get(
+        `/api/admin/configs/checklist?tenantId=${tenantId}`
+      )
       const json = await response.json()
 
       const onboardingSteps = Object.keys(json)

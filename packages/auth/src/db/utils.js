@@ -210,7 +210,7 @@ exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
   } else {
     const response = await Promise.allSettled(appPromises)
     const apps = response
-      .filter(result => result.status === "fulfilled" )
+      .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
       .filter(app => {
         const appTenant = !app.tenantId ? DEFAULT_TENANT_ID : app.tenantId
@@ -218,7 +218,6 @@ exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
       })
     if (!all) {
       return apps.filter(app => {
-
         if (dev) {
           return isDevApp(app)
         }
