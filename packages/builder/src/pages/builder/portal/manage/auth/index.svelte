@@ -123,37 +123,53 @@
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
+    let completed = []
     docs.forEach(element => {
       if (element.type === ConfigTypes.OIDC) {
         //Add a UUID here so each config is distinguishable when it arrives at the login page.
         element.config.configs.forEach(config => {
           !config.uuid && (config.uuid = uuid())
         })
-        oidcComplete && calls.push(api.post(`/api/admin/configs`, element))
+        if (oidcComplete) {
+          calls.push(api.post(`/api/admin/configs`, element))
+          completed.push(ConfigTypes.OIDC)
+        } else {
+          notifications.error(
+            `Please fill in all required ${ConfigTypes.OIDC} fields`
+          )
+        }
       }
       if (element.type === ConfigTypes.Google) {
-        googleComplete && calls.push(api.post(`/api/admin/configs`, element))
+        if (googleComplete) {
+          calls.push(api.post(`/api/admin/configs`, element))
+          completed.push(ConfigTypes.OIDC)
+        } else {
+          notifications.error(
+            `Please fill in all required ${ConfigTypes.Google} fields`
+          )
+        }
       }
     })
-    Promise.all(calls)
-      .then(responses => {
-        return Promise.all(
-          responses.map(response => {
-            return response.json()
-          })
-        )
-      })
-      .then(data => {
-        data.forEach(res => {
-          providers[res.type]._rev = res._rev
-          providers[res.type]._id = res._id
+    calls.length &&
+      Promise.all(calls)
+        .then(responses => {
+          return Promise.all(
+            responses.map(response => {
+              return response.json()
+            })
+          )
         })
-        notifications.success(`Settings saved.`)
-      })
-      .catch(err => {
-        notifications.error(`Failed to update OAuth settings. ${err}`)
-        throw new Error(err.message)
-      })
+        .then(data => {
+          data.forEach(res => {
+            providers[res.type]._rev = res._rev
+            providers[res.type]._id = res._id
+          })
+          notifications.success(`Settings saved.`)
+        })
+        .catch(err => {
+          notifications.error(`Failed to update OAuth settings. ${err}`)
+          throw new Error(err.message)
+        })
   }
 
   onMount(async () => {
