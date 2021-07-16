@@ -1,12 +1,5 @@
 <script>
-  import {
-    Body,
-    Button,
-    Divider,
-    Heading,
-    Input,
-    Layout,
-  } from "@budibase/bbui"
+  import { Body, Button, Divider, Heading, Input, Layout } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
