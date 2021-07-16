@@ -92,6 +92,15 @@
   const providers = { google, oidc }
 
   // Create a flag so that it will only try to save completed forms
+
+  $: trySaveGoogle =
+    providers.google?.config.clientID ||
+    providers.google?.config.clientSecret ||
+    providers.google?.config.callbackURL
+  $: trySaveOidc =
+    providers.oidc?.config?.configs[0].configUrl ||
+    providers.oidc?.config?.configs[0].clientID ||
+    providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
     providers.google?.config.clientID &&
     providers.google?.config.clientSecret &&
@@ -130,23 +139,27 @@
         element.config.configs.forEach(config => {
           !config.uuid && (config.uuid = uuid())
         })
-        if (oidcComplete) {
-          calls.push(api.post(`/api/admin/configs`, element))
-          completed.push(ConfigTypes.OIDC)
-        } else {
-          notifications.error(
-            `Please fill in all required ${ConfigTypes.OIDC} fields`
-          )
+        if (trySaveOidc) {
+          if (!oidcComplete) {
+            notifications.error(
+              `Please fill in all required ${ConfigTypes.OIDC} fields`
+            )
+          } else {
+            calls.push(api.post(`/api/admin/configs`, element))
+            completed.push(ConfigTypes.OIDC)
+          }
         }
       }
       if (element.type === ConfigTypes.Google) {
-        if (googleComplete) {
-          calls.push(api.post(`/api/admin/configs`, element))
-          completed.push(ConfigTypes.OIDC)
-        } else {
-          notifications.error(
-            `Please fill in all required ${ConfigTypes.Google} fields`
-          )
+        if (trySaveGoogle) {
+          if (!googleComplete) {
+            notifications.error(
+              `Please fill in all required ${ConfigTypes.Google} fields`
+            )
+          } else {
+            calls.push(api.post(`/api/admin/configs`, element))
+            completed.push(ConfigTypes.Google)
+          }
         }
       }
     })
@@ -167,7 +180,7 @@
           notifications.success(`Settings saved.`)
         })
         .catch(err => {
-          notifications.error(`Failed to update OAuth settings. ${err}`)
+          notifications.error(`Failed to update auth settings. ${err}`)
           throw new Error(err.message)
         })
   }
