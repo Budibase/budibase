@@ -23,7 +23,7 @@ const { user: userCache } = require("@budibase/auth/cache")
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
 const PASSWORD = "babs_password"
-const TENANT_ID = "tenant1"
+const TENANT_ID = "default"
 
 class TestConfiguration {
   constructor(openServer = true) {

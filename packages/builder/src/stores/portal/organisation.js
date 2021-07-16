@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import api from "builderStore/api"
 
 const DEFAULT_CONFIG = {
-  platformUrl: "http://localhost:1000",
+  platformUrl: "http://localhost:10000",
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",

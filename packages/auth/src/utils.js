@@ -101,10 +101,9 @@ exports.isClient = ctx => {
   return ctx.headers["x-budibase-type"] === "client"
 }
 
-exports.lookupTenantId = async ({ email, userId }) => {
-  const toQuery = email || userId
+exports.lookupTenantId = async userId => {
   const db = getDB(StaticDatabases.PLATFORM_INFO.name)
-  const doc = await db.get(toQuery)
+  const doc = await db.get(userId)
   if (!doc || !doc.tenantId) {
     throw "Unable to find tenant"
   }
@@ -118,12 +117,9 @@ exports.lookupTenantId = async ({ email, userId }) => {
  * @param {string|null} tenantId If tenant ID is known it can be specified
  * @return {Promise<object|null>}
  */
-exports.getGlobalUserByEmail = async (email, tenantId = null) => {
+exports.getGlobalUserByEmail = async (email, tenantId) => {
   if (email == null) {
     throw "Must supply an email address to view"
-  }
-  if (!tenantId) {
-    tenantId = await exports.lookupTenantId({ email })
   }
   const db = getGlobalDB(tenantId)
   try {
@@ -138,7 +134,7 @@ exports.getGlobalUserByEmail = async (email, tenantId = null) => {
   } catch (err) {
     if (err != null && err.name === "not_found") {
       await createUserEmailView(db)
-      return exports.getGlobalUserByEmail(email)
+      return exports.getGlobalUserByEmail(email, tenantId)
     } else {
       throw err
     }

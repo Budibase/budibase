@@ -7,6 +7,7 @@ export function createAuthStore() {
     let initials = null
     let isAdmin = false
     let isBuilder = false
+    let tenantId = "default"
     if ($user) {
       if ($user.firstName) {
         initials = $user.firstName[0]
@@ -20,18 +21,21 @@ export function createAuthStore() {
       }
       isAdmin = !!$user.admin?.global
       isBuilder = !!$user.builder?.global
+      tenantId = $user.tenantId || "default"
     }
     return {
       user: $user,
       initials,
       isAdmin,
       isBuilder,
+      tenantId,
     }
   })
 
   return {
     subscribe: store.subscribe,
     checkAuth: async () => {
+
       const response = await api.get("/api/admin/users/self")
       if (response.status !== 200) {
         user.set(null)
@@ -41,7 +45,8 @@ export function createAuthStore() {
       }
     },
     login: async creds => {
-      const response = await api.post(`/api/admin/auth`, creds)
+      const tenantId = get(store).tenantId
+      const response = await api.post(`/api/admin/auth/${tenantId}/login`, creds)
       const json = await response.json()
       if (response.status === 200) {
         user.set(json.user)
@@ -68,7 +73,8 @@ export function createAuthStore() {
       }
     },
     forgotPassword: async email => {
-      const response = await api.post(`/api/admin/auth/reset`, {
+      const tenantId = get(store).tenantId
+      const response = await api.post(`/api/admin/auth/${tenantId}/reset`, {
         email,
       })
       if (response.status !== 200) {
@@ -77,7 +83,8 @@ export function createAuthStore() {
       await response.json()
     },
     resetPassword: async (password, code) => {
-      const response = await api.post(`/api/admin/auth/reset/update`, {
+      const tenantId = get(store).tenantId
+      const response = await api.post(`/api/admin/auth/${tenantId}/reset/update`, {
         password,
         resetCode: code,
       })

@@ -1,7 +1,7 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-const { getGlobalDB } = require("./db/utils")
+const { getGlobalDB, StaticDatabases } = require("./db/utils")
 const { jwt, local, authenticated, google, auditLog } = require("./middleware")
 const { setDB } = require("./db")
 const userCache = require("./cache/user")
