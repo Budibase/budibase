@@ -3,6 +3,9 @@ const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
+const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
+const CouchDB = require("../db")
+const { DocumentTypes } = require("../db/utils")
 
 const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
 
@@ -16,13 +19,13 @@ class Orchestrator {
     this._metadata = triggerOutput.metadata
     this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
     this._appId = triggerOutput.appId
+    this._app = null
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
     // step zero is never used as the template string is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
-    this._tenantId = automation.tenantId
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
     this._emitter = new AutomationEmitter(this._chainCount + 1)
@@ -41,8 +44,19 @@ class Orchestrator {
     return step
   }
 
+  async getApp() {
+    const appId = this._appId
+    if (this._app) {
+      return this._app
+    }
+    const db = new CouchDB(appId)
+    this._app = await db.get(DocumentTypes.APP_METADATA)
+    return this._app
+  }
+
   async execute() {
     let automation = this._automation
+    const app = this.getApp()
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
       step.inputs = await processObject(step.inputs, this._context)
@@ -58,7 +72,7 @@ class Orchestrator {
           apiKey: automation.apiKey,
           emitter: this._emitter,
           context: this._context,
-          tenantId: this._tenantId,
+          tenantId: app.tenantId || DEFAULT_TENANT_ID,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break

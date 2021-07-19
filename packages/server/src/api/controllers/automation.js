@@ -151,7 +151,6 @@ exports.create = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   let automation = ctx.request.body
   automation.appId = ctx.appId
-  automation.tenantId = ctx.user.tenantId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
