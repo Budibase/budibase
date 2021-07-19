@@ -14,7 +14,6 @@
     Checkbox,
   } from "@budibase/bbui"
   import { email } from "stores/portal"
-  import TemplateLink from "./_components/TemplateLink.svelte"
   import api from "builderStore/api"
   import { cloneDeep } from "lodash/fp"
 
@@ -23,22 +22,29 @@
   }
 
   const templateSchema = {
-    purpose: {
-      displayName: "Email",
+    name: {
+      displayName: "Name",
+      editable: false,
+    },
+    category: {
+      displayName: "Category",
       editable: false,
     },
   }
 
-  const customRenderers = [
-    {
-      column: "purpose",
-      component: TemplateLink,
-    },
-  ]
+  $: emailInfo = getEmailInfo($email.definitions)
 
   let smtpConfig
   let loading
   let requireAuth = false
+
+  function getEmailInfo(definitions) {
+    if (!definitions) {
+      return []
+    }
+    const entries = Object.entries(definitions.info)
+    return entries.map(([key, value]) => ({ purpose: key, ...value }))
+  }
 
   async function saveSmtp() {
     // clone it so we can remove stuff if required
@@ -159,8 +165,7 @@
       </Body>
     </Layout>
     <Table
-      {customRenderers}
-      data={$email.templates}
+      data={emailInfo}
       schema={templateSchema}
       {loading}
       on:click={({ detail }) => $goto(`./${detail.purpose}`)}
