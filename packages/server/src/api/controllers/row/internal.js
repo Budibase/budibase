@@ -161,7 +161,7 @@ exports.fetchView = async ctx => {
         schema: {},
       }
     }
-    rows = await outputProcessing(appId, table, response.rows)
+    rows = await outputProcessing(ctx, table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -204,7 +204,7 @@ exports.fetch = async ctx => {
     )
     rows = response.rows.map(row => row.doc)
   }
-  return outputProcessing(appId, table, rows)
+  return outputProcessing(ctx, table, rows)
 }
 
 exports.find = async ctx => {
@@ -212,7 +212,7 @@ exports.find = async ctx => {
   const db = new CouchDB(appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, db, ctx.params.tableId, ctx.params.rowId)
-  row = await outputProcessing(appId, table, row)
+  row = await outputProcessing(ctx, table, row)
   return row
 }
 
@@ -290,7 +290,7 @@ exports.search = async ctx => {
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     const table = await db.get(tableId)
-    response.rows = await outputProcessing(appId, table, response.rows)
+    response.rows = await outputProcessing(ctx, table, response.rows)
   }
 
   return response
@@ -327,7 +327,7 @@ exports.fetchEnrichedRow = async ctx => {
   })
   // need to include the IDs in these rows for any links they may have
   let linkedRows = await outputProcessing(
-    appId,
+    ctx,
     table,
     response.rows.map(row => row.doc)
   )
