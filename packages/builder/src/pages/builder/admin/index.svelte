@@ -9,15 +9,18 @@
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
-  import { admin } from "stores/portal"
+  import { admin, auth } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import Logo from "assets/bb-emblem.svg"
 
   let adminUser = {}
   let error
 
+  $: tenantId = $auth.tenantId
+
   async function save() {
     try {
+      adminUser.tenantId = tenantId
       // Save the admin user
       const response = await api.post(`/api/admin/users/init`, adminUser)
       const json = await response.json()
@@ -44,7 +47,6 @@
         </Body>
       </Layout>
       <Layout gap="XS" noPadding>
-        <Input label="Organisation" bind:value={adminUser.tenantId} />
         <Input label="Email" bind:value={adminUser.email} />
         <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>

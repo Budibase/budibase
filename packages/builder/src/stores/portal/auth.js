@@ -5,6 +5,7 @@ export function createAuthStore() {
   const auth = writable({
     user: null,
     tenantId: "default",
+    tenantSet: false,
   })
   const store = derived(auth, $store => {
     let initials = null
@@ -28,6 +29,7 @@ export function createAuthStore() {
     return {
       user: $store.user,
       tenantId: $store.tenantId,
+      tenantSet: $store.tenantSet,
       initials,
       isAdmin,
       isBuilder,
@@ -46,6 +48,7 @@ export function createAuthStore() {
     setOrg: tenantId => {
       auth.update(store => {
         store.tenantId = tenantId
+        store.tenantSet = true
         return store
       })
     },

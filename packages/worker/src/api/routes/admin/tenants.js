@@ -1,8 +1,5 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/admin/tenants")
-const joiValidator = require("../../../middleware/joi-validator")
-const Joi = require("joi")
-const { TemplatePurpose, TemplateTypes } = require("../../../constants")
 const adminOnly = require("../../../middleware/adminOnly")
 
 const router = Router()

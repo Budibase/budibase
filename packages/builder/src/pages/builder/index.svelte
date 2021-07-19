@@ -4,7 +4,7 @@
 
   $: {
     if (!$auth.user) {
-      $redirect("./auth/login")
+      $redirect("./auth")
     } else if ($auth.user.builder?.global) {
       $redirect("./portal")
     } else {

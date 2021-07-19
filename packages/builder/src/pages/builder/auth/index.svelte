@@ -1,5 +1,24 @@
 <script>
   import { redirect } from "@roxi/routify"
-  // TODO: need to check if the tenant is already set
-  $redirect("./org")
+  import { auth, admin } from "stores/portal"
+  import { onMount } from "svelte"
+
+  $: tenantSet = $auth.tenantSet
+  $: multiTenancyEnabled = $admin.multiTenancy
+
+  let loaded = false
+
+  $: {
+    console.log(loaded)
+    if (loaded && multiTenancyEnabled && !tenantSet) {
+      $redirect("./org")
+    } else if (loaded) {
+      $redirect("./login")
+    }
+  }
+
+  onMount(async () => {
+    await admin.init()
+    loaded = true
+  })
 </script>

@@ -90,10 +90,13 @@
     }
     loading = false
     requireAuth = smtpConfig.config.auth != null
+    console.log(requireAuth)
     // always attach the auth for the forms purpose -
     // this will be removed later if required
-    smtpConfig.config.auth = {
-      type: "login",
+    if (!smtpDoc.config.auth) {
+      smtpConfig.config.auth = {
+        type: "login",
+      }
     }
   }
 
