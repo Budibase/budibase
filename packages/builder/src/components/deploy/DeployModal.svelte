@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
   import FeedbackIframe from "../feedback/FeedbackIframe.svelte"
+  import Feedback from "./Feedback.svelte"
   import { store } from "builderStore"
   import api from "builderStore/api"
   import analytics from "analytics"
@@ -91,6 +92,8 @@
 
   onDestroy(() => clearInterval(poll))
 </script>
+
+<Feedback />
 
 <Button secondary on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={feedbackModal}>
