@@ -12,12 +12,11 @@ async function init() {
     INTERNAL_API_KEY: "budibase",
     MINIO_ACCESS_KEY: "budibase",
     MINIO_SECRET_KEY: "budibase",
-    COUCH_DB_USER: "budibase",
-    COUCH_DB_PASSWORD: "budibase",
     REDIS_URL: "localhost:6379",
     REDIS_PASSWORD: "budibase",
     MINIO_URL: "http://localhost:10000/",
     COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+    MULTI_TENANCY: false,
   }
   let envFile = ""
   Object.keys(envFileJson).forEach(key => {
