@@ -150,14 +150,18 @@ class QueryBuilder {
       build(this.query.equal, (key, value) => {
         const escapedValue = luceneEscape(value.toLowerCase())
         // have to do the or to manage straight values, or strings
-        return value ? `(${key}:${escapedValue} OR ${key}:"${escapedValue}")` : null
+        return value
+          ? `(${key}:${escapedValue} OR ${key}:"${escapedValue}")`
+          : null
       })
     }
     if (this.query.notEqual) {
       build(this.query.notEqual, (key, value) => {
         const escapedValue = luceneEscape(value.toLowerCase())
         // have to do the or to manage straight values, or strings
-        return value ? `(!${key}:${escapedValue} OR !${key}:"${escapedValue}")` : null
+        return value
+          ? `(!${key}:${escapedValue} OR !${key}:"${escapedValue}")`
+          : null
       })
     }
     if (this.query.empty) {
