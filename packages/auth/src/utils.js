@@ -9,6 +9,7 @@ const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
 const { getDB } = require("./db")
 const { getGlobalDB } = require("./db/utils")
+const { DEFAULT_TENANT_ID } = require("./constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -103,11 +104,16 @@ exports.isClient = ctx => {
 
 exports.lookupTenantId = async userId => {
   const db = getDB(StaticDatabases.PLATFORM_INFO.name)
-  const doc = await db.get(userId)
-  if (!doc || !doc.tenantId) {
-    throw "Unable to find tenant"
+  let tenantId = DEFAULT_TENANT_ID
+  try {
+    const doc = await db.get(userId)
+    if (doc && doc.tenantId) {
+      tenantId = doc.tenantId
+    }
+  } catch (err) {
+    // just return the default
   }
-  return doc.tenantId
+  return tenantId
 }
 
 /**

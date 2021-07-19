@@ -207,7 +207,7 @@ exports.outputProcessing = async (ctx, table, rows) => {
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
 
   // process formulas
   enriched = processFormulas(table, enriched)

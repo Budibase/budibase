@@ -14,19 +14,19 @@ const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
-const tenantDocId = StaticDatabases.PLATFORM_INFO.docs.tenants
+const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
 async function tryAddTenant(tenantId) {
   const db = new CouchDB(PLATFORM_INFO_DB)
   let tenants
   try {
-    tenants = await db.get(tenantDocId)
+    tenants = await db.get(TENANT_DOC)
   } catch (err) {
     // if theres an error don't worry, we'll just write it in
   }
   if (!tenants || !Array.isArray(tenants.tenantIds)) {
     tenants = {
-      _id: tenantDocId,
+      _id: TENANT_DOC,
       tenantIds: [],
     }
   }
@@ -34,6 +34,18 @@ async function tryAddTenant(tenantId) {
     tenants.tenantIds.push(tenantId)
     await db.put(tenants)
   }
+}
+
+async function doesTenantExist(tenantId) {
+  const db = new CouchDB(PLATFORM_INFO_DB)
+  let tenants
+  try {
+    tenants = await db.get(TENANT_DOC)
+  } catch (err) {
+    // if theres an error the doc doesn't exist, no tenants exist
+    return false
+  }
+  return tenants && Array.isArray(tenants.tenantIds) && tenants.tenantIds.indexOf(tenantId) !== -1
 }
 
 async function allUsers(ctx) {
@@ -121,6 +133,10 @@ exports.save = async ctx => {
 
 exports.adminUser = async ctx => {
   const { email, password, tenantId } = ctx.request.body
+  if (await doesTenantExist(tenantId)) {
+    ctx.throw(403, "Organisation already exists.")
+  }
+
   const db = getGlobalDB(tenantId)
   const response = await db.allDocs(
     getGlobalUserParams(null, {
