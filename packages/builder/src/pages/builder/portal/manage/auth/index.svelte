@@ -99,10 +99,10 @@
   let googleSaveButtonDisabled
   let oidcSaveButtonDisabled
   $: {
-    isEqual(providers.google, originalGoogleDoc)
+    isEqual(providers.google?.config, originalGoogleDoc?.config)
       ? (googleSaveButtonDisabled = true)
       : (googleSaveButtonDisabled = false)
-    isEqual(providers.oidc, originalOidcDoc)
+    isEqual(providers.oidc?.config, originalOidcDoc?.config)
       ? (oidcSaveButtonDisabled = true)
       : (oidcSaveButtonDisabled = false)
   }
@@ -147,7 +147,6 @@
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
-    let completed = []
     docs.forEach(element => {
       if (element.type === ConfigTypes.OIDC) {
         //Add a UUID here so each config is distinguishable when it arrives at the login page.
@@ -161,7 +160,9 @@
             )
           } else {
             calls.push(api.post(`/api/admin/configs`, element))
-            completed.push(ConfigTypes.OIDC)
+            // turn the save button grey when clicked
+            oidcSaveButtonDisabled = true
+            originalOidcDoc = cloneDeep(providers.oidc)
           }
         }
       }
@@ -173,7 +174,8 @@
             )
           } else {
             calls.push(api.post(`/api/admin/configs`, element))
-            completed.push(ConfigTypes.Google)
+            googleSaveButtonDisabled = true
+            originalGoogleDoc = cloneDeep(providers.google)
           }
         }
       }
@@ -213,8 +215,9 @@
         type: ConfigTypes.Google,
         config: { activated: true },
       }
+      originalGoogleDoc = cloneDeep(googleDoc)
     } else {
-      originalGoogleDoc = googleDoc
+      originalGoogleDoc = cloneDeep(googleDoc)
       providers.google = googleDoc
     }
 
@@ -237,8 +240,9 @@
     }
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
-    console.log("teaste")
     if (!oidcDoc._id) {
+      console.log("hi")
+
       providers.oidc = {
         type: ConfigTypes.OIDC,
         config: { configs: [{ activated: true }] },
