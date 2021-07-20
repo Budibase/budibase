@@ -97,18 +97,61 @@ exports.find = async function (ctx) {
   }
 }
 
-exports.publicSettings = async function (ctx) {
+exports.publicOidc = async function (ctx) {
   const db = getGlobalDBFromCtx(ctx)
   try {
     // Find the config with the most granular scope based on context
-    const config = await getScopedFullConfig(db, {
-      type: Configs.SETTINGS,
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
     })
-    if (!config) {
+
+    if (!oidcConfig) {
       ctx.body = {}
     } else {
-      ctx.body = config
+      ctx.body = oidcConfig.config.configs.map(config => ({
+        logo: config.logo,
+        name: config.name,
+        uuid: config.uuid,
+      }))
     }
+  } catch (err) {
+    ctx.throw(err.status, err)
+  }
+}
+
+exports.publicSettings = async function (ctx) {
+  const db = getGlobalDBFromCtx(ctx)
+
+  try {
+    // Find the config with the most granular scope based on context
+    const publicConfig = await getScopedFullConfig(db, {
+      type: Configs.SETTINGS,
+    })
+
+    const googleConfig = await getScopedFullConfig(db, {
+      type: Configs.GOOGLE,
+    })
+
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
+
+    let config
+    if (!publicConfig) {
+      config = {
+        config: {},
+      }
+    } else {
+      config = publicConfig
+    }
+
+    config.config.google = !googleConfig
+      ? !!googleConfig
+      : googleConfig.config.activated
+    config.config.oidc = !oidcConfig
+      ? !!oidcConfig
+      : oidcConfig.config.configs[0].activated
+    ctx.body = config
   } catch (err) {
     ctx.throw(err.status, err)
   }
@@ -121,12 +164,8 @@ exports.upload = async function (ctx) {
   const file = ctx.request.files.file
   const { type, name } = ctx.params
 
-  const fileExtension = [...file.name.split(".")].pop()
-  // filenames converted to UUIDs so they are unique
-  const processedFileName = `${name}.${fileExtension}`
-
   const bucket = ObjectStoreBuckets.GLOBAL
-  const key = `${type}/${processedFileName}`
+  const key = `${type}/${name}`
   await upload({
     bucket,
     filename: key,
@@ -145,7 +184,7 @@ exports.upload = async function (ctx) {
     }
   }
   const url = `/${bucket}/${key}`
-  cfgStructure.config[`${name}Url`] = url
+  cfgStructure.config[`${name}`] = url
   // write back to db with url updated
   await db.put(cfgStructure)
 
@@ -183,10 +222,14 @@ exports.configChecklist = async function (ctx) {
     })
 
     // They have set up Google Auth
-    const oauthConfig = await getScopedFullConfig(db, {
+    const googleConfig = await getScopedFullConfig(db, {
       type: Configs.GOOGLE,
     })
 
+    // They have set up OIDC
+    const oidcConfig = await getScopedFullConfig(db, {
+      type: Configs.OIDC,
+    })
     // They have set up an admin user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
@@ -199,7 +242,7 @@ exports.configChecklist = async function (ctx) {
       apps: apps.length,
       smtp: !!smtpConfig,
       adminUser,
-      oauth: !!oauthConfig,
+      sso: !!googleConfig || !!oidcConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)

@@ -1,11 +1,14 @@
 import { writable, get } from "svelte/store"
 import api from "builderStore/api"
+import { auth } from "stores/portal"
 
 const DEFAULT_CONFIG = {
   platformUrl: "http://localhost:10000",
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",
+  oidc: undefined,
+  google: undefined,
 }
 
 export function createOrganisationStore() {
@@ -13,7 +16,8 @@ export function createOrganisationStore() {
   const { subscribe, set } = store
 
   async function init() {
-    const res = await api.get(`/api/admin/configs/public`)
+    const tenantId = get(auth).tenantId
+    const res = await api.get(`/api/admin/configs/public?tenantId=${tenantId}`)
     const json = await res.json()
 
     if (json.status === 400) {

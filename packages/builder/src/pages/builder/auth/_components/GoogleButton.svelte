@@ -1,12 +1,12 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
-  import { admin, auth } from "stores/portal"
+  import { admin, auth, organisation } from "stores/portal"
 
   let show = false
 
-  $: show = $admin.checklist?.oauth
   $: tenantId = $auth.tenantId
+  $: show = $organisation.google
 </script>
 
 {#if show}

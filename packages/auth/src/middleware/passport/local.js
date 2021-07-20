@@ -3,6 +3,7 @@ const { UserStatus, DEFAULT_TENANT_ID } = require("../../constants")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
 const { getGlobalUserByEmail } = require("../../utils")
+const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
 
@@ -21,20 +22,20 @@ exports.options = {
  * @returns The authenticated user, or errors if they occur
  */
 exports.authenticate = async function (ctx, email, password, done) {
-  if (!email) return done(null, false, "Email Required.")
-  if (!password) return done(null, false, "Password Required.")
+  if (!email) return authError(done, "Email Required")
+  if (!password) return authError(done, "Password Required")
   const params = ctx.params || {}
 
   // use the request to find the tenantId
   let tenantId = params.tenantId || DEFAULT_TENANT_ID
   const dbUser = await getGlobalUserByEmail(email, tenantId)
   if (dbUser == null) {
-    return done(null, false, { message: "User not found" })
+    return authError(done, "User not found")
   }
 
   // check that the user is currently inactive, if this is the case throw invalid
   if (dbUser.status === UserStatus.INACTIVE) {
-    return done(null, false, { message: INVALID_ERR })
+    return authError(done, INVALID_ERR)
   }
 
   // authenticate
@@ -55,6 +56,6 @@ exports.authenticate = async function (ctx, email, password, done) {
 
     return done(null, dbUser)
   } else {
-    done(new Error(INVALID_ERR), false)
+    return authError(done, INVALID_ERR)
   }
 }
