@@ -45,7 +45,11 @@ async function doesTenantExist(tenantId) {
     // if theres an error the doc doesn't exist, no tenants exist
     return false
   }
-  return tenants && Array.isArray(tenants.tenantIds) && tenants.tenantIds.indexOf(tenantId) !== -1
+  return (
+    tenants &&
+    Array.isArray(tenants.tenantIds) &&
+    tenants.tenantIds.indexOf(tenantId) !== -1
+  )
 }
 
 async function allUsers(ctx) {

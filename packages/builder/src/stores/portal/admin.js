@@ -22,12 +22,13 @@ export function createAdminStore() {
 
       admin.update(store => {
         store.checklist = json
-        store.onboardingProgress = (stepsComplete / onboardingSteps.length) * 100
+        store.onboardingProgress =
+          (stepsComplete / onboardingSteps.length) * 100
         return store
       })
       await multiTenancyEnabled()
     } catch (err) {
-      admin.update( store => {
+      admin.update(store => {
         store.checklist = null
         return store
       })

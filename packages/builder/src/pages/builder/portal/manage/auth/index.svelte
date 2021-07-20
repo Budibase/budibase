@@ -33,18 +33,28 @@
 
   $: GoogleConfigFields = {
     Google: [
-      {name: "clientID", label: "Client ID"},
-      {name: "clientSecret", label: "Client secret"},
-      {name: "callbackURL", label: "Callback URL", readonly: true, placeholder: `/api/admin/auth/${tenantId}/google/callback`},
+      { name: "clientID", label: "Client ID" },
+      { name: "clientSecret", label: "Client secret" },
+      {
+        name: "callbackURL",
+        label: "Callback URL",
+        readonly: true,
+        placeholder: `/api/admin/auth/${tenantId}/google/callback`,
+      },
     ],
   }
 
   $: OIDCConfigFields = {
     Oidc: [
-      {name: "configUrl", label: "Config URL"},
-      {name: "clientID", label: "Client ID"},
-      {name: "clientSecret", label: "Client Secret"},
-      {name: "callbackURL", label: "Callback URL", readonly: true, placeholder: `/api/admin/auth/${tenantId}/oidc/callback`},
+      { name: "configUrl", label: "Config URL" },
+      { name: "clientID", label: "Client ID" },
+      { name: "clientSecret", label: "Client Secret" },
+      {
+        name: "callbackURL",
+        label: "Callback URL",
+        readonly: true,
+        placeholder: `/api/admin/auth/${tenantId}/oidc/callback`,
+      },
     ],
   }
 
@@ -286,7 +296,11 @@
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
           <Label size="L">{field.label}</Label>
-          <Input bind:value={providers.google.config[field.name]} readonly={field.readonly} placeholder={field.placeholder} />
+          <Input
+            bind:value={providers.google.config[field.name]}
+            readonly={field.readonly}
+            placeholder={field.placeholder}
+          />
         </div>
       {/each}
       <div class="form-row">
@@ -326,7 +340,11 @@
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
           <Label size="L">{field.label}</Label>
-          <Input bind:value={providers.oidc.config.configs[0][field.name]} readonly={field.readonly} placeholder={field.placeholder} />
+          <Input
+            bind:value={providers.oidc.config.configs[0][field.name]}
+            readonly={field.readonly}
+            placeholder={field.placeholder}
+          />
         </div>
       {/each}
       <br />
