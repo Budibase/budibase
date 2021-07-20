@@ -41,7 +41,7 @@
 
 <DrawerContent>
   <div class="container">
-    <Layout noPadding>
+    <Layout noPadding gap="S">
       {#if links?.length}
         <div
           class="links"
@@ -72,7 +72,7 @@
           {/each}
         </div>
       {/if}
-      <div class="button-container">
+      <div>
         <Button secondary icon="Add" on:click={addLink}>Add Link</Button>
       </div>
     </Layout>
@@ -90,9 +90,9 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    gap: var(--spacing-s);
   }
   .link {
-    padding: 4px 8px;
     gap: var(--spacing-l);
     display: flex;
     flex-direction: row;
@@ -107,8 +107,5 @@
   .link > :global(.spectrum-Form-item) {
     flex: 1 1 auto;
     width: 0;
-  }
-  .button-container {
-    margin-left: var(--spacing-l);
   }
 </style>
