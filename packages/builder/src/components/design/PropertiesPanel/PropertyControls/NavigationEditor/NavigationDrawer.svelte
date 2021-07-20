@@ -83,7 +83,7 @@
   .container {
     width: 100%;
     max-width: 600px;
-    margin: var(--spacing-m) auto;
+    margin: 0 auto;
   }
   .links {
     display: flex;
