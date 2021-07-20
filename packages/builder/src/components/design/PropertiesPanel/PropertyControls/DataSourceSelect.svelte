@@ -132,7 +132,7 @@
         Save
       </Button>
       <DrawerContent slot="body">
-        <Layout>
+        <Layout noPadding>
           {#if value.parameters.length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
