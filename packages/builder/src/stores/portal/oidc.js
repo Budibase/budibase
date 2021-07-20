@@ -14,7 +14,9 @@ export function createOidcStore() {
 
   async function init() {
     const tenantId = get(auth).tenantId
-    const res = await api.get(`/api/admin/configs/public/oidc?tenantId=${tenantId}`)
+    const res = await api.get(
+      `/api/admin/configs/public/oidc?tenantId=${tenantId}`
+    )
     const json = await res.json()
 
     if (json.status === 400 || Object.keys(json).length === 0) {

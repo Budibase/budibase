@@ -1,9 +1,9 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
-  import { admin, auth, organisation } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
 
-  let show = false
+  let show
 
   $: tenantId = $auth.tenantId
   $: show = $organisation.google
