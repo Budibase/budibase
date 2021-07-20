@@ -4,7 +4,6 @@
   import { organisation } from "stores/portal"
 
   $: show = $organisation.google
-  console.log(show)
 </script>
 
 {#if show}

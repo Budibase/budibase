@@ -149,9 +149,16 @@ exports.publicSettings = async function (ctx) {
       config = publicConfig
     }
 
-    config.config.oidc = !!oidcConfig
-    config.config.google = !!googleConfig
-
+    config.config.google = !googleConfig
+      ? !!googleConfig
+      : !googleConfig.config.activated
+      ? false
+      : true
+    config.config.oidc = !oidcConfig
+      ? !!oidcConfig
+      : !oidcConfig.config.configs[0].activated
+      ? false
+      : true
     ctx.body = config
   } catch (err) {
     ctx.throw(err.status, err)

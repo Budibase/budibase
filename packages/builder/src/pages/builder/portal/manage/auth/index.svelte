@@ -17,6 +17,7 @@
     Input,
     Body,
     Select,
+    Toggle,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
@@ -90,21 +91,30 @@
   let google
   let oidc
   const providers = { google, oidc }
+  let googleSaveButtonDisabled
+  let oidcSaveButtonDisabled
+
+  $: googleSaveButtonDisabled =
+    providers.google?.config && !providers.google?.config.activated && true
+  $: oidcSaveButtonDisabled =
+    providers.oidc?.config.configs[0] &&
+    !providers.oidc?.config.configs[0].activated &&
+    true
 
   // Create a flag so that it will only try to save completed forms
 
-  $: trySaveGoogle =
-    providers.google?.config.clientID ||
-    providers.google?.config.clientSecret ||
-    providers.google?.config.callbackURL
-  $: trySaveOidc =
+  $: partialGoogle =
+    providers.google?.config?.clientID ||
+    providers.google?.config?.clientSecret ||
+    providers.google?.config?.callbackURL
+  $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
     providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
-    providers.google?.config.clientID &&
-    providers.google?.config.clientSecret &&
-    providers.google?.config.callbackURL
+    providers.google?.config?.clientID &&
+    providers.google?.config?.clientSecret &&
+    providers.google?.config?.callbackURL
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
@@ -128,6 +138,22 @@
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
   }
 
+  const toggleGoogle = ({ detail }) => {
+    // Only save on de-activation, as the user can save themselves when toggle is active
+    if (!detail) {
+      providers.google.config.activated = detail
+      save([providers.google])
+    }
+  }
+
+  const toggleOidc = ({ detail }) => {
+    // Only save on de-activation, as the user can save themselves when toggle is active
+    if (!detail) {
+      providers.oidc.config.configs[0].activated = detail
+      save([providers.oidc])
+    }
+  }
+
   async function save(docs) {
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
@@ -139,7 +165,7 @@
         element.config.configs.forEach(config => {
           !config.uuid && (config.uuid = uuid())
         })
-        if (trySaveOidc) {
+        if (partialOidc) {
           if (!oidcComplete) {
             notifications.error(
               `Please fill in all required ${ConfigTypes.OIDC} fields`
@@ -151,7 +177,7 @@
         }
       }
       if (element.type === ConfigTypes.Google) {
-        if (trySaveGoogle) {
+        if (partialGoogle) {
           if (!googleComplete) {
             notifications.error(
               `Please fill in all required ${ConfigTypes.Google} fields`
@@ -196,7 +222,7 @@
     if (!googleDoc._id) {
       providers.google = {
         type: ConfigTypes.Google,
-        config: {},
+        config: { activated: true },
       }
     } else {
       providers.google = googleDoc
@@ -225,7 +251,7 @@
     if (!oidcDoc._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{}] },
+        config: { configs: [{ activated: true }] },
       }
     } else {
       providers.oidc = oidcDoc
@@ -246,10 +272,20 @@
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <span>
+        <div>
           <GoogleLogo />
           Google
-        </span>
+          <div class="google-save-button">
+            <div>
+              <Button
+                disabled={googleSaveButtonDisabled}
+                size="s"
+                cta
+                on:click={() => save([providers.google])}>Save</Button
+              >
+            </div>
+          </div>
+        </div>
       </Heading>
       <Body size="S">
         To allow users to authenticate using their Google accounts, fill out the
@@ -263,17 +299,39 @@
           <Input bind:value={providers.google.config[field]} />
         </div>
       {/each}
+      <div class="form-row">
+        <div class="field">
+          <Label size="L">Activated</Label>
+          <span class="alignedToggle">
+            <Toggle
+              text=""
+              on:change={toggleGoogle}
+              bind:value={providers.google.config.activated}
+            />
+          </span>
+        </div>
+      </div>
     </Layout>
   {/if}
   {#if providers.oidc}
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <span>
+        <div>
           <OidcLogo />
           OpenID Connect
-        </span>
-      </Heading>
+          <div class="oidc-save-button">
+            <div>
+              <Button
+                disabled={oidcSaveButtonDisabled}
+                size="s"
+                cta
+                on:click={() => save([providers.oidc])}>Save</Button
+              >
+            </div>
+          </div>
+        </div></Heading
+      >
       <Body size="S">
         To allow users to authenticate using OIDC, fill out the fields below.
       </Body>
@@ -313,15 +371,31 @@
         bind:this={fileinput}
       />
     </Layout>
+    <div class="form-row">
+      <div class="field">
+        <Label size="L">Activated</Label>
+        <span class="alignedToggle">
+          <Toggle
+            text=""
+            on:change={toggleOidc}
+            bind:value={providers.oidc.config.configs[0].activated}
+          />
+        </span>
+      </div>
+    </div>
   {/if}
-  <div>
-    <Button cta on:click={() => save([providers.google, providers.oidc])}
-      >Save</Button
-    >
-  </div>
 </Layout>
 
 <style>
+  .field {
+    display: flex;
+    align-items: center;
+  }
+
+  .alignedToggle {
+    margin-left: 63%;
+  }
+
   .form-row {
     display: grid;
     grid-template-columns: 20% 1fr;
@@ -336,5 +410,15 @@
 
   input {
     display: none;
+  }
+
+  .google-save-button {
+    display: inline-block;
+    margin-left: 400px;
+  }
+
+  .oidc-save-button {
+    display: inline-block;
+    margin-left: 320px;
   }
 </style>
