@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.9.73",
+  "version": "0.9.78",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
@@ -21,8 +21,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.73",
-    "@budibase/string-templates": "^0.9.73",
+    "@budibase/auth": "^0.9.78",
+    "@budibase/string-templates": "^0.9.78",
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
     "bcryptjs": "^2.4.3",
@@ -39,6 +39,7 @@
     "koa-static": "^5.0.0",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.5.0",
+    "@techpass/passport-openidconnect": "^0.3.0",
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",

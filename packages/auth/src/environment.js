@@ -17,4 +17,8 @@ module.exports = {
   MINIO_URL: process.env.MINIO_URL,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   isTest,
+  _set(key, value) {
+    process.env[key] = value
+    module.exports[key] = value
+  },
 }
