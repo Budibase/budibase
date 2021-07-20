@@ -10,8 +10,9 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth, organisation } from "stores/portal"
+  import { auth, organisation, oidc } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
+  import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
 
@@ -61,6 +62,7 @@
         <Heading>Sign in to {company}</Heading>
       </Layout>
       <GoogleButton />
+      <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>

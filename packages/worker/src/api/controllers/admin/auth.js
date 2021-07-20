@@ -1,25 +1,28 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
+const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { clearCookie, getGlobalUserByEmail, hash } = authPkg.utils
+const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
+  authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 
 const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
 
-async function authInternal(ctx, user, err = null) {
+async function authInternal(ctx, user, err = null, info = null) {
   if (err) {
-    return ctx.throw(403, "Unauthorized")
+    console.error("Authentication error", err)
+    return ctx.throw(403, info ? info : "Unauthorized")
   }
 
   const expires = new Date()
   expires.setDate(expires.getDate() + 1)
 
   if (!user) {
-    return ctx.throw(403, "Unauthorized")
+    return ctx.throw(403, info ? info : "Unauthorized")
   }
 
   // just store the user ID
@@ -32,8 +35,8 @@ async function authInternal(ctx, user, err = null) {
 }
 
 exports.authenticate = async (ctx, next) => {
-  return passport.authenticate("local", async (err, user) => {
-    await authInternal(ctx, user, err)
+  return passport.authenticate("local", async (err, user, info) => {
+    await authInternal(ctx, user, err, info)
 
     delete user.token
 
@@ -123,8 +126,54 @@ exports.googleAuth = async (ctx, next) => {
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err, user) => {
-      await authInternal(ctx, user, err)
+    async (err, user, info) => {
+      await authInternal(ctx, user, err, info)
+
+      ctx.redirect("/")
+    }
+  )(ctx, next)
+}
+
+async function oidcStrategyFactory(ctx, configId) {
+  const db = new CouchDB(GLOBAL_DB)
+
+  const config = await authPkg.db.getScopedConfig(db, {
+    type: Configs.OIDC,
+    group: ctx.query.group,
+  })
+
+  const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
+
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+
+  return oidc.strategyFactory(chosenConfig, callbackUrl)
+}
+
+/**
+ * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
+ * On a successful login, you will be redirected to the oidcAuth callback route.
+ */
+exports.oidcPreAuth = async (ctx, next) => {
+  const { configId } = ctx.params
+  const strategy = await oidcStrategyFactory(ctx, configId)
+
+  setCookie(ctx, configId, Cookies.OIDC_CONFIG)
+
+  return passport.authenticate(strategy, {
+    // required 'openid' scope is added by oidc strategy factory
+    scope: ["profile", "email"],
+  })(ctx, next)
+}
+
+exports.oidcAuth = async (ctx, next) => {
+  const configId = getCookie(ctx, Cookies.OIDC_CONFIG)
+  const strategy = await oidcStrategyFactory(ctx, configId)
+
+  return passport.authenticate(
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
+    async (err, user, info) => {
+      await authInternal(ctx, user, err, info)
 
       ctx.redirect("/")
     }
