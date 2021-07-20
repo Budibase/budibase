@@ -40,7 +40,7 @@
     <Button cta slot="buttons" on:click={save}>Save</Button>
     <DrawerContent slot="body">
       <div class="content">
-        <Layout gap="S">
+        <Layout gap="S" noPadding>
           <Body size="S">Custom CSS overrides all other component styles.</Body>
           <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
         </Layout>
