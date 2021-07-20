@@ -29,30 +29,23 @@
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
-    // Github: "github",
-    // AzureAD: "ad",
   }
 
-  const GoogleConfigFields = {
-    Google: ["clientID", "clientSecret", "callbackURL"],
-  }
-  const GoogleConfigLabels = {
-    Google: {
-      clientID: "Client ID",
-      clientSecret: "Client secret",
-      callbackURL: "Callback URL",
-    },
+  $: GoogleConfigFields = {
+    Google: [
+      {name: "clientID", label: "Client ID"},
+      {name: "clientSecret", label: "Client secret"},
+      {name: "callbackURL", label: "Callback URL", readonly: true, placeholder: `/api/admin/auth/${tenantId}/google/callback`},
+    ],
   }
 
-  const OIDCConfigFields = {
-    Oidc: ["configUrl", "clientID", "clientSecret"],
-  }
-  const OIDCConfigLabels = {
-    Oidc: {
-      configUrl: "Config URL",
-      clientID: "Client ID",
-      clientSecret: "Client Secret",
-    },
+  $: OIDCConfigFields = {
+    Oidc: [
+      {name: "configUrl", label: "Config URL"},
+      {name: "clientID", label: "Client ID"},
+      {name: "clientSecret", label: "Client Secret"},
+      {name: "callbackURL", label: "Callback URL", readonly: true, placeholder: `/api/admin/auth/${tenantId}/oidc/callback`},
+    ],
   }
 
   let iconDropdownOptions = [
@@ -292,8 +285,8 @@
     <Layout gap="XS" noPadding>
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
-          <Label size="L">{GoogleConfigLabels.Google[field]}</Label>
-          <Input bind:value={providers.google.config[field]} />
+          <Label size="L">{field.label}</Label>
+          <Input bind:value={providers.google.config[field.name]} readonly={field.readonly} placeholder={field.placeholder} />
         </div>
       {/each}
       <div class="form-row">
@@ -332,14 +325,10 @@
     <Layout gap="XS" noPadding>
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
-          <Label size="L">{OIDCConfigLabels.Oidc[field]}</Label>
-          <Input bind:value={providers.oidc.config.configs[0][field]} />
+          <Label size="L">{field.label}</Label>
+          <Input bind:value={providers.oidc.config.configs[0][field.name]} readonly={field.readonly} placeholder={field.placeholder} />
         </div>
       {/each}
-      <div class="form-row">
-        <Label size="L">Callback URL</Label>
-        <Input readonly placeholder={`/api/admin/auth/${tenantId}/oidc/callback`} />
-      </div>
       <br />
       <Body size="S">
         To customize your login button, fill out the fields below.
