@@ -17,7 +17,7 @@ export function createOidcStore() {
     const res = await api.get(`/api/admin/configs/public/oidc?tenantId=${tenantId}`)
     const json = await res.json()
 
-    if (json.status === 400) {
+    if (json.status === 400 || Object.keys(json).length === 0) {
       set(OIDC_CONFIG)
     } else {
       // Just use the first config for now. We will be support multiple logins buttons later on.

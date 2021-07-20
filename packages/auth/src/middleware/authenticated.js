@@ -4,7 +4,7 @@ const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const env = require("../environment")
 
-const PARAM_REGEX = /\/:(.*?)\//g
+const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
 
 function buildNoAuthRegex(patterns) {
   return patterns.map(pattern => {
@@ -15,7 +15,8 @@ function buildNoAuthRegex(patterns) {
     const matches = route.match(PARAM_REGEX)
     if (matches) {
       for (let match of matches) {
-        route = route.replace(match, "/.*/")
+        const pattern = "/.*" + (match.endsWith("/") ? "/" : "")
+        route = route.replace(match, pattern)
       }
     }
     return { regex: new RegExp(route), method }
