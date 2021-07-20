@@ -38,6 +38,7 @@ function googleValidation() {
     clientID: Joi.string().required(),
     clientSecret: Joi.string().required(),
     callbackURL: Joi.string().required(),
+    activated: Joi.boolean().required(),
   }).unknown(true)
 }
 
@@ -52,6 +53,7 @@ function oidcValidation() {
         logo: Joi.string().allow("", null),
         name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
+        activated: Joi.boolean().required(),
       })
     ).required(true)
   }).unknown(true)
@@ -100,7 +102,7 @@ router
     buildConfigSaveValidation(),
     controller.save
   )
-  .delete("/api/admin/configs/:id", adminOnly, controller.destroy)
+  .delete("/api/admin/configs/:id/:rev", adminOnly, controller.destroy)
   .get("/api/admin/configs", controller.fetch)
   .get("/api/admin/configs/checklist", controller.configChecklist)
   .get(
