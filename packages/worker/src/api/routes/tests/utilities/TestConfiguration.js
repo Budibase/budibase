@@ -6,6 +6,7 @@ const { Cookies } = require("@budibase/auth").constants
 const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
 const { createASession } = require("@budibase/auth/sessions")
+const { newid } = require("../../../../../../auth/src/hashing")
 
 const TENANT_ID = "default"
 
@@ -69,6 +70,12 @@ class TestConfiguration {
     }
   }
 
+  cookieHeader(cookies) {
+    return {
+      Cookie: [cookies],
+    }
+  }
+
   defaultHeaders() {
     const user = {
       _id: "us_uuid1",
@@ -79,7 +86,7 @@ class TestConfiguration {
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {
       Accept: "application/json",
-      Cookie: [`${Cookies.Auth}=${authToken}`],
+      ...this.cookieHeader([`${Cookies.Auth}=${authToken}`]),
     }
   }
 
@@ -156,6 +163,33 @@ class TestConfiguration {
       null,
       controllers.config.save
     )
+  }
+
+  getOIDConfigCookie(configId) {
+    const token = jwt.sign(configId, env.JWT_SECRET)
+    return this.cookieHeader([[`${Cookies.OIDC_CONFIG}=${token}`]])
+  }
+
+  async saveOIDCConfig() {
+    await this.deleteConfig(Configs.OIDC)
+    const config = {
+      type: Configs.OIDC,
+      config: {
+        configs: [
+          {
+            configUrl: "http://someconfigurl",
+            clientID: "clientId",
+            clientSecret: "clientSecret",
+            logo: "Microsoft",
+            name: "Active Directory",
+            uuid: newid(),
+          },
+        ],
+      },
+    }
+
+    await this._req(config, null, controllers.config.save)
+    return config
   }
 
   async saveSmtpConfig() {
