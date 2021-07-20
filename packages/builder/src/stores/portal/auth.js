@@ -39,6 +39,10 @@ export function createAuthStore() {
   function setUser(user) {
     auth.update(store => {
       store.user = user
+      if (user) {
+        store.tenantId = user.tenantId || "default"
+        store.tenantSet = true
+      }
       return store
     })
   }

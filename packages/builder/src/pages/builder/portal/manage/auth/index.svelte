@@ -7,7 +7,6 @@
   import OneLoginLogo from "assets/onelogin-logo.png"
   import OidcLogoPng from "assets/oidc-logo.png"
   import { isEqual, cloneDeep } from "lodash/fp"
-
   import {
     Button,
     Heading,
@@ -22,8 +21,10 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { organisation } from "stores/portal"
+  import { organisation, auth } from "stores/portal"
   import { uuid } from "builderStore/uuid"
+
+  $: tenantId = $auth.tenantId
 
   const ConfigTypes = {
     Google: "google",
@@ -337,7 +338,7 @@
       {/each}
       <div class="form-row">
         <Label size="L">Callback URL</Label>
-        <Input readonly placeholder="/api/admin/auth/oidc/callback" />
+        <Input readonly placeholder={`/api/admin/auth/${tenantId}/oidc/callback`} />
       </div>
       <br />
       <Body size="S">
