@@ -16,6 +16,7 @@ exports.Configs = Configs
 
 exports.ConfigUploads = {
   LOGO: "logo",
+  OIDC_LOGO: "oidc_logo",
 }
 
 const TemplateTypes = {
@@ -96,7 +97,10 @@ const TemplateBindings = {
 const TemplateMetadata = {
   [TemplateTypes.EMAIL]: [
     {
-      name: "Base Format",
+      name: "Base format",
+      description:
+        "This is the base template, all others are based on it. The {{ body }} will be replaced with another email template.",
+      category: "miscellaneous",
       purpose: EmailTemplatePurpose.BASE,
       bindings: [
         {
@@ -110,7 +114,10 @@ const TemplateMetadata = {
       ],
     },
     {
-      name: "Password Recovery",
+      name: "Password recovery",
+      description:
+        "When a user requests a password reset they will receive an email built with this template.",
+      category: "user management",
       purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
       bindings: [
         {
@@ -126,7 +133,18 @@ const TemplateMetadata = {
       ],
     },
     {
-      name: "New User Invitation",
+      name: "User welcome",
+      description:
+        "When a new user is added they will be sent a welcome email using this template.",
+      category: "user management",
+      purpose: EmailTemplatePurpose.WELCOME,
+      bindings: [],
+    },
+    {
+      name: "User invitation",
+      description:
+        "When inviting a user via the email on-boarding this template will be used.",
+      category: "user management",
       purpose: EmailTemplatePurpose.INVITATION,
       bindings: [
         {
@@ -143,6 +161,9 @@ const TemplateMetadata = {
     },
     {
       name: "Custom",
+      description:
+        "A custom template, this is currently used for SMTP email actions in automations.",
+      category: "automations",
       purpose: EmailTemplatePurpose.CUSTOM,
       bindings: [
         {

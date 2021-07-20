@@ -92,7 +92,7 @@ module PostgresModule {
 
   async function internalQuery(client: any, query: SqlQuery) {
     try {
-      return await client.query(query.sql, query.bindings || {})
+      return await client.query(query.sql, query.bindings || [])
     } catch (err) {
       throw new Error(err)
     }
