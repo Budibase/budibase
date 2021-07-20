@@ -6,6 +6,7 @@
   import OktaLogo from "assets/okta-logo.png"
   import OneLoginLogo from "assets/onelogin-logo.png"
   import OidcLogoPng from "assets/oidc-logo.png"
+  import { isEqual, cloneDeep } from "lodash/fp"
 
   import {
     Button,
@@ -91,18 +92,22 @@
   let google
   let oidc
   const providers = { google, oidc }
+
+  // control the state of the save button depending on whether form has changed
+  let originalGoogleDoc
+  let originalOidcDoc
   let googleSaveButtonDisabled
   let oidcSaveButtonDisabled
-
-  $: googleSaveButtonDisabled =
-    providers.google?.config && !providers.google?.config.activated && true
-  $: oidcSaveButtonDisabled =
-    providers.oidc?.config.configs[0] &&
-    !providers.oidc?.config.configs[0].activated &&
-    true
+  $: {
+    isEqual(providers.google, originalGoogleDoc)
+      ? (googleSaveButtonDisabled = true)
+      : (googleSaveButtonDisabled = false)
+    isEqual(providers.oidc, originalOidcDoc)
+      ? (oidcSaveButtonDisabled = true)
+      : (oidcSaveButtonDisabled = false)
+  }
 
   // Create a flag so that it will only try to save completed forms
-
   $: partialGoogle =
     providers.google?.config?.clientID ||
     providers.google?.config?.clientSecret ||
@@ -136,22 +141,6 @@
     image = e.target.files[0]
     providers.oidc.config.configs[0].logo = fileName
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
-  }
-
-  const toggleGoogle = ({ detail }) => {
-    // Only save on de-activation, as the user can save themselves when toggle is active
-    if (!detail) {
-      providers.google.config.activated = detail
-      save([providers.google])
-    }
-  }
-
-  const toggleOidc = ({ detail }) => {
-    // Only save on de-activation, as the user can save themselves when toggle is active
-    if (!detail) {
-      providers.oidc.config.configs[0].activated = detail
-      save([providers.oidc])
-    }
   }
 
   async function save(docs) {
@@ -225,6 +214,7 @@
         config: { activated: true },
       }
     } else {
+      originalGoogleDoc = googleDoc
       providers.google = googleDoc
     }
 
@@ -247,13 +237,15 @@
     }
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
-
+    console.log("teaste")
     if (!oidcDoc._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
         config: { configs: [{ activated: true }] },
       }
     } else {
+      console.log("hello")
+      originalOidcDoc = cloneDeep(oidcDoc)
       providers.oidc = oidcDoc
     }
   })
@@ -303,11 +295,7 @@
         <div class="field">
           <Label size="L">Activated</Label>
           <span class="alignedToggle">
-            <Toggle
-              text=""
-              on:change={toggleGoogle}
-              bind:value={providers.google.config.activated}
-            />
+            <Toggle text="" bind:value={providers.google.config.activated} />
           </span>
         </div>
       </div>
@@ -377,7 +365,6 @@
         <span class="alignedToggle">
           <Toggle
             text=""
-            on:change={toggleOidc}
             bind:value={providers.oidc.config.configs[0].activated}
           />
         </span>
