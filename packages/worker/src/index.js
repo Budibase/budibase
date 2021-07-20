@@ -5,6 +5,7 @@ require("@budibase/auth").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
+const koaSession = require("koa-session")
 const { passport } = require("@budibase/auth").auth
 const logger = require("koa-pino-logger")
 const http = require("http")
@@ -13,8 +14,11 @@ const redis = require("./utilities/redis")
 
 const app = new Koa()
 
+app.keys = ["secret", "key"]
+
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
+app.use(koaSession(app))
 
 app.use(
   logger({
