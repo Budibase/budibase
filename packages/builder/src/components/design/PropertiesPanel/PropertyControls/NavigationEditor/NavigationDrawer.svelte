@@ -41,7 +41,7 @@
 
 <DrawerContent>
   <div class="container">
-    <Layout>
+    <Layout noPadding>
       {#if links?.length}
         <div
           class="links"
