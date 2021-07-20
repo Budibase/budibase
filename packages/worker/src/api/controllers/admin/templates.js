@@ -28,12 +28,18 @@ exports.save = async ctx => {
 
 exports.definitions = async ctx => {
   const bindings = {}
-
+  const info = {}
   for (let template of TemplateMetadata.email) {
     bindings[template.purpose] = template.bindings
+    info[template.purpose] = {
+      name: template.name,
+      description: template.description,
+      category: template.category,
+    }
   }
 
   ctx.body = {
+    info,
     bindings: {
       ...bindings,
       common: Object.values(TemplateBindings),
