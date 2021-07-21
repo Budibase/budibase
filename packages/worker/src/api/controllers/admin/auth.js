@@ -101,12 +101,15 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const db = getGlobalDB(ctx.params.tenantId)
+  const tenantId = ctx.params.tenantId
+  const db = getGlobalDB(tenantId)
+  const callbackUrl = `/api/admin/auth/${tenantId}/google/callback`
+
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  const strategy = await google.strategyFactory(config)
+  const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -114,13 +117,15 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const db = getGlobalDB(ctx.params.tenantId)
+  const tenantId = ctx.params.tenantId
+  const db = getGlobalDB(tenantId)
+  const callbackUrl = `/api/admin/auth/${tenantId}/google/callback`
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  const strategy = await google.strategyFactory(config)
+  const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(
     strategy,
@@ -134,6 +139,7 @@ exports.googleAuth = async (ctx, next) => {
 }
 
 async function oidcStrategyFactory(ctx, configId) {
+  const tenantId = ctx.params.tenantId
   const db = getGlobalDB(ctx.params.tenantId)
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.OIDC,
@@ -142,7 +148,7 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/${tenantId}/oidc/callback`
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }

@@ -114,16 +114,14 @@
   // Create a flag so that it will only try to save completed forms
   $: partialGoogle =
     providers.google?.config?.clientID ||
-    providers.google?.config?.clientSecret ||
-    providers.google?.config?.callbackURL
+    providers.google?.config?.clientSecret
   $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
     providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
     providers.google?.config?.clientID &&
-    providers.google?.config?.clientSecret &&
-    providers.google?.config?.callbackURL
+    providers.google?.config?.clientSecret
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
@@ -153,10 +151,14 @@
     let calls = []
     docs.forEach(element => {
       if (element.type === ConfigTypes.OIDC) {
-        //Add a UUID here so each config is distinguishable when it arrives at the login page.
-        element.config.configs.forEach(config => {
-          !config.uuid && (config.uuid = uuid())
-        })
+        //Add a UUID here so each config is distinguishable when it arrives at the login page
+        for (let config of element.config.configs) {
+          if (!config.uuid) {
+            config.uuid = uuid()
+          }
+          // callback urls shouldn't be included
+          delete config.callbackURL
+        }
         if (partialOidc) {
           if (!oidcComplete) {
             notifications.error(
@@ -177,6 +179,7 @@
               `Please fill in all required ${ConfigTypes.Google} fields`
             )
           } else {
+            delete element.config.callbackURL
             calls.push(api.post(`/api/admin/configs`, element))
             googleSaveButtonDisabled = true
             originalGoogleDoc = cloneDeep(providers.google)
