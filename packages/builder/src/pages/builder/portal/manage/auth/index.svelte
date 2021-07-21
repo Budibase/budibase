@@ -248,8 +248,6 @@
     const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
     if (!oidcDoc._id) {
-      console.log("hi")
-
       providers.oidc = {
         type: ConfigTypes.OIDC,
         config: { configs: [{ activated: true }] },

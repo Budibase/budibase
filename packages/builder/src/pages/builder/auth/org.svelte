@@ -3,10 +3,14 @@
   import { goto } from "@roxi/routify"
   import { auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
+  import { get } from "svelte/store"
 
-  let tenantId = ""
+  let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
 
   async function setOrg() {
+    if (tenantId == null || tenantId === "") {
+      tenantId = "default"
+    }
     auth.setOrg(tenantId)
     // re-init now org selected
     await admin.init()

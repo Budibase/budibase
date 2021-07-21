@@ -87,7 +87,8 @@ exports.getGlobalDB = tenantId => {
 exports.getGlobalDBFromCtx = ctx => {
   const user = ctx.user || {}
   const params = ctx.request.params || {}
-  return exports.getGlobalDB(user.tenantId || params.tenantId)
+  const query = ctx.request.query || {}
+  return exports.getGlobalDB(user.tenantId || params.tenantId || query.tenantId)
 }
 
 /**
