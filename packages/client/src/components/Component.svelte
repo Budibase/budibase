@@ -8,11 +8,18 @@
   import { hashString } from "../utils/hash"
   import Manifest from "@budibase/standard-components/manifest.json"
   import { Placeholder } from "@budibase/standard-components"
+  import {
+    getActiveConditions,
+    reduceConditionActions,
+  } from "../utils/conditions"
 
   export let instance = {}
 
-  // Props that will be passed to the component instance
-  let componentProps
+  // The enriched component settings
+  let enrichedSettings
+
+  // Any prop overrides that need to be applied due to conditional UI
+  let conditionalSettings
 
   // Props are hashed when inside the builder preview and used as a key, so that
   // components fully remount whenever any props change
@@ -27,6 +34,9 @@
   // to avoid enriching bindings as much as possible
   let lastContextKey
   let lastInstanceKey
+
+  // Visibility flag used by conditional UI
+  let visible = true
 
   // Get contexts
   const context = getContext("context")
@@ -54,6 +64,8 @@
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
   $: interactive = $builderStore.previewType === "layout" || insideScreenslot
+  $: evaluateConditions(enrichedSettings?._conditions)
+  $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
 
   // Update component context
   $: componentStore.set({
@@ -62,14 +74,14 @@
     styles: { ...instance._styles, id, empty, interactive },
     empty,
     selected,
-    props: componentProps,
+    props: componentSettings,
     name,
   })
 
   const getRawProps = instance => {
     let validProps = {}
     Object.entries(instance)
-      .filter(([name]) => !name.startsWith("_"))
+      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
       .forEach(([key, value]) => {
         validProps[key] = value
       })
@@ -123,34 +135,63 @@
       return
     }
     let propsChanged = false
-    if (!componentProps) {
-      componentProps = {}
+    if (!enrichedSettings) {
+      enrichedSettings = {}
       propsChanged = true
     }
     Object.keys(enrichedProps).forEach(key => {
-      if (!propsAreSame(enrichedProps[key], componentProps[key])) {
+      if (!propsAreSame(enrichedProps[key], enrichedSettings[key])) {
         propsChanged = true
-        componentProps[key] = enrichedProps[key]
+        enrichedSettings[key] = enrichedProps[key]
       }
     })
 
     // Update the hash if we're in the builder so we can fully remount this
     // component
     if (get(builderStore).inBuilder && propsChanged) {
-      propsHash = hashString(JSON.stringify(componentProps))
+      propsHash = hashString(JSON.stringify(enrichedSettings))
     }
+  }
+
+  const evaluateConditions = conditions => {
+    console.log("evaluating")
+    console.log(conditions)
+
+    if (!conditions?.length) {
+      return
+    }
+
+    // Default visible to false if there is a show condition
+    let nextVisible = true
+    for (let condition of conditions) {
+      if (condition.action === "show") {
+        nextVisible = false
+      }
+    }
+
+    const activeConditions = getActiveConditions(conditions)
+    console.log(activeConditions)
+
+    const result = reduceConditionActions(activeConditions)
+    conditionalSettings = result.settingUpdates
+    if (result.visible != null) {
+      nextVisible = result.visible
+    }
+
+    visible = nextVisible
   }
 </script>
 
-<div
-  class={`component ${id}`}
-  data-type={interactive ? "component" : ""}
-  data-id={id}
-  data-name={name}
->
-  {#key propsHash}
-    {#if constructor && componentProps}
-      <svelte:component this={constructor} {...componentProps}>
+{#key propsHash}
+  {#if constructor && componentSettings && visible}
+    <div
+      class={`component ${id}`}
+      data-type={interactive ? "component" : ""}
+      data-id={id}
+      data-name={name}
+      class:hidden={!visible}
+    >
+      <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}
           {#each children as child (child._id)}
             <svelte:self instance={child} />
@@ -159,9 +200,9 @@
           <Placeholder />
         {/if}
       </svelte:component>
-    {/if}
-  {/key}
-</div>
+    </div>
+  {/if}
+{/key}
 
 <style>
   .component {

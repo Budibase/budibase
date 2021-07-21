@@ -1,6 +1,6 @@
 <script>
   import { DetailSummary, ActionButton, Drawer, Button } from "@budibase/bbui"
-  // import { store } from "builderStore"
+  import { store } from "builderStore"
   import ConditionalUIDrawer from "./PropertyControls/ConditionalUIDrawer.svelte"
 
   export let componentInstance
@@ -9,12 +9,12 @@
   let drawer
 
   const openDrawer = () => {
-    tempValue = componentInstance?._conditions
+    tempValue = JSON.parse(JSON.stringify(componentInstance?._conditions ?? []))
     drawer.show()
   }
 
   const save = () => {
-    // store.actions.components.updateCustomStyle(tempValue)
+    store.actions.components.updateConditions(tempValue)
     drawer.hide()
   }
 </script>
