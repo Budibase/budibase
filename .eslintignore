@@ -3,4 +3,5 @@ public
 dist
 packages/server/builder
 packages/server/coverage
+packages/server/client
 packages/builder/.routify

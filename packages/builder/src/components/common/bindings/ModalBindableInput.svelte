@@ -6,7 +6,6 @@
   } from "builderStore/dataBinding"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  const dispatch = createEventDispatcher()
 
   export let panel = ServerBindingPanel
   export let value = ""
@@ -16,12 +15,11 @@
   export let placeholder
   export let label
 
+  const dispatch = createEventDispatcher()
   let bindingModal
-  let validity = true
-
+  let valid = true
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
-  $: invalid = !validity
 
   const saveBinding = () => {
     onChange(tempValue)
@@ -38,7 +36,7 @@
     {label}
     {thin}
     value={readableValue}
-    on:change={event => onChange(event.target.value)}
+    on:change={event => onChange(event.detail)}
     {placeholder}
   />
   <div class="icon" on:click={bindingModal.show}>
@@ -46,23 +44,20 @@
   </div>
 </div>
 <Modal bind:this={bindingModal}>
-  <ModalContent
-    {title}
-    onConfirm={saveBinding}
-    bind:disabled={invalid}
-    size="XL"
-  >
+  <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
-    <svelte:component
-      this={panel}
-      serverSide
-      value={readableValue}
-      bind:validity
-      on:update={event => (tempValue = event.detail)}
-      bindableProperties={bindings}
-    />
+    <div class="panel-wrapper">
+      <svelte:component
+        this={panel}
+        serverSide
+        value={readableValue}
+        bind:valid
+        on:change={e => (tempValue = e.detail)}
+        bindableProperties={bindings}
+      />
+    </div>
   </ModalContent>
 </Modal>
 
@@ -99,5 +94,10 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .panel-wrapper {
+    border: var(--border-light);
+    border-radius: 4px;
   }
 </style>
