@@ -8,8 +8,23 @@ import {
   Operation,
   RelationshipsJson,
 } from "../../definitions/datasource"
+import { isIsoDateString } from "../utils"
 
 type KnexQuery = Knex.QueryBuilder | Knex
+
+function parseBody(body: any) {
+  for (let [key, value] of Object.entries(body)) {
+    if (typeof value !== "string") {
+      continue
+    }
+    if (isIsoDateString(value)) {
+      body[key] = new Date(value)
+    } else if (!isNaN(parseFloat(value))) {
+      body[key] = parseFloat(value)
+    }
+  }
+  return body
+}
 
 // right now we only do filters on the specific table being queried
 function addFilters(
@@ -119,11 +134,12 @@ function buildCreate(
 ): KnexQuery {
   const { endpoint, body } = json
   let query: KnexQuery = knex(endpoint.entityId)
+  const parsedBody = parseBody(body)
   // mysql can't use returning
   if (opts.disableReturning) {
-    return query.insert(body)
+    return query.insert(parsedBody)
   } else {
-    return query.insert(body).returning("*")
+    return query.insert(parsedBody).returning("*")
   }
 }
 
@@ -173,12 +189,13 @@ function buildUpdate(
 ): KnexQuery {
   const { endpoint, body, filters } = json
   let query: KnexQuery = knex(endpoint.entityId)
+  const parsedBody = parseBody(body)
   query = addFilters(endpoint.entityId, query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
-    return query.update(body)
+    return query.update(parsedBody)
   } else {
-    return query.update(body).returning("*")
+    return query.update(parsedBody).returning("*")
   }
 }
 

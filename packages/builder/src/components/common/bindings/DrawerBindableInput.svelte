@@ -17,10 +17,11 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  $: tempValue = Array.isArray(value) ? value : []
+  let valid = true
   $: readableValue = runtimeToReadableBinding(bindings, value)
+  $: tempValue = readableValue
 
-  const handleClose = () => {
+  const saveBinding = () => {
     onChange(tempValue)
     bindingDrawer.hide()
   }
@@ -48,13 +49,15 @@
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
+    Save
+  </Button>
   <svelte:component
     this={panel}
     slot="body"
+    bind:valid
     value={readableValue}
-    close={handleClose}
-    on:update={event => (tempValue = event.detail)}
+    on:change={event => (tempValue = event.detail)}
     bindableProperties={bindings}
   />
 </Drawer>
