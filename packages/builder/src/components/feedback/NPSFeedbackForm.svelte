@@ -1,4 +1,7 @@
 <script>
+  import analytics from "analytics"
+  import { createEventDispatcher } from "svelte"
+  import { fly } from "svelte/transition"
   import {
     ActionButton,
     RadioGroup,
@@ -21,6 +24,8 @@
     "Documentation",
   ]
 
+  const dispatch = createEventDispatcher()
+
   // Data to send off
   let rating
   let improvements
@@ -31,20 +36,23 @@
     step = 1
   }
 
-  function submitFeedback() {
+  function submitFeedback(ev) {
     // 1. Submit feedback
     // 2. dispatch event to parent and publish event
     // 3. Store cookie, flip user flag
-    console.log({
+
+    analytics.submitFeedback({
       rating,
       improvements,
       comment,
     })
+
+    dispatch("submitted")
   }
 </script>
 
-<div class="overlay">
-  <div class="feedback-frame">
+<div class="position">
+  <div class="feedback-frame" transition:fly>
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
@@ -103,7 +111,7 @@
 </div>
 
 <style>
-  .overlay {
+  .position {
     position: absolute;
     right: var(--spacing-l);
     bottom: calc(5 * var(--spacing-xl));
