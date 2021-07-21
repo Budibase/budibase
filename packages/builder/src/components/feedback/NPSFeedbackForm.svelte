@@ -78,7 +78,7 @@
         <Divider />
         <RadioGroup bind:value={improvements} {options} />
         <div class="footer">
-          <Detail size="S">PAGE 2 OF 3</Detail>
+          <Detail size="S">STEP 2 OF 3</Detail>
           <ButtonGroup>
             <Button secondary on:click={() => (step -= 1)}>Previous</Button>
             <Button
@@ -93,7 +93,7 @@
         <Divider />
         <TextArea bind:value={comment} placeholder="Add comments" />
         <div class="footer">
-          <Detail size="S">PAGE 3 OF 3</Detail>
+          <Detail size="S">STEP 3 OF 3</Detail>
           <ButtonGroup>
             <Button secondary on:click={() => (step -= 1)}>Previous</Button>
             <Button disabled={!comment} cta on:click={submitFeedback}
@@ -133,5 +133,6 @@
   .footer {
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
 </style>
