@@ -2,13 +2,15 @@
   import { redirect } from "@roxi/routify"
   import { auth } from "stores/portal"
 
+  auth.checkQueryString()
+
   $: {
     if (!$auth.user) {
-      $redirect("./auth")
+      $redirect(`./auth`)
     } else if ($auth.user.builder?.global) {
-      $redirect("./portal")
+      $redirect(`./portal}`)
     } else {
-      $redirect("./apps")
+      $redirect(`./apps`)
     }
   }
 </script>

@@ -47,14 +47,25 @@ export function createAuthStore() {
     })
   }
 
+  function setOrganisation(tenantId) {
+    auth.update(store => {
+      store.tenantId = tenantId
+      store.tenantSet = !!tenantId
+      return store
+    })
+  }
+
   return {
     subscribe: store.subscribe,
+    checkQueryString: () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has("tenantId")) {
+        const tenantId = urlParams.get("tenantId")
+        setOrganisation(tenantId)
+      }
+    },
     setOrg: tenantId => {
-      auth.update(store => {
-        store.tenantId = tenantId
-        store.tenantSet = !!tenantId
-        return store
-      })
+      setOrganisation(tenantId)
     },
     checkAuth: async () => {
       const response = await api.get("/api/admin/users/self")

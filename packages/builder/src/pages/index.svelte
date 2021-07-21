@@ -1,4 +1,8 @@
 <script>
   import { redirect } from "@roxi/routify"
-  $redirect("./builder")
+  import { auth } from "../stores/portal"
+
+  auth.checkQueryString()
+
+  $redirect(`./builder`)
 </script>
