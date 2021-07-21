@@ -113,15 +113,13 @@
 
   // Create a flag so that it will only try to save completed forms
   $: partialGoogle =
-    providers.google?.config?.clientID ||
-    providers.google?.config?.clientSecret
+    providers.google?.config?.clientID || providers.google?.config?.clientSecret
   $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
     providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
-    providers.google?.config?.clientID &&
-    providers.google?.config?.clientSecret
+    providers.google?.config?.clientID && providers.google?.config?.clientSecret
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
