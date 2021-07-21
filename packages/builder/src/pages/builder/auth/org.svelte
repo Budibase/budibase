@@ -4,6 +4,7 @@
   import { auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { get } from "svelte/store"
+  import { onMount } from "svelte"
 
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
 
@@ -20,6 +21,10 @@
   function handleKeydown(evt) {
     if (evt.key === "Enter") setOrg()
   }
+
+  onMount(() => {
+    auth.checkQueryString()
+  })
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
