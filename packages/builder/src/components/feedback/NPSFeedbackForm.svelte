@@ -36,11 +36,7 @@
     step = 1
   }
 
-  function submitFeedback(ev) {
-    // 1. Submit feedback
-    // 2. dispatch event to parent and publish event
-    // 3. Store cookie, flip user flag
-
+  function submitFeedback() {
     analytics.submitFeedback({
       rating,
       improvements,
