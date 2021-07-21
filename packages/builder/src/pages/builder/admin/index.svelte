@@ -6,6 +6,7 @@
     Layout,
     Input,
     Body,
+    ActionButton,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
@@ -17,6 +18,7 @@
   let error
 
   $: tenantId = $auth.tenantId
+  $: multiTenancyEnabled = $admin.multiTenancy
 
   async function save() {
     try {
@@ -34,6 +36,11 @@
       notifications.error(`Failed to create admin user`)
     }
   }
+
+  function changeOrg() {
+    auth.setOrg(null)
+    $goto("../auth")
+  }
 </script>
 
 <section>
@@ -50,9 +57,16 @@
         <Input label="Email" bind:value={adminUser.email} />
         <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>
-      <Button cta disabled={error} on:click={save}>
-        Create super admin user
-      </Button>
+      <Layout gap="XS" noPadding>
+        <Button cta disabled={error} on:click={save}>
+          Create super admin user
+        </Button>
+        {#if multiTenancyEnabled}
+          <ActionButton quiet on:click={changeOrg}>
+            Change organisation
+          </ActionButton>
+        {/if}
+      </Layout>
     </Layout>
   </div>
 </section>

@@ -9,7 +9,6 @@
   let loaded = false
 
   $: {
-    console.log(loaded)
     if (loaded && multiTenancyEnabled && !tenantSet) {
       $redirect("./org")
     } else if (loaded) {

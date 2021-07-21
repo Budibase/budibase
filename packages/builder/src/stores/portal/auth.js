@@ -52,7 +52,7 @@ export function createAuthStore() {
     setOrg: tenantId => {
       auth.update(store => {
         store.tenantId = tenantId
-        store.tenantSet = true
+        store.tenantSet = !!tenantId
         return store
       })
     },
