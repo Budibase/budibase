@@ -10,7 +10,7 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
-  export let getOptionIcon = null
+  export let getOptionIcon = () => null
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
