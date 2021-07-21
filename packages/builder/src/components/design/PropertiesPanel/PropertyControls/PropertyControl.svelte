@@ -20,7 +20,6 @@
   export let onChange = () => {}
 
   let bindingDrawer
-  let temporaryBindableValue = value
   let anchor
   let valid
 
@@ -29,10 +28,11 @@
     $store.selectedComponentId
   )
   $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
+  $: tempValue = safeValue
   $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
 
   const handleClose = () => {
-    handleChange(temporaryBindableValue)
+    handleChange(tempValue)
     bindingDrawer.hide()
   }
 
@@ -107,8 +107,7 @@
           slot="body"
           bind:valid
           value={safeValue}
-          close={handleClose}
-          on:update={e => (temporaryBindableValue = e.detail)}
+          on:change={e => (tempValue = e.detail)}
           {bindableProperties}
         />
       </Drawer>
