@@ -35,11 +35,6 @@
     window.open(`/${application}`)
   }
 
-  function feedbackSubmitted() {
-    userShouldPostFeedback = false
-    document.cookie = "feedbackSubmitted=true"
-  }
-
   async function getPackage() {
     const res = await get(`/api/applications/${application}/appPackage`)
     const pkg = await res.json()
@@ -116,7 +111,7 @@
 {/await}
 
 {#if userShouldPostFeedback}
-  <NPSFeedbackForm on:submitted={feedbackSubmitted} />
+  <NPSFeedbackForm on:submitted={() => (userShouldPostFeedback = false)} />
 {/if}
 
 <style>
