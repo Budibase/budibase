@@ -69,8 +69,9 @@
         <Input type="password" bind:value={block.inputs[key]} />
       {:else if value.customType === "email"}
         <DrawerBindableInput
+          title={value.title}
           panel={AutomationBindingPanel}
-          type={"email"}
+          type="email"
           value={block.inputs[key]}
           on:change={e => (block.inputs[key] = e.detail)}
           {bindings}
@@ -102,6 +103,7 @@
         </CodeEditorModal>
       {:else if value.type === "string" || value.type === "number"}
         <DrawerBindableInput
+          title={value.title}
           panel={AutomationBindingPanel}
           type={value.customType}
           value={block.inputs[key]}
@@ -127,6 +129,7 @@
 
   .block-field {
     display: grid;
+    grid-gap: 5px;
   }
 
   .block-label {
