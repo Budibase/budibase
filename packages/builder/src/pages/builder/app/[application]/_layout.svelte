@@ -5,6 +5,7 @@
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
+  import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
@@ -17,6 +18,27 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+
+  let userShouldPostFeedback = false
+
+  function checkIfUserHasSubmittedFeedback() {
+    return document.cookie
+      ?.split("; ")
+      ?.find(row => row.startsWith("feedbackSubmitted="))
+      ?.split("=")[1]
+  }
+
+  function previewApp() {
+    if (!checkIfUserHasSubmittedFeedback() === true) {
+      userShouldPostFeedback = true
+    }
+    window.open(`/${application}`)
+  }
+
+  function feedbackSubmitted() {
+    userShouldPostFeedback = false
+    document.cookie = "feedbackSubmitted=true"
+  }
 
   async function getPackage() {
     const res = await get(`/api/applications/${application}/appPackage`)
@@ -83,13 +105,7 @@
       <div class="toprightnav">
         <VersionModal />
         <RevertModal />
-        <Icon
-          name="Play"
-          hoverable
-          on:click={() => {
-            window.open(`/${application}`)
-          }}
-        />
+        <Icon name="Play" hoverable on:click={previewApp} />
         <DeployModal />
       </div>
     </div>
@@ -98,6 +114,10 @@
 {:catch error}
   <p>Something went wrong: {error.message}</p>
 {/await}
+
+{#if userShouldPostFeedback}
+  <NPSFeedbackForm on:submitted={feedbackSubmitted} />
+{/if}
 
 <style>
   .loading {
