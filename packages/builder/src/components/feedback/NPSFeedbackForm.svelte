@@ -1,7 +1,7 @@
 <script>
   import analytics from "analytics"
   import { createEventDispatcher } from "svelte"
-  import { fly } from "svelte/transition"
+  import { fade, fly } from "svelte/transition"
   import {
     ActionButton,
     RadioGroup,
@@ -49,8 +49,16 @@
   }
 </script>
 
-<div class="position">
-  <div class="feedback-frame" transition:fly>
+<div
+  class="position"
+  in:fade={{ duration: 200 }}
+  out:fade|local={{ duration: 200 }}
+>
+  <div
+    class="feedback-frame"
+    in:fly={{ y: 30, duration: 200 }}
+    out:fly|local={{ y: 30, duration: 200 }}
+  >
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
