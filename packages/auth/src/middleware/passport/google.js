@@ -27,13 +27,13 @@ async function authenticate(accessToken, refreshToken, profile, done) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport Google Strategy
  */
-exports.strategyFactory = async function (config) {
+exports.strategyFactory = async function (config, callbackUrl) {
   try {
-    const { clientID, clientSecret, callbackURL } = config
+    const { clientID, clientSecret } = config
 
-    if (!clientID || !clientSecret || !callbackURL) {
+    if (!clientID || !clientSecret) {
       throw new Error(
-        "Configuration invalid. Must contain google clientID, clientSecret and callbackURL"
+        "Configuration invalid. Must contain google clientID and clientSecret"
       )
     }
 
@@ -41,7 +41,7 @@ exports.strategyFactory = async function (config) {
       {
         clientID: config.clientID,
         clientSecret: config.clientSecret,
-        callbackURL: config.callbackURL,
+        callbackURL: callbackUrl,
       },
       authenticate
     )

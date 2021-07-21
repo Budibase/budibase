@@ -37,7 +37,6 @@ function googleValidation() {
   return Joi.object({
     clientID: Joi.string().required(),
     clientSecret: Joi.string().required(),
-    callbackURL: Joi.string().required(),
     activated: Joi.boolean().required(),
   }).unknown(true)
 }

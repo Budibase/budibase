@@ -2,6 +2,8 @@
 
 const { data } = require("./utilities/mock-data")
 
+const TENANT_ID = "default"
+
 const googleConfig = {
   callbackURL: "http://somecallbackurl",
   clientID: data.clientID,
@@ -27,7 +29,7 @@ describe("google", () => {
     it("should create successfully create a google strategy", async () => {
       const google = require("../google")
          
-      await google.strategyFactory(googleConfig)
+      await google.strategyFactory(googleConfig, `/api/admin/auth/${TENANT_ID}/google/callback`)
   
       const expectedOptions = {
         clientID: googleConfig.clientID,

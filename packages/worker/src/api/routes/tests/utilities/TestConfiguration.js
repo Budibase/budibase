@@ -155,7 +155,6 @@ class TestConfiguration {
       {
         type: Configs.GOOGLE,
         config: {
-          callbackURL: "http://somecallbackurl",
           clientID: "clientId",
           clientSecret: "clientSecret",
         },
