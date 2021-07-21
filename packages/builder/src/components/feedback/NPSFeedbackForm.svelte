@@ -43,6 +43,8 @@
       comment,
     })
 
+    document.cookie = "feedbackSubmitted=true"
+
     dispatch("submitted")
   }
 </script>
