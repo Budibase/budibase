@@ -107,6 +107,10 @@
 </div>
 
 <style>
+  .feedback-frame :global(textarea) {
+    min-height: 180px !important;
+  }
+
   .position {
     position: absolute;
     right: var(--spacing-l);
