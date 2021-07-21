@@ -74,9 +74,7 @@
           <Detail size="S">EXTREMELY LIKELY</Detail>
         </div>
       {:else if step === 1}
-        <Heading size="XS"
-          >How likely are you to recommend Budibase to a colleague?</Heading
-        >
+        <Heading size="XS">What could be improved most in Budibase?</Heading>
         <Divider />
         <RadioGroup bind:value={improvements} {options} />
         <div class="footer">
