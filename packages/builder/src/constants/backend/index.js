@@ -1,7 +1,6 @@
 export const FIELDS = {
   STRING: {
     name: "Text",
-    icon: "ri-text",
     type: "string",
     constraints: {
       type: "string",
@@ -11,7 +10,6 @@ export const FIELDS = {
   },
   LONGFORM: {
     name: "Long Form Text",
-    icon: "ri-file-text-line",
     type: "longform",
     constraints: {
       type: "string",
@@ -21,7 +19,6 @@ export const FIELDS = {
   },
   OPTIONS: {
     name: "Options",
-    icon: "ri-list-check-2",
     type: "options",
     constraints: {
       type: "string",
@@ -31,7 +28,6 @@ export const FIELDS = {
   },
   NUMBER: {
     name: "Number",
-    icon: "ri-number-1",
     type: "number",
     constraints: {
       type: "number",
@@ -41,7 +37,6 @@ export const FIELDS = {
   },
   BOOLEAN: {
     name: "Boolean",
-    icon: "ri-toggle-line",
     type: "boolean",
     constraints: {
       type: "boolean",
@@ -50,7 +45,6 @@ export const FIELDS = {
   },
   DATETIME: {
     name: "Date/Time",
-    icon: "ri-calendar-event-fill",
     type: "datetime",
     constraints: {
       type: "string",
@@ -64,7 +58,6 @@ export const FIELDS = {
   },
   ATTACHMENT: {
     name: "Attachment",
-    icon: "ri-file-line",
     type: "attachment",
     constraints: {
       type: "array",
@@ -73,7 +66,6 @@ export const FIELDS = {
   },
   LINK: {
     name: "Relationship",
-    icon: "ri-link",
     type: "link",
     constraints: {
       type: "array",
@@ -82,7 +74,6 @@ export const FIELDS = {
   },
   FORMULA: {
     name: "Formula",
-    icon: "ri-braces-line",
     type: "formula",
     constraints: {
       type: "string",
