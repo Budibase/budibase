@@ -27,7 +27,6 @@
         username,
         password,
       })
-      notifications.success("Logged in successfully")
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
@@ -78,6 +77,9 @@
         <Button cta on:click={login}>Sign in to {company}</Button>
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
+        </ActionButton>
+        <ActionButton quiet on:click={() => $goto("./org")}>
+          Change organisation
         </ActionButton>
       </Layout>
     </Layout>
