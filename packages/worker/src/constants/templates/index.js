@@ -6,7 +6,11 @@ const {
   GLOBAL_OWNER,
 } = require("../index")
 const { join } = require("path")
-const { getTemplateParams, getTenantIdFromCtx, getGlobalDB } = require("@budibase/auth/db")
+const {
+  getTemplateParams,
+  getTenantIdFromCtx,
+  getGlobalDB,
+} = require("@budibase/auth/db")
 
 exports.EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(
@@ -53,7 +57,7 @@ exports.getTemplatesCtx = async (ctx, opts = {}) => {
   return exports.getTemplates(tenantId, opts)
 }
 
-exports.getTemplates = async (tenantId, { ownerId, type, id} = {}) => {
+exports.getTemplates = async (tenantId, { ownerId, type, id } = {}) => {
   const db = getGlobalDB(tenantId)
   const response = await db.allDocs(
     getTemplateParams(ownerId || GLOBAL_OWNER, id, {

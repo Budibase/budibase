@@ -338,7 +338,10 @@ class TestConfiguration {
     if (!email || !password) {
       await this.createUser()
     }
-    await createASession(userId, { sessionId: "sessionid", tenantId: TENANT_ID })
+    await createASession(userId, {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+    })
     // have to fake this
     const auth = {
       userId,
