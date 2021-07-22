@@ -74,6 +74,7 @@ exports.reset = async ctx => {
       })
     }
   } catch (err) {
+    console.log(err)
     // don't throw any kind of error to the user, this might give away something
   }
   ctx.body = {
@@ -88,7 +89,7 @@ exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
   try {
     const userId = await checkResetPasswordCode(resetCode)
-    const db = new getGlobalDB(ctx.params.tenantId)
+    const db = getGlobalDB(ctx.params.tenantId)
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)

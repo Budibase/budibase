@@ -1,5 +1,6 @@
 const setup = require("./utilities")
 const { EmailTemplatePurpose } = require("../../../constants")
+const { TENANT_ID } = require("./utilities/structures")
 
 // mock the email system
 const sendMailMock = jest.fn()
@@ -29,6 +30,7 @@ describe("/api/global/email", () => {
       .send({
         email: "test@test.com",
         purpose: EmailTemplatePurpose.INVITATION,
+        tenantId: TENANT_ID,
       })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)

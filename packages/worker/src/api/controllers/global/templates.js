@@ -4,7 +4,7 @@ const {
   TemplateBindings,
   GLOBAL_OWNER,
 } = require("../../../constants")
-const { getTemplates } = require("../../../constants/templates")
+const { getTemplatesCtx } = require("../../../constants/templates")
 
 exports.save = async ctx => {
   const db = getGlobalDBFromCtx(ctx)
@@ -45,23 +45,23 @@ exports.definitions = async ctx => {
 }
 
 exports.fetch = async ctx => {
-  ctx.body = await getTemplates(ctx)
+  ctx.body = await getTemplatesCtx(ctx)
 }
 
 exports.fetchByType = async ctx => {
-  ctx.body = await getTemplates(ctx, {
+  ctx.body = await getTemplatesCtx(ctx, {
     type: ctx.params.type,
   })
 }
 
 exports.fetchByOwner = async ctx => {
-  ctx.body = await getTemplates(ctx, {
+  ctx.body = await getTemplatesCtx(ctx, {
     ownerId: ctx.params.ownerId,
   })
 }
 
 exports.find = async ctx => {
-  ctx.body = await getTemplates(ctx, {
+  ctx.body = await getTemplatesCtx(ctx, {
     id: ctx.params.id,
   })
 }

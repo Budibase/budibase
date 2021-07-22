@@ -60,6 +60,7 @@ async function getLinkCode(purpose, email, user, info = null) {
 
 /**
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
+ * @param {string} tenantId the ID of the tenant which is sending the email.
  * @param {string} purpose the purpose of the email being built, e.g. invitation, password reset.
  * @param {string} email the address which it is being sent to for contextual purposes.
  * @param {object} context the context which is being used for building the email (hbs context).
@@ -67,14 +68,14 @@ async function getLinkCode(purpose, email, user, info = null) {
  * @param {string|null} contents if using a custom template can supply contents for context.
  * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
  */
-async function buildEmail(purpose, email, context, { user, contents } = {}) {
+async function buildEmail(tenantId, purpose, email, context, { user, contents } = {}) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`
   }
   let [base, body] = await Promise.all([
-    getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
-    getTemplateByPurpose(TYPE, purpose),
+    getTemplateByPurpose({ tenantId }, TYPE, EmailTemplatePurpose.BASE),
+    getTemplateByPurpose({ tenantId }, TYPE, purpose),
   ])
   if (!base || !body) {
     throw "Unable to build email, missing base components"
@@ -147,7 +148,7 @@ exports.sendEmail = async (
   purpose,
   { workspaceId, user, from, contents, subject, info } = {}
 ) => {
-  const db = new getGlobalDB(tenantId)
+  const db = getGlobalDB(tenantId)
   let config = (await getSmtpConfiguration(db, workspaceId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
@@ -159,7 +160,7 @@ exports.sendEmail = async (
   const message = {
     from: from || config.from,
     to: email,
-    html: await buildEmail(purpose, email, context, { user, contents }),
+    html: await buildEmail(tenantId, purpose, email, context, { user, contents }),
   }
   if (subject || config.subject) {
     message.subject = await processString(subject || config.subject, context)

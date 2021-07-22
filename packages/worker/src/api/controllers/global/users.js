@@ -265,12 +265,16 @@ exports.find = async ctx => {
 }
 
 exports.invite = async ctx => {
-  const { email, userInfo } = ctx.request.body
+  let { email, userInfo } = ctx.request.body
   const tenantId = ctx.user.tenantId
   const existing = await getGlobalUserByEmail(email, tenantId)
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
+  if (!userInfo) {
+    userInfo = {}
+  }
+  userInfo.tenantId = tenantId
   await sendEmail(tenantId, email, EmailTemplatePurpose.INVITATION, {
     subject: "{{ company }} platform invitation",
     info: userInfo,
@@ -292,6 +296,9 @@ exports.inviteAccept = async ctx => {
       password,
       email,
       ...info,
+    }
+    ctx.user = {
+      tenantId: info.tenantId,
     }
     // this will flesh out the body response
     await exports.save(ctx)

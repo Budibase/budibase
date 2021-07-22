@@ -7,8 +7,10 @@ const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
 const { createASession } = require("@budibase/auth/sessions")
 const { newid } = require("../../../../../../auth/src/hashing")
-
-const TENANT_ID = "default"
+const { TENANT_ID } = require("./structures")
+const auth = require("@budibase/auth")
+const CouchDB = require("../../../../db")
+auth.init(CouchDB)
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -30,7 +32,7 @@ class TestConfiguration {
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
-    request.user = { appId: this.appId }
+    request.user = { appId: this.appId, tenantId: TENANT_ID }
     request.query = {}
     request.request = {
       body: config,
@@ -60,7 +62,7 @@ class TestConfiguration {
         null,
         controllers.users.save
       )
-      await createASession("us_uuid1", "sessionid")
+      await createASession("us_uuid1", { sessionId: "sessionid", tenantId: TENANT_ID })
     }
   }
 
@@ -233,6 +235,7 @@ class TestConfiguration {
       {
         email: "testuser@test.com",
         password: "test@test.com",
+        tenantId: TENANT_ID,
       },
       null,
       controllers.users.adminUser
