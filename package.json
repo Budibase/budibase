@@ -23,6 +23,7 @@
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
     "release": "yarn build && lerna publish patch --yes --force-publish",
+    "release:develop": "yarn build && lerna publish prerelease --yes --force-publish --dist-tag develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
