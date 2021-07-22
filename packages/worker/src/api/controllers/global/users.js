@@ -149,7 +149,10 @@ exports.adminUser = async ctx => {
   )
 
   if (response.rows.some(row => row.doc.admin)) {
-    ctx.throw(403, "You cannot initialise once an global user has been created.")
+    ctx.throw(
+      403,
+      "You cannot initialise once an global user has been created."
+    )
   }
 
   const user = {
