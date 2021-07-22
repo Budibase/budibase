@@ -23,7 +23,7 @@
   let userShouldPostFeedback = false
 
   function previewApp() {
-    if (!$auth?.user?.flags?.feedbackSubmitted === true) {
+    if (!$auth?.user?.flags?.feedbackSubmitted) {
       userShouldPostFeedback = true
     }
     window.open(`/${application}`)
