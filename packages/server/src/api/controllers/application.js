@@ -172,7 +172,7 @@ exports.fetchAppPackage = async function (ctx) {
 }
 
 exports.create = async function (ctx) {
-  const { useTemplate, templateKey } = ctx.request.body
+  const { useTemplate, templateKey, theme } = ctx.request.body
   const instanceConfig = {
     useTemplate,
     key: templateKey,
@@ -204,6 +204,7 @@ exports.create = async function (ctx) {
     url: url,
     template: ctx.request.body.template,
     instance: instance,
+    theme,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

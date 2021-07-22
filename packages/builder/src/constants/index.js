@@ -33,3 +33,10 @@ export const LAYOUT_NAMES = {
 }
 
 export const BUDIBASE_INTERNAL_DB = "bb_internal"
+
+export const SPECTRUM_THEMES = {
+  LIGHTER: "lighter",
+  LIGHT: "light",
+  DARK: "dark",
+  DARKEST: "darkest"
+}

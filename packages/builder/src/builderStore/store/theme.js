@@ -1,10 +1,16 @@
 import { localStorageStore } from "./localStorage"
+import { SPECTRUM_THEMES } from "../../constants";
 
 export const getThemeStore = () => {
   const themeElement = document.documentElement
   const initialValue = {
-    theme: "darkest",
-    options: ["lightest", "light", "dark", "darkest"],
+    theme: SPECTRUM_THEMES.DARKEST,
+    options: [
+      SPECTRUM_THEMES.LIGHTER,
+      SPECTRUM_THEMES.LIGHT,
+      SPECTRUM_THEMES.DARK,
+      SPECTRUM_THEMES.DARKEST
+    ],
   }
   const store = localStorageStore("bb-theme", initialValue)
 

@@ -13,6 +13,7 @@
     authStore,
     routeStore,
     builderStore,
+    appStore,
   } from "../store"
   import { TableNames, ActionTypes } from "../constants"
   import SettingsBar from "./preview/SettingsBar.svelte"
@@ -77,7 +78,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium spectrum--light"
+    class="spectrum spectrum--medium spectrum--{$appStore.theme}"
   >
     {#if permissionError}
       <div class="error">

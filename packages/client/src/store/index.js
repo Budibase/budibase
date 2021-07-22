@@ -5,6 +5,7 @@ export { screenStore } from "./screens"
 export { builderStore } from "./builder"
 export { dataSourceStore } from "./dataSource"
 export { confirmationStore } from "./confirmation"
+export { appStore } from "./app"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

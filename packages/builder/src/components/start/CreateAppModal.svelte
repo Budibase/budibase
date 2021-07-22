@@ -7,18 +7,20 @@
     Dropzone,
     Body,
     Checkbox,
+    Select
   } from "@budibase/bbui"
-  import { store, automationStore, hostingStore } from "builderStore"
+  import { store, automationStore, hostingStore, themeStore } from "builderStore"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
+  import { SPECTRUM_THEMES } from "../../constants";
 
   export let template
 
-  const values = writable({ name: null })
+  const values = writable({ name: null, theme: SPECTRUM_THEMES.LIGHT })
   const errors = writable({})
   const touched = writable({})
   const validator = {
@@ -75,6 +77,7 @@
       let data = new FormData()
       data.append("name", $values.name)
       data.append("useTemplate", template != null)
+      data.append("theme", $values.theme)
       if (template) {
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
@@ -148,6 +151,13 @@
     error={$touched.name && $errors.name}
     on:blur={() => ($touched.name = true)}
     label="Name"
+  />
+  <Select
+    label="App theme"
+    options={$themeStore.options}
+    bind:value={$values.theme}
+    placeholder={null}
+    getOptionLabel={capitalise}
   />
   <Checkbox label="Group access" disabled value={true} text="All users" />
 </ModalContent>
