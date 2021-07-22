@@ -11,7 +11,7 @@
 
 {#if show}
   <ActionButton
-    on:click={() => window.open(`/api/admin/auth/${tenantId}/google`, "_blank")}
+    on:click={() => window.open(`/api/global/auth/${tenantId}/google`, "_blank")}
   >
     <div class="inner">
       <img src={GoogleLogo} alt="google icon" />

@@ -7,33 +7,33 @@ const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
 const PUBLIC_ENDPOINTS = [
   {
     // this covers all of the POST auth routes
-    route: "/api/admin/auth/:tenantId",
+    route: "/api/global/auth/:tenantId",
     method: "POST",
   },
   {
     // this covers all of the GET auth routes
-    route: "/api/admin/auth/:tenantId",
+    route: "/api/global/auth/:tenantId",
     method: "GET",
   },
   {
     // this covers all of the public config routes
-    route: "/api/admin/configs/public",
+    route: "/api/global/configs/public",
     method: "GET",
   },
   {
-    route: "api/admin/tenants/enabled",
+    route: "api/global/tenants/enabled",
     method: "GET",
   },
   {
-    route: "/api/admin/configs/checklist",
+    route: "/api/global/configs/checklist",
     method: "GET",
   },
   {
-    route: "/api/admin/users/init",
+    route: "/api/global/users/init",
     method: "POST",
   },
   {
-    route: "/api/admin/users/invite/accept",
+    route: "/api/global/users/invite/accept",
     method: "POST",
   },
 ]

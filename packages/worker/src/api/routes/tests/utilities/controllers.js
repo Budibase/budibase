@@ -1,7 +1,7 @@
 module.exports = {
-  email: require("../../../controllers/admin/email"),
-  workspaces: require("../../../controllers/admin/workspaces"),
-  config: require("../../../controllers/admin/configs"),
-  templates: require("../../../controllers/admin/templates"),
-  users: require("../../../controllers/admin/users"),
+  email: require("../../../controllers/global/email"),
+  workspaces: require("../../../controllers/global/workspaces"),
+  config: require("../../../controllers/global/configs"),
+  templates: require("../../../controllers/global/templates"),
+  users: require("../../../controllers/global/users"),
 }

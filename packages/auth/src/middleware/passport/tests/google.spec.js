@@ -29,7 +29,7 @@ describe("google", () => {
     it("should create successfully create a google strategy", async () => {
       const google = require("../google")
          
-      await google.strategyFactory(googleConfig, `/api/admin/auth/${TENANT_ID}/google/callback`)
+      await google.strategyFactory(googleConfig, `/api/global/auth/${TENANT_ID}/google/callback`)
   
       const expectedOptions = {
         clientID: googleConfig.clientID,

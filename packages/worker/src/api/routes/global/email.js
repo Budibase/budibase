@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/email")
+const controller = require("../../controllers/global/email")
 const { EmailTemplatePurpose } = require("../../../constants")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
@@ -20,7 +20,7 @@ function buildEmailSendValidation() {
 }
 
 router.post(
-  "/api/admin/email/send",
+  "/api/global/email/send",
   buildEmailSendValidation(),
   adminOnly,
   controller.sendEmail

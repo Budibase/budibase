@@ -9,7 +9,7 @@ export function createAdminStore() {
     try {
       const tenantId = get(auth).tenantId
       const response = await api.get(
-        `/api/admin/configs/checklist?tenantId=${tenantId}`
+        `/api/global/configs/checklist?tenantId=${tenantId}`
       )
       const json = await response.json()
 
@@ -38,7 +38,7 @@ export function createAdminStore() {
   async function multiTenancyEnabled() {
     let enabled = false
     try {
-      const response = await api.get(`/api/admin/tenants/enabled`)
+      const response = await api.get(`/api/global/tenants/enabled`)
       const json = await response.json()
       enabled = json.enabled
     } catch (err) {

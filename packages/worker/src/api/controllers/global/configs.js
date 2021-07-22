@@ -230,7 +230,7 @@ exports.configChecklist = async function (ctx) {
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
-    // They have set up an admin user
+    // They have set up an global user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
         include_docs: true,

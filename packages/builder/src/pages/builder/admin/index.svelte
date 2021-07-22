@@ -24,7 +24,7 @@
     try {
       adminUser.tenantId = tenantId
       // Save the admin user
-      const response = await api.post(`/api/admin/users/init`, adminUser)
+      const response = await api.post(`/api/global/users/init`, adminUser)
       const json = await response.json()
       if (response.status !== 200) {
         throw new Error(json.message)

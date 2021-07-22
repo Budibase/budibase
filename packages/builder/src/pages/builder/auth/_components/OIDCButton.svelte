@@ -31,7 +31,7 @@
 {#if show}
   <ActionButton
     on:click={() =>
-      window.open(`/api/admin/auth/oidc/configs/${$oidc.uuid}`, "_blank")}
+      window.open(`/api/global/auth/oidc/configs/${$oidc.uuid}`, "_blank")}
   >
     <div class="inner">
       <img {src} alt="oidc icon" />
