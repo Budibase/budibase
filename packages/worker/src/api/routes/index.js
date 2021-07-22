@@ -7,6 +7,7 @@ const emailRoutes = require("./global/email")
 const authRoutes = require("./global/auth")
 const roleRoutes = require("./global/roles")
 const sessionRoutes = require("./global/sessions")
+const flagRoutes = require("./global/flags")
 const appRoutes = require("./app")
 
 exports.routes = [
@@ -20,4 +21,5 @@ exports.routes = [
   emailRoutes,
   sessionRoutes,
   roleRoutes,
+  flagRoutes,
 ]
