@@ -11,8 +11,16 @@ const env = require("../environment")
 const LOCAL_URL = `http://localhost:${env.CLUSTER_PORT || 10000}`
 const BASE_COMPANY = "Budibase"
 
+function addTenantToUrl(url, tenantId) {
+  if (env.MULTI_TENANCY) {
+    const char = url.indexOf("?") === -1 ? "?" : "&"
+    url += `${char}tenantId=${tenantId}`
+  }
+  return url
+}
+
 exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
-  const db = new getGlobalDB(tenantId)
+  const db = getGlobalDB(tenantId)
   // TODO: use more granular settings in the future if required
   let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
   if (!settings || !settings.platformUrl) {
@@ -26,7 +34,7 @@ exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
     [InternalTemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
     [InternalTemplateBindings.DOCS_URL]:
       settings.docsUrl || "https://docs.budibase.com/",
-    [InternalTemplateBindings.LOGIN_URL]: checkSlashesInUrl(`${URL}/login`),
+    [InternalTemplateBindings.LOGIN_URL]: checkSlashesInUrl(addTenantToUrl(`${URL}/login`, tenantId)),
     [InternalTemplateBindings.CURRENT_DATE]: new Date().toISOString(),
     [InternalTemplateBindings.CURRENT_YEAR]: new Date().getFullYear(),
   }
@@ -35,13 +43,13 @@ exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       context[InternalTemplateBindings.RESET_CODE] = code
       context[InternalTemplateBindings.RESET_URL] = checkSlashesInUrl(
-        `${URL}/builder/auth/reset?code=${code}`
+        addTenantToUrl(`${URL}/builder/auth/reset?code=${code}`, tenantId)
       )
       break
     case EmailTemplatePurpose.INVITATION:
       context[InternalTemplateBindings.INVITE_CODE] = code
       context[InternalTemplateBindings.INVITE_URL] = checkSlashesInUrl(
-        `${URL}/builder/invite?code=${code}`
+        addTenantToUrl(`${URL}/builder/invite?code=${code}&tenantId=${tenantId}`, tenantId)
       )
       break
   }

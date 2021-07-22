@@ -1,4 +1,5 @@
 const setup = require("./utilities")
+const { TENANT_ID } = require("./utilities/structures")
 
 jest.mock("nodemailer")
 const sendMailMock = setup.emailMock()
@@ -31,7 +32,7 @@ describe("/api/global/users", () => {
     const emailCall = sendMailMock.mock.calls[0][0]
     // after this URL there should be a code
     const parts = emailCall.html.split("http://localhost:10000/builder/invite?code=")
-    code = parts[1].split("\"")[0]
+    code = parts[1].split("\"")[0].split("&")[0]
     expect(code).toBeDefined()
   })
 
