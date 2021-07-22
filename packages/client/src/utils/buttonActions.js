@@ -4,13 +4,16 @@ import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
 
 const saveRowHandler = async (action, context) => {
-  const { fields, providerId } = action.parameters
+  const { fields, providerId, tableId } = action.parameters
   if (providerId) {
     let draft = context[providerId]
     if (fields) {
       for (let [field, value] of Object.entries(fields)) {
         draft[field] = value
       }
+    }
+    if (tableId) {
+      draft.tableId = tableId
     }
     await saveRow(draft)
   }
