@@ -243,7 +243,9 @@
         })
       })
     }
-    const oidcResponse = await api.get(`/api/global/configs/${ConfigTypes.OIDC}`)
+    const oidcResponse = await api.get(
+      `/api/global/configs/${ConfigTypes.OIDC}`
+    )
     const oidcDoc = await oidcResponse.json()
     if (!oidcDoc._id) {
       providers.oidc = {

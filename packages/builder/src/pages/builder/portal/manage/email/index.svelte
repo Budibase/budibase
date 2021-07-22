@@ -75,7 +75,9 @@
   async function fetchSmtp() {
     loading = true
     // fetch the configs for smtp
-    const smtpResponse = await api.get(`/api/global/configs/${ConfigTypes.SMTP}`)
+    const smtpResponse = await api.get(
+      `/api/global/configs/${ConfigTypes.SMTP}`
+    )
     const smtpDoc = await smtpResponse.json()
 
     if (!smtpDoc._id) {
