@@ -4,6 +4,7 @@
   import { fade, fly } from "svelte/transition"
   import {
     ActionButton,
+    ClearButton,
     RadioGroup,
     TextArea,
     ButtonGroup,
@@ -47,6 +48,11 @@
 
     dispatch("submitted")
   }
+
+  function cancelFeedback() {
+    document.cookie = "feedbackSubmitted=true"
+    dispatch("submitted")
+  }
 </script>
 
 <div
@@ -59,6 +65,9 @@
     in:fly={{ y: 30, duration: 200 }}
     out:fly|local={{ y: 30, duration: 200 }}
   >
+    <div class="close">
+      <ClearButton on:click={cancelFeedback} />
+    </div>
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
@@ -137,6 +146,11 @@
   .ratings {
     display: flex;
     justify-content: space-between;
+  }
+  .close {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
   .footer {
     display: flex;
