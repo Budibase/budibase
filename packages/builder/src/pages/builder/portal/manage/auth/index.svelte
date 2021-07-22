@@ -21,14 +21,24 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { organisation, auth } from "stores/portal"
+  import { organisation, auth, admin } from "stores/portal"
   import { uuid } from "builderStore/uuid"
 
   $: tenantId = $auth.tenantId
+  $: multiTenancyEnabled = $admin.multiTenancy
 
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
+  }
+
+  function callbackUrl(tenantId, end) {
+    let url = `/api/global/auth`
+    if (multiTenancyEnabled && tenantId) {
+      url += `/${tenantId}`
+    }
+    url += end
+    return url
   }
 
   $: GoogleConfigFields = {
@@ -39,7 +49,7 @@
         name: "callbackURL",
         label: "Callback URL",
         readonly: true,
-        placeholder: `/api/global/auth/${tenantId}/google/callback`,
+        placeholder: callbackUrl(tenantId, "/google/callback"),
       },
     ],
   }
@@ -53,7 +63,7 @@
         name: "callbackURL",
         label: "Callback URL",
         readonly: true,
-        placeholder: `/api/global/auth/${tenantId}/oidc/callback`,
+        placeholder: callbackUrl(tenantId, "/oidc/callback"),
       },
     ],
   }

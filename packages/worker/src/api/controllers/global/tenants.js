@@ -4,7 +4,7 @@ const { StaticDatabases } = require("@budibase/auth/db")
 
 exports.multiTenancyEnabled = async ctx => {
   ctx.body = {
-    enabled: !!env.MULTI_TENANCY,
+    enabled: false,
   }
 }
 

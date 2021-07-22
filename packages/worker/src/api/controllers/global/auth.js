@@ -10,6 +10,15 @@ const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const { getGlobalDB } = authPkg.db
 
+function googleCallbackUrl(tenantId = null) {
+  let callbackUrl = `/api/global/auth`
+  if (tenantId) {
+    callbackUrl += `/${tenantId}`
+  }
+  callbackUrl += `/google/callback`
+  return callbackUrl
+}
+
 async function authInternal(ctx, user, err = null, info = null) {
   if (err) {
     console.error("Authentication error", err)
@@ -101,9 +110,9 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const tenantId = ctx.params.tenantId
+  const tenantId = ctx.params ? ctx.params.tenantId : null
   const db = getGlobalDB(tenantId)
-  const callbackUrl = `/api/global/auth/${tenantId}/google/callback`
+  let callbackUrl = googleCallbackUrl(tenantId)
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -117,9 +126,9 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const tenantId = ctx.params.tenantId
+  const tenantId = ctx.params ? ctx.params.tenantId : null
   const db = getGlobalDB(tenantId)
-  const callbackUrl = `/api/global/auth/${tenantId}/google/callback`
+  const callbackUrl = googleCallbackUrl(tenantId)
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -139,7 +148,7 @@ exports.googleAuth = async (ctx, next) => {
 }
 
 async function oidcStrategyFactory(ctx, configId) {
-  const tenantId = ctx.params.tenantId
+  const tenantId = ctx.params ? ctx.params.tenantId : null
   const db = getGlobalDB(ctx.params.tenantId)
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.OIDC,
@@ -148,8 +157,11 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/global/auth/${tenantId}/oidc/callback`
-
+  let callbackUrl = `${ctx.protocol}://${ctx.host}/api/global/auth`
+  if (tenantId) {
+    callbackUrl += `/${tenantId}`
+  }
+  callbackUrl += `/oidc/callback`
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }
 
