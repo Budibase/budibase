@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/workspaces")
+const controller = require("../../controllers/global/workspaces")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
@@ -26,13 +26,13 @@ function buildWorkspaceSaveValidation() {
 
 router
   .post(
-    "/api/admin/workspaces",
+    "/api/global/workspaces",
     adminOnly,
     buildWorkspaceSaveValidation(),
     controller.save
   )
-  .delete("/api/admin/workspaces/:id", adminOnly, controller.destroy)
-  .get("/api/admin/workspaces", controller.fetch)
-  .get("/api/admin/workspaces/:id", controller.find)
+  .delete("/api/global/workspaces/:id", adminOnly, controller.destroy)
+  .get("/api/global/workspaces", controller.fetch)
+  .get("/api/global/workspaces/:id", controller.find)
 
 module.exports = router

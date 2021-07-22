@@ -149,7 +149,7 @@ exports.adminUser = async ctx => {
   )
 
   if (response.rows.some(row => row.doc.admin)) {
-    ctx.throw(403, "You cannot initialise once an admin user has been created.")
+    ctx.throw(403, "You cannot initialise once an global user has been created.")
   }
 
   const user = {
@@ -280,7 +280,7 @@ exports.invite = async ctx => {
 exports.inviteAccept = async ctx => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
-    // info is an extension of the user object that was stored by admin
+    // info is an extension of the user object that was stored by global
     const { email, info } = await checkInviteCode(inviteCode)
     // only pass through certain props for accepting
     ctx.request.body = {

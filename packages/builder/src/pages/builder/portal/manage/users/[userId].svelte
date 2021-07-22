@@ -45,8 +45,8 @@
   })
   let selectedApp
 
-  const userFetch = fetchData(`/api/admin/users/${userId}`)
-  const apps = fetchData(`/api/admin/roles`)
+  const userFetch = fetchData(`/api/global/users/${userId}`)
+  const apps = fetchData(`/api/global/roles`)
 
   async function deleteUser() {
     const res = await users.delete(userId)

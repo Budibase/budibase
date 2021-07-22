@@ -5,7 +5,7 @@ const TENANT_ID = "default"
 jest.mock("nodemailer")
 const sendMailMock = setup.emailMock()
 
-describe("/api/admin/auth", () => {
+describe("/api/global/auth", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let code
@@ -26,7 +26,7 @@ describe("/api/admin/auth", () => {
     await config.saveSettingsConfig()
     await config.createUser("test@test.com")
     const res = await request
-      .post(`/api/admin/auth/${TENANT_ID}/reset`)
+      .post(`/api/global/auth/${TENANT_ID}/reset`)
       .send({
         email: "test@test.com",
       })
@@ -43,7 +43,7 @@ describe("/api/admin/auth", () => {
 
   it("should allow resetting user password with code", async () => {
     const res = await request
-      .post(`/api/admin/auth/${TENANT_ID}/reset/update`)
+      .post(`/api/global/auth/${TENANT_ID}/reset/update`)
       .send({
         password: "newpassword",
         resetCode: code,
@@ -76,13 +76,13 @@ describe("/api/admin/auth", () => {
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
         chosenConfig, 
-        `http://127.0.0.1:4003/api/admin/auth/${TENANT_ID}/oidc/callback` // calculated url
+        `http://127.0.0.1:4003/api/global/auth/${TENANT_ID}/oidc/callback` // calculated url
       )
     })
 
     describe("oidc configs", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/${TENANT_ID}/oidc/configs/${configId}`)
+        await request.get(`/api/global/auth/${TENANT_ID}/oidc/configs/${configId}`)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email"],
@@ -93,7 +93,7 @@ describe("/api/admin/auth", () => {
 
     describe("oidc callback", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/admin/auth/${TENANT_ID}/oidc/callback`)
+        await request.get(`/api/global/auth/${TENANT_ID}/oidc/callback`)
                      .set(config.getOIDConfigCookie(configId))
       
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {

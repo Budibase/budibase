@@ -68,7 +68,7 @@ export function createAuthStore() {
       setOrganisation(tenantId)
     },
     checkAuth: async () => {
-      const response = await api.get("/api/admin/users/self")
+      const response = await api.get("/api/global/users/self")
       if (response.status !== 200) {
         setUser(null)
       } else {
@@ -79,7 +79,7 @@ export function createAuthStore() {
     login: async creds => {
       const tenantId = get(store).tenantId
       const response = await api.post(
-        `/api/admin/auth/${tenantId}/login`,
+        `/api/global/auth/${tenantId}/login`,
         creds
       )
       const json = await response.json()
@@ -91,7 +91,7 @@ export function createAuthStore() {
       return json
     },
     logout: async () => {
-      const response = await api.post(`/api/admin/auth/logout`)
+      const response = await api.post(`/api/global/auth/logout`)
       if (response.status !== 200) {
         throw "Unable to create logout"
       }
@@ -100,7 +100,7 @@ export function createAuthStore() {
     },
     updateSelf: async fields => {
       const newUser = { ...get(auth).user, ...fields }
-      const response = await api.post("/api/admin/users/self", newUser)
+      const response = await api.post("/api/global/users/self", newUser)
       if (response.status === 200) {
         setUser(newUser)
       } else {
@@ -109,7 +109,7 @@ export function createAuthStore() {
     },
     forgotPassword: async email => {
       const tenantId = get(store).tenantId
-      const response = await api.post(`/api/admin/auth/${tenantId}/reset`, {
+      const response = await api.post(`/api/global/auth/${tenantId}/reset`, {
         email,
       })
       if (response.status !== 200) {
@@ -120,7 +120,7 @@ export function createAuthStore() {
     resetPassword: async (password, code) => {
       const tenantId = get(store).tenantId
       const response = await api.post(
-        `/api/admin/auth/${tenantId}/reset/update`,
+        `/api/global/auth/${tenantId}/reset/update`,
         {
           password,
           resetCode: code,
@@ -132,7 +132,7 @@ export function createAuthStore() {
       await response.json()
     },
     createUser: async user => {
-      const response = await api.post(`/api/admin/users`, user)
+      const response = await api.post(`/api/global/users`, user)
       if (response.status !== 200) {
         throw "Unable to create user"
       }

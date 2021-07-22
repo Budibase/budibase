@@ -6,7 +6,7 @@ export function createUsersStore() {
   const { subscribe, set } = writable([])
 
   async function init() {
-    const response = await api.get(`/api/admin/users`)
+    const response = await api.get(`/api/global/users`)
     const json = await response.json()
     set(json)
   }
@@ -23,12 +23,12 @@ export function createUsersStore() {
         global: true,
       }
     }
-    const response = await api.post(`/api/admin/users/invite`, body)
+    const response = await api.post(`/api/global/users/invite`, body)
     return await response.json()
   }
 
   async function acceptInvite(inviteCode, password) {
-    const response = await api.post("/api/admin/users/invite/accept", {
+    const response = await api.post("/api/global/users/invite/accept", {
       inviteCode,
       password,
     })
@@ -47,20 +47,20 @@ export function createUsersStore() {
     if (admin) {
       body.admin = { global: true }
     }
-    const response = await api.post("/api/admin/users", body)
+    const response = await api.post("/api/global/users", body)
     await init()
     return await response.json()
   }
 
   async function del(id) {
-    const response = await api.delete(`/api/admin/users/${id}`)
+    const response = await api.delete(`/api/global/users/${id}`)
     update(users => users.filter(user => user._id !== id))
     return await response.json()
   }
 
   async function save(data) {
     try {
-      const res = await post(`/api/admin/users`, data)
+      const res = await post(`/api/global/users`, data)
       return await res.json()
     } catch (error) {
       console.log(error)

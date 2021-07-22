@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/users")
+const controller = require("../../controllers/global/users")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
@@ -62,39 +62,39 @@ function buildInviteAcceptValidation() {
 
 router
   .post(
-    "/api/admin/users",
+    "/api/global/users",
     adminOnly,
     buildUserSaveValidation(),
     controller.save
   )
-  .get("/api/admin/users", adminOnly, controller.fetch)
-  .delete("/api/admin/roles/:appId", adminOnly, controller.removeAppRole)
-  .delete("/api/admin/users/:id", adminOnly, controller.destroy)
-  .get("/api/admin/roles/:appId")
+  .get("/api/global/users", adminOnly, controller.fetch)
+  .delete("/api/global/roles/:appId", adminOnly, controller.removeAppRole)
+  .delete("/api/global/users/:id", adminOnly, controller.destroy)
+  .get("/api/global/roles/:appId")
   .post(
-    "/api/admin/users/invite",
+    "/api/global/users/invite",
     adminOnly,
     buildInviteValidation(),
     controller.invite
   )
-  // non-admin endpoints
+  // non-global endpoints
   .post(
-    "/api/admin/users/self",
+    "/api/global/users/self",
     buildUserSaveValidation(true),
     controller.updateSelf
   )
   .post(
-    "/api/admin/users/invite/accept",
+    "/api/global/users/invite/accept",
     buildInviteAcceptValidation(),
     controller.inviteAccept
   )
   .post(
-    "/api/admin/users/init",
+    "/api/global/users/init",
     buildAdminInitValidation(),
     controller.adminUser
   )
-  .get("/api/admin/users/self", controller.getSelf)
-  // admin endpoint but needs to come at end (blocks other endpoints otherwise)
-  .get("/api/admin/users/:id", adminOnly, controller.find)
+  .get("/api/global/users/self", controller.getSelf)
+  // global endpoint but needs to come at end (blocks other endpoints otherwise)
+  .get("/api/global/users/:id", adminOnly, controller.find)
 
 module.exports = router

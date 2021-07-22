@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/configs")
+const controller = require("../../controllers/global/configs")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
@@ -96,24 +96,24 @@ function buildConfigGetValidation() {
 
 router
   .post(
-    "/api/admin/configs",
+    "/api/global/configs",
     adminOnly,
     buildConfigSaveValidation(),
     controller.save
   )
-  .delete("/api/admin/configs/:id/:rev", adminOnly, controller.destroy)
-  .get("/api/admin/configs", controller.fetch)
-  .get("/api/admin/configs/checklist", controller.configChecklist)
+  .delete("/api/global/configs/:id/:rev", adminOnly, controller.destroy)
+  .get("/api/global/configs", controller.fetch)
+  .get("/api/global/configs/checklist", controller.configChecklist)
   .get(
-    "/api/admin/configs/all/:type",
+    "/api/global/configs/all/:type",
     buildConfigGetValidation(),
     controller.fetch
   )
-  .get("/api/admin/configs/public", controller.publicSettings)
-  .get("/api/admin/configs/public/oidc", controller.publicOidc)
-  .get("/api/admin/configs/:type", buildConfigGetValidation(), controller.find)
+  .get("/api/global/configs/public", controller.publicSettings)
+  .get("/api/global/configs/public/oidc", controller.publicOidc)
+  .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)
   .post(
-    "/api/admin/configs/upload/:type/:name",
+    "/api/global/configs/upload/:type/:name",
     adminOnly,
     buildUploadValidation(),
     controller.upload

@@ -30,7 +30,7 @@ exports.request = request
 
 exports.sendSmtpEmail = async (tenantId, to, from, subject, contents) => {
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
     request(null, {
       method: "POST",
       body: {
@@ -74,7 +74,7 @@ exports.getDeployedApps = async ctx => {
 }
 
 exports.getGlobalSelf = async (ctx, appId = null) => {
-  const endpoint = `/api/admin/users/self`
+  const endpoint = `/api/global/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     // we don't want to use API key when getting self
@@ -96,11 +96,11 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     body = {}
   if (!userId) {
     user = await exports.getGlobalSelf(ctx)
-    endpoint = `/api/admin/users/self`
+    endpoint = `/api/global/users/self`
   } else {
     user = await getGlobalUser(ctx, appId, userId)
     body._id = userId
-    endpoint = `/api/admin/users`
+    endpoint = `/api/global/users`
   }
   body = {
     ...body,
@@ -125,7 +125,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
 exports.removeAppFromUserRoles = async (ctx, appId) => {
   const deployedAppId = getDeployedAppID(appId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/admin/roles/${deployedAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${deployedAppId}`),
     request(ctx, {
       method: "DELETE",
     })

@@ -103,7 +103,7 @@ exports.logout = async ctx => {
 exports.googlePreAuth = async (ctx, next) => {
   const tenantId = ctx.params.tenantId
   const db = getGlobalDB(tenantId)
-  const callbackUrl = `/api/admin/auth/${tenantId}/google/callback`
+  const callbackUrl = `/api/global/auth/${tenantId}/google/callback`
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -119,7 +119,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const tenantId = ctx.params.tenantId
   const db = getGlobalDB(tenantId)
-  const callbackUrl = `/api/admin/auth/${tenantId}/google/callback`
+  const callbackUrl = `/api/global/auth/${tenantId}/google/callback`
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -148,7 +148,7 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/${tenantId}/oidc/callback`
+  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/global/auth/${tenantId}/oidc/callback`
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }

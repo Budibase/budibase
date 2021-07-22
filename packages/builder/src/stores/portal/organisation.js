@@ -17,7 +17,7 @@ export function createOrganisationStore() {
 
   async function init() {
     const tenantId = get(auth).tenantId
-    const res = await api.get(`/api/admin/configs/public?tenantId=${tenantId}`)
+    const res = await api.get(`/api/global/configs/public?tenantId=${tenantId}`)
     const json = await res.json()
 
     if (json.status === 400) {
@@ -28,7 +28,7 @@ export function createOrganisationStore() {
   }
 
   async function save(config) {
-    const res = await api.post("/api/admin/configs", {
+    const res = await api.post("/api/global/configs", {
       type: "settings",
       config: { ...get(store), ...config },
       _rev: get(store)._rev,
