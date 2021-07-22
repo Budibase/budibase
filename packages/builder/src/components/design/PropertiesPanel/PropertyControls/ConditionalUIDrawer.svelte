@@ -7,7 +7,9 @@
   import ColorPicker from "./ColorPicker.svelte"
   import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
   import { getBindableProperties } from "../../../../builderStore/dataBinding"
-  import { currentAsset, store } from "../../../../builderStore"
+  import { currentAsset, selectedComponent, store } from "builderStore"
+  import { getComponentForSettingType } from "./componentSettings"
+  import PropertyControl from "./PropertyControl.svelte"
 
   export let conditions = []
 
@@ -27,6 +29,15 @@
     },
   ]
 
+  $: definition = store.actions.components.getDefinition(
+    $selectedComponent?._component
+  )
+  $: settings = (definition?.settings ?? []).map(setting => {
+    return {
+      label: setting.label,
+      value: setting.key,
+    }
+  })
   $: operatorOptions = getValidOperatorsForType("string")
   $: bindableProperties = getBindableProperties(
     $currentAsset,
@@ -37,6 +48,17 @@
       link.id = generate()
     }
   })
+
+  const getSettingDefinition = key => {
+    return definition?.settings?.find(setting => {
+      return setting.key === key
+    })
+  }
+
+  const getComponentForSetting = key => {
+    const settingDefinition = getSettingDefinition(key)
+    return getComponentForSettingType(settingDefinition?.type || "text")
+  }
 
   const addCondition = () => {
     conditions = [
@@ -79,12 +101,23 @@
                 bind:value={condition.action}
               />
               {#if condition.action === "update"}
-                <Select options={["Color"]} bind:value={condition.setting} />
-                <div>TO</div>
-                <ColorPicker
-                  on:change={e => (condition.settingValue = e.detail)}
-                  value={condition.settingValue}
-                />
+                <Select options={settings} bind:value={condition.setting} />
+                {#if getSettingDefinition(condition.setting)}
+                  <div>TO</div>
+                  <PropertyControl
+                    type={getSettingDefinition(condition.setting).type}
+                    control={getComponentForSetting(condition.setting)}
+                    key={getSettingDefinition(condition.setting).key}
+                    value={condition.settingValue}
+                    componentInstance={$selectedComponent}
+                    onChange={val => (condition.settingValue = val)}
+                    props={{
+                      options: getSettingDefinition(condition.setting).options,
+                      placeholder: getSettingDefinition(condition.setting)
+                        .placeholder,
+                    }}
+                  />
+                {/if}
               {/if}
               <div>IF</div>
               <DrawerBindableInput

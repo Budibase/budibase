@@ -8,19 +8,17 @@ export const getActiveConditions = conditions => {
     return []
   }
 
-  const luceneCompatibleConditions = conditions.map(condition => {
-    return {
+  return conditions.filter(condition => {
+    const luceneCompatibleCondition = {
       ...condition,
       type: "string",
       field: "newValue",
       value: condition.referenceValue,
     }
+    const query = buildLuceneQuery([luceneCompatibleCondition])
+    const result = luceneQuery([luceneCompatibleCondition], query)
+    return result.length > 0
   })
-
-  const query = buildLuceneQuery(luceneCompatibleConditions)
-  console.log(luceneQuery)
-
-  return luceneQuery(luceneCompatibleConditions, query)
 }
 
 export const reduceConditionActions = conditions => {

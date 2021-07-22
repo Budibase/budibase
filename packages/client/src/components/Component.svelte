@@ -154,9 +154,6 @@
   }
 
   const evaluateConditions = conditions => {
-    console.log("evaluating")
-    console.log(conditions)
-
     if (!conditions?.length) {
       return
     }
@@ -170,8 +167,6 @@
     }
 
     const activeConditions = getActiveConditions(conditions)
-    console.log(activeConditions)
-
     const result = reduceConditionActions(activeConditions)
     conditionalSettings = result.settingUpdates
     if (result.visible != null) {
