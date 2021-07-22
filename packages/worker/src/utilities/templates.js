@@ -34,7 +34,9 @@ exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
     [InternalTemplateBindings.COMPANY]: settings.company || BASE_COMPANY,
     [InternalTemplateBindings.DOCS_URL]:
       settings.docsUrl || "https://docs.budibase.com/",
-    [InternalTemplateBindings.LOGIN_URL]: checkSlashesInUrl(addTenantToUrl(`${URL}/login`, tenantId)),
+    [InternalTemplateBindings.LOGIN_URL]: checkSlashesInUrl(
+      addTenantToUrl(`${URL}/login`, tenantId)
+    ),
     [InternalTemplateBindings.CURRENT_DATE]: new Date().toISOString(),
     [InternalTemplateBindings.CURRENT_YEAR]: new Date().getFullYear(),
   }
@@ -49,7 +51,10 @@ exports.getSettingsTemplateContext = async (tenantId, purpose, code = null) => {
     case EmailTemplatePurpose.INVITATION:
       context[InternalTemplateBindings.INVITE_CODE] = code
       context[InternalTemplateBindings.INVITE_URL] = checkSlashesInUrl(
-        addTenantToUrl(`${URL}/builder/invite?code=${code}&tenantId=${tenantId}`, tenantId)
+        addTenantToUrl(
+          `${URL}/builder/invite?code=${code}&tenantId=${tenantId}`,
+          tenantId
+        )
       )
       break
   }
