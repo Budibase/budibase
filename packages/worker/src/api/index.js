@@ -21,7 +21,7 @@ const PUBLIC_ENDPOINTS = [
     method: "GET",
   },
   {
-    route: "api/global/tenants/enabled",
+    route: "api/global/flags",
     method: "GET",
   },
   {

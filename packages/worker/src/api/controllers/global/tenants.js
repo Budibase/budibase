@@ -1,12 +1,5 @@
-const env = require("../../../environment")
 const CouchDB = require("../../../db")
 const { StaticDatabases } = require("@budibase/auth/db")
-
-exports.multiTenancyEnabled = async ctx => {
-  ctx.body = {
-    enabled: false,
-  }
-}
 
 exports.exists = async ctx => {
   const tenantId = ctx.request.params
