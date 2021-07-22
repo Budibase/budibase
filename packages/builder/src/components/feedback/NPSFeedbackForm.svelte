@@ -14,6 +14,8 @@
     Divider,
     Layout,
   } from "@budibase/bbui"
+  import { auth } from "stores/portal"
+
   let step = 0
   let ratings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   let options = [
@@ -43,15 +45,21 @@
       improvements,
       comment,
     })
-
-    document.cookie = "feedbackSubmitted=true"
-
-    dispatch("submitted")
+    auth.updateSelf({
+      flags: {
+        feedbackSubmitted: true,
+      },
+    })
+    dispatch("complete")
   }
 
   function cancelFeedback() {
-    document.cookie = "feedbackSubmitted=true"
-    dispatch("submitted")
+    auth.updateSelf({
+      flags: {
+        feedbackSubmitted: true,
+      },
+    })
+    dispatch("complete")
   }
 </script>
 

@@ -7,6 +7,7 @@
   import VersionModal from "components/deploy/VersionModal.svelte"
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
+  import { auth } from "stores/portal"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
@@ -21,15 +22,8 @@
 
   let userShouldPostFeedback = false
 
-  function checkIfUserHasSubmittedFeedback() {
-    return document.cookie
-      ?.split("; ")
-      ?.find(row => row.startsWith("feedbackSubmitted="))
-      ?.split("=")[1]
-  }
-
   function previewApp() {
-    if (!checkIfUserHasSubmittedFeedback() === true) {
+    if (!$auth?.user?.flags?.feedbackSubmitted === true) {
       userShouldPostFeedback = true
     }
     window.open(`/${application}`)
@@ -111,7 +105,7 @@
 {/await}
 
 {#if userShouldPostFeedback}
-  <NPSFeedbackForm on:submitted={() => (userShouldPostFeedback = false)} />
+  <NPSFeedbackForm on:complete={() => (userShouldPostFeedback = false)} />
 {/if}
 
 <style>
