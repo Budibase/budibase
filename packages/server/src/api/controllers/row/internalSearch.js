@@ -28,6 +28,7 @@ class QueryBuilder {
 
   setVersion(version) {
     this.version = version
+    return this
   }
 
   setTable(tableId) {
@@ -335,6 +336,7 @@ exports.paginatedSearch = async (appId, query, params) => {
   }
   limit = Math.min(limit, 200)
   const search = new QueryBuilder(appId, query)
+    .setVersion(params.version)
     .setTable(params.tableId)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)
