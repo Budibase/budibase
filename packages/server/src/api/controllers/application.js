@@ -92,8 +92,8 @@ async function getAppUrlIfNotInUse(ctx) {
   return url
 }
 
-async function createInstance(template) {
-  const baseAppId = generateAppID()
+async function createInstance(tenantId, template) {
+  const baseAppId = generateAppID(env.MULTI_TENANCY ? tenantId : null)
   const appId = generateDevAppID(baseAppId)
 
   const db = new CouchDB(appId)
@@ -198,7 +198,7 @@ exports.create = async function (ctx) {
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
   }
-  const instance = await createInstance(instanceConfig)
+  const instance = await createInstance(tenantId, instanceConfig)
   const appId = instance._id
 
   const url = await getAppUrlIfNotInUse(ctx)
