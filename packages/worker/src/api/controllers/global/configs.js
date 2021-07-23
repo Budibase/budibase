@@ -148,8 +148,8 @@ exports.publicSettings = async function (ctx) {
     // google button flag
     if (googleConfig && googleConfig.config) {
       // activated by default for configs pre-activated flag
-      config.config.google = googleConfig.config.activated == null ||
-        googleConfig.config.activated
+      config.config.google =
+        googleConfig.config.activated == null || googleConfig.config.activated
     } else {
       config.config.google = false
     }

@@ -8,7 +8,7 @@
     if (!$auth.user) {
       $redirect(`./auth`)
     } else if ($auth.user.builder?.global) {
-      $redirect(`./portal}`)
+      $redirect(`./portal`)
     } else {
       $redirect(`./apps`)
     }
