@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.9.78",
+  "version": "0.9.79",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
@@ -21,8 +21,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.78",
-    "@budibase/string-templates": "^0.9.78",
+    "@budibase/auth": "^0.9.79",
+    "@budibase/string-templates": "^0.9.79",
     "@koa/router": "^8.0.0",
     "aws-sdk": "^2.811.0",
     "bcryptjs": "^2.4.3",
