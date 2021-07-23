@@ -17,8 +17,8 @@ const preprocess = (
   const originalType = typeof value
 
   // Convert to lowercase
-  if (options.lowercase) {
-    value = value?.toLowerCase ? value.toLowerCase() : value
+  if (value && options.lowercase) {
+    value = value.toLowerCase ? value.toLowerCase() : value
   }
 
   // Escape characters
