@@ -43,8 +43,7 @@ const DocumentTypes = {
 
 exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
-exports.APP_DEV =
-exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
+exports.APP_DEV = exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
 function isDevApp(app) {
@@ -223,8 +222,10 @@ exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
       const noTenantId = split.length === 2 || split[1] === DocumentTypes.DEV
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
-      return (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
-        (possibleTenantId === tenantId)
+      return (
+        (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
+        possibleTenantId === tenantId
+      )
     }
     return false
   })

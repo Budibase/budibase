@@ -18,7 +18,6 @@ const env = require("../../../environment")
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
-
 async function tryAddTenant(tenantId, userId, email) {
   const db = new CouchDB(PLATFORM_INFO_DB)
   const getDoc = async id => {
