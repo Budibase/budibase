@@ -22,7 +22,7 @@ const preprocess = (
   }
 
   // Escape characters
-  if (options.escape) {
+  if (options.escape && originalType === "string") {
     value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
   }
 
@@ -136,7 +136,8 @@ class QueryBuilder {
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
         key = preprocess(key.replace(/ /, "_"), {
-          escape: true,
+          wrap: false,
+          lowercase: false,
         })
         const expression = queryFn(key, value)
         if (expression == null) {
@@ -152,10 +153,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value, {
-          escape: true,
-          lowercase: true,
-        })
+        value = preprocess(value)
         return `${key}:${value}*`
       })
     }
@@ -180,10 +178,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value, {
-          escape: true,
-          lowercase: true,
-        })
+        value = preprocess(value)
         return `${key}:${value}~`
       })
     }
