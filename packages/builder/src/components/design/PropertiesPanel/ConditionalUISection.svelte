@@ -17,6 +17,8 @@
     store.actions.components.updateConditions(tempValue)
     drawer.hide()
   }
+
+  $: console.log(componentInstance?._id)
 </script>
 
 <DetailSummary
@@ -27,12 +29,10 @@
     <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
   </div>
 </DetailSummary>
-{#key componentInstance?._id}
-  <Drawer bind:this={drawer} title="Conditions">
-    <svelte:fragment slot="description">
-      Show, hide and update components in response to conditions being met.
-    </svelte:fragment>
-    <Button cta slot="buttons" on:click={save}>Save</Button>
-    <ConditionalUIDrawer slot="body" bind:conditions={tempValue} />
-  </Drawer>
-{/key}
+<Drawer bind:this={drawer} title="Conditions">
+  <svelte:fragment slot="description">
+    Show, hide and update components in response to conditions being met.
+  </svelte:fragment>
+  <Button cta slot="buttons" on:click={() => save()}>Save</Button>
+  <ConditionalUIDrawer slot="body" bind:conditions={tempValue} />
+</Drawer>

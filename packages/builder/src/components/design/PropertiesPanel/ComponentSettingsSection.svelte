@@ -50,7 +50,7 @@
     />
   {/if}
   {#if settings && settings.length > 0}
-    {#each settings as setting (`${componentInstance._id}-${setting.key}`)}
+    {#each settings as setting}
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
