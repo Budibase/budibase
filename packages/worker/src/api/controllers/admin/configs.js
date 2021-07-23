@@ -149,16 +149,16 @@ exports.publicSettings = async function (ctx) {
       config = publicConfig
     }
 
-    config.config.google = !googleConfig
-      ? !!googleConfig
-      : !googleConfig.config.activated
-      ? false
-      : true
-    config.config.oidc = !oidcConfig
-      ? !!oidcConfig
-      : !oidcConfig.config.configs[0].activated
-      ? false
-      : true
+    // google button flag
+    const googleActivated =
+      googleConfig.config.activated == undefined || // activated by default for configs pre-activated flag
+      googleConfig.config.activated
+    config.config.google = !googleConfig ? false : googleActivated
+
+    // oidc button flag
+    const oidcActivated = !oidcConfig.config.configs[0].activated
+    config.config.oidc = !oidcConfig ? false : oidcActivated
+
     ctx.body = config
   } catch (err) {
     ctx.throw(err.status, err)
