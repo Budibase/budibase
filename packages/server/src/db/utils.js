@@ -225,8 +225,12 @@ exports.getLinkParams = (otherProps = {}) => {
  * Generates a new app ID.
  * @returns {string} The new app ID which the app doc can be stored under.
  */
-exports.generateAppID = () => {
-  return `${DocumentTypes.APP}${SEPARATOR}${newid()}`
+exports.generateAppID = (tenantId = null) => {
+  let id = `${DocumentTypes.APP}${SEPARATOR}`
+  if (tenantId) {
+    id += `${tenantId}${SEPARATOR}`
+  }
+  return `${id}${newid()}`
 }
 
 /**
@@ -235,8 +239,8 @@ exports.generateAppID = () => {
  */
 exports.generateDevAppID = appId => {
   const prefix = `${DocumentTypes.APP}${SEPARATOR}`
-  const uuid = appId.split(prefix)[1]
-  return `${DocumentTypes.APP_DEV}${SEPARATOR}${uuid}`
+  const rest = appId.split(prefix)[1]
+  return `${DocumentTypes.APP_DEV}${SEPARATOR}${rest}`
 }
 
 /**

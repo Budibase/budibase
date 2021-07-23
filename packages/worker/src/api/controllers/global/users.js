@@ -211,7 +211,7 @@ exports.destroy = async ctx => {
 exports.removeAppRole = async ctx => {
   const { appId } = ctx.params
   const db = getGlobalDBFromCtx(ctx)
-  const users = await allUsers()
+  const users = await allUsers(ctx)
   const bulk = []
   const cacheInvalidations = []
   for (let user of users) {

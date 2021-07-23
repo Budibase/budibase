@@ -26,19 +26,24 @@ exports.StaticDatabases = {
   },
 }
 
+const PRE_APP = "app"
+const PRE_DEV = "dev"
+
 const DocumentTypes = {
   USER: "us",
   WORKSPACE: "workspace",
   CONFIG: "config",
   TEMPLATE: "template",
-  APP: "app",
-  APP_DEV: "app_dev",
-  APP_METADATA: "app_metadata",
+  APP: PRE_APP,
+  DEV: PRE_DEV,
+  APP_DEV: `${PRE_APP}${SEPARATOR}${PRE_DEV}`,
+  APP_METADATA: `${PRE_APP}${SEPARATOR}metadata`,
   ROLE: "role",
 }
 
 exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
+exports.APP_DEV =
 exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
@@ -85,6 +90,9 @@ exports.getGlobalDB = tenantId => {
  * Given a koa context this tries to extra what tenant is being accessed.
  */
 exports.getTenantIdFromCtx = ctx => {
+  if (!ctx) {
+    return null
+  }
   const user = ctx.user || {}
   const params = ctx.request.params || {}
   const query = ctx.request.query || {}
@@ -208,9 +216,18 @@ exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
   }
   const CouchDB = getCouch()
   let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName =>
-    dbName.startsWith(exports.APP_PREFIX)
-  )
+  const appDbNames = allDbs.filter(dbName => {
+    const split = dbName.split(SEPARATOR)
+    // it is an app, check the tenantId
+    if (split[0] === DocumentTypes.APP) {
+      const noTenantId = split.length === 2 || split[1] === DocumentTypes.DEV
+      // tenantId is always right before the UUID
+      const possibleTenantId = split[split.length - 2]
+      return (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
+        (possibleTenantId === tenantId)
+    }
+    return false
+  })
   const appPromises = appDbNames.map(db =>
     // skip setup otherwise databases could be re-created
     new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
@@ -222,10 +239,6 @@ exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
     const apps = response
       .filter(result => result.status === "fulfilled")
       .map(({ value }) => value)
-      .filter(app => {
-        const appTenant = !app.tenantId ? DEFAULT_TENANT_ID : app.tenantId
-        return tenantId === appTenant
-      })
     if (!all) {
       return apps.filter(app => {
         if (dev) {
