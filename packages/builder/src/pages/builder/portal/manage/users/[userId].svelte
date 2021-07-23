@@ -36,7 +36,8 @@
   $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : "BASIC"
   // Merge the Apps list and the roles response to get something that makes sense for the table
   $: appList = Object.keys($apps?.data).map(id => {
-    const role = $userFetch?.data?.roles?.[id] || defaultRoleId
+    const roleId = $userFetch?.data?.roles?.[id] || defaultRoleId
+    const role = $apps?.data?.[id].roles.find(role => role._id === roleId)
     return {
       ...$apps?.data?.[id],
       _id: id,
