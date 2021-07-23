@@ -145,12 +145,22 @@ exports.publicSettings = async function (ctx) {
       config = publicConfig
     }
 
-    config.config.google = !googleConfig
-      ? !!googleConfig
-      : googleConfig.config.activated
-    config.config.oidc = !oidcConfig
-      ? !!oidcConfig
-      : oidcConfig.config.configs[0].activated
+    // google button flag
+    if (googleConfig && googleConfig.config) {
+      // activated by default for configs pre-activated flag
+      config.config.google = googleConfig.config.activated == null ||
+        googleConfig.config.activated
+    } else {
+      config.config.google = false
+    }
+
+    // oidc button flag
+    if (oidcConfig && oidcConfig.config) {
+      config.config.oidc = oidcConfig.config.configs[0].activated
+    } else {
+      config.config.oidc = false
+    }
+
     ctx.body = config
   } catch (err) {
     ctx.throw(err.status, err)

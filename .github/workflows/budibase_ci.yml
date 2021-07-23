@@ -42,15 +42,3 @@ jobs:
         name: codecov-umbrella
         verbose: true 
     - run: yarn test:e2e:ci
-
-    - name: Build and Push Development Docker Image
-      # Only run on push
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
-      run: |
-        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        yarn build
-        yarn build:docker:develop
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-

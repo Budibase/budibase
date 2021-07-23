@@ -9,6 +9,7 @@ const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const { getGlobalDB } = authPkg.db
+const env = require("../../../environment")
 
 function googleCallbackUrl(tenantId = null) {
   let callbackUrl = `/api/global/auth`
@@ -158,11 +159,13 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  let callbackUrl = `${ctx.protocol}://${ctx.host}/api/global/auth`
+  const protocol = env.NODE_ENV === "production" ? "https" : "http"
+  let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
   if (tenantId) {
     callbackUrl += `/${tenantId}`
   }
   callbackUrl += `/oidc/callback`
+
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }
 

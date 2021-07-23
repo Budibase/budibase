@@ -232,6 +232,10 @@
       }
       originalGoogleDoc = cloneDeep(googleDoc)
     } else {
+      // default activated to true for older configs
+      if (googleDoc.config.activated === undefined) {
+        googleDoc.config.activated = true
+      }
       originalGoogleDoc = cloneDeep(googleDoc)
       providers.google = googleDoc
     }
