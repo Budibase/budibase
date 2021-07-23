@@ -75,10 +75,14 @@ module.exports = (noAuthPatterns = [], opts) => {
         }
       }
       const apiKey = ctx.request.headers[Headers.API_KEY]
+      const tenantId = ctx.request.headers[Headers.TENANT_ID]
       // this is an internal request, no user made it
       if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
         authenticated = true
         internal = true
+      }
+      if (!user && tenantId) {
+        user = { tenantId }
       }
       // be explicit
       if (authenticated !== true) {
