@@ -158,7 +158,6 @@ exports.publicSettings = async function (ctx) {
     } else {
       config.config.google = false
     }
-    
 
     // oidc button flag
     if (oidcConfig && oidcConfig.config) {
@@ -167,7 +166,6 @@ exports.publicSettings = async function (ctx) {
     } else {
       config.config.oidc = false
     }
-    
 
     ctx.body = config
   } catch (err) {
