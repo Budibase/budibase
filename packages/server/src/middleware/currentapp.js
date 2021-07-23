@@ -12,7 +12,12 @@ module.exports = async (ctx, next) => {
   // try to get the appID from the request
   const requestAppId = getAppId(ctx)
   // get app cookie if it exists
-  const appCookie = getCookie(ctx, Cookies.CurrentApp)
+  let appCookie = null
+  try {
+    appCookie = getCookie(ctx, Cookies.CurrentApp)
+  } catch (err) {
+    clearCookie(ctx, Cookies.CurrentApp)
+  }
   if (!appCookie && !requestAppId) {
     return next()
   }
