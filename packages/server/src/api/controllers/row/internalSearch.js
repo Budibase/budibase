@@ -28,6 +28,7 @@ class QueryBuilder {
 
   setVersion(version) {
     this.version = version
+    return this
   }
 
   setTable(tableId) {
