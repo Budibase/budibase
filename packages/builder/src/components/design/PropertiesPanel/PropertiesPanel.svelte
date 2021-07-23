@@ -16,11 +16,13 @@
 <Tabs selected="Settings" noPadding>
   <Tab title="Settings">
     <div class="container">
-      <ScreenSettingsSection {componentInstance} {componentDefinition} />
-      <ComponentSettingsSection {componentInstance} {componentDefinition} />
-      <DesignSection {componentInstance} {componentDefinition} />
-      <CustomStylesSection {componentInstance} {componentDefinition} />
-      <ConditionalUISection {componentInstance} {componentDefinition} />
+      {#key componentInstance?._id}
+        <ScreenSettingsSection {componentInstance} {componentDefinition} />
+        <ComponentSettingsSection {componentInstance} {componentDefinition} />
+        <DesignSection {componentInstance} {componentDefinition} />
+        <CustomStylesSection {componentInstance} {componentDefinition} />
+        <ConditionalUISection {componentInstance} {componentDefinition} />
+      {/key}
     </div>
   </Tab>
 </Tabs>
