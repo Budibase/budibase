@@ -1,4 +1,4 @@
-name: Budibase Release
+name: Budibase Release Staging
 
 on: 
  push:
