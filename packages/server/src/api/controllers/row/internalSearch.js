@@ -3,35 +3,6 @@ const env = require("../../../environment")
 const fetch = require("node-fetch")
 
 /**
- * Preprocesses a value before going into a lucene search.
- * Transforms strings to lowercase and wraps strings and bools in quotes.
- * @param value The value to process
- * @param options The preprocess options
- * @returns {string|*}
- */
-const preprocess = (value, { escape, lowercase, wrap } = {}) => {
-  // Determine if type needs wrapped
-  const originalType = typeof value
-
-  // Convert to lowercase
-  if (value && lowercase) {
-    value = value.toLowerCase ? value.toLowerCase() : value
-  }
-
-  // Escape characters
-  if (escape && originalType === "string") {
-    value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
-  }
-
-  // Wrap in quotes
-  if (wrap) {
-    value = originalType === "number" ? value : `"${value}"`
-  }
-
-  return value
-}
-
-/**
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
  */
@@ -52,6 +23,11 @@ class QueryBuilder {
     this.sortOrder = "ascending"
     this.sortType = "string"
     this.includeDocs = true
+    this.version = null
+  }
+
+  setVersion(version) {
+    this.version = version
   }
 
   setTable(tableId) {
@@ -127,13 +103,40 @@ class QueryBuilder {
     return this
   }
 
+  /**
+   * Preprocesses a value before going into a lucene search.
+   * Transforms strings to lowercase and wraps strings and bools in quotes.
+   * @param value The value to process
+   * @param options The preprocess options
+   * @returns {string|*}
+   */
+  preprocess(value, { escape, lowercase, wrap } = {}) {
+    const hasVersion = !!this.version
+    // Determine if type needs wrapped
+    const originalType = typeof value
+    // Convert to lowercase
+    if (value && lowercase) {
+      value = value.toLowerCase ? value.toLowerCase() : value
+    }
+    // Escape characters
+    if (escape && originalType === "string") {
+      value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
+    }
+    // Wrap in quotes
+    if (hasVersion && wrap) {
+      value = originalType === "number" ? value : `"${value}"`
+    }
+    return value
+  }
+
   buildSearchQuery() {
+    const builder = this
     let query = "*:*"
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        key = preprocess(key.replace(/ /, "_"), {
+        key = builder.preprocess(key.replace(/ /, "_"), {
           escape: true,
         })
         const expression = queryFn(key, value)
@@ -150,7 +153,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value, {
+        value = builder.preprocess(value, {
           escape: true,
           lowercase: true,
         })
@@ -168,8 +171,8 @@ class QueryBuilder {
         if (value.high == null || value.high === "") {
           return null
         }
-        const low = preprocess(value.low, allPreProcessingOpts)
-        const high = preprocess(value.high, allPreProcessingOpts)
+        const low = builder.preprocess(value.low, allPreProcessingOpts)
+        const high = builder.preprocess(value.high, allPreProcessingOpts)
         return `${key}:[${low} TO ${high}]`
       })
     }
@@ -178,7 +181,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value, {
+        value = builder.preprocess(value, {
           escape: true,
           lowercase: true,
         })
@@ -190,7 +193,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `${key}:${preprocess(value, allPreProcessingOpts)}`
+        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.notEqual) {
@@ -198,7 +201,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `!${key}:${preprocess(value, allPreProcessingOpts)}`
+        return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.empty) {
@@ -287,6 +290,7 @@ const recursiveSearch = async (appId, query, params) => {
     pageSize = params.limit - rows.length
   }
   const page = await new QueryBuilder(appId, query)
+    .setVersion(params.version)
     .setTable(params.tableId)
     .setBookmark(bookmark)
     .setLimit(pageSize)
