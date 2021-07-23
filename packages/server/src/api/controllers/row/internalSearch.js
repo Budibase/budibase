@@ -335,6 +335,7 @@ exports.paginatedSearch = async (appId, query, params) => {
   }
   limit = Math.min(limit, 200)
   const search = new QueryBuilder(appId, query)
+    .setVersion(params.version)
     .setTable(params.tableId)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)
