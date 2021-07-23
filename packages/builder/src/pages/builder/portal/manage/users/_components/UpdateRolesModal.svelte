@@ -8,8 +8,7 @@
 
   const dispatch = createEventDispatcher()
 
-  const roles = app.roles
-  let options = roles.map(role => role._id).filter(id => id !== "PUBLIC")
+  let options = app.roles.filter(role => role._id !== "PUBLIC")
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
@@ -46,5 +45,7 @@
     on:change
     {options}
     label="Role"
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
   />
 </ModalContent>
