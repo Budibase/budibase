@@ -7,33 +7,55 @@ const {
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
+const { DEFAULT_TENANT_ID } = require("@budibase/auth/constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
+const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
-async function tryAddTenant(tenantId) {
+
+async function tryAddTenant(tenantId, userId, email) {
   const db = new CouchDB(PLATFORM_INFO_DB)
-  let tenants
-  try {
-    tenants = await db.get(TENANT_DOC)
-  } catch (err) {
-    // if theres an error don't worry, we'll just write it in
+  const getDoc = async id => {
+    if (!id) {
+      return null
+    }
+    try {
+      return await db.get(id)
+    } catch (err) {
+      return { _id: id }
+    }
   }
-  if (!tenants || !Array.isArray(tenants.tenantIds)) {
+  let [tenants, userIdDoc, emailDoc] = await Promise.all([
+    getDoc(TENANT_DOC),
+    getDoc(userId),
+    getDoc(email),
+  ])
+  if (!Array.isArray(tenants.tenantIds)) {
     tenants = {
       _id: TENANT_DOC,
       tenantIds: [],
     }
   }
+  let promises = []
+  if (userIdDoc) {
+    userIdDoc.tenantId = tenantId
+    promises.push(db.put(userIdDoc))
+  }
+  if (emailDoc) {
+    emailDoc.tenantId = tenantId
+    promises.push(db.put(emailDoc))
+  }
   if (tenants.tenantIds.indexOf(tenantId) === -1) {
     tenants.tenantIds.push(tenantId)
-    await db.put(tenants)
+    promises.push(db.put(tenants))
   }
+  await Promise.all(promises)
 }
 
 async function doesTenantExist(tenantId) {
@@ -67,8 +89,7 @@ async function saveUser(user, tenantId) {
     throw "No tenancy specified."
   }
   const db = getGlobalDB(tenantId)
-  await tryAddTenant(tenantId)
-  const { email, password, _id } = user
+  let { email, password, _id } = user
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
@@ -90,10 +111,11 @@ async function saveUser(user, tenantId) {
     throw "Password must be specified."
   }
 
+  _id = _id || generateGlobalUserID()
   user = {
     ...dbUser,
     ...user,
-    _id: _id || generateGlobalUserID(),
+    _id,
     password: hashedPassword,
     tenantId,
   }
@@ -110,6 +132,7 @@ async function saveUser(user, tenantId) {
       password: hashedPassword,
       ...user,
     })
+    await tryAddTenant(tenantId, _id, email)
     await userCache.invalidateUser(response.id)
     return {
       _id: response.id,
@@ -262,6 +285,28 @@ exports.find = async ctx => {
     delete user.password
   }
   ctx.body = user
+}
+
+exports.tenantLookup = async ctx => {
+  const id = ctx.params.id
+  // lookup, could be email or userId, either will return a doc
+  const db = new CouchDB(PLATFORM_INFO_DB)
+  let tenantId = null
+  try {
+    const doc = await db.get(id)
+    if (doc && doc.tenantId) {
+      tenantId = doc.tenantId
+    }
+  } catch (err) {
+    if (!env.MULTI_TENANCY) {
+      tenantId = DEFAULT_TENANT_ID
+    } else {
+      ctx.throw(400, "No tenant found.")
+    }
+  }
+  ctx.body = {
+    tenantId,
+  }
 }
 
 exports.invite = async ctx => {
