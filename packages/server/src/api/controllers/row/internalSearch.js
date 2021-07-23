@@ -9,25 +9,22 @@ const fetch = require("node-fetch")
  * @param options The preprocess options
  * @returns {string|*}
  */
-const preprocess = (
-  value,
-  options = { escape: true, lowercase: true, wrap: true }
-) => {
+const preprocess = (value, { escape, lowercase, wrap } = {}) => {
   // Determine if type needs wrapped
   const originalType = typeof value
 
   // Convert to lowercase
-  if (value && options.lowercase) {
+  if (value && lowercase) {
     value = value.toLowerCase ? value.toLowerCase() : value
   }
 
   // Escape characters
-  if (options.escape && originalType === "string") {
+  if (escape && originalType === "string") {
     value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
   }
 
   // Wrap in quotes
-  if (options.wrap) {
+  if (wrap) {
     value = originalType === "number" ? value : `"${value}"`
   }
 
@@ -132,12 +129,12 @@ class QueryBuilder {
 
   buildSearchQuery() {
     let query = "*:*"
+    const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
         key = preprocess(key.replace(/ /, "_"), {
-          wrap: false,
-          lowercase: false,
+          escape: true,
         })
         const expression = queryFn(key, value)
         if (expression == null) {
@@ -153,7 +150,10 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value)
+        value = preprocess(value, {
+          escape: true,
+          lowercase: true,
+        })
         return `${key}:${value}*`
       })
     }
@@ -168,8 +168,8 @@ class QueryBuilder {
         if (value.high == null || value.high === "") {
           return null
         }
-        const low = preprocess(value.low)
-        const high = preprocess(value.high)
+        const low = preprocess(value.low, allPreProcessingOpts)
+        const high = preprocess(value.high, allPreProcessingOpts)
         return `${key}:[${low} TO ${high}]`
       })
     }
@@ -178,7 +178,10 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        value = preprocess(value)
+        value = preprocess(value, {
+          escape: true,
+          lowercase: true,
+        })
         return `${key}:${value}~`
       })
     }
@@ -187,7 +190,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `${key}:${preprocess(value)}`
+        return `${key}:${preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.notEqual) {
@@ -195,7 +198,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `!${key}:${preprocess(value)}`
+        return `!${key}:${preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.empty) {
