@@ -278,6 +278,7 @@ exports.search = async ctx => {
   const { tableId } = ctx.params
   const db = new CouchDB(appId)
   const { paginate, query, ...params } = ctx.request.body
+  params.version = ctx.version
   params.tableId = tableId
 
   let response
