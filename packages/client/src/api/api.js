@@ -1,7 +1,9 @@
+import { notificationStore } from "../store"
+import { ApiVersion } from "../constants"
+
 /**
  * API cache for cached request responses.
  */
-import { notificationStore } from "../store"
 let cache = {}
 
 /**
@@ -22,6 +24,7 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     const headers = {
       Accept: "application/json",
       "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
+      "x-budibase-api-version": ApiVersion,
       ...(json && { "Content-Type": "application/json" }),
       ...(!inBuilder && { "x-budibase-type": "client" }),
     }
