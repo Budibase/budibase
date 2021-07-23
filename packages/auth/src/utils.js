@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
 const { getDB } = require("./db")
+const { Headers } = require("./constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -23,7 +24,7 @@ function confirmAppId(possibleAppId) {
  * @returns {string|undefined} If an appId was found it will be returned.
  */
 exports.getAppId = ctx => {
-  const options = [ctx.headers["x-budibase-app-id"], ctx.params.appId]
+  const options = [ctx.headers[Headers.APP_ID], ctx.params.appId]
   if (ctx.subdomains) {
     options.push(ctx.subdomains[1])
   }
@@ -97,7 +98,7 @@ exports.clearCookie = (ctx, name) => {
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
 exports.isClient = ctx => {
-  return ctx.headers["x-budibase-type"] === "client"
+  return ctx.headers[Headers.TYPE] === "client"
 }
 
 /**

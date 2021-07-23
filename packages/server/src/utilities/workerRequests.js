@@ -3,13 +3,14 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { getDeployedAppID } = require("@budibase/auth/db")
 const { updateAppRole, getGlobalUser } = require("./global")
+const { Headers } = require("@budibase/auth/constants")
 
 function request(ctx, request, noApiKey) {
   if (!request.headers) {
     request.headers = {}
   }
   if (!noApiKey) {
-    request.headers["x-budibase-api-key"] = env.INTERNAL_API_KEY
+    request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
   }
   if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"

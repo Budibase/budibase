@@ -15,9 +15,15 @@ export const buildLuceneQuery = filter => {
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
       let { operator, field, type, value } = expression
-      // Ensure date fields are transformed into ISO strings
+      // Parse all values into correct types
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
+      }
+      if (type === "number") {
+        value = parseFloat(value)
+      }
+      if (type === "boolean") {
+        value = value?.toLowerCase() === "true"
       }
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
@@ -42,10 +48,10 @@ export const buildLuceneQuery = filter => {
           // Transform boolean filters to cope with null.
           // "equals false" needs to be "not equals true"
           // "not equals false" needs to be "equals true"
-          if (operator === "equal" && value === "false") {
-            query.notEqual[field] = "true"
-          } else if (operator === "notEqual" && value === "false") {
-            query.equal[field] = "true"
+          if (operator === "equal" && value === false) {
+            query.notEqual[field] = true
+          } else if (operator === "notEqual" && value === false) {
+            query.equal[field] = true
           } else {
             query[operator][field] = value
           }

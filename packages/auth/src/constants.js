@@ -9,6 +9,13 @@ exports.Cookies = {
   OIDC_CONFIG: "budibase:oidc:config",
 }
 
+exports.Headers = {
+  API_KEY: "x-budibase-api-key",
+  API_VER: "x-budibase-api-version",
+  APP_ID: "x-budibase-app-id",
+  TYPE: "x-budibase-type",
+}
+
 exports.GlobalRoles = {
   OWNER: "owner",
   ADMIN: "admin",

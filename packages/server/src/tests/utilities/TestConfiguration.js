@@ -14,7 +14,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies } = require("@budibase/auth").constants
+const { Cookies, Headers } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
 const { StaticDatabases } = require("@budibase/auth/db")
 const { createASession } = require("@budibase/auth/sessions")
@@ -122,7 +122,7 @@ class TestConfiguration {
       ],
     }
     if (this.appId) {
-      headers["x-budibase-app-id"] = this.appId
+      headers[Headers.APP_ID] = this.appId
     }
     return headers
   }
@@ -132,7 +132,7 @@ class TestConfiguration {
       Accept: "application/json",
     }
     if (this.appId) {
-      headers["x-budibase-app-id"] = this.appId
+      headers[Headers.APP_ID] = this.appId
     }
     return headers
   }
@@ -354,7 +354,7 @@ class TestConfiguration {
         `${Cookies.Auth}=${authToken}`,
         `${Cookies.CurrentApp}=${appToken}`,
       ],
-      "x-budibase-app-id": this.appId,
+      [Headers.APP_ID]: this.appId,
     }
   }
 }
