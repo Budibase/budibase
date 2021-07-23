@@ -31,7 +31,13 @@ describe("run misc tests", () => {
   describe("/version", () => {
     it("should confirm version", async () => {
       const res = await request.get("/version").expect(200)
-      expect(res.text.split(".").length).toEqual(3)
+      const text = res.text
+      if (text.includes("alpha")) {
+        expect(text.split(".").length).toEqual(4)
+      } else {
+        expect(text.split(".").length).toEqual(3)
+      }
+      
     })
   })
 
