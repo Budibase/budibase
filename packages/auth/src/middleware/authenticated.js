@@ -1,4 +1,4 @@
-const { Cookies } = require("../constants")
+const { Cookies, Headers } = require("../constants")
 const { getCookie, clearCookie } = require("../utils")
 const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
@@ -23,15 +23,17 @@ function buildNoAuthRegex(patterns) {
   })
 }
 
-function finalise(ctx, { authenticated, user, internal } = {}) {
+function finalise(ctx, { authenticated, user, internal, version } = {}) {
   ctx.isAuthenticated = authenticated || false
   ctx.user = user
   ctx.internal = internal || false
+  ctx.version = version
 }
 
 module.exports = (noAuthPatterns = [], opts) => {
   const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
   return async (ctx, next) => {
+    const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
     const found = noAuthOptions.find(({ regex, method }) => {
       return (
@@ -72,7 +74,7 @@ module.exports = (noAuthPatterns = [], opts) => {
           await updateSessionTTL(session)
         }
       }
-      const apiKey = ctx.request.headers["x-budibase-api-key"]
+      const apiKey = ctx.request.headers[Headers.API_KEY]
       // this is an internal request, no user made it
       if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
         authenticated = true
@@ -83,12 +85,12 @@ module.exports = (noAuthPatterns = [], opts) => {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
-      finalise(ctx, { authenticated, user, internal })
+      finalise(ctx, { authenticated, user, internal, version })
       return next()
     } catch (err) {
       // allow configuring for public access
       if (opts && opts.publicAllowed) {
-        finalise(ctx, { authenticated: false })
+        finalise(ctx, { authenticated: false, version })
       } else {
         ctx.throw(err.status || 403, err)
       }
