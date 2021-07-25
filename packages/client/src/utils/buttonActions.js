@@ -1,5 +1,10 @@
 import { get } from "svelte/store"
-import { routeStore, builderStore, confirmationStore, authStore } from "../store"
+import {
+  routeStore,
+  builderStore,
+  confirmationStore,
+  authStore,
+} from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
 
