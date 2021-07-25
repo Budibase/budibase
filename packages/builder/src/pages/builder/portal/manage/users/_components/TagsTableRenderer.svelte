@@ -4,7 +4,7 @@
 
   const displayLimit = 5
 
-  $: roles = value?.filter(role => role != null) ?? []
+  $: roles = value?.filter(role => role != null).map(role => role.name) ?? []
   $: tags = roles.slice(0, displayLimit)
   $: leftover = roles.length - tags.length
 </script>
