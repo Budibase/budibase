@@ -1,8 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import FeedbackIframe from "../feedback/FeedbackIframe.svelte"
-  import { store } from "builderStore"
   import api from "builderStore/api"
   import analytics from "analytics"
 
@@ -18,8 +16,6 @@
   let deployments = []
   let poll
   let publishModal
-
-  $: appId = $store.appId
 
   async function deployApp() {
     try {
@@ -99,9 +95,7 @@
     size="L"
     showConfirmButton={false}
     showCancelButton={false}
-  >
-    <FeedbackIframe on:finished={feedbackModal.hide} />
-  </ModalContent>
+  />
 </Modal>
 <Modal bind:this={publishModal}>
   <ModalContent

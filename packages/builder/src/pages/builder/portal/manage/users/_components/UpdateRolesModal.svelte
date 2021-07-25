@@ -8,7 +8,10 @@
 
   const dispatch = createEventDispatcher()
 
-  let options = app.roles.filter(role => role._id !== "PUBLIC")
+  const roles = app.roles
+  let options = roles
+    .filter(role => role._id !== "PUBLIC")
+    .map(role => ({ value: role._id, label: role.name }))
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {

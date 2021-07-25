@@ -67,7 +67,7 @@
     grid-template-columns: 1fr 1fr;
   }
   .placeholder {
-    border: 2px dashed var(--grey-5);
+    border: 2px dashed var(--spectrum-global-color-gray-600);
     padding: var(--spacing-l);
   }
 </style>

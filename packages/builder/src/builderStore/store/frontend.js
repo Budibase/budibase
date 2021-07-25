@@ -8,7 +8,6 @@ import {
   selectedComponent,
   selectedAccessRole,
 } from "builderStore"
-// Backendstores
 import {
   datasources,
   integrations,
@@ -33,6 +32,10 @@ const INITIAL_FRONTEND_STATE = {
   layouts: [],
   screens: [],
   components: [],
+  clientFeatures: {
+    spectrumThemes: false,
+    intelligentLoading: false,
+  },
   currentFrontEndType: "none",
   selectedScreenId: "",
   selectedLayoutId: "",
@@ -43,6 +46,7 @@ const INITIAL_FRONTEND_STATE = {
   appId: "",
   routes: {},
   clientLibPath: "",
+  theme: "",
 }
 
 export const getFrontendStore = () => {
@@ -56,16 +60,23 @@ export const getFrontendStore = () => {
         ...state,
         libraries: application.componentLibraries,
         components,
+        clientFeatures: {
+          ...state.clientFeatures,
+          ...components.features,
+        },
         name: application.name,
         description: application.description,
         appId: application.appId,
         url: application.url,
         layouts,
         screens,
+        theme: application.theme,
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,
         previousTopNavPath: {},
+        version: application.version,
+        revertableVersion: application.revertableVersion,
       }))
       await hostingStore.actions.fetch()
 
@@ -78,6 +89,20 @@ export const getFrontendStore = () => {
       queries.init()
       database.set(application.instance)
       tables.init()
+    },
+    theme: {
+      save: async theme => {
+        const appId = get(store).appId
+        const response = await api.put(`/api/applications/${appId}`, { theme })
+        if (response.status === 200) {
+          store.update(state => {
+            state.theme = theme
+            return state
+          })
+        } else {
+          throw new Error("Error updating theme")
+        }
+      },
     },
     routing: {
       fetch: async () => {
@@ -199,6 +224,11 @@ export const getFrontendStore = () => {
         const response = await api.post(`/api/layouts`, layoutToSave)
         const savedLayout = await response.json()
 
+        // Abort if saving failed
+        if (response.status !== 200) {
+          return
+        }
+
         store.update(state => {
           const layoutIdx = state.layouts.findIndex(
             stateLayout => stateLayout._id === savedLayout._id
@@ -316,16 +346,6 @@ export const getFrontendStore = () => {
       create: async (componentName, presetProps) => {
         const selected = get(selectedComponent)
         const asset = get(currentAsset)
-        const state = get(store)
-
-        // Only allow one screen slot, and in the layout
-        if (componentName.endsWith("screenslot")) {
-          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
-          const slot = findComponentType(asset.props, componentName)
-          if (!isLayout || slot != null) {
-            return
-          }
-        }
 
         // Create new component
         const componentInstance = store.actions.components.createInstance(

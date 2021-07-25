@@ -39,5 +39,7 @@ router
   .post("/api/admin/auth/logout", authController.logout)
   .get("/api/admin/auth/google", authController.googlePreAuth)
   .get("/api/admin/auth/google/callback", authController.googleAuth)
+  .get("/api/admin/auth/oidc/configs/:configId", authController.oidcPreAuth)
+  .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
 
 module.exports = router

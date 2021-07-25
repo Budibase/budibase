@@ -9,10 +9,12 @@
   export let onClick
   export let size = "M"
   export let type = "primary"
+  export let quiet = false
 </script>
 
 <button
   class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
+  class:spectrum-Button--quiet={quiet}
   disabled={disabled || false}
   use:styleable={$component.styles}
   on:click={onClick}

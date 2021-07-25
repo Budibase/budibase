@@ -1,7 +1,7 @@
-const { Cookies } = require("../constants")
-const database = require("../db")
+const { Cookies, Headers } = require("../constants")
 const { getCookie, clearCookie } = require("../utils")
-const { StaticDatabases } = require("../db/utils")
+const { getUser } = require("../cache/user")
+const { getSession, updateSessionTTL } = require("../security/sessions")
 const env = require("../environment")
 
 const PARAM_REGEX = /\/:(.*?)\//g
@@ -22,15 +22,17 @@ function buildNoAuthRegex(patterns) {
   })
 }
 
-function finalise(ctx, { authenticated, user, internal } = {}) {
+function finalise(ctx, { authenticated, user, internal, version } = {}) {
   ctx.isAuthenticated = authenticated || false
   ctx.user = user
   ctx.internal = internal || false
+  ctx.version = version
 }
 
 module.exports = (noAuthPatterns = [], opts) => {
   const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
   return async (ctx, next) => {
+    const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
     const found = noAuthOptions.find(({ regex, method }) => {
       return (
@@ -48,17 +50,30 @@ module.exports = (noAuthPatterns = [], opts) => {
         user = null,
         internal = false
       if (authCookie) {
-        try {
-          const db = database.getDB(StaticDatabases.GLOBAL.name)
-          user = await db.get(authCookie.userId)
-          delete user.password
-          authenticated = true
-        } catch (err) {
-          // remove the cookie as the use does not exist anymore
+        let error = null
+        const sessionId = authCookie.sessionId,
+          userId = authCookie.userId
+        const session = await getSession(userId, sessionId)
+        if (!session) {
+          error = "No session found"
+        } else {
+          try {
+            user = await getUser(userId)
+            delete user.password
+            authenticated = true
+          } catch (err) {
+            error = err
+          }
+        }
+        if (error) {
+          // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookies.Auth)
+        } else {
+          // make sure we denote that the session is still in use
+          await updateSessionTTL(session)
         }
       }
-      const apiKey = ctx.request.headers["x-budibase-api-key"]
+      const apiKey = ctx.request.headers[Headers.API_KEY]
       // this is an internal request, no user made it
       if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
         authenticated = true
@@ -69,12 +84,12 @@ module.exports = (noAuthPatterns = [], opts) => {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
-      finalise(ctx, { authenticated, user, internal })
+      finalise(ctx, { authenticated, user, internal, version })
       return next()
     } catch (err) {
       // allow configuring for public access
       if (opts && opts.publicAllowed) {
-        finalise(ctx, { authenticated: false })
+        finalise(ctx, { authenticated: false, version })
       } else {
         ctx.throw(err.status || 403, err)
       }

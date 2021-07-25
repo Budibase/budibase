@@ -145,4 +145,7 @@
     height: 100vh;
     z-index: 999;
   }
+  :global(.flatpickr-calendar) {
+    font-family: "Source Sans Pro", sans-serif;
+  }
 </style>

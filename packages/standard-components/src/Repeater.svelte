@@ -33,7 +33,7 @@
 
 <style>
   .noRows {
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-600);
     font-size: var(--font-size-s);
     padding: var(--spacing-l);
     display: grid;
@@ -42,6 +42,6 @@
   .noRows i {
     margin-bottom: var(--spacing-m);
     font-size: 1.5rem;
-    color: var(--grey-5);
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

@@ -35,17 +35,19 @@
     <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
   </div>
 </DetailSummary>
-<Drawer bind:this={drawer} title="Custom CSS">
-  <Button cta slot="buttons" on:click={save}>Save</Button>
-  <DrawerContent slot="body">
-    <div class="content">
-      <Layout gap="S">
-        <Body size="S">Custom CSS overrides all other component styles.</Body>
-        <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
-      </Layout>
-    </div>
-  </DrawerContent>
-</Drawer>
+{#key componentInstance?._id}
+  <Drawer bind:this={drawer} title="Custom CSS">
+    <Button cta slot="buttons" on:click={save}>Save</Button>
+    <DrawerContent slot="body">
+      <div class="content">
+        <Layout gap="S" noPadding>
+          <Body size="S">Custom CSS overrides all other component styles.</Body>
+          <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
+        </Layout>
+      </div>
+    </DrawerContent>
+  </Drawer>
+{/key}
 
 <style>
   .content {
