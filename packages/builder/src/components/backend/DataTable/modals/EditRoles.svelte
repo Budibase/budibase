@@ -17,7 +17,11 @@
   $: selectedRoleId = selectedRole._id
   $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
-  $: valid = selectedRole.name && selectedRole.inherits && selectedRole.permissionId && !builtInRoles.includes(selectedRole.name)
+  $: valid =
+    selectedRole.name &&
+    selectedRole.inherits &&
+    selectedRole.permissionId &&
+    !builtInRoles.includes(selectedRole.name)
 
   const fetchBasePermissions = async () => {
     const permissionsResponse = await api.get("/api/permission/builtin")
