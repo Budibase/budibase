@@ -10,6 +10,11 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
+"@spectrum-css/card@^3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/card/-/card-3.0.3.tgz#56b2e2da6b80c1583228baa279de7407383bfb6b"
+  integrity sha512-+oKLUI2a0QmQP9EzySeq/G4FpUkkdaDNbuEbqCj2IkPMc/2v/nwzsPhh1fj2UIghGAiiUwXfPpzax1e8fyhQUg==
+
 "@spectrum-css/link@^3.1.3":
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/@spectrum-css/link/-/link-3.1.3.tgz#b0e560a7e0acdb4a2b329b6669696aa3438f5993"
@@ -21,6 +26,11 @@
   integrity sha512-lCXWjonLwYBg8FHUEkiFX0Mmfk+9Uivgvxq0DTulPlWrJcULTwjaOiY28/YBz7Fy1wuv/0KORbkPRALpYldBZg==
   dependencies:
     "@spectrum-css/vars" "^3.0.2"
+
+"@spectrum-css/typography@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.2.tgz#ea3ca0a60e18064527819d48c8c4364cab4fcd38"
+  integrity sha512-5ZOLmQe0edzsDMyhghUd4hBb5uxGsFrxzf+WasfcUw9klSfTsRZ09n1BsaaWbgrLjlMQ+EEHS46v5VNo0Ms2CA==
 
 "@spectrum-css/vars@^3.0.1", "@spectrum-css/vars@^3.0.2":
   version "3.0.2"

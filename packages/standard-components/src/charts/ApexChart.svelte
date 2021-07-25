@@ -23,6 +23,16 @@
     text-transform: capitalize;
   }
   div :global(.apexcharts-yaxis-label, .apexcharts-xaxis-label) {
-    fill: #aaa;
+    fill: var(--spectrum-global-color-gray-600);
+  }
+
+  div :global(.apexcharts-gridline) {
+    stroke: var(--spectrum-global-color-gray-600);
+  }
+  div :global(.apexcharts-legend-text) {
+    color: var(--spectrum-global-color-gray-700) !important;
+  }
+  div :global(.apexcharts-datalabel) {
+    fill: var(--spectrum-global-color-gray-800);
   }
 </style>

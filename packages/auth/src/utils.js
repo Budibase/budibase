@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
 const { getDB } = require("./db")
+const { Headers } = require("./constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -23,7 +24,7 @@ function confirmAppId(possibleAppId) {
  * @returns {string|undefined} If an appId was found it will be returned.
  */
 exports.getAppId = ctx => {
-  const options = [ctx.headers["x-budibase-app-id"], ctx.params.appId]
+  const options = [ctx.headers[Headers.APP_ID], ctx.params.appId]
   if (ctx.subdomains) {
     options.push(ctx.subdomains[1])
   }
@@ -64,23 +65,18 @@ exports.getCookie = (ctx, name) => {
 }
 
 /**
- * Store a cookie for the request, has a hardcoded expiry.
+ * Store a cookie for the request - it will not expire.
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to set.
  * @param {string|object} value The value of cookie which will be set.
  */
 exports.setCookie = (ctx, value, name = "builder") => {
-  const expires = new Date()
-  expires.setDate(expires.getDate() + 1)
-
   if (!value) {
     ctx.cookies.set(name)
   } else {
-    value = jwt.sign(value, options.secretOrKey, {
-      expiresIn: "1 day",
-    })
+    value = jwt.sign(value, options.secretOrKey)
     ctx.cookies.set(name, value, {
-      expires,
+      maxAge: Number.MAX_SAFE_INTEGER,
       path: "/",
       httpOnly: false,
       overwrite: true,
@@ -102,7 +98,7 @@ exports.clearCookie = (ctx, name) => {
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
 exports.isClient = ctx => {
-  return ctx.headers["x-budibase-type"] === "client"
+  return ctx.headers[Headers.TYPE] === "client"
 }
 
 /**

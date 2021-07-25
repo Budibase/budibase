@@ -4,7 +4,10 @@
   import { Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
+  import VersionModal from "components/deploy/VersionModal.svelte"
+  import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
+  import { auth } from "stores/portal"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
@@ -16,6 +19,15 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+
+  let userShouldPostFeedback = false
+
+  function previewApp() {
+    if (!$auth?.user?.flags?.feedbackSubmitted) {
+      userShouldPostFeedback = true
+    }
+    window.open(`/${application}`)
+  }
 
   async function getPackage() {
     const res = await get(`/api/applications/${application}/appPackage`)
@@ -80,14 +92,9 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
+        <VersionModal />
         <RevertModal />
-        <Icon
-          name="Play"
-          hoverable
-          on:click={() => {
-            window.open(`/${application}`)
-          }}
-        />
+        <Icon name="Play" hoverable on:click={previewApp} />
         <DeployModal />
       </div>
     </div>
@@ -96,6 +103,10 @@
 {:catch error}
   <p>Something went wrong: {error.message}</p>
 {/await}
+
+{#if userShouldPostFeedback}
+  <NPSFeedbackForm on:complete={() => (userShouldPostFeedback = false)} />
+{/if}
 
 <style>
   .loading {

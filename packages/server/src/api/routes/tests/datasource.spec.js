@@ -94,7 +94,7 @@ describe("/datasources", () => {
         .expect(200)
       // this is mock data, can't test it
       expect(res.body).toBeDefined()
-      expect(pg.queryMock).toHaveBeenCalledWith(`select "name", "age" from "users" where "name" like $1 limit $2`, ["John%", 5000])
+      expect(pg.queryMock).toHaveBeenCalledWith(`select "name", "age" from "users" where "users"."name" like $1 limit $2`, ["John%", 5000])
     })
   })
 

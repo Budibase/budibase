@@ -51,7 +51,7 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define Actions</ActionButton>
+<ActionButton on:click={drawer.show}>Define actions</ActionButton>
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.

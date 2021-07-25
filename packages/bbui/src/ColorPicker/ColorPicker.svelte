@@ -9,10 +9,10 @@
 
   export let value
   export let size = "M"
+  export let spectrumTheme
 
   let open = false
 
-  $: color = value || "transparent"
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
 
@@ -21,7 +21,8 @@
     {
       label: "Grays",
       colors: [
-        "white",
+        "gray-50",
+        "gray-75",
         "gray-100",
         "gray-200",
         "gray-300",
@@ -31,7 +32,6 @@
         "gray-700",
         "gray-800",
         "gray-900",
-        "black",
       ],
     },
     {
@@ -86,7 +86,7 @@
       return value
     }
     let found = false
-    const comparisonValue = value.substring(35, value.length - 1)
+    const comparisonValue = value.substring(28, value.length - 1)
     for (let category of categories) {
       found = category.colors.includes(comparisonValue)
       if (found) {
@@ -102,17 +102,19 @@
 
   const getCheckColor = value => {
     return /^.*(white|(gray-(50|75|100|200|300|400|500)))\)$/.test(value)
-      ? "black"
-      : "white"
+      ? "var(--spectrum-global-color-gray-900)"
+      : "var(--spectrum-global-color-gray-50)"
   }
 </script>
 
 <div class="container">
-  <div
-    class="preview size--{size || 'M'}"
-    style="background: {color};"
-    on:click={() => (open = true)}
-  />
+  <div class="preview size--{size || 'M'}" on:click={() => (open = true)}>
+    <div
+      class="fill {spectrumTheme || ''}"
+      style={value ? `background: ${value};` : ""}
+      class:placeholder={!value}
+    />
+  </div>
   {#if open}
     <div
       use:clickOutside={() => (open = false)}
@@ -126,15 +128,19 @@
             {#each category.colors as color}
               <div
                 on:click={() => {
-                  onChange(`var(--spectrum-global-color-static-${color})`)
+                  onChange(`var(--spectrum-global-color-${color})`)
                 }}
                 class="color"
-                style="background: var(--spectrum-global-color-static-{color}); color: {checkColor};"
                 title={prettyPrint(color)}
               >
-                {#if value === `var(--spectrum-global-color-static-${color})`}
-                  <Icon name="Checkmark" size="S" />
-                {/if}
+                <div
+                  class="fill {spectrumTheme || ''}"
+                  style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
+                >
+                  {#if value === `var(--spectrum-global-color-${color})`}
+                    <Icon name="Checkmark" size="S" />
+                  {/if}
+                </div>
               </div>
             {/each}
           </div>
@@ -170,12 +176,43 @@
     width: 32px;
     height: 32px;
     border-radius: 100%;
+    position: relative;
     transition: border-color 130ms ease-in-out;
-    box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-300);
+    box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-400);
   }
   .preview:hover {
     cursor: pointer;
-    box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-300);
+    box-shadow: 0 0 2px 2px var(--spectrum-global-color-gray-400);
+  }
+  .fill {
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+  }
+  .fill.placeholder {
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+    background-image: linear-gradient(
+        45deg,
+        #eee 25%,
+        transparent 25%,
+        transparent 75%,
+        #eee 75%,
+        #eee 100%
+      ),
+      linear-gradient(
+        45deg,
+        #eee 25%,
+        white 25%,
+        white 75%,
+        #eee 75%,
+        #eee 100%
+      );
   }
   .size--S {
     width: 20px;
@@ -219,8 +256,7 @@
     width: 16px;
     border-radius: 100%;
     box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-300);
-    display: grid;
-    place-items: center;
+    position: relative;
   }
   .color:hover {
     cursor: pointer;
@@ -235,5 +271,9 @@
   }
   .category--custom .heading {
     margin-bottom: var(--spacing-xs);
+  }
+
+  .spectrum-wrapper {
+    background-color: transparent;
   }
 </style>

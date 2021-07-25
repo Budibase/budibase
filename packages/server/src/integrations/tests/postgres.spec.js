@@ -17,7 +17,7 @@ describe("Postgres Integration", () => {
 
   it("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
-    const response = await config.integration.create({ 
+    await config.integration.create({
       sql
     })
     expect(pg.queryMock).toHaveBeenCalledWith(sql, [])
@@ -25,7 +25,7 @@ describe("Postgres Integration", () => {
 
   it("calls the read method with the correct params", async () => {
     const sql = "select * from users;"
-    const response = await config.integration.read({ 
+    await config.integration.read({
       sql
     })
     expect(pg.queryMock).toHaveBeenCalledWith(sql, [])

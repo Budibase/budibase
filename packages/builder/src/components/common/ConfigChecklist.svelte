@@ -12,7 +12,7 @@
     apps: "Create your first app",
     smtp: "Set up email",
     adminUser: "Create your first user",
-    oauth: "Set up OAuth",
+    sso: "Set up single sign-on",
   }
 </script>
 

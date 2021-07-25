@@ -6,18 +6,38 @@ import {
   QueryOptions,
   SortDirection,
   Operation,
-} from "./definitions"
+  RelationshipsJson,
+} from "../../definitions/datasource"
+import { isIsoDateString } from "../utils"
 
+type KnexQuery = Knex.QueryBuilder | Knex
+
+function parseBody(body: any) {
+  for (let [key, value] of Object.entries(body)) {
+    if (typeof value !== "string") {
+      continue
+    }
+    if (isIsoDateString(value)) {
+      body[key] = new Date(value)
+    } else if (!isNaN(parseFloat(value))) {
+      body[key] = parseFloat(value)
+    }
+  }
+  return body
+}
+
+// right now we only do filters on the specific table being queried
 function addFilters(
-  query: any,
+  tableName: string,
+  query: KnexQuery,
   filters: SearchFilters | undefined
-): Knex.QueryBuilder {
+): KnexQuery {
   function iterate(
     structure: { [key: string]: any },
     fn: (key: string, value: any) => void
   ) {
     for (let [key, value] of Object.entries(structure)) {
-      fn(key, value)
+      fn(`${tableName}.${key}`, value)
     }
   }
   if (!filters) {
@@ -25,6 +45,12 @@ function addFilters(
   }
   // if all or specified in filters, then everything is an or
   const allOr = filters.allOr
+  if (filters.oneOf) {
+    iterate(filters.oneOf, (key, array) => {
+      const fnc = allOr ? "orWhereIn" : "whereIn"
+      query = query[fnc](key, array)
+    })
+  }
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       const fnc = allOr ? "orWhere" : "where"
@@ -67,20 +93,60 @@ function addFilters(
   return query
 }
 
-function buildCreate(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function addRelationships(
+  query: KnexQuery,
+  fromTable: string,
+  relationships: RelationshipsJson[] | undefined
+): KnexQuery {
+  if (!relationships) {
+    return query
+  }
+  for (let relationship of relationships) {
+    const from = relationship.from,
+      to = relationship.to,
+      toTable = relationship.tableName
+    if (!relationship.through) {
+      // @ts-ignore
+      query = query.leftJoin(
+        toTable,
+        `${fromTable}.${from}`,
+        `${relationship.tableName}.${to}`
+      )
+    } else {
+      const throughTable = relationship.through
+      query = query
+        // @ts-ignore
+        .leftJoin(
+          throughTable,
+          `${fromTable}.${from}`,
+          `${throughTable}.${from}`
+        )
+        .leftJoin(toTable, `${toTable}.${to}`, `${throughTable}.${to}`)
+    }
+  }
+  return query
+}
+
+function buildCreate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body } = json
-  let query = knex(endpoint.entityId)
+  let query: KnexQuery = knex(endpoint.entityId)
+  const parsedBody = parseBody(body)
   // mysql can't use returning
   if (opts.disableReturning) {
-    return query.insert(body)
+    return query.insert(parsedBody)
   } else {
-    return query.insert(body).returning("*")
+    return query.insert(parsedBody).returning("*")
   }
 }
 
-function buildRead(knex: Knex, json: QueryJson, limit: number) {
-  let { endpoint, resource, filters, sort, paginate } = json
-  let query: Knex.QueryBuilder = knex(endpoint.entityId)
+function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
+  let { endpoint, resource, filters, sort, paginate, relationships } = json
+  const tableName = endpoint.entityId
+  let query: KnexQuery = knex(tableName)
   // select all if not specified
   if (!resource) {
     resource = { fields: [] }
@@ -92,7 +158,9 @@ function buildRead(knex: Knex, json: QueryJson, limit: number) {
     query = query.select("*")
   }
   // handle where
-  query = addFilters(query, filters)
+  query = addFilters(tableName, query, filters)
+  // handle join
+  query = addRelationships(query, tableName, relationships)
   // handle sorting
   if (sort) {
     for (let [key, value] of Object.entries(sort)) {
@@ -114,22 +182,31 @@ function buildRead(knex: Knex, json: QueryJson, limit: number) {
   return query
 }
 
-function buildUpdate(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function buildUpdate(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, body, filters } = json
-  let query = knex(endpoint.entityId)
-  query = addFilters(query, filters)
+  let query: KnexQuery = knex(endpoint.entityId)
+  const parsedBody = parseBody(body)
+  query = addFilters(endpoint.entityId, query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
-    return query.update(body)
+    return query.update(parsedBody)
   } else {
-    return query.update(body).returning("*")
+    return query.update(parsedBody).returning("*")
   }
 }
 
-function buildDelete(knex: Knex, json: QueryJson, opts: QueryOptions) {
+function buildDelete(
+  knex: Knex,
+  json: QueryJson,
+  opts: QueryOptions
+): KnexQuery {
   const { endpoint, filters } = json
-  let query = knex(endpoint.entityId)
-  query = addFilters(query, filters)
+  let query: KnexQuery = knex(endpoint.entityId)
+  query = addFilters(endpoint.entityId, query, filters)
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.delete()
@@ -180,6 +257,8 @@ class SqlQueryBuilder {
       default:
         throw `Operation type is not supported by SQL query builder`
     }
+
+    // @ts-ignore
     return query.toSQL().toNative()
   }
 }

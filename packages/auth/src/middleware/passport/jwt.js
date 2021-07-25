@@ -1,5 +1,6 @@
 const { Cookies } = require("../../constants")
 const env = require("../../environment")
+const { authError } = require("./utils")
 
 exports.options = {
   secretOrKey: env.JWT_SECRET,
@@ -12,6 +13,6 @@ exports.authenticate = async function (jwt, done) {
   try {
     return done(null, jwt)
   } catch (err) {
-    return done(new Error("JWT invalid."), false)
+    return authError(done, "JWT invalid", err)
   }
 }
