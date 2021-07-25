@@ -1,6 +1,7 @@
 import * as API from "../api"
 import { writable } from "svelte/store"
 import { initialise } from "./initialise"
+import { routeStore } from "./routes"
 
 const createAuthStore = () => {
   const store = writable(null)
@@ -13,7 +14,6 @@ const createAuthStore = () => {
     // Navigating updates the URL to reflect this route
     routeStore.actions.navigate("/")
   }
-
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
