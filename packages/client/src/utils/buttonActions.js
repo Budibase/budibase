@@ -1,5 +1,10 @@
 import { get } from "svelte/store"
-import { routeStore, builderStore, confirmationStore } from "../store"
+import {
+  routeStore,
+  builderStore,
+  confirmationStore,
+  authStore,
+} from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
 
@@ -77,6 +82,10 @@ const refreshDatasourceHandler = async (action, context) => {
   )
 }
 
+const logoutHandler = async () => {
+  await authStore.actions.logOut()
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -85,6 +94,7 @@ const handlerMap = {
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
+  ["Log Out"]: logoutHandler,
 }
 
 const confirmTextMap = {
