@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rm -rf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
+    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
@@ -132,6 +132,7 @@
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
     "prettier": "^2.3.1",
+    "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
