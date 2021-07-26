@@ -103,8 +103,7 @@
       } else if (type === "update-prop") {
         store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
-        idToDelete = data.id
-        confirmDeleteDialog.show()
+        confirmDeleteComponent(data.id)
       } else if (type === "preview-loaded") {
         // Wait for this event to show the client library if intelligent
         // loading is supported
@@ -113,7 +112,18 @@
         console.warning(`Client sent unknown event type: ${type}`)
       }
     })
+
+    iframe.contentWindow.addEventListener("keydown", event => {
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedComponentId) {
+        confirmDeleteComponent(selectedComponentId);
+      }
+    })
   })
+
+  const confirmDeleteComponent = (componentId) => {
+    idToDelete = componentId
+    confirmDeleteDialog.show()
+  }
 
   const deleteComponent = () => {
     store.actions.components.delete({ _id: idToDelete })
