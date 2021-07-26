@@ -119,20 +119,19 @@
 
     const clearValue = () => {
       const { fieldState } = fieldMap[field]
+      const newValue = initialValues[field] ?? defaultValue;
       fieldState.update(state => {
-        state.value = defaultValue
+        state.value = newValue
         state.error = null
         return state
       })
 
       formState.update(state => {
-        state.values = { ...state.values, [field]: defaultValue }
+        state.values = { ...state.values, [field]: newValue }
         delete state.errors[field]
         state.valid = Object.keys(state.errors).length === 0
         return state
       })
-
-      return true
     }
 
     return {
