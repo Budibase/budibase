@@ -209,11 +209,10 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async ({ tenantId, dev, all } = {}) => {
+exports.getAllApps = async (CouchDB, { tenantId, dev, all } = {}) => {
   if (!tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  const CouchDB = getCouch()
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName => {
     const split = dbName.split(SEPARATOR)

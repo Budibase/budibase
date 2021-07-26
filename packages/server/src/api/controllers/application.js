@@ -129,7 +129,7 @@ exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const tenantId = ctx.user.tenantId
-  const apps = await getAllApps({ tenantId, dev, all })
+  const apps = await getAllApps(CouchDB, { tenantId, dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -226,7 +226,8 @@ exports.create = async function (ctx) {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
-  await db.put(newApplication, { force: true })
+  const response = await db.put(newApplication, { force: true })
+  newApplication._rev = response.rev
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
