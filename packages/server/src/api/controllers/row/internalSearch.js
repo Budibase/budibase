@@ -3,16 +3,6 @@ const env = require("../../../environment")
 const fetch = require("node-fetch")
 
 /**
- * Escapes any characters in a string which lucene searches require to be
- * escaped.
- * @param value The value to escape
- * @returns {string}
- */
-const luceneEscape = value => {
-  return `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
-}
-
-/**
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
  */
@@ -33,6 +23,12 @@ class QueryBuilder {
     this.sortOrder = "ascending"
     this.sortType = "string"
     this.includeDocs = true
+    this.version = null
+  }
+
+  setVersion(version) {
+    this.version = version
+    return this
   }
 
   setTable(tableId) {
@@ -108,12 +104,43 @@ class QueryBuilder {
     return this
   }
 
+  /**
+   * Preprocesses a value before going into a lucene search.
+   * Transforms strings to lowercase and wraps strings and bools in quotes.
+   * @param value The value to process
+   * @param options The preprocess options
+   * @returns {string|*}
+   */
+  preprocess(value, { escape, lowercase, wrap } = {}) {
+    const hasVersion = !!this.version
+    // Determine if type needs wrapped
+    const originalType = typeof value
+    // Convert to lowercase
+    if (value && lowercase) {
+      value = value.toLowerCase ? value.toLowerCase() : value
+    }
+    // Escape characters
+    if (escape && originalType === "string") {
+      value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
+    }
+    // Wrap in quotes
+    if (hasVersion && wrap) {
+      value = originalType === "number" ? value : `"${value}"`
+    }
+    return value
+  }
+
   buildSearchQuery() {
+    const builder = this
     let query = "*:*"
+    const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        const expression = queryFn(luceneEscape(key.replace(/ /, "_")), value)
+        key = builder.preprocess(key.replace(/ /, "_"), {
+          escape: true,
+        })
+        const expression = queryFn(key, value)
         if (expression == null) {
           continue
         }
@@ -124,7 +151,14 @@ class QueryBuilder {
     // Construct the actual lucene search query string from JSON structure
     if (this.query.string) {
       build(this.query.string, (key, value) => {
-        return value ? `${key}:${luceneEscape(value.toLowerCase())}*` : null
+        if (!value) {
+          return null
+        }
+        value = builder.preprocess(value, {
+          escape: true,
+          lowercase: true,
+        })
+        return `${key}:${value}*`
       })
     }
     if (this.query.range) {
@@ -138,30 +172,37 @@ class QueryBuilder {
         if (value.high == null || value.high === "") {
           return null
         }
-        return `${key}:[${value.low} TO ${value.high}]`
+        const low = builder.preprocess(value.low, allPreProcessingOpts)
+        const high = builder.preprocess(value.high, allPreProcessingOpts)
+        return `${key}:[${low} TO ${high}]`
       })
     }
     if (this.query.fuzzy) {
       build(this.query.fuzzy, (key, value) => {
-        return value ? `${key}:${luceneEscape(value.toLowerCase())}~` : null
+        if (!value) {
+          return null
+        }
+        value = builder.preprocess(value, {
+          escape: true,
+          lowercase: true,
+        })
+        return `${key}:${value}~`
       })
     }
     if (this.query.equal) {
       build(this.query.equal, (key, value) => {
-        const escapedValue = luceneEscape(value.toLowerCase())
-        // have to do the or to manage straight values, or strings
-        return value
-          ? `(${key}:${escapedValue} OR ${key}:"${escapedValue}")`
-          : null
+        if (!value) {
+          return null
+        }
+        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.notEqual) {
       build(this.query.notEqual, (key, value) => {
-        const escapedValue = luceneEscape(value.toLowerCase())
-        // have to do the or to manage straight values, or strings
-        return value
-          ? `(!${key}:${escapedValue} OR !${key}:"${escapedValue}")`
-          : null
+        if (!value) {
+          return null
+        }
+        return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.query.empty) {
@@ -250,6 +291,7 @@ const recursiveSearch = async (appId, query, params) => {
     pageSize = params.limit - rows.length
   }
   const page = await new QueryBuilder(appId, query)
+    .setVersion(params.version)
     .setTable(params.tableId)
     .setBookmark(bookmark)
     .setLimit(pageSize)
@@ -294,6 +336,7 @@ exports.paginatedSearch = async (appId, query, params) => {
   }
   limit = Math.min(limit, 200)
   const search = new QueryBuilder(appId, query)
+    .setVersion(params.version)
     .setTable(params.tableId)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)

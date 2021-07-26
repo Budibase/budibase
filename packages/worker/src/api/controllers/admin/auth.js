@@ -144,7 +144,9 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const callbackUrl = `${ctx.protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  // require https callback in production
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
+  const callbackUrl = `${protocol}://${ctx.host}/api/admin/auth/oidc/callback`
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }
