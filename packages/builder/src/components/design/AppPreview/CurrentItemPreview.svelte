@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
@@ -118,6 +118,14 @@
         confirmDeleteComponent(selectedComponentId);
       }
     })
+  })
+
+  // remove all iframe event listeners on component destroy
+  onDestroy(() => {
+    iframe.contentWindow.removeEventListener("ready")
+    iframe.contentWindow.removeEventListener("error")
+    iframe.contentWindow.removeEventListener("bb-event")
+    iframe.contentWindow.removeEventListener("keydown")
   })
 
   const confirmDeleteComponent = (componentId) => {
