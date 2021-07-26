@@ -6,6 +6,8 @@
     DrawerContent,
     Layout,
     Select,
+    Input,
+    DatePicker,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
@@ -34,6 +36,24 @@
       value: "update",
     },
   ]
+  const valueTypeOptions = [
+    {
+      value: "string",
+      label: "Binding",
+    },
+    {
+      value: "number",
+      label: "Number",
+    },
+    {
+      value: "datetime",
+      label: "Date",
+    },
+    {
+      value: "boolean",
+      label: "Boolean",
+    },
+  ]
 
   $: definition = store.actions.components.getDefinition(
     $selectedComponent?._component
@@ -44,7 +64,6 @@
       value: setting.key,
     }
   })
-  $: operatorOptions = getValidOperatorsForType("string")
   $: bindableProperties = getBindableProperties(
     $currentAsset,
     $store.selectedComponentId
@@ -70,6 +89,7 @@
     conditions = [
       ...conditions,
       {
+        valueType: "string",
         id: generate(),
         action: "hide",
         operator: OperatorOptions.Equals.value,
@@ -83,6 +103,34 @@
 
   const updateLinks = e => {
     conditions = e.detail.items
+  }
+
+  const getOperatorOptions = condition => {
+    return getValidOperatorsForType(condition.valueType)
+  }
+
+  const onOperatorChange = (condition, newOperator) => {
+    const noValueOptions = [
+      OperatorOptions.Empty.value,
+      OperatorOptions.NotEmpty.value,
+    ]
+    condition.noValue = noValueOptions.includes(newOperator)
+    if (condition.noValue) {
+      condition.referenceValue = null
+      condition.valueType = "string"
+    }
+  }
+
+  const onValueTypeChange = (condition, newType) => {
+    condition.referenceValue = null
+
+    // Ensure a valid operator is set
+    const validOperators = getValidOperatorsForType(newType)
+    if (!validOperators.includes(condition.operator)) {
+      condition.operator =
+        validOperators[0]?.value ?? OperatorOptions.Equals.value
+      onOperatorChange(condition, condition.operator)
+    }
   }
 </script>
 
@@ -143,15 +191,39 @@
               />
               <Select
                 placeholder={null}
-                options={operatorOptions}
+                options={getOperatorOptions(condition)}
                 bind:value={condition.operator}
+                on:change={e => onOperatorChange(condition, e.detail)}
               />
-              <DrawerBindableInput
-                bindings={bindableProperties}
-                placeholder="Value"
-                value={condition.referenceValue}
-                on:change={e => (condition.referenceValue = e.detail)}
+              <Select
+                disabled={condition.noValue}
+                options={valueTypeOptions}
+                bind:value={condition.valueType}
+                placeholder={null}
+                on:change={e => onValueTypeChange(condition, e.detail)}
               />
+              {#if ["string", "number"].includes(condition.valueType)}
+                <DrawerBindableInput
+                  disabled={condition.noValue}
+                  bindings={bindableProperties}
+                  placeholder="Value"
+                  value={condition.referenceValue}
+                  on:change={e => (condition.referenceValue = e.detail)}
+                />
+              {:else if condition.valueType === "datetime"}
+                <DatePicker
+                  placeholder="Value"
+                  disabled={condition.noValue}
+                  bind:value={condition.referenceValue}
+                />
+              {:else if condition.valueType === "boolean"}
+                <Select
+                  placeholder="Value"
+                  disabled={condition.noValue}
+                  options={["True", "False"]}
+                  bind:value={condition.referenceValue}
+                />
+              {/if}
               <Icon
                 name="Close"
                 hoverable
@@ -176,7 +248,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
   }
   .conditions {
@@ -190,12 +262,12 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: auto 1fr auto 1fr 1fr 1fr auto;
+    grid-template-columns: auto 1fr auto 1fr 1fr 1fr 1fr auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
-    grid-template-columns: auto 1fr 1fr auto 1fr auto 1fr 1fr 1fr auto;
+    grid-template-columns: auto 1fr 1fr auto 1fr auto 1fr 1fr 1fr 1fr auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);

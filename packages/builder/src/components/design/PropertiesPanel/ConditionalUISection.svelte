@@ -17,8 +17,6 @@
     store.actions.components.updateConditions(tempValue)
     drawer.hide()
   }
-
-  $: console.log(componentInstance?._id)
 </script>
 
 <DetailSummary

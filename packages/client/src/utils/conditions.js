@@ -9,14 +9,35 @@ export const getActiveConditions = conditions => {
   }
 
   return conditions.filter(condition => {
-    const luceneCompatibleCondition = {
+    // Parse values into correct types
+    if (condition.valueType === "number") {
+      condition.referenceValue = parseFloat(condition.referenceValue)
+      condition.newValue = parseFloat(condition.newValue)
+    } else if (condition.valueType === "datetime") {
+      if (condition.referenceValue) {
+        condition.referenceValue = new Date(
+          condition.referenceValue
+        ).toISOString()
+      }
+      if (condition.newValue) {
+        condition.newValue = new Date(condition.newValue).toISOString()
+      }
+    } else if (condition.valueType === "boolean") {
+      condition.referenceValue =
+        `${condition.referenceValue}`.toLowerCase() === "true"
+      condition.newValue = `${condition.newValue}`.toLowerCase() === "true"
+    }
+
+    // Build lucene compatible condition expression
+    const luceneCondition = {
       ...condition,
-      type: "string",
+      type: condition.valueType,
       field: "newValue",
       value: condition.referenceValue,
     }
-    const query = buildLuceneQuery([luceneCompatibleCondition])
-    const result = luceneQuery([luceneCompatibleCondition], query)
+
+    const query = buildLuceneQuery([luceneCondition])
+    const result = luceneQuery([luceneCondition], query)
     return result.length > 0
   })
 }
