@@ -125,10 +125,9 @@
     condition.referenceValue = null
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(newType)
+    const validOperators = getValidOperatorsForType(newType).map(x => x.value)
     if (!validOperators.includes(condition.operator)) {
-      condition.operator =
-        validOperators[0]?.value ?? OperatorOptions.Equals.value
+      condition.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(condition, condition.operator)
     }
   }

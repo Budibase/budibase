@@ -47,10 +47,11 @@
     expression.type = schemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type)
+    const validOperators = getValidOperatorsForType(expression.type).map(
+      x => x.value
+    )
     if (!validOperators.includes(expression.operator)) {
-      expression.operator =
-        validOperators[0]?.value ?? OperatorOptions.Equals.value
+      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
   }
