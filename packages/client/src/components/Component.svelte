@@ -159,20 +159,17 @@
     }
 
     // Default visible to false if there is a show condition
-    let nextVisible = true
-    for (let condition of conditions) {
-      if (condition.action === "show") {
-        nextVisible = false
-      }
-    }
+    let nextVisible = !conditions.find(condition => condition.action === "show")
 
+    // Execute conditions and determine settings and visibility changes
     const activeConditions = getActiveConditions(conditions)
     const result = reduceConditionActions(activeConditions)
-    conditionalSettings = result.settingUpdates
     if (result.visible != null) {
       nextVisible = result.visible
     }
 
+    // Update state from condition results
+    conditionalSettings = result.settingUpdates
     visible = nextVisible
   }
 </script>
