@@ -53,9 +53,10 @@ router
   )
   .get("/api/global/auth/:tenantId/oidc/callback", authController.oidcAuth)
   // deprecated - used by the default system before tenancy
-  .get("/api/global/auth/google", authController.googlePreAuth)
+  .get("/api/admin/auth/google/callback", authController.googleAuth)
   .get("/api/global/auth/google/callback", authController.googleAuth)
-  .get("/api/global/auth/oidc/configs/:configId", authController.oidcPreAuth)
+  .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
   .get("/api/global/auth/oidc/callback", authController.oidcAuth)
+
 
 module.exports = router
