@@ -23,7 +23,9 @@
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
-    "initialise": "node scripts/initialise.js"
+    "initialise": "node scripts/initialise.js",
+    "multi:enable": "node scripts/multiTenancy.js enable",
+    "multi:disable": "node scripts/multiTenancy.js disable"
   },
   "jest": {
     "preset": "ts-jest",
@@ -135,7 +137,8 @@
     "supertest": "^4.0.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.3.4",
+    "update-dotenv": "^1.1.1"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

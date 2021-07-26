@@ -43,6 +43,8 @@
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci",
     "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
-    "build:docker:develop": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -"
+    "build:docker:develop": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
+    "multi:enable": "lerna run multi:enable",
+    "multi:disable": "lerna run multi:disable"
   }
 }
