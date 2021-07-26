@@ -58,5 +58,4 @@ router
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
   .get("/api/global/auth/oidc/callback", authController.oidcAuth)
 
-
 module.exports = router
