@@ -19,7 +19,8 @@
   import { fetchData } from "helpers"
   import { users, auth } from "stores/portal"
 
-  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
+  import TagsRenderer from "./_components/RolesTagsTableRenderer.svelte"
+
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
 

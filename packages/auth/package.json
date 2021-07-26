@@ -1,6 +1,6 @@
 {
   "name": "@budibase/auth",
-  "version": "0.9.80-alpha.4",
+  "version": "0.9.80-alpha.7",
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
   "author": "Budibase",

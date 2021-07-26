@@ -10,9 +10,14 @@ const createAuthStore = () => {
     store.set(user)
   }
 
+  const logOut = async () => {
+    window.document.cookie = `budibase:auth=; budibase:currentapp=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
+    window.location = "/builder/auth/login"
+  }
+
   return {
     subscribe: store.subscribe,
-    actions: { fetchUser },
+    actions: { fetchUser, logOut },
   }
 }
 
