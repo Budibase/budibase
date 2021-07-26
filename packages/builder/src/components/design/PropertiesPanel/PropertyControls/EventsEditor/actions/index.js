@@ -45,6 +45,6 @@ export default [
   },
   {
     name: "Clear Form",
-    component: ClearForm
+    component: ClearForm,
   },
 ]

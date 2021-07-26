@@ -103,7 +103,7 @@ const handlerMap = {
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log Out"]: logoutHandler,
-  ["Clear Form"]: clearFormHandler
+  ["Clear Form"]: clearFormHandler,
 }
 
 const confirmTextMap = {
