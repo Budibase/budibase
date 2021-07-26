@@ -47,7 +47,7 @@ async function init() {
     COUCH_DB_PASSWORD: "budibase",
     COUCH_DB_USER: "budibase",
     SELF_HOSTED: 1,
-    MULTI_TENANCY: 0,
+    MULTI_TENANCY: "",
   }
   let envFile = ""
   Object.keys(envFileJson).forEach(key => {

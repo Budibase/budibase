@@ -7,6 +7,7 @@
   import { onMount } from "svelte"
 
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
+  $: multiTenancyEnabled = $admin.multiTenancy
 
   async function setOrg() {
     if (tenantId == null || tenantId === "") {
@@ -24,6 +25,9 @@
 
   onMount(() => {
     auth.checkQueryString()
+    if (!multiTenancyEnabled) {
+      $goto("../")
+    }
   })
 </script>
 

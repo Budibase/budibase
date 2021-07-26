@@ -10,6 +10,7 @@ const {
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
+const CouchDB = require("../../../db")
 
 exports.save = async function (ctx) {
   const db = getGlobalDBFromCtx(ctx)
@@ -224,7 +225,7 @@ exports.configChecklist = async function (ctx) {
     // TODO: Watch get started video
 
     // Apps exist
-    const apps = await getAllApps({ tenantId })
+    const apps = await getAllApps(CouchDB, { tenantId })
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {
