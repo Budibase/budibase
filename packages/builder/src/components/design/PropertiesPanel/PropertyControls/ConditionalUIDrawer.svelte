@@ -54,6 +54,7 @@
     },
   ]
 
+  let dragDisabled = true
   $: definition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
@@ -96,11 +97,16 @@
     ]
   }
 
-  const removeLink = id => {
+  const removeCondition = id => {
     conditions = conditions.filter(link => link.id !== id)
   }
 
-  const updateLinks = e => {
+  const handleFinalize = e => {
+    updateConditions(e)
+    dragDisabled = true
+  }
+
+  const updateConditions = e => {
     conditions = e.detail.items
   }
 
@@ -142,9 +148,10 @@
             items: conditions,
             flipDurationMs,
             dropTargetStyle: { outline: "none" },
+            dragDisabled,
           }}
-          on:finalize={updateLinks}
-          on:consider={updateLinks}
+          on:finalize={handleFinalize}
+          on:consider={updateConditions}
         >
           {#each conditions as condition (condition.id)}
             <div
@@ -152,9 +159,15 @@
               class:update={condition.action === "update"}
               animate:flip={{ duration: flipDurationMs }}
             >
-              <Icon name="DragHandle" size="XL" />
+              <div
+                class="handle"
+                aria-label="drag-handle"
+                style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
+                on:mousedown={() => (dragDisabled = false)}
+              >
+                <Icon name="DragHandle" size="XL" />
+              </div>
               <Select
-                draggable={false}
                 placeholder={null}
                 options={actionOptions}
                 bind:value={condition.action}
@@ -226,7 +239,7 @@
                 name="Close"
                 hoverable
                 size="S"
-                on:click={() => removeLink(condition.id)}
+                on:click={() => removeCondition(condition.id)}
               />
             </div>
           {/each}
@@ -269,5 +282,9 @@
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);
+  }
+  .handle {
+    display: grid;
+    place-items: center;
   }
 </style>
