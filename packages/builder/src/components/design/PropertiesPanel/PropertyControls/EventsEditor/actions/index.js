@@ -42,4 +42,7 @@ export default [
     name: "Log Out",
     component: LogOut,
   },
+  {
+    name: "Clear Form",
+  },
 ]
