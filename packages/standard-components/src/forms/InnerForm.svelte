@@ -68,9 +68,9 @@
       const fields = Object.keys(fieldMap)
       fields.forEach(field => {
         const { fieldApi } = fieldMap[field]
-        fieldApi.clearValue();
+        fieldApi.clearValue()
       })
-    }
+    },
   }
 
   // Provide both form API and state to children
