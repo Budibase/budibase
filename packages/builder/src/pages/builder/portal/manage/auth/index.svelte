@@ -267,7 +267,6 @@
         config: { configs: [{ activated: true }] },
       }
     } else {
-      console.log("hello")
       originalOidcDoc = cloneDeep(oidcDoc)
       providers.oidc = oidcDoc
     }
