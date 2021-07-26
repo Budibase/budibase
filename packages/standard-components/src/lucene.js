@@ -23,7 +23,7 @@ export const buildLuceneQuery = filter => {
         value = parseFloat(value)
       }
       if (type === "boolean") {
-        value = value?.toLowerCase() === "true"
+        value = `${value}`?.toLowerCase() === "true"
       }
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
