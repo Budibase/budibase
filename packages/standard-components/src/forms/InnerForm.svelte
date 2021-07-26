@@ -119,7 +119,7 @@
 
     const clearValue = () => {
       const { fieldState } = fieldMap[field]
-      const newValue = initialValues[field] ?? defaultValue;
+      const newValue = initialValues[field] ?? defaultValue
       fieldState.update(state => {
         state.value = newValue
         state.error = null
