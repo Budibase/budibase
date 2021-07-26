@@ -77,6 +77,14 @@ const refreshDatasourceHandler = async (action, context) => {
   )
 }
 
+const clearFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ClearForm
+  )
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -85,6 +93,7 @@ const handlerMap = {
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
+  ["Clear Form"]: clearFormHandler
 }
 
 const confirmTextMap = {
