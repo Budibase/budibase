@@ -1,6 +1,6 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { getDB, getCouch } = require("./index")
+const { getDB } = require("./index")
 const { DEFAULT_TENANT_ID } = require("../constants")
 
 const UNICODE_MAX = "\ufff0"
