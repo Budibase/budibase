@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.9.80-alpha.8",
+  "version": "0.9.80-alpha.9",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
@@ -21,8 +21,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.80-alpha.8",
-    "@budibase/string-templates": "^0.9.80-alpha.8",
+    "@budibase/auth": "^0.9.80-alpha.9",
+    "@budibase/string-templates": "^0.9.80-alpha.9",
     "@koa/router": "^8.0.0",
     "@techpass/passport-openidconnect": "^0.3.0",
     "aws-sdk": "^2.811.0",
