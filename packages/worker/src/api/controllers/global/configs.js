@@ -99,7 +99,7 @@ exports.find = async function (ctx) {
 }
 
 exports.publicOidc = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
   try {
     // Find the config with the most granular scope based on context
     const oidcConfig = await getScopedFullConfig(db, {
@@ -121,7 +121,7 @@ exports.publicOidc = async function (ctx) {
 }
 
 exports.publicSettings = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
 
   try {
     // Find the config with the most granular scope based on context
@@ -218,8 +218,9 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  const tenantId = getTenantIdFromCtx(ctx)
-  const db = getGlobalDBFromCtx(ctx)
+  // include the query string only for a select few endpoints
+  const tenantId = getTenantIdFromCtx(ctx, { includeQuery: true })
+  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
 
   try {
     // TODO: Watch get started video
