@@ -11,44 +11,11 @@
   import { getBindableProperties } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
+  import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
 
   export let schemaFields
   export let value
 
-  const OperatorOptions = {
-    Equals: {
-      value: "equal",
-      label: "Equals",
-    },
-    NotEquals: {
-      value: "notEqual",
-      label: "Not equals",
-    },
-    Empty: {
-      value: "empty",
-      label: "Is empty",
-    },
-    NotEmpty: {
-      value: "notEmpty",
-      label: "Is not empty",
-    },
-    StartsWith: {
-      value: "string",
-      label: "Starts with",
-    },
-    Like: {
-      value: "fuzzy",
-      label: "Like",
-    },
-    MoreThan: {
-      value: "rangeLow",
-      label: "More than",
-    },
-    LessThan: {
-      value: "rangeHigh",
-      label: "Less than",
-    },
-  }
   const BannedTypes = ["link", "attachment"]
   $: bindableProperties = getBindableProperties(
     $currentAsset,
@@ -75,61 +42,16 @@
     value = value.filter(field => field.id !== id)
   }
 
-  const getValidOperatorsForType = type => {
-    const Op = OperatorOptions
-    if (type === "string") {
-      return [
-        Op.Equals,
-        Op.NotEquals,
-        Op.StartsWith,
-        Op.Like,
-        Op.Empty,
-        Op.NotEmpty,
-      ]
-    } else if (type === "number") {
-      return [
-        Op.Equals,
-        Op.NotEquals,
-        Op.MoreThan,
-        Op.LessThan,
-        Op.Empty,
-        Op.NotEmpty,
-      ]
-    } else if (type === "options") {
-      return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
-    } else if (type === "boolean") {
-      return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
-    } else if (type === "longform") {
-      return [
-        Op.Equals,
-        Op.NotEquals,
-        Op.StartsWith,
-        Op.Like,
-        Op.Empty,
-        Op.NotEmpty,
-      ]
-    } else if (type === "datetime") {
-      return [
-        Op.Equals,
-        Op.NotEquals,
-        Op.MoreThan,
-        Op.LessThan,
-        Op.Empty,
-        Op.NotEmpty,
-      ]
-    }
-    return []
-  }
-
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = schemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type)
+    const validOperators = getValidOperatorsForType(expression.type).map(
+      x => x.value
+    )
     if (!validOperators.includes(expression.operator)) {
-      expression.operator =
-        validOperators[0]?.value ?? OperatorOptions.Equals.value
+      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
   }

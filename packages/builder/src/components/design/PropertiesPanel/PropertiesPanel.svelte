@@ -5,6 +5,7 @@
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
+  import ConditionalUISection from "./ConditionalUISection.svelte"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
@@ -15,10 +16,13 @@
 <Tabs selected="Settings" noPadding>
   <Tab title="Settings">
     <div class="container">
-      <ScreenSettingsSection {componentInstance} {componentDefinition} />
-      <ComponentSettingsSection {componentInstance} {componentDefinition} />
-      <DesignSection {componentInstance} {componentDefinition} />
-      <CustomStylesSection {componentInstance} {componentDefinition} />
+      {#key componentInstance?._id}
+        <ScreenSettingsSection {componentInstance} {componentDefinition} />
+        <ComponentSettingsSection {componentInstance} {componentDefinition} />
+        <DesignSection {componentInstance} {componentDefinition} />
+        <CustomStylesSection {componentInstance} {componentDefinition} />
+        <ConditionalUISection {componentInstance} {componentDefinition} />
+      {/key}
     </div>
   </Tab>
 </Tabs>
