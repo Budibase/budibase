@@ -15,7 +15,7 @@
     if (automationLive === live) {
       return
     }
-    automation.live = live;
+    automation.live = live
     automationStore.actions.save({ instanceId, automation })
     if (live) {
       notifications.info(`Automation ${automation.name} enabled.`)
