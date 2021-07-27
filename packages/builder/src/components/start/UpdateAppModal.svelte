@@ -20,11 +20,11 @@
     name: string().required("Your application must have a name"),
   }
 
-  export let app;
+  export let app
 
-  let modal;
+  let modal
   let valid = false
-  let dirty = false;
+  let dirty = false
   $: checkValidity($values, validator)
   $: {
     // prevent validation by setting name to undefined without an app
@@ -65,8 +65,8 @@
   async function updateApp() {
     try {
       // Update App
-      await apps.update(app.instance._id, $values.name);
-      hide();
+      await apps.update(app.instance._id, $values.name)
+      hide()
     } catch (error) {
       console.error(error)
       notifications.error(error)
@@ -81,14 +81,14 @@
   }
 
   const onCancel = () => {
-    hide();
+    hide()
   }
 
   const onShow = () => {
-    dirty = false;
+    dirty = false
   }
-
 </script>
+
 <Modal bind:this={modal} on:hide={onCancel} on:show={onShow}>
   <ModalContent
     title={"Update app"}
@@ -104,7 +104,7 @@
       bind:value={$values.name}
       error={$touched.name && $errors.name}
       on:blur={() => ($touched.name = true)}
-      on:change={() => dirty = true}
+      on:change={() => (dirty = true)}
       label="Name"
     />
   </ModalContent>

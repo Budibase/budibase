@@ -297,11 +297,7 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<UpdateAppModal
-  app={selectedApp}
-  bind:this={updatingModal}
->
-</UpdateAppModal>
+<UpdateAppModal app={selectedApp} bind:this={updatingModal} />
 
 <style>
   .title,

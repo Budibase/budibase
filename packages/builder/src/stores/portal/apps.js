@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
 import { get } from "builderStore/api"
 import { AppStatus } from "../../constants"
-import api from "../../builderStore/api";
+import api from "../../builderStore/api"
 
 export function createAppStore() {
   const store = writable([])
@@ -54,15 +54,17 @@ export function createAppStore() {
     }
   }
 
-  async function update (appId, name) {
+  async function update(appId, name) {
     const response = await api.put(`/api/applications/${appId}`, { name })
     if (response.status === 200) {
       store.update(state => {
-        const updatedAppIndex = state.findIndex(app => app.instance._id === appId);
+        const updatedAppIndex = state.findIndex(
+          app => app.instance._id === appId
+        )
         if (updatedAppIndex !== -1) {
-          const updatedApp = state[updatedAppIndex];
-          updatedApp.name = name;
-          state.apps = state.splice(updatedAppIndex, 1, updatedApp);
+          const updatedApp = state[updatedAppIndex]
+          updatedApp.name = name
+          state.apps = state.splice(updatedAppIndex, 1, updatedApp)
         }
         return state
       })
