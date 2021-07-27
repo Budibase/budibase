@@ -23,7 +23,10 @@ function buildNoAuthRegex(patterns) {
   })
 }
 
-function finalise(ctx, { authenticated, user, internal, version, publicEndpoint } = {}) {
+function finalise(
+  ctx,
+  { authenticated, user, internal, version, publicEndpoint } = {}
+) {
   ctx.publicEndpoint = publicEndpoint || false
   ctx.isAuthenticated = authenticated || false
   ctx.user = user

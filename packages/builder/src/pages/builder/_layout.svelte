@@ -19,7 +19,6 @@
     if (loaded && multiTenancyEnabled && !tenantSet) {
       $redirect("./auth/org")
     } else if (loaded && !hasAdminUser) {
-
       $redirect("./admin")
     }
   }
