@@ -140,6 +140,17 @@
         "test",
         "code"
       ]
+    },
+    {
+      "login": "Rory-Powell",
+      "name": "Rory Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8755148?v=4",
+      "profile": "https://github.com/Rory-Powell",
+      "contributions": [
+        "infra",
+        "test",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
