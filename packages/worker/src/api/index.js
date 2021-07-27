@@ -56,7 +56,7 @@ router
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
-    if (!ctx.isAuthenticated) {
+    if (!ctx.isAuthenticated && !ctx.publicEndpoint) {
       ctx.throw(403, "Unauthorized - no public worker access")
     }
     return next()
