@@ -130,6 +130,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "mslourens",
+      "name": "Maurits Lourens",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1907152?v=4",
+      "profile": "https://github.com/mslourens",
+      "contributions": [
+        "test",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
