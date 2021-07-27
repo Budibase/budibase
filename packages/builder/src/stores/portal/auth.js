@@ -6,6 +6,7 @@ export function createAuthStore() {
     user: null,
     tenantId: "default",
     tenantSet: false,
+    loaded: false,
   })
   const store = derived(auth, $store => {
     let initials = null
@@ -30,6 +31,7 @@ export function createAuthStore() {
       user: $store.user,
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
+      loaded: $store.loaded,
       initials,
       isAdmin,
       isBuilder,
@@ -38,6 +40,7 @@ export function createAuthStore() {
 
   function setUser(user) {
     auth.update(store => {
+      store.loaded = true
       store.user = user
       if (user) {
         store.tenantId = user.tenantId || "default"

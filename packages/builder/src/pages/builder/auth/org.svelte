@@ -27,6 +27,8 @@
     auth.checkQueryString()
     if (!multiTenancyEnabled) {
       $goto("../")
+    } else {
+      admin.unload()
     }
   })
 </script>

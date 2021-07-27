@@ -2,6 +2,7 @@ const { newid } = require("../hashing")
 const Replication = require("./Replication")
 const { getDB } = require("./index")
 const { DEFAULT_TENANT_ID } = require("../constants")
+const env = require("../environment")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
@@ -81,6 +82,9 @@ exports.getGlobalDB = tenantId => {
   let dbName = exports.StaticDatabases.GLOBAL.name
   if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
     dbName = `${tenantId}${SEPARATOR}${dbName}`
+  }
+  if (env.MULTI_TENANCY && tenantId == null) {
+    throw "Cannot create global DB without tenantId"
   }
   return getDB(dbName)
 }
@@ -210,7 +214,7 @@ exports.getDeployedAppID = appId => {
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
 exports.getAllApps = async (CouchDB, { tenantId, dev, all } = {}) => {
-  if (!tenantId) {
+  if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
   let allDbs = await CouchDB.allDbs()
