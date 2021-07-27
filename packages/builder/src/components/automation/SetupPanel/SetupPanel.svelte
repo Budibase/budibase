@@ -51,7 +51,7 @@
   <Toggle
     value={automationLive}
     on:change={() => setAutomationLive(!automationLive)}
-    data-cy="activate-automation"
+    dataCy="activate-automation"
     text="Live"
   />
 </div>

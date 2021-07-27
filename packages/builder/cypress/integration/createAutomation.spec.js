@@ -29,10 +29,10 @@ context("Create a automation", () => {
     cy.get(".setup").within(() => {
       cy.get(".spectrum-Picker-label").click()
       cy.contains("dog").click()
-      cy.get("input")
+      cy.get(".spectrum-Textfield-input")
         .first()
         .type("goodboy")
-      cy.get("input")
+      cy.get(".spectrum-Textfield-input")
         .eq(1)
         .type("11")
     })
@@ -41,7 +41,7 @@ context("Create a automation", () => {
     cy.contains("Save Automation").click()
 
     // Activate Automation
-    cy.get("[aria-label=PlayCircle]").click()
+    cy.get("[data-cy=activate-automation]").click()
   })
 
   it("should add row when a new row is added", () => {
