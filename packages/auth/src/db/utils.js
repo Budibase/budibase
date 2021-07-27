@@ -92,21 +92,24 @@ exports.getGlobalDB = tenantId => {
 /**
  * Given a koa context this tries to extra what tenant is being accessed.
  */
-exports.getTenantIdFromCtx = ctx => {
+exports.getTenantIdFromCtx = (ctx, opts = { includeQuery: false }) => {
   if (!ctx) {
     return null
   }
   const user = ctx.user || {}
   const params = ctx.request.params || {}
-  const query = ctx.request.query || {}
+  let query = {}
+  if (opts && opts.includeQuery) {
+    query = ctx.request.query || {}
+  }
   return user.tenantId || params.tenantId || query.tenantId
 }
 
 /**
  * Given a koa context this tries to find the correct tenant Global DB.
  */
-exports.getGlobalDBFromCtx = ctx => {
-  const tenantId = exports.getTenantIdFromCtx(ctx)
+exports.getGlobalDBFromCtx = (ctx, opts) => {
+  const tenantId = exports.getTenantIdFromCtx(ctx, opts)
   return exports.getGlobalDB(tenantId)
 }
 
