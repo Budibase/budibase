@@ -10,6 +10,7 @@ const { createUserEmailView } = require("./db/views")
 const { getDB } = require("./db")
 const { getGlobalDB } = require("./db/utils")
 const { DEFAULT_TENANT_ID, Headers } = require("./constants")
+const env = require("./environment")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -104,7 +105,7 @@ exports.isClient = ctx => {
 
 exports.lookupTenantId = async userId => {
   const db = getDB(StaticDatabases.PLATFORM_INFO.name)
-  let tenantId = DEFAULT_TENANT_ID
+  let tenantId = env.MULTI_TENANCY ? DEFAULT_TENANT_ID : null
   try {
     const doc = await db.get(userId)
     if (doc && doc.tenantId) {

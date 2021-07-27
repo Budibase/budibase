@@ -3,7 +3,9 @@ import api from "builderStore/api"
 import { auth } from "stores/portal"
 
 export function createAdminStore() {
-  const admin = writable({})
+  const admin = writable({
+    loaded: false,
+  })
 
   async function init() {
     try {
@@ -20,13 +22,14 @@ export function createAdminStore() {
         0
       )
 
+      await multiTenancyEnabled()
       admin.update(store => {
+        store.loaded = true
         store.checklist = json
         store.onboardingProgress =
           (stepsComplete / onboardingSteps.length) * 100
         return store
       })
-      await multiTenancyEnabled()
     } catch (err) {
       admin.update(store => {
         store.checklist = null
@@ -51,9 +54,17 @@ export function createAdminStore() {
     return enabled
   }
 
+  function unload() {
+    admin.update(store => {
+      store.loaded = false
+      return store
+    })
+  }
+
   return {
     subscribe: admin.subscribe,
     init,
+    unload,
   }
 }
 
