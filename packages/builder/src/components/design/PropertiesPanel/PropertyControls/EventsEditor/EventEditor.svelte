@@ -73,54 +73,49 @@
 </script>
 
 <DrawerContent>
-  <div class="actions-list" slot="sidebar">
-    <Layout>
-      <ActionMenu>
-        <Button slot="control" secondary>Add Action</Button>
-        {#each actionTypes as actionType}
-          <MenuItem on:click={addAction(actionType)}>
-            {actionType.name}
-          </MenuItem>
-        {/each}
-      </ActionMenu>
-
-      {#if actions && actions.length > 0}
-        <div
-          class="action-dnd-container"
-          use:dndzone={{
-            items: actions,
-            flipDurationMs,
-            dropTargetStyle: { outline: "none" },
-          }}
-          on:consider={handleDndConsider}
-          on:finalize={handleDndFinalize}
-        >
-          {#each actions as action, index (action.id)}
-            <div
-              class="action-container"
-              animate:flip={{ duration: flipDurationMs }}
-            >
-              <div
-                class="action-header"
-                class:selected={action === selectedAction}
-                on:click={selectAction(action)}
-              >
-                {index + 1}.
-                {action[EVENT_TYPE_KEY]}
-              </div>
-              <div
-                on:click={() => deleteAction(index)}
-                style="margin-left: auto;"
-              >
-                <Icon size="S" hoverable name="Close" />
-              </div>
+  <Layout noPadding gap="S" slot="sidebar">
+    {#if actions && actions.length > 0}
+      <div
+        class="actions"
+        use:dndzone={{
+          items: actions,
+          flipDurationMs,
+          dropTargetStyle: { outline: "none" },
+        }}
+        on:consider={handleDndConsider}
+        on:finalize={handleDndFinalize}
+      >
+        {#each actions as action, index (action.id)}
+          <div
+            class="action-container"
+            animate:flip={{ duration: flipDurationMs }}
+            class:selected={action === selectedAction}
+            on:click={selectAction(action)}
+          >
+            <Icon name="DragHandle" size="XL" />
+            <div class="action-header">
+              {index + 1}.&nbsp;{action[EVENT_TYPE_KEY]}
             </div>
-          {/each}
-        </div>
-      {/if}
-    </Layout>
-  </div>
-  <Layout>
+            <Icon
+              name="Close"
+              hoverable
+              size="S"
+              on:click={() => deleteAction(index)}
+            />
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <ActionMenu>
+      <Button slot="control" secondary>Add Action</Button>
+      {#each actionTypes as actionType}
+        <MenuItem on:click={addAction(actionType)}>
+          {actionType.name}
+        </MenuItem>
+      {/each}
+    </ActionMenu>
+  </Layout>
+  <Layout noPadding>
     {#if selectedAction}
       <div class="selected-action-container">
         <svelte:component
@@ -133,32 +128,41 @@
 </DrawerContent>
 
 <style>
-  .action-header {
+  .actions {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-top: var(--spacing-s);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-s);
   }
 
   .action-header {
-    margin-bottom: var(--spacing-m);
-    font-size: var(--font-size-s);
-    color: var(--grey-7);
-    font-weight: 600;
-  }
+    color: var(--spectrum-global-color-gray-700);
 
-  .action-header:hover,
-  .action-header.selected {
-    cursor: pointer;
-    color: var(--ink);
+    flex: 1 1 auto;
   }
 
   .action-container {
-    border-bottom: 1px solid var(--grey-1);
+    background-color: var(--background);
+    padding: var(--spacing-s) var(--spacing-m);
+    border-radius: 4px;
+    border: var(--border-light);
+    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+      border-color 130ms ease-in-out;
+    gap: var(--spacing-m);
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
   }
-  .action-container:last-child {
-    border-bottom: none;
+  .action-container:hover,
+  .action-container.selected {
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-global-color-gray-500);
+    cursor: pointer;
+  }
+  .action-container:hover .action-header,
+  .action-container.selected .action-header {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

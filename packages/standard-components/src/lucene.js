@@ -23,7 +23,7 @@ export const buildLuceneQuery = filter => {
         value = parseFloat(value)
       }
       if (type === "boolean") {
-        value = value?.toLowerCase() === "true"
+        value = `${value}`?.toLowerCase() === "true"
       }
       if (operator.startsWith("range")) {
         if (!query.range[field]) {
@@ -91,6 +91,11 @@ export const luceneQuery = (docs, query) => {
     return !doc[key] || !doc[key].startsWith(value)
   })
 
+  // Process a fuzzy match (treat the same as starts with when running locally)
+  const fuzzyMatch = match("fuzzy", (key, value, doc) => {
+    return !doc[key] || !doc[key].startsWith(value)
+  })
+
   // Process a range match
   const rangeMatch = match("range", (key, value, doc) => {
     return !doc[key] || doc[key] < value.low || doc[key] > value.high
@@ -120,6 +125,7 @@ export const luceneQuery = (docs, query) => {
   const docMatch = doc => {
     return (
       stringMatch(doc) &&
+      fuzzyMatch(doc) &&
       rangeMatch(doc) &&
       equalMatch(doc) &&
       notEqualMatch(doc) &&

@@ -1,7 +1,7 @@
 <script>
   import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
-  import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Button from "../Button/Button.svelte"
   import Body from "../Typography/Body.svelte"
   import Heading from "../Typography/Heading.svelte"
 
@@ -38,13 +38,13 @@
       <header>
         <div class="text">
           <Heading size="XS">{title}</Heading>
-          <Body size="XXS">
+          <Body size="S">
             <slot name="description" />
           </Body>
         </div>
         <div class="buttons">
+          <Button secondary quiet on:click={hide}>Cancel</Button>
           <slot name="buttons" />
-          <ActionButton quiet icon="Close" on:click={hide} />
         </div>
       </header>
       <slot name="body" />
@@ -59,7 +59,7 @@
     left: 260px;
     width: calc(100% - 520px);
     background: var(--background);
-    border: var(--border-light);
+    border-top: var(--border-light);
     z-index: 2;
   }
 
@@ -68,17 +68,15 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: var(--spectrum-alias-item-padding-s) 0;
-  }
-  header :global(*) + :global(*) {
-    margin: 0 var(--spectrum-alias-grid-baseline);
+    padding: var(--spacing-l) var(--spacing-xl);
+    gap: var(--spacing-xl);
   }
 
   .text {
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-left: var(--spectrum-alias-item-padding-s);
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
   }
 </style>

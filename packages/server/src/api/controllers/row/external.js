@@ -1,136 +1,19 @@
-const { makeExternalQuery } = require("./utils")
-const { DataSourceOperation, SortDirection } = require("../../../constants")
-const { getExternalTable } = require("../table/utils")
+const {
+  DataSourceOperation,
+  SortDirection,
+  FieldTypes,
+} = require("../../../constants")
 const {
   breakExternalTableId,
-  generateRowIdField,
   breakRowIdField,
 } = require("../../../integrations/utils")
-const { cloneDeep } = require("lodash/fp")
+const ExternalRequest = require("./ExternalRequest")
+const CouchDB = require("../../../db")
 
-function inputProcessing(row, table) {
-  if (!row) {
-    return row
-  }
-  let newRow = {}
-  for (let key of Object.keys(table.schema)) {
-    // currently excludes empty strings
-    if (row[key]) {
-      newRow[key] = row[key]
-    }
-  }
-  return newRow
-}
-
-function generateIdForRow(row, table) {
-  if (!row) {
-    return
-  }
-  const primary = table.primary
-  // build id array
-  let idParts = []
-  for (let field of primary) {
-    idParts.push(row[field])
-  }
-  return generateRowIdField(idParts)
-}
-
-function outputProcessing(rows, table) {
-  // if no rows this is what is returned? Might be PG only
-  if (rows[0].read === true) {
-    return []
-  }
-  for (let row of rows) {
-    row._id = generateIdForRow(row, table)
-    row.tableId = table._id
-    row._rev = "rev"
-  }
-  return rows
-}
-
-function buildFilters(id, filters, table) {
-  const primary = table.primary
-  // if passed in array need to copy for shifting etc
-  let idCopy = cloneDeep(id)
-  if (filters) {
-    // need to map over the filters and make sure the _id field isn't present
-    for (let filter of Object.values(filters)) {
-      if (filter._id) {
-        const parts = breakRowIdField(filter._id)
-        for (let field of primary) {
-          filter[field] = parts.shift()
-        }
-      }
-      // make sure this field doesn't exist on any filter
-      delete filter._id
-    }
-  }
-  // there is no id, just use the user provided filters
-  if (!idCopy || !table) {
-    return filters
-  }
-  // if used as URL parameter it will have been joined
-  if (typeof idCopy === "string") {
-    idCopy = breakRowIdField(idCopy)
-  }
-  const equal = {}
-  for (let field of primary) {
-    // work through the ID and get the parts
-    equal[field] = idCopy.shift()
-  }
-  return {
-    equal,
-  }
-}
-
-async function handleRequest(
-  appId,
-  operation,
-  tableId,
-  { id, row, filters, sort, paginate } = {}
-) {
-  let { datasourceId, tableName } = breakExternalTableId(tableId)
-  const table = await getExternalTable(appId, datasourceId, tableName)
-  if (!table) {
-    throw `Unable to process query, table "${tableName}" not defined.`
-  }
-  // clean up row on ingress using schema
-  filters = buildFilters(id, filters, table)
-  row = inputProcessing(row, table)
-  if (
-    operation === DataSourceOperation.DELETE &&
-    (filters == null || Object.keys(filters).length === 0)
-  ) {
-    throw "Deletion must be filtered"
-  }
-  let json = {
-    endpoint: {
-      datasourceId,
-      entityId: tableName,
-      operation,
-    },
-    resource: {
-      // not specifying any fields means "*"
-      fields: [],
-    },
-    filters,
-    sort,
-    paginate,
-    body: row,
-    // pass an id filter into extra, purely for mysql/returning
-    extra: {
-      idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
-    },
-  }
-  // can't really use response right now
-  const response = await makeExternalQuery(appId, json)
-  // we searched for rows in someway
-  if (operation === DataSourceOperation.READ && Array.isArray(response)) {
-    return outputProcessing(response, table)
-  } else {
-    row = outputProcessing(response, table)[0]
-    return { row, table }
-  }
+async function handleRequest(appId, operation, tableId, opts = {}) {
+  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
+    opts
+  )
 }
 
 exports.patch = async ctx => {
@@ -172,9 +55,15 @@ exports.find = async ctx => {
   const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  return handleRequest(appId, DataSourceOperation.READ, tableId, {
-    id,
-  })
+  const response = await handleRequest(
+    appId,
+    DataSourceOperation.READ,
+    tableId,
+    {
+      id,
+    }
+  )
+  return response ? response[0] : response
 }
 
 exports.destroy = async ctx => {
@@ -270,7 +159,56 @@ exports.validate = async () => {
   return { valid: true }
 }
 
-exports.fetchEnrichedRow = async () => {
-  // TODO: How does this work
-  throw "Not Implemented"
+exports.fetchEnrichedRow = async ctx => {
+  const appId = ctx.appId
+  const id = ctx.params.rowId
+  const tableId = ctx.params.tableId
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const db = new CouchDB(appId)
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    ctx.throw(400, "Datasource has not been configured for plus API.")
+  }
+  const tables = datasource.entities
+  const response = await handleRequest(
+    appId,
+    DataSourceOperation.READ,
+    tableId,
+    {
+      id,
+      datasource,
+    }
+  )
+  const table = tables[tableName]
+  const row = response[0]
+  // this seems like a lot of work, but basically we need to dig deeper for the enrich
+  // for a single row, there is probably a better way to do this with some smart multi-layer joins
+  for (let [fieldName, field] of Object.entries(table.schema)) {
+    if (
+      field.type !== FieldTypes.LINK ||
+      !row[fieldName] ||
+      row[fieldName].length === 0
+    ) {
+      continue
+    }
+    const links = row[fieldName]
+    const linkedTableId = field.tableId
+    const linkedTable = tables[breakExternalTableId(linkedTableId).tableName]
+    // don't support composite keys right now
+    const linkedIds = links.map(link => breakRowIdField(link._id)[0])
+    row[fieldName] = await handleRequest(
+      appId,
+      DataSourceOperation.READ,
+      linkedTableId,
+      {
+        tables,
+        filters: {
+          oneOf: {
+            [linkedTable.primary]: linkedIds,
+          },
+        },
+      }
+    )
+  }
+  return row
 }

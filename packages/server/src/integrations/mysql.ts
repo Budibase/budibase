@@ -5,7 +5,8 @@ import {
   Operation,
   QueryJson,
   SqlQuery,
-} from "./base/definitions"
+} from "../definitions/datasource"
+import { Table, TableSchema } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module MySQLModule {
@@ -28,6 +29,7 @@ module MySQLModule {
     blob: FieldTypes.LONGFORM,
     enum: FieldTypes.STRING,
     varchar: FieldTypes.STRING,
+    float: FieldTypes.NUMBER,
     int: FieldTypes.NUMBER,
     numeric: FieldTypes.NUMBER,
     bigint: FieldTypes.NUMBER,
@@ -139,7 +141,7 @@ module MySQLModule {
     }
 
     async buildSchema(datasourceId: string) {
-      const tables: any = {}
+      const tables: { [key: string]: Table } = {}
       const database = this.config.database
       this.client.connect()
 
@@ -154,7 +156,7 @@ module MySQLModule {
       )
       for (let tableName of tableNames) {
         const primaryKeys = []
-        const schema: any = {}
+        const schema: TableSchema = {}
         const descResp = await internalQuery(
           this.client,
           { sql: `DESCRIBE ${tableName};` },
@@ -162,14 +164,19 @@ module MySQLModule {
         )
         for (let column of descResp) {
           const columnName = column.Field
-          if (column.Key === "PRI") {
+          if (column.Key === "PRI" && primaryKeys.indexOf(column.Key) === -1) {
             primaryKeys.push(columnName)
           }
           const constraints = {
-            required: column.Null !== "YES",
+            presence: column.Null !== "YES",
           }
+          const isAuto: boolean =
+            typeof column.Extra === "string" &&
+            (column.Extra === "auto_increment" ||
+              column.Extra.toLowerCase().includes("generated"))
           schema[columnName] = {
             name: columnName,
+            autocolumn: isAuto,
             type: convertType(column.Type, TYPE_MAP),
             constraints,
           }
@@ -212,7 +219,7 @@ module MySQLModule {
     }
 
     async getReturningRow(json: QueryJson) {
-      if (!json.extra.idFilter) {
+      if (!json.extra || !json.extra.idFilter) {
         return {}
       }
       const input = this._query({

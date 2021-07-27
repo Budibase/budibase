@@ -26,6 +26,14 @@ const PUBLIC_ENDPOINTS = [
     method: "GET",
   },
   {
+    route: "/api/admin/auth/oidc",
+    method: "GET",
+  },
+  {
+    route: "/api/admin/auth/oidc/callback",
+    method: "GET",
+  },
+  {
     route: "/api/admin/auth/reset",
     method: "POST",
   },
@@ -39,6 +47,10 @@ const PUBLIC_ENDPOINTS = [
   },
   {
     route: "/api/admin/configs/public",
+    method: "GET",
+  },
+  {
+    route: "/api/admin/configs/publicOidc",
     method: "GET",
   },
 ]

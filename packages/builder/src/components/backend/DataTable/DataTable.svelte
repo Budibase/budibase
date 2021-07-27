@@ -24,7 +24,7 @@
     name: $views.selected?.name,
   }
   $: type = $tables.selected?.type
-  $: isInternal = type === "internal"
+  $: isInternal = type !== "external"
 
   // Fetch rows for specified table
   $: {
@@ -72,9 +72,7 @@
     {#if isUsersTable}
       <EditRolesButton />
     {/if}
-    {#if isInternal}
-      <HideAutocolumnButton bind:hideAutocolumns />
-    {/if}
+    <HideAutocolumnButton bind:hideAutocolumns />
     <!-- always have the export last -->
     <ExportButton view={$tables.selected?._id} />
   {/if}

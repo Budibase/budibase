@@ -6,6 +6,8 @@ const DEFAULT_CONFIG = {
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",
+  oidc: undefined,
+  google: undefined,
 }
 
 export function createOrganisationStore() {

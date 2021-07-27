@@ -4,8 +4,8 @@ import {
   QueryTypes,
   QueryJson,
   SqlQuery,
-} from "./base/definitions"
-import { Table } from "../constants/definitions"
+} from "../definitions/datasource"
+import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module PostgresModule {
@@ -134,8 +134,9 @@ module PostgresModule {
     /**
      * Fetches the tables from the postgres table and assigns them to the datasource.
      * @param {*} datasourceId - datasourceId to fetch
+     * @param entities - the tables that are to be built
      */
-    async buildSchema(datasourceId: string) {
+    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       let tableKeys: { [key: string]: string[] } = {}
       try {
         const primaryKeysResponse = await this.client.query(
@@ -146,7 +147,11 @@ module PostgresModule {
           if (!tableKeys[tableName]) {
             tableKeys[tableName] = []
           }
-          tableKeys[tableName].push(table.column_name || table.primary_key)
+          const key = table.column_name || table.primary_key
+          // only add the unique keys
+          if (key && tableKeys[tableName].indexOf(key) === -1) {
+            tableKeys[tableName].push(key)
+          }
         }
       } catch (err) {
         tableKeys = {}
@@ -167,10 +172,27 @@ module PostgresModule {
             name: tableName,
             schema: {},
           }
+
+          // add the existing relationships from the entities if they exist, to prevent them from being overridden
+          if (entities && entities[tableName]) {
+            const existingTableSchema = entities[tableName].schema
+            for (let key in existingTableSchema) {
+              if (!existingTableSchema.hasOwnProperty(key)) {
+                continue
+              }
+              if (existingTableSchema[key].type === "link") {
+                tables[tableName].schema[key] = existingTableSchema[key]
+              }
+            }
+          }
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
+        const isAuto: boolean =
+          typeof column.column_default === "string" &&
+          column.column_default.startsWith("nextval")
         tables[tableName].schema[columnName] = {
+          autocolumn: isAuto,
           name: columnName,
           type,
         }
