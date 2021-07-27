@@ -219,6 +219,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/victoriasloan"><img src="https://avatars.githubusercontent.com/u/9913651?v=4?s=100" width="100px;" alt=""/><br /><sub><b>victoriasloan</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=victoriasloan" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/yashank09"><img src="https://avatars.githubusercontent.com/u/37672190?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yashank09</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=yashank09" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/SOVLOOKUP"><img src="https://avatars.githubusercontent.com/u/53158137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>SOVLOOKUP</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=SOVLOOKUP" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/mslourens"><img src="https://avatars.githubusercontent.com/u/1907152?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Maurits Lourens</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Code">💻</a></td>
   </tr>
 </table>
 
