@@ -16,9 +16,6 @@
 
   // Force creation of an admin user if one doesn't exist
   $: {
-    console.log(`loaded: ${loaded}`)
-    console.log(`tenancy: ${multiTenancyEnabled}`)
-    console.log(`tenant set: ${tenantSet}`)
     if (loaded && multiTenancyEnabled && !tenantSet) {
       $redirect("./auth/org")
     } else if (loaded && !hasAdminUser) {

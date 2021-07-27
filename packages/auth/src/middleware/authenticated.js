@@ -23,7 +23,8 @@ function buildNoAuthRegex(patterns) {
   })
 }
 
-function finalise(ctx, { authenticated, user, internal, version } = {}) {
+function finalise(ctx, { authenticated, user, internal, version, publicEndpoint } = {}) {
+  ctx.publicEndpoint = publicEndpoint || false
   ctx.isAuthenticated = authenticated || false
   ctx.user = user
   ctx.internal = internal || false
@@ -90,12 +91,12 @@ module.exports = (noAuthPatterns = [], opts) => {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
-      finalise(ctx, { authenticated, user, internal, version })
+      finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
       return next()
     } catch (err) {
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
-        finalise(ctx, { authenticated: false, version })
+        finalise(ctx, { authenticated: false, version, publicEndpoint })
       } else {
         ctx.throw(err.status || 403, err)
       }
