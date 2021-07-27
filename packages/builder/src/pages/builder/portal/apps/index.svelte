@@ -14,6 +14,7 @@
     Body,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
+  import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import api, { del } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
@@ -30,6 +31,7 @@
   let template
   let selectedApp
   let creationModal
+  let updatingModal
   let deletionModal
   let unpublishModal
   let creatingApp = false
@@ -164,6 +166,11 @@
     selectedApp = null
   }
 
+  const updateApp = async app => {
+    selectedApp = app
+    updatingModal.show()
+  }
+
   const releaseLock = async app => {
     try {
       const response = await del(`/api/dev/${app.devId}/lock`)
@@ -236,6 +243,7 @@
             {editApp}
             {exportApp}
             {deleteApp}
+            {updateApp}
           />
         {/each}
       </div>
@@ -288,6 +296,12 @@
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
+
+<UpdateAppModal
+  app={selectedApp}
+  bind:this={updatingModal}
+>
+</UpdateAppModal>
 
 <style>
   .title,
