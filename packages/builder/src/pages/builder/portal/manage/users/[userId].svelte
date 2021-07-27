@@ -19,7 +19,8 @@
   import { fetchData } from "helpers"
   import { users, auth } from "stores/portal"
 
-  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
+  import TagsRenderer from "./_components/RolesTagsTableRenderer.svelte"
+
   import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
 
@@ -36,7 +37,8 @@
   $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : "BASIC"
   // Merge the Apps list and the roles response to get something that makes sense for the table
   $: appList = Object.keys($apps?.data).map(id => {
-    const role = $userFetch?.data?.roles?.[id] || defaultRoleId
+    const roleId = $userFetch?.data?.roles?.[id] || defaultRoleId
+    const role = $apps?.data?.[id].roles.find(role => role._id === roleId)
     return {
       ...$apps?.data?.[id],
       _id: id,
@@ -59,6 +61,16 @@
   }
 
   let toggleDisabled = false
+
+  async function updateUserFirstName(evt) {
+    await users.save({ ...$userFetch?.data, firstName: evt.target.value })
+    await userFetch.refresh()
+  }
+
+  async function updateUserLastName(evt) {
+    await users.save({ ...$userFetch?.data, lastName: evt.target.value })
+    await userFetch.refresh()
+  }
 
   async function toggleFlag(flagName, detail) {
     toggleDisabled = true
@@ -113,11 +125,19 @@
       </div>
       <div class="field">
         <Label size="L">First name</Label>
-        <Input disabled thin value={$userFetch?.data?.firstName} />
+        <Input
+          thin
+          value={$userFetch?.data?.firstName}
+          on:blur={updateUserFirstName}
+        />
       </div>
       <div class="field">
         <Label size="L">Last name</Label>
-        <Input disabled thin value={$userFetch?.data?.lastName} />
+        <Input
+          thin
+          value={$userFetch?.data?.lastName}
+          on:blur={updateUserLastName}
+        />
       </div>
       <!-- don't let a user remove the privileges that let them be here -->
       {#if userId !== $auth.user._id}

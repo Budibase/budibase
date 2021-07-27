@@ -44,7 +44,7 @@ async function getACode(db, code, deleteCode = true) {
 
 exports.init = async () => {
   pwResetClient = await new Client(utils.Databases.PW_RESETS).init()
-  invitationClient = await new Client(utils.Databases.PW_RESETS).init()
+  invitationClient = await new Client(utils.Databases.INVITATIONS).init()
 }
 
 /**

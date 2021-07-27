@@ -1,31 +1,23 @@
 import * as API from "../api"
-import { writable, get } from "svelte/store"
-import { builderStore } from "./builder"
-import { TableNames } from "../constants"
+import { writable } from "svelte/store"
 
 const createAuthStore = () => {
   const store = writable(null)
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
-    // Fetch the first user if inside the builder
-    if (get(builderStore).inBuilder) {
-      const users = await API.fetchTableData(TableNames.USERS)
-      if (!users.error && users[0] != null) {
-        store.set(users[0])
-      }
-    }
+    const user = await API.fetchSelf()
+    store.set(user)
+  }
 
-    // Or fetch the current user from localstorage in a real app
-    else {
-      const user = await API.fetchSelf()
-      store.set(user)
-    }
+  const logOut = async () => {
+    window.document.cookie = `budibase:auth=; budibase:currentapp=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
+    window.location = "/builder/auth/login"
   }
 
   return {
     subscribe: store.subscribe,
-    actions: { fetchUser },
+    actions: { fetchUser, logOut },
   }
 }
 

@@ -6,6 +6,7 @@ exports.UserStatus = {
 exports.Cookies = {
   CurrentApp: "budibase:currentapp",
   Auth: "budibase:auth",
+  OIDC_CONFIG: "budibase:oidc:config",
 }
 
 exports.Headers = {
@@ -27,4 +28,6 @@ exports.Configs = {
   ACCOUNT: "account",
   SMTP: "smtp",
   GOOGLE: "google",
+  OIDC: "oidc",
+  OIDC_LOGOS: "logos_oidc",
 }

@@ -20,14 +20,13 @@
   .container {
     min-width: 260px;
     width: max-content;
-    border: 1px solid var(--grey-3);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 0.3rem;
-    color: var(--blue);
   }
 
   .title {
     font-size: 0.85rem;
-    color: #9e9e9e;
+    color: var(--spectrum-global-color-gray-600);
     font-weight: 600;
     margin: 1rem 1.5rem 0.5rem 1.5rem;
     white-space: pre-wrap;
@@ -37,14 +36,14 @@
     font-size: 2rem;
     font-weight: 600;
     margin: 0 1.5rem 1.5rem 1.5rem;
-    color: inherit;
+    color: var(--spectrum-global-color-blue-600);
     white-space: pre-wrap;
   }
 
   .label {
     font-size: 0.85rem;
     font-weight: 400;
-    color: #9e9e9e;
+    color: var(--spectrum-global-color-gray-600);
     margin: 1rem 1.5rem;
     white-space: pre-wrap;
   }

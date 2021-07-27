@@ -1,16 +1,70 @@
 <script>
   import { goto, beforeUrlChange } from "@roxi/routify"
-  import { Button, Heading, Body, Divider, Layout } from "@budibase/bbui"
+  import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
+  import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
+  import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
   let unsaved = false
+  let relationshipModal
+  let displayColumnModal
+  let selectedFromRelationship, selectedToRelationship
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
+  $: plusTables = datasource?.plus
+    ? Object.values(datasource.entities || {})
+    : []
+  $: relationships = getRelationships(plusTables)
+
+  function getRelationships(tables) {
+    if (!tables || !Array.isArray(tables)) {
+      return {}
+    }
+    let pairs = {}
+    for (let table of tables) {
+      for (let column of Object.values(table.schema)) {
+        if (column.type !== "link") {
+          continue
+        }
+        // these relationships have an id to pair them to each other
+        // one has a main for the from side
+        const key = column.main ? "from" : "to"
+        pairs[column._id] = {
+          ...pairs[column._id],
+          [key]: column,
+        }
+      }
+    }
+    return pairs
+  }
+
+  function buildRelationshipDisplayString(fromCol, toCol) {
+    function getTableName(tableId) {
+      if (!tableId || typeof tableId !== "string") {
+        return null
+      }
+      return plusTables.find(table => table._id === tableId)?.name || "Unknown"
+    }
+    if (!toCol || !fromCol) {
+      return "Cannot build name"
+    }
+    const fromTableName = getTableName(toCol.tableId)
+    const toTableName = getTableName(fromCol.tableId)
+    const throughTableName = getTableName(fromCol.through)
+
+    let displayString
+    if (throughTableName) {
+      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
+    } else {
+      displayString = `${fromTableName} → ${toTableName}`
+    }
+    return displayString
+  }
 
   async function saveDatasource() {
     try {
@@ -48,6 +102,16 @@
     unsaved = true
   }
 
+  function openRelationshipModal(fromRelationship, toRelationship) {
+    selectedFromRelationship = fromRelationship || {}
+    selectedToRelationship = toRelationship || {}
+    relationshipModal.show()
+  }
+
+  function openDisplayColumnModal() {
+    displayColumnModal.show()
+  }
+
   $beforeUrlChange(() => {
     if (unsaved) {
       notifications.error(
@@ -58,6 +122,21 @@
     return true
   })
 </script>
+
+<Modal bind:this={relationshipModal}>
+  <CreateEditRelationship
+    {datasource}
+    save={saveDatasource}
+    close={relationshipModal.hide}
+    {plusTables}
+    fromRelationship={selectedFromRelationship}
+    toRelationship={selectedToRelationship}
+  />
+</Modal>
+
+<Modal bind:this={displayColumnModal}>
+  <DisplayColumnModal {datasource} {plusTables} save={saveDatasource} />
+</Modal>
 
 {#if datasource && integration}
   <section>
@@ -92,9 +171,18 @@
         <Divider />
         <div class="query-header">
           <Heading size="S">Tables</Heading>
-          <Button primary on:click={updateDatasourceSchema}
-            >Fetch Tables From Database</Button
-          >
+          <div class="table-buttons">
+            {#if plusTables && plusTables.length !== 0}
+              <Button primary on:click={openDisplayColumnModal}>
+                Update display columns
+              </Button>
+            {/if}
+            <div>
+              <Button primary on:click={updateDatasourceSchema}>
+                Fetch tables from database
+              </Button>
+            </div>
+          </div>
         </div>
         <Body>
           This datasource can determine tables automatically. Budibase can fetch
@@ -102,18 +190,44 @@
           having to write any queries at all.
         </Body>
         <div class="query-list">
-          {#if datasource.entities}
-            {#each Object.keys(datasource.entities) as entity}
-              <div
-                class="query-list-item"
-                on:click={() => onClickTable(datasource.entities[entity])}
-              >
-                <p class="query-name">{entity}</p>
-                <p>Primary Key: {datasource.entities[entity].primary}</p>
-                <p>→</p>
-              </div>
-            {/each}
-          {/if}
+          {#each plusTables as table}
+            <div class="query-list-item" on:click={() => onClickTable(table)}>
+              <p class="query-name">{table.name}</p>
+              <p>Primary Key: {table.primary}</p>
+              <p>→</p>
+            </div>
+          {/each}
+        </div>
+        {#if plusTables?.length !== 0}
+          <Divider />
+          <div class="query-header">
+            <Heading size="S">Relationships</Heading>
+            <Button primary on:click={() => openRelationshipModal()}
+              >Create relationship</Button
+            >
+          </div>
+          <Body>
+            Tell budibase how your tables are related to get even more smart
+            features.
+          </Body>
+        {/if}
+        <div class="query-list">
+          {#each Object.values(relationships) as relationship}
+            <div
+              class="query-list-item"
+              on:click={() =>
+                openRelationshipModal(relationship.from, relationship.to)}
+            >
+              <p class="query-name">
+                {buildRelationshipDisplayString(
+                  relationship.from,
+                  relationship.to
+                )}
+              </p>
+              <p>{relationship.from?.name} to {relationship.to?.name}</p>
+              <p>→</p>
+            </div>
+          {/each}
         </div>
       {/if}
       <Divider />
@@ -201,5 +315,15 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size-s);
+  }
+
+  .table-buttons {
+    display: grid;
+    grid-gap: var(--spacing-l);
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .table-buttons div {
+    grid-column-end: -1;
   }
 </style>

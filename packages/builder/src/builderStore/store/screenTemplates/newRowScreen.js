@@ -38,8 +38,6 @@ const createScreen = table => {
     .instanceName("Form")
     .customProps({
       actionType: "Create",
-      theme: "spectrum--lightest",
-      size: "spectrum--medium",
       dataSource: {
         label: table.name,
         tableId: table._id,

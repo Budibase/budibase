@@ -5,8 +5,6 @@
   import { generateID } from "../helpers"
 
   export let dataSource
-  export let theme
-  export let size
   export let disabled = false
   export let initialValues
 
@@ -160,24 +158,9 @@
   {actions}
   data={{ ...$formState.values, tableId: dataSource?.tableId }}
 >
-  <div
-    lang="en"
-    dir="ltr"
-    use:styleable={$component.styles}
-    class={`spectrum ${size || "spectrum--medium"} ${
-      theme || "spectrum--light"
-    }`}
-  >
+  <div use:styleable={$component.styles}>
     {#if loaded}
       <slot />
     {/if}
   </div>
 </Provider>
-
-<style>
-  div {
-    padding: 20px;
-    position: relative;
-    background-color: var(--spectrum-alias-background-color-secondary);
-  }
-</style>
