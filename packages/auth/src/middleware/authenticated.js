@@ -33,6 +33,7 @@ function finalise(ctx, { authenticated, user, internal, version } = {}) {
 module.exports = (noAuthPatterns = [], opts) => {
   const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
   return async (ctx, next) => {
+    let publicEndpoint = false
     const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
     const found = noAuthOptions.find(({ regex, method }) => {
@@ -42,7 +43,7 @@ module.exports = (noAuthPatterns = [], opts) => {
       )
     })
     if (found != null) {
-      return next()
+      publicEndpoint = true
     }
     try {
       // check the actual user is authenticated first
@@ -93,7 +94,7 @@ module.exports = (noAuthPatterns = [], opts) => {
       return next()
     } catch (err) {
       // allow configuring for public access
-      if (opts && opts.publicAllowed) {
+      if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version })
       } else {
         ctx.throw(err.status || 403, err)

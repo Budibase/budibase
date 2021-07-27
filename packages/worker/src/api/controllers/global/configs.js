@@ -4,7 +4,7 @@ const {
   getGlobalUserParams,
   getScopedFullConfig,
   getGlobalDBFromCtx,
-  getGlobalDB,
+  getTenantIdFromCtx,
   getAllApps,
 } = require("@budibase/auth/db")
 const { Configs } = require("../../../constants")
@@ -218,8 +218,8 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  const tenantId = ctx.request.query.tenantId
-  const db = tenantId ? getGlobalDB(tenantId) : getGlobalDBFromCtx(ctx)
+  const tenantId = getTenantIdFromCtx(ctx)
+  const db = getGlobalDBFromCtx(ctx)
 
   try {
     // TODO: Watch get started video
