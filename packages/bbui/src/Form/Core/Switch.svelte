@@ -12,7 +12,6 @@
   const onChange = event => {
     dispatch("change", event.target.checked)
   }
-
 </script>
 
 <div class="spectrum-Switch spectrum-Switch--emphasized">
