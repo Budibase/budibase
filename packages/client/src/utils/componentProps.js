@@ -43,5 +43,17 @@ export const enrichProps = (props, context) => {
     )
   }
 
+  // Enrich any click actions in conditions
+  if (enrichedProps._conditions) {
+    enrichedProps._conditions.forEach(condition => {
+      if (condition.setting === "onClick") {
+        condition.settingValue = enrichButtonActions(
+          condition.settingValue,
+          totalContext
+        )
+      }
+    })
+  }
+
   return enrichedProps
 }
