@@ -130,6 +130,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "seoulaja",
+      "name": "seoulaja",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15101654?v=4",
+      "profile": "https://github.com/seoulaja",
+      "contributions": [
+        "translation"
+      ]
     }
   ],
   "contributorsPerLine": 7,
