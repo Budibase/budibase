@@ -8,10 +8,10 @@
 </h1>
 
 <h3 align="center">
-  Build, automate and self-host internal tools in minutes
+  Membangun, mengotomatisasi dan hosting sendiri aplikasi internal dalam hitungan menit
 </h3>
 <p align="center">
-  Budibase is an open-source low-code platform, helping developers and IT professionals build, automate, and ship internal tools on their own infrastructure in minutes.
+  Budibase adalah sebuah platform low-code dengan sumber terbuka, bertujuan untuk membantu para developer dan professional IT, untuk membangun, mengotomatisasi, dan mengirimkan aplikasi internal di infrastruktur sendiri dalam waktu hitungan menit.
 </p>
 
 <h3 align="center">
@@ -39,31 +39,31 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/getting-started">Get started</a>
+  <a href="https://docs.budibase.com/getting-started">Mari mulai</a>
   <span> · </span>
-  <a href="https://docs.budibase.com">Docs</a>
+  <a href="https://docs.budibase.com">Dokumentasi</a>
   <span> · </span>
-  <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Feature request</a>
+  <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Permintaan Fitur</a>
   <span> · </span>
-  <a href="https://github.com/Budibase/budibase/issues">Report a bug</a>
+  <a href="https://github.com/Budibase/budibase/issues">Laporkan bug</a>
   <span> · </span>
-  Support: <a href="https://github.com/Budibase/budibase/discussions">Discussions</a>
+  Bantuan: <a href="https://github.com/Budibase/budibase/discussions">Diskusi</a>
 </h3>
 
 <br /><br />
-## ✨ Features
+## ✨ Fitur-fitur
 
-- **Build and ship real software.** Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
+- **Membangun dan mengirimkan software nyata.** Tidak seperti platform lain, dengan Budibase Anda membuat dan mengirimkan aplikasi-aplikasi satu halaman. Aplikasi-aplikasi Budibase memiliki kinerja yang matang dan dapat dirancang secara responsif, memberikan pengalaman yang menyenangkan bagi pengguna.
 
-- **Open source and extensible.** Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
+- **Sumber terbuka dan dapat dikembangkan.** Budibase adalah platform dengan sumber terbuka - dilisensikan sebagai GPL v3. Ini akan membuat Anda yakin bahwa Budibase akan selalu ada. Anda juga dapat berkontribusi terhadap kode Budibase atau melakukan fork dan membuat perubahan sesuka Anda, memberikan pengalaman yang ramah developer.
 
-- **Load data or start from scratch.** Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, S3, DyanmoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Muat data atau mulai dari awal.** Budibase menarik data dari berbagai sumber, termasuk MongoDB, CouchDB, PostgreSQL, mySQL, Airtable, S3, DyanmoDB, atau REST API. Dan tidak seperti platform lain, dengan Budibase Anda dapat memulai dari awal dan membuat aplikasi bisnis tanpa sumber data sekalipun. [Permintaan untuk sumber data baru](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Design and build apps with powerful pre-made components.** Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Rancang dan bangun aplikasi dengan komponen siap pakai yang kuat.** Budibase tersedia dengan siap pakai dan dirancang dengan indah, komponen-komponen kuat yang dapat anda gunakan layaknya blok penyusun untuk merancang UI Anda. Kami juga menyediakan banyak sekali pilihan-pilihan CSS favorit yang dapat digunakan sesuai dengan kreatifitas yang Anda inginkan. [Permintaan komponen baru [Permintaan untuk komponen baru](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Automate processes, integrate with other tools, and connect to webhooks.** Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+- **Otomatiskan proses, integrasikan dengan aplikasi lain, dan sambungkan ke webhook.** Menghemat waktu dengan mengotomatisasikan proses dan alur kerja yang masih dikerjakan secara manual. Dari menghubungkan ke webhooks, hingga mengotomatiasi email-email, cukup beritahu Budibase apa yang harus dilakukan dan biarkan dia berkerja untuk Anda. Anda bisa dengan mudah [membuat otomatisasi baru untuk Budibase disini ](https://github.com/Budibase/automations) atau [minta otomatisasi baru](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
-- **Admin paradise.** Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
+- **Surga bagi Admin.** Budibase dibuat untuk berkembang. Dengan Budibase, Anda dapat menghosting sendiri di infrastruktrur Anda punya dan secara global mengelola para pengguna, orientasi, SMTP, aplikasi-aplikasi, grup-grup, tema, dan masih masih banyak lagi. Anda juga dapat menyediakan para pengguna/grup dengan sebuah aplikasi portal dan menyebarkan pengelolaan pengguna kepada manaajer grup.
 
 <br />
 
@@ -71,49 +71,49 @@
 
 <br />
 
-## 🏁 Get started
-Currently there are two ways to get started with Budibase; Digital Ocean, and Docker.
+## 🏁 Memulai
+Saat ini ada 2 cara untuk memulai Budibase, yaitu: Digital Ocean dan Docker.
 <br /><br />
 
-### Get started with Digital Ocean
-The easiest and quickest way to get started, is to use Digital Ocean:
-<a href="https://marketplace.digitalocean.com/apps/budibase">1-click Digital Ocean deploy</a>
+### Memulai Dengan Digital Ocean
+Cara paling mudah dan cepat untuk memulai adalah dengan menggunakan Digital Ocean:
+<a href="https://marketplace.digitalocean.com/apps/budibase">1-klik Digital Ocean deploy</a>
 
 <a href="https://marketplace.digitalocean.com/apps/budibase">
   <img src="https://user-images.githubusercontent.com/552074/87779219-5c3b7600-c824-11ea-9898-981a8ba94f6c.png" alt="digital ocean badge">
 </a>  
 <br /><br />
 
-### Get started with Docker
-To get started, you must have docker and docker compose installed on your machine. 
-Once you have Docker installed, the process takes 5 minutes, with these four steps:
+### Memulai dengan Docker
+Untuk memulai, Anda harus memiliki docker dan docker compose  terinstal di mesin anda. 
+Setelah Anda docker terinstal, prosesnya akan memakan waktu 5 menit, dengan empat langkah ini:
 
-1. Install the Budibase CLI.
+1. Instal CLI Budibase.
 
 ```
 $ npm i -g @budibase/cli 
 ```
 
 
-2. Setup Budibase (select where to store Budibase, and the port to run it on)
+2. Mempersiapkan Budibase (pilih tempat menyimpan Budibase dan port untuk menjalankannya)
 
 ```
 budi hosting --init 
 ```
 
 
-3. Run Budibase
+3. Jalankan Budibase
 
 ```
 budi hosting --start 
 ```
 
 
-4. Create your admin user
+4. Buat pengguna admin Anda
 
-Enter the email and password for the new admin user.
+Masukkan surel dan sandi untuk admin baru.
 
-Done! You are now ready to build powerful internal tools in minutes. For additional information on how to get started and learn Budibase, visit our [docs](https://docs.budibase.com/getting-started).
+Selesai! Anda sekarang siap untuk membangun aplikasi internal yang mumpuni dalam hitungan menit. Untuk informasi tambahan tentang cara memulai dan mempelajari Budibase, kunjungi [dokumentasi](https://docs.budibase.com/getting-started) kami.
 
 <br />
 
@@ -121,18 +121,18 @@ Done! You are now ready to build powerful internal tools in minutes. For additio
 
 <br />
 
-## 🎓 Learning Budibase
+## 🎓 Belajar Budibase
 
-The Budibase documentation [lives here](https://docs.budibase.com).
+Dokumentasi Budibase [dapat dilihat disini](https://docs.budibase.com).
 <br />
 
 ---
 
 <br /><br />
 
-## 💬 Community
+## 💬 Komunitas
 
-If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
+Jika Anda memiliki pertanyaan atau ingin berbicara dengan pengguna Budibase lainnya dan bergabung dengan komunitas kami, silakan kunjungi [Diskusi Github](https://github.com/Budibase/budibase/discussions)
 
 <img src="https://d33wubrfki0l68.cloudfront.net/e9241201fd89f9abbbdaac4fe44bb16312752abe/84013/img/hero-images/community.webp" />
 
@@ -142,41 +142,41 @@ If you have a question or would like to talk with other Budibase users and join 
 
 <br />
 
-## ❗ Code of conduct
+## ❗ Kode etik
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+Budibase berdedikasi untuk memberikan pengalaman yang ramah, beragam, dan bebas pelecehan bagi semua orang. Kami mengharapkan semua orang di komunitas Budibase untuk mematuhi [**Kode etik**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Mohon dibac.
 <br />
 
 ---
 
 <br />
 
-## 🙌 Contributing to Budibase
+## 🙌 Berkontribusi untuk Budibase
 
-From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
+Dari membuka laporan bug hingga membuat pull request: setiap kontribusi dihargai dan disambut. Jika Anda berencana untuk menerapkan fitur baru atau mengubah API, harap buat issue terlebih dahulu. Dengan cara ini kami dapat memastikan pekerjaan Anda tidak sia-sia.
 
-### Not Sure Where to Start?
-A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
+### Tidak yakin memulai dari mana?
+Sebuat tempat yang baik untuk mulai berkontribusi, adalah  [Masalah pertama di proyek](https://github.com/Budibase/budibase/projects/22).
 
-### How the repository is organized
-Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
+### Bagaimana repositori diatur
+Budibase adalah monorepo yang dikelola oleh lerna. Lerna mengelola pembangunan dan penerbitan paket budibase. Pada level tinggi, inilah paket-paket yang membentuk Budibase.
 
-- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client side svelte application.
+- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - berisi kode untuk aplikasi svelte sisi klien pembangun budibase.
 
-- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
+- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - Modul yang berjalan di browser yang bertanggung jawab untuk membaca definisi JSON dan membuat aplikasi web yang hidup dan bernafas darinya.
 
-- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
+- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - Server Budibase. Aplikasi Koa ini bertanggung jawab untuk melayani JS untuk aplikasi builder dan budibase, serta menyediakan API untuk interaksi dengan database dan sistem file.
 
-For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
+Untuk informasi lebih lanjut, lihat [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 <br /><br />
 
 ---
 
 <br /><br />
 
-## 📝 License
+## 📝 Lisensi
 
-Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps that you build can be licensed however you like.
+Budibase adalah sumber terbuka, dilisensikan sebagai [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). Pustaka klien dan komponen dilisensikan sebagai [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - sehingga aplikasi yang Anda buat dapat dilisensikan sesuka Anda.
 <br /><br />
 
 ---
@@ -188,7 +188,7 @@ Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+Jika Anda mengalami masalah di antara pembaruan, silakan gunakan panduan [disini](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) untuk membersihkan environment Anda.
 
 <br />
 
@@ -196,9 +196,9 @@ If you are having issues between updates of the builder, please use the guide [h
 
 <br /><br />
 
-## Contributors ✨
+## Kontributor ✨
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+Terima kasih untuk orang-orang hebat ini ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -219,11 +219,6 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/victoriasloan"><img src="https://avatars.githubusercontent.com/u/9913651?v=4?s=100" width="100px;" alt=""/><br /><sub><b>victoriasloan</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=victoriasloan" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/yashank09"><img src="https://avatars.githubusercontent.com/u/37672190?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yashank09</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=yashank09" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/SOVLOOKUP"><img src="https://avatars.githubusercontent.com/u/53158137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>SOVLOOKUP</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=SOVLOOKUP" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/seoulaja"><img src="https://avatars.githubusercontent.com/u/15101654?v=4?s=100" width="100px;" alt=""/><br /><sub><b>seoulaja</b></sub></a><br /><a href="#translation-seoulaja" title="Translation">🌍</a></td>
-    <td align="center"><a href="https://github.com/mslourens"><img src="https://avatars.githubusercontent.com/u/1907152?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Maurits Lourens</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/Rory-Powell"><img src="https://avatars.githubusercontent.com/u/8755148?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rory Powell</b></sub></a><br /><a href="#infra-Rory-Powell" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Code">💻</a></td>
   </tr>
 </table>
 
