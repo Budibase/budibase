@@ -8,6 +8,7 @@
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { capitalise } from "helpers"
+  import { createEventDispatcher } from "svelte"
 
   export let label = ""
   export let bindable = true
@@ -17,11 +18,12 @@
   export let type = ""
   export let value = null
   export let props = {}
-  export let onChange = () => {}
 
   let bindingDrawer
   let anchor
   let valid
+  let dispatch = createEventDispatcher();
+
 
   $: bindableProperties = getBindableProperties(
     $currentAsset,
@@ -53,9 +55,9 @@
     }
 
     if (typeof innerVal === "string") {
-      onChange(replaceBindings(innerVal))
+      dispatch('change', replaceBindings(innerVal))
     } else {
-      onChange(innerVal)
+      dispatch('change', innerVal)
     }
   }
 
