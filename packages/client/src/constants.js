@@ -6,6 +6,7 @@ export const ActionTypes = {
   ValidateForm: "ValidateForm",
   RefreshDatasource: "RefreshDatasource",
   SetDataProviderQuery: "SetDataProviderQuery",
+  ClearForm: "ClearForm",
 }
 
 export const ApiVersion = "1"
