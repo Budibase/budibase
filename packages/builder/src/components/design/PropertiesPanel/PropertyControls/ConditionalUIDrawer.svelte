@@ -101,6 +101,12 @@
     conditions = conditions.filter(link => link.id !== id)
   }
 
+  const duplicateCondition = id => {
+    const condition = conditions.find(link => link.id === id);
+    const duplicate = {...condition, id: generate()}
+    conditions = [...conditions, duplicate]
+  }
+
   const handleFinalize = e => {
     updateConditions(e)
     dragDisabled = true
@@ -236,6 +242,12 @@
                 />
               {/if}
               <Icon
+                name="Duplicate"
+                hoverable
+                size="S"
+                on:click={() => duplicateCondition(condition.id)}
+              />
+              <Icon
                 name="Close"
                 hoverable
                 size="S"
@@ -273,7 +285,7 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: auto 1fr auto 1fr 1fr 1fr 1fr auto;
+    grid-template-columns: auto 1fr auto 1fr 1fr 1fr 1fr auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
