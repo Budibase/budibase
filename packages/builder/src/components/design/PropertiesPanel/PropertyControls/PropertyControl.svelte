@@ -22,8 +22,7 @@
   let bindingDrawer
   let anchor
   let valid
-  let dispatch = createEventDispatcher();
-
+  let dispatch = createEventDispatcher()
 
   $: bindableProperties = getBindableProperties(
     $currentAsset,
@@ -55,9 +54,9 @@
     }
 
     if (typeof innerVal === "string") {
-      dispatch('change', replaceBindings(innerVal))
+      dispatch("change", replaceBindings(innerVal))
     } else {
-      dispatch('change', innerVal)
+      dispatch("change", innerVal)
     }
   }
 
