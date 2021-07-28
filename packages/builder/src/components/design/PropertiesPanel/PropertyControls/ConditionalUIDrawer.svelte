@@ -102,8 +102,8 @@
   }
 
   const duplicateCondition = id => {
-    const condition = conditions.find(link => link.id === id);
-    const duplicate = {...condition, id: generate()}
+    const condition = conditions.find(link => link.id === id)
+    const duplicate = { ...condition, id: generate() }
     conditions = [...conditions, duplicate]
   }
 
