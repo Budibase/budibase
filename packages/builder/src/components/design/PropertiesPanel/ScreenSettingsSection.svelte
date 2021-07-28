@@ -11,7 +11,7 @@
   export let componentInstance
 
   function setAssetProps(name, value, parser) {
-    if (parser && typeof parser === 'function') {
+    if (parser && typeof parser === "function") {
       value = parser(value)
     }
 
@@ -32,7 +32,12 @@
 
   const screenSettings = [
     // { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input, parser: (val) => val.replaceAll(' ', '_') },
+    {
+      key: "routing.route",
+      label: "Route",
+      control: Input,
+      parser: val => val.replaceAll(" ", "_"),
+    },
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
