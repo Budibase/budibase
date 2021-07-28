@@ -15,6 +15,7 @@
   export let exportApp
   export let viewApp
   export let editApp
+  export let updateApp
   export let deleteApp
   export let unpublishApp
   export let releaseLock
@@ -53,6 +54,9 @@
           </MenuItem>
         {/if}
         {#if !app.deployed}
+          <MenuItem on:click={() => updateApp(app)} icon="Edit">
+            Update
+          </MenuItem>
           <MenuItem on:click={() => deleteApp(app)} icon="Delete">
             Delete
           </MenuItem>
