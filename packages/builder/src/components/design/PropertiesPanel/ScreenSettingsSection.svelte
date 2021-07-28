@@ -10,7 +10,11 @@
 
   export let componentInstance
 
-  function setAssetProps(name, value) {
+  function setAssetProps(name, value, parser) {
+    if (parser && typeof parser === 'function') {
+      value = parser(value)
+    }
+
     const selectedAsset = get(currentAsset)
     store.update(state => {
       if (
@@ -28,7 +32,7 @@
 
   const screenSettings = [
     // { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input },
+    { key: "routing.route", label: "Route", control: Input, parser: (val) => val.replaceAll(' ', '_') },
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
@@ -43,7 +47,7 @@
         label={def.label}
         key={def.key}
         value={deepGet($currentAsset, def.key)}
-        onChange={val => setAssetProps(def.key, val)}
+        on:change={event => setAssetProps(def.key, event.detail, def.parser)}
       />
     {/each}
   </DetailSummary>

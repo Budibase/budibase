@@ -160,7 +160,5 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
     cy.get("input").eq(1).type(route)
     cy.get(".spectrum-Button--cta").click()
   })
-  cy.get(".nav-items-container").within(() => {
-    cy.contains(route).should("exist")
-  })
+
 })

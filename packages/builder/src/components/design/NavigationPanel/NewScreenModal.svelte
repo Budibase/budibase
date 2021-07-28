@@ -84,6 +84,7 @@
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
+    route = route.replaceAll(' ', '_')
   }
 </script>
 
