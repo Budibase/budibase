@@ -32,5 +32,3 @@ exports.Configs = {
   OIDC: "oidc",
   OIDC_LOGOS: "logos_oidc",
 }
-
-exports.DEFAULT_TENANT_ID = "default"

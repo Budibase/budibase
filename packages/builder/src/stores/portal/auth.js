@@ -1,5 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import api from "../../builderStore/api"
+import { addTenantToUrl } from "./tenancy"
 
 export function createAuthStore() {
   const auth = writable({
@@ -68,7 +69,7 @@ export function createAuthStore() {
       setOrganisation(tenantId)
     },
     checkAuth: async () => {
-      const response = await api.get("/api/global/users/self")
+      const response = await api.get("/api/admin/users/self")
       if (response.status !== 200) {
         setUser(null)
       } else {
@@ -77,9 +78,8 @@ export function createAuthStore() {
       }
     },
     login: async creds => {
-      const tenantId = get(store).tenantId
       const response = await api.post(
-        `/api/global/auth/${tenantId}/login`,
+        addTenantToUrl(`/api/admin/auth/login`),
         creds
       )
       const json = await response.json()
@@ -91,7 +91,7 @@ export function createAuthStore() {
       return json
     },
     logout: async () => {
-      const response = await api.post(`/api/global/auth/logout`)
+      const response = await api.post(`/api/admin/auth/logout`)
       if (response.status !== 200) {
         throw "Unable to create logout"
       }
@@ -100,7 +100,7 @@ export function createAuthStore() {
     },
     updateSelf: async fields => {
       const newUser = { ...get(auth).user, ...fields }
-      const response = await api.post("/api/global/users/self", newUser)
+      const response = await api.post("/api/admin/users/self", newUser)
       if (response.status === 200) {
         setUser(newUser)
       } else {
@@ -108,8 +108,7 @@ export function createAuthStore() {
       }
     },
     forgotPassword: async email => {
-      const tenantId = get(store).tenantId
-      const response = await api.post(`/api/global/auth/${tenantId}/reset`, {
+      const response = await api.post(addTenantToUrl(`/api/admin/auth/reset`), {
         email,
       })
       if (response.status !== 200) {
@@ -118,9 +117,8 @@ export function createAuthStore() {
       await response.json()
     },
     resetPassword: async (password, code) => {
-      const tenantId = get(store).tenantId
       const response = await api.post(
-        `/api/global/auth/${tenantId}/reset/update`,
+        addTenantToUrl(`/api/admin/auth/reset/update`),
         {
           password,
           resetCode: code,
@@ -132,7 +130,7 @@ export function createAuthStore() {
       await response.json()
     },
     createUser: async user => {
-      const response = await api.post(`/api/global/users`, user)
+      const response = await api.post(`/api/admin/users`, user)
       if (response.status !== 200) {
         throw "Unable to create user"
       }

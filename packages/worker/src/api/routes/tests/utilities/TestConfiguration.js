@@ -96,7 +96,7 @@ class TestConfiguration {
   }
 
   async getUser(email) {
-    return getGlobalUserByEmail(email, TENANT_ID)
+    return getGlobalUserByEmail(email)
   }
 
   async createUser(email = "test@test.com", password = "test") {

@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const authController = require("../../controllers/global/auth")
+const authController = require("../../controllers/admin/auth")
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
 
@@ -30,32 +30,20 @@ function buildResetUpdateValidation() {
 
 router
   .post(
-    "/api/global/auth/:tenantId/login",
+    "/api/admin/auth/login",
     buildAuthValidation(),
     authController.authenticate
   )
+  .post("/api/admin/auth/reset", buildResetValidation(), authController.reset)
   .post(
-    "/api/global/auth/:tenantId/reset",
-    buildResetValidation(),
-    authController.reset
-  )
-  .post(
-    "/api/global/auth/:tenantId/reset/update",
+    "/api/admin/auth/reset/update",
     buildResetUpdateValidation(),
     authController.resetUpdate
   )
-  .post("/api/global/auth/logout", authController.logout)
-  .get("/api/global/auth/:tenantId/google", authController.googlePreAuth)
-  .get("/api/global/auth/:tenantId/google/callback", authController.googleAuth)
-  .get(
-    "/api/global/auth/:tenantId/oidc/configs/:configId",
-    authController.oidcPreAuth
-  )
-  .get("/api/global/auth/:tenantId/oidc/callback", authController.oidcAuth)
-  // deprecated - used by the default system before tenancy
+  .post("/api/admin/auth/logout", authController.logout)
+  .get("/api/admin/auth/google", authController.googlePreAuth)
   .get("/api/admin/auth/google/callback", authController.googleAuth)
-  .get("/api/global/auth/google/callback", authController.googleAuth)
+  .get("/api/admin/auth/oidc/configs/:configId", authController.oidcPreAuth)
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
-  .get("/api/global/auth/oidc/callback", authController.oidcAuth)
 
 module.exports = router

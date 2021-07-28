@@ -3,7 +3,8 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDeployedAppID, getGlobalDBFromCtx } = require("@budibase/auth/db")
+const { getDeployedAppID } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth").tenancy
 const { getGlobalUserParams } = require("@budibase/auth/db")
 const { user: userCache } = require("@budibase/auth/cache")
 
@@ -32,18 +33,18 @@ function processUser(appId, user) {
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
-  const user = await userCache.getUser(ctx.user._id, ctx.user.tenantId)
+  const user = await userCache.getUser(ctx.user._id)
   return processUser(appId, user)
 }
 
 exports.getGlobalUser = async (ctx, appId, userId) => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let user = await db.get(getGlobalIDFromUserMetadataID(userId))
   return processUser(appId, user)
 }
 
 exports.getGlobalUsers = async (ctx, appId = null, users = null) => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let globalUsers
   if (users) {
     const globalIds = users.map(user => getGlobalIDFromUserMetadataID(user._id))

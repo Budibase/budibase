@@ -14,8 +14,7 @@
       tenantId = "default"
     }
     auth.setOrg(tenantId)
-    // re-init now org selected
-    await admin.init()
+    await admin.checklist()
     $goto("../")
   }
 

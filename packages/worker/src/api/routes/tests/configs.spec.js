@@ -8,7 +8,7 @@ nodemailer.createTransport.mockReturnValue({
   verify: jest.fn()
 })
 
-describe("/api/global/configs/checklist", () => {
+describe("/api/admin/configs/checklist", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
@@ -24,7 +24,7 @@ describe("/api/global/configs/checklist", () => {
     await config.saveSmtpConfig()
 
     const res = await request
-      .get(`/api/global/configs/checklist`)
+      .get(`/api/admin/configs/checklist`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)

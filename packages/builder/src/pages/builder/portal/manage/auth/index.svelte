@@ -32,12 +32,10 @@
     OIDC: "oidc",
   }
 
-  function callbackUrl(tenantId, end) {
-    let url = `/api/global/auth`
+  function callbackUrl(tenantId, url) {
     if (multiTenancyEnabled && tenantId) {
-      url += `/${tenantId}`
+      url += `?tenantId=${tenantId}`
     }
-    url += end
     return url
   }
 
@@ -49,7 +47,7 @@
         name: "callbackURL",
         label: "Callback URL",
         readonly: true,
-        placeholder: callbackUrl(tenantId, "/google/callback"),
+        placeholder: callbackUrl(tenantId, "/api/admin/auth/google/callback"),
       },
     ],
   }
@@ -63,7 +61,7 @@
         name: "callbackURL",
         label: "Callback URL",
         readonly: true,
-        placeholder: callbackUrl(tenantId, "/oidc/callback"),
+        placeholder: callbackUrl(tenantId, "/api/admin/auth/oidc/callback"),
       },
     ],
   }
@@ -139,7 +137,7 @@
     let data = new FormData()
     data.append("file", file)
     const res = await api.post(
-      `/api/global/configs/upload/logos_oidc/${file.name}`,
+      `/api/admin/configs/upload/logos_oidc/${file.name}`,
       data,
       {}
     )
@@ -173,7 +171,7 @@
               `Please fill in all required ${ConfigTypes.OIDC} fields`
             )
           } else {
-            calls.push(api.post(`/api/global/configs`, element))
+            calls.push(api.post(`/api/admin/configs`, element))
             // turn the save button grey when clicked
             oidcSaveButtonDisabled = true
             originalOidcDoc = cloneDeep(providers.oidc)
@@ -188,7 +186,7 @@
             )
           } else {
             delete element.config.callbackURL
-            calls.push(api.post(`/api/global/configs`, element))
+            calls.push(api.post(`/api/admin/configs`, element))
             googleSaveButtonDisabled = true
             originalGoogleDoc = cloneDeep(providers.google)
           }
@@ -221,7 +219,7 @@
     await organisation.init()
     // fetch the configs for oauth
     const googleResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.Google}`
+      `/api/admin/configs/${ConfigTypes.Google}`
     )
     const googleDoc = await googleResponse.json()
 
@@ -242,7 +240,7 @@
 
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
-    const res = await api.get(`/api/global/configs/logos_oidc`)
+    const res = await api.get(`/api/admin/configs/logos_oidc`)
     const configSettings = await res.json()
 
     if (configSettings.config) {
@@ -257,9 +255,7 @@
         })
       })
     }
-    const oidcResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.OIDC}`
-    )
+    const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
     if (!oidcDoc._id) {
       providers.oidc = {

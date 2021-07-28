@@ -1,15 +1,18 @@
-import { writable, get } from "svelte/store"
+import { writable } from "svelte/store"
 import api from "builderStore/api"
-import { auth } from "stores/portal"
+import { addTenantToUrl } from "./tenancy"
 
 export function createAdminStore() {
   const admin = writable({})
 
   async function init() {
+    await multiTenancyEnabled()
+  }
+
+  async function checklist() {
     try {
-      const tenantId = get(auth).tenantId
       const response = await api.get(
-        `/api/global/configs/checklist?tenantId=${tenantId}`
+        addTenantToUrl(`/api/admin/configs/checklist`)
       )
       const json = await response.json()
 
@@ -26,7 +29,7 @@ export function createAdminStore() {
           (stepsComplete / onboardingSteps.length) * 100
         return store
       })
-      await multiTenancyEnabled()
+      
     } catch (err) {
       admin.update(store => {
         store.checklist = null
@@ -54,6 +57,7 @@ export function createAdminStore() {
   return {
     subscribe: admin.subscribe,
     init,
+    checklist
   }
 }
 

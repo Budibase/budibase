@@ -11,7 +11,7 @@ nodemailer.createTransport.mockReturnValue({
   verify: jest.fn()
 })
 
-describe("/api/global/email", () => {
+describe("/api/admin/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
@@ -26,7 +26,7 @@ describe("/api/global/email", () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
     const res = await request
-      .post(`/api/global/email/send`)
+      .post(`/api/admin/email/send`)
       .send({
         email: "test@test.com",
         purpose: EmailTemplatePurpose.INVITATION,

@@ -1,4 +1,5 @@
-const { generateTemplateID, getGlobalDBFromCtx } = require("@budibase/auth/db")
+const { generateTemplateID } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth").tenancy
 const {
   TemplateMetadata,
   TemplateBindings,
@@ -7,7 +8,7 @@ const {
 const { getTemplatesCtx } = require("../../../constants/templates")
 
 exports.save = async ctx => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let template = ctx.request.body
   if (!template.ownerId) {
     template.ownerId = GLOBAL_OWNER
@@ -67,7 +68,7 @@ exports.find = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   await db.remove(ctx.params.id, ctx.params.rev)
   ctx.message = `Template ${ctx.params.id} deleted.`
   ctx.status = 200

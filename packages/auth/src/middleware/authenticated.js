@@ -1,27 +1,10 @@
 const { Cookies, Headers } = require("../constants")
 const { getCookie, clearCookie } = require("../utils")
 const { getUser } = require("../cache/user")
+const { doInTenant } = require("../tenancy")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const env = require("../environment")
-
-const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
-
-function buildNoAuthRegex(patterns) {
-  return patterns.map(pattern => {
-    const isObj = typeof pattern === "object" && pattern.route
-    const method = isObj ? pattern.method : "GET"
-    let route = isObj ? pattern.route : pattern
-
-    const matches = route.match(PARAM_REGEX)
-    if (matches) {
-      for (let match of matches) {
-        const pattern = "/.*" + (match.endsWith("/") ? "/" : "")
-        route = route.replace(match, pattern)
-      }
-    }
-    return { regex: new RegExp(route), method }
-  })
-}
+const { buildMatcherRegex, matches } = require("./matchers")
 
 function finalise(ctx, { authenticated, user, internal, version } = {}) {
   ctx.isAuthenticated = authenticated || false
@@ -31,17 +14,12 @@ function finalise(ctx, { authenticated, user, internal, version } = {}) {
 }
 
 module.exports = (noAuthPatterns = [], opts) => {
-  const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
+  const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
   return async (ctx, next) => {
     const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
-    const found = noAuthOptions.find(({ regex, method }) => {
-      return (
-        regex.test(ctx.request.url) &&
-        ctx.request.method.toLowerCase() === method.toLowerCase()
-      )
-    })
-    if (found != null) {
+    const found = matches(ctx, noAuthOptions)
+    if (found) {
       return next()
     }
     try {
@@ -59,7 +37,9 @@ module.exports = (noAuthPatterns = [], opts) => {
           error = "No session found"
         } else {
           try {
-            user = await getUser(userId, session.tenantId)
+            user = await doInTenant(session.tenantId, async () => {
+              return await getUser(userId)
+            })
             delete user.password
             authenticated = true
           } catch (err) {
@@ -75,14 +55,10 @@ module.exports = (noAuthPatterns = [], opts) => {
         }
       }
       const apiKey = ctx.request.headers[Headers.API_KEY]
-      const tenantId = ctx.request.headers[Headers.TENANT_ID]
       // this is an internal request, no user made it
       if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
         authenticated = true
         internal = true
-      }
-      if (!user && tenantId) {
-        user = { tenantId }
       }
       // be explicit
       if (authenticated !== true) {

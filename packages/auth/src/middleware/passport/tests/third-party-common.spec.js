@@ -7,9 +7,9 @@ const { authenticateThirdParty } = require("../third-party-common")
 const { data } = require("./utilities/mock-data")
 
 const {
-  StaticDatabases,
   generateGlobalUserID
 } = require("../../../db/utils")
+const { StaticDatabases } = require("../../../db/constants")
 const { newid } = require("../../../hashing")
 
 let db

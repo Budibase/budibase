@@ -28,7 +28,7 @@ describe("google", () => {
     it("should create successfully create a google strategy", async () => {
       const google = require("../google")
 
-      const callbackUrl = `/api/global/auth/${TENANT_ID}/google/callback`
+      const callbackUrl = `/api/admin/auth/google/callback`
       await google.strategyFactory(googleConfig, callbackUrl)
   
       const expectedOptions = {

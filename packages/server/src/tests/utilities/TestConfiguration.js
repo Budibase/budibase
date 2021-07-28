@@ -18,7 +18,7 @@ const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
 const auth = require("@budibase/auth")
-const { getGlobalDB } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth").tenancy
 const { createASession } = require("@budibase/auth/sessions")
 const { user: userCache } = require("@budibase/auth/cache")
 const CouchDB = require("../../db")
@@ -68,7 +68,7 @@ class TestConfiguration {
   }
 
   async globalUser(id = GLOBAL_USER_ID, builder = true, roles) {
-    const db = getGlobalDB(TENANT_ID)
+    const db = getGlobalDB()
     let existing
     try {
       existing = await db.get(id)

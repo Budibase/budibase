@@ -38,6 +38,11 @@ static_resources:
                   cluster: app-service
 
               # special case for worker admin API
+              - match: { prefix: "/api/admin/" }
+                route:
+                  cluster: worker-service
+
+              # special case for worker global API
               - match: { prefix: "/api/global/" }
                 route:
                   cluster: worker-service

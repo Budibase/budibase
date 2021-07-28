@@ -13,7 +13,7 @@ export const logIn = async ({ email, password }) => {
     return API.error("Please enter your password")
   }
   return await API.post({
-    url: "/api/global/auth",
+    url: "/api/admin/auth",
     body: { username: email, password },
   })
 }

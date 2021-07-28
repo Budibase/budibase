@@ -6,7 +6,7 @@ const fetch = require("node-fetch")
 // need a longer timeout for getting these
 jest.setTimeout(30000)
 
-describe("/api/global/email", () => {
+describe("/api/admin/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
@@ -21,7 +21,7 @@ describe("/api/global/email", () => {
     await config.saveSettingsConfig()
     const user = await config.getUser("test@test.com")
     const res = await request
-      .post(`/api/global/email/send`)
+      .post(`/api/admin/email/send`)
       .send({
         email: "test@test.com",
         purpose,

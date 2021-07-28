@@ -1,15 +1,9 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-  StaticDatabases,
-} = require("./db/utils")
+const { DocumentTypes, SEPARATOR, ViewNames } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { getDB } = require("./db")
-const { getGlobalDB } = require("./db/utils")
-const { DEFAULT_TENANT_ID, Headers } = require("./constants")
+const { getGlobalDB } = require("./tenancy")
+const { Headers } = require("./constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -102,32 +96,19 @@ exports.isClient = ctx => {
   return ctx.headers[Headers.TYPE] === "client"
 }
 
-exports.lookupTenantId = async userId => {
-  const db = getDB(StaticDatabases.PLATFORM_INFO.name)
-  let tenantId = DEFAULT_TENANT_ID
-  try {
-    const doc = await db.get(userId)
-    if (doc && doc.tenantId) {
-      tenantId = doc.tenantId
-    }
-  } catch (err) {
-    // just return the default
-  }
-  return tenantId
-}
-
 /**
  * Given an email address this will use a view to search through
  * all the users to find one with this email address.
  * @param {string} email the email to lookup the user by.
- * @param {string|null} tenantId If tenant ID is known it can be specified
  * @return {Promise<object|null>}
  */
-exports.getGlobalUserByEmail = async (email, tenantId) => {
+exports.getGlobalUserByEmail = async email => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
-  const db = getGlobalDB(tenantId)
+
+  const db = await getGlobalDB()
+
   try {
     let users = (
       await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
@@ -140,7 +121,7 @@ exports.getGlobalUserByEmail = async (email, tenantId) => {
   } catch (err) {
     if (err != null && err.name === "not_found") {
       await createUserEmailView(db)
-      return exports.getGlobalUserByEmail(email, tenantId)
+      return exports.getGlobalUserByEmail(email)
     } else {
       throw err
     }
