@@ -51,8 +51,8 @@ export interface QueryDefinition {
 
 export interface ExtraQueryConfig {
   [key: string]: {
-    displayName: string,
-    type: string,
+    displayName: string
+    type: string
     required: boolean
     data?: object
   }
