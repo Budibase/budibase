@@ -49,6 +49,15 @@ export interface QueryDefinition {
   urlDisplay?: boolean
 }
 
+export interface ExtraQueryConfig {
+  [key: string]: {
+    displayName: string,
+    type: string,
+    required: boolean
+    data?: object
+  }
+}
+
 export interface Integration {
   docs: string
   plus?: boolean
@@ -58,6 +67,7 @@ export interface Integration {
   query: {
     [key: string]: QueryDefinition
   }
+  extra?: ExtraQueryConfig
 }
 
 export interface SearchFilters {
