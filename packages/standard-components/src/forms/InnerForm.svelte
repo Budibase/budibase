@@ -64,6 +64,13 @@
       })
       return get(formState).valid
     },
+    clear: () => {
+      const fields = Object.keys(fieldMap)
+      fields.forEach(field => {
+        const { fieldApi } = fieldMap[field]
+        fieldApi.clearValue()
+      })
+    },
   }
 
   // Provide both form API and state to children
@@ -72,6 +79,7 @@
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
+    { type: ActionTypes.ClearForm, callback: formApi.clear },
   ]
 
   // Creates an API for a specific field
@@ -108,8 +116,27 @@
 
       return !newError
     }
+
+    const clearValue = () => {
+      const { fieldState } = fieldMap[field]
+      const newValue = initialValues[field] ?? defaultValue
+      fieldState.update(state => {
+        state.value = newValue
+        state.error = null
+        return state
+      })
+
+      formState.update(state => {
+        state.values = { ...state.values, [field]: newValue }
+        delete state.errors[field]
+        state.valid = Object.keys(state.errors).length === 0
+        return state
+      })
+    }
+
     return {
       setValue,
+      clearValue,
       validate: () => {
         const { fieldState } = fieldMap[field]
         setValue(get(fieldState).value, true)

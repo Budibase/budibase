@@ -1,7 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
   import { database } from "stores/backend"
-  import { notifications, Icon, Button, Modal, Heading } from "@budibase/bbui"
+  import { notifications, Button, Modal, Heading, Toggle } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
@@ -12,7 +12,7 @@
   $: automationLive = automation?.live
 
   function setAutomationLive(live) {
-    if (automation.live === live) {
+    if (automationLive === live) {
       return
     }
     automation.live = live
@@ -48,20 +48,11 @@
 
 <div class="title">
   <Heading size="S">Setup</Heading>
-  <Icon
-    l
-    disabled={!automationLive}
-    hoverable={automationLive}
-    name="PauseCircle"
-    on:click={() => setAutomationLive(false)}
-  />
-  <Icon
-    l
-    name="PlayCircle"
-    disabled={automationLive}
-    hoverable={!automationLive}
-    data-cy="activate-automation"
-    on:click={() => setAutomationLive(true)}
+  <Toggle
+    value={automationLive}
+    on:change={() => setAutomationLive(!automationLive)}
+    dataCy="activate-automation"
+    text="Live"
   />
 </div>
 {#if $automationStore.selectedBlock}
