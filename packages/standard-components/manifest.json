@@ -1647,7 +1647,8 @@
     "hasChildren": true,
     "illegalChildren": ["section"],
     "actions": [
-      "ValidateForm"
+      "ValidateForm",
+      "ClearForm"
     ],
     "styles": ["size"],
     "settings": [
