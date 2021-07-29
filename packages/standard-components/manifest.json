@@ -1679,6 +1679,7 @@
     "name": "Field Group",
     "icon": "Group",
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "hasChildren": true,
     "settings": [
       {
@@ -1707,6 +1708,7 @@
     "name": "Text Field",
     "icon": "Text",
     "illegalChildren": ["section"],
+    "styles": ["size"],
     "settings": [
       {
         "type": "field/string",
@@ -1734,6 +1736,7 @@
   "numberfield": {
     "name": "Number Field",
     "icon": "123",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1762,6 +1765,7 @@
   "passwordfield": {
     "name": "Password Field",
     "icon": "LockClosed",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1790,6 +1794,7 @@
   "optionsfield": {
     "name": "Options Picker",
     "icon": "ViewList",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1819,6 +1824,7 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1847,6 +1853,7 @@
   "longformfield": {
     "name": "Rich Text",
     "icon": "TextParagraph",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1876,6 +1883,7 @@
   "datetimefield": {
     "name": "Date Picker",
     "icon": "DateInput",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1910,6 +1918,7 @@
   "attachmentfield": {
     "name": "Attachment",
     "icon": "Attach",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1933,6 +1942,7 @@
   "relationshipfield": {
     "name": "Relationship Picker",
     "icon": "TaskList",
+    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2066,6 +2076,7 @@
   "daterangepicker": {
     "name": "Date Range",
     "icon": "Date",
+    "styles": ["size"],
     "hasChildren": false,
     "info": "Your data provider will be automatically filtered to the given date range.",
     "settings": [
