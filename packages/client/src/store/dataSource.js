@@ -67,12 +67,17 @@ export const createDataSourceStore = () => {
     const relatedInstances = get(store).filter(instance => {
       return instance.dataSourceId === dataSourceId
     })
-    if (relatedInstances?.length) {
-      notificationStore.blockNotifications(1000)
-    }
     relatedInstances?.forEach(instance => {
       instance.refresh()
     })
+
+    // Emit this as a window event, so parent screens which are iframing us in
+    // can also invalidate the same datasource
+    window.dispatchEvent(
+      new CustomEvent("invalidate-datasource", {
+        detail: { dataSourceId },
+      })
+    )
   }
 
   return {
