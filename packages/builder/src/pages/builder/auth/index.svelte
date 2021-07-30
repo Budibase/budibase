@@ -18,7 +18,7 @@
 
   onMount(async () => {
     await admin.init()
-    auth.checkQueryString()
+    await auth.checkQueryString()
     loaded = true
   })
 </script>

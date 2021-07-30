@@ -13,7 +13,7 @@
     if (tenantId == null || tenantId === "") {
       tenantId = "default"
     }
-    auth.setOrg(tenantId)
+    await auth.setOrg(tenantId)
     // re-init now org selected
     await admin.init()
     $goto("../")
@@ -23,8 +23,8 @@
     if (evt.key === "Enter") setOrg()
   }
 
-  onMount(() => {
-    auth.checkQueryString()
+  onMount(async () => {
+    await auth.checkQueryString()
     if (!multiTenancyEnabled) {
       $goto("../")
     } else {

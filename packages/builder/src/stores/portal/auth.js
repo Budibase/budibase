@@ -1,5 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import api from "../../builderStore/api"
+import { admin } from "stores/portal"
 
 export function createAuthStore() {
   const auth = writable({
@@ -50,25 +51,30 @@ export function createAuthStore() {
     })
   }
 
-  function setOrganisation(tenantId) {
+  async function setOrganisation(tenantId) {
+    const prevId = get(store).tenantId
     auth.update(store => {
       store.tenantId = tenantId
       store.tenantSet = !!tenantId
       return store
     })
+    if (prevId !== tenantId) {
+      // re-init admin after setting org
+      await admin.init()
+    }
   }
 
   return {
     subscribe: store.subscribe,
-    checkQueryString: () => {
+    checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
         const tenantId = urlParams.get("tenantId")
-        setOrganisation(tenantId)
+        await setOrganisation(tenantId)
       }
     },
-    setOrg: tenantId => {
-      setOrganisation(tenantId)
+    setOrg: async tenantId => {
+      await setOrganisation(tenantId)
     },
     checkAuth: async () => {
       const response = await api.get("/api/global/users/self")
