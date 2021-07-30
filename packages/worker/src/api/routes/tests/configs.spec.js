@@ -1,7 +1,6 @@
 const setup = require("./utilities")
 
 // mock the email system
-const sendMailMock = jest.fn()
 jest.mock("nodemailer")
 const nodemailer = require("nodemailer")
 nodemailer.createTransport.mockReturnValue({
@@ -13,14 +12,12 @@ describe("/api/admin/configs/checklist", () => {
   let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init(false)
+    await config.init()
   })
 
   afterAll(setup.afterAll)
 
   it("should return the correct checklist status based on the state of the budibase installation", async () => {
-    // initially configure settings
-    await config.saveAdminUser()
     await config.saveSmtpConfig()
 
     const res = await request

@@ -15,13 +15,13 @@
   export let links = []
 
   const flipDurationMs = 150
+  let dragDisabled = true
 
   $: links.forEach(link => {
     if (!link.id) {
       link.id = generate()
     }
   })
-
   $: urlOptions = $store.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
@@ -37,6 +37,11 @@
   const updateLinks = e => {
     links = e.detail.items
   }
+
+  const handleFinalize = e => {
+    updateLinks(e)
+    dragDisabled = true
+  }
 </script>
 
 <DrawerContent>
@@ -49,13 +54,21 @@
             items: links,
             flipDurationMs,
             dropTargetStyle: { outline: "none" },
+            dragDisabled,
           }}
-          on:finalize={updateLinks}
+          on:finalize={handleFinalize}
           on:consider={updateLinks}
         >
           {#each links as link (link.id)}
             <div class="link" animate:flip={{ duration: flipDurationMs }}>
-              <Icon name="DragHandle" size="XL" />
+              <div
+                class="handle"
+                aria-label="drag-handle"
+                style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
+                on:mousedown={() => (dragDisabled = false)}
+              >
+                <Icon name="DragHandle" size="XL" />
+              </div>
               <Input bind:value={link.text} placeholder="Text" />
               <Combobox
                 bind:value={link.url}
@@ -90,7 +103,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
   .link {
     gap: var(--spacing-l);
@@ -107,5 +120,9 @@
   .link > :global(.spectrum-Form-item) {
     flex: 1 1 auto;
     width: 0;
+  }
+  .handle {
+    display: grid;
+    place-items: center;
   }
 </style>

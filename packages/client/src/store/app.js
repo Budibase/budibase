@@ -6,8 +6,15 @@ const createAppStore = () => {
 
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
-    const appDefinition = await API.fetchAppPackage(get(store).appId)
-    store.set(appDefinition)
+    const appId = get(store)?.appId
+    if (!appId) {
+      throw "Cannot fetch app definition without app ID set"
+    }
+    const appDefinition = await API.fetchAppPackage(appId)
+    store.set({
+      ...appDefinition,
+      appId: appDefinition?.application?.appId,
+    })
   }
 
   // Sets the initial app ID

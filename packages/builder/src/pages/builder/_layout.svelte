@@ -16,9 +16,10 @@
 
   // Force creation of an admin user if one doesn't exist
   $: {
-    if (loaded && multiTenancyEnabled && !tenantSet) {
+    const apiReady = $admin.loaded && $auth.loaded
+    if (loaded && apiReady && multiTenancyEnabled && !tenantSet) {
       $redirect("./auth/org")
-    } else if (loaded && !hasAdminUser) {
+    } else if (loaded && apiReady && !hasAdminUser) {
       $redirect("./admin")
     }
   }

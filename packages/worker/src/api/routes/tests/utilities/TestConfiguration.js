@@ -62,11 +62,11 @@ class TestConfiguration {
         null,
         controllers.users.save
       )
-      await createASession("us_uuid1", {
-        sessionId: "sessionid",
-        tenantId: TENANT_ID,
-      })
     }
+    await createASession("us_uuid1", {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+    })
   }
 
   async end() {

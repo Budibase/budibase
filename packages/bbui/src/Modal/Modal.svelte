@@ -115,7 +115,6 @@
   }
 
   .spectrum-Modal {
-    background: var(--background);
     overflow: visible;
     max-height: none;
     margin: 40px 0;

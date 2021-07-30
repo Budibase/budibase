@@ -1,16 +1,24 @@
 import { get } from "svelte/store"
-import { routeStore, builderStore, confirmationStore } from "../store"
+import {
+  routeStore,
+  builderStore,
+  confirmationStore,
+  authStore,
+} from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
 
 const saveRowHandler = async (action, context) => {
-  const { fields, providerId } = action.parameters
+  const { fields, providerId, tableId } = action.parameters
   if (providerId) {
     let draft = context[providerId]
     if (fields) {
       for (let [field, value] of Object.entries(fields)) {
         draft[field] = value
       }
+    }
+    if (tableId) {
+      draft.tableId = tableId
     }
     await saveRow(draft)
   }
@@ -74,6 +82,10 @@ const refreshDatasourceHandler = async (action, context) => {
   )
 }
 
+const logoutHandler = async () => {
+  await authStore.actions.logOut()
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -82,6 +94,7 @@ const handlerMap = {
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
+  ["Log Out"]: logoutHandler,
 }
 
 const confirmTextMap = {

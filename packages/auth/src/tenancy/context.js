@@ -58,7 +58,7 @@ exports.setTenantId = (ctx, strategy = this.SESSION_STRATEGY) => {
   }
 
   // pre-auth
-  if (strategy == this.REQUEST_STRATEGY) {
+  if (strategy === this.REQUEST_STRATEGY) {
     const params = ctx.request.params || {}
     const query = ctx.request.query || {}
     const header = ctx.request.headers[Headers.TENANT_ID]
@@ -67,7 +67,7 @@ exports.setTenantId = (ctx, strategy = this.SESSION_STRATEGY) => {
   }
 
   // post-auth
-  if (strategy == this.SESSION_STRATEGY) {
+  if (strategy === this.SESSION_STRATEGY) {
     const user = ctx.request.user || {}
     tenantId = user.tenantId
   }

@@ -70,7 +70,7 @@
 </script>
 
 <div class="property-control" bind:this={anchor} data-cy={`setting-${key}`}>
-  {#if type !== "boolean"}
+  {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
     </div>

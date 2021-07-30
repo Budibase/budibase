@@ -121,7 +121,6 @@ exports.publicOidc = async function (ctx) {
 
 exports.publicSettings = async function (ctx) {
   const db = getGlobalDB()
-
   try {
     // Find the config with the most granular scope based on context
     const publicConfig = await getScopedFullConfig(db, {

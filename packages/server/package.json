@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.79-alpha.4",
+  "version": "0.9.80-alpha.9",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rm -rf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
+    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
@@ -62,9 +62,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.79-alpha.4",
-    "@budibase/client": "^0.9.79-alpha.4",
-    "@budibase/string-templates": "^0.9.79-alpha.4",
+    "@budibase/auth": "^0.9.80-alpha.9",
+    "@budibase/client": "^0.9.80-alpha.9",
+    "@budibase/string-templates": "^0.9.80-alpha.9",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -117,7 +117,7 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.79-alpha.4",
+    "@budibase/standard-components": "^0.9.80-alpha.9",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
     "@types/jest": "^26.0.23",
@@ -134,6 +134,7 @@
     "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
     "prettier": "^2.3.1",
+    "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",

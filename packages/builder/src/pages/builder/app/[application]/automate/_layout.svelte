@@ -58,5 +58,6 @@
     align-items: stretch;
     gap: var(--spacing-l);
     background-color: var(--background);
+    overflow-y: auto;
   }
 </style>

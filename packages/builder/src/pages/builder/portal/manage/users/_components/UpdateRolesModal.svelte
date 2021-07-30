@@ -10,8 +10,8 @@
 
   const roles = app.roles
   let options = roles
+    .filter(role => role._id !== "PUBLIC")
     .map(role => ({ value: role._id, label: role.name }))
-    .filter(role => role.value !== "PUBLIC")
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
@@ -48,5 +48,7 @@
     on:change
     {options}
     label="Role"
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
   />
 </ModalContent>

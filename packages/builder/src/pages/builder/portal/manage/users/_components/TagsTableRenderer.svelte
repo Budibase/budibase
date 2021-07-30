@@ -4,9 +4,9 @@
 
   const displayLimit = 5
 
-  $: roles = value?.filter(role => role != null) ?? []
-  $: tags = roles.slice(0, displayLimit)
-  $: leftover = roles.length - tags.length
+  $: values = value?.filter(value => value != null) ?? []
+  $: tags = values.slice(0, displayLimit)
+  $: leftover = values.length - tags.length
 </script>
 
 <div class="tag-renderer">

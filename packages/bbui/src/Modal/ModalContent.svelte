@@ -88,7 +88,6 @@
     display: grid;
     position: relative;
     gap: var(--spacing-xl);
-    color: var(--ink);
   }
 
   .spectrum-Dialog-content {
@@ -106,12 +105,7 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    color: var(--ink);
     font-size: var(--font-size-m);
-  }
-  .close-icon:hover {
-    color: var(--grey-6);
-    cursor: pointer;
   }
   .close-icon :global(svg) {
     margin-right: 0;

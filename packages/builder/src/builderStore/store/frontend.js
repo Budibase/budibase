@@ -530,6 +530,11 @@ export const getFrontendStore = () => {
         selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
+      updateConditions: async conditions => {
+        const selected = get(selectedComponent)
+        selected._conditions = conditions
+        await store.actions.preview.saveSelected()
+      },
       updateProp: async (name, value) => {
         let component = get(selectedComponent)
         if (!name || !component) {
