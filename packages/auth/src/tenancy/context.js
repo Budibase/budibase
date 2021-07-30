@@ -1,11 +1,11 @@
 const cls = require("cls-hooked")
 const env = require("../environment")
-const { Headers } = require("../constants") 
+const { Headers } = require("../constants")
 
 exports.DEFAULT_TENANT_ID = "default"
 
 exports.isDefaultTenant = () => {
-  return getTenantId() === DEFAULT_TENANT_ID
+  return exports.getTenantId() === exports.DEFAULT_TENANT_ID
 }
 
 exports.isMultiTenant = () => {
@@ -32,7 +32,6 @@ const getTenancyContext = () => {
 
 exports.doInTenant = (tenantId, task) => {
   const context = getTenancyContext()
-
   return getTenancyContext().runAndReturn(() => {
     // set the tenant id
     context.set(TENANT_ID, tenantId)
@@ -50,7 +49,6 @@ exports.doInTenant = (tenantId, task) => {
 
 exports.setTenantId = (ctx, strategy = this.SESSION_STRATEGY) => {
   let tenantId
-
   // exit early if not multi-tenant
   if (!this.isMultiTenant()) {
     getTenancyContext().set(TENANT_ID, this.DEFAULT_TENANT_ID)
@@ -81,10 +79,8 @@ exports.setTenantId = (ctx, strategy = this.SESSION_STRATEGY) => {
 
 exports.getTenantId = () => {
   const tenantId = getTenancyContext().get(TENANT_ID)
-
   if (!tenantId) {
     throw Error("Tenant id not found")
   }
-
   return tenantId
 }

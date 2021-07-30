@@ -67,7 +67,7 @@ export function createAdminStore() {
   return {
     subscribe: admin.subscribe,
     init,
-    checklist
+    checklist,
     unload,
   }
 }

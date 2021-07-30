@@ -6,7 +6,7 @@ const { getGlobalUserByEmail } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
-const { getTenantId, getGlobalDB } = require("../../tenancy")
+const { getTenantId } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid Credentials"
 

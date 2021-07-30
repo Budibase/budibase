@@ -2,10 +2,8 @@ const { DocumentTypes, SEPARATOR, ViewNames } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { getDB } = require("./db")
-const { getGlobalDB } = require("./db/utils")
-const { DEFAULT_TENANT_ID, Headers } = require("./constants")
-const env = require("./environment")
+const { getGlobalDB } = require("./tenancy")
+const { Headers } = require("./constants")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
