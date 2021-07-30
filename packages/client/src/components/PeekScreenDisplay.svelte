@@ -59,7 +59,7 @@
     >
       <iframe title="Peek" bind:this={iframe} src={$peekStore.href} />
       <div slot="footer">
-        <Button cta on:click={navigate}>Full screen</Button>
+        <Button secondary quiet on:click={navigate}>Full screen</Button>
       </div>
     </ModalContent>
   </Modal>
