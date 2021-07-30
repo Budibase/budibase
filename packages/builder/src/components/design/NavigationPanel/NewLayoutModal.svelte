@@ -15,6 +15,6 @@
   }
 </script>
 
-<ModalContent title="Create Layout" confirmText="Create" onConfirm={save}>
-  <Input thin label="Name" bind:value={name} />
+<ModalContent title="Create Layout" confirmText="Create" onConfirm="{save}">
+  <input thin label="Name" bind:value="{name}" />
 </ModalContent>

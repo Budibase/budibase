@@ -1,6 +1,6 @@
 <script>
   import { peekStore, dataSourceStore, routeStore } from "../store"
-  import { Modal, ModalContent, Button, Divider, Layout } from "@budibase/bbui"
+  import { Modal, ModalContent, Button } from "@budibase/bbui"
   import { onDestroy } from "svelte"
 
   let iframe
@@ -51,28 +51,30 @@
 {#if $peekStore.showPeek}
   <Modal fixed on:cancel={handleCancel}>
     <ModalContent
-      cancelText="Close"
+      showCancelButton={false}
       showConfirmButton={false}
       size="XL"
-      title="Screen Peek"
       showDivider={false}
+      showCloseIcon={false}
     >
       <iframe title="Peek" bind:this={iframe} src={$peekStore.href} />
-      <div slot="footer">
-        <Button secondary quiet on:click={navigate}>Full screen</Button>
-      </div>
     </ModalContent>
   </Modal>
 {/if}
 
 <style>
   iframe {
-    margin: 0 -40px;
+    margin: -40px;
     border: none;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    border-top: 1px solid var(--spectrum-global-color-gray-300);
     width: calc(100% + 80px);
     height: 640px;
     transition: width 1s ease, height 1s ease, top 1s ease, left 1s ease;
+    border-radius: var(--spectrum-global-dimension-size-100);
+  }
+
+  @media (max-width: 600px) {
+    iframe {
+      max-height: calc(100vh - 80px);
+    }
   }
 </style>
