@@ -6,6 +6,7 @@ const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
 const { getGlobalUserByEmail } = require("../../utils")
+const fetch = require("node-fetch")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -65,7 +66,7 @@ exports.authenticateThirdParty = async function (
     }
   }
 
-  dbUser = syncUser(dbUser, thirdPartyUser)
+  dbUser = await syncUser(dbUser, thirdPartyUser)
 
   // create or sync the user
   const response = await db.post(dbUser)
@@ -86,10 +87,26 @@ exports.authenticateThirdParty = async function (
   return done(null, dbUser)
 }
 
+async function syncProfilePicture(user, thirdPartyUser) {
+  const pictureUrl = thirdPartyUser.profile._json.picture
+  if (pictureUrl) {
+    const response = await fetch(pictureUrl)
+
+    if (response.status === 200) {
+      const type = response.headers.get("content-type")
+      if (type.startsWith("image/")) {
+        user.pictureUrl = pictureUrl
+      }
+    }
+  }
+
+  return user
+}
+
 /**
  * @returns a user that has been sync'd with third party information
  */
-function syncUser(user, thirdPartyUser) {
+async function syncUser(user, thirdPartyUser) {
   // provider
   user.provider = thirdPartyUser.provider
   user.providerType = thirdPartyUser.providerType
@@ -111,6 +128,8 @@ function syncUser(user, thirdPartyUser) {
         user.lastName = name.familyName
       }
     }
+
+    user = await syncProfilePicture(user, thirdPartyUser)
 
     // profile
     user.thirdPartyProfile = {
