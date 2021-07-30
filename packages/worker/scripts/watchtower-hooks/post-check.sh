@@ -1,0 +1,1 @@
+echo '{ "current-hook" : "post-check" }' > 'watchtower-hook.json'
