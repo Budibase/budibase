@@ -9,6 +9,7 @@ const createRouteStore = () => {
     activeRoute: null,
     routeSessionId: Math.random(),
     routerLoaded: false,
+    queryParams: {},
   }
   const store = writable(initialState)
 
@@ -41,6 +42,12 @@ const createRouteStore = () => {
       return state
     })
   }
+  const setQueryParams = queryParams => {
+    store.update(state => {
+      state.queryParams = queryParams
+      return state
+    })
+  }
   const setActiveRoute = route => {
     store.update(state => {
       state.activeRoute = state.routes.find(x => x.path === route)
@@ -58,6 +65,7 @@ const createRouteStore = () => {
       fetchRoutes,
       navigate,
       setRouteParams,
+      setQueryParams,
       setActiveRoute,
       setRouterLoaded,
     },
