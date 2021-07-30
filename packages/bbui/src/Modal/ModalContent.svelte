@@ -79,8 +79,8 @@
       </div>
     {/if}
     {#if showCloseIcon}
-      <div class="close-icon" on:click={hide}>
-        <Icon hoverable name="Close" />
+      <div class="close-icon">
+        <Icon hoverable name="Close" on:click={cancel} />
       </div>
     {/if}
   </div>

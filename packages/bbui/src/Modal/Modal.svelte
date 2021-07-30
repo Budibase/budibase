@@ -122,6 +122,7 @@
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
+    max-width: 100%;
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);
