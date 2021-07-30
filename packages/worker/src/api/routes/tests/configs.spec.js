@@ -1,7 +1,6 @@
 const setup = require("./utilities")
 
 // mock the email system
-const sendMailMock = jest.fn()
 jest.mock("nodemailer")
 const nodemailer = require("nodemailer")
 nodemailer.createTransport.mockReturnValue({
