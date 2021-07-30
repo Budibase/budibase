@@ -57,10 +57,13 @@
           Create super admin user
         </Button>
         {#if multiTenancyEnabled}
-          <ActionButton quiet on:click={() => {
-            admin.unload()
-            $goto("../auth/org")
-          }}>
+          <ActionButton
+            quiet
+            on:click={() => {
+              admin.unload()
+              $goto("../auth/org")
+            }}
+          >
             Change organisation
           </ActionButton>
         {/if}
