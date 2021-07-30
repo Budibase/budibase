@@ -36,11 +36,6 @@
       notifications.error(`Failed to create admin user`)
     }
   }
-
-  function changeOrg() {
-    auth.setOrg(null)
-    $goto("../auth")
-  }
 </script>
 
 <section>
@@ -62,7 +57,10 @@
           Create super admin user
         </Button>
         {#if multiTenancyEnabled}
-          <ActionButton quiet on:click={changeOrg}>
+          <ActionButton quiet on:click={() => {
+            admin.unload()
+            $goto("../auth/org")
+          }}>
             Change organisation
           </ActionButton>
         {/if}

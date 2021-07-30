@@ -4,6 +4,7 @@
   import { onMount } from "svelte"
 
   let loaded = false
+
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = !!$admin?.checklist?.adminUser
   $: tenantSet = $auth.tenantSet
@@ -14,12 +15,14 @@
     loaded = true
   })
 
-  // Force creation of an admin user if one doesn't exist
   $: {
     const apiReady = $admin.loaded && $auth.loaded
+    // if tenant is not set go to it
     if (loaded && apiReady && multiTenancyEnabled && !tenantSet) {
       $redirect("./auth/org")
-    } else if (loaded && apiReady && !hasAdminUser) {
+    }
+    // Force creation of an admin user if one doesn't exist
+    else if (loaded && apiReady && !hasAdminUser) {
       $redirect("./admin")
     }
   }

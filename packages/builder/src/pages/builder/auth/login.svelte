@@ -84,7 +84,10 @@
           Forgot password?
         </ActionButton>
         {#if multiTenancyEnabled}
-          <ActionButton quiet on:click={() => $goto("./org")}>
+          <ActionButton quiet on:click={() => {
+            admin.unload()
+            $goto("./org")
+          }}>
             Change organisation
           </ActionButton>
         {/if}
