@@ -334,10 +334,6 @@
           {
             "label": "Large",
             "value": "L"
-          },
-          {
-            "label": "Extra large",
-            "value": "XL"
           }
         ],
         "defaultValue": "M"
