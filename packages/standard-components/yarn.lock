@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.82":
-  version "0.9.82"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.82.tgz#bb5a75a6a2a173e32ae0173485a6518be44ae99b"
-  integrity sha512-1wAACi04qjl/8o/X7U+RFcCFUMTSRCUiJybfM/9DzOGcKhechQOVZZZ/V7N3boSDiwbVjHWDEem0k5dYTk5rXw==
+"@budibase/bbui@^0.9.87-alpha.3":
+  version "0.9.88"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.88.tgz#4adf11405af063997deb933fabd20c528b74976b"
+  integrity sha512-kc/4OTJmLjAojODpXpfLpvgDZs4KaquNEFTDLsDwwuvsFtH/PRQd7K577pHk7qsnl97oSUnqN7OC0gL5S4B1Zw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -103,7 +103,7 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/dialog/-/dialog-3.0.3.tgz#7715a4ea435e753afb623d99ca5917ed1bcd6f34"
   integrity sha512-AhmKgfRIVyTe3ABiJ8lLUQL34VB/H6fN16na2LlbDRJvyRMzkdN1Xf2i6U3f4OMd3qQ8Gm5xat4BvMxIQPBAUQ==
 
-"@spectrum-css/divider@^1.0.1":
+"@spectrum-css/divider@^1.0.1", "@spectrum-css/divider@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@spectrum-css/divider/-/divider-1.0.3.tgz#639e2ebaa0834efa40f42397668bbd5c153ea385"
   integrity sha512-Zy4Rn40w8UtzMh3wx/U9+CepSCpm1aOCGftHgWDub0XZuVTzh0c1WwyzTuLCx2Hf21z5VRGNiDh8bGEEzSbtNA==

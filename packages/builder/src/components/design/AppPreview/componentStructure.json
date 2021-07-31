@@ -49,6 +49,7 @@
     "children": [
       "heading",
       "text",
+      "divider",
       "image",
       "backgroundimage",
       "link",
