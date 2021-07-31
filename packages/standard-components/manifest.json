@@ -312,6 +312,43 @@
       }
     ]
   },
+  "divider": {
+    "name": "Divider",
+    "description": "A basic divider",
+    "icon": "Separator",
+    "illegalChildren": ["section"],
+    "settings": [
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Vertical",
+        "key": "vertical"
+      }
+    ]
+  },
   "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
