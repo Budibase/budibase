@@ -9,6 +9,7 @@
   import { FrontendTypes } from "constants"
 
   export let componentInstance
+  export let bindings
 
   function setAssetProps(name, value) {
     const selectedAsset = get(currentAsset)
@@ -44,6 +45,7 @@
         key={def.key}
         value={deepGet($currentAsset, def.key)}
         onChange={val => setAssetProps(def.key, val)}
+        {bindings}
       />
     {/each}
   </DetailSummary>
