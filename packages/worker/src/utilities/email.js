@@ -68,12 +68,7 @@ async function getLinkCode(purpose, email, user, info = null) {
  * @param {string|null} contents if using a custom template can supply contents for context.
  * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
  */
-async function buildEmail(
-  purpose,
-  email,
-  context,
-  { user, contents } = {}
-) {
+async function buildEmail(purpose, email, context, { user, contents } = {}) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`

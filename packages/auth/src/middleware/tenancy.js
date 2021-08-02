@@ -1,7 +1,4 @@
-const {
-  createTenancyContext,
-  setTenantId,
-} = require("../tenancy")
+const { createTenancyContext, setTenantId } = require("../tenancy")
 const { buildMatcherRegex, matches } = require("./matchers")
 
 module.exports = (allowQueryStringPatterns, noTenancyPatterns) => {

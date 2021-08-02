@@ -1,5 +1,6 @@
 const Router = require("@koa/router")
-const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
+  require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")

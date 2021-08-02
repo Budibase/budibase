@@ -6,9 +6,7 @@ const {
   GLOBAL_OWNER,
 } = require("../index")
 const { join } = require("path")
-const {
-  getTemplateParams,
-} = require("@budibase/auth/db")
+const { getTemplateParams } = require("@budibase/auth/db")
 const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.EmailTemplates = {

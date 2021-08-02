@@ -8,7 +8,11 @@ const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
-const { getGlobalDB, getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const {
+  getGlobalDB,
+  getTenantId,
+  isMultiTenant,
+} = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
 
 function googleCallbackUrl() {

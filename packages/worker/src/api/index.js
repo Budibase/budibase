@@ -2,7 +2,8 @@ const Router = require("@koa/router")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
-const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
+  require("@budibase/auth").auth
 
 const NO_TENANCY_ENDPOINTS = [
   {
@@ -12,7 +13,7 @@ const NO_TENANCY_ENDPOINTS = [
   {
     route: "/api/global/users/self",
     method: "GET",
-  }
+  },
 ]
 
 const PUBLIC_ENDPOINTS = [

@@ -1,8 +1,4 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-} = require("./db/utils")
+const { DocumentTypes, SEPARATOR, ViewNames } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
