@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { generate } from "shortid"
+import { routeStore } from "./routes"
 
 const NOTIFICATION_TIMEOUT = 3000
 
@@ -22,6 +23,17 @@ const createNotificationStore = () => {
     if (block) {
       return
     }
+
+    // If peeking, pass notifications back to parent window
+    if (get(routeStore).queryParams?.peek) {
+      window.dispatchEvent(
+        new CustomEvent("notification", {
+          detail: { message, type, icon },
+        })
+      )
+      return
+    }
+
     store.set({
       id: generate(),
       type,
@@ -38,6 +50,7 @@ const createNotificationStore = () => {
   return {
     subscribe: store.subscribe,
     actions: {
+      send,
       info: msg => send(msg, "info", "Info"),
       success: msg => send(msg, "success", "CheckmarkCircle"),
       warning: msg => send(msg, "warning", "Alert"),

@@ -1,49 +1,61 @@
 <script>
-  import { peekStore, dataSourceStore, routeStore } from "../store"
+  import { peekStore, dataSourceStore, notificationStore } from "../store"
   import { Modal, ModalContent, Button } from "@budibase/bbui"
   import { onDestroy } from "svelte"
 
   let iframe
-  let fullscreen = false
+  let listenersAttached = false
 
   const invalidateDataSource = event => {
     const { dataSourceId } = event.detail
     dataSourceStore.actions.invalidateDataSource(dataSourceId)
   }
 
+  const proxyNotification = event => {
+    const { message, type, icon } = event.detail
+    notificationStore.actions.send(message, type, icon)
+  }
+
+  const attachListeners = () => {
+    // Mirror datasource invalidation to keep the parent window up to date
+    iframe.contentWindow.addEventListener(
+      "invalidate-datasource",
+      invalidateDataSource
+    )
+    // Listen for a close event to close the screen peek
+    iframe.contentWindow.addEventListener(
+      "close-screen-peek",
+      peekStore.actions.hidePeek
+    )
+    // Proxy notifications back to the parent window instead of iframe
+    iframe.contentWindow.addEventListener("notification", proxyNotification)
+  }
+
   const handleCancel = () => {
+    peekStore.actions.hidePeek()
     iframe.contentWindow.removeEventListener(
       "invalidate-datasource",
       invalidateDataSource
     )
-    peekStore.actions.hidePeek()
-    fullscreen = false
-  }
-
-  const navigate = () => {
-    if ($peekStore.external) {
-      window.location = $peekStore.href
-    } else {
-      routeStore.actions.navigate($peekStore.url)
-    }
-    peekStore.actions.hidePeek()
+    iframe.contentWindow.removeEventListener(
+      "close-screen-peek",
+      peekStore.actions.hidePeek
+    )
+    iframe.contentWindow.removeEventListener("notification", proxyNotification)
   }
 
   $: {
-    if (iframe) {
-      iframe.contentWindow.addEventListener(
-        "invalidate-datasource",
-        invalidateDataSource
-      )
+    if (iframe && !listenersAttached) {
+      attachListeners()
+      listenersAttached = true
+    } else if (!iframe) {
+      listenersAttached = false
     }
   }
 
   onDestroy(() => {
     if (iframe) {
-      iframe.contentWindow.removeEventListener(
-        "invalidate-datasource",
-        invalidateDataSource
-      )
+      handleCancel()
     }
   })
 </script>
@@ -53,7 +65,7 @@
     <ModalContent
       showCancelButton={false}
       showConfirmButton={false}
-      size="XL"
+      size="L"
       showDivider={false}
       showCloseIcon={false}
     >
