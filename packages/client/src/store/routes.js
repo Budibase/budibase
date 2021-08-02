@@ -44,7 +44,12 @@ const createRouteStore = () => {
   }
   const setQueryParams = queryParams => {
     store.update(state => {
-      state.queryParams = queryParams
+      state.queryParams = {
+        ...queryParams,
+        // Never unset the peek param - screen peek modals should always be
+        // in a peek state, even if they navigate to a different page
+        peek: queryParams.peek || state.queryParams?.peek,
+      }
       return state
     })
   }
