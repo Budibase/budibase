@@ -99,10 +99,10 @@ const clearFormHandler = async (action, context) => {
   )
 }
 
-const closeScreenPeekModalHandler = () => {
+const closeScreenModalHandler = () => {
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.dispatchEvent(new Event("close-screen-peek"))
+  window.dispatchEvent(new Event("close-screen-modal"))
 }
 
 const handlerMap = {
@@ -115,7 +115,7 @@ const handlerMap = {
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
-  ["Close Screen-Peek Modal"]: closeScreenPeekModalHandler,
+  ["Close Screen Modal"]: closeScreenModalHandler,
 }
 
 const confirmTextMap = {
