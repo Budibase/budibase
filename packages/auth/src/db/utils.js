@@ -1,6 +1,5 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { getDB } = require("./index")
 const { DEFAULT_TENANT_ID } = require("../constants")
 const env = require("../environment")
 const { StaticDatabases, SEPARATOR } = require("./constants")

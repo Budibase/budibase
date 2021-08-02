@@ -330,13 +330,16 @@ exports.inviteAccept = async ctx => {
   try {
     // info is an extension of the user object that was stored by global
     const { email, info } = await checkInviteCode(inviteCode)
-    ctx.body = await saveUser({
-      firstName,
-      lastName,
-      password,
-      email,
-      ...info,
-    }, info.tenantId)
+    ctx.body = await saveUser(
+      {
+        firstName,
+        lastName,
+        password,
+        email,
+        ...info,
+      },
+      info.tenantId
+    )
     // this will flesh out the body response
     await exports.save(ctx)
   } catch (err) {

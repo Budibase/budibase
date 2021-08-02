@@ -76,7 +76,7 @@ exports.getGlobalDB = (tenantId = null) => {
   // tenant ID can be set externally, for example user API where
   // new tenants are being created, this may be the case
   if (!tenantId) {
-    const tenantId = getTenantId()
+    tenantId = getTenantId()
   }
 
   let dbName

@@ -44,9 +44,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
     case EmailTemplatePurpose.INVITATION:
       context[InternalTemplateBindings.INVITE_CODE] = code
       context[InternalTemplateBindings.INVITE_URL] = checkSlashesInUrl(
-        addTenantToUrl(
-          `${URL}/builder/invite?code=${code}`
-        )
+        addTenantToUrl(`${URL}/builder/invite?code=${code}`)
       )
       break
   }
