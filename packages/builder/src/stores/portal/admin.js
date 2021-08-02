@@ -41,7 +41,7 @@ export function createAdminStore() {
   async function multiTenancyEnabled() {
     let enabled = false
     try {
-      const response = await api.get(`/api/global/flags`)
+      const response = await api.get(`/api/system/flags`)
       const json = await response.json()
       enabled = json.multiTenancy
     } catch (err) {
