@@ -54,7 +54,11 @@
             </Layout>
             <ActionMenu align="right">
               <div slot="control" class="avatar">
-                <Avatar size="M" initials={$auth.initials} />
+                <Avatar
+                  size="M"
+                  initials={$auth.initials}
+                  url={$auth.user.pictureUrl}
+                />
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
