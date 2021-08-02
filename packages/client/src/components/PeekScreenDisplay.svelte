@@ -24,7 +24,7 @@
     )
     // Listen for a close event to close the screen peek
     iframe.contentWindow.addEventListener(
-      "close-screen-peek",
+      "close-screen-modal",
       peekStore.actions.hidePeek
     )
     // Proxy notifications back to the parent window instead of iframe
@@ -38,7 +38,7 @@
       invalidateDataSource
     )
     iframe.contentWindow.removeEventListener(
-      "close-screen-peek",
+      "close-screen-modal",
       peekStore.actions.hidePeek
     )
     iframe.contentWindow.removeEventListener("notification", proxyNotification)

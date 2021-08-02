@@ -19,7 +19,7 @@
     {bindings}
   />
   <div />
-  <Checkbox text="Peek screen in modal" bind:value={parameters.peek} />
+  <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
 </div>
 
 <style>

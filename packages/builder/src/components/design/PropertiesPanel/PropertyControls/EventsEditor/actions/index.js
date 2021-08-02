@@ -6,7 +6,7 @@ import TriggerAutomation from "./TriggerAutomation.svelte"
 import ValidateForm from "./ValidateForm.svelte"
 import LogOut from "./LogOut.svelte"
 import ClearForm from "./ClearForm.svelte"
-import CloseScreenPeekModal from "./CloseScreenPeekModal.svelte"
+import CloseScreenModal from "./CloseScreenModal.svelte"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -49,7 +49,7 @@ export default [
     component: ClearForm,
   },
   {
-    name: "Close Screen-Peek Modal",
-    component: CloseScreenPeekModal,
+    name: "Close Screen Modal",
+    component: CloseScreenModal,
   },
 ]
