@@ -2,7 +2,18 @@ const Router = require("@koa/router")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
-const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } = require("@budibase/auth").auth
+
+const NO_TENANCY_ENDPOINTS = [
+  {
+    route: "/api/system",
+    method: "ALL",
+  },
+  {
+    route: "/api/global/users/self",
+    method: "GET",
+  }
+]
 
 const PUBLIC_ENDPOINTS = [
   {
@@ -53,6 +64,7 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
+  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {

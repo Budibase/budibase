@@ -1,10 +1,11 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
-const { generateGlobalUserID, getGlobalDB } = require("../../db/utils")
+const { generateGlobalUserID } = require("../../db/utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
-const { getGlobalUserByEmail, lookupTenantId } = require("../../utils")
+const { getGlobalUserByEmail } = require("../../utils")
+const { getGlobalDB, getTenantId } = require("../../tenancy")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -26,8 +27,7 @@ exports.authenticateThirdParty = async function (
 
   // use the third party id
   const userId = generateGlobalUserID(thirdPartyUser.userId)
-  const tenantId = await lookupTenantId(userId)
-  const db = getGlobalDB(tenantId)
+  const db = getGlobalDB()
 
   let dbUser
 
@@ -47,7 +47,7 @@ exports.authenticateThirdParty = async function (
 
   // fallback to loading by email
   if (!dbUser) {
-    dbUser = await getGlobalUserByEmail(thirdPartyUser.email, tenantId)
+    dbUser = await getGlobalUserByEmail(thirdPartyUser.email)
   }
 
   // exit early if there is still no user and auto creation is disabled
@@ -75,6 +75,7 @@ exports.authenticateThirdParty = async function (
 
   // authenticate
   const sessionId = newid()
+  const tenantId = getTenantId()
   await createASession(dbUser._id, { sessionId, tenantId })
 
   dbUser.token = jwt.sign(

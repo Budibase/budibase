@@ -3,17 +3,16 @@ const {
   getConfigParams,
   getGlobalUserParams,
   getScopedFullConfig,
-  getGlobalDBFromCtx,
-  getTenantIdFromCtx,
   getAllApps,
 } = require("@budibase/auth/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
 const CouchDB = require("../../../db")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.save = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
 
   // Config does not exist yet
@@ -49,7 +48,7 @@ exports.save = async function (ctx) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getConfigParams(
       { type: ctx.params.type },
@@ -66,7 +65,7 @@ exports.fetch = async function (ctx) {
  * The hierarchy is type -> workspace -> user.
  */
 exports.find = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
 
   const { userId, workspaceId } = ctx.query
   if (workspaceId && userId) {
@@ -99,7 +98,7 @@ exports.find = async function (ctx) {
 }
 
 exports.publicOidc = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
+  const db = getGlobalDB()
   try {
     // Find the config with the most granular scope based on context
     const oidcConfig = await getScopedFullConfig(db, {
@@ -121,7 +120,7 @@ exports.publicOidc = async function (ctx) {
 }
 
 exports.publicSettings = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
+  const db = getGlobalDB()
 
   try {
     // Find the config with the most granular scope based on context
@@ -186,7 +185,7 @@ exports.upload = async function (ctx) {
 
   // add to configuration structure
   // TODO: right now this only does a global level
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let cfgStructure = await getScopedFullConfig(db, { type })
   if (!cfgStructure) {
     cfgStructure = {
@@ -206,7 +205,7 @@ exports.upload = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const { id, rev } = ctx.params
 
   try {
@@ -218,15 +217,13 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  // include the query string only for a select few endpoints
-  const tenantId = getTenantIdFromCtx(ctx, { includeQuery: true })
-  const db = getGlobalDBFromCtx(ctx, { includeQuery: true })
+  const db = getGlobalDB()
 
   try {
     // TODO: Watch get started video
 
     // Apps exist
-    const apps = await getAllApps(CouchDB, { tenantId })
+    const apps = await getAllApps(CouchDB)
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {

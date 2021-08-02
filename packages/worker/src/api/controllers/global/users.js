@@ -1,8 +1,7 @@
 const {
   generateGlobalUserID,
   getGlobalUserParams,
-  getGlobalDB,
-  getGlobalDBFromCtx,
+
   StaticDatabases,
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
@@ -14,6 +13,7 @@ const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
 const env = require("../../../environment")
+const { getGlobalDB, getTenantId } = require("@budibase/auth/tenancy")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
@@ -73,8 +73,8 @@ async function doesTenantExist(tenantId) {
   )
 }
 
-async function allUsers(ctx) {
-  const db = getGlobalDBFromCtx(ctx)
+async function allUsers() {
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
@@ -87,12 +87,13 @@ async function saveUser(user, tenantId) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
+  // specify the tenancy incase we're making a new admin user (public)
   const db = getGlobalDB(tenantId)
   let { email, password, _id } = user
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
-    dbUser = await getGlobalUserByEmail(email, tenantId)
+    dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
       throw "Email address already in use."
     }
@@ -148,10 +149,8 @@ async function saveUser(user, tenantId) {
 }
 
 exports.save = async ctx => {
-  // this always stores the user into the requesting users tenancy
-  const tenantId = ctx.user.tenantId
   try {
-    ctx.body = await saveUser(ctx.request.body, tenantId)
+    ctx.body = await saveUser(ctx.request.body, getTenantId())
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }
@@ -163,7 +162,7 @@ exports.adminUser = async ctx => {
     ctx.throw(403, "Organisation already exists.")
   }
 
-  const db = getGlobalDB(tenantId)
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
@@ -197,7 +196,7 @@ exports.adminUser = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
@@ -209,7 +208,7 @@ exports.destroy = async ctx => {
 
 exports.removeAppRole = async ctx => {
   const { appId } = ctx.params
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const users = await allUsers(ctx)
   const bulk = []
   const cacheInvalidations = []
@@ -239,7 +238,7 @@ exports.getSelf = async ctx => {
 }
 
 exports.updateSelf = async ctx => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
     ctx.request.body.password = await hash(ctx.request.body.password)
@@ -272,7 +271,7 @@ exports.fetch = async ctx => {
 
 // called internally by app server user find
 exports.find = async ctx => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let user
   try {
     user = await db.get(ctx.params.id)
@@ -310,16 +309,14 @@ exports.tenantLookup = async ctx => {
 
 exports.invite = async ctx => {
   let { email, userInfo } = ctx.request.body
-  const tenantId = ctx.user.tenantId
-  const existing = await getGlobalUserByEmail(email, tenantId)
+  const existing = await getGlobalUserByEmail(email)
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
   if (!userInfo) {
     userInfo = {}
   }
-  userInfo.tenantId = tenantId
-  await sendEmail(tenantId, email, EmailTemplatePurpose.INVITATION, {
+  await sendEmail(email, EmailTemplatePurpose.INVITATION, {
     subject: "{{ company }} platform invitation",
     info: userInfo,
   })
@@ -333,17 +330,13 @@ exports.inviteAccept = async ctx => {
   try {
     // info is an extension of the user object that was stored by global
     const { email, info } = await checkInviteCode(inviteCode)
-    // only pass through certain props for accepting
-    ctx.request.body = {
+    ctx.body = await saveUser({
       firstName,
       lastName,
       password,
       email,
       ...info,
-    }
-    ctx.user = {
-      tenantId: info.tenantId,
-    }
+    }, info.tenantId)
     // this will flesh out the body response
     await exports.save(ctx)
   } catch (err) {

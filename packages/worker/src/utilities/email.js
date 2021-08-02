@@ -1,10 +1,11 @@
 const nodemailer = require("nodemailer")
-const { getGlobalDB, getScopedConfig } = require("@budibase/auth/db")
+const { getScopedConfig } = require("@budibase/auth/db")
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
 const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 const TEST_MODE = false
 const TYPE = TemplateTypes.EMAIL
@@ -60,7 +61,6 @@ async function getLinkCode(purpose, email, user, info = null) {
 
 /**
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
- * @param {string} tenantId the ID of the tenant which is sending the email.
  * @param {string} purpose the purpose of the email being built, e.g. invitation, password reset.
  * @param {string} email the address which it is being sent to for contextual purposes.
  * @param {object} context the context which is being used for building the email (hbs context).
@@ -69,7 +69,6 @@ async function getLinkCode(purpose, email, user, info = null) {
  * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
  */
 async function buildEmail(
-  tenantId,
   purpose,
   email,
   context,
@@ -80,8 +79,8 @@ async function buildEmail(
     throw `Unable to build an email of type ${purpose}`
   }
   let [base, body] = await Promise.all([
-    getTemplateByPurpose({ tenantId }, TYPE, EmailTemplatePurpose.BASE),
-    getTemplateByPurpose({ tenantId }, TYPE, purpose),
+    getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
+    getTemplateByPurpose(TYPE, purpose),
   ])
   if (!base || !body) {
     throw "Unable to build email, missing base components"
@@ -123,12 +122,12 @@ async function getSmtpConfiguration(db, workspaceId = null) {
  * Checks if a SMTP config exists based on passed in parameters.
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-exports.isEmailConfigured = async (tenantId, workspaceId = null) => {
+exports.isEmailConfigured = async (workspaceId = null) => {
   // when "testing" simply return true
   if (TEST_MODE) {
     return true
   }
-  const db = getGlobalDB(tenantId)
+  const db = getGlobalDB()
   const config = await getSmtpConfiguration(db, workspaceId)
   return config != null
 }
@@ -136,7 +135,6 @@ exports.isEmailConfigured = async (tenantId, workspaceId = null) => {
 /**
  * Given an email address and an email purpose this will retrieve the SMTP configuration and
  * send an email using it.
- * @param {string} tenantId The tenant which is sending them email.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
  * @param {string|undefined} workspaceId If finer grain controls being used then this will lookup config for workspace.
@@ -149,12 +147,11 @@ exports.isEmailConfigured = async (tenantId, workspaceId = null) => {
  * nodemailer response.
  */
 exports.sendEmail = async (
-  tenantId,
   email,
   purpose,
   { workspaceId, user, from, contents, subject, info } = {}
 ) => {
-  const db = getGlobalDB(tenantId)
+  const db = getGlobalDB()
   let config = (await getSmtpConfiguration(db, workspaceId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
@@ -162,11 +159,11 @@ exports.sendEmail = async (
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, user, info)
-  const context = await getSettingsTemplateContext(tenantId, purpose, code)
+  const context = await getSettingsTemplateContext(purpose, code)
   const message = {
     from: from || config.from,
     to: email,
-    html: await buildEmail(tenantId, purpose, email, context, {
+    html: await buildEmail(purpose, email, context, {
       user,
       contents,
     }),

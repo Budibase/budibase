@@ -1,9 +1,8 @@
 const { sendEmail } = require("../../../utilities/email")
-const { getGlobalDBFromCtx } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.sendEmail = async ctx => {
   let {
-    tenantId,
     workspaceId,
     email,
     userId,
@@ -14,13 +13,10 @@ exports.sendEmail = async ctx => {
   } = ctx.request.body
   let user
   if (userId) {
-    const db = getGlobalDBFromCtx(ctx)
+    const db = getGlobalDB()
     user = await db.get(userId)
   }
-  if (!tenantId && ctx.user.tenantId) {
-    tenantId = ctx.user.tenantId
-  }
-  const response = await sendEmail(tenantId, email, purpose, {
+  const response = await sendEmail(email, purpose, {
     workspaceId,
     user,
     contents,

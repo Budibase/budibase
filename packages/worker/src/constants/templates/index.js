@@ -8,9 +8,8 @@ const {
 const { join } = require("path")
 const {
   getTemplateParams,
-  getTenantIdFromCtx,
-  getGlobalDB,
 } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(
@@ -52,13 +51,8 @@ exports.addBaseTemplates = (templates, type = null) => {
   return templates
 }
 
-exports.getTemplatesCtx = async (ctx, opts = {}) => {
-  const tenantId = getTenantIdFromCtx(ctx)
-  return exports.getTemplates(tenantId, opts)
-}
-
-exports.getTemplates = async (tenantId, { ownerId, type, id } = {}) => {
-  const db = getGlobalDB(tenantId)
+exports.getTemplates = async ({ ownerId, type, id } = {}) => {
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getTemplateParams(ownerId || GLOBAL_OWNER, id, {
       include_docs: true,
@@ -75,10 +69,7 @@ exports.getTemplates = async (tenantId, { ownerId, type, id } = {}) => {
   return exports.addBaseTemplates(templates, type)
 }
 
-exports.getTemplateByPurpose = async ({ tenantId, ctx }, type, purpose) => {
-  if (!tenantId && ctx) {
-    tenantId = getTenantIdFromCtx(ctx)
-  }
-  const templates = await exports.getTemplates(tenantId, { type })
+exports.getTemplateByPurpose = async (type, purpose) => {
+  const templates = await exports.getTemplates({ type })
   return templates.find(template => template.purpose === purpose)
 }

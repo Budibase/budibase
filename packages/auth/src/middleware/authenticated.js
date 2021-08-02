@@ -2,26 +2,9 @@ const { Cookies, Headers } = require("../constants")
 const { getCookie, clearCookie } = require("../utils")
 const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
+const { buildMatcherRegex, matches } = require("./matchers")
+const { isTenantIdSet, updateTenantId } = require("../tenancy")
 const env = require("../environment")
-
-const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
-
-function buildNoAuthRegex(patterns) {
-  return patterns.map(pattern => {
-    const isObj = typeof pattern === "object" && pattern.route
-    const method = isObj ? pattern.method : "GET"
-    let route = isObj ? pattern.route : pattern
-
-    const matches = route.match(PARAM_REGEX)
-    if (matches) {
-      for (let match of matches) {
-        const pattern = "/.*" + (match.endsWith("/") ? "/" : "")
-        route = route.replace(match, pattern)
-      }
-    }
-    return { regex: new RegExp(route), method }
-  })
-}
 
 function finalise(
   ctx,
@@ -34,19 +17,14 @@ function finalise(
   ctx.version = version
 }
 
-module.exports = (noAuthPatterns = [], opts) => {
-  const noAuthOptions = noAuthPatterns ? buildNoAuthRegex(noAuthPatterns) : []
+module.exports = (noAuthPatterns = [], opts = { publicAllowed: false }) => {
+  const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
   return async (ctx, next) => {
     let publicEndpoint = false
     const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
-    const found = noAuthOptions.find(({ regex, method }) => {
-      return (
-        regex.test(ctx.request.url) &&
-        ctx.request.method.toLowerCase() === method.toLowerCase()
-      )
-    })
-    if (found != null) {
+    const found = matches(ctx, noAuthOptions)
+    if (found) {
       publicEndpoint = true
     }
     try {
@@ -64,7 +42,10 @@ module.exports = (noAuthPatterns = [], opts) => {
           error = "No session found"
         } else {
           try {
-            user = await getUser(userId, session.tenantId)
+            if (session.tenantId && !isTenantIdSet()) {
+              updateTenantId(session.tenantId)
+            }
+            user = await getUser(userId)
             delete user.password
             authenticated = true
           } catch (err) {
