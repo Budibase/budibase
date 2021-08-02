@@ -3,29 +3,16 @@ const Replication = require("./Replication")
 const { getDB } = require("./index")
 const { DEFAULT_TENANT_ID } = require("../constants")
 const env = require("../environment")
+const { StaticDatabases, SEPARATOR } = require("./constants")
+const { getTenantId } = require("../tenancy")
 
 const UNICODE_MAX = "\ufff0"
-const SEPARATOR = "_"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
 }
 
-exports.StaticDatabases = {
-  GLOBAL: {
-    name: "global-db",
-    docs: {
-      apiKeys: "apikeys",
-    },
-  },
-  // contains information about tenancy and so on
-  PLATFORM_INFO: {
-    name: "global-info",
-    docs: {
-      tenants: "tenants",
-    },
-  },
-}
+exports.StaticDatabases = StaticDatabases
 
 const PRE_APP = "app"
 const PRE_DEV = "dev"
@@ -72,45 +59,6 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
-}
-
-/**
- * Gets the name of the global DB to connect to in a multi-tenancy system.
- */
-exports.getGlobalDB = tenantId => {
-  // fallback for system pre multi-tenancy
-  let dbName = exports.StaticDatabases.GLOBAL.name
-  if (tenantId && tenantId !== DEFAULT_TENANT_ID) {
-    dbName = `${tenantId}${SEPARATOR}${dbName}`
-  }
-  if (env.MULTI_TENANCY && tenantId == null) {
-    throw "Cannot create global DB without tenantId"
-  }
-  return getDB(dbName)
-}
-
-/**
- * Given a koa context this tries to extra what tenant is being accessed.
- */
-exports.getTenantIdFromCtx = (ctx, opts = { includeQuery: false }) => {
-  if (!ctx) {
-    return null
-  }
-  const user = ctx.user || {}
-  const params = ctx.request.params || {}
-  let query = {}
-  if (opts && opts.includeQuery) {
-    query = ctx.request.query || {}
-  }
-  return user.tenantId || params.tenantId || query.tenantId
-}
-
-/**
- * Given a koa context this tries to find the correct tenant Global DB.
- */
-exports.getGlobalDBFromCtx = (ctx, opts) => {
-  const tenantId = exports.getTenantIdFromCtx(ctx, opts)
-  return exports.getGlobalDB(tenantId)
 }
 
 /**
@@ -216,7 +164,8 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async (CouchDB, { tenantId, dev, all } = {}) => {
+exports.getAllApps = async (CouchDB, { dev, all } = {}) => {
+  let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }

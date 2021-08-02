@@ -3,9 +3,10 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDeployedAppID, getGlobalDBFromCtx } = require("@budibase/auth/db")
+const { getDeployedAppID } = require("@budibase/auth/db")
 const { getGlobalUserParams } = require("@budibase/auth/db")
 const { user: userCache } = require("@budibase/auth/cache")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.updateAppRole = (appId, user) => {
   if (!user.roles) {
@@ -37,13 +38,13 @@ exports.getCachedSelf = async (ctx, appId) => {
 }
 
 exports.getGlobalUser = async (ctx, appId, userId) => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let user = await db.get(getGlobalIDFromUserMetadataID(userId))
   return processUser(appId, user)
 }
 
 exports.getGlobalUsers = async (ctx, appId = null, users = null) => {
-  const db = getGlobalDBFromCtx(ctx)
+  const db = getGlobalDB()
   let globalUsers
   if (users) {
     const globalIds = users.map(user => getGlobalIDFromUserMetadataID(user._id))

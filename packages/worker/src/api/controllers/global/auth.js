@@ -8,13 +8,13 @@ const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
-const { getGlobalDB } = authPkg.db
+const { getGlobalDB, getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
 
-function googleCallbackUrl(tenantId = null) {
+function googleCallbackUrl() {
   let callbackUrl = `/api/global/auth`
-  if (tenantId) {
-    callbackUrl += `/${tenantId}`
+  if (isMultiTenant()) {
+    callbackUrl += `/${getTenantId()}`
   }
   callbackUrl += `/google/callback`
   return callbackUrl
@@ -57,8 +57,7 @@ exports.authenticate = async (ctx, next) => {
  */
 exports.reset = async ctx => {
   const { email } = ctx.request.body
-  const tenantId = ctx.params.tenantId
-  const configured = await isEmailConfigured(tenantId)
+  const configured = await isEmailConfigured()
   if (!configured) {
     ctx.throw(
       400,
@@ -66,10 +65,10 @@ exports.reset = async ctx => {
     )
   }
   try {
-    const user = await getGlobalUserByEmail(email, tenantId)
+    const user = await getGlobalUserByEmail(email)
     // only if user exists, don't error though if they don't
     if (user) {
-      await sendEmail(tenantId, email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
+      await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
         user,
         subject: "{{ company }} platform password reset",
       })
@@ -90,7 +89,7 @@ exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
   try {
     const userId = await checkResetPasswordCode(resetCode)
-    const db = getGlobalDB(ctx.params.tenantId)
+    const db = getGlobalDB()
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)
@@ -112,9 +111,8 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const tenantId = ctx.params ? ctx.params.tenantId : null
-  const db = getGlobalDB(tenantId)
-  let callbackUrl = googleCallbackUrl(tenantId)
+  const db = getGlobalDB()
+  let callbackUrl = googleCallbackUrl()
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -128,9 +126,8 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const tenantId = ctx.params ? ctx.params.tenantId : null
-  const db = getGlobalDB(tenantId)
-  const callbackUrl = googleCallbackUrl(tenantId)
+  const db = getGlobalDB()
+  const callbackUrl = googleCallbackUrl()
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
@@ -150,8 +147,7 @@ exports.googleAuth = async (ctx, next) => {
 }
 
 async function oidcStrategyFactory(ctx, configId) {
-  const tenantId = ctx.params ? ctx.params.tenantId : null
-  const db = getGlobalDB(ctx.params.tenantId)
+  const db = getGlobalDB()
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.OIDC,
     group: ctx.query.group,
@@ -161,8 +157,8 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const protocol = env.NODE_ENV === "production" ? "https" : "http"
   let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
-  if (tenantId) {
-    callbackUrl += `/${tenantId}`
+  if (isMultiTenant()) {
+    callbackUrl += `/${getTenantId()}`
   }
   callbackUrl += `/oidc/callback`
 

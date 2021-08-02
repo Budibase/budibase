@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } = require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
@@ -31,6 +31,7 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
+  .use(buildTenancyMiddleware())
   .use(
     buildAuthMiddleware(null, {
       publicAllowed: true,
