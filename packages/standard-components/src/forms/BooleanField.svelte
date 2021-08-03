@@ -6,9 +6,10 @@
   export let label
   export let text
   export let disabled = false
-
+  export let size
   let fieldState
   let fieldApi
+
 </script>
 
 <Field
@@ -26,6 +27,7 @@
       disabled={$fieldState.disabled}
       error={$fieldState.error}
       id={$fieldState.fieldId}
+      size={size}
       on:change={e => fieldApi.setValue(e.detail)}
       {text}
     />
