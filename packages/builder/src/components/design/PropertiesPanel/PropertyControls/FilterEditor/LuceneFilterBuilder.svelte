@@ -7,20 +7,15 @@
     Combobox,
     Input,
   } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
   import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
 
   export let schemaFields
   export let value
+  export let bindings = []
 
   const BannedTypes = ["link", "attachment"]
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))
     .map(field => field.name)
@@ -101,7 +96,7 @@
           title={`Value for "${expression.field}"`}
           value={expression.value}
           placeholder="Value"
-          bindings={bindableProperties}
+          {bindings}
           on:change={event => (expression.value = event.detail)}
         />
       {:else if ["string", "longform", "number"].includes(expression.type)}
