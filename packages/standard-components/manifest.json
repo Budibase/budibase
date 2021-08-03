@@ -1842,6 +1842,22 @@
         "placeholder": "Choose an option"
       },
       {
+        "type": "select",
+        "label": "Type",
+        "key": "optionsType",
+        "placeholder": "Pick an options type",
+        "options": [
+          {
+            "label": "Select",
+            "value": "select"
+          },
+          {
+            "label": "Radio buttons",
+            "value": "radio"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
