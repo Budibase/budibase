@@ -92,7 +92,12 @@ module.exports.run = async function ({ inputs }) {
     }
 
     if (headers && headers.length !== 0) {
-      request.headers = { ...request.headers, ...JSON.parse(headers) }
+      try {
+        const customHeaders = JSON.parse(headers)
+        request.headers = { ...request.headers, ...customHeaders }
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 
