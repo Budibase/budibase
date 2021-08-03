@@ -10,6 +10,13 @@ const env = require("../environment")
 
 const router = new Router()
 
+const NO_TENANCY_ENDPOINTS = [
+  {
+    route: "/api/analytics",
+    method: "GET",
+  },
+]
+
 router
   .use(
     compress({
@@ -32,12 +39,13 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
-  .use(buildTenancyMiddleware())
   .use(
     buildAuthMiddleware(null, {
       publicAllowed: true,
     })
   )
+  // nothing in the server should allow query string tenants
+  .use(buildTenancyMiddleware(null, NO_TENANCY_ENDPOINTS))
   .use(currentApp)
   .use(auditLog)
 

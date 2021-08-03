@@ -4,6 +4,7 @@ const { checkSlashesInUrl } = require("./index")
 const { getDeployedAppID } = require("@budibase/auth/db")
 const { updateAppRole, getGlobalUser } = require("./global")
 const { Headers } = require("@budibase/auth/constants")
+const { getTenantId, isTenantIdSet } = require("@budibase/auth/tenancy")
 
 function request(ctx, request) {
   if (!request.headers) {
@@ -11,6 +12,9 @@ function request(ctx, request) {
   }
   if (!ctx) {
     request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
+    if (isTenantIdSet()) {
+      request.headers[Headers.TENANT_ID] = getTenantId()
+    }
   }
   if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
@@ -29,13 +33,14 @@ function request(ctx, request) {
 
 exports.request = request
 
-exports.sendSmtpEmail = async (tenantId, to, from, subject, contents) => {
+// have to pass in the tenant ID as this could be coming from an automation
+exports.sendSmtpEmail = async (to, from, subject, contents) => {
+  // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
     request(null, {
       method: "POST",
       body: {
-        tenantId,
         email: to,
         from,
         contents,

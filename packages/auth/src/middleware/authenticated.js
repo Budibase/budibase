@@ -3,7 +3,6 @@ const { getCookie, clearCookie } = require("../utils")
 const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const { buildMatcherRegex, matches } = require("./matchers")
-const { isTenantIdSet, updateTenantId } = require("../tenancy")
 const env = require("../environment")
 
 function finalise(
@@ -17,6 +16,11 @@ function finalise(
   ctx.version = version
 }
 
+/**
+ * This middleware is tenancy aware, so that it does not depend on other middlewares being used.
+ * The tenancy modules should not be used here and it should be assumed that the tenancy context
+ * has not yet been populated.
+ */
 module.exports = (noAuthPatterns = [], opts = { publicAllowed: false }) => {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
   return async (ctx, next) => {
@@ -42,10 +46,7 @@ module.exports = (noAuthPatterns = [], opts = { publicAllowed: false }) => {
           error = "No session found"
         } else {
           try {
-            if (session.tenantId && !isTenantIdSet()) {
-              updateTenantId(session.tenantId)
-            }
-            user = await getUser(userId)
+            user = await getUser(userId, session.tenantId)
             delete user.password
             authenticated = true
           } catch (err) {

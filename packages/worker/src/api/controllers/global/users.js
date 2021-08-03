@@ -13,65 +13,9 @@ const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
 const env = require("../../../environment")
-const { getGlobalDB, getTenantId } = require("@budibase/auth/tenancy")
+const { getGlobalDB, getTenantId, doesTenantExist, tryAddTenant, updateTenantId } = require("@budibase/auth/tenancy")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
-const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
-
-async function tryAddTenant(tenantId, userId, email) {
-  const db = new CouchDB(PLATFORM_INFO_DB)
-  const getDoc = async id => {
-    if (!id) {
-      return null
-    }
-    try {
-      return await db.get(id)
-    } catch (err) {
-      return { _id: id }
-    }
-  }
-  let [tenants, userIdDoc, emailDoc] = await Promise.all([
-    getDoc(TENANT_DOC),
-    getDoc(userId),
-    getDoc(email),
-  ])
-  if (!Array.isArray(tenants.tenantIds)) {
-    tenants = {
-      _id: TENANT_DOC,
-      tenantIds: [],
-    }
-  }
-  let promises = []
-  if (userIdDoc) {
-    userIdDoc.tenantId = tenantId
-    promises.push(db.put(userIdDoc))
-  }
-  if (emailDoc) {
-    emailDoc.tenantId = tenantId
-    promises.push(db.put(emailDoc))
-  }
-  if (tenants.tenantIds.indexOf(tenantId) === -1) {
-    tenants.tenantIds.push(tenantId)
-    promises.push(db.put(tenants))
-  }
-  await Promise.all(promises)
-}
-
-async function doesTenantExist(tenantId) {
-  const db = new CouchDB(PLATFORM_INFO_DB)
-  let tenants
-  try {
-    tenants = await db.get(TENANT_DOC)
-  } catch (err) {
-    // if theres an error the doc doesn't exist, no tenants exist
-    return false
-  }
-  return (
-    tenants &&
-    Array.isArray(tenants.tenantIds) &&
-    tenants.tenantIds.indexOf(tenantId) !== -1
-  )
-}
 
 async function allUsers() {
   const db = getGlobalDB()
@@ -87,6 +31,8 @@ async function saveUser(user, tenantId) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
+  // need to set the context for this request, as specified
+  updateTenantId(tenantId)
   // specify the tenancy incase we're making a new admin user (public)
   const db = getGlobalDB(tenantId)
   let { email, password, _id } = user
@@ -162,7 +108,7 @@ exports.adminUser = async ctx => {
     ctx.throw(403, "Organisation already exists.")
   }
 
-  const db = getGlobalDB()
+  const db = getGlobalDB(tenantId)
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,

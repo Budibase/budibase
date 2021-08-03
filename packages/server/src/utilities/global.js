@@ -33,7 +33,9 @@ function processUser(appId, user) {
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
-  const user = await userCache.getUser(ctx.user._id, ctx.user.tenantId)
+  // this has to be tenant aware, can't depend on the context to find it out
+  // running some middlewares before the tenancy causes context to break
+  const user = await userCache.getUser(ctx.user._id)
   return processUser(appId, user)
 }
 

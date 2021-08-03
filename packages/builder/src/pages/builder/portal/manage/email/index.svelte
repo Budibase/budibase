@@ -94,6 +94,9 @@
     requireAuth = smtpConfig.config.auth != null
     // always attach the auth for the forms purpose -
     // this will be removed later if required
+    if (!smtpDoc.config) {
+      smtpDoc.config = {}
+    }
     if (!smtpDoc.config.auth) {
       smtpConfig.config.auth = {
         type: "login",
