@@ -60,7 +60,7 @@
     bind:block={$automationStore.selectedBlock}
     {webhookModal}
   />
-{:else if $automationStore.selectedAutomation}
+{:else if automation}
   <div class="block-label">{automation.name}</div>
   <Button secondary on:click={testAutomation}>Test Automation</Button>
 {/if}
