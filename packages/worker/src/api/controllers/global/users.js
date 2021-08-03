@@ -13,7 +13,13 @@ const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
 const env = require("../../../environment")
-const { getGlobalDB, getTenantId, doesTenantExist, tryAddTenant, updateTenantId } = require("@budibase/auth/tenancy")
+const {
+  getGlobalDB,
+  getTenantId,
+  doesTenantExist,
+  tryAddTenant,
+  updateTenantId,
+} = require("@budibase/auth/tenancy")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 

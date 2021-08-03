@@ -7,18 +7,20 @@ class FunctionContext {
   static getMiddleware(updateCtxFn = null) {
     const namespace = this.createNamespace()
 
-    return async function(ctx, next) {
-      await new Promise(namespace.bind(function(resolve, reject) {
-        // store a contextual request ID that can be used anywhere (audit logs)
-        namespace.set(REQUEST_ID_KEY, newid())
-        namespace.bindEmitter(ctx.req)
-        namespace.bindEmitter(ctx.res)
+    return async function (ctx, next) {
+      await new Promise(
+        namespace.bind(function (resolve, reject) {
+          // store a contextual request ID that can be used anywhere (audit logs)
+          namespace.set(REQUEST_ID_KEY, newid())
+          namespace.bindEmitter(ctx.req)
+          namespace.bindEmitter(ctx.res)
 
-        if (updateCtxFn) {
-          updateCtxFn(ctx)
-        }
-        next().then(resolve).catch(reject)
-      }))
+          if (updateCtxFn) {
+            updateCtxFn(ctx)
+          }
+          next().then(resolve).catch(reject)
+        })
+      )
     }
   }
 
@@ -35,7 +37,9 @@ class FunctionContext {
 
   static getContextStorage() {
     if (this._namespace && this._namespace.active) {
-      const { id, _ns_name, ...contextData } = this._namespace.active
+      let contextData = this._namespace.active
+      delete contextData.id
+      delete contextData._ns_name
       return contextData
     }
 

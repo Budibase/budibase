@@ -54,14 +54,26 @@ router
     authController.resetUpdate
   )
   .post("/api/global/auth/logout", authController.logout)
-  .get("/api/global/auth/:tenantId/google", updateTenant, authController.googlePreAuth)
-  .get("/api/global/auth/:tenantId/google/callback", updateTenant, authController.googleAuth)
+  .get(
+    "/api/global/auth/:tenantId/google",
+    updateTenant,
+    authController.googlePreAuth
+  )
+  .get(
+    "/api/global/auth/:tenantId/google/callback",
+    updateTenant,
+    authController.googleAuth
+  )
   .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",
     updateTenant,
     authController.oidcPreAuth
   )
-  .get("/api/global/auth/:tenantId/oidc/callback", updateTenant, authController.oidcAuth)
+  .get(
+    "/api/global/auth/:tenantId/oidc/callback",
+    updateTenant,
+    authController.oidcAuth
+  )
   // deprecated - used by the default system before tenancy
   .get("/api/admin/auth/google/callback", authController.googleAuth)
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)

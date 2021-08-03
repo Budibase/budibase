@@ -35,7 +35,10 @@ exports.updateTenantId = tenantId => {
   cls.setOnContext(TENANT_ID, tenantId)
 }
 
-exports.setTenantId = (ctx, opts = { allowQs: false, allowNoTenant: false }) => {
+exports.setTenantId = (
+  ctx,
+  opts = { allowQs: false, allowNoTenant: false }
+) => {
   let tenantId
   // exit early if not multi-tenant
   if (!exports.isMultiTenant()) {
