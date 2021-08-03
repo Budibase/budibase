@@ -1,11 +1,12 @@
 <script>
-  import { CoreSelect } from "@budibase/bbui"
+  import { CoreSelect, RadioGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
   export let label
   export let placeholder
   export let disabled = false
+  export let optionsType = "select"
 
   let fieldState
   let fieldApi
@@ -22,14 +23,25 @@
   bind:fieldSchema
 >
   {#if fieldState}
-    <CoreSelect
-      value={$fieldState.value}
-      id={$fieldState.fieldId}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
-      options={fieldSchema?.constraints?.inclusion ?? []}
-      {placeholder}
-      on:change={e => fieldApi.setValue(e.detail)}
-    />
+    {#if optionsType === 'select'}
+      <CoreSelect
+        value={$fieldState.value}
+        id={$fieldState.fieldId}
+        disabled={$fieldState.disabled}
+        error={$fieldState.error}
+        options={fieldSchema?.constraints?.inclusion ?? []}
+        {placeholder}
+        on:change={e => fieldApi.setValue(e.detail)}
+      />
+    {:else if optionsType === 'radio'}
+      <RadioGroup
+        value={$fieldState.value}
+        id={$fieldState.fieldId}
+        disabled={$fieldState.disabled}
+        error={$fieldState.error}
+        options={fieldSchema?.constraints?.inclusion ?? []}
+        on:change={e => fieldApi.setValue(e.detail)}
+      />
+    {/if}
   {/if}
 </Field>
