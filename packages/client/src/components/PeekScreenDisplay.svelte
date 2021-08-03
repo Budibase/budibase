@@ -1,6 +1,11 @@
 <script>
-  import { peekStore, dataSourceStore, notificationStore } from "../store"
-  import { Modal, ModalContent, Button } from "@budibase/bbui"
+  import {
+    peekStore,
+    dataSourceStore,
+    notificationStore,
+    routeStore,
+  } from "../store"
+  import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { onDestroy } from "svelte"
 
   let iframe
@@ -44,6 +49,11 @@
     iframe.contentWindow.removeEventListener("notification", proxyNotification)
   }
 
+  const handleFullscreen = () => {
+    routeStore.actions.navigate($peekStore.url)
+    handleCancel()
+  }
+
   $: {
     if (iframe && !listenersAttached) {
       attachListeners()
@@ -62,6 +72,14 @@
 
 {#if $peekStore.showPeek}
   <Modal fixed on:cancel={handleCancel}>
+    <div class="actions spectrum--darkest" slot="outside">
+      <ActionButton size="S" quiet icon="OpenIn" on:click={handleFullscreen}>
+        Full screen
+      </ActionButton>
+      <ActionButton size="S" quiet icon="Close" on:click={handleCancel}>
+        Close
+      </ActionButton>
+    </div>
     <ModalContent
       showCancelButton={false}
       showConfirmButton={false}
@@ -80,13 +98,19 @@
     border: none;
     width: calc(100% + 80px);
     height: 640px;
+    max-height: calc(100vh - 120px);
     transition: width 1s ease, height 1s ease, top 1s ease, left 1s ease;
     border-radius: var(--spectrum-global-dimension-size-100);
   }
 
-  @media (max-width: 600px) {
-    iframe {
-      max-height: calc(100vh - 80px);
-    }
+  .actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    width: 640px;
+    max-width: 100%;
   }
 </style>
