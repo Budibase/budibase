@@ -23,7 +23,7 @@
   bind:fieldSchema
 >
   {#if fieldState}
-    {#if optionsType === 'select'}
+    {#if optionsType === "select"}
       <CoreSelect
         value={$fieldState.value}
         id={$fieldState.fieldId}
@@ -33,7 +33,7 @@
         {placeholder}
         on:change={e => fieldApi.setValue(e.detail)}
       />
-    {:else if optionsType === 'radio'}
+    {:else if optionsType === "radio"}
       <RadioGroup
         value={$fieldState.value}
         id={$fieldState.fieldId}
