@@ -1,5 +1,4 @@
 import { writable, get } from "svelte/store"
-import { notificationStore } from "./notification"
 
 export const createDataSourceStore = () => {
   const store = writable([])
