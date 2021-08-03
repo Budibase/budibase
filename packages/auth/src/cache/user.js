@@ -1,9 +1,5 @@
 const redis = require("../redis/authRedis")
-const {
-  getTenantId,
-  lookupTenantId,
-  getGlobalDB,
-} = require("../tenancy")
+const { getTenantId, lookupTenantId, getGlobalDB } = require("../tenancy")
 
 const EXPIRY_SECONDS = 3600
 
