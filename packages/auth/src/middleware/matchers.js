@@ -1,6 +1,9 @@
 const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
 
 exports.buildMatcherRegex = patterns => {
+  if (!patterns) {
+    return []
+  }
   return patterns.map(pattern => {
     const isObj = typeof pattern === "object" && pattern.route
     const method = isObj ? pattern.method : "GET"

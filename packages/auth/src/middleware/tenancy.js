@@ -1,20 +1,14 @@
-const { createTenancyContext, setTenantId } = require("../tenancy")
+const { setTenantId } = require("../tenancy")
+const ContextFactory = require("../tenancy/FunctionContext")
 const { buildMatcherRegex, matches } = require("./matchers")
 
 module.exports = (allowQueryStringPatterns, noTenancyPatterns) => {
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
   const noTenancyOptions = buildMatcherRegex(noTenancyPatterns)
 
-  return (ctx, next) => {
-    // always run in context
-    return createTenancyContext().runAndReturn(() => {
-      if (matches(ctx, noTenancyOptions)) {
-        return next()
-      }
-
-      const allowQs = !!matches(ctx, allowQsOptions)
-      setTenantId(ctx, { allowQs })
-      return next()
-    })
-  }
+  return ContextFactory.getMiddleware(ctx => {
+    const allowNoTenant = !!matches(ctx, noTenancyOptions)
+    const allowQs = !!matches(ctx, allowQsOptions)
+    setTenantId(ctx, { allowQs, allowNoTenant })
+  })
 }

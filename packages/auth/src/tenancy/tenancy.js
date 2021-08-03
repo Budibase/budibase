@@ -1,4 +1,4 @@
-const { getDB } = require("../../db")
+const { getDB } = require("../db")
 const { SEPARATOR, StaticDatabases } = require("../db/constants")
 const { getTenantId, DEFAULT_TENANT_ID, isMultiTenant } = require("./context")
 const env = require("../environment")

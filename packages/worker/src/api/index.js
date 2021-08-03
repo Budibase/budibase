@@ -5,17 +5,6 @@ const { routes } = require("./routes")
 const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
   require("@budibase/auth").auth
 
-const NO_TENANCY_ENDPOINTS = [
-  {
-    route: "/api/system",
-    method: "ALL",
-  },
-  {
-    route: "/api/global/users/self",
-    method: "GET",
-  },
-]
-
 const PUBLIC_ENDPOINTS = [
   {
     // this covers all of the POST auth routes
@@ -33,10 +22,6 @@ const PUBLIC_ENDPOINTS = [
     method: "GET",
   },
   {
-    route: "api/global/flags",
-    method: "GET",
-  },
-  {
     route: "/api/global/configs/checklist",
     method: "GET",
   },
@@ -47,6 +32,22 @@ const PUBLIC_ENDPOINTS = [
   {
     route: "/api/global/users/invite/accept",
     method: "POST",
+  },
+  {
+    route: "api/system/flags",
+    method: "GET",
+  },
+]
+
+const NO_TENANCY_ENDPOINTS = [
+  ...PUBLIC_ENDPOINTS,
+  {
+    route: "/api/system",
+    method: "ALL",
+  },
+  {
+    route: "/api/global/users/self",
+    method: "GET",
   },
 ]
 
@@ -65,8 +66,8 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
-  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
+  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (!ctx.isAuthenticated && !ctx.publicEndpoint) {

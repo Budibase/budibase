@@ -38,6 +38,7 @@ const {
   backupClientLibrary,
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
+const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -92,8 +93,9 @@ async function getAppUrlIfNotInUse(ctx) {
   return url
 }
 
-async function createInstance(tenantId, template) {
-  const baseAppId = generateAppID(env.MULTI_TENANCY ? tenantId : null)
+async function createInstance(template) {
+  const tenantId = isMultiTenant() ? getTenantId() : null
+  const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
 
   const db = new CouchDB(appId)
@@ -128,8 +130,7 @@ async function createInstance(tenantId, template) {
 exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const tenantId = ctx.user.tenantId
-  const apps = await getAllApps(CouchDB, { tenantId, dev, all })
+  const apps = await getAllApps(CouchDB, { dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -189,7 +190,6 @@ exports.fetchAppPackage = async function (ctx) {
 }
 
 exports.create = async function (ctx) {
-  const tenantId = ctx.user.tenantId
   const { useTemplate, templateKey } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -198,7 +198,7 @@ exports.create = async function (ctx) {
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
   }
-  const instance = await createInstance(tenantId, instanceConfig)
+  const instance = await createInstance(instanceConfig)
   const appId = instance._id
 
   const url = await getAppUrlIfNotInUse(ctx)
@@ -222,7 +222,7 @@ exports.create = async function (ctx) {
     url: url,
     template: ctx.request.body.template,
     instance: instance,
-    tenantId,
+    tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
