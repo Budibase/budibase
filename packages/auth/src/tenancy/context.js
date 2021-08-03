@@ -23,10 +23,6 @@ exports.doInTenant = (tenantId, task) => {
     // invoke the task
     const result = task()
 
-    // clear down the tenant id manually for extra safety
-    // this should also happen automatically when the call exits
-    cls.setOnContext(TENANT_ID, null)
-
     return result
   })
 }

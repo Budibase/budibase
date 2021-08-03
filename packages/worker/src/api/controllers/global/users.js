@@ -268,6 +268,7 @@ exports.invite = async ctx => {
   if (!userInfo) {
     userInfo = {}
   }
+  userInfo.tenantId = getTenantId()
   await sendEmail(email, EmailTemplatePurpose.INVITATION, {
     subject: "{{ company }} platform invitation",
     info: userInfo,
@@ -292,8 +293,6 @@ exports.inviteAccept = async ctx => {
       },
       info.tenantId
     )
-    // this will flesh out the body response
-    await exports.save(ctx)
   } catch (err) {
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }

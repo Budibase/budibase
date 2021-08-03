@@ -10,6 +10,7 @@ const { newid } = require("../../../../../../auth/src/hashing")
 const { TENANT_ID } = require("./structures")
 const auth = require("@budibase/auth")
 const CouchDB = require("../../../../db")
+const { doInTenant } = require("@budibase/auth/tenancy")
 auth.init(CouchDB)
 
 class TestConfiguration {
@@ -40,7 +41,9 @@ class TestConfiguration {
     if (params) {
       request.params = params
     }
-    await controlFunc(request)
+    await doInTenant(TENANT_ID, () => {
+      return controlFunc(request)
+    })
     return request.body
   }
 
@@ -96,7 +99,9 @@ class TestConfiguration {
   }
 
   async getUser(email) {
-    return getGlobalUserByEmail(email, TENANT_ID)
+    return doInTenant(TENANT_ID, () => {
+      return getGlobalUserByEmail(email)
+    })
   }
 
   async createUser(email = "test@test.com", password = "test") {
