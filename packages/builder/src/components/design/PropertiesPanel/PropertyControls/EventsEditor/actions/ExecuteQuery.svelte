@@ -1,20 +1,15 @@
 <script>
   import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
   import { datasources, integrations, queries } from "stores/backend"
-  import { getBindableProperties } from "builderStore/dataBinding"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
 
   export let parameters
+  export let bindings = []
 
   $: query = $queries.list.find(q => q._id === parameters.queryId)
   $: datasource = $datasources.list.find(
     ds => ds._id === parameters.datasourceId
-  )
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
   )
 
   function fetchQueryDefinition(query) {
@@ -61,7 +56,7 @@
           <ParameterBuilder
             bind:customParams={parameters.queryParams}
             parameters={query.parameters}
-            bindings={bindableProperties}
+            {bindings}
           />
           <IntegrationQueryEditor
             height={200}

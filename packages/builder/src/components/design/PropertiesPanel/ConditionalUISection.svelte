@@ -4,6 +4,7 @@
   import ConditionalUIDrawer from "./PropertyControls/ConditionalUIDrawer.svelte"
 
   export let componentInstance
+  export let bindings
 
   let tempValue
   let drawer
@@ -32,5 +33,5 @@
     Show, hide and update components in response to conditions being met.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={() => save()}>Save</Button>
-  <ConditionalUIDrawer slot="body" bind:conditions={tempValue} />
+  <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>

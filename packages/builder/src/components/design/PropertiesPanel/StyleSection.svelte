@@ -7,6 +7,7 @@
   export let columns
   export let properties
   export let componentInstance
+  export let bindings = []
 
   $: style = componentInstance._styles.normal || {}
   $: changed = properties?.some(prop => hasPropChanged(style, prop)) ?? false
@@ -36,6 +37,7 @@
           value={style[prop.key]}
           onChange={val => store.actions.components.updateStyle(prop.key, val)}
           props={getControlProps(prop)}
+          {bindings}
         />
       </div>
     {/each}

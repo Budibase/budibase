@@ -1,14 +1,12 @@
 <script>
   import { Select, Label, Checkbox, Input } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
-  import { getBindableProperties } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
+  export let bindings = []
 
   $: tableOptions = $tables.list || []
-  $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 
 <div class="root">
