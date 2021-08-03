@@ -50,8 +50,12 @@
   }
 
   const handleFullscreen = () => {
-    routeStore.actions.navigate($peekStore.url)
-    handleCancel()
+    if ($peekStore.external) {
+      window.location = $peekStore.href
+    } else {
+      routeStore.actions.navigate($peekStore.url)
+      handleCancel()
+    }
   }
 
   $: {
