@@ -9,11 +9,11 @@ export function createEmailStore() {
     templates: {
       fetch: async () => {
         // fetch the email template definitions
-        const response = await api.get(`/api/admin/template/definitions`)
+        const response = await api.get(`/api/global/template/definitions`)
         const definitions = await response.json()
 
         // fetch the email templates themselves
-        const templatesResponse = await api.get(`/api/admin/template/email`)
+        const templatesResponse = await api.get(`/api/global/template/email`)
         const templates = await templatesResponse.json()
 
         store.set({
@@ -23,7 +23,7 @@ export function createEmailStore() {
       },
       save: async template => {
         // Save your template config
-        const response = await api.post(`/api/admin/template`, template)
+        const response = await api.post(`/api/global/template`, template)
         const json = await response.json()
         if (response.status !== 200) throw new Error(json.message)
         template._rev = json._rev

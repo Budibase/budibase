@@ -17,7 +17,7 @@ function removeGlobalProps(user) {
 
 exports.fetchMetadata = async function (ctx) {
   const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers(ctx.appId)
+  const global = await getGlobalUsers(ctx, ctx.appId)
   const metadata = (
     await database.allDocs(
       getUserMetadataParams(null, {
