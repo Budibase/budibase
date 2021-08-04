@@ -1,13 +1,14 @@
 const nodemailer = require("nodemailer")
-const { getScopedConfig } = require("@budibase/auth/db")
+const CouchDB = require("../db")
+const { StaticDatabases, getScopedConfig } = require("@budibase/auth").db
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
 const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 const TEST_MODE = false
+const GLOBAL_DB = StaticDatabases.GLOBAL.name
 const TYPE = TemplateTypes.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
@@ -100,30 +101,31 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
 /**
  * Utility function for finding most valid SMTP configuration.
  * @param {object} db The CouchDB database which is to be looked up within.
- * @param {string|null} workspaceId If using finer grain control of configs a workspace can be used.
+ * @param {string|null} groupId If using finer grain control of configs a group can be used.
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
-async function getSmtpConfiguration(db, workspaceId = null) {
+async function getSmtpConfiguration(db, groupId = null) {
   const params = {
     type: Configs.SMTP,
   }
-  if (workspaceId) {
-    params.workspace = workspaceId
+  if (groupId) {
+    params.group = groupId
   }
   return getScopedConfig(db, params)
 }
 
 /**
  * Checks if a SMTP config exists based on passed in parameters.
+ * @param groupId
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-exports.isEmailConfigured = async (workspaceId = null) => {
+exports.isEmailConfigured = async (groupId = null) => {
   // when "testing" simply return true
   if (TEST_MODE) {
     return true
   }
-  const db = getGlobalDB()
-  const config = await getSmtpConfiguration(db, workspaceId)
+  const db = new CouchDB(GLOBAL_DB)
+  const config = await getSmtpConfiguration(db, groupId)
   return config != null
 }
 
@@ -132,7 +134,7 @@ exports.isEmailConfigured = async (workspaceId = null) => {
  * send an email using it.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
- * @param {string|undefined} workspaceId If finer grain controls being used then this will lookup config for workspace.
+ * @param {string|undefined} groupId If finer grain controls being used then this will lookup config for group.
  * @param {object|undefined} user If sending to an existing user the object can be provided, this is used in the context.
  * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
  * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
@@ -144,10 +146,10 @@ exports.isEmailConfigured = async (workspaceId = null) => {
 exports.sendEmail = async (
   email,
   purpose,
-  { workspaceId, user, from, contents, subject, info } = {}
+  { groupId, user, from, contents, subject, info } = {}
 ) => {
-  const db = getGlobalDB()
-  let config = (await getSmtpConfiguration(db, workspaceId)) || {}
+  const db = new CouchDB(GLOBAL_DB)
+  let config = (await getSmtpConfiguration(db, groupId)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }
@@ -158,10 +160,7 @@ exports.sendEmail = async (
   const message = {
     from: from || config.from,
     to: email,
-    html: await buildEmail(purpose, email, context, {
-      user,
-      contents,
-    }),
+    html: await buildEmail(purpose, email, context, { user, contents }),
   }
   if (subject || config.subject) {
     message.subject = await processString(subject || config.subject, context)

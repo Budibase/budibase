@@ -1,6 +1,5 @@
 const Router = require("@koa/router")
-const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
-  require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
@@ -9,13 +8,6 @@ const pkg = require("../../package.json")
 const env = require("../environment")
 
 const router = new Router()
-
-const NO_TENANCY_ENDPOINTS = [
-  {
-    route: "/api/analytics",
-    method: "GET",
-  },
-]
 
 router
   .use(
@@ -44,8 +36,6 @@ router
       publicAllowed: true,
     })
   )
-  // nothing in the server should allow query string tenants
-  .use(buildTenancyMiddleware(null, NO_TENANCY_ENDPOINTS))
   .use(currentApp)
   .use(auditLog)
 

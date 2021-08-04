@@ -9,9 +9,8 @@ const { DocumentTypes } = require("../../db/utils")
 
 async function redirect(ctx, method) {
   const { devPath } = ctx.params
-  const queryString = ctx.originalUrl.split("?")[1] || ""
   const response = await fetch(
-    checkSlashesInUrl(`${env.WORKER_URL}/api/global/${devPath}?${queryString}`),
+    checkSlashesInUrl(`${env.WORKER_URL}/api/admin/${devPath}`),
     request(
       ctx,
       {

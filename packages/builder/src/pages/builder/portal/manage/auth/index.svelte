@@ -7,6 +7,7 @@
   import OneLoginLogo from "assets/onelogin-logo.png"
   import OidcLogoPng from "assets/oidc-logo.png"
   import { isEqual, cloneDeep } from "lodash/fp"
+
   import {
     Button,
     Heading,
@@ -21,51 +22,36 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { organisation, auth, admin } from "stores/portal"
+  import { organisation } from "stores/portal"
   import { uuid } from "builderStore/uuid"
-
-  $: tenantId = $auth.tenantId
-  $: multiTenancyEnabled = $admin.multiTenancy
 
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
+    // Github: "github",
+    // AzureAD: "ad",
   }
 
-  function callbackUrl(tenantId, end) {
-    let url = `/api/global/auth`
-    if (multiTenancyEnabled && tenantId) {
-      url += `/${tenantId}`
-    }
-    url += end
-    return url
+  const GoogleConfigFields = {
+    Google: ["clientID", "clientSecret", "callbackURL"],
+  }
+  const GoogleConfigLabels = {
+    Google: {
+      clientID: "Client ID",
+      clientSecret: "Client secret",
+      callbackURL: "Callback URL",
+    },
   }
 
-  $: GoogleConfigFields = {
-    Google: [
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client secret" },
-      {
-        name: "callbackURL",
-        label: "Callback URL",
-        readonly: true,
-        placeholder: callbackUrl(tenantId, "/google/callback"),
-      },
-    ],
+  const OIDCConfigFields = {
+    Oidc: ["configUrl", "clientID", "clientSecret"],
   }
-
-  $: OIDCConfigFields = {
-    Oidc: [
-      { name: "configUrl", label: "Config URL" },
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client Secret" },
-      {
-        name: "callbackURL",
-        label: "Callback URL",
-        readonly: true,
-        placeholder: callbackUrl(tenantId, "/oidc/callback"),
-      },
-    ],
+  const OIDCConfigLabels = {
+    Oidc: {
+      configUrl: "Config URL",
+      clientID: "Client ID",
+      clientSecret: "Client Secret",
+    },
   }
 
   let iconDropdownOptions = [
@@ -123,13 +109,17 @@
 
   // Create a flag so that it will only try to save completed forms
   $: partialGoogle =
-    providers.google?.config?.clientID || providers.google?.config?.clientSecret
+    providers.google?.config?.clientID ||
+    providers.google?.config?.clientSecret ||
+    providers.google?.config?.callbackURL
   $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
     providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
-    providers.google?.config?.clientID && providers.google?.config?.clientSecret
+    providers.google?.config?.clientID &&
+    providers.google?.config?.clientSecret &&
+    providers.google?.config?.callbackURL
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
@@ -139,7 +129,7 @@
     let data = new FormData()
     data.append("file", file)
     const res = await api.post(
-      `/api/global/configs/upload/logos_oidc/${file.name}`,
+      `/api/admin/configs/upload/logos_oidc/${file.name}`,
       data,
       {}
     )
@@ -159,21 +149,17 @@
     let calls = []
     docs.forEach(element => {
       if (element.type === ConfigTypes.OIDC) {
-        //Add a UUID here so each config is distinguishable when it arrives at the login page
-        for (let config of element.config.configs) {
-          if (!config.uuid) {
-            config.uuid = uuid()
-          }
-          // callback urls shouldn't be included
-          delete config.callbackURL
-        }
+        //Add a UUID here so each config is distinguishable when it arrives at the login page.
+        element.config.configs.forEach(config => {
+          !config.uuid && (config.uuid = uuid())
+        })
         if (partialOidc) {
           if (!oidcComplete) {
             notifications.error(
               `Please fill in all required ${ConfigTypes.OIDC} fields`
             )
           } else {
-            calls.push(api.post(`/api/global/configs`, element))
+            calls.push(api.post(`/api/admin/configs`, element))
             // turn the save button grey when clicked
             oidcSaveButtonDisabled = true
             originalOidcDoc = cloneDeep(providers.oidc)
@@ -187,8 +173,7 @@
               `Please fill in all required ${ConfigTypes.Google} fields`
             )
           } else {
-            delete element.config.callbackURL
-            calls.push(api.post(`/api/global/configs`, element))
+            calls.push(api.post(`/api/admin/configs`, element))
             googleSaveButtonDisabled = true
             originalGoogleDoc = cloneDeep(providers.google)
           }
@@ -221,7 +206,7 @@
     await organisation.init()
     // fetch the configs for oauth
     const googleResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.Google}`
+      `/api/admin/configs/${ConfigTypes.Google}`
     )
     const googleDoc = await googleResponse.json()
 
@@ -242,7 +227,7 @@
 
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
-    const res = await api.get(`/api/global/configs/logos_oidc`)
+    const res = await api.get(`/api/admin/configs/logos_oidc`)
     const configSettings = await res.json()
 
     if (configSettings.config) {
@@ -257,16 +242,17 @@
         })
       })
     }
-    const oidcResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.OIDC}`
-    )
+    const oidcResponse = await api.get(`/api/admin/configs/${ConfigTypes.OIDC}`)
     const oidcDoc = await oidcResponse.json()
     if (!oidcDoc._id) {
+      console.log("hi")
+
       providers.oidc = {
         type: ConfigTypes.OIDC,
         config: { configs: [{ activated: true }] },
       }
     } else {
+      console.log("hello")
       originalOidcDoc = cloneDeep(oidcDoc)
       providers.oidc = oidcDoc
     }
@@ -309,12 +295,8 @@
     <Layout gap="XS" noPadding>
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
-          <Label size="L">{field.label}</Label>
-          <Input
-            bind:value={providers.google.config[field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          <Label size="L">{GoogleConfigLabels.Google[field]}</Label>
+          <Input bind:value={providers.google.config[field]} />
         </div>
       {/each}
       <div class="form-row">
@@ -353,14 +335,14 @@
     <Layout gap="XS" noPadding>
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
-          <Label size="L">{field.label}</Label>
-          <Input
-            bind:value={providers.oidc.config.configs[0][field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          <Label size="L">{OIDCConfigLabels.Oidc[field]}</Label>
+          <Input bind:value={providers.oidc.config.configs[0][field]} />
         </div>
       {/each}
+      <div class="form-row">
+        <Label size="L">Callback URL</Label>
+        <Input readonly placeholder="/api/admin/auth/oidc/callback" />
+      </div>
       <br />
       <Body size="S">
         To customize your login button, fill out the fields below.

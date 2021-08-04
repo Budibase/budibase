@@ -26,15 +26,7 @@ static_resources:
                   cluster: couchdb-service
                   prefix_rewrite: "/"
 
-              - match: { prefix: "/api/system/" }
-                route:
-                  cluster: worker-dev
-
               - match: { prefix: "/api/admin/" }
-                route:
-                  cluster: worker-dev
-
-              - match: { prefix: "/api/global/" }
                 route:
                   cluster: worker-dev
 

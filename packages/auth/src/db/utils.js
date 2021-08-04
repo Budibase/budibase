@@ -1,36 +1,36 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { DEFAULT_TENANT_ID } = require("../constants")
-const env = require("../environment")
-const { StaticDatabases, SEPARATOR } = require("./constants")
-const { getTenantId } = require("../tenancy")
 
 const UNICODE_MAX = "\ufff0"
+const SEPARATOR = "_"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
 }
 
-exports.StaticDatabases = StaticDatabases
-
-const PRE_APP = "app"
-const PRE_DEV = "dev"
+exports.StaticDatabases = {
+  GLOBAL: {
+    name: "global-db",
+  },
+  DEPLOYMENTS: {
+    name: "deployments",
+  },
+}
 
 const DocumentTypes = {
   USER: "us",
-  WORKSPACE: "workspace",
+  GROUP: "group",
   CONFIG: "config",
   TEMPLATE: "template",
-  APP: PRE_APP,
-  DEV: PRE_DEV,
-  APP_DEV: `${PRE_APP}${SEPARATOR}${PRE_DEV}`,
-  APP_METADATA: `${PRE_APP}${SEPARATOR}metadata`,
+  APP: "app",
+  APP_DEV: "app_dev",
+  APP_METADATA: "app_metadata",
   ROLE: "role",
 }
 
 exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
-exports.APP_DEV = exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
+exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
 function isDevApp(app) {
@@ -61,21 +61,21 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 }
 
 /**
- * Generates a new workspace ID.
- * @returns {string} The new workspace ID which the workspace doc can be stored under.
+ * Generates a new group ID.
+ * @returns {string} The new group ID which the group doc can be stored under.
  */
-exports.generateWorkspaceID = () => {
-  return `${DocumentTypes.WORKSPACE}${SEPARATOR}${newid()}`
+exports.generateGroupID = () => {
+  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving workspaces.
+ * Gets parameters for retrieving groups.
  */
-exports.getWorkspaceParams = (id = "", otherProps = {}) => {
+exports.getGroupParams = (id = "", otherProps = {}) => {
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}`,
-    endkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
+    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}`,
+    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${id}${UNICODE_MAX}`,
   }
 }
 
@@ -103,14 +103,14 @@ exports.getGlobalUserParams = (globalId, otherProps = {}) => {
 
 /**
  * Generates a template ID.
- * @param ownerId The owner/user of the template, this could be global or a workspace level.
+ * @param ownerId The owner/user of the template, this could be global or a group level.
  */
 exports.generateTemplateID = ownerId => {
   return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving templates. Owner ID must be specified, either global or a workspace level.
+ * Gets parameters for retrieving templates. Owner ID must be specified, either global or a group level.
  */
 exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
   if (!templateId) {
@@ -163,26 +163,11 @@ exports.getDeployedAppID = appId => {
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async (CouchDB, { dev, all } = {}) => {
-  let tenantId = getTenantId()
-  if (!env.MULTI_TENANCY && !tenantId) {
-    tenantId = DEFAULT_TENANT_ID
-  }
+exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
   let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => {
-    const split = dbName.split(SEPARATOR)
-    // it is an app, check the tenantId
-    if (split[0] === DocumentTypes.APP) {
-      const noTenantId = split.length === 2 || split[1] === DocumentTypes.DEV
-      // tenantId is always right before the UUID
-      const possibleTenantId = split[split.length - 2]
-      return (
-        (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
-        possibleTenantId === tenantId
-      )
-    }
-    return false
-  })
+  const appDbNames = allDbs.filter(dbName =>
+    dbName.startsWith(exports.APP_PREFIX)
+  )
   const appPromises = appDbNames.map(db =>
     // skip setup otherwise databases could be re-created
     new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
@@ -229,8 +214,8 @@ exports.dbExists = async (CouchDB, dbName) => {
  * Generates a new configuration ID.
  * @returns {string} The new configuration ID which the config doc can be stored under.
  */
-const generateConfigID = ({ type, workspace, user }) => {
-  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
+const generateConfigID = ({ type, group, user }) => {
+  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
 
   return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
 }
@@ -238,8 +223,8 @@ const generateConfigID = ({ type, workspace, user }) => {
 /**
  * Gets parameters for retrieving configurations.
  */
-const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
-  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
+const getConfigParams = ({ type, group, user }, otherProps = {}) => {
+  const scope = [type, group, user].filter(Boolean).join(SEPARATOR)
 
   return {
     ...otherProps,
@@ -249,15 +234,15 @@ const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
 }
 
 /**
- * Returns the most granular configuration document from the DB based on the type, workspace and userID passed.
+ * Returns the most granular configuration document from the DB based on the type, group and userID passed.
  * @param {Object} db - db instance to query
- * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
+ * @param {Object} scopes - the type, group and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
-const getScopedFullConfig = async function (db, { type, user, workspace }) {
+const getScopedFullConfig = async function (db, { type, user, group }) {
   const response = await db.allDocs(
     getConfigParams(
-      { type, user, workspace },
+      { type, user, group },
       {
         include_docs: true,
       }
@@ -267,14 +252,14 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
   function determineScore(row) {
     const config = row.doc
 
-    // Config is specific to a user and a workspace
-    if (config._id.includes(generateConfigID({ type, user, workspace }))) {
+    // Config is specific to a user and a group
+    if (config._id.includes(generateConfigID({ type, user, group }))) {
       return 4
     } else if (config._id.includes(generateConfigID({ type, user }))) {
       // Config is specific to a user only
       return 3
-    } else if (config._id.includes(generateConfigID({ type, workspace }))) {
-      // Config is specific to a workspace only
+    } else if (config._id.includes(generateConfigID({ type, group }))) {
+      // Config is specific to a group only
       return 2
     } else if (config._id.includes(generateConfigID({ type }))) {
       // Config is specific to a type only
