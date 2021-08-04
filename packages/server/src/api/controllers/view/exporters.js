@@ -6,7 +6,7 @@ exports.csv = function (headers, rows) {
       .map(header => {
         let val = row[header]
         val = typeof val === "object" ? JSON.stringify(val) : val
-        return `"${val}"`.trim() 
+        return `"${val}"`.trim()
       })
       .join(",")}`
   }
