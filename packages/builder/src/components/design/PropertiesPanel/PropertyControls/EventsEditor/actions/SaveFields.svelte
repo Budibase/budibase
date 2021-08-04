@@ -1,7 +1,5 @@
 <script>
   import { Label, ActionButton, Button, Select, Input } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
-  import { getBindableProperties } from "builderStore/dataBinding"
   import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
@@ -11,13 +9,10 @@
   export let schemaFields
   export let fieldLabel = "Column"
   export let valueLabel = "Value"
+  export let bindings = []
 
   let fields = Object.entries(parameterFields || {})
   $: onChange(fields)
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
 
   const addField = () => {
     fields = [...fields.filter(field => field[0]), ["", ""]]
@@ -69,7 +64,7 @@
     <DrawerBindableInput
       title={`Value for "${field[0]}"`}
       value={field[1]}
-      bindings={bindableProperties}
+      {bindings}
       on:change={event => updateFieldValue(idx, event.detail)}
     />
     <ActionButton

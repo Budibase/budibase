@@ -13,10 +13,10 @@
   import { generate } from "shortid"
 
   const flipDurationMs = 150
-
   const EVENT_TYPE_KEY = "##eventHandlerType"
 
   export let actions
+  export let bindings = []
 
   // dndzone needs an id on the array items, so this adds some temporary ones.
   $: {
@@ -121,6 +121,7 @@
         <svelte:component
           this={selectedActionComponent}
           parameters={selectedAction.parameters}
+          {bindings}
         />
       </div>
     {/if}

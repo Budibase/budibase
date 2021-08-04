@@ -70,7 +70,7 @@ export const getFrontendStore = () => {
         url: application.url,
         layouts,
         screens,
-        theme: application.theme,
+        theme: application.theme || "spectrum--light",
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,

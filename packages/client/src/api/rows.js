@@ -27,8 +27,8 @@ export const saveRow = async row => {
     body: row,
   })
   res.error
-    ? notificationStore.danger("An error has occurred")
-    : notificationStore.success("Row saved")
+    ? notificationStore.actions.error("An error has occurred")
+    : notificationStore.actions.success("Row saved")
 
   // Refresh related datasources
   dataSourceStore.actions.invalidateDataSource(row.tableId)
@@ -48,8 +48,8 @@ export const updateRow = async row => {
     body: row,
   })
   res.error
-    ? notificationStore.danger("An error has occurred")
-    : notificationStore.success("Row updated")
+    ? notificationStore.actions.error("An error has occurred")
+    : notificationStore.actions.success("Row updated")
 
   // Refresh related datasources
   dataSourceStore.actions.invalidateDataSource(row.tableId)
@@ -72,8 +72,8 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
     },
   })
   res.error
-    ? notificationStore.danger("An error has occurred")
-    : notificationStore.success("Row deleted")
+    ? notificationStore.actions.error("An error has occurred")
+    : notificationStore.actions.success("Row deleted")
 
   // Refresh related datasources
   dataSourceStore.actions.invalidateDataSource(tableId)
@@ -95,8 +95,8 @@ export const deleteRows = async ({ tableId, rows }) => {
     },
   })
   res.error
-    ? notificationStore.danger("An error has occurred")
-    : notificationStore.success(`${rows.length} row(s) deleted`)
+    ? notificationStore.actions.error("An error has occurred")
+    : notificationStore.actions.success(`${rows.length} row(s) deleted`)
 
   // Refresh related datasources
   dataSourceStore.actions.invalidateDataSource(tableId)
