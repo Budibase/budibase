@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Divider, Heading, Input, Layout } from "@budibase/bbui"
+  import { Body, Button, Heading, Input, Layout } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
@@ -41,9 +41,7 @@
         <img alt="logo" src={Logo} />
         <Heading>Set Budibase organisation</Heading>
       </Layout>
-      <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Set organisation</Body>
         <Input label="Organisation" bind:value={tenantId} />
       </Layout>
       <Layout gap="XS" noPadding>
