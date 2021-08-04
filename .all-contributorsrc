@@ -152,6 +152,35 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "seoulaja",
+      "name": "seoulaja",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15101654?v=4",
+      "profile": "https://github.com/seoulaja",
+      "contributions": [
+        "translation"
+      ]
+    },
+      "login": "mslourens",
+      "name": "Maurits Lourens",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1907152?v=4",
+      "profile": "https://github.com/mslourens",
+      "contributions": [
+        "test",
+        "code"
+      ]
+    },
+    {
+      "login": "Rory-Powell",
+      "name": "Rory Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8755148?v=4",
+      "profile": "https://github.com/Rory-Powell",
+      "contributions": [
+        "infra",
+        "test",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
