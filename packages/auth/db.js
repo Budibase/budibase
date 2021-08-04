@@ -1,4 +1,1 @@
-module.exports = {
-  ...require("./src/db/utils"),
-  ...require("./src/db/constants"),
-}
+module.exports = require("./src/db/utils")

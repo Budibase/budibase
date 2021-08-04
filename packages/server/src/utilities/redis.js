@@ -7,10 +7,8 @@ let devAppClient, debounceClient
 // we init this as we want to keep the connection open all the time
 // reduces the performance hit
 exports.init = async () => {
-  devAppClient = new Client(utils.Databases.DEV_LOCKS)
-  debounceClient = new Client(utils.Databases.DEBOUNCE)
-  await devAppClient.init()
-  await debounceClient.init()
+  devAppClient = await new Client(utils.Databases.DEV_LOCKS).init()
+  debounceClient = await new Client(utils.Databases.DEBOUNCE).init()
 }
 
 exports.shutdown = async () => {
