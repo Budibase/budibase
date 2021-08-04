@@ -86,6 +86,14 @@ const logoutHandler = async () => {
   await authStore.actions.logOut()
 }
 
+const clearFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ClearForm
+  )
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -95,6 +103,7 @@ const handlerMap = {
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log Out"]: logoutHandler,
+  ["Clear Form"]: clearFormHandler,
 }
 
 const confirmTextMap = {

@@ -130,7 +130,6 @@
   }
   #app-root {
     position: relative;
-    border: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   /* Custom scrollbars */

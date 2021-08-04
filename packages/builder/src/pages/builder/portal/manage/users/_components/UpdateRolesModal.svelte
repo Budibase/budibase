@@ -48,7 +48,7 @@
     on:change
     {options}
     label="Role"
-    getOptionLabel={role => role.name}
-    getOptionValue={role => role._id}
+    getOptionLabel={role => role.label}
+    getOptionValue={role => role.value}
   />
 </ModalContent>
