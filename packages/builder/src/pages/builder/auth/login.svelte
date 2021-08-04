@@ -10,7 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth, organisation, oidc, admin } from "stores/portal"
+  import { auth, organisation, oidc } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
@@ -18,10 +18,8 @@
 
   let username = ""
   let password = ""
-  let loaded = false
 
   $: company = $organisation.company || "Budibase"
-  $: multiTenancyEnabled = $admin.multiTenancy
 
   async function login() {
     try {
@@ -29,6 +27,7 @@
         username,
         password,
       })
+      notifications.success("Logged in successfully")
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
@@ -51,7 +50,6 @@
 
   onMount(async () => {
     await organisation.init()
-    loaded = true
   })
 </script>
 
@@ -63,10 +61,8 @@
         <img alt="logo" src={$organisation.logoUrl || Logo} />
         <Heading>Sign in to {company}</Heading>
       </Layout>
-      {#if loaded}
-        <GoogleButton />
-        <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
-      {/if}
+      <GoogleButton />
+      <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
@@ -83,17 +79,6 @@
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
-        {#if multiTenancyEnabled}
-          <ActionButton
-            quiet
-            on:click={() => {
-              admin.unload()
-              $goto("./org")
-            }}
-          >
-            Change organisation
-          </ActionButton>
-        {/if}
       </Layout>
     </Layout>
   </div>

@@ -94,7 +94,7 @@
       </div>
     {:else if $screenStore.activeLayout}
       <Provider key="user" data={$authStore} {actions}>
-        <div id="app-root">
+        <div id="app-root" class:preview={$builderStore.inBuilder}>
           {#key $screenStore.activeLayout._id}
             <Component instance={$screenStore.activeLayout.props} />
           {/key}
@@ -132,6 +132,9 @@
   }
   #app-root {
     position: relative;
+  }
+  #app-root.preview {
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   /* Custom scrollbars */

@@ -12,13 +12,12 @@ function makeSessionID(userId, sessionId) {
   return `${userId}/${sessionId}`
 }
 
-exports.createASession = async (userId, session) => {
+exports.createASession = async (userId, sessionId) => {
   const client = await redis.getSessionClient()
-  const sessionId = session.sessionId
-  session = {
+  const session = {
     createdAt: new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
-    ...session,
+    sessionId,
     userId,
   }
   await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)

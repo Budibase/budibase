@@ -1,6 +1,5 @@
-import { writable, get } from "svelte/store"
+import { writable } from "svelte/store"
 import api from "builderStore/api"
-import { auth } from "stores/portal"
 
 const OIDC_CONFIG = {
   logo: undefined,
@@ -13,13 +12,10 @@ export function createOidcStore() {
   const { set, subscribe } = store
 
   async function init() {
-    const tenantId = get(auth).tenantId
-    const res = await api.get(
-      `/api/global/configs/public/oidc?tenantId=${tenantId}`
-    )
+    const res = await api.get(`/api/admin/configs/publicOidc`)
     const json = await res.json()
 
-    if (json.status === 400 || Object.keys(json).length === 0) {
+    if (json.status === 400) {
       set(OIDC_CONFIG)
     } else {
       // Just use the first config for now. We will be support multiple logins buttons later on.

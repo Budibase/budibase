@@ -3,12 +3,13 @@
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
 
+  export let parameters = {}
+  export let bindings = []
+
   const AUTOMATION_STATUS = {
     NEW: "new",
     EXISTING: "existing",
   }
-
-  export let parameters = {}
 
   let automationStatus = parameters.automationId
     ? AUTOMATION_STATUS.EXISTING
@@ -109,6 +110,7 @@
         parameterFields={parameters.fields}
         fieldLabel="Field"
         on:change={onFieldsChanged}
+        {bindings}
       />
     {/key}
   </div>

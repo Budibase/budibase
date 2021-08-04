@@ -1,14 +1,16 @@
-const { generateTemplateID } = require("@budibase/auth/db")
+const { generateTemplateID, StaticDatabases } = require("@budibase/auth").db
+const CouchDB = require("../../../db")
 const {
   TemplateMetadata,
   TemplateBindings,
   GLOBAL_OWNER,
 } = require("../../../constants")
 const { getTemplates } = require("../../../constants/templates")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+
+const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async ctx => {
-  const db = getGlobalDB()
+  const db = new CouchDB(GLOBAL_DB)
   let template = ctx.request.body
   if (!template.ownerId) {
     template.ownerId = GLOBAL_OWNER
@@ -68,7 +70,7 @@ exports.find = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = getGlobalDB()
+  const db = new CouchDB(GLOBAL_DB)
   await db.remove(ctx.params.id, ctx.params.rev)
   ctx.message = `Template ${ctx.params.id} deleted.`
   ctx.status = 200

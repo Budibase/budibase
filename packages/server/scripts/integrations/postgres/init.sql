@@ -10,11 +10,10 @@ CREATE TABLE Persons (
 CREATE TABLE Tasks (
     TaskID SERIAL PRIMARY KEY,
     PersonID INT,
-    Completed BOOLEAN,
     TaskName varchar(255),
     CONSTRAINT fkPersons
         FOREIGN KEY(PersonID)
-            REFERENCES Persons(PersonID)
+	    REFERENCES Persons(PersonID)
 );
 CREATE TABLE Products (
     ProductID SERIAL PRIMARY KEY,
@@ -25,15 +24,15 @@ CREATE TABLE Products_Tasks (
     TaskID INT NOT NULL,
     CONSTRAINT fkProducts
         FOREIGN KEY(ProductID)
-            REFERENCES Products(ProductID),
+	    REFERENCES Products(ProductID),
     CONSTRAINT fkTasks
         FOREIGN KEY(TaskID)
-            REFERENCES Tasks(TaskID),
+	    REFERENCES Tasks(TaskID),
     PRIMARY KEY (ProductID, TaskID)
 );
 INSERT INTO Persons (FirstName, LastName, Address, City) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast');
-INSERT INTO Tasks (PersonID, TaskName, Completed) VALUES (1, 'assembling', TRUE);
-INSERT INTO Tasks (PersonID, TaskName, Completed) VALUES (1, 'processing', FALSE);
+INSERT INTO Tasks (PersonID, TaskName) VALUES (1, 'assembling');
+INSERT INTO Tasks (PersonID, TaskName) VALUES (1, 'processing');
 INSERT INTO Products (ProductName) VALUES ('Computers');
 INSERT INTO Products (ProductName) VALUES ('Laptops');
 INSERT INTO Products (ProductName) VALUES ('Chairs');

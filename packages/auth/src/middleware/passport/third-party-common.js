@@ -1,12 +1,11 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
-const { generateGlobalUserID } = require("../../db/utils")
+const database = require("../../db")
+const { StaticDatabases, generateGlobalUserID } = require("../../db/utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
 const { getGlobalUserByEmail } = require("../../utils")
-const { getGlobalDB, getTenantId } = require("../../tenancy")
-const fetch = require("node-fetch")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -16,21 +15,19 @@ exports.authenticateThirdParty = async function (
   requireLocalAccount = true,
   done
 ) {
-  if (!thirdPartyUser.provider) {
+  if (!thirdPartyUser.provider)
     return authError(done, "third party user provider required")
-  }
-  if (!thirdPartyUser.userId) {
+  if (!thirdPartyUser.userId)
     return authError(done, "third party user id required")
-  }
-  if (!thirdPartyUser.email) {
+  if (!thirdPartyUser.email)
     return authError(done, "third party user email required")
-  }
+
+  const db = database.getDB(StaticDatabases.GLOBAL.name)
+
+  let dbUser
 
   // use the third party id
   const userId = generateGlobalUserID(thirdPartyUser.userId)
-  const db = getGlobalDB()
-
-  let dbUser
 
   // try to load by id
   try {
@@ -76,8 +73,7 @@ exports.authenticateThirdParty = async function (
 
   // authenticate
   const sessionId = newid()
-  const tenantId = getTenantId()
-  await createASession(dbUser._id, { sessionId, tenantId })
+  await createASession(dbUser._id, sessionId)
 
   dbUser.token = jwt.sign(
     {
