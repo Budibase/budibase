@@ -13,7 +13,7 @@ export const logIn = async ({ email, password }) => {
     return API.error("Please enter your password")
   }
   return await API.post({
-    url: "/api/admin/auth",
+    url: "/api/global/auth",
     body: { username: email, password },
   })
 }
@@ -23,7 +23,7 @@ export const logIn = async ({ email, password }) => {
  */
 export const fetchSelf = async () => {
   const user = await API.get({ url: "/api/self" })
-  if (user?._id) {
+  if (user && user._id) {
     if (user.roleId === "PUBLIC") {
       // Don't try to enrich a public user as it will 403
       return user

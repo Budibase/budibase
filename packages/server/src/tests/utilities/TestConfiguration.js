@@ -10,16 +10,19 @@ const {
   basicScreen,
   basicLayout,
   basicWebhook,
+  TENANT_ID,
 } = require("./structures")
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/auth").constants
 const { jwt } = require("@budibase/auth").auth
-const { StaticDatabases } = require("@budibase/auth/db")
+const auth = require("@budibase/auth")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 const { createASession } = require("@budibase/auth/sessions")
 const { user: userCache } = require("@budibase/auth/cache")
 const CouchDB = require("../../db")
+auth.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -52,7 +55,7 @@ class TestConfiguration {
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
-    request.user = { appId: this.appId }
+    request.user = { appId: this.appId, tenantId: TENANT_ID }
     request.query = {}
     request.request = {
       body: config,
@@ -65,7 +68,7 @@ class TestConfiguration {
   }
 
   async globalUser(id = GLOBAL_USER_ID, builder = true, roles) {
-    const db = new CouchDB(StaticDatabases.GLOBAL.name)
+    const db = getGlobalDB(TENANT_ID)
     let existing
     try {
       existing = await db.get(id)
@@ -76,8 +79,9 @@ class TestConfiguration {
       _id: id,
       ...existing,
       roles: roles || {},
+      tenantId: TENANT_ID,
     }
-    await createASession(id, "sessionid")
+    await createASession(id, { sessionId: "sessionid", tenantId: TENANT_ID })
     if (builder) {
       user.builder = { global: true }
     }
@@ -107,6 +111,7 @@ class TestConfiguration {
     const auth = {
       userId: GLOBAL_USER_ID,
       sessionId: "sessionid",
+      tenantId: TENANT_ID,
     }
     const app = {
       roleId: BUILTIN_ROLE_IDS.ADMIN,
@@ -333,11 +338,15 @@ class TestConfiguration {
     if (!email || !password) {
       await this.createUser()
     }
-    await createASession(userId, "sessionid")
+    await createASession(userId, {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+    })
     // have to fake this
     const auth = {
       userId,
       sessionId: "sessionid",
+      tenantId: TENANT_ID,
     }
     const app = {
       roleId: roleId,
