@@ -13,12 +13,12 @@
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
-  import { getBindableProperties } from "builderStore/dataBinding"
-  import { currentAsset, selectedComponent, store } from "builderStore"
+  import { selectedComponent, store } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
 
   export let conditions = []
+  export let bindings = []
 
   const flipDurationMs = 150
   const actionOptions = [
@@ -64,10 +64,6 @@
       value: setting.key,
     }
   })
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
   $: conditions.forEach(link => {
     if (!link.id) {
       link.id = generate()
@@ -194,6 +190,7 @@
                       placeholder: getSettingDefinition(condition.setting)
                         .placeholder,
                     }}
+                    {bindings}
                   />
                 {:else}
                   <Select disabled placeholder=" " />
@@ -201,7 +198,7 @@
               {/if}
               <div>IF</div>
               <DrawerBindableInput
-                bindings={bindableProperties}
+                {bindings}
                 placeholder="Value"
                 value={condition.newValue}
                 on:change={e => (condition.newValue = e.detail)}
@@ -222,7 +219,7 @@
               {#if ["string", "number"].includes(condition.valueType)}
                 <DrawerBindableInput
                   disabled={condition.noValue}
-                  bindings={bindableProperties}
+                  {bindings}
                   placeholder="Value"
                   value={condition.referenceValue}
                   on:change={e => (condition.referenceValue = e.detail)}

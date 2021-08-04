@@ -11,6 +11,7 @@
   export let componentDefinition
   export let componentInstance
   export let assetInstance
+  export let bindings
 
   const layoutDefinition = []
   const screenDefinition = [
@@ -65,6 +66,7 @@
             options: setting.options,
             placeholder: setting.placeholder,
           }}
+          {bindings}
         />
       {/if}
     {/each}

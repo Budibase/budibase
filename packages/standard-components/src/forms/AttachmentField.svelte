@@ -10,12 +10,12 @@
   let fieldState
   let fieldApi
 
-  const { API, notifications } = getContext("sdk")
+  const { API, notificationStore } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
 
   const handleFileTooLarge = fileSizeLimit => {
-    notifications.warning(
+    notificationStore.actions.warning(
       `Files cannot exceed ${
         fileSizeLimit / BYTES_IN_MB
       } MB. Please try again with smaller files.`

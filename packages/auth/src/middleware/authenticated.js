@@ -66,6 +66,7 @@ module.exports = (noAuthPatterns = [], opts) => {
           }
         }
         if (error) {
+          console.error("Auth Error", error)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookies.Auth)
         } else {

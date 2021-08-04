@@ -47,6 +47,18 @@ export default `
           return
         }
 
+        // Parse received message
+        // If parsing fails, just ignore and wait for the next message
+        let parsed
+        try {
+          parsed = JSON.parse(event.data)
+        } catch (error) {
+          // Ignore
+        }
+        if (!parsed) {
+          return
+        }
+        
         // Extract data from message
         const {
           selectedComponentId,
@@ -55,7 +67,7 @@ export default `
           previewType,
           appId,
           theme
-        } = JSON.parse(event.data)
+        } = parsed
 
         // Set some flags so the app knows we're in the builder
         window["##BUDIBASE_IN_BUILDER##"] = true

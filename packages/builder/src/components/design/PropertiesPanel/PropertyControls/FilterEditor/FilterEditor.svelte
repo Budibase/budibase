@@ -20,6 +20,8 @@
 
   export let value = []
   export let componentInstance
+  export let bindings = []
+
   let drawer
   let tempValue = value || []
 
@@ -51,7 +53,7 @@
           constraints.
         {/if}
       </Body>
-      <LuceneFilterBuilder bind:value={tempValue} {schemaFields} />
+      <LuceneFilterBuilder bind:value={tempValue} {schemaFields} {bindings} />
     </Layout>
   </DrawerContent>
 </Drawer>

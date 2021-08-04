@@ -4,6 +4,7 @@
   import Component from "./Component.svelte"
   import NotificationDisplay from "./NotificationDisplay.svelte"
   import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
+  import PeekScreenDisplay from "./PeekScreenDisplay.svelte"
   import Provider from "./Provider.svelte"
   import SDK from "../sdk"
   import {
@@ -93,13 +94,14 @@
       </div>
     {:else if $screenStore.activeLayout}
       <Provider key="user" data={$authStore} {actions}>
-        <div id="app-root">
+        <div id="app-root" class:preview={$builderStore.inBuilder}>
           {#key $screenStore.activeLayout._id}
             <Component instance={$screenStore.activeLayout.props} />
           {/key}
         </div>
         <NotificationDisplay />
         <ConfirmationDisplay />
+        <PeekScreenDisplay />
         <!-- Key block needs to be outside the if statement or it breaks -->
         {#key $builderStore.selectedComponentId}
           {#if $builderStore.inBuilder}
@@ -130,6 +132,9 @@
   }
   #app-root {
     position: relative;
+  }
+  #app-root.preview {
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   /* Custom scrollbars */

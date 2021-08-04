@@ -14,7 +14,7 @@
   export let underline
   export let size
 
-  $: external = url && !url.startsWith("/")
+  $: external = url && typeof url === "string" && !url.startsWith("/")
   $: target = openInNewTab ? "_blank" : "_self"
   $: placeholder = $builderStore.inBuilder && !text
   $: componentText = $builderStore.inBuilder
