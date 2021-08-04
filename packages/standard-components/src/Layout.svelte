@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Heading, Icon } from "@budibase/bbui"
+  import { routeStore } from "../../client/src/store"
 
   const { styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -24,6 +25,14 @@
     Large: "l",
     Medium: "m",
     Small: "s",
+  }
+
+  // Permanently go into peek mode if we ever get the peek flag
+  let isPeeking = false
+  $: {
+    if ($routeStore.queryParams?.peek) {
+      isPeeking = true
+    }
   }
 
   $: validLinks = links?.filter(link => link.text && link.url) || []
@@ -51,7 +60,7 @@
 
 <div class="layout layout--{typeClass}" use:styleable={$component.styles}>
   {#if typeClass !== "none"}
-    <div class="nav-wrapper" class:sticky>
+    <div class="nav-wrapper" class:sticky class:hidden={isPeeking}>
       <div class="nav nav--{typeClass} size--{widthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
@@ -138,6 +147,9 @@
     z-index: 2;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);
+  }
+  .nav-wrapper.hidden {
+    display: none;
   }
   .layout--top .nav-wrapper.sticky {
     position: sticky;
