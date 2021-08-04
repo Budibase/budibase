@@ -17,7 +17,10 @@
       return null
     }
     let date
-    if (isNaN(val)) {
+    if (val instanceof Date) {
+      // Use real date obj if already parsed
+      date = val
+    } else if (isNaN(val)) {
       // Treat as date string of some sort
       date = new Date(val)
     } else {
