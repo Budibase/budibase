@@ -9,6 +9,7 @@
   import SaveFields from "./SaveFields.svelte"
 
   export let parameters
+  export let bindings = []
 
   $: dataProviderComponents = getDataProviderComponents(
     $currentAsset,
@@ -70,6 +71,7 @@
         parameterFields={parameters.fields}
         {schemaFields}
         on:change={onFieldsChanged}
+        {bindings}
       />
     </div>
   {/if}
