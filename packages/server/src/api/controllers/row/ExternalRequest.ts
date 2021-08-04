@@ -165,6 +165,10 @@ module External {
         if (!row[key] || newRow[key] || field.autocolumn) {
           continue
         }
+        // parse floats/numbers
+        if (field.type === FieldTypes.NUMBER && !isNaN(parseFloat(row[key]))) {
+          newRow[key] = parseFloat(row[key])
+        }
         // if its not a link then just copy it over
         if (field.type !== FieldTypes.LINK) {
           newRow[key] = row[key]
