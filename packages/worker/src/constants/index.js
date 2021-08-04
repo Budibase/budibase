@@ -8,6 +8,10 @@ exports.UserStatus = {
   INACTIVE: "inactive",
 }
 
+exports.Groups = {
+  ALL_USERS: "all_users",
+}
+
 exports.Configs = Configs
 
 exports.ConfigUploads = {
