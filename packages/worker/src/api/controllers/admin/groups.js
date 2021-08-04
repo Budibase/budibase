@@ -1,17 +1,20 @@
-const { getWorkspaceParams, generateWorkspaceID } = require("@budibase/auth/db")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const CouchDB = require("../../../db")
+const { getGroupParams, generateGroupID, StaticDatabases } =
+  require("@budibase/auth").db
+
+const GLOBAL_DB = StaticDatabases.GLOBAL.name
 
 exports.save = async function (ctx) {
-  const db = getGlobalDB()
-  const workspaceDoc = ctx.request.body
+  const db = new CouchDB(GLOBAL_DB)
+  const groupDoc = ctx.request.body
 
-  // workspace does not exist yet
-  if (!workspaceDoc._id) {
-    workspaceDoc._id = generateWorkspaceID()
+  // Group does not exist yet
+  if (!groupDoc._id) {
+    groupDoc._id = generateGroupID()
   }
 
   try {
-    const response = await db.post(workspaceDoc)
+    const response = await db.post(groupDoc)
     ctx.body = {
       _id: response.id,
       _rev: response.rev,
@@ -22,9 +25,9 @@ exports.save = async function (ctx) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = getGlobalDB()
+  const db = new CouchDB(GLOBAL_DB)
   const response = await db.allDocs(
-    getWorkspaceParams(undefined, {
+    getGroupParams(undefined, {
       include_docs: true,
     })
   )
@@ -32,7 +35,7 @@ exports.fetch = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const db = getGlobalDB()
+  const db = new CouchDB(GLOBAL_DB)
   try {
     ctx.body = await db.get(ctx.params.id)
   } catch (err) {
@@ -41,12 +44,12 @@ exports.find = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = getGlobalDB()
+  const db = new CouchDB(GLOBAL_DB)
   const { id, rev } = ctx.params
 
   try {
     await db.remove(id, rev)
-    ctx.body = { message: "Workspace deleted successfully" }
+    ctx.body = { message: "Group deleted successfully" }
   } catch (err) {
     ctx.throw(err.status, err)
   }

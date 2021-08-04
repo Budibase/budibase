@@ -4,8 +4,6 @@ const { createHomeScreen } = require("../../constants/screens")
 const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")
 
-exports.TENANT_ID = "default"
-
 exports.basicTable = () => {
   return {
     name: "TestTable",

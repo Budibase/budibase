@@ -53,7 +53,7 @@
       delete smtp.config.auth
     }
     // Save your SMTP config
-    const response = await api.post(`/api/global/configs`, smtp)
+    const response = await api.post(`/api/admin/configs`, smtp)
 
     if (response.status !== 200) {
       const error = await response.text()
@@ -75,9 +75,7 @@
   async function fetchSmtp() {
     loading = true
     // fetch the configs for smtp
-    const smtpResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.SMTP}`
-    )
+    const smtpResponse = await api.get(`/api/admin/configs/${ConfigTypes.SMTP}`)
     const smtpDoc = await smtpResponse.json()
 
     if (!smtpDoc._id) {
@@ -94,13 +92,8 @@
     requireAuth = smtpConfig.config.auth != null
     // always attach the auth for the forms purpose -
     // this will be removed later if required
-    if (!smtpDoc.config) {
-      smtpDoc.config = {}
-    }
-    if (!smtpDoc.config.auth) {
-      smtpConfig.config.auth = {
-        type: "login",
-      }
+    smtpConfig.config.auth = {
+      type: "login",
     }
   }
 

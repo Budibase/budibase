@@ -1,18 +1,12 @@
-import { writable, get } from "svelte/store"
+import { writable } from "svelte/store"
 import api from "builderStore/api"
-import { auth } from "stores/portal"
 
 export function createAdminStore() {
-  const admin = writable({
-    loaded: false,
-  })
+  const { subscribe, set } = writable({})
 
   async function init() {
     try {
-      const tenantId = get(auth).tenantId
-      const response = await api.get(
-        `/api/global/configs/checklist?tenantId=${tenantId}`
-      )
+      const response = await api.get("/api/admin/configs/checklist")
       const json = await response.json()
 
       const onboardingSteps = Object.keys(json)
@@ -22,49 +16,20 @@ export function createAdminStore() {
         0
       )
 
-      await multiTenancyEnabled()
-      admin.update(store => {
-        store.loaded = true
-        store.checklist = json
-        store.onboardingProgress =
-          (stepsComplete / onboardingSteps.length) * 100
-        return store
+      set({
+        checklist: json,
+        onboardingProgress: (stepsComplete / onboardingSteps.length) * 100,
       })
     } catch (err) {
-      admin.update(store => {
-        store.checklist = null
-        return store
+      set({
+        checklist: null,
       })
     }
-  }
-
-  async function multiTenancyEnabled() {
-    let enabled = false
-    try {
-      const response = await api.get(`/api/system/flags`)
-      const json = await response.json()
-      enabled = json.multiTenancy
-    } catch (err) {
-      // just let it stay disabled
-    }
-    admin.update(store => {
-      store.multiTenancy = enabled
-      return store
-    })
-    return enabled
-  }
-
-  function unload() {
-    admin.update(store => {
-      store.loaded = false
-      return store
-    })
   }
 
   return {
-    subscribe: admin.subscribe,
+    subscribe,
     init,
-    unload,
   }
 }
 

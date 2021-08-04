@@ -34,7 +34,6 @@ const DocumentTypes = {
   DATASOURCE: "datasource",
   DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
-  DEPLOYMENTS: "deployments",
 }
 
 const ViewNames = {
@@ -50,7 +49,13 @@ const SearchIndexes = {
   ROWS: "rows",
 }
 
-exports.StaticDatabases = StaticDatabases
+exports.StaticDatabases = {
+  BUILDER: {
+    name: "builder-db",
+    baseDoc: "builder-doc",
+  },
+  ...StaticDatabases,
+}
 
 const BudibaseInternalDB = {
   _id: "bb_internal",
@@ -225,12 +230,8 @@ exports.getLinkParams = (otherProps = {}) => {
  * Generates a new app ID.
  * @returns {string} The new app ID which the app doc can be stored under.
  */
-exports.generateAppID = (tenantId = null) => {
-  let id = `${DocumentTypes.APP}${SEPARATOR}`
-  if (tenantId) {
-    id += `${tenantId}${SEPARATOR}`
-  }
-  return `${id}${newid()}`
+exports.generateAppID = () => {
+  return `${DocumentTypes.APP}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -239,8 +240,8 @@ exports.generateAppID = (tenantId = null) => {
  */
 exports.generateDevAppID = appId => {
   const prefix = `${DocumentTypes.APP}${SEPARATOR}`
-  const rest = appId.split(prefix)[1]
-  return `${DocumentTypes.APP_DEV}${SEPARATOR}${rest}`
+  const uuid = appId.split(prefix)[1]
+  return `${DocumentTypes.APP_DEV}${SEPARATOR}${uuid}`
 }
 
 /**

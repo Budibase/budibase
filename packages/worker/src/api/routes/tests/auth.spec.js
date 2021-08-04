@@ -1,11 +1,10 @@
 const setup = require("./utilities")
-
-const TENANT_ID = "default"
+const { Cookies } = require("@budibase/auth").constants
 
 jest.mock("nodemailer")
 const sendMailMock = setup.emailMock()
 
-describe("/api/global/auth", () => {
+describe("/api/admin/auth", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let code
@@ -26,7 +25,7 @@ describe("/api/global/auth", () => {
     await config.saveSettingsConfig()
     await config.createUser("test@test.com")
     const res = await request
-      .post(`/api/global/auth/${TENANT_ID}/reset`)
+      .post(`/api/admin/auth/reset`)
       .send({
         email: "test@test.com",
       })
@@ -36,14 +35,14 @@ describe("/api/global/auth", () => {
     expect(sendMailMock).toHaveBeenCalled()
     const emailCall = sendMailMock.mock.calls[0][0]
     // after this URL there should be a code
-    const parts = emailCall.html.split(`http://localhost:10000/builder/auth/reset?code=`)
-    code = parts[1].split("\"")[0].split("&")[0]
+    const parts = emailCall.html.split("http://localhost:10000/builder/auth/reset?code=")
+    code = parts[1].split("\"")[0]
     expect(code).toBeDefined()
   })
 
   it("should allow resetting user password with code", async () => {
     const res = await request
-      .post(`/api/global/auth/${TENANT_ID}/reset/update`)
+      .post(`/api/admin/auth/reset/update`)
       .send({
         password: "newpassword",
         resetCode: code,
@@ -76,13 +75,13 @@ describe("/api/global/auth", () => {
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
         chosenConfig, 
-        `http://127.0.0.1:4003/api/global/auth/${TENANT_ID}/oidc/callback` // calculated url
+        `http://127.0.0.1:4003/api/admin/auth/oidc/callback` // calculated url
       )
     })
 
-    describe("oidc configs", () => {
+    describe("/api/admin/auth/oidc/configs", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/global/auth/${TENANT_ID}/oidc/configs/${configId}`)
+        await request.get(`/api/admin/auth/oidc/configs/${configId}`)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email"],
@@ -91,9 +90,9 @@ describe("/api/global/auth", () => {
       })
     })
 
-    describe("oidc callback", () => {
+    describe("/api/admin/auth/oidc/callback", () => {
       it("should load strategy and delegate to passport", async () => {
-        await request.get(`/api/global/auth/${TENANT_ID}/oidc/callback`)
+        await request.get(`/api/admin/auth/oidc/callback`)
                      .set(config.getOIDConfigCookie(configId))
       
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
