@@ -184,7 +184,13 @@ exports.inputProcessing = (user = {}, table, row) => {
       }
       continue
     }
-    clonedRow[key] = exports.coerce(value, field.type)
+    // specific case to delete formula values if they get saved
+    // type coercion cannot completely remove the field, so have to do it here
+    if (field.type === FieldTypes.FORMULA) {
+      delete clonedRow[key]
+    } else {
+      clonedRow[key] = exports.coerce(value, field.type)
+    }
   }
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow)
