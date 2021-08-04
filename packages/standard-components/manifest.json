@@ -1690,7 +1690,11 @@
       {
         "type": "schema",
         "label": "Schema",
-        "key": "dataSource"
+        "key": "dataSource",
+        "defaultValue": {
+          "name": "Custom",
+          "label": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1754,6 +1758,11 @@
         "key": "placeholder"
       },
       {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -1783,6 +1792,11 @@
         "key": "placeholder"
       },
       {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -1810,6 +1824,11 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
       },
       {
         "type": "boolean",
@@ -1858,6 +1877,11 @@
         ]
       },
       {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -1885,6 +1909,11 @@
         "type": "text",
         "label": "Text",
         "key": "text"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
       },
       {
         "type": "boolean",
@@ -1915,6 +1944,11 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Type something..."
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
       },
       {
         "type": "boolean",
@@ -1950,6 +1984,11 @@
         "label": "Show Time",
         "key": "enableTime",
         "defaultValue": true
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
       },
       {
         "type": "boolean",
