@@ -2,6 +2,7 @@
   import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import analytics from "analytics"
+  import { FIELDS } from "constants/backend"
 
   const CALCULATIONS = [
     {
@@ -26,11 +27,15 @@
   $: fields =
     viewTable &&
     Object.keys(viewTable.schema).filter(
-      field =>
-        view.calculation === "count" ||
-        // don't want to perform calculations based on auto ID
-        (viewTable.schema[field].type === "number" &&
-          !viewTable.schema[field].autocolumn)
+      fieldName => {
+        const field = viewTable.schema[fieldName]
+        return field.type !== FIELDS.FORMULA.type && field.type !== FIELDS.LINK.type &&
+          (view.calculation === "count" ||
+            // don't want to perform calculations based on auto ID
+            (field.type === "number" &&
+              !field.autocolumn))
+      }
+
     )
 
   function saveView() {
