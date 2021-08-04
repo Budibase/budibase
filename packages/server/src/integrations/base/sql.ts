@@ -19,8 +19,6 @@ function parseBody(body: any) {
     }
     if (isIsoDateString(value)) {
       body[key] = new Date(value)
-    } else if (!isNaN(parseFloat(value))) {
-      body[key] = parseFloat(value)
     }
   }
   return body
