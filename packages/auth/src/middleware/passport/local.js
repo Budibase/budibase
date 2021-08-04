@@ -6,23 +6,19 @@ const { getGlobalUserByEmail } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
-const { getTenantId } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid Credentials"
 
-exports.options = {
-  passReqToCallback: true,
-}
+exports.options = {}
 
 /**
  * Passport Local Authentication Middleware.
- * @param {*} ctx the request structure
- * @param {*} email username to login with
- * @param {*} password plain text password to log in with
- * @param {*} done callback from passport to return user information and errors
+ * @param {*} email - username to login with
+ * @param {*} password - plain text password to log in with
+ * @param {*} done - callback from passport to return user information and errors
  * @returns The authenticated user, or errors if they occur
  */
-exports.authenticate = async function (ctx, email, password, done) {
+exports.authenticate = async function (email, password, done) {
   if (!email) return authError(done, "Email Required")
   if (!password) return authError(done, "Password Required")
 
@@ -39,14 +35,12 @@ exports.authenticate = async function (ctx, email, password, done) {
   // authenticate
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
-    const tenantId = getTenantId()
-    await createASession(dbUser._id, { sessionId, tenantId })
+    await createASession(dbUser._id, sessionId)
 
     dbUser.token = jwt.sign(
       {
         userId: dbUser._id,
         sessionId,
-        tenantId,
       },
       env.JWT_SECRET
     )

@@ -16,7 +16,7 @@ module FetchMock {
       }
     }
 
-    if (url.includes("/api/global")) {
+    if (url.includes("/api/admin")) {
       return json({
         email: "test@test.com",
         _id: "us_test@test.com",

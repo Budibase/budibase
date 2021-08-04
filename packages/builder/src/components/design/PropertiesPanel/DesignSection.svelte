@@ -4,6 +4,7 @@
 
   export let componentDefinition
   export let componentInstance
+  export let bindings
 
   const getStyles = def => {
     if (!def?.styles?.length) {
@@ -29,6 +30,7 @@
       columns={style.columns}
       properties={style.settings}
       {componentInstance}
+      {bindings}
     />
   {/each}
 {/if}

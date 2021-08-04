@@ -1,8 +1,5 @@
 <script>
-  import {
-    getBindableProperties,
-    getDataProviderComponents,
-  } from "builderStore/dataBinding"
+  import { getDataProviderComponents } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -31,6 +28,7 @@
   export let value = {}
   export let otherSources
   export let showAllQueries
+  export let bindings = []
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -60,10 +58,6 @@
       parameters: query.parameters,
       type: "query",
     }))
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
   $: dataProviders = getDataProviderComponents(
     $currentAsset,
     $store.selectedComponentId
@@ -75,13 +69,13 @@
     type: "provider",
     schema: provider.schema,
   }))
-  $: queryBindableProperties = bindableProperties.map(property => ({
+  $: queryBindableProperties = bindings.map(property => ({
     ...property,
     category: property.type === "instance" ? "Component" : "Table",
     label: property.readableBinding,
     path: property.readableBinding,
   }))
-  $: links = bindableProperties
+  $: links = bindings
     .filter(x => x.fieldSchema?.type === "link")
     .map(property => {
       return {
@@ -138,7 +132,7 @@
               bind:customParams={value.queryParams}
               parameters={queries.find(query => query._id === value._id)
                 .parameters}
-              bindings={queryBindableProperties}
+              {bindings}
             />
           {/if}
           <IntegrationQueryEditor

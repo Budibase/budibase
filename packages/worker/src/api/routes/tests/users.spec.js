@@ -1,10 +1,9 @@
 const setup = require("./utilities")
-const { TENANT_ID } = require("./utilities/structures")
 
 jest.mock("nodemailer")
 const sendMailMock = setup.emailMock()
 
-describe("/api/global/users", () => {
+describe("/api/admin/users", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let code
@@ -20,7 +19,7 @@ describe("/api/global/users", () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
     const res = await request
-      .post(`/api/global/users/invite`)
+      .post(`/api/admin/users/invite`)
       .send({
         email: "invite@test.com",
       })
@@ -32,13 +31,13 @@ describe("/api/global/users", () => {
     const emailCall = sendMailMock.mock.calls[0][0]
     // after this URL there should be a code
     const parts = emailCall.html.split("http://localhost:10000/builder/invite?code=")
-    code = parts[1].split("\"")[0].split("&")[0]
+    code = parts[1].split("\"")[0]
     expect(code).toBeDefined()
   })
 
   it("should be able to create new user from invite", async () => {
     const res = await request
-      .post(`/api/global/users/invite/accept`)
+      .post(`/api/admin/users/invite/accept`)
       .send({
         password: "newpassword",
         inviteCode: code,
