@@ -7,6 +7,11 @@ const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/auth").utils
 const { createASession } = require("@budibase/auth/sessions")
 const { newid } = require("../../../../../../auth/src/hashing")
+const { TENANT_ID } = require("./structures")
+const auth = require("@budibase/auth")
+const CouchDB = require("../../../../db")
+const { doInTenant } = require("@budibase/auth/tenancy")
+auth.init(CouchDB)
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -28,7 +33,7 @@ class TestConfiguration {
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
     request.appId = this.appId
-    request.user = { appId: this.appId }
+    request.user = { appId: this.appId, tenantId: TENANT_ID }
     request.query = {}
     request.request = {
       body: config,
@@ -36,7 +41,9 @@ class TestConfiguration {
     if (params) {
       request.params = params
     }
-    await controlFunc(request)
+    await doInTenant(TENANT_ID, () => {
+      return controlFunc(request)
+    })
     return request.body
   }
 
@@ -58,8 +65,11 @@ class TestConfiguration {
         null,
         controllers.users.save
       )
-      await createASession("us_uuid1", "sessionid")
     }
+    await createASession("us_uuid1", {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+    })
   }
 
   async end() {
@@ -79,6 +89,7 @@ class TestConfiguration {
       _id: "us_uuid1",
       userId: "us_uuid1",
       sessionId: "sessionid",
+      tenantId: TENANT_ID,
     }
     const authToken = jwt.sign(user, env.JWT_SECRET)
     return {
@@ -88,7 +99,9 @@ class TestConfiguration {
   }
 
   async getUser(email) {
-    return getGlobalUserByEmail(email)
+    return doInTenant(TENANT_ID, () => {
+      return getGlobalUserByEmail(email)
+    })
   }
 
   async createUser(email = "test@test.com", password = "test") {
@@ -152,7 +165,6 @@ class TestConfiguration {
       {
         type: Configs.GOOGLE,
         config: {
-          callbackURL: "http://somecallbackurl",
           clientID: "clientId",
           clientSecret: "clientSecret",
         },
@@ -231,6 +243,7 @@ class TestConfiguration {
       {
         email: "testuser@test.com",
         password: "test@test.com",
+        tenantId: TENANT_ID,
       },
       null,
       controllers.users.adminUser

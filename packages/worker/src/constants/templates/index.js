@@ -6,8 +6,8 @@ const {
   GLOBAL_OWNER,
 } = require("../index")
 const { join } = require("path")
-const CouchDB = require("../../db")
-const { getTemplateParams, StaticDatabases } = require("@budibase/auth").db
+const { getTemplateParams } = require("@budibase/auth/db")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(
@@ -50,7 +50,7 @@ exports.addBaseTemplates = (templates, type = null) => {
 }
 
 exports.getTemplates = async ({ ownerId, type, id } = {}) => {
-  const db = new CouchDB(StaticDatabases.GLOBAL.name)
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getTemplateParams(ownerId || GLOBAL_OWNER, id, {
       include_docs: true,

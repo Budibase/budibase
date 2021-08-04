@@ -1,28 +1,25 @@
-const CouchDB = require("../../../db")
 const {
   generateConfigID,
-  StaticDatabases,
   getConfigParams,
   getGlobalUserParams,
   getScopedFullConfig,
-} = require("@budibase/auth").db
+  getAllApps,
+} = require("@budibase/auth/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
-
-const APP_PREFIX = "app_"
-
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
+const CouchDB = require("../../../db")
+const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
-  const { type, group, user, config } = ctx.request.body
+  const db = getGlobalDB()
+  const { type, workspace, user, config } = ctx.request.body
 
   // Config does not exist yet
   if (!ctx.request.body._id) {
     ctx.request.body._id = generateConfigID({
       type,
-      group,
+      workspace,
       user,
     })
   }
@@ -51,7 +48,7 @@ exports.save = async function (ctx) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getConfigParams(
       { type: ctx.params.type },
@@ -65,17 +62,19 @@ exports.fetch = async function (ctx) {
 
 /**
  * Gets the most granular config for a particular configuration type.
- * The hierarchy is type -> group -> user.
+ * The hierarchy is type -> workspace -> user.
  */
 exports.find = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
 
-  const { userId, groupId } = ctx.query
-  if (groupId && userId) {
-    const group = await db.get(groupId)
-    const userInGroup = group.users.some(groupUser => groupUser === userId)
-    if (!ctx.user.admin && !userInGroup) {
-      ctx.throw(400, `User is not in specified group: ${group}.`)
+  const { userId, workspaceId } = ctx.query
+  if (workspaceId && userId) {
+    const workspace = await db.get(workspaceId)
+    const userInWorkspace = workspace.users.some(
+      workspaceUser => workspaceUser === userId
+    )
+    if (!ctx.user.admin && !userInWorkspace) {
+      ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
     }
   }
 
@@ -84,7 +83,7 @@ exports.find = async function (ctx) {
     const scopedConfig = await getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
-      group: groupId,
+      workspace: workspaceId,
     })
 
     if (scopedConfig) {
@@ -99,7 +98,7 @@ exports.find = async function (ctx) {
 }
 
 exports.publicOidc = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   try {
     // Find the config with the most granular scope based on context
     const oidcConfig = await getScopedFullConfig(db, {
@@ -109,14 +108,11 @@ exports.publicOidc = async function (ctx) {
     if (!oidcConfig) {
       ctx.body = {}
     } else {
-      const partialOidcCofig = oidcConfig.config.configs.map(config => {
-        return {
-          logo: config.logo,
-          name: config.name,
-          uuid: config.uuid,
-        }
-      })
-      ctx.body = partialOidcCofig
+      ctx.body = oidcConfig.config.configs.map(config => ({
+        logo: config.logo,
+        name: config.name,
+        uuid: config.uuid,
+      }))
     }
   } catch (err) {
     ctx.throw(err.status, err)
@@ -124,7 +120,7 @@ exports.publicOidc = async function (ctx) {
 }
 
 exports.publicSettings = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
 
   try {
     // Find the config with the most granular scope based on context
@@ -140,7 +136,7 @@ exports.publicSettings = async function (ctx) {
       type: Configs.OIDC,
     })
 
-    let config = {}
+    let config
     if (!publicConfig) {
       config = {
         config: {},
@@ -151,18 +147,16 @@ exports.publicSettings = async function (ctx) {
 
     // google button flag
     if (googleConfig && googleConfig.config) {
-      const googleActivated =
-        googleConfig.config.activated == undefined || // activated by default for configs pre-activated flag
-        googleConfig.config.activated
-      config.config.google = googleActivated
+      // activated by default for configs pre-activated flag
+      config.config.google =
+        googleConfig.config.activated == null || googleConfig.config.activated
     } else {
       config.config.google = false
     }
 
     // oidc button flag
     if (oidcConfig && oidcConfig.config) {
-      const oidcActivated = oidcConfig.config.configs[0].activated
-      config.config.oidc = oidcActivated
+      config.config.oidc = oidcConfig.config.configs[0].activated
     } else {
       config.config.oidc = false
     }
@@ -191,7 +185,7 @@ exports.upload = async function (ctx) {
 
   // add to configuration structure
   // TODO: right now this only does a global level
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   let cfgStructure = await getScopedFullConfig(db, { type })
   if (!cfgStructure) {
     cfgStructure = {
@@ -211,7 +205,7 @@ exports.upload = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   const { id, rev } = ctx.params
 
   try {
@@ -223,14 +217,13 @@ exports.destroy = async function (ctx) {
 }
 
 exports.configChecklist = async function (ctx) {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
 
   try {
     // TODO: Watch get started video
 
     // Apps exist
-    let allDbs = await CouchDB.allDbs()
-    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+    const apps = await getAllApps(CouchDB)
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {
@@ -246,7 +239,7 @@ exports.configChecklist = async function (ctx) {
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
-    // They have set up an admin user
+    // They have set up an global user
     const users = await db.allDocs(
       getGlobalUserParams(null, {
         include_docs: true,
@@ -255,7 +248,7 @@ exports.configChecklist = async function (ctx) {
     const adminUser = users.rows.some(row => row.doc.admin)
 
     ctx.body = {
-      apps: appDbNames.length,
+      apps: apps.length,
       smtp: !!smtpConfig,
       adminUser,
       sso: !!googleConfig || !!oidcConfig,

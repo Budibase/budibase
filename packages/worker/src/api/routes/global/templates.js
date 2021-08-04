@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/admin/templates")
+const controller = require("../../controllers/global/templates")
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
 const { TemplatePurpose, TemplateTypes } = require("../../../constants")
@@ -21,17 +21,17 @@ function buildTemplateSaveValidation() {
 }
 
 router
-  .get("/api/admin/template/definitions", controller.definitions)
+  .get("/api/global/template/definitions", controller.definitions)
   .post(
-    "/api/admin/template",
+    "/api/global/template",
     adminOnly,
     buildTemplateSaveValidation(),
     controller.save
   )
-  .get("/api/admin/template", controller.fetch)
-  .get("/api/admin/template/:type", controller.fetchByType)
-  .get("/api/admin/template/:ownerId", controller.fetchByOwner)
-  .get("/api/admin/template/:id", controller.find)
-  .delete("/api/admin/template/:id/:rev", adminOnly, controller.destroy)
+  .get("/api/global/template", controller.fetch)
+  .get("/api/global/template/:type", controller.fetchByType)
+  .get("/api/global/template/:ownerId", controller.fetchByOwner)
+  .get("/api/global/template/:id", controller.find)
+  .delete("/api/global/template/:id/:rev", adminOnly, controller.destroy)
 
 module.exports = router

@@ -1,5 +1,4 @@
-const { DocumentTypes, ViewNames, StaticDatabases } = require("./utils")
-const { getDB } = require("./index")
+const { DocumentTypes, ViewNames } = require("./utils")
 
 function DesignDoc() {
   return {
@@ -10,8 +9,7 @@ function DesignDoc() {
   }
 }
 
-exports.createUserEmailView = async () => {
-  const db = getDB(StaticDatabases.GLOBAL.name)
+exports.createUserEmailView = async db => {
   let designDoc
   try {
     designDoc = await db.get("_design/database")
