@@ -25,10 +25,10 @@ interface ManyRelationship {
 
 interface RunConfig {
   id: string
-  row: Row
   filters: SearchFilters
   sort: SortJson
   paginate: PaginationJson
+  row: Row
 }
 
 module External {
@@ -89,8 +89,9 @@ module External {
     // build id array
     let idParts = []
     for (let field of primary) {
-      if (row[field]) {
-        idParts.push(row[field])
+      const fieldValue = row[`${table.name}.${field}`]
+      if (fieldValue) {
+        idParts.push(fieldValue)
       }
     }
     if (idParts.length === 0) {
@@ -115,7 +116,11 @@ module External {
     const thisRow: { [key: string]: any } = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
-      thisRow[fieldName] = row[fieldName]
+      const value = row[`${table.name}.${fieldName}`]
+      // all responses include "select col as table.col" so that overlaps are handled
+      if (value) {
+        thisRow[fieldName] = value
+      }
     }
     thisRow._id = generateIdForRow(row, table)
     thisRow.tableId = table._id
@@ -191,7 +196,7 @@ module External {
           const isUpdate = !field.through
           const thisKey: string = isUpdate ? "id" : linkTablePrimary
           // @ts-ignore
-          const otherKey: string = isUpdate ? field.foreignKey : tablePrimary
+          const otherKey: string = isUpdate ? field.fieldName : tablePrimary
           row[key].map((relationship: any) => {
             // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
@@ -442,7 +447,7 @@ module External {
           .filter(
             column =>
               column[1].type !== FieldTypes.LINK &&
-              !existing.find((field: string) => field.includes(column[0]))
+              !existing.find((field: string) => field === column[0])
           )
           .map(column => `${table.name}.${column[0]}`)
       }
