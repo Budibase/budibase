@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
-"@budibase/bbui@^0.9.96":
+"@budibase/bbui@^0.9.98":
   version "0.9.98"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.98.tgz#8fe80cc573df204d1a4147ebda5c20322f4616df"
   integrity sha512-T03xRq/Kz0/goMNfqsfXymvqhm9jHJQbzWx4oqPtgwIJlb/spx4kEgHS7MWuf3uyagAaFbW2x56Lauoiha8uLQ==
