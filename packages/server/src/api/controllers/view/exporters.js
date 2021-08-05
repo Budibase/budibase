@@ -3,7 +3,11 @@ exports.csv = function (headers, rows) {
 
   for (let row of rows) {
     csv = `${csv}\n${headers
-      .map(header => `"${row[header]}"`.trim())
+      .map(header => {
+        let val = row[header]
+        val = typeof val === "object" ? JSON.stringify(val) : val
+        return `"${val}"`.trim()
+      })
       .join(",")}`
   }
   return csv
