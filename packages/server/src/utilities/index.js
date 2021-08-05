@@ -54,6 +54,6 @@ exports.clientLibraryPath = appId => {
 
 exports.attachmentsRelativeURL = attachmentKey => {
   return exports.checkSlashesInUrl(
-    `/${ObjectStoreBuckets.APPS}/${attachmentKey}`
+    `${exports.objectStoreUrl()}/${attachmentKey}`
   )
 }
