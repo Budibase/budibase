@@ -4,13 +4,17 @@ const { checkSlashesInUrl } = require("./index")
 const { getDeployedAppID } = require("@budibase/auth/db")
 const { updateAppRole, getGlobalUser } = require("./global")
 const { Headers } = require("@budibase/auth/constants")
+const { getTenantId, isTenantIdSet } = require("@budibase/auth/tenancy")
 
-function request(ctx, request, noApiKey) {
+function request(ctx, request) {
   if (!request.headers) {
     request.headers = {}
   }
-  if (!noApiKey) {
+  if (!ctx) {
     request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
+    if (isTenantIdSet()) {
+      request.headers[Headers.TENANT_ID] = getTenantId()
+    }
   }
   if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
@@ -29,9 +33,11 @@ function request(ctx, request, noApiKey) {
 
 exports.request = request
 
+// have to pass in the tenant ID as this could be coming from an automation
 exports.sendSmtpEmail = async (to, from, subject, contents) => {
+  // tenant ID will be set in header
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/admin/email/send`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
     request(null, {
       method: "POST",
       body: {
@@ -74,11 +80,11 @@ exports.getDeployedApps = async ctx => {
 }
 
 exports.getGlobalSelf = async (ctx, appId = null) => {
-  const endpoint = `/api/admin/users/self`
+  const endpoint = `/api/global/users/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     // we don't want to use API key when getting self
-    request(ctx, { method: "GET" }, true)
+    request(ctx, { method: "GET" })
   )
   if (response.status !== 200) {
     ctx.throw(400, "Unable to get self globally.")
@@ -96,11 +102,11 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     body = {}
   if (!userId) {
     user = await exports.getGlobalSelf(ctx)
-    endpoint = `/api/admin/users/self`
+    endpoint = `/api/global/users/self`
   } else {
-    user = await getGlobalUser(appId, userId)
+    user = await getGlobalUser(ctx, appId, userId)
     body._id = userId
-    endpoint = `/api/admin/users`
+    endpoint = `/api/global/users`
   }
   body = {
     ...body,
@@ -122,11 +128,11 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
   return response.json()
 }
 
-exports.removeAppFromUserRoles = async appId => {
+exports.removeAppFromUserRoles = async (ctx, appId) => {
   const deployedAppId = getDeployedAppID(appId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/admin/roles/${deployedAppId}`),
-    request(null, {
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${deployedAppId}`),
+    request(ctx, {
       method: "DELETE",
     })
   )

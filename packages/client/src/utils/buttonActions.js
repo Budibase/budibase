@@ -4,6 +4,7 @@ import {
   builderStore,
   confirmationStore,
   authStore,
+  peekStore,
 } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
@@ -39,13 +40,17 @@ const triggerAutomationHandler = async action => {
 }
 
 const navigationHandler = action => {
-  const { url } = action.parameters
+  const { url, peek } = action.parameters
   if (url) {
-    const external = !url.startsWith("/")
-    if (external) {
-      window.location.href = url
+    if (peek) {
+      peekStore.actions.showPeek(url)
     } else {
-      routeStore.actions.navigate(action.parameters.url)
+      const external = !url.startsWith("/")
+      if (external) {
+        window.location.href = url
+      } else {
+        routeStore.actions.navigate(action.parameters.url)
+      }
     }
   }
 }
@@ -86,6 +91,20 @@ const logoutHandler = async () => {
   await authStore.actions.logOut()
 }
 
+const clearFormHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ClearForm
+  )
+}
+
+const closeScreenModalHandler = () => {
+  // Emit this as a window event, so parent screens which are iframing us in
+  // can close the modal
+  window.dispatchEvent(new Event("close-screen-modal"))
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -95,6 +114,8 @@ const handlerMap = {
   ["Validate Form"]: validateFormHandler,
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log Out"]: logoutHandler,
+  ["Clear Form"]: clearFormHandler,
+  ["Close Screen Modal"]: closeScreenModalHandler,
 }
 
 const confirmTextMap = {

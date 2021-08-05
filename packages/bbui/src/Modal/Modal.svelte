@@ -70,6 +70,7 @@
     >
       <div class="modal-wrapper" on:mousedown|self={cancel}>
         <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
+          <slot name="outside" />
           <div
             use:focusFirstInput
             class="spectrum-Modal is-open"
@@ -93,6 +94,7 @@
     z-index: 999;
     overflow: auto;
     overflow-x: hidden;
+    background: rgba(0, 0, 0, 0.75);
   }
 
   .modal-wrapper {
@@ -112,6 +114,7 @@
     justify-content: center;
     align-items: flex-start;
     width: 0;
+    position: relative;
   }
 
   .spectrum-Modal {
@@ -122,6 +125,7 @@
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
+    max-width: 100%;
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);

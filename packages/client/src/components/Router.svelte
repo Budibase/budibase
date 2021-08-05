@@ -1,6 +1,6 @@
 <script>
   import { setContext, getContext } from "svelte"
-  import Router from "svelte-spa-router"
+  import Router, { querystring } from "svelte-spa-router"
   import { routeStore } from "../store"
   import Screen from "./Screen.svelte"
 
@@ -14,6 +14,18 @@
   $: config = {
     routes: getRouterConfig($routeStore.routes),
     id: $routeStore.routeSessionId,
+  }
+
+  // Keep query params up to date
+  $: {
+    let queryParams = {}
+    if ($querystring) {
+      const urlSearchParams = new URLSearchParams($querystring)
+      for (const [key, value] of urlSearchParams) {
+        queryParams[key] = value
+      }
+    }
+    routeStore.actions.setQueryParams(queryParams)
   }
 
   const getRouterConfig = routes => {
