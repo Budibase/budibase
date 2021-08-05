@@ -6,6 +6,7 @@ const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
 const { getGlobalUserByEmail } = require("../../utils")
 const { getGlobalDB, getTenantId } = require("../../tenancy")
+const fetch = require("node-fetch")
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
