@@ -14,13 +14,14 @@ exports.Headers = {
   API_VER: "x-budibase-api-version",
   APP_ID: "x-budibase-app-id",
   TYPE: "x-budibase-type",
+  TENANT_ID: "x-budibase-tenant-id",
 }
 
 exports.GlobalRoles = {
   OWNER: "owner",
   ADMIN: "admin",
   BUILDER: "builder",
-  GROUP_MANAGER: "group_manager",
+  WORKSPACE_MANAGER: "workspace_manager",
 }
 
 exports.Configs = {
@@ -31,3 +32,5 @@ exports.Configs = {
   OIDC: "oidc",
   OIDC_LOGOS: "logos_oidc",
 }
+
+exports.DEFAULT_TENANT_ID = "default"

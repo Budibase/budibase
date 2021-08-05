@@ -1,17 +1,30 @@
-const CouchDB = require("../../../db")
-const { generateGlobalUserID, getGlobalUserParams, StaticDatabases } =
-  require("@budibase/auth").db
+const {
+  generateGlobalUserID,
+  getGlobalUserParams,
+
+  StaticDatabases,
+} = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
+const { DEFAULT_TENANT_ID } = require("@budibase/auth/constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
+const CouchDB = require("../../../db")
+const env = require("../../../environment")
+const {
+  getGlobalDB,
+  getTenantId,
+  doesTenantExist,
+  tryAddTenant,
+  updateTenantId,
+} = require("@budibase/auth/tenancy")
 
-const GLOBAL_DB = StaticDatabases.GLOBAL.name
+const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
 async function allUsers() {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
@@ -20,16 +33,21 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-exports.save = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
-  const { email, password, _id } = ctx.request.body
-
+async function saveUser(user, tenantId) {
+  if (!tenantId) {
+    throw "No tenancy specified."
+  }
+  // need to set the context for this request, as specified
+  updateTenantId(tenantId)
+  // specify the tenancy incase we're making a new admin user (public)
+  const db = getGlobalDB(tenantId)
+  let { email, password, _id } = user
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
     dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      ctx.throw(400, "Email address already in use.")
+      throw "Email address already in use."
     }
   } else {
     dbUser = await db.get(_id)
@@ -42,14 +60,16 @@ exports.save = async ctx => {
   } else if (dbUser) {
     hashedPassword = dbUser.password
   } else {
-    ctx.throw(400, "Password must be specified.")
+    throw "Password must be specified."
   }
 
-  let user = {
+  _id = _id || generateGlobalUserID()
+  user = {
     ...dbUser,
-    ...ctx.request.body,
-    _id: _id || generateGlobalUserID(),
+    ...user,
+    _id,
     password: hashedPassword,
+    tenantId,
   }
   // make sure the roles object is always present
   if (!user.roles) {
@@ -64,23 +84,37 @@ exports.save = async ctx => {
       password: hashedPassword,
       ...user,
     })
+    await tryAddTenant(tenantId, _id, email)
     await userCache.invalidateUser(response.id)
-    ctx.body = {
+    return {
       _id: response.id,
       _rev: response.rev,
       email,
     }
   } catch (err) {
     if (err.status === 409) {
-      ctx.throw(400, "User exists already")
+      throw "User exists already"
     } else {
-      ctx.throw(err.status, err)
+      throw err
     }
   }
 }
 
+exports.save = async ctx => {
+  try {
+    ctx.body = await saveUser(ctx.request.body, getTenantId())
+  } catch (err) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
 exports.adminUser = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
+  const { email, password, tenantId } = ctx.request.body
+  if (await doesTenantExist(tenantId)) {
+    ctx.throw(403, "Organisation already exists.")
+  }
+
+  const db = getGlobalDB(tenantId)
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
@@ -88,11 +122,13 @@ exports.adminUser = async ctx => {
   )
 
   if (response.rows.some(row => row.doc.admin)) {
-    ctx.throw(403, "You cannot initialise once an admin user has been created.")
+    ctx.throw(
+      403,
+      "You cannot initialise once an global user has been created."
+    )
   }
 
-  const { email, password } = ctx.request.body
-  ctx.request.body = {
+  const user = {
     email: email,
     password: password,
     roles: {},
@@ -102,12 +138,17 @@ exports.adminUser = async ctx => {
     admin: {
       global: true,
     },
+    tenantId,
   }
-  await exports.save(ctx)
+  try {
+    ctx.body = await saveUser(user, tenantId)
+  } catch (err) {
+    ctx.throw(err.status || 400, err)
+  }
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
@@ -119,8 +160,8 @@ exports.destroy = async ctx => {
 
 exports.removeAppRole = async ctx => {
   const { appId } = ctx.params
-  const db = new CouchDB(GLOBAL_DB)
-  const users = await allUsers()
+  const db = getGlobalDB()
+  const users = await allUsers(ctx)
   const bulk = []
   const cacheInvalidations = []
   for (let user of users) {
@@ -149,7 +190,7 @@ exports.getSelf = async ctx => {
 }
 
 exports.updateSelf = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
     ctx.request.body.password = await hash(ctx.request.body.password)
@@ -170,7 +211,7 @@ exports.updateSelf = async ctx => {
 
 // called internally by app server user fetch
 exports.fetch = async ctx => {
-  const users = await allUsers()
+  const users = await allUsers(ctx)
   // user hashed password shouldn't ever be returned
   for (let user of users) {
     if (user) {
@@ -182,7 +223,7 @@ exports.fetch = async ctx => {
 
 // called internally by app server user find
 exports.find = async ctx => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
   let user
   try {
     user = await db.get(ctx.params.id)
@@ -196,12 +237,38 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
+exports.tenantLookup = async ctx => {
+  const id = ctx.params.id
+  // lookup, could be email or userId, either will return a doc
+  const db = new CouchDB(PLATFORM_INFO_DB)
+  let tenantId = null
+  try {
+    const doc = await db.get(id)
+    if (doc && doc.tenantId) {
+      tenantId = doc.tenantId
+    }
+  } catch (err) {
+    if (!env.MULTI_TENANCY) {
+      tenantId = DEFAULT_TENANT_ID
+    } else {
+      ctx.throw(400, "No tenant found.")
+    }
+  }
+  ctx.body = {
+    tenantId,
+  }
+}
+
 exports.invite = async ctx => {
-  const { email, userInfo } = ctx.request.body
+  let { email, userInfo } = ctx.request.body
   const existing = await getGlobalUserByEmail(email)
   if (existing) {
     ctx.throw(400, "Email address already in use.")
   }
+  if (!userInfo) {
+    userInfo = {}
+  }
+  userInfo.tenantId = getTenantId()
   await sendEmail(email, EmailTemplatePurpose.INVITATION, {
     subject: "{{ company }} platform invitation",
     info: userInfo,
@@ -214,18 +281,18 @@ exports.invite = async ctx => {
 exports.inviteAccept = async ctx => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
-    // info is an extension of the user object that was stored by admin
+    // info is an extension of the user object that was stored by global
     const { email, info } = await checkInviteCode(inviteCode)
-    // only pass through certain props for accepting
-    ctx.request.body = {
-      firstName,
-      lastName,
-      password,
-      email,
-      ...info,
-    }
-    // this will flesh out the body response
-    await exports.save(ctx)
+    ctx.body = await saveUser(
+      {
+        firstName,
+        lastName,
+        password,
+        email,
+        ...info,
+      },
+      info.tenantId
+    )
   } catch (err) {
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
