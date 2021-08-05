@@ -151,7 +151,7 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   }
   // handle select
   if (resource.fields && resource.fields.length > 0) {
-    query = query.select(resource.fields)
+    query = query.select(resource.fields.map(field => `${field} as ${field}`))
   } else {
     query = query.select("*")
   }

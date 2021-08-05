@@ -322,7 +322,7 @@ class LinkController {
     // remove schema from other table
     let linkedTable = await this._db.get(field.tableId)
     delete linkedTable.schema[field.fieldName]
-    this._db.put(linkedTable)
+    await this._db.put(linkedTable)
   }
 
   /**
