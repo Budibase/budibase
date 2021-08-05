@@ -67,7 +67,7 @@
   "dependencies": {
     "@budibase/bbui": "^0.9.99-alpha.2",
     "@budibase/client": "^0.9.99-alpha.2",
-    "@budibase/colorpicker": "1.1.2",
+    "@budibase/colorpicker": "^1.1.2",
     "@budibase/string-templates": "^0.9.99-alpha.2",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
