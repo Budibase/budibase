@@ -2,7 +2,7 @@ const env = require("../environment")
 const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 
-const BB_CDN = "https://d14h4vmm231itd.cloudfront.net"
+const BB_CDN = "https://cdn.app.budi.live/assets"
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
