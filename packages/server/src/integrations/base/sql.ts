@@ -151,6 +151,8 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   }
   // handle select
   if (resource.fields && resource.fields.length > 0) {
+    // select the resources as the format "table.columnName" - this is what is provided
+    // by the resource builder further up
     query = query.select(resource.fields.map(field => `${field} as ${field}`))
   } else {
     query = query.select("*")
