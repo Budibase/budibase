@@ -1,5 +1,5 @@
 const env = require("../environment")
-const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
+const { OBJ_STORE_DIRECTORY } = require("../constants")
 const { getAllApps } = require("@budibase/auth/db")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 
