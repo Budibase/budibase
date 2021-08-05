@@ -364,7 +364,7 @@ module External {
         }
       }
       if (cache[fullKey] == null) {
-        cache[fullKey] = await makeExternalQuery(this.appId, {
+        const response = await makeExternalQuery(this.appId, {
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
             equal: {
@@ -372,8 +372,12 @@ module External {
             },
           },
         })
+        // this is the response from knex if no rows found
+        if (!response[0].read) {
+          cache[fullKey] = response
+        }
       }
-      return { rows: cache[fullKey], table }
+      return { rows: cache[fullKey] || [], table }
     }
 
     /**
@@ -423,12 +427,16 @@ module External {
         const { tableName } = breakExternalTableId(tableId)
         const table = this.tables[tableName]
         for (let row of rows) {
-          promises.push(
-            makeExternalQuery(this.appId, {
-              endpoint: getEndpoint(tableId, DataSourceOperation.DELETE),
-              filters: buildFilters(generateIdForRow(row, table), {}, table),
-            })
-          )
+          const filters = buildFilters(generateIdForRow(row, table), {}, table)
+          // safety check, if there are no filters on deletion bad things happen
+          if (Object.keys(filters).length !== 0) {
+            promises.push(
+              makeExternalQuery(this.appId, {
+                endpoint: getEndpoint(tableId, DataSourceOperation.DELETE),
+                filters,
+              })
+            )
+          }
         }
       }
       await Promise.all(promises)
