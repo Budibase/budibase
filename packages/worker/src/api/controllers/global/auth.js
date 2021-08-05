@@ -2,15 +2,27 @@ const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
-const CouchDB = require("../../../db")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
   authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
+const {
+  getGlobalDB,
+  getTenantId,
+  isMultiTenant,
+} = require("@budibase/auth/tenancy")
+const env = require("../../../environment")
 
-const GLOBAL_DB = authPkg.StaticDatabases.GLOBAL.name
+function googleCallbackUrl() {
+  let callbackUrl = `/api/global/auth`
+  if (isMultiTenant()) {
+    callbackUrl += `/${getTenantId()}`
+  }
+  callbackUrl += `/google/callback`
+  return callbackUrl
+}
 
 async function authInternal(ctx, user, err = null, info = null) {
   if (err) {
@@ -66,6 +78,7 @@ exports.reset = async ctx => {
       })
     }
   } catch (err) {
+    console.log(err)
     // don't throw any kind of error to the user, this might give away something
   }
   ctx.body = {
@@ -80,7 +93,7 @@ exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
   try {
     const userId = await checkResetPasswordCode(resetCode)
-    const db = new CouchDB(GLOBAL_DB)
+    const db = getGlobalDB()
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)
@@ -102,12 +115,14 @@ exports.logout = async ctx => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 exports.googlePreAuth = async (ctx, next) => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
+  let callbackUrl = googleCallbackUrl()
+
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
-    group: ctx.query.group,
+    workspace: ctx.query.workspace,
   })
-  const strategy = await google.strategyFactory(config)
+  const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -115,13 +130,14 @@ exports.googlePreAuth = async (ctx, next) => {
 }
 
 exports.googleAuth = async (ctx, next) => {
-  const db = new CouchDB(GLOBAL_DB)
+  const db = getGlobalDB()
+  const callbackUrl = googleCallbackUrl()
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
-    group: ctx.query.group,
+    workspace: ctx.query.workspace,
   })
-  const strategy = await google.strategyFactory(config)
+  const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(
     strategy,
@@ -135,8 +151,7 @@ exports.googleAuth = async (ctx, next) => {
 }
 
 async function oidcStrategyFactory(ctx, configId) {
-  const db = new CouchDB(GLOBAL_DB)
-
+  const db = getGlobalDB()
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.OIDC,
     group: ctx.query.group,
@@ -144,9 +159,12 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  // require https callback in production
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
-  const callbackUrl = `${protocol}://${ctx.host}/api/admin/auth/oidc/callback`
+  const protocol = env.NODE_ENV === "production" ? "https" : "http"
+  let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
+  if (isMultiTenant()) {
+    callbackUrl += `/${getTenantId()}`
+  }
+  callbackUrl += `/oidc/callback`
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }

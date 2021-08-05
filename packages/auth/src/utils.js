@@ -1,14 +1,9 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-  StaticDatabases,
-} = require("./db/utils")
+const { DocumentTypes, SEPARATOR, ViewNames } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { getDB } = require("./db")
 const { Headers } = require("./constants")
+const { getGlobalDB } = require("./tenancy")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -111,7 +106,7 @@ exports.getGlobalUserByEmail = async email => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
-  const db = getDB(StaticDatabases.GLOBAL.name)
+  const db = getGlobalDB()
   try {
     let users = (
       await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
@@ -123,7 +118,7 @@ exports.getGlobalUserByEmail = async email => {
     return users.length <= 1 ? users[0] : users
   } catch (err) {
     if (err != null && err.name === "not_found") {
-      await createUserEmailView()
+      await createUserEmailView(db)
       return exports.getGlobalUserByEmail(email)
     } else {
       throw err

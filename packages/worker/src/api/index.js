@@ -2,55 +2,51 @@ const Router = require("@koa/router")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
-const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
+  require("@budibase/auth").auth
 
 const PUBLIC_ENDPOINTS = [
   {
-    route: "/api/admin/users/init",
+    // this covers all of the POST auth routes
+    route: "/api/global/auth/:tenantId",
     method: "POST",
   },
   {
-    route: "/api/admin/users/invite/accept",
+    // this covers all of the GET auth routes
+    route: "/api/global/auth/:tenantId",
+    method: "GET",
+  },
+  {
+    // this covers all of the public config routes
+    route: "/api/global/configs/public",
+    method: "GET",
+  },
+  {
+    route: "/api/global/configs/checklist",
+    method: "GET",
+  },
+  {
+    route: "/api/global/users/init",
     method: "POST",
   },
   {
-    route: "/api/admin/auth",
+    route: "/api/global/users/invite/accept",
     method: "POST",
   },
   {
-    route: "/api/admin/auth/google",
+    route: "api/system/flags",
     method: "GET",
   },
+]
+
+const NO_TENANCY_ENDPOINTS = [
+  ...PUBLIC_ENDPOINTS,
   {
-    route: "/api/admin/auth/google/callback",
-    method: "GET",
+    route: "/api/system",
+    method: "ALL",
   },
   {
-    route: "/api/admin/auth/oidc",
-    method: "GET",
-  },
-  {
-    route: "/api/admin/auth/oidc/callback",
-    method: "GET",
-  },
-  {
-    route: "/api/admin/auth/reset",
-    method: "POST",
-  },
-  {
-    route: "/api/admin/configs/checklist",
-    method: "GET",
-  },
-  {
-    route: "/api/apps",
-    method: "GET",
-  },
-  {
-    route: "/api/admin/configs/public",
-    method: "GET",
-  },
-  {
-    route: "/api/admin/configs/publicOidc",
+    route: "/api/global/users/self",
     method: "GET",
   },
 ]
@@ -71,9 +67,10 @@ router
   )
   .use("/health", ctx => (ctx.status = 200))
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
+  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
-    if (!ctx.isAuthenticated) {
+    if (!ctx.isAuthenticated && !ctx.publicEndpoint) {
       ctx.throw(403, "Unauthorized - no public worker access")
     }
     return next()
