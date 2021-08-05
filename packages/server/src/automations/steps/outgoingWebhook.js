@@ -27,6 +27,7 @@ module.exports.definition = {
     requestMethod: "POST",
     url: "http://",
     requestBody: "{}",
+    headers: "{}",
   },
   schema: {
     inputs: {
@@ -43,6 +44,11 @@ module.exports.definition = {
         requestBody: {
           type: "string",
           title: "JSON Body",
+          customType: "wide",
+        },
+        headers: {
+          type: "string",
+          title: "Headers",
           customType: "wide",
         },
       },
@@ -65,7 +71,7 @@ module.exports.definition = {
 }
 
 module.exports.run = async function ({ inputs }) {
-  let { requestMethod, url, requestBody } = inputs
+  let { requestMethod, url, requestBody, headers } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`
   }
@@ -83,6 +89,15 @@ module.exports.run = async function ({ inputs }) {
         : JSON.stringify(requestBody)
     request.headers = {
       "Content-Type": "application/json",
+    }
+
+    if (headers && headers.length !== 0) {
+      try {
+        const customHeaders = JSON.parse(headers)
+        request.headers = { ...request.headers, ...customHeaders }
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 

@@ -9,6 +9,7 @@
   import { FrontendTypes } from "constants"
 
   export let componentInstance
+  export let bindings
 
   function setAssetProps(name, value, parser) {
     if (parser && typeof parser === "function") {
@@ -53,6 +54,7 @@
         key={def.key}
         value={deepGet($currentAsset, def.key)}
         on:change={event => setAssetProps(def.key, event.detail, def.parser)}
+        {bindings}
       />
     {/each}
   </DetailSummary>

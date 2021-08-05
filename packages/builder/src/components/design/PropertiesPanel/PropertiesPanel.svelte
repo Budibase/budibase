@@ -1,27 +1,45 @@
 <script>
-  import { store, selectedComponent } from "builderStore"
+  import { store, selectedComponent, currentAsset } from "builderStore"
   import { Tabs, Tab } from "@budibase/bbui"
   import ScreenSettingsSection from "./ScreenSettingsSection.svelte"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
+  import { getBindableProperties } from "builderStore/dataBinding"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
+  $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
 </script>
 
 <Tabs selected="Settings" noPadding>
   <Tab title="Settings">
     <div class="container">
       {#key componentInstance?._id}
-        <ScreenSettingsSection {componentInstance} {componentDefinition} />
-        <ComponentSettingsSection {componentInstance} {componentDefinition} />
-        <DesignSection {componentInstance} {componentDefinition} />
-        <CustomStylesSection {componentInstance} {componentDefinition} />
-        <ConditionalUISection {componentInstance} {componentDefinition} />
+        <ScreenSettingsSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
+        <ComponentSettingsSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
+        <DesignSection {componentInstance} {componentDefinition} {bindings} />
+        <CustomStylesSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
+        <ConditionalUISection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
       {/key}
     </div>
   </Tab>
