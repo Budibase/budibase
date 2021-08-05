@@ -37,7 +37,7 @@
   async function uploadLogo(file) {
     let data = new FormData()
     data.append("file", file)
-    const res = await post("/api/admin/configs/upload/settings/logo", data, {})
+    const res = await post("/api/global/configs/upload/settings/logo", data, {})
     return await res.json()
   }
 
