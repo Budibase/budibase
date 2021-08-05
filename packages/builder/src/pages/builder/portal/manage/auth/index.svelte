@@ -187,7 +187,6 @@
               `Please fill in all required ${ConfigTypes.Google} fields`
             )
           } else {
-            delete element.config.callbackURL
             calls.push(api.post(`/api/global/configs`, element))
             googleSaveButtonDisabled = true
             originalGoogleDoc = cloneDeep(providers.google)
