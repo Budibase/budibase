@@ -8,6 +8,7 @@
   export let id = null
   export let text = null
   export let disabled = false
+  export let size = null
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
@@ -16,7 +17,7 @@
 </script>
 
 <label
-  class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-Checkbox--emphasized"
+  class="spectrum-Checkbox spectrum-Checkbox--size{size} spectrum-Checkbox--emphasized"
   class:is-invalid={!!error}
 >
   <input
