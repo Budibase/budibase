@@ -15,7 +15,7 @@ context("Screen Tests", () => {
   it("Should update the url", () => {
     cy.createScreen("Test Screen", "test with spaces")
     cy.get(".nav-items-container").within(() => {
-      cy.contains("/test_with_spaces").should("exist")
+      cy.contains("/test-with-spaces").should("exist")
     })
   })
 })
