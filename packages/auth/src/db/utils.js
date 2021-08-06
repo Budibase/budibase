@@ -185,9 +185,7 @@ exports.getAllDbs = async () => {
  */
 exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
   let dbs = await exports.getAllDbs()
-  const appDbNames = dbs.filter(dbName =>
-    dbName.startsWith(exports.APP_PREFIX)
-  )
+  const appDbNames = dbs.filter(dbName => dbName.startsWith(exports.APP_PREFIX))
   const appPromises = appDbNames.map(db =>
     // skip setup otherwise databases could be re-created
     new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
