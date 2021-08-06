@@ -1,5 +1,6 @@
 const env = require("../environment")
-const { OBJ_STORE_DIRECTORY, ObjectStoreBuckets } = require("../constants")
+const { OBJ_STORE_DIRECTORY } = require("../constants")
+const { getAllApps } = require("@budibase/auth/db")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 
 const BB_CDN = "https://cdn.app.budi.live/assets"
@@ -52,6 +53,6 @@ exports.clientLibraryPath = appId => {
 
 exports.attachmentsRelativeURL = attachmentKey => {
   return exports.checkSlashesInUrl(
-    `/${ObjectStoreBuckets.APPS}/${attachmentKey}`
+    `${exports.objectStoreUrl()}/${attachmentKey}`
   )
 }
