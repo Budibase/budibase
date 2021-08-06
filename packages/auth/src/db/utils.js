@@ -4,6 +4,8 @@ const { DEFAULT_TENANT_ID } = require("../constants")
 const env = require("../environment")
 const { StaticDatabases, SEPARATOR } = require("./constants")
 const { getTenantId } = require("../tenancy")
+const fetch = require("node-fetch")
+const { getCouch } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 
@@ -157,19 +159,36 @@ exports.getDeployedAppID = appId => {
 }
 
 /**
+ * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
+ * when using Pouch it will use the pouchdb-all-dbs package.
+ */
+exports.getAllDbs = async () => {
+  // specifically for testing we use the pouch package for this
+  if (env.isTest()) {
+    return getCouch().allDbs()
+  }
+  const response = await fetch(`${env.COUCH_DB_URL}/_all_dbs`)
+  if (response.status === 200) {
+    return response.json()
+  } else {
+    throw "Cannot connect to CouchDB instance"
+  }
+}
+
+/**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
  * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
  * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async (CouchDB, { dev, all } = {}) => {
+exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => {
+  let dbs = await exports.getAllDbs()
+  const appDbNames = dbs.filter(dbName => {
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
     if (split[0] === DocumentTypes.APP) {
@@ -183,6 +202,9 @@ exports.getAllApps = async (CouchDB, { dev, all } = {}) => {
     }
     return false
   })
+  if (idsOnly) {
+    return appDbNames
+  }
   const appPromises = appDbNames.map(db =>
     // skip setup otherwise databases could be re-created
     new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)

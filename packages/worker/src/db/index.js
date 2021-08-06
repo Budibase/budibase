@@ -19,6 +19,7 @@ if (env.isTest()) {
 
 const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 
+// have to still have pouch alldbs for testing
 allDbs(Pouch)
 
 module.exports = Pouch

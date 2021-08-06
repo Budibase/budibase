@@ -4,14 +4,9 @@ const CouchDB = require("../../db")
 const URL_REGEX_SLASH = /\/|\\/g
 
 exports.getApps = async ctx => {
-  const tenantId = ctx.user.tenantId
-  const apps = await getAllApps(CouchDB, { tenantId })
-
+  const apps = await getAllApps(CouchDB, { dev: true })
   const body = {}
   for (let app of apps) {
-    if (app.status !== "fulfilled") {
-      continue
-    }
     app = app.value
     let url = app.url || encodeURI(`${app.name}`)
     url = `/${url.replace(URL_REGEX_SLASH, "")}`
