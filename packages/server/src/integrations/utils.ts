@@ -40,8 +40,13 @@ export function breakRowIdField(_id: string): any[] {
   // have to replace on the way back as we swapped out the double quotes
   // when encoding, but JSON can't handle the single quotes
   const decoded: string = decodeURIComponent(_id).replace(/'/g, '"')
-  const parsed = JSON.parse(decoded)
-  return Array.isArray(parsed) ? parsed : [parsed]
+  try {
+    const parsed = JSON.parse(decoded)
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch (err) {
+    // wasn't json - likely was handlebars for a many to many
+    return [_id]
+  }
 }
 
 export function convertType(type: string, map: { [key: string]: any }) {
