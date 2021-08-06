@@ -1,15 +1,14 @@
-const { DocumentTypes } = require("@budibase/auth").db
+const { DocumentTypes, getAllDbs } = require("@budibase/auth").db
 const CouchDB = require("../../db")
 
 const APP_PREFIX = "app_"
 const URL_REGEX_SLASH = /\/|\\/g
 
 exports.getApps = async ctx => {
-  // allDbs call of CouchDB is very inaccurate in production
-  const allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+  const dbs = await getAllDbs()
+  const appDbNames = dbs.filter(dbName => dbName.startsWith(APP_PREFIX))
   const appPromises = appDbNames.map(db =>
-    new CouchDB(db).get(DocumentTypes.APP_METADATA)
+    new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
   )
 
   const apps = await Promise.allSettled(appPromises)
