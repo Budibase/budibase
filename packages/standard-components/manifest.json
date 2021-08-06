@@ -1758,6 +1758,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1787,6 +1792,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1816,6 +1826,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1862,6 +1877,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1891,6 +1911,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/boolean",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1921,6 +1946,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1956,6 +1986,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/datetime",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1980,6 +2015,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -2009,6 +2049,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },

@@ -66,7 +66,7 @@ const presenceConstraint = value => {
   } else {
     invalid = value == null || value === ""
   }
-  return invalid ? "Required" : null
+  return invalid ? "Required field" : null
 }
 
 const lengthConstraint = maxLength => value => {
