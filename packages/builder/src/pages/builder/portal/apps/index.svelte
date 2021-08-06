@@ -18,7 +18,7 @@
   import api, { del } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
-  import { apps, auth } from "stores/portal"
+  import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -159,6 +159,8 @@
         throw json.message
       }
       await apps.load()
+      // get checklist, just in case that was the last app
+      await admin.init()
       notifications.success("App deleted successfully")
     } catch (err) {
       notifications.error(`Error deleting app: ${err}`)

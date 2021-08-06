@@ -1,5 +1,8 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
+const env = require("../environment")
+const fetch = require("node-fetch")
+const { getCouch } = require("./index")
 
 const UNICODE_MAX = "\ufff0"
 const SEPARATOR = "_"
@@ -157,6 +160,23 @@ exports.getDeployedAppID = appId => {
 }
 
 /**
+ * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
+ * when using Pouch it will use the pouchdb-all-dbs package.
+ */
+exports.getAllDbs = async () => {
+  // specifically for testing we use the pouch package for this
+  if (env.isTest()) {
+    return getCouch().allDbs()
+  }
+  const response = await fetch(`${env.COUCH_DB_URL}/_all_dbs`)
+  if (response.status === 200) {
+    return response.json()
+  } else {
+    throw "Cannot connect to CouchDB instance"
+  }
+}
+
+/**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
  * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
@@ -164,8 +184,8 @@ exports.getDeployedAppID = appId => {
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
 exports.getAllApps = async ({ CouchDB, dev, all } = {}) => {
-  let allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName =>
+  let dbs = await exports.getAllDbs()
+  const appDbNames = dbs.filter(dbName =>
     dbName.startsWith(exports.APP_PREFIX)
   )
   const appPromises = appDbNames.map(db =>
