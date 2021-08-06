@@ -199,6 +199,9 @@
       delete datasource.entities[toTable.name].schema[originalToName]
     }
 
+    // store the original names so it won't cause an error
+    originalToName = toRelationship.name
+    originalFromName = fromRelationship.name
     await save()
     await tables.fetch()
   }
