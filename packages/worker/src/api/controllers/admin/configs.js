@@ -10,8 +10,6 @@ const {
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
-const fetch = require("node-fetch")
-const env = require("../../../environment")
 
 const APP_PREFIX = "app_"
 
