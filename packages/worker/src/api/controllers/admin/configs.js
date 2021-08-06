@@ -5,10 +5,13 @@ const {
   getConfigParams,
   getGlobalUserParams,
   getScopedFullConfig,
+  getAllDbs,
 } = require("@budibase/auth").db
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
+const fetch = require("node-fetch")
+const env = require("../../../environment")
 
 const APP_PREFIX = "app_"
 
@@ -229,8 +232,8 @@ exports.configChecklist = async function (ctx) {
     // TODO: Watch get started video
 
     // Apps exist
-    let allDbs = await CouchDB.allDbs()
-    const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+    let dbs = await getAllDbs()
+    const appDbNames = dbs.filter(dbName => dbName.startsWith(APP_PREFIX))
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {

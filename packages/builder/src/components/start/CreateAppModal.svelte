@@ -9,6 +9,7 @@
     Checkbox,
   } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
+  import { admin } from "stores/portal"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
   import analytics from "analytics"
@@ -102,6 +103,8 @@
       if (applicationPkg.ok) {
         await store.actions.initialise(pkg)
         await automationStore.actions.fetch()
+        // update checklist - incase first app
+        await admin.init()
       } else {
         throw new Error(pkg)
       }
