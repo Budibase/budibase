@@ -68,7 +68,8 @@
   {#if $tab.info}
     <div
       class="spectrum-Tabs-selectionIndicator indicator-transition"
-      style=" background-color: {'var(--spectrum-global-color-blue-400)'}; width: {width}; height: {height}; left: {left}; top: {top};"
+      style="{quiet &&
+        'background-color: var(--spectrum-global-color-blue-400)'}; width: {width}; height: {height}; left: {left}; top: {top};"
     />
   {/if}
 </div>
