@@ -6,9 +6,11 @@
   export let selected
   export let vertical = false
   export let noPadding = false
+  export let quiet = false
+  export let emphasized = false
 
   let _id = id()
-  const tab = writable({ title: selected, id: _id })
+  const tab = writable({ title: selected, id: _id, emphasized })
   setContext("tab", tab)
 
   let container
@@ -56,7 +58,9 @@
 
 <div
   bind:this={container}
-  class="selected-border spectrum-Tabs spectrum-Tabs--{vertical
+  class:quiet
+  class="selected-border spectrum-Tabs {quiet &&
+    'spectrum-Tabs--quiet'} spectrum-Tabs--{vertical
     ? 'vertical'
     : 'horizontal'}"
 >
@@ -64,7 +68,7 @@
   {#if $tab.info}
     <div
       class="spectrum-Tabs-selectionIndicator indicator-transition"
-      style="width: {width}; height: {height}; left: {left}; top: {top};"
+      style=" background-color: {'var(--spectrum-global-color-blue-400)'}; width: {width}; height: {height}; left: {left}; top: {top};"
     />
   {/if}
 </div>
@@ -75,6 +79,10 @@
 />
 
 <style>
+  .quiet {
+    border-bottom: none !important;
+  }
+
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
