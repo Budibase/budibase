@@ -7,11 +7,14 @@
     Select,
     Heading,
     Body,
+    Input,
+    DatePicker,
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { getSchemaForDatasource } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { generate } from "shortid"
 
   export let rules = []
   export let bindings = []
@@ -100,10 +103,11 @@
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
   $: field = $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
-  $: constraintOptions = getConstraintsForType(type)
+  $: fieldType = type?.split("/")[1] || "string"
+  $: constraintOptions = getConstraintsForType(fieldType)
 
   const getConstraintsForType = type => {
-    return ConstraintMap[type?.split("/")[1] || "string"]
+    return ConstraintMap[type]
   }
 
   const getDataSourceSchema = (asset, component) => {
@@ -145,7 +149,7 @@
       const length = constraints.length.maximum
       rules.push({
         constraint: "maxLength",
-        constraintValue: length,
+        value: length,
         error: `Maximum ${length} characters`,
       })
     }
@@ -155,7 +159,7 @@
       const min = constraints.numericality.greaterThanOrEqualTo
       rules.push({
         constraint: "minValue",
-        constraintValue: min,
+        value: min,
         error: `Minimum value is ${min}`,
       })
     }
@@ -163,7 +167,7 @@
       const max = constraints.numericality.lessThanOrEqualTo
       rules.push({
         constraint: "maxValue",
-        constraintValue: max,
+        value: max,
         error: `Maximum value is ${max}`,
       })
     }
@@ -176,7 +180,14 @@
   }
 
   const addRule = () => {
-    rules = [...(rules || []), {}]
+    rules = [
+      ...(rules || []),
+      {
+        valueType: "Binding",
+        type: fieldType,
+        id: generate(),
+      },
+    ]
   }
 
   const removeRule = id => {
@@ -199,9 +210,15 @@
                   options={constraintOptions}
                   disabled
                 />
+                <Select
+                  placeholder={null}
+                  value="Value"
+                  options={["Binding", "Value"]}
+                  disabled
+                />
                 <DrawerBindableInput
                   placeholder="Constraint value"
-                  value={rule.constraintValue}
+                  value={rule.value}
                   {bindings}
                   disabled
                 />
@@ -225,20 +242,51 @@
         <Heading size="XS">Custom validation rules</Heading>
         {#if rules?.length}
           <div class="links">
-            {#each rules as rule}
+            {#each rules as rule (rule.id)}
               <div class="rule">
                 <Select
                   bind:value={rule.constraint}
                   options={constraintOptions}
                   placeholder="Constraint"
                 />
-                <DrawerBindableInput
-                  placeholder="Constraint value"
-                  value={rule.constraintValue}
-                  {bindings}
+                <Select
                   disabled={rule.constraint === "required"}
-                  on:change={e => (rule.constraintValue = e.detail)}
+                  placeholder={null}
+                  bind:value={rule.valueType}
+                  options={["Binding", "Value"]}
                 />
+                {#if rule.valueType === "Binding"}
+                  <DrawerBindableInput
+                    placeholder="Constraint value"
+                    value={rule.value}
+                    {bindings}
+                    disabled={rule.constraint === "required"}
+                    on:change={e => (rule.value = e.detail)}
+                  />
+                {:else if ["string", "number", "options", "longform"].includes(rule.type)}
+                  <Input
+                    disabled={rule.constraint === "required"}
+                    bind:value={rule.value}
+                    placeholder="Constraint value"
+                  />
+                {:else if fieldType === "boolean"}
+                  <Select
+                    disabled={rule.constraint === "required"}
+                    options={[
+                      { label: "True", value: "true" },
+                      { label: "False", value: "false" },
+                    ]}
+                    bind:value={rule.value}
+                  />
+                {:else if fieldType === "datetime"}
+                  <DatePicker
+                    enableTime={false}
+                    disabled={rule.constraint === "required"}
+                    bind:value={rule.value}
+                  />
+                {:else}
+                  <DrawerBindableInput disabled />
+                {/if}
                 <DrawerBindableInput
                   placeholder="Error message"
                   value={rule.error}
@@ -266,7 +314,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
   }
   .links {
@@ -281,7 +329,7 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: 1fr 1fr 1fr 20px;
+    grid-template-columns: 1fr 1fr 1fr 1fr 20px;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
