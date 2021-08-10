@@ -6,6 +6,7 @@
   export let label
   export let text
   export let disabled = false
+  export let validation
 
   let fieldState
   let fieldApi
@@ -15,6 +16,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   type="boolean"
   bind:fieldState
   bind:fieldApi
