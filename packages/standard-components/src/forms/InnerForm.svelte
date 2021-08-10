@@ -21,7 +21,12 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, defaultValue = null, fieldDisabled = false) => {
+    registerField: (
+      field,
+      defaultValue = null,
+      fieldDisabled = false,
+      validationRules
+    ) => {
       if (!field) {
         return
       }
@@ -30,8 +35,13 @@
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
       // Create validation function based on field schema
-      const constraints = schema?.[field]?.constraints
-      const validate = createValidatorFromConstraints(constraints, field, table)
+      const schemaConstraints = schema?.[field]?.constraints
+      const validate = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
 
       // Construct field object
       fieldMap[field] = {
