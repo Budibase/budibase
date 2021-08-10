@@ -1,6 +1,6 @@
 const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
-const { generateLinkID, InternalTables, generateUserMetadataID, getUserMetadataParams } = require("../utils")
+const { generateLinkID, InternalTables, getUserMetadataParams } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
 
