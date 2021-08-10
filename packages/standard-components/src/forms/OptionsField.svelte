@@ -7,6 +7,7 @@
   export let placeholder
   export let disabled = false
   export let optionsType = "select"
+  export let validation
 
   let fieldState
   let fieldApi
@@ -17,6 +18,7 @@
   {field}
   {label}
   {disabled}
+  {validation}
   type="options"
   bind:fieldState
   bind:fieldApi

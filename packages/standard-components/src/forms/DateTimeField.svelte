@@ -7,12 +7,21 @@
   export let placeholder
   export let disabled = false
   export let enableTime = false
+  export let validation
 
   let fieldState
   let fieldApi
 </script>
 
-<Field {label} {field} {disabled} type="datetime" bind:fieldState bind:fieldApi>
+<Field
+  {label}
+  {field}
+  {disabled}
+  {validation}
+  type="datetime"
+  bind:fieldState
+  bind:fieldApi
+>
   {#if fieldState}
     <CoreDatePicker
       value={$fieldState.value}
