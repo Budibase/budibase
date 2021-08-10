@@ -14,6 +14,7 @@
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
+    console.log(value.toISOString())
     dispatch("change", e.detail)
   }
 </script>
