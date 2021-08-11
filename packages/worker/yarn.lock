@@ -287,11 +287,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.79-alpha.4":
-  version "0.9.79"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.79.tgz#416271ffc55e84116550469656bf151a7734a90f"
-  integrity sha512-ENh099tYeUfVExsAeoxwMh2ODioKQGPteK9LJiU5hMdM4Oi7pyImu287BgKpTIheB+WtadT4e21VpPaJ62APEw==
+"@budibase/auth@^0.9.102":
+  version "0.9.102"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.102.tgz#86bb653686a311858b6ab6a048c6a4746bd5ced4"
+  integrity sha512-Wov1vWAkWQn2P/gVapMBDdGKE1OwbpyD+3LV9E1HqZ3AASWZztqAFfnUaF6kKsHeem8S69uZ3vBU6uuyn9Sp+w==
   dependencies:
+    "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
     bcryptjs "^2.4.3"
     ioredis "^4.27.1"
@@ -336,10 +337,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.79-alpha.4":
-  version "0.9.79"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.79.tgz#bb75a7433a7cfda1fc488283f35e47879b799fcc"
-  integrity sha512-hkAne5mx7mj8+osXFt45VwgLKSa94uQOGOb4R8uv9WNzvk4RzcjBfRzJxggv29FUemItrAeZpSh+Um6yugFI+w==
+"@budibase/string-templates@^0.9.102":
+  version "0.9.102"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.102.tgz#5beb1dac696781b404020d5ab6bb91cbe4dcd10a"
+  integrity sha512-cDDh5tyGYtA2sr8VDaRMLp9Ff+icXKNZ5BredePfES5du3GOWjFeVe0h1WFsR12Yq1dH1WWKR1XKc9CNwoQ8YA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"

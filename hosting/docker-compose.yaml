@@ -5,7 +5,7 @@ version: "3"
 services:
   app-service:
     restart: always
-    image: budibase/apps
+    image: budibase.docker.scarf.sh/budibase/apps
     container_name: bbapps
     ports:
       - "${APP_PORT}:4002"
@@ -33,7 +33,7 @@ services:
 
   worker-service:
     restart: always
-    image: budibase/worker
+    image: budibase.docker.scarf.sh/budibase/worker
     container_name: bbworker
     ports:
       - "${WORKER_PORT}:4003"

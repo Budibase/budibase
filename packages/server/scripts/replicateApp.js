@@ -7,6 +7,7 @@
 
 const CouchDB = require("../src/db")
 const { DocumentTypes } = require("../src/db/utils")
+const { getAllDbs } = require("@budibase/auth/db")
 
 const appName = process.argv[2].toLowerCase()
 const remoteUrl = process.argv[3]
@@ -14,8 +15,8 @@ const remoteUrl = process.argv[3]
 console.log(`Replicating from ${appName} to ${remoteUrl}/${appName}`)
 
 const run = async () => {
-  const allDbs = await CouchDB.allDbs()
-  const appDbNames = allDbs.filter(dbName => dbName.startsWith("inst_app"))
+  const dbs = await getAllDbs()
+  const appDbNames = dbs.filter(dbName => dbName.startsWith("inst_app"))
   let apps = []
   for (let dbName of appDbNames) {
     const db = new CouchDB(dbName)
