@@ -1,6 +1,10 @@
 const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
-const { generateLinkID, InternalTables, getUserMetadataParams } = require("../utils")
+const {
+  generateLinkID,
+  InternalTables,
+  getUserMetadataParams,
+} = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
 
@@ -211,10 +215,14 @@ class LinkController {
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
           const users = await this._db.allDocs(getUserMetadataParams(null, {}))
-          const metadataRequired = rowField.filter(userId => !users.rows.some(user => user.id === userId))
+          const metadataRequired = rowField.filter(
+            userId => !users.rows.some(user => user.id === userId)
+          )
 
           // ensure non-existing user metadata is created in the app DB
-          await this._db.bulkDocs(metadataRequired.map(userId => ({ _id: userId })))
+          await this._db.bulkDocs(
+            metadataRequired.map(userId => ({ _id: userId }))
+          )
         }
 
         // iterate through the link IDs in the row field, see if any don't exist already
