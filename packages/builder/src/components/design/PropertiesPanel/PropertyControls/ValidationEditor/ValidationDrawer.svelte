@@ -25,6 +25,10 @@
       label: "Required",
       value: "required",
     },
+    MinLength: {
+      label: "Min length",
+      value: "minLength",
+    },
     MaxLength: {
       label: "Max length",
       value: "maxLength",
@@ -93,10 +97,10 @@
     ["attachment"]: [Constraints.Required],
     ["link"]: [
       Constraints.Required,
-      Constraints.Equal,
-      Constraints.NotEqual,
       Constraints.Contains,
       Constraints.NotContains,
+      Constraints.MinLength,
+      Constraints.MaxLength,
     ],
   }
 
@@ -255,7 +259,9 @@
                   bind:value={rule.valueType}
                   options={["Binding", "Value"]}
                 />
+
                 {#if rule.valueType === "Binding"}
+                  <!-- Bindings always get a bindable input -->
                   <DrawerBindableInput
                     placeholder="Constraint value"
                     value={rule.value}
@@ -263,29 +269,38 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if ["string", "number", "options", "longform"].includes(rule.type)}
+                {:else if ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
+                  <!-- Certain constraints always need string values-->
                   <Input
-                    disabled={rule.constraint === "required"}
                     bind:value={rule.value}
                     placeholder="Constraint value"
                   />
-                {:else if fieldType === "boolean"}
-                  <Select
-                    disabled={rule.constraint === "required"}
-                    options={[
-                      { label: "True", value: "true" },
-                      { label: "False", value: "false" },
-                    ]}
-                    bind:value={rule.value}
-                  />
-                {:else if fieldType === "datetime"}
-                  <DatePicker
-                    enableTime={false}
-                    disabled={rule.constraint === "required"}
-                    bind:value={rule.value}
-                  />
                 {:else}
-                  <DrawerBindableInput disabled />
+                  <!-- Otherwise we render a component based on the type -->
+                  {#if ["string", "number", "options", "longform"].includes(rule.type) || ["contains"]}
+                    <Input
+                      disabled={rule.constraint === "required"}
+                      bind:value={rule.value}
+                      placeholder="Constraint value"
+                    />
+                  {:else if fieldType === "boolean"}
+                    <Select
+                      disabled={rule.constraint === "required"}
+                      options={[
+                        { label: "True", value: "true" },
+                        { label: "False", value: "false" },
+                      ]}
+                      bind:value={rule.value}
+                    />
+                  {:else if fieldType === "datetime"}
+                    <DatePicker
+                      enableTime={false}
+                      disabled={rule.constraint === "required"}
+                      bind:value={rule.value}
+                    />
+                  {:else}
+                    <DrawerBindableInput disabled />
+                  {/if}
                 {/if}
                 <DrawerBindableInput
                   placeholder="Error message"
