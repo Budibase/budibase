@@ -225,13 +225,15 @@ const maxLengthHandler = (value, rule) => {
 
 // Evaluates a min value constraint
 const minValueHandler = (value, rule) => {
-  const limit = parseType(rule.value, "number")
+  // Use same type as the value so that things can be compared
+  const limit = parseType(rule.value, rule.type)
   return value && value >= limit
 }
 
 // Evaluates a max value constraint
 const maxValueHandler = (value, rule) => {
-  const limit = parseType(rule.value, "number")
+  // Use same type as the value so that things can be compared
+  const limit = parseType(rule.value, rule.type)
   return value == null || value <= limit
 }
 
