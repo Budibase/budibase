@@ -242,7 +242,7 @@ module MySQLModule {
       const input = this._query(json, { disableReturning: true })
       let row
       // need to manage returning, a feature mySQL can't do
-      if (operation === "awdawd") {
+      if (operation === operation.DELETE) {
         row = this.getReturningRow(json)
       }
       const results = await internalQuery(this.client, input, false)

@@ -6,7 +6,7 @@
   import OktaLogo from "assets/okta-logo.png"
   import OneLoginLogo from "assets/onelogin-logo.png"
 
-  import { oidc, organisation } from "stores/portal"
+  import { oidc, organisation, auth } from "stores/portal"
   import { onMount } from "svelte"
 
   $: show = $organisation.oidc
@@ -31,7 +31,10 @@
 {#if show}
   <ActionButton
     on:click={() =>
-      window.open(`/api/global/auth/oidc/configs/${$oidc.uuid}`, "_blank")}
+      window.open(
+        `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`,
+        "_blank"
+      )}
   >
     <div class="inner">
       <img {src} alt="oidc icon" />
