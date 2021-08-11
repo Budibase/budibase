@@ -197,8 +197,6 @@
   const removeRule = id => {
     rules = rules.filter(link => link.id !== id)
   }
-
-  $: console.log(fieldType)
 </script>
 
 <DrawerContent>
