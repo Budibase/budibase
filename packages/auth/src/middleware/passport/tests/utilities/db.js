@@ -1,5 +1,4 @@
 const PouchDB = require("pouchdb")
-const allDbs = require("pouchdb-all-dbs")
 const env = require("../../../../environment")
 
 let POUCH_DB_DEFAULTS
@@ -14,7 +13,5 @@ if (env.isTest()) {
 }
 
 const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
-
-allDbs(Pouch)
 
 module.exports = Pouch

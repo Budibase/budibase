@@ -15,7 +15,11 @@ const {
 } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
 
-function googleCallbackUrl() {
+function googleCallbackUrl(config) {
+  // incase there is a callback URL from before
+  if (config && config.callbackURL) {
+    return config.callbackURL
+  }
   let callbackUrl = `/api/global/auth`
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
@@ -116,12 +120,12 @@ exports.logout = async ctx => {
  */
 exports.googlePreAuth = async (ctx, next) => {
   const db = getGlobalDB()
-  let callbackUrl = googleCallbackUrl()
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
+  let callbackUrl = googleCallbackUrl(config)
   const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(strategy, {
@@ -131,12 +135,12 @@ exports.googlePreAuth = async (ctx, next) => {
 
 exports.googleAuth = async (ctx, next) => {
   const db = getGlobalDB()
-  const callbackUrl = googleCallbackUrl()
 
   const config = await authPkg.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
+  const callbackUrl = googleCallbackUrl(config)
   const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(

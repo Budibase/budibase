@@ -6,6 +6,15 @@ const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
   require("@budibase/auth").auth
 
 const PUBLIC_ENDPOINTS = [
+  // old deprecated endpoints kept for backwards compat
+  {
+    route: "/api/admin/auth/google/callback",
+    method: "GET",
+  },
+  {
+    route: "/api/admin/auth/oidc/callback",
+    method: "GET",
+  },
   {
     // this covers all of the POST auth routes
     route: "/api/global/auth/:tenantId",

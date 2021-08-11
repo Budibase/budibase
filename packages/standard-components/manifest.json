@@ -1892,7 +1892,6 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
-    "styles": ["size"],
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1909,6 +1908,30 @@
         "type": "text",
         "label": "Text",
         "key": "text"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
       },
       {
         "type": "text",
