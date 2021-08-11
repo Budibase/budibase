@@ -30,7 +30,9 @@ function buildResetUpdateValidation() {
 }
 
 function updateTenant(ctx, next) {
-  updateTenantId(ctx.params.tenantId)
+  if (ctx.params) {
+    updateTenantId(ctx.params.tenantId)
+  }
   return next()
 }
 
