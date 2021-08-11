@@ -1,7 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
 
   export let label
   export let field
