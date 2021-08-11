@@ -248,7 +248,11 @@ const equalHandler = (value, rule) => {
 
 // Evaluates a not equal constraint
 const notEqualHandler = (value, rule) => {
-  return !equalHandler(value, rule)
+  const ruleValue = parseType(rule.value, rule.type)
+  if (value == null && ruleValue == null) {
+    return true
+  }
+  return value !== ruleValue
 }
 
 // Evaluates a regex constraint
