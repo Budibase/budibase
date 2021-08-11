@@ -1,7 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
 
   export let label
   export let field
@@ -33,6 +33,9 @@
   fieldState = formField?.fieldState
   fieldApi = formField?.fieldApi
   fieldSchema = formField?.fieldSchema
+
+  // Keep validation rules up to date
+  $: fieldApi?.updateValidation(validation)
 
   // Extract label position from field group context
   $: labelPositionClass =
