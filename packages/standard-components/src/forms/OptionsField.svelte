@@ -8,6 +8,7 @@
   export let disabled = false
   export let optionsType = "select"
   export let validation
+  export let defaultValue
 
   let fieldState
   let fieldApi
@@ -19,6 +20,7 @@
   {label}
   {disabled}
   {validation}
+  {defaultValue}
   type="options"
   bind:fieldState
   bind:fieldApi

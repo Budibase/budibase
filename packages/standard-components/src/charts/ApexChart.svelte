@@ -22,7 +22,8 @@
     display: flex !important;
     text-transform: capitalize;
   }
-  div :global(.apexcharts-yaxis-label, .apexcharts-xaxis-label) {
+  div :global(.apexcharts-yaxis-label),
+  div :global(.apexcharts-xaxis-label) {
     fill: var(--spectrum-global-color-gray-600);
   }
 

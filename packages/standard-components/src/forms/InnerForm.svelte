@@ -98,28 +98,26 @@
     // Sets the value for a certain field and invokes validation
     const setValue = (value, skipCheck = false) => {
       const { fieldState } = fieldMap[field]
-      const { defaultValue, validator } = get(fieldState)
+      const { validator } = get(fieldState)
 
       // Skip if the value is the same
       if (!skipCheck && get(fieldState).value === value) {
         return
       }
 
-      const newValue = value == null ? defaultValue : value
-      const newError = validator ? validator(newValue) : null
-
       // Update field state
+      const error = validator ? validator(value) : null
       fieldState.update(state => {
-        state.value = newValue
-        state.error = newError
+        state.value = value
+        state.error = error
         return state
       })
 
       // Update form state
       formState.update(state => {
-        state.values = { ...state.values, [field]: newValue }
-        if (newError) {
-          state.errors = { ...state.errors, [field]: newError }
+        state.values = { ...state.values, [field]: value }
+        if (error) {
+          state.errors = { ...state.errors, [field]: error }
         } else {
           delete state.errors[field]
         }
@@ -127,7 +125,7 @@
         return state
       })
 
-      return !newError
+      return !error
     }
 
     // Clears the value of a certain field back to the initial value

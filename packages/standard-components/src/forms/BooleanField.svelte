@@ -8,9 +8,23 @@
   export let disabled = false
   export let size
   export let validation
+  export let defaultValue
 
   let fieldState
   let fieldApi
+
+  const isTruthy = value => {
+    if (!value) {
+      return false
+    }
+    if (value === true) {
+      return true
+    }
+    if (typeof value === "string" && value.toLowerCase() === "true") {
+      return true
+    }
+    return false
+  }
 </script>
 
 <Field
@@ -18,10 +32,10 @@
   {field}
   {disabled}
   {validation}
+  defaultValue={isTruthy(defaultValue)}
   type="boolean"
   bind:fieldState
   bind:fieldApi
-  defaultValue={false}
 >
   {#if fieldState}
     <CoreCheckbox
