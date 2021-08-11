@@ -38,7 +38,7 @@ export const createValidatorFromConstraints = (
         type: "string",
         constraint: "length",
         value: length,
-        error: val => `Maximum length is ${val}`,
+        error: `Maximum length is ${length}`,
       })
     }
 
@@ -49,7 +49,7 @@ export const createValidatorFromConstraints = (
         type: "number",
         constraint: "minValue",
         value: min,
-        error: val => `Minimum value is ${val}`,
+        error: `Minimum value is ${min}`,
       })
     }
     if (exists(schemaConstraints.numericality?.lessThanOrEqualTo)) {
@@ -58,13 +58,13 @@ export const createValidatorFromConstraints = (
         type: "number",
         constraint: "maxValue",
         value: max,
-        error: val => `Maximum value is ${val}`,
+        error: `Maximum value is ${max}`,
       })
     }
 
     // Inclusion constraint
     if (exists(schemaConstraints.inclusion)) {
-      const options = schemaConstraints.inclusion
+      const options = schemaConstraints.inclusion || []
       rules.push({
         type: "string",
         constraint: "inclusion",
@@ -76,26 +76,22 @@ export const createValidatorFromConstraints = (
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
       const limit = schemaConstraints.datetime.earliest
+      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
       rules.push({
         type: "datetime",
         constraint: "minValue",
         value: limit,
-        error: val => {
-          const date = flatpickr.formatDate(new Date(val), "F j Y, H:i")
-          return `Earliest date is ${date}`
-        },
+        error: `Earliest date is ${limitString}`,
       })
     }
     if (exists(schemaConstraints.datetime?.latest)) {
       const limit = schemaConstraints.datetime.latest
+      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
       rules.push({
         type: "datetime",
         constraint: "maxValue",
         value: limit,
-        error: val => {
-          const date = flatpickr.formatDate(new Date(val), "F j Y, H:i")
-          return `Latest date is ${date}`
-        },
+        error: `Latest date is ${limitString}`,
       })
     }
   }
@@ -133,22 +129,12 @@ const evaluateRule = (rule, value) => {
     return null
   }
 
-  // Coerce values into correct types
-  const parsedValue = parseType(value, rule.type)
-  const parsedRuleValue = parseType(rule.value, rule.type)
+  // Coerce input value into correct type
+  value = parseType(value, rule.type)
 
   // Evaluate the rule
-  const pass = handler(parsedValue, parsedRuleValue)
-  if (pass) {
-    return null
-  }
-
-  // Return an error if the validation failed
-  let error = rule.error
-  if (typeof error === "function") {
-    error = rule.error(parsedRuleValue)
-  }
-  return error || "Error"
+  const pass = handler(value, rule)
+  return pass ? null : rule.error || "Error"
 }
 
 /**
@@ -225,53 +211,66 @@ const requiredHandler = value => {
   return value != null
 }
 
+// Evaluates a min length constraint
+const minLengthHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return value && value.length >= limit
+}
+
 // Evaluates a max length constraint
-const maxLengthHandler = (value, maxLength) => {
-  if (value == null) {
-    return true
-  }
-  return value.length <= maxLength
+const maxLengthHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return value == null || value.length <= limit
 }
 
 // Evaluates a min value constraint
-const minValueHandler = (value, minValue) => {
-  if (value == null) {
-    return true
-  }
-  return value >= minValue
+const minValueHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return value && value >= limit
 }
 
 // Evaluates a max value constraint
-const maxValueHandler = (value, maxValue) => {
-  if (value == null) {
-    return true
-  }
-  return value <= maxValue
+const maxValueHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return value == null || value <= limit
 }
 
 // Evaluates an inclusion constraint
-const inclusionHandler = (value, options) => {
-  return options.includes(value)
+const inclusionHandler = (value, rule) => {
+  return value == null || rule.value.includes(value)
 }
 
 // Evaluates an equal constraint
-const equalHandler = (value, referenceValue) => {
-  return value === referenceValue
+const equalHandler = (value, rule) => {
+  const ruleValue = parseType(rule.value, rule.type)
+  return value === ruleValue
 }
 
 // Evaluates a not equal constraint
-const notEqualHandler = (value, referenceValue) => {
-  return !equalHandler(value, referenceValue)
+const notEqualHandler = (value, rule) => {
+  return !equalHandler(value, rule)
 }
 
 // Evaluates a regex constraint
-const regexHandler = (value, regex) => {
+const regexHandler = (value, rule) => {
+  const regex = parseType(rule.value, "string")
   return new RegExp(regex).test(value)
 }
 
 // Evaluates a not regex constraint
-const notRegexHandler = (value, regex) => {
-  return !regexHandler(value, regex)
+const notRegexHandler = (value, rule) => {
+  return !regexHandler(value, rule)
+}
+
+// Evaluates a contains constraint
+const containsHandler = (value, rule) => {
+  const expectedValue = parseType(rule.value, "string")
+  return value && value.includes(expectedValue)
+}
+
+// Evaluates a not contains constraint
+const notContainsHandler = (value, rule) => {
+  return !containsHandler(value, rule)
 }
 
 /**
@@ -279,6 +278,7 @@ const notRegexHandler = (value, regex) => {
  */
 const handlerMap = {
   required: requiredHandler,
+  minLength: minLengthHandler,
   maxLength: maxLengthHandler,
   minValue: minValueHandler,
   maxValue: maxValueHandler,
@@ -287,6 +287,8 @@ const handlerMap = {
   notEqual: notEqualHandler,
   regex: regexHandler,
   notRegex: notRegexHandler,
+  contains: containsHandler,
+  notContains: notContainsHandler,
 }
 
 /**
