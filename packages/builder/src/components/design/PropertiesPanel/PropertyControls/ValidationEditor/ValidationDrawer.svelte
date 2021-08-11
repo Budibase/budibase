@@ -197,6 +197,8 @@
   const removeRule = id => {
     rules = rules.filter(link => link.id !== id)
   }
+
+  $: console.log(fieldType)
 </script>
 
 <DrawerContent>
@@ -277,13 +279,13 @@
                   />
                 {:else}
                   <!-- Otherwise we render a component based on the type -->
-                  {#if ["string", "number", "options", "longform"].includes(rule.type) || ["contains"]}
+                  {#if ["string", "number", "options", "longform"].includes(rule.type)}
                     <Input
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}
                       placeholder="Constraint value"
                     />
-                  {:else if fieldType === "boolean"}
+                  {:else if rule.type === "boolean"}
                     <Select
                       disabled={rule.constraint === "required"}
                       options={[
@@ -292,7 +294,7 @@
                       ]}
                       bind:value={rule.value}
                     />
-                  {:else if fieldType === "datetime"}
+                  {:else if rule.type === "datetime"}
                     <DatePicker
                       enableTime={false}
                       disabled={rule.constraint === "required"}
