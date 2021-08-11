@@ -7,6 +7,7 @@
   export let placeholder
   export let type = "text"
   export let disabled = false
+  export let defaultValue = ""
 
   let fieldState
   let fieldApi
@@ -16,6 +17,7 @@
   {label}
   {field}
   {disabled}
+  {defaultValue}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
   bind:fieldApi
