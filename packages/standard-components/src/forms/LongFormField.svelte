@@ -7,6 +7,7 @@
   export let placeholder
   export let disabled = false
   export let validation
+  export let defaultValue = ""
 
   let fieldState
   let fieldApi
@@ -17,10 +18,10 @@
   {field}
   {disabled}
   {validation}
+  {defaultValue}
   type="longform"
   bind:fieldState
   bind:fieldApi
-  defaultValue=""
 >
   {#if fieldState}
     <CoreTextArea
