@@ -23,13 +23,28 @@
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
+
   const dispatch = createEventDispatcher()
+
+  $: sortedOptions = getSortedOptions(options, getOptionLabel)
+
   const onClick = () => {
     dispatch("click")
     if (readonly) {
       return
     }
     open = true
+  }
+
+  const getSortedOptions = (options, getLabel) => {
+    if (!options?.length || !Array.isArray(options)) {
+      return []
+    }
+    return options.sort((a, b) => {
+      const labelA = getLabel(a)
+      const labelB = getLabel(b)
+      return labelA > labelB ? 1 : -1
+    })
   }
 </script>
 
@@ -101,8 +116,8 @@
           </svg>
         </li>
       {/if}
-      {#if options && Array.isArray(options)}
-        {#each options as option, idx}
+      {#if sortedOptions.length}
+        {#each sortedOptions as option, idx}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -121,9 +136,9 @@
                 />
               </span>
             {/if}
-            <span class="spectrum-Menu-itemLabel"
-              >{getOptionLabel(option, idx)}</span
-            >
+            <span class="spectrum-Menu-itemLabel">
+              {getOptionLabel(option, idx)}
+            </span>
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
