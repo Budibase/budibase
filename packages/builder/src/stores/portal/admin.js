@@ -3,9 +3,15 @@ import api from "builderStore/api"
 import { auth } from "stores/portal"
 
 export function createAdminStore() {
-  const admin = writable({
+  const DEFAULT_CONFIG = {
     loaded: false,
-  })
+    multiTenancy: false,
+    sandbox: false,
+    onboardingProgress: 0,
+    checklist: { apps: 0, smtp: false, adminUser: false, sso: false },
+  }
+
+  const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
     try {
@@ -22,7 +28,7 @@ export function createAdminStore() {
         0
       )
 
-      await multiTenancyEnabled()
+      await getFlags()
       admin.update(store => {
         store.loaded = true
         store.checklist = json
@@ -38,20 +44,22 @@ export function createAdminStore() {
     }
   }
 
-  async function multiTenancyEnabled() {
-    let enabled = false
+  async function getFlags() {
+    let multiTenancyEnabled = false
+    let sandbox = false
     try {
       const response = await api.get(`/api/system/flags`)
       const json = await response.json()
-      enabled = json.multiTenancy
+      multiTenancyEnabled = json.multiTenancy
+      sandbox = json.sandbox
     } catch (err) {
       // just let it stay disabled
     }
     admin.update(store => {
-      store.multiTenancy = enabled
+      store.multiTenancy = multiTenancyEnabled
+      store.sandbox = sandbox
       return store
     })
-    return enabled
   }
 
   function unload() {
