@@ -22,7 +22,7 @@ export function createAdminStore() {
         0
       )
 
-      await multiTenancyEnabled()
+      await getFlags()
       admin.update(store => {
         store.loaded = true
         store.checklist = json
@@ -38,20 +38,22 @@ export function createAdminStore() {
     }
   }
 
-  async function multiTenancyEnabled() {
-    let enabled = false
+  async function getFlags() {
+    let multiTenancyEnabled = false
+    let sandbox = false
     try {
       const response = await api.get(`/api/system/flags`)
       const json = await response.json()
-      enabled = json.multiTenancy
+      multiTenancyEnabled = json.multiTenancy
+      sandbox = json.sandbox
     } catch (err) {
       // just let it stay disabled
     }
     admin.update(store => {
-      store.multiTenancy = enabled
+      store.multiTenancy = multiTenancyEnabled
+      store.sandbox = sandbox
       return store
     })
-    return enabled
   }
 
   function unload() {
