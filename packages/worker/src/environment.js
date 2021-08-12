@@ -32,6 +32,7 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
+  SANDBOX: process.env.SANDBOX,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
