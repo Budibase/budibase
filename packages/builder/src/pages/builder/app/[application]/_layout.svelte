@@ -7,14 +7,14 @@
   import VersionModal from "components/deploy/VersionModal.svelte"
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
-  import { auth } from "stores/portal"
+  import { auth, admin } from "stores/portal"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
+  import UpgradeModal from "../../../../components/upgrade/UpgradeModal.svelte"
 
   // Get Package and set store
   export let application
-
   let promise = getPackage()
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
@@ -92,6 +92,9 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
+        {#if $admin.sandbox}
+          <UpgradeModal />
+        {/if}
         <VersionModal />
         <RevertModal />
         <Icon name="Play" hoverable on:click={previewApp} />
