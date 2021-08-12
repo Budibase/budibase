@@ -197,6 +197,12 @@
   const removeRule = id => {
     rules = rules.filter(link => link.id !== id)
   }
+
+  const duplicateRule = id => {
+    const existingRule = rules.find(rule => rule.id === id)
+    const newRule = { ...existingRule, id: generate() }
+    rules = [...rules, newRule]
+  }
 </script>
 
 <DrawerContent>
@@ -309,6 +315,12 @@
                   on:change={e => (rule.error = e.detail)}
                 />
                 <Icon
+                  name="Duplicate"
+                  hoverable
+                  size="S"
+                  on:click={() => duplicateRule(rule.id)}
+                />
+                <Icon
                   name="Close"
                   hoverable
                   size="S"
@@ -344,7 +356,7 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: 1fr 1fr 1fr 1fr 20px;
+    grid-template-columns: 180px 120px 1fr 1fr auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
