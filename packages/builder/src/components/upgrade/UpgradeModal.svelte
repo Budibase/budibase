@@ -14,7 +14,7 @@
     quiet
     primary
     size="M"
-    icon="DownloadFromCloud">Upgrade to self-hosted</Button
+    icon="DownloadFromCloud">Self-host Budibase</Button
   >
 </div>
 <Modal bind:this={upgradeModal}>
@@ -26,7 +26,7 @@
   >
     <span
       >Upgrade to Budibase self-hosting for free, and get SSO, unlimited apps,
-      and more - and it only takes 10 minutes!</span
+      and more - and it only takes a few minutes!</span
     >
   </ModalContent>
 </Modal>
