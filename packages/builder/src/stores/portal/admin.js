@@ -3,9 +3,16 @@ import api from "builderStore/api"
 import { auth } from "stores/portal"
 
 export function createAdminStore() {
-  const admin = writable({
+
+  const DEFAULT_CONFIG = {
     loaded: false,
-  })
+    multiTenancy: false,
+    sandbox: false,
+    onboardingProgress: 0,
+    checklist: {"apps":0,"smtp":false,"adminUser":false,"sso":false}
+  }
+  
+  const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
     try {
