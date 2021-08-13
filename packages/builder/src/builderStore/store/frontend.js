@@ -35,6 +35,7 @@ const INITIAL_FRONTEND_STATE = {
   clientFeatures: {
     spectrumThemes: false,
     intelligentLoading: false,
+    deviceAwareness: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
