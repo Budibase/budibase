@@ -5,7 +5,6 @@
   import NotificationDisplay from "./NotificationDisplay.svelte"
   import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./PeekScreenDisplay.svelte"
-  import Provider from "./Provider.svelte"
   import SDK from "../sdk"
   import {
     createContextStore,
@@ -16,12 +15,13 @@
     builderStore,
     appStore,
   } from "../store"
-  import { TableNames, ActionTypes } from "../constants"
   import SettingsBar from "./preview/SettingsBar.svelte"
   import SelectionIndicator from "./preview/SelectionIndicator.svelte"
   import HoverIndicator from "./preview/HoverIndicator.svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "../../../builder/assets/error.svg"
+  import UserBindingsProvider from "./UserBindingsProvider.svelte"
+  import DeviceBindingsProvider from "./DeviceBindingsProvider.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -40,16 +40,6 @@
       builderStore.actions.notifyLoaded()
     }
   })
-
-  // Register this as a refreshable datasource so that user changes cause
-  // the user object to be refreshed
-  $: actions = [
-    {
-      type: ActionTypes.RefreshDatasource,
-      callback: () => authStore.actions.fetchUser(),
-      metadata: { dataSource: { type: "table", tableId: TableNames.USERS } },
-    },
-  ]
 
   // Handle no matching route - this is likely a permission error
   $: {
@@ -93,30 +83,32 @@
         </Layout>
       </div>
     {:else if $screenStore.activeLayout}
-      <Provider key="user" data={$authStore} {actions}>
-        <div id="app-root" class:preview={$builderStore.inBuilder}>
-          {#key $screenStore.activeLayout._id}
-            <Component instance={$screenStore.activeLayout.props} />
+      <UserBindingsProvider>
+        <DeviceBindingsProvider>
+          <div id="app-root" class:preview={$builderStore.inBuilder}>
+            {#key $screenStore.activeLayout._id}
+              <Component instance={$screenStore.activeLayout.props} />
+            {/key}
+          </div>
+          <NotificationDisplay />
+          <ConfirmationDisplay />
+          <PeekScreenDisplay />
+          <!-- Key block needs to be outside the if statement or it breaks -->
+          {#key $builderStore.selectedComponentId}
+            {#if $builderStore.inBuilder}
+              <SettingsBar />
+            {/if}
           {/key}
-        </div>
-        <NotificationDisplay />
-        <ConfirmationDisplay />
-        <PeekScreenDisplay />
-        <!-- Key block needs to be outside the if statement or it breaks -->
-        {#key $builderStore.selectedComponentId}
+          <!--
+              We don't want to key these by componentID as they control their own
+              re-mounting to avoid flashes.
+            -->
           {#if $builderStore.inBuilder}
-            <SettingsBar />
+            <SelectionIndicator />
+            <HoverIndicator />
           {/if}
-        {/key}
-        <!--
-            We don't want to key these by componentID as they control their own
-            re-mounting to avoid flashes.
-          -->
-        {#if $builderStore.inBuilder}
-          <SelectionIndicator />
-          <HoverIndicator />
-        {/if}
-      </Provider>
+        </DeviceBindingsProvider>
+      </UserBindingsProvider>
     {/if}
   </div>
 {/if}

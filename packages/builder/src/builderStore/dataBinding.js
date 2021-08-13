@@ -17,7 +17,13 @@ export const getBindableProperties = (asset, componentId) => {
   const contextBindings = getContextBindings(asset, componentId)
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
-  return [...contextBindings, ...userBindings, ...urlBindings]
+  const deviceBindings = getDeviceBindings()
+  return [
+    ...deviceBindings,
+    ...urlBindings,
+    ...contextBindings,
+    ...userBindings,
+  ]
 }
 
 /**
@@ -218,6 +224,27 @@ const getUserBindings = () => {
     })
   })
 
+  return bindings
+}
+
+/**
+ * Gets all device bindings that are globally available.
+ */
+const getDeviceBindings = () => {
+  let bindings = []
+  if (get(store).clientFeatures?.deviceAwareness) {
+    const safeDevice = makePropSafe("device")
+    bindings.push({
+      type: "context",
+      runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
+      readableBinding: `Device.Mobile`,
+    })
+    bindings.push({
+      type: "context",
+      runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
+      readableBinding: `Device.Tablet`,
+    })
+  }
   return bindings
 }
 
