@@ -2,21 +2,19 @@
   import Provider from "./Provider.svelte"
   import { onMount } from "svelte"
 
+  let width = window.innerWidth
   const tabletBreakpoint = 768
   const desktopBreakpoint = 1280
-
-  let screenWidth = window.innerWidth
   const resizeObserver = new ResizeObserver(entries => {
     if (entries?.[0]) {
-      screenWidth = entries[0].contentRect?.width
+      width = entries[0].contentRect?.width
     }
   })
-  $: mobile = screenWidth && screenWidth < tabletBreakpoint
-  $: tablet =
-    screenWidth &&
-    screenWidth >= tabletBreakpoint &&
-    screenWidth < desktopBreakpoint
-  $: data = { mobile, tablet }
+
+  $: data = {
+    mobile: width && width < tabletBreakpoint,
+    tablet: width && width >= tabletBreakpoint && width < desktopBreakpoint,
+  }
 
   onMount(() => {
     const doc = document.documentElement
