@@ -595,6 +595,9 @@
         "showInBar": true,
         "barStyle": "picker",
         "options": [{
+          "label": "Extra Small",
+          "value": "XS"
+        }, {
           "label": "Small",
           "value": "S"
         }, {
@@ -603,6 +606,15 @@
         }, {
           "label": "Large",
           "value": "L"
+        }, {
+          "label": "Extra Large",
+          "value": "XL"
+        }, {
+          "label": "2XL",
+          "value": "XXL"
+        }, {
+          "label": "3XL",
+          "value": "XXXL"
         }]
       },
       {
@@ -689,6 +701,9 @@
         "showInBar": true,
         "barStyle": "picker",
         "options": [{
+          "label": "Extra Small",
+          "value": "XS"
+        }, {
           "label": "Small",
           "value": "S"
         }, {
@@ -697,6 +712,15 @@
         }, {
           "label": "Large",
           "value": "L"
+        }, {
+          "label": "Extra Large",
+          "value": "XL"
+        }, {
+          "label": "2XL",
+          "value": "XXL"
+        }, {
+          "label": "3XL",
+          "value": "XXXL"
         }]
       },
       {
