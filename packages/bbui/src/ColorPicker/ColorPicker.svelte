@@ -19,7 +19,7 @@
   const dispatch = createEventDispatcher()
   const categories = [
     {
-      label: "Grays",
+      label: "Theme",
       colors: [
         "gray-50",
         "gray-75",
@@ -72,6 +72,9 @@
         "blue-700",
         "indigo-700",
         "magenta-700",
+
+        "static-white",
+        "static-black",
       ],
     },
   ]
@@ -101,9 +104,19 @@
   }
 
   const getCheckColor = value => {
-    return /^.*(white|(gray-(50|75|100|200|300|400|500)))\)$/.test(value)
-      ? "var(--spectrum-global-color-gray-900)"
-      : "var(--spectrum-global-color-gray-50)"
+    // Use dynamic color for theme grays
+    if (value?.includes("gray")) {
+      return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
+        ? "var(--spectrum-global-color-gray-900)"
+        : "var(--spectrum-global-color-gray-50)"
+    }
+
+    // Use black check for static white
+    if (value?.includes("static-black")) {
+      return "var(--spectrum-global-color-static-gray-50)"
+    }
+
+    return "var(--spectrum-global-color-static-gray-900)"
   }
 </script>
 
