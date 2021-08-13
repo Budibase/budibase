@@ -19,7 +19,7 @@
   const dispatch = createEventDispatcher()
   const categories = [
     {
-      label: "Grays",
+      label: "Theme",
       colors: [
         "gray-50",
         "gray-75",
