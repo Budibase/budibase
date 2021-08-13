@@ -13,8 +13,9 @@
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
-    value = e.detail
-    dispatch("change", e.detail)
+    const isoString = e.detail.toISOString()
+    value = isoString
+    dispatch("change", isoString)
   }
 </script>
 
