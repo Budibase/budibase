@@ -267,6 +267,10 @@
           {
             "label": "Warning",
             "value": "warning"
+          },
+          {
+            "label": "Over Background",
+            "value": "overBackground"
           }
         ],
         "defaultValue": "primary"

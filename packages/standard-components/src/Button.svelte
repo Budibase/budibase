@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import "@spectrum-css/button/dist/index-vars.css"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -26,5 +27,8 @@
   button {
     width: fit-content;
     width: -moz-fit-content;
+  }
+  .spectrum-Button--overBackground:hover {
+    color: #555;
   }
 </style>
