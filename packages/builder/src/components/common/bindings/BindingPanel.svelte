@@ -38,7 +38,7 @@
       </section>
       {#if filteredColumns?.length}
         <section>
-          <div class="heading">Columns</div>
+          <div class="heading">Bindable Values</div>
           <ul>
             {#each filteredColumns as { readableBinding }}
               <li
