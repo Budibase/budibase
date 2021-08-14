@@ -37,6 +37,12 @@
     value = value.filter(field => field.id !== id)
   }
 
+  const duplicateField = id => {
+    const filter = value.find(filter => filter.id === id)
+    const duplicate = { ...filter, id: generate() }
+    value = [...value, duplicate]
+  }
+
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = schemaFields.find(x => x.name === field)?.type
@@ -128,6 +134,13 @@
       <ActionButton
         size="S"
         quiet
+        icon="Duplicate"
+        on:click={() => duplicateField(expression.id)}
+      />
+
+      <ActionButton
+        size="S"
+        quiet
         icon="Close"
         on:click={() => removeField(expression.id)}
       />
@@ -146,6 +159,6 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 120px 120px 1fr auto;
+    grid-template-columns: 1fr 120px 120px 1fr auto auto;
   }
 </style>
