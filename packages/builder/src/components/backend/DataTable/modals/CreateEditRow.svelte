@@ -31,7 +31,10 @@
         .flat()
       // Prevent modal closing if there were errors
       return false
-    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
+    } else if (rowResponse.status === 400 && rowResponse.validationErrors) {
+      errors = Object.keys(rowResponse.validationErrors).map(field => ({message: `${field} ${rowResponse.validationErrors[field][0]}`}))
+      return false
+    } else if (rowResponse.status === 500) {
       errors = [{ message: rowResponse.message }]
       return false
     }
