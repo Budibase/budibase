@@ -6,6 +6,7 @@
   export let field
   export let label
   export let disabled = false
+  export let validation
 
   let fieldState
   let fieldApi
@@ -35,6 +36,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   type="attachment"
   bind:fieldState
   bind:fieldApi
@@ -44,6 +46,7 @@
     <CoreDropzone
       value={$fieldState.value}
       disabled={$fieldState.disabled}
+      error={$fieldState.error}
       on:change={e => {
         fieldApi.setValue(e.detail)
       }}

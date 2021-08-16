@@ -11,6 +11,7 @@
   export let defaultValue
   export let type
   export let disabled = false
+  export let validation
 
   // Get contexts
   const formContext = getContext("form")
@@ -21,12 +22,20 @@
   // Register field with form
   const formApi = formContext?.formApi
   const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field, defaultValue, disabled)
+  const formField = formApi?.registerField(
+    field,
+    defaultValue,
+    disabled,
+    validation
+  )
 
   // Expose field properties to parent component
   fieldState = formField?.fieldState
   fieldApi = formField?.fieldApi
   fieldSchema = formField?.fieldSchema
+
+  // Keep validation rules up to date
+  $: fieldApi?.updateValidation(validation)
 
   // Extract label position from field group context
   $: labelPositionClass =
