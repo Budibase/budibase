@@ -23,6 +23,8 @@ module.exports = {
   // important
   PORT: process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
+  COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
+  COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,

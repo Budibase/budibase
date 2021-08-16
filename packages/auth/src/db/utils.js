@@ -168,7 +168,13 @@ exports.getAllDbs = async () => {
   if (env.isTest()) {
     return getCouch().allDbs()
   }
-  const response = await fetch(`${env.COUCH_DB_URL}/_all_dbs`)
+  const response = await fetch(`${env.COUCH_DB_URL}/_all_dbs`, {
+    method: "POST",
+    body: JSON.stringify({
+      name: env.COUCH_DB_USERNAME, 
+      password: env.COUCH_DB_PASSWORD, 
+    }),
+  })
   if (response.status === 200) {
     return response.json()
   } else {
