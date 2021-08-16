@@ -5,6 +5,7 @@
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
+  import Search from "./Search.svelte"
 
   export let id = null
   export let disabled = false
@@ -13,6 +14,7 @@
   export let fieldIcon = ""
   export let isPlaceholder = false
   export let placeholderOption = null
+  export let autocompletePlaceholder = ""
   export let options = []
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
@@ -23,10 +25,17 @@
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
+  export let autocomplete = false
 
   const dispatch = createEventDispatcher()
+  let searchTerm = null
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel)
+  $: filteredOptions = getFilteredOptions(
+    sortedOptions,
+    searchTerm,
+    getOptionLabel
+  )
 
   const onClick = () => {
     dispatch("click")
@@ -45,6 +54,16 @@
       const labelB = getLabel(b)
       return labelA > labelB ? 1 : -1
     })
+  }
+
+  const getFilteredOptions = (options, term, getLabel) => {
+    if (autocomplete && term) {
+      const lowerCaseTerm = term.toLowerCase()
+      return options.filter(option =>
+        getLabel(option).toLowerCase().includes(lowerCaseTerm)
+      )
+    }
+    return options
   }
 </script>
 
@@ -96,6 +115,14 @@
     class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
     class:auto-width={autoWidth}
   >
+    {#if autocomplete}
+      <Search
+        on:change={event => (searchTerm = event.detail)}
+        updateOnChange="true"
+        {disabled}
+        placeholder={autocompletePlaceholder}
+      />
+    {/if}
     <ul class="spectrum-Menu" role="listbox">
       {#if placeholderOption}
         <li
@@ -116,8 +143,8 @@
           </svg>
         </li>
       {/if}
-      {#if sortedOptions.length}
-        {#each sortedOptions as option, idx}
+      {#if filteredOptions.length}
+        {#each filteredOptions as option, idx}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}

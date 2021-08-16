@@ -95,4 +95,7 @@
   .is-disabled {
     pointer-events: none;
   }
+  .spectrum-Search-clearButton {
+    position: absolute;
+  }
 </style>

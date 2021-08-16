@@ -1915,6 +1915,10 @@
             "value": "select"
           },
           {
+            "label": "Autocomplete",
+            "value": "autocomplete"
+          },
+          {
             "label": "Radio buttons",
             "value": "radio"
           }
@@ -2134,6 +2138,12 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false
       },
       {
         "type": "boolean",

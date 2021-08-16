@@ -1,5 +1,5 @@
 <script>
-  import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
+  import { CoreAutocomplete, CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
 
@@ -10,6 +10,7 @@
   export let placeholder
   export let disabled = false
   export let validation
+  export let autocomplete = false
 
   let fieldState
   let fieldApi
@@ -24,6 +25,11 @@
   $: fetchTable(linkedTableId)
   $: singleValue = flatten($fieldState?.value)?.[0]
   $: multiValue = flatten($fieldState?.value) ?? []
+  $: component = multiselect
+    ? CoreMultiselect
+    : autocomplete
+    ? CoreAutocomplete
+    : CoreSelect
 
   const fetchTable = async id => {
     if (id) {
@@ -74,7 +80,7 @@
 >
   {#if fieldState}
     <svelte:component
-      this={multiselect ? CoreMultiselect : CoreSelect}
+      this={component}
       {options}
       value={multiselect ? multiValue : singleValue}
       on:change={multiselect ? multiHandler : singleHandler}
