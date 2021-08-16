@@ -32,7 +32,6 @@ spec:
           {{ if .Values.services.couchdb.url }}
           value: {{ .Values.services.couchdb.url }}
           {{ else }}
-          # value: http://{{ .Release.Name }}-svc-couchdb.{{ include "budibase.serviceDns" . }}:{{ .Values.services.couchdb.port }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
         - name: COUCH_DB_USER
