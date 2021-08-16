@@ -88,14 +88,16 @@ globals:
   sentryDSN: "" 
   logLevel: info
   selfHosted: 1
-  # creates an internal API key, JWT secrets and redis password for you
-  createSecrets: true
+  createSecrets: true # creates an internal API key, JWT secrets and redis password for you
+
   # if createSecrets is set to false, you can hard-code your secrets here
   internalApiKey: ""
   jwtSecret: ""
 
 
 services:
+  dns: cluster.local
+
   proxy:
     port: 10000
     replicaCount: 1
@@ -114,28 +116,27 @@ services:
 
   couchdb:
     replicaCount: 3
-    host: budibase-prod-svc-couchdb
-    url: budibase-prod-svc-couchdb # only change if pointing to existing couch server
+    url: "" # only change if pointing to existing couch server
     user: "" # only change if pointing to existing couch server
     password: "" # only change if pointing to existing couch server
     port: 5678
     storage: 100Mi
   
   redis:
-    # disable if using external redis
-    enabled: true
+    enabled: true # disable if using external redis
     port: 6379
     replicaCount: 1
+    host: "" # only change if pointing to existing redis cluster and enabled: false
     password: "budibase" # recommended to override if using built-in redis
     storage: 100Mi
   
-  object_store:
-    minio: false
+  objectStore:
+    minio: true
     browser: true
-    accessKey: "" # AWS_ACCESS_KEY or existing minio access key
-    secretKey: "" # AWS_SECRET_ACCESS_KEY or existing minio secret 
-    url: minio-service.budibase.svc.cluster.local:9000
     port: 9000
     replicaCount: 1
+    accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
+    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret 
+    url: "" # only change if pointing to existing minio cluster and minio: false 
     storage: 100Mi
 

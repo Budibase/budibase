@@ -1,4 +1,4 @@
-{{- if .Values.services.object_store.minio }}
+{{- if .Values.services.objectStore.minio }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,19 +31,17 @@ spec:
         - /data
         env:
         - name: MINIO_BROWSER
-          value: {{ .Values.services.object_store.browser | quote }}
+          value: {{ .Values.services.objectStore.browser | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreAccess
-          # value: {{ .Values.services.object_store.accessKey }}
         - name: MINIO_SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
-          # value: {{ .Values.services.object_store.secretKey }}
         image: minio/minio
         imagePullPolicy: ""
         livenessProbe:
@@ -57,7 +55,7 @@ spec:
           timeoutSeconds: 20
         name: minio-service
         ports:
-        - containerPort: {{ .Values.services.object_store.port }}
+        - containerPort: {{ .Values.services.objectStore.port }}
         resources: {}
         volumeMounts:
         - mountPath: /data

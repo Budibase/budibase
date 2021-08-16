@@ -29,7 +29,8 @@ spec:
         - name: BUDIBASE_ENVIRONMENT
           value: {{ .Values.globals.budibaseEnv }}
         - name: COUCH_DB_URL
-          value: {{ .Values.services.couchdb.url | quote }}
+          # Or inject value directly
+          value: couchdb-service.{{ include "budibase.serviceDns" . }}:{{ .Values.services.couchdb.port }}
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: INTERNAL_API_KEY
@@ -55,19 +56,21 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          value: {{ .Values.services.object_store.url }}
+          # Or inject value directly
+          value: minio-service.{{ include "budibase.serviceDns" . }}{{ .Values.services.objectStore.port }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password }}
         - name: REDIS_URL
-          value: "{{ .Values.services.redis.host }}:{{ .Values.services.redis.port }}"
+          # Or inject value directly
+          value: redis-service.{{ include "budibase.serviceDns" . }}:{{ .Values.services.redis.port }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
           value: {{ .Values.globals.sentryDSN }}
         - name: WORKER_URL
-          value: "{{ .Values.services.worker.host }}:{{ .Values.services.worker.port }}"
+          value: worker-service.{{ include "budibase.serviceDns" . }}:{{ .Values.services.worker.port }}
         image: budibase/apps
         imagePullPolicy: Always
         name: bbapps

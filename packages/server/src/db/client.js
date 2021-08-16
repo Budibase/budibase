@@ -11,7 +11,11 @@ PouchDB.plugin(find)
 PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
 
 let POUCH_DB_DEFAULTS = {
-  prefix: COUCH_DB_URL
+  prefix: COUCH_DB_URL,
+  auth: {
+    username: env.COUCH_DB_USER,
+    password: env.COUCH_DB_PASSWORD,
+  }
 }
 
 if (env.isTest()) {

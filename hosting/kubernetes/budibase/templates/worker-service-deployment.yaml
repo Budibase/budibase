@@ -40,7 +40,7 @@ spec:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
         - name: COUCH_DB_URL
-          value: {{ .Values.services.couchdb.url | quote }}
+          value: http://couchdb-service.{{ include "budibase.serviceDns" . }}:{{ .Values.services.couchdb.port }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
@@ -62,13 +62,13 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          value: {{ .Values.services.object_store.url }}
+          value: minio-service.{{ include "budibase.serviceDns" . }}{{ .Values.services.objectStore.port }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
-          value: "{{ .Values.services.redis.host }}:{{ .Values.services.redis.port }}"
+          value: redis-service.{{ include "budibase.serviceDns" . }}{{ .Values.services.redis.port }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
         image: budibase/worker
