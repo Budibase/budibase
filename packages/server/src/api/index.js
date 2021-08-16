@@ -58,7 +58,7 @@ router.use(async (ctx, next) => {
     ctx.body = {
       message: err.message,
       status: ctx.status,
-      validationErrors: err.validation
+      validationErrors: err.validation,
     }
     if (env.NODE_ENV !== "jest") {
       ctx.log.error(err)
