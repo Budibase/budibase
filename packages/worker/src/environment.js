@@ -31,7 +31,7 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   /* TODO: to remove - once deployment removed */
-  COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
+  COUCH_DB_USERNAME: process.env.COUCH_DB_USERNAME,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   _set(key, value) {
     process.env[key] = value
