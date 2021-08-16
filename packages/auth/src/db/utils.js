@@ -159,6 +159,17 @@ exports.getDeployedAppID = appId => {
   return appId
 }
 
+exports.getCouchUrl = () => {
+  // username and password already exist in URL
+  if (env.COUCH_DB_URL.includes("@")) {
+    return env.COUCH_DB_URL
+  }
+
+  const [protocol, ...rest] = env.COUCH_DB_URL.split("://")
+
+  return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
+}
+
 /**
  * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
  * when using Pouch it will use the pouchdb-all-dbs package.
@@ -168,7 +179,7 @@ exports.getAllDbs = async () => {
   if (env.isTest()) {
     return getCouch().allDbs()
   }
-  const response = await fetch(`${env.COUCH_DB_URL}/_all_dbs`)
+  const response = await fetch(`${exports.getCouchUrl()}/_all_dbs`)
   if (response.status === 200) {
     return response.json()
   } else {
