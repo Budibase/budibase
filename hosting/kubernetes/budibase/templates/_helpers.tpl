@@ -27,6 +27,13 @@ CouchDB secret identifier
 {{- end -}}
 
 {{/*
+Internal DNS
+*/}}
+{{- define "budibase.serviceDns" -}}
+{{- printf "%s.%s.%s" .Release.Namespace "svc" .Values.services.dns -}}
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "budibase.chart" -}}

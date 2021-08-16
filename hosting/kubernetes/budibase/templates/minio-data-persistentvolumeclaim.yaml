@@ -1,4 +1,4 @@
-{{- if .Values.services.object_store.minio }}
+{{- if .Values.services.objectStore.minio }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -11,6 +11,6 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.services.object_store.storage }}
+      storage: {{ .Values.services.objectStore.storage }}
 status: {}
 {{- end }}

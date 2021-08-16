@@ -1,4 +1,4 @@
-{{- if .Values.services.object_store.minio }}
+{{- if .Values.services.objectStore.minio }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,9 +11,9 @@ metadata:
   name: minio-service
 spec:
   ports:
-  - name: {{ .Values.services.object_store.port | quote }}
-    port: {{ .Values.services.object_store.port }}
-    targetPort: {{ .Values.services.object_store.port }}
+  - name: {{ .Values.services.objectStore.port | quote }}
+    port: {{ .Values.services.objectStore.port }}
+    targetPort: {{ .Values.services.objectStore.port }}
   selector:
     io.kompose.service: minio-service
 status:
