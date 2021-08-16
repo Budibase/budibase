@@ -1,0 +1,9 @@
+controller:
+  kind: DaemonSet
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: ClusterIP
+
+podSecurityPolicy:
+  enabled: true

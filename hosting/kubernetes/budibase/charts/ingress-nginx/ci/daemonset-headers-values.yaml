@@ -1,0 +1,10 @@
+controller:
+  kind: DaemonSet
+  admissionWebhooks:
+    enabled: false
+  addHeaders:
+    X-Frame-Options: deny
+  proxySetHeaders:
+    X-Forwarded-Proto: https
+  service:
+    type: ClusterIP

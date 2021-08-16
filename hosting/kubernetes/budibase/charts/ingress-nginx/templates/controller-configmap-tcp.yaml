@@ -1,0 +1,14 @@
+{{- if .Values.tcp -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- if .Values.controller.tcp.annotations }}
+  annotations: {{ toYaml .Values.controller.tcp.annotations | nindent 4 }}
+{{- end }}
+  name: {{ include "ingress-nginx.fullname" . }}-tcp
+  namespace: {{ .Release.Namespace }}
+data: {{ tpl (toYaml .Values.tcp) . | nindent 2 }}
+{{- end }}

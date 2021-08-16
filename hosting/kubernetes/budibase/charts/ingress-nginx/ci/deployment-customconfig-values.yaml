@@ -1,0 +1,7 @@
+controller:
+  config:
+    use-proxy-protocol: "true"
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: ClusterIP

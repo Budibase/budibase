@@ -1,0 +1,7 @@
+controller:
+  autoscaling:
+    enabled: true
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: ClusterIP

@@ -1,0 +1,16 @@
+{{- if and .Values.rbac.create (not .Values.rbac.scope) -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+  name: {{ include "ingress-nginx.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "ingress-nginx.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "ingress-nginx.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace | quote }}
+{{- end }}

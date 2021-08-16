@@ -1,0 +1,6 @@
+controller:
+  service:
+    type: ClusterIP
+
+podSecurityPolicy:
+  enabled: true

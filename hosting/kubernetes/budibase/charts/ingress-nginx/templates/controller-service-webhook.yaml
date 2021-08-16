@@ -1,0 +1,34 @@
+{{- if .Values.controller.admissionWebhooks.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.controller.admissionWebhooks.service.annotations }}
+  annotations: {{ toYaml .Values.controller.admissionWebhooks.service.annotations | nindent 4 }}
+{{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}-admission
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.controller.admissionWebhooks.service.type }}
+{{- if .Values.controller.admissionWebhooks.service.clusterIP }}
+  clusterIP: {{ .Values.controller.admissionWebhooks.service.clusterIP }}
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.externalIPs }}
+  externalIPs: {{ toYaml .Values.controller.admissionWebhooks.service.externalIPs | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.controller.admissionWebhooks.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.admissionWebhooks.service.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+  ports:
+    - name: https-webhook
+      port: 443
+      targetPort: webhook
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

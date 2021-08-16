@@ -1,0 +1,51 @@
+{{- if and .Values.controller.service.enabled .Values.controller.service.internal.enabled .Values.controller.service.internal.annotations}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  {{- range $key, $value := .Values.controller.service.internal.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  {{- if .Values.controller.service.labels }}
+    {{- toYaml .Values.controller.service.labels | nindent 4 }}
+  {{- end }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}-internal
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: "{{ .Values.controller.service.type }}"
+{{- if .Values.controller.service.internal.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.controller.service.internal.loadBalancerIP }}
+{{- end }}
+{{- if .Values.controller.service.internal.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.service.internal.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.service.internal.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.controller.service.internal.externalTrafficPolicy }}
+{{- end }}
+  ports:
+  {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
+  {{- if .Values.controller.service.enableHttp }}
+    - name: http
+      port: {{ .Values.controller.service.ports.http }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.http }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.http }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.controller.service.enableHttps }}
+    - name: https
+      port: {{ .Values.controller.service.ports.https }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.https }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.https }}
+    {{- end }}
+  {{- end }}
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

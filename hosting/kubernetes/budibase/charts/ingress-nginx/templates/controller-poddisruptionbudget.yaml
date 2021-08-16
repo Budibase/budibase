@@ -1,0 +1,16 @@
+{{- if or (and .Values.controller.autoscaling.enabled (gt (.Values.controller.autoscaling.minReplicas | int) 1)) (and (not .Values.controller.autoscaling.enabled) (gt (.Values.controller.replicaCount | int) 1)) }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: controller
+  minAvailable: {{ .Values.controller.minAvailable }}
+{{- end }}

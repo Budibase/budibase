@@ -11,7 +11,7 @@ PouchDB.plugin(find)
 PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
 
 let POUCH_DB_DEFAULTS = {
-  prefix: COUCH_DB_URL,
+  prefix: COUCH_DB_URL
 }
 
 if (env.isTest()) {
