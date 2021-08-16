@@ -233,7 +233,9 @@ class QueryBuilder {
   }
 
   async run() {
-    const url = `${getCouchUrl()}/${this.appId}/_design/database/_search/${SearchIndexes.ROWS}`
+    const url = `${getCouchUrl()}/${this.appId}/_design/database/_search/${
+      SearchIndexes.ROWS
+    }`
     const body = this.buildSearchBody()
     return await runQuery(url, body)
   }

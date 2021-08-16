@@ -15,7 +15,7 @@ let POUCH_DB_DEFAULTS = {
   auth: {
     username: env.COUCH_DB_USERNAME,
     password: env.COUCH_DB_PASSWORD,
-  }
+  },
 }
 
 if (env.isTest()) {
