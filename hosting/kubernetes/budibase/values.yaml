@@ -101,18 +101,15 @@ services:
   proxy:
     port: 10000
     replicaCount: 1
-    storage: 100Mi
 
   apps:
     port: 4002
     replicaCount: 1
-    storage: 100Mi
     logLevel: info
 
   worker:
     port: 4001
     replicaCount: 1
-    storage: 100Mi
 
   couchdb:
     replicaCount: 3
