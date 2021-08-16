@@ -119,7 +119,7 @@ services:
     url: "" # only change if pointing to existing couch server
     user: "" # only change if pointing to existing couch server
     password: "" # only change if pointing to existing couch server
-    port: 5678
+    port: 5984
     storage: 100Mi
   
   redis:
