@@ -67,6 +67,7 @@
             placeholder: setting.placeholder,
           }}
           {bindings}
+          {componentDefinition}
         />
       {/if}
     {/each}

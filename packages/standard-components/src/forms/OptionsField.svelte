@@ -7,6 +7,7 @@
   export let placeholder
   export let disabled = false
   export let optionsType = "select"
+  export let validation
   export let defaultValue
 
   let fieldState
@@ -18,6 +19,7 @@
   {field}
   {label}
   {disabled}
+  {validation}
   {defaultValue}
   type="options"
   bind:fieldState
