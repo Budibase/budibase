@@ -34,13 +34,22 @@ spec:
             secretKeyRef:
               name: {{ template "couchdb.fullname" . }}
               key: adminUsername
+        - name: COUCH_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminUsername
         - name: COUCH_DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
         - name: COUCH_DB_URL
-          value: http://couchdb-service.{{ include "budibase.serviceDns" . }}:{{ .Values.services.couchdb.port }}
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
@@ -62,13 +71,21 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          value: minio-service.{{ include "budibase.serviceDns" . }}{{ .Values.services.objectStore.port }}
+          {{ if .Values.services.objectStore.url }}
+          value: {{ .Values.services.objectStore.url }}
+          {{ else }}
+          value: http://minio-service:{{ .Values.services.objectStore.port }}
+          {{ end }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
-          value: redis-service.{{ include "budibase.serviceDns" . }}{{ .Values.services.redis.port }}
+          {{ if .Values.services.redis.url }}
+          value: {{ .Values.services.redis.url }}
+          {{ else }}
+          value: redis-service:{{ .Values.services.redis.port }}
+          {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
         image: budibase/worker
