@@ -1,0 +1,35 @@
+{{- if .Values.defaultBackend.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.defaultBackend.service.annotations }}
+  annotations: {{ toYaml .Values.defaultBackend.service.annotations | nindent 4 }}
+{{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: default-backend
+  name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.defaultBackend.service.type }}
+{{- if .Values.defaultBackend.service.clusterIP }}
+  clusterIP: {{ .Values.defaultBackend.service.clusterIP }}
+{{- end }}
+{{- if .Values.defaultBackend.service.externalIPs }}
+  externalIPs: {{ toYaml .Values.defaultBackend.service.externalIPs | nindent 4 }}
+{{- end }}
+{{- if .Values.defaultBackend.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.defaultBackend.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.defaultBackend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.defaultBackend.service.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.defaultBackend.service.servicePort }}
+      protocol: TCP
+      targetPort: http
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: default-backend
+{{- end }}

@@ -1,0 +1,16 @@
+{{- if or .Values.controller.proxySetHeaders .Values.controller.headers -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
+  namespace: {{ .Release.Namespace }}
+data:
+{{- if .Values.controller.proxySetHeaders }}
+{{ toYaml .Values.controller.proxySetHeaders | indent 2 }}
+{{ else if and .Values.controller.headers (not .Values.controller.proxySetHeaders) }}
+{{ toYaml .Values.controller.headers | indent 2 }}
+{{- end }}
+{{- end }}

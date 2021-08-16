@@ -1,0 +1,6 @@
+controller:
+  kind: DaemonSet
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: ClusterIP

@@ -1,0 +1,85 @@
+{{- if .Values.controller.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  {{- range $key, $value := .Values.controller.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  {{- if .Values.controller.service.labels }}
+    {{- toYaml .Values.controller.service.labels | nindent 4 }}
+  {{- end }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.controller.service.type }}
+{{- if .Values.controller.service.clusterIP }}
+  clusterIP: {{ .Values.controller.service.clusterIP }}
+{{- end }}
+{{- if .Values.controller.service.externalIPs }}
+  externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.controller.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.controller.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
+{{- end }}
+{{- if .Values.controller.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.controller.service.sessionAffinity }}
+{{- end }}
+{{- if .Values.controller.service.healthCheckNodePort }}
+  healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
+{{- end }}
+  ports:
+  {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
+  {{- if .Values.controller.service.enableHttp }}
+    - name: http
+      port: {{ .Values.controller.service.ports.http }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.http }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.http }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.controller.service.enableHttps }}
+    - name: https
+      port: {{ .Values.controller.service.ports.https }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.https }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.https }}
+    {{- end }}
+  {{- end }}
+  {{- range $key, $value := .Values.tcp }}
+    - name: {{ $key }}-tcp
+      port: {{ $key }}
+      protocol: TCP
+      targetPort: {{ $key }}-tcp
+    {{- if $.Values.controller.service.nodePorts.tcp }}
+    {{- if index $.Values.controller.service.nodePorts.tcp $key }}
+      nodePort: {{ index $.Values.controller.service.nodePorts.tcp $key }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- range $key, $value := .Values.udp }}
+    - name: {{ $key }}-udp
+      port: {{ $key }}
+      protocol: UDP
+      targetPort: {{ $key }}-udp
+    {{- if $.Values.controller.service.nodePorts.udp }}
+    {{- if index $.Values.controller.service.nodePorts.udp $key }}
+      nodePort: {{ index $.Values.controller.service.nodePorts.udp $key }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

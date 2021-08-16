@@ -1,0 +1,44 @@
+{{- if .Values.controller.metrics.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.controller.metrics.service.annotations }}
+  annotations: {{ toYaml .Values.controller.metrics.service.annotations | nindent 4 }}
+{{- end }}
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  {{- if .Values.controller.metrics.service.labels }}
+    {{- toYaml .Values.controller.metrics.service.labels | nindent 4 }}
+  {{- end }}
+  name: {{ include "ingress-nginx.controller.fullname" . }}-metrics
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.controller.metrics.service.type }}
+{{- if .Values.controller.metrics.service.clusterIP }}
+  clusterIP: {{ .Values.controller.metrics.service.clusterIP }}
+{{- end }}
+{{- if .Values.controller.metrics.service.externalIPs }}
+  externalIPs: {{ toYaml .Values.controller.metrics.service.externalIPs | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.metrics.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.controller.metrics.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.controller.metrics.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ toYaml .Values.controller.metrics.service.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.metrics.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.controller.metrics.service.externalTrafficPolicy }}
+{{- end }}
+  ports:
+    - name: metrics
+      port: {{ .Values.controller.metrics.service.servicePort }}
+      targetPort: metrics
+    {{- $setNodePorts := (or (eq .Values.controller.metrics.service.type "NodePort") (eq .Values.controller.metrics.service.type "LoadBalancer")) }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.metrics.service.nodePort))) }}
+      nodePort: {{ .Values.controller.metrics.service.nodePort }}
+    {{- end }}
+  selector:
+    {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

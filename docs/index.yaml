@@ -1,0 +1,21 @@
+apiVersion: v1
+entries:
+  budibase:
+  - apiVersion: v2
+    appVersion: 0.9.56
+    created: "2021-08-11T23:12:24.184224+01:00"
+    description: Budibase is an open source low-code platform, helping thousands of teams build apps for their workplace in minutes.
+    digest: 19bde738daee9c5fe0fd3aef74c41214be4f7f1b9951b277506684493a5bc3fe
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - https://budibase.github.io/budibase/budibase-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-08-11T23:12:24.178479+01:00"

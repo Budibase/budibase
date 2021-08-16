@@ -1,0 +1,11 @@
+{{- if .Values.controller.addHeaders -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+  name: {{ include "ingress-nginx.fullname" . }}-custom-add-headers
+  namespace: {{ .Release.Namespace }}
+data: {{ toYaml .Values.controller.addHeaders | nindent 2 }}
+{{- end }}

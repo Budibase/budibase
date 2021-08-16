@@ -1,0 +1,23 @@
+{{- if and (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.ingressClassResource.enabled) -}}
+{{- if and (semverCompare "=1.18-0" .Capabilities.KubeVersion.GitVersion)  }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: networking.k8s.io/v1
+{{- end }}
+kind: IngressClass
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+    {{- with .Values.controller.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ .Values.controller.ingressClass }}
+{{- if .Values.controller.ingressClassResource.default }}
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+{{- end }}
+spec:
+  controller: k8s.io/ingress-nginx
+  {{ template "ingressClass.parameters" . }}
+{{- end }}

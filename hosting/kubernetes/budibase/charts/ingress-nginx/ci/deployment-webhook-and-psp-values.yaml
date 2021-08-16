@@ -1,0 +1,8 @@
+controller:
+  admissionWebhooks:
+    enabled: true
+  service:
+    type: ClusterIP
+
+podSecurityPolicy:
+  enabled: true

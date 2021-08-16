@@ -1,0 +1,18 @@
+{{- if and .Values.rbac.create .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: default-backend
+  name: {{ include "ingress-nginx.fullname" . }}-backend
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "ingress-nginx.fullname" . }}-backend
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "ingress-nginx.defaultBackend.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace | quote }}
+{{- end }}
