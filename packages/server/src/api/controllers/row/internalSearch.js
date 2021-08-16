@@ -1,5 +1,4 @@
 const { SearchIndexes } = require("../../../db/utils")
-const env = require("../../../environment")
 const fetch = require("node-fetch")
 const { getCouchUrl } = require("@budibase/auth/db")
 
