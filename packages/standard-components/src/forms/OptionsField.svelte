@@ -1,5 +1,5 @@
 <script>
-  import { CoreSelect, RadioGroup } from "@budibase/bbui"
+  import { CoreAutocomplete, CoreSelect, RadioGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
@@ -29,6 +29,16 @@
   {#if fieldState}
     {#if optionsType === "select"}
       <CoreSelect
+        value={$fieldState.value}
+        id={$fieldState.fieldId}
+        disabled={$fieldState.disabled}
+        error={$fieldState.error}
+        options={fieldSchema?.constraints?.inclusion ?? []}
+        {placeholder}
+        on:change={e => fieldApi.setValue(e.detail)}
+      />
+    {:else if optionsType === "autocomplete"}
+      <CoreAutocomplete
         value={$fieldState.value}
         id={$fieldState.fieldId}
         disabled={$fieldState.disabled}
