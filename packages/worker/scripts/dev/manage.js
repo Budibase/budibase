@@ -12,7 +12,7 @@ async function init() {
     INTERNAL_API_KEY: "budibase",
     MINIO_ACCESS_KEY: "budibase",
     MINIO_SECRET_KEY: "budibase",
-    COUCH_DB_USER: "budibase",
+    COUCH_DB_USERNAME: "budibase",
     COUCH_DB_PASSWORD: "budibase",
     REDIS_URL: "localhost:6379",
     REDIS_PASSWORD: "budibase",
