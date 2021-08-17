@@ -97,8 +97,7 @@
     disabled={!(valid && dirty)}
   >
     <Body size="S">
-      Give your new app a name, and choose which groups have access (paid plans
-      only).
+    Update the name of your app.
     </Body>
     <Input
       bind:value={$values.name}
