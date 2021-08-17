@@ -88,7 +88,7 @@ spec:
           {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
-        image: budibase/worker
+        image: budibase/worker:develop
         imagePullPolicy: Always
         name: bbworker
         ports:
