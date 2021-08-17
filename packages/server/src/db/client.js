@@ -12,10 +12,13 @@ PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
 
 let POUCH_DB_DEFAULTS = {
   prefix: COUCH_DB_URL,
-  auth: {
+}
+
+if (env.COUCH_DB_USERNAME && env.COUCH_DB_PASSWORD) {
+  POUCH_DB_DEFAULTS.auth = {
     username: env.COUCH_DB_USERNAME,
     password: env.COUCH_DB_PASSWORD,
-  },
+  }
 }
 
 if (env.isTest()) {
