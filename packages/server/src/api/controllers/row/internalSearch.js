@@ -1,6 +1,6 @@
 const { SearchIndexes } = require("../../../db/utils")
-const env = require("../../../environment")
 const fetch = require("node-fetch")
+const { getCouchUrl } = require("@budibase/auth/db")
 
 /**
  * Class to build lucene query URLs.
@@ -233,7 +233,9 @@ class QueryBuilder {
   }
 
   async run() {
-    const url = `${env.COUCH_DB_URL}/${this.appId}/_design/database/_search/${SearchIndexes.ROWS}`
+    const url = `${getCouchUrl()}/${this.appId}/_design/database/_search/${
+      SearchIndexes.ROWS
+    }`
     const body = this.buildSearchBody()
     return await runQuery(url, body)
   }
