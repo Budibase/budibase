@@ -1908,6 +1908,7 @@
         "type": "select",
         "label": "Type",
         "key": "optionsType",
+        "defaultValue": "select",
         "placeholder": "Pick an options type",
         "options": [
           {
@@ -1934,6 +1935,62 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Options source",
+        "key": "optionsSource",
+        "defaultValue": "schema",
+        "placeholder": "Pick an options source",
+        "options": [
+          {
+            "label": "Schema",
+            "value": "schema"
+          },
+          {
+            "label": "Data provider",
+            "value": "provider"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
+        ]
+      },
+      {
+        "type": "dataProvider",
+        "label": "Options Provider",
+        "key": "dataProvider",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Label Column",
+        "key": "labelColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Value Column",
+        "key": "valueColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      }, 
+      {
+        "type": "options",
+        "key": "customOptions",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "custom"
+        }
       },
       {
         "type": "validation/string",

@@ -32,9 +32,29 @@
     if (!control) {
       return false
     }
-    if (setting.dependsOn && isEmpty(componentInstance[setting.dependsOn])) {
-      return false
+
+    // Parse dependant settings
+    if (setting.dependsOn) {
+      let dependantSetting = setting.dependsOn
+      let dependantValue = null
+      if (typeof setting.dependsOn === "object") {
+        dependantSetting = setting.dependsOn.setting
+        dependantValue = setting.dependsOn.value
+      }
+      if (!dependantSetting) {
+        return false
+      }
+
+      // If no specific value is depended upon, check if a value exists at all
+      // for the dependent setting
+      if (dependantValue == null) {
+        return !isEmpty(componentInstance[dependantSetting])
+      }
+
+      // Otherwise check the value matches
+      return componentInstance[dependantSetting] === dependantValue
     }
+
     return true
   }
 </script>
