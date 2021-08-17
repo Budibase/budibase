@@ -1916,10 +1916,6 @@
             "value": "select"
           },
           {
-            "label": "Autocomplete",
-            "value": "autocomplete"
-          },
-          {
             "label": "Radio buttons",
             "value": "radio"
           }
@@ -1929,6 +1925,16 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
       },
       {
         "type": "boolean",

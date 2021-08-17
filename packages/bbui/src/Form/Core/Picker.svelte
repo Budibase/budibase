@@ -14,7 +14,6 @@
   export let fieldIcon = ""
   export let isPlaceholder = false
   export let placeholderOption = null
-  export let autocompletePlaceholder = ""
   export let options = []
   export let isOptionSelected = () => false
   export let onSelectOption = () => {}
@@ -120,7 +119,7 @@
         on:change={event => (searchTerm = event.detail)}
         updateOnChange="true"
         {disabled}
-        placeholder={autocompletePlaceholder}
+        placeholder="Search"
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox">
