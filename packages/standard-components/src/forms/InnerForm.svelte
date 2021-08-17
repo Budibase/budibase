@@ -21,7 +21,12 @@
 
   // Form API contains functions to control the form
   const formApi = {
-    registerField: (field, defaultValue = null, fieldDisabled = false) => {
+    registerField: (
+      field,
+      defaultValue = null,
+      fieldDisabled = false,
+      validationRules
+    ) => {
       if (!field) {
         return
       }
@@ -30,17 +35,23 @@
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
       // Create validation function based on field schema
-      const constraints = schema?.[field]?.constraints
-      const validate = createValidatorFromConstraints(constraints, field, table)
+      const schemaConstraints = schema?.[field]?.constraints
+      const validator = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
 
       // Construct field object
       fieldMap[field] = {
         fieldState: makeFieldState(
           field,
+          validator,
           defaultValue,
           disabled || fieldDisabled || isAutoColumn
         ),
-        fieldApi: makeFieldApi(field, defaultValue, validate),
+        fieldApi: makeFieldApi(field, defaultValue),
         fieldSchema: schema?.[field] ?? {},
       }
 
@@ -83,9 +94,11 @@
   ]
 
   // Creates an API for a specific field
-  const makeFieldApi = (field, defaultValue, validate) => {
+  const makeFieldApi = field => {
+    // Sets the value for a certain field and invokes validation
     const setValue = (value, skipCheck = false) => {
       const { fieldState } = fieldMap[field]
+      const { validator } = get(fieldState)
 
       // Skip if the value is the same
       if (!skipCheck && get(fieldState).value === value) {
@@ -93,7 +106,7 @@
       }
 
       // Update field state
-      const error = validate ? validate(value) : null
+      const error = validator ? validator(value) : null
       fieldState.update(state => {
         state.value = value
         state.error = error
@@ -115,15 +128,20 @@
       return !error
     }
 
+    // Clears the value of a certain field back to the initial value
     const clearValue = () => {
       const { fieldState } = fieldMap[field]
+      const { defaultValue } = get(fieldState)
       const newValue = initialValues[field] ?? defaultValue
+
+      // Update field state
       fieldState.update(state => {
         state.value = newValue
         state.error = null
         return state
       })
 
+      // Update form state
       formState.update(state => {
         state.values = { ...state.values, [field]: newValue }
         delete state.errors[field]
@@ -132,9 +150,37 @@
       })
     }
 
+    // Updates the validator rules for a certain field
+    const updateValidation = validationRules => {
+      const { fieldState } = fieldMap[field]
+      const { value, error } = get(fieldState)
+
+      // Create new validator
+      const schemaConstraints = schema?.[field]?.constraints
+      const validator = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
+
+      // Update validator
+      fieldState.update(state => {
+        state.validator = validator
+        return state
+      })
+
+      // If there is currently an error, run the validator again in case
+      // the error should be cleared by the new validation rules
+      if (error) {
+        setValue(value, true)
+      }
+    }
+
     return {
       setValue,
       clearValue,
+      updateValidation,
       validate: () => {
         const { fieldState } = fieldMap[field]
         setValue(get(fieldState).value, true)
@@ -143,13 +189,15 @@
   }
 
   // Creates observable state data about a specific field
-  const makeFieldState = (field, defaultValue, fieldDisabled) => {
+  const makeFieldState = (field, validator, defaultValue, fieldDisabled) => {
     return writable({
       field,
       fieldId: `id-${generateID()}`,
       value: initialValues[field] ?? defaultValue,
       error: null,
       disabled: fieldDisabled,
+      defaultValue,
+      validator,
     })
   }
 

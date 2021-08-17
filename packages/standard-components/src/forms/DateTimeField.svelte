@@ -7,6 +7,7 @@
   export let placeholder
   export let disabled = false
   export let enableTime = false
+  export let validation
   export let defaultValue
 
   let fieldState
@@ -42,6 +43,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   defaultValue={parseDate(defaultValue)}
   type="datetime"
   bind:fieldState

@@ -53,7 +53,7 @@
         label={def.label}
         key={def.key}
         value={deepGet($currentAsset, def.key)}
-        on:change={event => setAssetProps(def.key, event.detail, def.parser)}
+        onChange={val => setAssetProps(def.key, val, def.parser)}
         {bindings}
       />
     {/each}
