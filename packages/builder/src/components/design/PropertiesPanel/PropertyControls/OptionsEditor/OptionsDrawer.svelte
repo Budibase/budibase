@@ -32,7 +32,7 @@
     <Layout noPadding>
       <Body size="S">
         {#if !options.length}
-          Add a custom option.
+          Add an option to get started.
         {/if}
       </Body>
 
