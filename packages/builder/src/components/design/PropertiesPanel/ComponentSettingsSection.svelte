@@ -71,7 +71,7 @@
     />
   {/if}
   {#if settings && settings.length > 0}
-    {#each settings as setting}
+    {#each settings as setting (setting.key)}
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
@@ -83,8 +83,8 @@
           {componentInstance}
           onChange={val => updateProp(setting.key, val)}
           props={{
-            options: setting.options,
-            placeholder: setting.placeholder,
+            options: setting.options || [],
+            placeholder: setting.placeholder || null,
           }}
           {bindings}
           {componentDefinition}
