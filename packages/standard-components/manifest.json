@@ -1706,7 +1706,6 @@
     "actions": [
       "ValidateForm",
       "ClearForm",
-      "NextFormStep"
     ],
     "styles": ["size"],
     "settings": [
