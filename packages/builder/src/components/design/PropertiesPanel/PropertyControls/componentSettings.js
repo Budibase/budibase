@@ -20,6 +20,8 @@ import LongFormFieldSelect from "./LongFormFieldSelect.svelte"
 import DateTimeFieldSelect from "./DateTimeFieldSelect.svelte"
 import AttachmentFieldSelect from "./AttachmentFieldSelect.svelte"
 import RelationshipFieldSelect from "./RelationshipFieldSelect.svelte"
+import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
+
 
 const componentMap = {
   text: Input,
@@ -34,6 +36,7 @@ const componentMap = {
   icon: IconSelect,
   field: FieldSelect,
   multifield: MultiFieldSelect,
+  options: OptionsEditor,
   schema: SchemaSelect,
   section: SectionSelect,
   navigation: NavigationEditor,

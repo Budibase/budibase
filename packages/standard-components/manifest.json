@@ -1964,7 +1964,15 @@
           "setting": "optionsSource",
           "value": "provider"
         }
+      }, 
+      {
+        "type": "options",
+        "key": "customOptions",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "custom"
       }
+    }
     ]
   },
   "booleanfield": {
