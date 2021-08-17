@@ -12,7 +12,7 @@
 
   const saveFilter = async () => {
     // Filter out null objects
-    tempValue = tempValue.filter(optionValue => optionValue.value)
+    tempValue = tempValue.filter(option => option.value && option.label)
     dispatch("change", tempValue)
     notifications.success("Options saved.")
     drawer.hide()
