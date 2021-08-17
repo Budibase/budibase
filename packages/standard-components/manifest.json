@@ -1705,7 +1705,7 @@
     "illegalChildren": ["section"],
     "actions": [
       "ValidateForm",
-      "ClearForm",
+      "ClearForm"
     ],
     "styles": ["size"],
     "settings": [
