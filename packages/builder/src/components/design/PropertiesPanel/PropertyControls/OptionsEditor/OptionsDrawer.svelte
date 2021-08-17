@@ -29,39 +29,38 @@
 
 <DrawerContent>
   <div class="container">
-    <Layout noPadding>
-      <Body size="S">
-        {#if !options.length}
-          Add an option to get started.
-        {/if}
-      </Body>
-
-      <div class="options">
-        {#each options as option (option.id)}
-          <Input
-            placeholder="Label"
-            bind:value={option.label}
-            label="Label"
-            labelPosition="left"
-          />
-          <Input
-            placeholder="Value"
-            bind:value={option.value}
-            label="Value"
-            labelPosition="left"
-          />
-          <Icon
-            name="Close"
-            hoverable
-            size="S"
-            on:click={() => removeOption(option.id)}
-          />
-        {/each}
-      </div>
+    <Layout noPadding gap="S">
+      {#if !options.length}
+        <Body size="S">Add an option to get started.</Body>
+      {/if}
+      {#if options?.length}
+        <div class="options">
+          {#each options as option (option.id)}
+            <Input
+              placeholder="Label"
+              bind:value={option.label}
+              label="Label"
+              labelPosition="left"
+            />
+            <Input
+              placeholder="Value"
+              bind:value={option.value}
+              label="Value"
+              labelPosition="left"
+            />
+            <Icon
+              name="Close"
+              hoverable
+              size="S"
+              on:click={() => removeOption(option.id)}
+            />
+          {/each}
+        </div>
+      {/if}
       <div>
-        <Button icon="AddCircle" size="M" on:click={addOption} secondary
-          >Add Option</Button
-        >
+        <Button icon="AddCircle" size="M" on:click={addOption} secondary>
+          Add Option
+        </Button>
       </div>
     </Layout>
   </div>
@@ -70,7 +69,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1000px;
+    max-width: 800px;
     margin: 0 auto;
   }
   .options {
@@ -78,6 +77,6 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: auto auto 20px;
+    grid-template-columns: 1fr 1fr auto;
   }
 </style>
