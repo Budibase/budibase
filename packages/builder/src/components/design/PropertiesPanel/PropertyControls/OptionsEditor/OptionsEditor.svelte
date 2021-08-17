@@ -22,7 +22,7 @@
 <ActionButton on:click={drawer.show}>Define Options</ActionButton>
 <Drawer bind:this={drawer} title="Options">
   <svelte:fragment slot="description">
-    Add custom picker options
+    Define the options for this picker.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <OptionsDrawer bind:options={tempValue} slot="body" />
