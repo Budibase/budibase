@@ -12,6 +12,7 @@
   export let dataProvider
   export let labelColumn
   export let valueColumn
+  export let customOptions
 
   let fieldState
   let fieldApi
@@ -49,6 +50,11 @@
         }
       })
       return Object.values(optionsSet)
+    }
+
+    // Extract custom options
+    if (optionsSource === "custom" && customOptions) {
+      return customOptions
     }
 
     return []
