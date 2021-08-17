@@ -74,7 +74,7 @@
   bind:fieldSchema
 >
   {#if fieldState}
-    {#if optionsType === "select"}
+    {#if !optionsType || optionsType === "select"}
       <CoreSelect
         value={$fieldState.value}
         id={$fieldState.fieldId}
