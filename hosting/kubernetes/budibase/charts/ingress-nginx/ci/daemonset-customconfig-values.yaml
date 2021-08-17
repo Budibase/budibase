@@ -1,9 +1,0 @@
-controller:
-  kind: DaemonSet
-  admissionWebhooks:
-    enabled: false
-  service:
-    type: ClusterIP
-
-  config:
-    use-proxy-protocol: "true"

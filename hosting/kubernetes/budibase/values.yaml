@@ -123,7 +123,7 @@ services:
     enabled: true # disable if using external redis
     port: 6379
     replicaCount: 1
-    host: "" # only change if pointing to existing redis cluster and enabled: false
+    url: "" # only change if pointing to existing redis cluster and enabled: false
     password: "budibase" # recommended to override if using built-in redis
     storage: 100Mi
   

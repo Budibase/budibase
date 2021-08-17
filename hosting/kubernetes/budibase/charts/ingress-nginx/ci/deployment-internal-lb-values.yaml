@@ -1,9 +1,0 @@
-controller:
-  admissionWebhooks:
-    enabled: false
-  service:
-    type: ClusterIP
-    internal:
-      enabled: true
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-internal: "true"

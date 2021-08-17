@@ -1,7 +1,0 @@
-controller:
-  admissionWebhooks:
-    enabled: false
-  metrics:
-    enabled: true
-  service:
-    type: ClusterIP
