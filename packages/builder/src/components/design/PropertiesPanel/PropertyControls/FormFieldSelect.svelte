@@ -23,6 +23,7 @@
   const getOptions = (schema, fieldType) => {
     let entries = Object.entries(schema ?? {})
     if (fieldType) {
+      fieldType = fieldType.split("/")[1]
       entries = entries.filter(entry => entry[1].type === fieldType)
     }
     return entries.map(entry => entry[0])
