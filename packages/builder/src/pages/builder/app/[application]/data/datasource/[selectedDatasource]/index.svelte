@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
