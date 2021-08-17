@@ -23,7 +23,7 @@
     dropdown.show()
   }
 
-  const openMenu = (event) => {
+  const openMenu = event => {
     if (!disabled) {
       event.stopPropagation()
       show()
