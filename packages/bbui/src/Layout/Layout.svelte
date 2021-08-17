@@ -48,6 +48,9 @@
     padding-top: var(--spacing-l);
     padding-bottom: var(--spacing-l);
   }
+  .gap-XXS {
+    grid-gap: var(--spacing-xs);
+  }
   .gap-XS {
     grid-gap: var(--spacing-s);
   }
