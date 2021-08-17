@@ -22,7 +22,6 @@ import AttachmentFieldSelect from "./AttachmentFieldSelect.svelte"
 import RelationshipFieldSelect from "./RelationshipFieldSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 
-
 const componentMap = {
   text: Input,
   select: Select,
