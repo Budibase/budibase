@@ -12,6 +12,7 @@ import SectionSelect from "./SectionSelect.svelte"
 import NavigationEditor from "./NavigationEditor/NavigationEditor.svelte"
 import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 import URLSelect from "./URLSelect.svelte"
+import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 
@@ -28,6 +29,7 @@ const componentMap = {
   icon: IconSelect,
   field: FieldSelect,
   multifield: MultiFieldSelect,
+  options: OptionsEditor,
   schema: SchemaSelect,
   section: SectionSelect,
   navigation: NavigationEditor,
