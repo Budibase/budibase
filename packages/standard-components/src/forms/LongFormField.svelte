@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let validation
   export let defaultValue = ""
 
   let fieldState
@@ -16,6 +17,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   {defaultValue}
   type="longform"
   bind:fieldState

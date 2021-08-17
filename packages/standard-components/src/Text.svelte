@@ -16,6 +16,8 @@
   $: componentText = $builderStore.inBuilder
     ? text || $component.name || "Placeholder text"
     : text || ""
+  $: sizeClass = `spectrum-Body--size${size || "M"}`
+  $: alignClass = `align--${align || "left"}`
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
@@ -41,7 +43,7 @@
   class:bold
   class:italic
   class:underline
-  class="align--{align || 'left'} size--{size || 'M'}"
+  class="spectrum-Body {sizeClass} {alignClass}"
 >
   {componentText}
 </p>
@@ -64,15 +66,6 @@
   }
   .underline {
     text-decoration: underline;
-  }
-  .size--S {
-    font-size: 14px;
-  }
-  .size--M {
-    font-size: 16px;
-  }
-  .size--L {
-    font-size: 18px;
   }
   .align--left {
     text-align: left;

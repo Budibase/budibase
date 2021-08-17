@@ -9,6 +9,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let validation
 
   let fieldState
   let fieldApi
@@ -64,6 +65,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   type="link"
   bind:fieldState
   bind:fieldApi

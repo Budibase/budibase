@@ -7,6 +7,7 @@
   export let text
   export let disabled = false
   export let size
+  export let validation
   export let defaultValue
 
   let fieldState
@@ -30,6 +31,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   defaultValue={isTruthy(defaultValue)}
   type="boolean"
   bind:fieldState

@@ -1,7 +1,8 @@
 {
   "features": {
     "spectrumThemes": true,
-    "intelligentLoading": true
+    "intelligentLoading": true,
+    "deviceAwareness": true
   },
   "layout": {
     "name": "Layout",
@@ -267,6 +268,10 @@
           {
             "label": "Warning",
             "value": "warning"
+          },
+          {
+            "label": "Over Background",
+            "value": "overBackground"
           }
         ],
         "defaultValue": "primary"
@@ -595,6 +600,9 @@
         "showInBar": true,
         "barStyle": "picker",
         "options": [{
+          "label": "Extra Small",
+          "value": "XS"
+        }, {
           "label": "Small",
           "value": "S"
         }, {
@@ -603,6 +611,15 @@
         }, {
           "label": "Large",
           "value": "L"
+        }, {
+          "label": "Extra Large",
+          "value": "XL"
+        }, {
+          "label": "2XL",
+          "value": "XXL"
+        }, {
+          "label": "3XL",
+          "value": "XXXL"
         }]
       },
       {
@@ -689,6 +706,9 @@
         "showInBar": true,
         "barStyle": "picker",
         "options": [{
+          "label": "Extra Small",
+          "value": "XS"
+        }, {
           "label": "Small",
           "value": "S"
         }, {
@@ -697,6 +717,15 @@
         }, {
           "label": "Large",
           "value": "L"
+        }, {
+          "label": "Extra Large",
+          "value": "XL"
+        }, {
+          "label": "2XL",
+          "value": "XXL"
+        }, {
+          "label": "3XL",
+          "value": "XXXL"
         }]
       },
       {
@@ -1767,6 +1796,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1801,6 +1835,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1835,6 +1874,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1864,6 +1908,7 @@
         "type": "select",
         "label": "Type",
         "key": "optionsType",
+        "defaultValue": "select",
         "placeholder": "Pick an options type",
         "options": [
           {
@@ -1886,6 +1931,67 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Options source",
+        "key": "optionsSource",
+        "defaultValue": "schema",
+        "placeholder": "Pick an options source",
+        "options": [
+          {
+            "label": "Schema",
+            "value": "schema"
+          },
+          {
+            "label": "Data provider",
+            "value": "provider"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
+        ]
+      },
+      {
+        "type": "dataProvider",
+        "label": "Options Provider",
+        "key": "dataProvider",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Label Column",
+        "key": "labelColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Value Column",
+        "key": "valueColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      }, 
+      {
+        "type": "options",
+        "key": "customOptions",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "custom"
+        }
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1943,6 +2049,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/boolean",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -1978,6 +2089,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -2018,6 +2134,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/datetime",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -2042,6 +2163,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
@@ -2071,6 +2197,11 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
       }
     ]
   },
