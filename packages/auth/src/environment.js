@@ -9,8 +9,6 @@ function isTest() {
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
-  COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
-  COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
