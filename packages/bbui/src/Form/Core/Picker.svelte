@@ -41,6 +41,7 @@
     if (readonly) {
       return
     }
+    searchTerm = null
     open = true
   }
 
@@ -59,7 +60,7 @@
     if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option =>
-        getLabel(option).toLowerCase().includes(lowerCaseTerm)
+        getLabel(option)?.toLowerCase().includes(lowerCaseTerm)
       )
     }
     return options
@@ -116,8 +117,8 @@
   >
     {#if autocomplete}
       <Search
+        value={searchTerm}
         on:change={event => (searchTerm = event.detail)}
-        updateOnChange="true"
         {disabled}
         placeholder="Search"
       />
@@ -213,5 +214,24 @@
   .icon-Placeholder-Padding {
     padding-top: 5px;
     padding-right: 10px;
+  }
+  .spectrum-Popover :global(.spectrum-Search) {
+    margin-top: -1px;
+    margin-left: -1px;
+    width: calc(100% + 2px);
+  }
+  .spectrum-Popover :global(.spectrum-Search input) {
+    height: auto;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-top: var(--spectrum-global-dimension-size-100);
+    padding-bottom: var(--spectrum-global-dimension-size-100);
+  }
+  .spectrum-Popover :global(.spectrum-Search .spectrum-ClearButton) {
+    right: 1px;
+    top: 2px;
+  }
+  .spectrum-Popover :global(.spectrum-Search .spectrum-Textfield-icon) {
+    top: 9px;
   }
 </style>
