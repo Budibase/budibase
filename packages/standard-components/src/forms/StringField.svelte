@@ -7,6 +7,7 @@
   export let placeholder
   export let type = "text"
   export let disabled = false
+  export let validation
   export let defaultValue = ""
 
   let fieldState
@@ -17,6 +18,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   {defaultValue}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
