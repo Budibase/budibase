@@ -1,5 +1,5 @@
 <script>
-  import { notifications, ActionButton, Button, Drawer } from "@budibase/bbui"
+  import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import OptionsDrawer from "./OptionsDrawer.svelte"
 
@@ -11,10 +11,9 @@
   let tempValue = value || []
 
   const saveFilter = async () => {
-    // Filter out null objects
+    // Filter out incomplete options
     tempValue = tempValue.filter(option => option.value && option.label)
     dispatch("change", tempValue)
-    notifications.success("Options saved.")
     drawer.hide()
   }
 </script>
