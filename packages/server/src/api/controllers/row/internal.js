@@ -57,7 +57,7 @@ exports.patch = async ctx => {
   })
 
   if (!validateResult.valid) {
-    throw validateResult.errors
+    throw { validation: validateResult.errors }
   }
 
   // returned row is cleaned and prepared for writing to DB
@@ -105,7 +105,7 @@ exports.save = async function (ctx) {
   })
 
   if (!validateResult.valid) {
-    throw validateResult.errors
+    throw { validation: validateResult.errors }
   }
 
   // make sure link rows are up to date

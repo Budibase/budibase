@@ -18,6 +18,13 @@ let POUCH_DB_DEFAULTS = {
   }
 }
 
+if (env.COUCH_DB_USERNAME && env.COUCH_DB_PASSWORD) {
+  POUCH_DB_DEFAULTS.auth = {
+    username: env.COUCH_DB_USERNAME,
+    password: env.COUCH_DB_PASSWORD,
+  }
+}
+
 if (env.isTest()) {
   PouchDB.plugin(require("pouchdb-adapter-memory"))
   POUCH_DB_DEFAULTS = {
