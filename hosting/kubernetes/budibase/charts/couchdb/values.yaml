@@ -51,7 +51,7 @@ serviceAccount:
 ## provisioning of Persistent Volumes; leaving it unset will invoke the default
 ## provisioner.
 persistentVolume:
-  enabled: false
+  enabled: true
   accessModes:
     - ReadWriteOnce
   size: 10Gi
