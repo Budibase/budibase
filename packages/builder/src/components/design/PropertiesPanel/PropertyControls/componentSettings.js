@@ -12,15 +12,9 @@ import SectionSelect from "./SectionSelect.svelte"
 import NavigationEditor from "./NavigationEditor/NavigationEditor.svelte"
 import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 import URLSelect from "./URLSelect.svelte"
-import StringFieldSelect from "./StringFieldSelect.svelte"
-import NumberFieldSelect from "./NumberFieldSelect.svelte"
-import OptionsFieldSelect from "./OptionsFieldSelect.svelte"
-import BooleanFieldSelect from "./BooleanFieldSelect.svelte"
-import LongFormFieldSelect from "./LongFormFieldSelect.svelte"
-import DateTimeFieldSelect from "./DateTimeFieldSelect.svelte"
-import AttachmentFieldSelect from "./AttachmentFieldSelect.svelte"
-import RelationshipFieldSelect from "./RelationshipFieldSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
+import FormFieldSelect from "./FormFieldSelect.svelte"
+import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 
 const componentMap = {
   text: Input,
@@ -41,14 +35,22 @@ const componentMap = {
   navigation: NavigationEditor,
   filter: FilterEditor,
   url: URLSelect,
-  "field/string": StringFieldSelect,
-  "field/number": NumberFieldSelect,
-  "field/options": OptionsFieldSelect,
-  "field/boolean": BooleanFieldSelect,
-  "field/longform": LongFormFieldSelect,
-  "field/datetime": DateTimeFieldSelect,
-  "field/attachment": AttachmentFieldSelect,
-  "field/link": RelationshipFieldSelect,
+  "field/string": FormFieldSelect,
+  "field/number": FormFieldSelect,
+  "field/options": FormFieldSelect,
+  "field/boolean": FormFieldSelect,
+  "field/longform": FormFieldSelect,
+  "field/datetime": FormFieldSelect,
+  "field/attachment": FormFieldSelect,
+  "field/link": FormFieldSelect,
+  // Some validation types are the same as others, so not all types are
+  // explicitly listed here. e.g. options uses string validation
+  "validation/string": ValidationEditor,
+  "validation/number": ValidationEditor,
+  "validation/boolean": ValidationEditor,
+  "validation/datetime": ValidationEditor,
+  "validation/attachment": ValidationEditor,
+  "validation/link": ValidationEditor,
 }
 
 export const getComponentForSettingType = type => {
