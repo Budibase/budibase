@@ -90,7 +90,7 @@ spec:
           value: {{ .Values.globals.sentryDSN }}
         - name: WORKER_URL
           value: worker-service:{{ .Values.services.worker.port }}
-        image: budibase/apps:develop
+        image: budibase/apps
         imagePullPolicy: Always
         name: bbapps
         ports:
