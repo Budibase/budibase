@@ -29,11 +29,6 @@ spec:
       - env:
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
-        - name: COUCH_DB_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "couchdb.fullname" . }}
-              key: adminUsername
         - name: COUCH_DB_USER
           valueFrom:
             secretKeyRef:

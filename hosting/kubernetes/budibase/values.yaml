@@ -46,7 +46,7 @@ ingress:
   annotations: 
     kubernetes.io/ingress.class: nginx
   hosts:
-    - host: example.cluster # change to be your domain
+    - host: # change if using custom domain
       paths:
       - path: /
         pathType: Prefix
