@@ -21,9 +21,7 @@
 
   function checkValid(evt) {
     const datasourceName = evt.target.value
-    if (
-      $datasources?.list.some(ds => ds.name === datasourceName)
-    ) {
+    if ($datasources?.list.some(ds => ds.name === datasourceName)) {
       error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
       return
     }
@@ -59,4 +57,3 @@
     />
   </ModalContent>
 </Modal>
-
