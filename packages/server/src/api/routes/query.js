@@ -30,6 +30,7 @@ function generateQueryValidation() {
       default: Joi.string().allow(""),
     })),
     queryVerb: Joi.string().allow().required(),
+    extra: Joi.object().optional(),
     schema: Joi.object({}).required().unknown(true)
   }))
 }
@@ -39,6 +40,7 @@ function generateQueryPreviewValidation() {
   return joiValidator.body(Joi.object({
     fields: Joi.object().required(),
     queryVerb: Joi.string().allow().required(),
+    extra: Joi.object().optional(),
     datasourceId: Joi.string().required(),
     parameters: Joi.object({}).required().unknown(true)
   }))

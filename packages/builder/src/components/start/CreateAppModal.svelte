@@ -16,6 +16,7 @@
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
+  import { APP_NAME_REGEX } from "constants"
 
   export let template
 
@@ -23,7 +24,13 @@
   const errors = writable({})
   const touched = writable({})
   const validator = {
-    name: string().required("Your application must have a name"),
+    name: string()
+      .trim()
+      .required("Your application must have a name")
+      .matches(
+        APP_NAME_REGEX,
+        "App name must be letters, numbers and spaces only"
+      ),
     file: template ? mixed().required("Please choose a file to import") : null,
   }
 
@@ -35,7 +42,9 @@
     await hostingStore.actions.fetchDeployedApps()
     const existingAppNames = svelteGet(hostingStore).deployedAppNames
     validator.name = string()
+      .trim()
       .required("Your application must have a name")
+      .matches(APP_NAME_REGEX, "App name must be letters and numbers only")
       .test(
         "non-existing-app-name",
         "Another app with the same name already exists",
@@ -74,7 +83,7 @@
     try {
       // Create form data to create app
       let data = new FormData()
-      data.append("name", $values.name)
+      data.append("name", $values.name.trim())
       data.append("useTemplate", template != null)
       if (template) {
         data.append("templateName", template.name)

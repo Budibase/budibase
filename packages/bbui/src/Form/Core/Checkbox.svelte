@@ -8,15 +8,18 @@
   export let id = null
   export let text = null
   export let disabled = false
+  export let size
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
     dispatch("change", event.target.checked)
   }
+
+  $: sizeClass = `spectrum-Checkbox--size${size || "M"}`
 </script>
 
 <label
-  class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-Checkbox--emphasized"
+  class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
   class:is-invalid={!!error}
 >
   <input

@@ -25,4 +25,7 @@
   .spectrum-Form {
     width: 100%;
   }
+  .spectrum-Form--labelsAbove {
+    gap: var(--spectrum-global-dimension-size-100);
+  }
 </style>

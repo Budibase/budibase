@@ -2,31 +2,13 @@ const Router = require("@koa/router")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
-const { buildAuthMiddleware, auditLog } = require("@budibase/auth").auth
+const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
+  require("@budibase/auth").auth
 
 const PUBLIC_ENDPOINTS = [
-  {
-    route: "/api/admin/users/init",
-    method: "POST",
-  },
-  {
-    route: "/api/admin/users/invite/accept",
-    method: "POST",
-  },
-  {
-    route: "/api/admin/auth",
-    method: "POST",
-  },
-  {
-    route: "/api/admin/auth/google",
-    method: "GET",
-  },
+  // old deprecated endpoints kept for backwards compat
   {
     route: "/api/admin/auth/google/callback",
-    method: "GET",
-  },
-  {
-    route: "/api/admin/auth/oidc",
     method: "GET",
   },
   {
@@ -34,23 +16,46 @@ const PUBLIC_ENDPOINTS = [
     method: "GET",
   },
   {
-    route: "/api/admin/auth/reset",
+    // this covers all of the POST auth routes
+    route: "/api/global/auth/:tenantId",
     method: "POST",
   },
   {
-    route: "/api/admin/configs/checklist",
+    // this covers all of the GET auth routes
+    route: "/api/global/auth/:tenantId",
     method: "GET",
   },
   {
-    route: "/api/apps",
+    // this covers all of the public config routes
+    route: "/api/global/configs/public",
     method: "GET",
   },
   {
-    route: "/api/admin/configs/public",
+    route: "/api/global/configs/checklist",
     method: "GET",
   },
   {
-    route: "/api/admin/configs/publicOidc",
+    route: "/api/global/users/init",
+    method: "POST",
+  },
+  {
+    route: "/api/global/users/invite/accept",
+    method: "POST",
+  },
+  {
+    route: "api/system/flags",
+    method: "GET",
+  },
+]
+
+const NO_TENANCY_ENDPOINTS = [
+  ...PUBLIC_ENDPOINTS,
+  {
+    route: "/api/system",
+    method: "ALL",
+  },
+  {
+    route: "/api/global/users/self",
     method: "GET",
   },
 ]
@@ -71,9 +76,10 @@ router
   )
   .use("/health", ctx => (ctx.status = 200))
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
+  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
-    if (!ctx.isAuthenticated) {
+    if (!ctx.isAuthenticated && !ctx.publicEndpoint) {
       ctx.throw(403, "Unauthorized - no public worker access")
     }
     return next()

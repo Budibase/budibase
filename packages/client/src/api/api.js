@@ -38,15 +38,15 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
       case 200:
         return response.json()
       case 401:
-        notificationStore.danger("Invalid credentials")
+        notificationStore.actions.error("Invalid credentials")
         return handleError(`Invalid credentials`)
       case 404:
-        notificationStore.danger("Not found")
+        notificationStore.actions.warning("Not found")
         return handleError(`${url}: Not Found`)
       case 400:
         return handleError(`${url}: Bad Request`)
       case 403:
-        notificationStore.danger(
+        notificationStore.actions.error(
           "Your session has expired, or you don't have permission to access that data"
         )
         return handleError(`${url}: Forbidden`)

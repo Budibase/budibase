@@ -1,4 +1,4 @@
-import svelte from "@sveltejs/vite-plugin-svelte"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 const path = require("path")
 
 export default ({ mode }) => {

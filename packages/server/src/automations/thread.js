@@ -3,6 +3,10 @@ const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
+const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
+const CouchDB = require("../db")
+const { DocumentTypes } = require("../db/utils")
+const { doInTenant } = require("@budibase/auth/tenancy")
 
 const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
 
@@ -16,6 +20,7 @@ class Orchestrator {
     this._metadata = triggerOutput.metadata
     this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
     this._appId = triggerOutput.appId
+    this._app = null
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
@@ -40,8 +45,19 @@ class Orchestrator {
     return step
   }
 
+  async getApp() {
+    const appId = this._appId
+    if (this._app) {
+      return this._app
+    }
+    const db = new CouchDB(appId)
+    this._app = await db.get(DocumentTypes.APP_METADATA)
+    return this._app
+  }
+
   async execute() {
     let automation = this._automation
+    const app = await this.getApp()
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
       step.inputs = await processObject(step.inputs, this._context)
@@ -51,12 +67,15 @@ class Orchestrator {
       )
       // appId is always passed
       try {
-        const outputs = await stepFn({
-          inputs: step.inputs,
-          appId: this._appId,
-          apiKey: automation.apiKey,
-          emitter: this._emitter,
-          context: this._context,
+        let tenantId = app.tenantId || DEFAULT_TENANT_ID
+        const outputs = await doInTenant(tenantId, () => {
+          return stepFn({
+            inputs: step.inputs,
+            appId: this._appId,
+            apiKey: automation.apiKey,
+            emitter: this._emitter,
+            context: this._context,
+          })
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break
