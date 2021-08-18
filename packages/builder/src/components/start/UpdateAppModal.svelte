@@ -96,9 +96,7 @@
     onConfirm={updateApp}
     disabled={!(valid && dirty)}
   >
-    <Body size="S">
-    Update the name of your app.
-    </Body>
+    <Body size="S">Update the name of your app.</Body>
     <Input
       bind:value={$values.name}
       error={$touched.name && $errors.name}
