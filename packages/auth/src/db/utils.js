@@ -159,6 +159,8 @@ exports.getDeployedAppID = appId => {
 }
 
 exports.getCouchUrl = () => {
+  if (!env.COUCH_DB_URL) return
+
   // username and password already exist in URL
   if (env.COUCH_DB_URL.includes("@")) {
     return env.COUCH_DB_URL
