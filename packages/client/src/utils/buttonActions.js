@@ -99,6 +99,22 @@ const clearFormHandler = async (action, context) => {
   )
 }
 
+const nextFormStepHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.NextFormStep
+  )
+}
+
+const prevFormStepHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.PrevFormStep
+  )
+}
+
 const closeScreenModalHandler = () => {
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
@@ -116,6 +132,8 @@ const handlerMap = {
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,
+  ["Next Form Step"]: nextFormStepHandler,
+  ["Previous Form Step"]: prevFormStepHandler,
 }
 
 const confirmTextMap = {
