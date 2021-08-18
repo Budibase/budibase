@@ -14,6 +14,7 @@
   export let labelColumn
   export let valueColumn
   export let customOptions
+  export let autocomplete = false
 
   let fieldState
   let fieldApi
@@ -85,6 +86,7 @@
         on:change={e => fieldApi.setValue(e.detail)}
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
+        {autocomplete}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup

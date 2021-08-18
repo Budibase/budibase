@@ -5,6 +5,7 @@
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
+  import Search from "./Search.svelte"
 
   export let id = null
   export let disabled = false
@@ -23,16 +24,24 @@
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
+  export let autocomplete = false
 
   const dispatch = createEventDispatcher()
+  let searchTerm = null
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel)
+  $: filteredOptions = getFilteredOptions(
+    sortedOptions,
+    searchTerm,
+    getOptionLabel
+  )
 
   const onClick = () => {
     dispatch("click")
     if (readonly) {
       return
     }
+    searchTerm = null
     open = true
   }
 
@@ -45,6 +54,16 @@
       const labelB = getLabel(b)
       return labelA > labelB ? 1 : -1
     })
+  }
+
+  const getFilteredOptions = (options, term, getLabel) => {
+    if (autocomplete && term) {
+      const lowerCaseTerm = term.toLowerCase()
+      return options.filter(option =>
+        getLabel(option)?.toLowerCase().includes(lowerCaseTerm)
+      )
+    }
+    return options
   }
 </script>
 
@@ -96,6 +115,14 @@
     class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
     class:auto-width={autoWidth}
   >
+    {#if autocomplete}
+      <Search
+        value={searchTerm}
+        on:change={event => (searchTerm = event.detail)}
+        {disabled}
+        placeholder="Search"
+      />
+    {/if}
     <ul class="spectrum-Menu" role="listbox">
       {#if placeholderOption}
         <li
@@ -116,8 +143,8 @@
           </svg>
         </li>
       {/if}
-      {#if sortedOptions.length}
-        {#each sortedOptions as option, idx}
+      {#if filteredOptions.length}
+        {#each filteredOptions as option, idx}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -187,5 +214,24 @@
   .icon-Placeholder-Padding {
     padding-top: 5px;
     padding-right: 10px;
+  }
+  .spectrum-Popover :global(.spectrum-Search) {
+    margin-top: -1px;
+    margin-left: -1px;
+    width: calc(100% + 2px);
+  }
+  .spectrum-Popover :global(.spectrum-Search input) {
+    height: auto;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-top: var(--spectrum-global-dimension-size-100);
+    padding-bottom: var(--spectrum-global-dimension-size-100);
+  }
+  .spectrum-Popover :global(.spectrum-Search .spectrum-ClearButton) {
+    right: 1px;
+    top: 2px;
+  }
+  .spectrum-Popover :global(.spectrum-Search .spectrum-Textfield-icon) {
+    top: 9px;
   }
 </style>

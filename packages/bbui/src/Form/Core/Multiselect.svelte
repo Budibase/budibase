@@ -11,6 +11,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let readonly = false
+  export let autocomplete = false
 
   const dispatch = createEventDispatcher()
   $: selectedLookupMap = getSelectedLookupMap(value)
@@ -77,6 +78,7 @@
   {fieldText}
   {options}
   isPlaceholder={!value?.length}
+  {autocomplete}
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
