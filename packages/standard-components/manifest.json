@@ -1928,6 +1928,16 @@
       },
       {
         "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -2191,6 +2201,12 @@
         "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
+      },
+      {
+        "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false
       },
       {
         "type": "boolean",
