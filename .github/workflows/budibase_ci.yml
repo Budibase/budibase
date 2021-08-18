@@ -47,7 +47,7 @@ jobs:
     - uses: azure/setup-helm@v1
       id: install
 
-    - run: ./scripts/release_helm
+    - run: yarn release:helm
 
     - name: Run chart-releaser
       uses: helm/chart-releaser-action@v1.1.0
