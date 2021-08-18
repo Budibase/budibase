@@ -7,6 +7,8 @@ import ValidateForm from "./ValidateForm.svelte"
 import LogOut from "./LogOut.svelte"
 import ClearForm from "./ClearForm.svelte"
 import CloseScreenModal from "./CloseScreenModal.svelte"
+import NextFormStep from "./NextFormStep.svelte"
+import PrevFormStep from "./PrevFormStep.svelte"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -51,5 +53,13 @@ export default [
   {
     name: "Close Screen Modal",
     component: CloseScreenModal,
+  },
+  {
+    name: "Next Form Step",
+    component: NextFormStep,
+  },
+  {
+    name: "Previous Form Step",
+    component: PrevFormStep,
   },
 ]
