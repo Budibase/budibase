@@ -59,9 +59,16 @@ export function createDatasourcesStore() {
       return json
     },
     save: async datasource => {
-      let url = "/api/datasources"
+      let response
+      if (datasource._id) {
+        response = await api.put(
+          `/api/datasources/${datasource._id}`,
+          datasource
+        )
+      } else {
+        response = await api.post("/api/datasources", datasource)
+      }
 
-      const response = await api.post(url, datasource)
       const json = await response.json()
 
       if (response.status !== 200) {
