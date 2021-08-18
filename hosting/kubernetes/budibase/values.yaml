@@ -41,7 +41,7 @@ service:
 
 ingress:
   enabled: true
-  # certificateArn: ""
+  certificateArn: ""
   className: ""
   annotations: 
     kubernetes.io/ingress.class: nginx
@@ -112,6 +112,7 @@ services:
     replicaCount: 1
 
   couchdb:
+    enabled: true
     replicaCount: 3
     url: "" # only change if pointing to existing couch server
     user: "" # only change if pointing to existing couch server
