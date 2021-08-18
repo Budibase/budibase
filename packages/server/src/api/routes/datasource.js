@@ -66,6 +66,11 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     datasourceController.find
   )
+  .put(
+    "/api/datasources/:datasourceId",
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    datasourceController.update
+  )
   .post(
     "/api/datasources/query",
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
