@@ -43,6 +43,12 @@ jobs:
         verbose: true 
     - run: yarn test:e2e:ci
 
+
+    - uses: azure/setup-helm@v1
+      id: install
+
+    - run: ./scripts/release_helm
+
     - name: Run chart-releaser
       uses: helm/chart-releaser-action@v1.1.0
       with:
