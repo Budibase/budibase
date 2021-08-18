@@ -1,19 +1,13 @@
 const PouchDB = require("pouchdb")
 const allDbs = require("pouchdb-all-dbs")
 const env = require("../environment")
+const { getCouchUrl } = require("@budibase/auth/db")
 
 // level option is purely for testing (development)
-const COUCH_DB_URL = env.COUCH_DB_URL || "http://localhost:10000/db/"
+const COUCH_DB_URL = getCouchUrl() || "http://localhost:10000/db/"
 
 let POUCH_DB_DEFAULTS = {
   prefix: COUCH_DB_URL,
-}
-
-if (env.COUCH_DB_USERNAME && env.COUCH_DB_PASSWORD) {
-  POUCH_DB_DEFAULTS.auth = {
-    username: env.COUCH_DB_USERNAME,
-    password: env.COUCH_DB_PASSWORD,
-  }
 }
 
 if (env.isTest()) {
