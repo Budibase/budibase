@@ -120,71 +120,79 @@ const getContextBindings = (asset, componentId) => {
   // Create bindings for each data provider
   dataProviders.forEach(component => {
     const def = store.actions.components.getDefinition(component._component)
-    const contextDefinition = def.context
-    let schema
-    let readablePrefix
+    const contexts = Array.isArray(def.context) ? def.context : [def.context]
 
-    if (contextDefinition.type === "form") {
-      // Forms do not need table schemas
-      // Their schemas are built from their component field names
-      schema = buildFormSchema(component)
-      readablePrefix = "Fields"
-    } else if (contextDefinition.type === "static") {
-      // Static contexts are fully defined by the components
-      schema = {}
-      const values = contextDefinition.values || []
-      values.forEach(value => {
-        schema[value.key] = { name: value.label, type: "string" }
-      })
-    } else if (contextDefinition.type === "schema") {
-      // Schema contexts are generated dynamically depending on their data
-      const datasource = getDatasourceForProvider(asset, component)
-      if (!datasource) {
+    // Create bindings for each context block provided by this data provider
+    contexts.forEach(context => {
+      if (!context?.type) {
         return
       }
-      const info = getSchemaForDatasource(asset, datasource)
-      schema = info.schema
-      readablePrefix = info.table?.name
-    }
-    if (!schema) {
-      return
-    }
 
-    const keys = Object.keys(schema).sort()
+      let schema
+      let readablePrefix
 
-    // Create bindable properties for each schema field
-    const safeComponentId = makePropSafe(component._id)
-    keys.forEach(key => {
-      const fieldSchema = schema[key]
-
-      // Make safe runtime binding and replace certain bindings with a
-      // new property to help display components
-      let runtimeBoundKey = key
-      if (fieldSchema.type === "link") {
-        runtimeBoundKey = `${key}_text`
-      } else if (fieldSchema.type === "attachment") {
-        runtimeBoundKey = `${key}_first`
+      if (context.type === "form") {
+        // Forms do not need table schemas
+        // Their schemas are built from their component field names
+        schema = buildFormSchema(component)
+        readablePrefix = "Fields"
+      } else if (context.type === "static") {
+        // Static contexts are fully defined by the components
+        schema = {}
+        const values = context.values || []
+        values.forEach(value => {
+          schema[value.key] = { name: value.label, type: "string" }
+        })
+      } else if (context.type === "schema") {
+        // Schema contexts are generated dynamically depending on their data
+        const datasource = getDatasourceForProvider(asset, component)
+        if (!datasource) {
+          return
+        }
+        const info = getSchemaForDatasource(asset, datasource)
+        schema = info.schema
+        readablePrefix = info.table?.name
       }
-      const runtimeBinding = `${safeComponentId}.${makePropSafe(
-        runtimeBoundKey
-      )}`
-
-      // Optionally use a prefix with readable bindings
-      let readableBinding = component._instanceName
-      if (readablePrefix) {
-        readableBinding += `.${readablePrefix}`
+      if (!schema) {
+        return
       }
-      readableBinding += `.${fieldSchema.name || key}`
 
-      // Create the binding object
-      bindings.push({
-        type: "context",
-        runtimeBinding,
-        readableBinding,
-        // Field schema and provider are required to construct relationship
-        // datasource options, based on bindable properties
-        fieldSchema,
-        providerId: component._id,
+      const keys = Object.keys(schema).sort()
+
+      // Create bindable properties for each schema field
+      const safeComponentId = makePropSafe(component._id)
+      keys.forEach(key => {
+        const fieldSchema = schema[key]
+
+        // Make safe runtime binding and replace certain bindings with a
+        // new property to help display components
+        let runtimeBoundKey = key
+        if (fieldSchema.type === "link") {
+          runtimeBoundKey = `${key}_text`
+        } else if (fieldSchema.type === "attachment") {
+          runtimeBoundKey = `${key}_first`
+        }
+        const runtimeBinding = `${safeComponentId}.${makePropSafe(
+          runtimeBoundKey
+        )}`
+
+        // Optionally use a prefix with readable bindings
+        let readableBinding = component._instanceName
+        if (readablePrefix) {
+          readableBinding += `.${readablePrefix}`
+        }
+        readableBinding += `.${fieldSchema.name || key}`
+
+        // Create the binding object
+        bindings.push({
+          type: "context",
+          runtimeBinding,
+          readableBinding,
+          // Field schema and provider are required to construct relationship
+          // datasource options, based on bindable properties
+          fieldSchema,
+          providerId: component._id,
+        })
       })
     })
   })

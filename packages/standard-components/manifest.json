@@ -1705,7 +1705,9 @@
     "illegalChildren": ["section"],
     "actions": [
       "ValidateForm",
-      "ClearForm"
+      "ClearForm",
+      "NextFormStep",
+      "PrevFormStep"
     ],
     "styles": ["size"],
     "settings": [
@@ -1727,7 +1729,7 @@
       },
       {
         "type": "number",
-        "label": "Number of steps",
+        "label": "Steps",
         "key": "steps",
         "defaultValue": 1
       },
@@ -1738,8 +1740,51 @@
         "defaultValue": false
       }
     ],
+    "context": [
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Valid",
+            "key": "valid"
+          },
+          {
+            "label": "Step",
+            "key": "step"
+          }
+        ]
+      },
+      {
+        "type": "form"
+      }
+    ]
+  },
+  "formstep": {
+    "name": "Form Step",
+    "icon": "Form",
+    "hasChildren": true,
+    "illegalChildren": ["section"],
+    "actions": [
+      "ValidateFormStep"
+    ],
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "number",
+        "label": "Step",
+        "key": "step",
+        "defaultValue": 1,
+        "min": 1
+      }
+    ],
     "context": {
-      "type": "form"
+      "type": "static",
+      "values":  [
+        {
+          "label": "Valid",
+          "key": "valid"
+        }
+      ]
     }
   },
   "fieldgroup": {

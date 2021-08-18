@@ -17,7 +17,12 @@
   let fieldMap = {}
 
   // Form state contains observable data about the form
-  const formState = writable({ values: initialValues, errors: {}, valid: true })
+  const formState = writable({
+    values: initialValues,
+    errors: {},
+    valid: true,
+    step: 1,
+  })
 
   // Form API contains functions to control the form
   const formApi = {
@@ -82,6 +87,18 @@
         fieldApi.clearValue()
       })
     },
+    nextStep: () => {
+      formState.update(state => ({
+        ...state,
+        step: state.step + 1,
+      }))
+    },
+    prevStep: () => {
+      formState.update(state => ({
+        ...state,
+        step: Math.max(1, state.step - 1),
+      }))
+    },
   }
 
   // Provide both form API and state to children
@@ -91,6 +108,8 @@
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.clear },
+    { type: ActionTypes.NextFormStep, callback: formApi.nextStep },
+    { type: ActionTypes.PrevFormStep, callback: formApi.prevStep },
   ]
 
   // Creates an API for a specific field
@@ -229,7 +248,12 @@
 
 <Provider
   {actions}
-  data={{ ...$formState.values, tableId: dataSource?.tableId }}
+  data={{
+    ...$formState.values,
+    tableId: dataSource?.tableId,
+    valid: $formState.valid,
+    step: $formState.step,
+  }}
 >
   <div use:styleable={$component.styles}>
     {#if loaded}
