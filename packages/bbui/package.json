@@ -65,6 +65,7 @@
     "@spectrum-css/search": "^3.0.2",
     "@spectrum-css/sidenav": "^3.0.2",
     "@spectrum-css/statuslight": "^3.0.2",
+    "@spectrum-css/stepper": "^3.0.3",
     "@spectrum-css/switch": "^1.0.2",
     "@spectrum-css/table": "^3.0.1",
     "@spectrum-css/tabs": "^3.0.1",

@@ -1726,6 +1726,12 @@
         }
       },
       {
+        "type": "number",
+        "label": "Number of steps",
+        "key": "steps",
+        "defaultValue": 1
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
