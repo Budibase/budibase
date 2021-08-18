@@ -159,12 +159,20 @@ exports.getDeployedAppID = appId => {
 }
 
 exports.getCouchUrl = () => {
+  if (!env.COUCH_DB_URL) return
+
   // username and password already exist in URL
   if (env.COUCH_DB_URL.includes("@")) {
     return env.COUCH_DB_URL
   }
 
   const [protocol, ...rest] = env.COUCH_DB_URL.split("://")
+
+  if (!env.COUCH_DB_USERNAME || !env.COUCH_DB_PASSWORD) {
+    throw new Error(
+      "CouchDB configuration invalid. You must provide a fully qualified CouchDB url, or the COUCH_DB_USER and COUCH_DB_PASSWORD environment variables."
+    )
+  }
 
   return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
 }
