@@ -113,6 +113,10 @@
       label: "Options",
       value: FIELDS.OPTIONS.type,
     },
+    {
+      label: "List",
+      value: FIELDS.ARRAY.type,
+    },
   ]
 </script>
 
