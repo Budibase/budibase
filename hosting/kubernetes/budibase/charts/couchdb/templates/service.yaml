@@ -1,0 +1,23 @@
+{{- if .Values.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "couchdb.svcname" . }}
+  labels:
+    app: {{ template "couchdb.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.service.annotations }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4 }}
+{{- end }}
+spec:
+  ports:
+    - port: {{ .Values.service.externalPort }}
+      protocol: TCP
+      targetPort: 5984
+  type: {{ .Values.service.type }}
+  selector:
+{{ include "couchdb.ss.selector" . | indent 4 }}
+{{- end -}}
