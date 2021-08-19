@@ -28,6 +28,26 @@ const findComponentById = (component, componentId) => {
   return null
 }
 
+const findComponentIdPath = (component, componentId, path = []) => {
+  if (!component || !componentId) {
+    return null
+  }
+  path = [...path, component._id]
+  if (component._id === componentId) {
+    return path
+  }
+  if (!component._children?.length) {
+    return null
+  }
+  for (let child of component._children) {
+    const result = findComponentIdPath(child, componentId, path)
+    if (result) {
+      return result
+    }
+  }
+  return null
+}
+
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
@@ -37,6 +57,7 @@ const createBuilderStore = () => {
     selectedComponentId: null,
     previewId: null,
     previewType: null,
+    selectedPath: [],
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
@@ -47,10 +68,15 @@ const createBuilderStore = () => {
     const prefix = "@budibase/standard-components/"
     const type = component?._component?.replace(prefix, "")
     const definition = type ? Manifest[type] : null
+
+    // Derive the selected component path
+    const path = findComponentIdPath(asset.props, selectedComponentId) || []
+
     return {
       ...$state,
       selectedComponent: component,
       selectedComponentDefinition: definition,
+      selectedComponentPath: path,
     }
   })
 
@@ -66,6 +92,14 @@ const createBuilderStore = () => {
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    setSelectedPath: path => {
+      console.log("set to ")
+      console.log(path)
+      writableStore.update(state => {
+        state.selectedPath = path
+        return state
+      })
     },
   }
   return {
