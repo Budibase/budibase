@@ -7,6 +7,7 @@
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",
     "eslint-plugin-svelte3": "^3.2.0",
+    "husky": "^7.0.1",
     "kill-port": "^1.6.1",
     "lerna": "3.14.1",
     "prettier": "^2.3.1",
@@ -46,6 +47,7 @@
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "release:helm": "./scripts/release_helm_chart.sh",
     "multi:enable": "lerna run multi:enable",
-    "multi:disable": "lerna run multi:disable"
+    "multi:disable": "lerna run multi:disable",
+    "postinstall": "husky install"
   }
 }
