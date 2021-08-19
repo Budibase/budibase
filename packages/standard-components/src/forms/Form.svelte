@@ -24,12 +24,9 @@
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
-    // Only inherit values if the table ID matches
+    // Always inherit the closest data source
     const closestContext = context[`${context.closestComponentId}`] || {}
-    if (dataSource.tableId !== closestContext?.tableId) {
-      return {}
-    }
-    return closestContext
+    return closestContext || {}
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
