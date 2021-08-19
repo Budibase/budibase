@@ -64,10 +64,15 @@ const queryExecutionHandler = async action => {
   })
 }
 
-const executeActionHandler = async (context, componentId, actionType) => {
+const executeActionHandler = async (
+  context,
+  componentId,
+  actionType,
+  params
+) => {
   const fn = context[`${componentId}_${actionType}`]
   if (fn) {
-    return await fn()
+    return await fn(params)
   }
 }
 
@@ -75,7 +80,8 @@ const validateFormHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
-    ActionTypes.ValidateForm
+    ActionTypes.ValidateForm,
+    action.parameters.onlyCurrentStep
   )
 }
 
