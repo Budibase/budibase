@@ -62,7 +62,7 @@ const createBuilderStore = () => {
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
     // Avoid any of this logic if we aren't in the builder preview
-    if (!writableStore.inBuilder) {
+    if (!$state.inBuilder) {
       return $state
     }
 
