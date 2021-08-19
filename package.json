@@ -47,11 +47,6 @@
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "multi:enable": "lerna run multi:enable",
     "multi:disable": "lerna run multi:disable",
-    "prepare": "husky install"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn run lint:fix"
-    }
+    "postinstall": "husky install"
   }
 }
