@@ -61,6 +61,11 @@ const createBuilderStore = () => {
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
+    // Avoid any of this logic if we aren't in the builder preview
+    if (!writableStore.inBuilder) {
+      return $state
+    }
+
     // Derive the selected component instance and definition
     const { layout, screen, previewType, selectedComponentId } = $state
     const asset = previewType === "layout" ? layout : screen
