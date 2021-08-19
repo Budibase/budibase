@@ -118,24 +118,21 @@
       return fieldInfo
     },
     validate: (onlyCurrentStep = false) => {
-      // Validate only the current step if required
+      let valid = true
+      let validationFields = fields
+
+      // Reduce fields to only the current step if required
       if (onlyCurrentStep) {
-        const stepFields = fields.filter(f => get(f).step === get(currentStep))
-        for (let field of stepFields) {
-          if (!get(field).fieldApi.validate()) {
-            return false
-          }
-        }
-        return true
+        validationFields = fields.filter(f => get(f).step === get(currentStep))
       }
 
-      // Otherwise validate all fields
-      for (let field of fields) {
+      // Validate fields and check if any are invalid
+      validationFields.forEach(field => {
         if (!get(field).fieldApi.validate()) {
-          return false
+          valid = false
         }
-      }
-      return true
+      })
+      return valid
     },
     clear: () => {
       // Clear the form by clearing each individual field
