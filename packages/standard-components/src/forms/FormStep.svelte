@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import Placeholder from "../Placeholder.svelte"
 
-  export let step
+  export let step = 1
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -14,16 +14,15 @@
   $: formState = formContext?.formState
   $: currentStep = $formState?.currentStep
 
-  // If in the builder preview, show this step if it is selected
+  // If in the builder preview, show this step if a child is selected
   $: {
-    if (step && formContext && $builderStore.inBuilder) {
-      console.log($builderStore.selectedPath)
-      console.log($component.id)
-
-      if ($builderStore.selectedComponentPath?.includes($component.id)) {
-        console.log("selecting " + step)
-        formContext.formApi.setStep(step)
-      }
+    if (
+      formContext &&
+      $builderStore.inBuilder &&
+      $builderStore.selectedComponentPath?.includes($component.id) &&
+      $formState?.currentStep !== step
+    ) {
+      formContext.formApi.setStep(step)
     }
   }
 </script>
