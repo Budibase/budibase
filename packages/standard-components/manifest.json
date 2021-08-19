@@ -1749,8 +1749,12 @@
             "key": "valid"
           },
           {
-            "label": "Step",
-            "key": "step"
+            "label": "Current Step",
+            "key": "currentStep"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "currentStepValid"
           }
         ]
       },
@@ -1776,16 +1780,7 @@
         "defaultValue": 1,
         "min": 1
       }
-    ],
-    "context": {
-      "type": "static",
-      "values":  [
-        {
-          "label": "Valid",
-          "key": "valid"
-        }
-      ]
-    }
+    ]
   },
   "fieldgroup": {
     "name": "Field Group",
