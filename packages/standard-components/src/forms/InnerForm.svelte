@@ -146,6 +146,11 @@
     prevStep: () => {
       currentStep.update(step => Math.max(1, step - 1))
     },
+    setStep: step => {
+      if (step) {
+        currentStep.set(step)
+      }
+    },
   }
 
   // Creates an API for a specific field
