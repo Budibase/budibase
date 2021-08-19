@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Checkbox } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
 
@@ -19,6 +19,11 @@
     options={actionProviders}
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
+  />
+  <div />
+  <Checkbox
+    text="Validate only current step"
+    bind:value={parameters.onlyCurrentStep}
   />
 </div>
 
