@@ -77,10 +77,10 @@
   {#if fieldState}
     {#if !optionsType || optionsType === "select"}
       <CoreSelect
-        value={$fieldState.value}
-        id={$fieldState.fieldId}
-        disabled={$fieldState.disabled}
-        error={$fieldState.error}
+        value={fieldState.value}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
         {options}
         {placeholder}
         on:change={e => fieldApi.setValue(e.detail)}
@@ -90,10 +90,10 @@
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup
-        value={$fieldState.value}
-        id={$fieldState.fieldId}
-        disabled={$fieldState.disabled}
-        error={$fieldState.error}
+        value={fieldState.value}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
         {options}
         on:change={e => fieldApi.setValue(e.detail)}
         getOptionLabel={flatOptions ? x => x : x => x.label}
