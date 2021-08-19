@@ -74,7 +74,7 @@
   }
 
   export const show = () => {
-    modal.show()
+    modal.show();
   }
   export const hide = () => {
     modal.hide()
