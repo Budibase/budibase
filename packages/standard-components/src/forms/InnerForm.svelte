@@ -73,9 +73,14 @@
         return
       }
 
-      // Skip if we've already registered this field
+      // If we've already registered this field then wipe any errors and
+      // return the existing field
       const existingField = getField(field)
       if (existingField) {
+        existingField.update(state => {
+          state.fieldState.error = null
+          return state
+        })
         return existingField
       }
 
