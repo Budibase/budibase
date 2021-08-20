@@ -35,6 +35,7 @@ const INITIAL_FRONTEND_STATE = {
   clientFeatures: {
     spectrumThemes: false,
     intelligentLoading: false,
+    deviceAwareness: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
@@ -70,7 +71,7 @@ export const getFrontendStore = () => {
         url: application.url,
         layouts,
         screens,
-        theme: application.theme,
+        theme: application.theme || "spectrum--light",
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,

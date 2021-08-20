@@ -1,12 +1,9 @@
 <script>
-  import { Label } from "@budibase/bbui"
-  import { getBindableProperties } from "builderStore/dataBinding"
-  import { currentAsset, store } from "builderStore"
+  import { Label, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
-
-  $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
+  export let bindings = []
 </script>
 
 <div class="root">
@@ -18,19 +15,17 @@
     on:change={value => (parameters.url = value.detail)}
     {bindings}
   />
+  <div />
+  <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
 </div>
 
 <style>
   .root {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
+    display: grid;
+    align-items: center;
+    gap: var(--spacing-m);
+    grid-template-columns: auto 1fr;
     max-width: 800px;
     margin: 0 auto;
-  }
-
-  .root :global(> div) {
-    flex: 1;
-    margin-left: var(--spacing-l);
   }
 </style>

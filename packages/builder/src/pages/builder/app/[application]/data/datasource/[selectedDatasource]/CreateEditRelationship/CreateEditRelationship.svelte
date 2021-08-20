@@ -158,10 +158,16 @@
         fieldName: fromTable.primary[0],
       }
     } else {
+      // the relateFrom.fieldName should remain the same, as it is the foreignKey in the other
+      // table, this is due to the way that budibase represents relationships, the fieldName in a
+      // link column schema is the column linked to (FK in this case). The foreignKey column is
+      // essentially what is linked to in the from table, this is unique to SQL as this isn't a feature
+      // of Budibase internal tables.
+      // Essentially this means the fieldName is what we are linking to in the other table, and the
+      // foreignKey is what is linking out of the current table.
       relateFrom = {
         ...relateFrom,
-        foreignKey: relateFrom.fieldName,
-        fieldName: fromTable.primary[0],
+        foreignKey: fromTable.primary[0],
       }
       relateTo = {
         ...relateTo,
@@ -193,6 +199,9 @@
       delete datasource.entities[toTable.name].schema[originalToName]
     }
 
+    // store the original names so it won't cause an error
+    originalToName = toRelationship.name
+    originalFromName = fromRelationship.name
     await save()
     await tables.fetch()
   }

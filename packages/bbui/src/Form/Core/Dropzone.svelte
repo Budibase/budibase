@@ -5,6 +5,7 @@
   import { createEventDispatcher } from "svelte"
   import { generateID } from "../../utils/helpers"
   import Icon from "../../Icon/Icon.svelte"
+  import Link from "../../Link/Link.svelte"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -117,7 +118,13 @@
     {#if gallery}
       <div class="gallery">
         <div class="title">
-          <div class="filename">{selectedImage.name}</div>
+          <div class="filename">
+            {#if selectedUrl}
+              <Link href={selectedUrl}>{selectedImage.name}</Link>
+            {:else}
+              {selectedImage.name}
+            {/if}
+          </div>
           {#if selectedImage.size}
             <div class="filesize">
               {#if selectedImage.size <= BYTES_IN_MB}

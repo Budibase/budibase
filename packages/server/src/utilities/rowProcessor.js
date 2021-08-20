@@ -184,7 +184,13 @@ exports.inputProcessing = (user = {}, table, row) => {
       }
       continue
     }
-    clonedRow[key] = exports.coerce(value, field.type)
+    // specific case to delete formula values if they get saved
+    // type coercion cannot completely remove the field, so have to do it here
+    if (field.type === FieldTypes.FORMULA) {
+      delete clonedRow[key]
+    } else {
+      clonedRow[key] = exports.coerce(value, field.type)
+    }
   }
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow)
@@ -193,20 +199,21 @@ exports.inputProcessing = (user = {}, table, row) => {
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {string} appId the ID of the application for which rows are being enriched.
+ * @param {object} ctx the request which is looking for enriched rows.
  * @param {object} table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
  * @param {object[]} rows the rows which are to be enriched.
  * @returns {object[]} the enriched rows will be returned.
  */
-exports.outputProcessing = async (appId, table, rows) => {
+exports.outputProcessing = async (ctx, table, rows) => {
+  const appId = ctx.appId
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
 
   // process formulas
   enriched = processFormulas(table, enriched)

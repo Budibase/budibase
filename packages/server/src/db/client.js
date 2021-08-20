@@ -1,10 +1,11 @@
 const PouchDB = require("pouchdb")
+const { getCouchUrl } = require("@budibase/auth/db")
 const replicationStream = require("pouchdb-replication-stream")
 const allDbs = require("pouchdb-all-dbs")
 const find = require("pouchdb-find")
 const env = require("../environment")
 
-const COUCH_DB_URL = env.COUCH_DB_URL || "http://localhost:10000/db/"
+const COUCH_DB_URL = getCouchUrl() || "http://localhost:10000/db/"
 
 PouchDB.plugin(replicationStream.plugin)
 PouchDB.plugin(find)
@@ -24,21 +25,7 @@ if (env.isTest()) {
 
 const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 
+// have to still have pouch alldbs for testing
 allDbs(Pouch)
-
-// replicate your local levelDB pouch to a running HTTP compliant couch or pouchdb server.
-/* istanbul ignore next */
-// eslint-disable-next-line no-unused-vars
-function replicateLocal() {
-  Pouch.allDbs().then(dbs => {
-    for (let db of dbs) {
-      new Pouch(db).sync(
-        new PouchDB(`http://127.0.0.1:5984/${db}`, { live: true })
-      )
-    }
-  })
-}
-
-// replicateLocal()
 
 module.exports = Pouch

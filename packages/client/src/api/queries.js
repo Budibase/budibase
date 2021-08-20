@@ -7,7 +7,7 @@ import API from "./api"
 export const executeQuery = async ({ queryId, parameters }) => {
   const query = await API.get({ url: `/api/queries/${queryId}` })
   if (query?.datasourceId == null) {
-    notificationStore.danger("That query couldn't be found")
+    notificationStore.actions.error("That query couldn't be found")
     return
   }
   const res = await API.post({
@@ -17,9 +17,9 @@ export const executeQuery = async ({ queryId, parameters }) => {
     },
   })
   if (res.error) {
-    notificationStore.danger("An error has occurred")
+    notificationStore.actions.error("An error has occurred")
   } else if (!query.readable) {
-    notificationStore.success("Query executed successfully")
+    notificationStore.actions.success("Query executed successfully")
     dataSourceStore.actions.invalidateDataSource(query.datasourceId)
   }
   return res

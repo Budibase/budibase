@@ -387,7 +387,7 @@ describe("/rows", () => {
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        const enriched = await outputProcessing(config.getAppId(), table, [row])
+        const enriched = await outputProcessing({ appId: config.getAppId() }, table, [row])
         expect(enriched[0].attachment[0].url).toBe(
           `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
         )

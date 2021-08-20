@@ -25,7 +25,7 @@ const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
-const { getAllApps } = require("../../utilities")
+const { getAllApps } = require("@budibase/auth/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
   getDeployedApps,
@@ -38,6 +38,7 @@ const {
   backupClientLibrary,
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
+const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -93,7 +94,8 @@ async function getAppUrlIfNotInUse(ctx) {
 }
 
 async function createInstance(template) {
-  const baseAppId = generateAppID()
+  const tenantId = isMultiTenant() ? getTenantId() : null
+  const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
 
   const db = new CouchDB(appId)
@@ -128,7 +130,7 @@ async function createInstance(template) {
 exports.fetch = async function (ctx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps({ CouchDB, dev, all })
+  const apps = await getAllApps(CouchDB, { dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -220,10 +222,12 @@ exports.create = async function (ctx) {
     url: url,
     template: ctx.request.body.template,
     instance: instance,
+    tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
-  await db.put(newApplication, { force: true })
+  const response = await db.put(newApplication, { force: true })
+  newApplication._rev = response.rev
 
   await createEmptyAppPackage(ctx, newApplication)
   /* istanbul ignore next */
@@ -295,7 +299,7 @@ exports.delete = async function (ctx) {
     await deleteApp(ctx.params.appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
-  await removeAppFromUserRoles(ctx.params.appId)
+  await removeAppFromUserRoles(ctx, ctx.params.appId)
 
   ctx.status = 200
   ctx.body = result

@@ -19,8 +19,6 @@ function parseBody(body: any) {
     }
     if (isIsoDateString(value)) {
       body[key] = new Date(value)
-    } else if (!isNaN(parseFloat(value))) {
-      body[key] = parseFloat(value)
     }
   }
   return body
@@ -153,7 +151,9 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   }
   // handle select
   if (resource.fields && resource.fields.length > 0) {
-    query = query.select(resource.fields)
+    // select the resources as the format "table.columnName" - this is what is provided
+    // by the resource builder further up
+    query = query.select(resource.fields.map(field => `${field} as ${field}`))
   } else {
     query = query.select("*")
   }

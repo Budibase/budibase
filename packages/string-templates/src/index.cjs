@@ -126,6 +126,7 @@ module.exports.isValid = string => {
     "object",
     "array",
     "cannot read property",
+    "undefined",
   ]
   // this is a portion of a specific string always output by handlebars in the case of a syntax error
   const invalidCases = [`expecting '`]

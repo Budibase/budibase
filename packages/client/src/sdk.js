@@ -15,7 +15,7 @@ import { ActionTypes } from "./constants"
 export default {
   API,
   authStore,
-  notifications: notificationStore,
+  notificationStore,
   routeStore,
   screenStore,
   builderStore,

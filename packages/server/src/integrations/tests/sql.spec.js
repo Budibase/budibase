@@ -62,12 +62,13 @@ describe("SQL query builder", () => {
   })
 
   it("should test a read with specific columns", () => {
+    const nameProp = `${TABLE_NAME}.name`, ageProp = `${TABLE_NAME}.age`
     const query = sql._query(generateReadJson({
-      fields: ["name", "age"]
+      fields: [nameProp, ageProp]
     }))
     expect(query).toEqual({
       bindings: [limit],
-      sql: `select "name", "age" from "${TABLE_NAME}" limit $1`
+      sql: `select "${TABLE_NAME}"."name" as "${nameProp}", "${TABLE_NAME}"."age" as "${ageProp}" from "${TABLE_NAME}" limit $1`
     })
   })
 

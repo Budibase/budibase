@@ -1,8 +1,6 @@
 <script>
   import { Button, Icon, Drawer, Label } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
   import {
-    getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
@@ -18,18 +16,15 @@
   export let value = null
   export let props = {}
   export let onChange = () => {}
+  export let bindings = []
 
   let bindingDrawer
   let anchor
   let valid
 
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
-  $: safeValue = getSafeValue(value, props.defaultValue, bindableProperties)
+  $: safeValue = getSafeValue(value, props.defaultValue, bindings)
   $: tempValue = safeValue
-  $: replaceBindings = val => readableToRuntimeBinding(bindableProperties, val)
+  $: replaceBindings = val => readableToRuntimeBinding(bindings, val)
 
   const handleClose = () => {
     handleChange(tempValue)
@@ -61,8 +56,8 @@
 
   // The "safe" value is the value with any bindings made readable
   // If there is no value set, any default value is used
-  const getSafeValue = (value, defaultValue, bindableProperties) => {
-    const enriched = runtimeToReadableBinding(bindableProperties, value)
+  const getSafeValue = (value, defaultValue, bindings) => {
+    const enriched = runtimeToReadableBinding(bindings, value)
     return enriched == null && defaultValue !== undefined
       ? defaultValue
       : enriched
@@ -83,6 +78,7 @@
       updateOnChange={false}
       on:change={handleChange}
       onChange={handleChange}
+      {bindings}
       name={key}
       text={label}
       {type}
@@ -108,7 +104,7 @@
           bind:valid
           value={safeValue}
           on:change={e => (tempValue = e.detail)}
-          {bindableProperties}
+          bindableProperties={bindings}
         />
       </Drawer>
     {/if}
