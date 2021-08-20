@@ -20,7 +20,8 @@
       "datetimefield",
       "attachmentfield",
       "relationshipfield",
-      "daterangepicker"
+      "daterangepicker",
+      "multifieldselect"
     ]
   },
   {

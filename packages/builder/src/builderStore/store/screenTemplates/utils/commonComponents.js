@@ -131,6 +131,7 @@ const fieldTypeToComponentMap = {
   string: "stringfield",
   number: "numberfield",
   options: "optionsfield",
+  array: "multifieldselect",
   boolean: "booleanfield",
   longform: "longformfield",
   datetime: "datetimefield",
