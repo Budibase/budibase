@@ -119,6 +119,8 @@ services:
   
   watchtower-service:
     image: containrrr/watchtower
+    ports:
+      - "${WATCHTOWER_PORT}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --debug --http-api-update bbapps bbworker
