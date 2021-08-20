@@ -105,19 +105,12 @@ const clearFormHandler = async (action, context) => {
   )
 }
 
-const nextFormStepHandler = async (action, context) => {
+const changeFormStepHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
-    ActionTypes.NextFormStep
-  )
-}
-
-const prevFormStepHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.PrevFormStep
+    ActionTypes.ChangeFormStep,
+    action.parameters
   )
 }
 
@@ -138,8 +131,7 @@ const handlerMap = {
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,
-  ["Next Form Step"]: nextFormStepHandler,
-  ["Previous Form Step"]: prevFormStepHandler,
+  ["Change Form Step"]: changeFormStepHandler,
 }
 
 const confirmTextMap = {

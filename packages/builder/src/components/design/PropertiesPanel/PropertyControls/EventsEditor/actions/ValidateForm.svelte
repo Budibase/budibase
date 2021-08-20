@@ -34,7 +34,7 @@
     row-gap: var(--spacing-s);
     grid-template-columns: 60px 1fr;
     align-items: center;
-    max-width: 800px;
+    max-width: 400px;
     margin: 0 auto;
   }
 </style>

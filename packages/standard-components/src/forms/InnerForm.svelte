@@ -140,11 +140,16 @@
         get(field).fieldApi.clearValue()
       })
     },
-    nextStep: () => {
-      currentStep.update(step => step + 1)
-    },
-    prevStep: () => {
-      currentStep.update(step => Math.max(1, step - 1))
+    changeStep: ({ type, number }) => {
+      if (type === "next") {
+        currentStep.update(step => step + 1)
+      } else if (type === "prev") {
+        currentStep.update(step => Math.max(1, step - 1))
+      } else if (type === "first") {
+        currentStep.set(1)
+      } else if (type === "specific" && number && !isNaN(number)) {
+        currentStep.set(number)
+      }
     },
     setStep: step => {
       if (step) {
@@ -249,8 +254,7 @@
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.clear },
-    { type: ActionTypes.NextFormStep, callback: formApi.nextStep },
-    { type: ActionTypes.PrevFormStep, callback: formApi.prevStep },
+    { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
   ]
 </script>
 

@@ -1706,8 +1706,7 @@
     "actions": [
       "ValidateForm",
       "ClearForm",
-      "NextFormStep",
-      "PrevFormStep"
+      "ChangeFormStep"
     ],
     "styles": ["size"],
     "settings": [
@@ -1768,9 +1767,6 @@
     "icon": "Form",
     "hasChildren": true,
     "illegalChildren": ["section"],
-    "actions": [
-      "ValidateFormStep"
-    ],
     "styles": ["size"],
     "settings": [
       {
