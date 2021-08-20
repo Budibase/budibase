@@ -33,7 +33,7 @@
 
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY])?.component
 
   // Select the first action if we delete an action
   $: {
@@ -116,7 +116,7 @@
     </ActionMenu>
   </Layout>
   <Layout noPadding>
-    {#if selectedAction}
+    {#if selectedActionComponent}
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}
