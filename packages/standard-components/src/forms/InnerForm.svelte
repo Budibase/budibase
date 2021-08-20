@@ -27,7 +27,7 @@
   $: errors = deriveFieldProperty(fields, f => f.fieldState.error)
   $: valid = !Object.values($errors).some(error => error != null)
 
-  // Derive which fields belong in which steps
+  // Derive whether the current form step is valid
   $: currentStepValid = derived(
     [currentStep, ...fields],
     ([currentStepValue, ...fieldsValue]) => {

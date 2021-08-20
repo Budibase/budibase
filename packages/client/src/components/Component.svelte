@@ -74,7 +74,6 @@
     styles: { ...instance._styles, id, empty, interactive },
     empty,
     selected,
-    props: componentSettings,
     name,
   })
 
