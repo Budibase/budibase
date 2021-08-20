@@ -36,6 +36,7 @@
 {:else if type === "array"}
   <Multiselect
     bind:value
+    {label}
     options={meta.constraints.inclusion.reduce((p, n) => p.concat(n), [])}
   />
 {:else if type === "link"}

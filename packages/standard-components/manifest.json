@@ -2005,6 +2005,112 @@
       }
     ]
   },
+  "multifieldselect": {
+    "name": "MultiField Picker",
+    "icon": "ViewList",
+    "styles": ["size"],
+    "illegalChildren": ["section"],
+    "settings": [
+      {
+        "type": "field/array",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Choose an option"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Options source",
+        "key": "optionsSource",
+        "defaultValue": "schema",
+        "placeholder": "Pick an options source",
+        "options": [
+          {
+            "label": "Schema",
+            "value": "schema"
+          },
+          {
+            "label": "Data provider",
+            "value": "provider"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
+        ]
+      },
+      {
+        "type": "dataProvider",
+        "label": "Options Provider",
+        "key": "dataProvider",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Label Column",
+        "key": "labelColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Value Column",
+        "key": "valueColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      }, 
+      {
+        "type": "options",
+        "key": "customOptions",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "custom"
+        }
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
