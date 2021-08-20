@@ -87,6 +87,7 @@
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
       {placeholder}
+      sort={true}
     />
   {/if}
 </Field>
