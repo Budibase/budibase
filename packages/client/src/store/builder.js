@@ -1,5 +1,6 @@
 import { writable, derived } from "svelte/store"
 import Manifest from "@budibase/standard-components/manifest.json"
+import { findComponentById, findComponentPathById } from "../utils/components"
 
 const dispatchEvent = (type, data = {}) => {
   window.dispatchEvent(
@@ -7,45 +8,6 @@ const dispatchEvent = (type, data = {}) => {
       detail: { type, data },
     })
   )
-}
-
-const findComponentById = (component, componentId) => {
-  if (!component || !componentId) {
-    return null
-  }
-  if (component._id === componentId) {
-    return component
-  }
-  if (!component._children?.length) {
-    return null
-  }
-  for (let child of component._children) {
-    const result = findComponentById(child, componentId)
-    if (result) {
-      return result
-    }
-  }
-  return null
-}
-
-const findComponentIdPath = (component, componentId, path = []) => {
-  if (!component || !componentId) {
-    return null
-  }
-  path = [...path, component._id]
-  if (component._id === componentId) {
-    return path
-  }
-  if (!component._children?.length) {
-    return null
-  }
-  for (let child of component._children) {
-    const result = findComponentIdPath(child, componentId, path)
-    if (result) {
-      return result
-    }
-  }
-  return null
 }
 
 const createBuilderStore = () => {
@@ -75,13 +37,13 @@ const createBuilderStore = () => {
     const definition = type ? Manifest[type] : null
 
     // Derive the selected component path
-    const path = findComponentIdPath(asset.props, selectedComponentId) || []
+    const path = findComponentPathById(asset.props, selectedComponentId) || []
 
     return {
       ...$state,
       selectedComponent: component,
       selectedComponentDefinition: definition,
-      selectedComponentPath: path,
+      selectedComponentPath: path?.map(component => component._id),
     }
   })
 
