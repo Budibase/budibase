@@ -87,6 +87,7 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
+        sort={true}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup
