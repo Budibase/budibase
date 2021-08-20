@@ -19,8 +19,7 @@
     if (
       formContext &&
       $builderStore.inBuilder &&
-      $builderStore.selectedComponentPath?.includes($component.id) &&
-      $formState?.currentStep !== step
+      $builderStore.selectedComponentPath?.includes($component.id)
     ) {
       formContext.formApi.setStep(step)
     }
