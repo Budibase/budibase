@@ -57,6 +57,28 @@ exports.buildSchemaFromDb = async function (ctx) {
   ctx.body = datasource
 }
 
+exports.update = async function (ctx) {
+  const db = new CouchDB(ctx.appId)
+  const datasourceId = ctx.params.datasourceId
+  const datasource = await db.get(datasourceId)
+  datasource.name = ctx.request.body.name
+
+  const response = await db.put(datasource)
+  datasource._rev = response.rev
+
+  // Drain connection pools when configuration is changed
+  if (datasource.source) {
+    const source = integrations[datasource.source]
+    if (source && source.pool) {
+      await source.pool.end()
+    }
+  }
+
+  ctx.status = 200
+  ctx.message = "Datasource saved successfully."
+  ctx.body = datasource
+}
+
 exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const plus = ctx.request.body.plus

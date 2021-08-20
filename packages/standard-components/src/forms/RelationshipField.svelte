@@ -9,6 +9,8 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let validation
+  export let autocomplete = false
 
   let fieldState
   let fieldApi
@@ -23,6 +25,7 @@
   $: fetchTable(linkedTableId)
   $: singleValue = flatten($fieldState?.value)?.[0]
   $: multiValue = flatten($fieldState?.value) ?? []
+  $: component = multiselect ? CoreMultiselect : CoreSelect
 
   const fetchTable = async id => {
     if (id) {
@@ -64,6 +67,7 @@
   {label}
   {field}
   {disabled}
+  {validation}
   type="link"
   bind:fieldState
   bind:fieldApi
@@ -72,8 +76,9 @@
 >
   {#if fieldState}
     <svelte:component
-      this={multiselect ? CoreMultiselect : CoreSelect}
+      this={component}
       {options}
+      {autocomplete}
       value={multiselect ? multiValue : singleValue}
       on:change={multiselect ? multiHandler : singleHandler}
       id={$fieldState.fieldId}

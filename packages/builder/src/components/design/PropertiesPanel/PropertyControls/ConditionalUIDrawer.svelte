@@ -13,12 +13,12 @@
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
-  import { getBindableProperties } from "builderStore/dataBinding"
-  import { currentAsset, selectedComponent, store } from "builderStore"
+  import { selectedComponent, store } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
 
   export let conditions = []
+  export let bindings = []
 
   const flipDurationMs = 150
   const actionOptions = [
@@ -64,10 +64,6 @@
       value: setting.key,
     }
   })
-  $: bindableProperties = getBindableProperties(
-    $currentAsset,
-    $store.selectedComponentId
-  )
   $: conditions.forEach(link => {
     if (!link.id) {
       link.id = generate()
@@ -194,6 +190,7 @@
                       placeholder: getSettingDefinition(condition.setting)
                         .placeholder,
                     }}
+                    {bindings}
                   />
                 {:else}
                   <Select disabled placeholder=" " />
@@ -201,7 +198,7 @@
               {/if}
               <div>IF</div>
               <DrawerBindableInput
-                bindings={bindableProperties}
+                {bindings}
                 placeholder="Value"
                 value={condition.newValue}
                 on:change={e => (condition.newValue = e.detail)}
@@ -222,7 +219,7 @@
               {#if ["string", "number"].includes(condition.valueType)}
                 <DrawerBindableInput
                   disabled={condition.noValue}
-                  bindings={bindableProperties}
+                  {bindings}
                   placeholder="Value"
                   value={condition.referenceValue}
                   on:change={e => (condition.referenceValue = e.detail)}
@@ -285,12 +282,12 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: auto 1fr auto 1fr 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto 160px auto 1fr 130px 130px 1fr auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .condition.update {
-    grid-template-columns: auto 1fr 1fr auto 1fr auto 1fr 1fr 1fr 1fr auto;
+    grid-template-columns: auto 160px 1fr auto 1fr auto 1fr 130px 130px 1fr auto auto;
   }
   .condition:hover {
     background-color: var(--spectrum-global-color-gray-100);

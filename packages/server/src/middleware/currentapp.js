@@ -10,7 +10,7 @@ const CouchDB = require("../db")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
-  const requestAppId = getAppId(ctx)
+  let requestAppId = getAppId(ctx)
   // get app cookie if it exists
   let appCookie = null
   try {
@@ -29,6 +29,8 @@ module.exports = async (ctx, next) => {
       clearCookie(ctx, Cookies.CurrentApp)
       return next()
     }
+    // if the request app ID wasn't set, update it with the cookie
+    requestAppId = requestAppId || appId
   }
 
   let appId,
@@ -68,5 +70,6 @@ module.exports = async (ctx, next) => {
   ) {
     setCookie(ctx, { appId }, Cookies.CurrentApp)
   }
+
   return next()
 }

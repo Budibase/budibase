@@ -9,12 +9,14 @@
     Checkbox,
   } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
+  import { admin } from "stores/portal"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
   import analytics from "analytics"
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
+  import { APP_NAME_REGEX } from "constants"
 
   export let template
 
@@ -22,7 +24,13 @@
   const errors = writable({})
   const touched = writable({})
   const validator = {
-    name: string().required("Your application must have a name"),
+    name: string()
+      .trim()
+      .required("Your application must have a name")
+      .matches(
+        APP_NAME_REGEX,
+        "App name must be letters, numbers and spaces only"
+      ),
     file: template ? mixed().required("Please choose a file to import") : null,
   }
 
@@ -34,7 +42,9 @@
     await hostingStore.actions.fetchDeployedApps()
     const existingAppNames = svelteGet(hostingStore).deployedAppNames
     validator.name = string()
+      .trim()
       .required("Your application must have a name")
+      .matches(APP_NAME_REGEX, "App name must be letters and numbers only")
       .test(
         "non-existing-app-name",
         "Another app with the same name already exists",
@@ -73,7 +83,7 @@
     try {
       // Create form data to create app
       let data = new FormData()
-      data.append("name", $values.name)
+      data.append("name", $values.name.trim())
       data.append("useTemplate", template != null)
       if (template) {
         data.append("templateName", template.name)
@@ -102,6 +112,8 @@
       if (applicationPkg.ok) {
         await store.actions.initialise(pkg)
         await automationStore.actions.fetch()
+        // update checklist - incase first app
+        await admin.init()
       } else {
         throw new Error(pkg)
       }

@@ -3,6 +3,7 @@ const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
 const { AppStatus } = require("../../../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { TENANT_ID } = require("../../../../tests/utilities/structures")
 
 function Request(appId, params) {
   this.appId = appId
@@ -16,8 +17,8 @@ exports.getAllTableRows = async config => {
   return req.body
 }
 
-exports.clearAllApps = async () => {
-  const req = { query: { status: AppStatus.DEV } }
+exports.clearAllApps = async (tenantId = TENANT_ID) => {
+  const req = { query: { status: AppStatus.DEV }, user: { tenantId } }
   await appController.fetch(req)
   const apps = req.body
   if (!apps || apps.length <= 0) {

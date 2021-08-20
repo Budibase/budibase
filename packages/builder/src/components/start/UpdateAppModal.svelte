@@ -12,12 +12,19 @@
   import { string, object } from "yup"
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
+  import { APP_NAME_REGEX } from "constants"
 
   const values = writable({ name: null })
   const errors = writable({})
   const touched = writable({})
   const validator = {
-    name: string().required("Your application must have a name"),
+    name: string()
+      .trim()
+      .required("Your application must have a name")
+      .matches(
+        APP_NAME_REGEX,
+        "App name must be letters, numbers and spaces only"
+      ),
   }
 
   export let app
@@ -37,7 +44,12 @@
     await hostingStore.actions.fetchDeployedApps()
     const existingAppNames = svelteGet(hostingStore).deployedAppNames
     validator.name = string()
+      .trim()
       .required("Your application must have a name")
+      .matches(
+        APP_NAME_REGEX,
+        "App name must be letters, numbers and spaces only"
+      )
       .test(
         "non-existing-app-name",
         "Another app with the same name already exists",
@@ -65,7 +77,7 @@
   async function updateApp() {
     try {
       // Update App
-      await apps.update(app.instance._id, $values.name)
+      await apps.update(app.instance._id, $values.name.trim())
       hide()
     } catch (error) {
       console.error(error)
@@ -96,10 +108,7 @@
     onConfirm={updateApp}
     disabled={!(valid && dirty)}
   >
-    <Body size="S">
-      Give your new app a name, and choose which groups have access (paid plans
-      only).
-    </Body>
+    <Body size="S">Update the name of your app.</Body>
     <Input
       bind:value={$values.name}
       error={$touched.name && $errors.name}

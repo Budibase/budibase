@@ -2,6 +2,7 @@ const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 const { StaticDatabases } = require("./db/utils")
+const { getGlobalDB } = require("./tenancy")
 const {
   jwt,
   local,
@@ -9,8 +10,9 @@ const {
   google,
   oidc,
   auditLog,
+  tenancy,
 } = require("./middleware")
-const { setDB, getDB } = require("./db")
+const { setDB } = require("./db")
 const userCache = require("./cache/user")
 
 // Strategies
@@ -20,7 +22,7 @@ passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
 passport.serializeUser((user, done) => done(null, user))
 
 passport.deserializeUser(async (user, done) => {
-  const db = getDB(StaticDatabases.GLOBAL.name)
+  const db = getGlobalDB()
 
   try {
     const user = await db.get(user._id)
@@ -54,6 +56,7 @@ module.exports = {
     google,
     oidc,
     jwt: require("jsonwebtoken"),
+    buildTenancyMiddleware: tenancy,
     auditLog,
   },
   cache: {
