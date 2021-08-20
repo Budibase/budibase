@@ -52,7 +52,7 @@ function addFilters(
   if (filters.string) {
     iterate(filters.string, (key, value) => {
       const fnc = allOr ? "orWhere" : "where"
-      query = query[fnc](key, "like", `${value}%`)
+      query = query[fnc](key, "ilike", `${value}%`)
     })
   }
   if (filters.range) {
