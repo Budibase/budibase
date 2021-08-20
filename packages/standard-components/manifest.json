@@ -1702,7 +1702,7 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "form"],
     "actions": [
       "ValidateForm",
       "ClearForm",
@@ -1764,9 +1764,9 @@
   },
   "formstep": {
     "name": "Form Step",
-    "icon": "Form",
+    "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "form", "form step"],
     "styles": ["size"],
     "settings": [
       {
