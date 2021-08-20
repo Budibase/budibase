@@ -108,10 +108,7 @@
     onConfirm={updateApp}
     disabled={!(valid && dirty)}
   >
-    <Body size="S">
-      Give your new app a name, and choose which groups have access (paid plans
-      only).
-    </Body>
+    <Body size="S">Update the name of your app.</Body>
     <Input
       bind:value={$values.name}
       error={$touched.name && $errors.name}
