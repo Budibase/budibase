@@ -1727,12 +1727,6 @@
         }
       },
       {
-        "type": "number",
-        "label": "Steps",
-        "key": "steps",
-        "defaultValue": 1
-      },
-      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
