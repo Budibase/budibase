@@ -50,3 +50,15 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+
+    - uses: azure/setup-helm@v1
+      id: install
+
+    - run: yarn release:helm
+
+    - name: Run chart-releaser
+      uses: helm/chart-releaser-action@v1.1.0
+      with:
+        charts_dir: docs
+      env:
+        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

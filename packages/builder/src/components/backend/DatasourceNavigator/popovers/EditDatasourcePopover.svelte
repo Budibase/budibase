@@ -4,10 +4,12 @@
   import { notifications } from "@budibase/bbui"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
 
   export let datasource
 
   let confirmDeleteDialog
+  let updateDatasourceDialog
 
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
@@ -24,6 +26,7 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
+  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Update</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
@@ -37,6 +40,7 @@
   <i>{datasource.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
+<UpdateDatasourceModal {datasource} bind:this={updateDatasourceDialog} />
 
 <style>
   div.icon {
