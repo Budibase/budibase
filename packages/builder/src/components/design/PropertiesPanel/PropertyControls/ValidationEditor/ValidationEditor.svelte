@@ -17,7 +17,7 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure Validation</ActionButton>
+<ActionButton on:click={drawer.show}>Configure validation</ActionButton>
 <Drawer bind:this={drawer} title="Validation Rules">
   <svelte:fragment slot="description">
     Configure validation rules for this field.
