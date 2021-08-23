@@ -94,6 +94,7 @@ const createScreen = table => {
     .instanceName("Repeater")
     .customProps({
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
+      noRowsMessage: "We couldn't find a row to display",
     })
 
   const form = makeMainForm()
