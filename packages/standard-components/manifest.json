@@ -1739,15 +1739,15 @@
         "values":  [
           {
             "label": "Valid",
-            "key": "valid"
+            "key": "__valid"
           },
           {
             "label": "Current Step",
-            "key": "currentStep"
+            "key": "__currentStep"
           },
           {
             "label": "Current Step Valid",
-            "key": "currentStepValid"
+            "key": "__currentStepValid"
           }
         ]
       },
