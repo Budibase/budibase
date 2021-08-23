@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
@@ -9,7 +9,6 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
-  let unsaved = false
   let relationshipModal
   let displayColumnModal
   let selectedFromRelationship, selectedToRelationship
@@ -71,7 +70,6 @@
       // Create datasource
       await datasources.save(datasource)
       notifications.success(`Datasource ${name} updated successfully.`)
-      unsaved = false
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
     }
@@ -81,7 +79,6 @@
     try {
       await datasources.updateSchema(datasource)
       notifications.success(`Datasource ${name} tables updated successfully.`)
-      unsaved = false
       await tables.fetch()
     } catch (err) {
       notifications.error(`Error updating datasource schema: ${err}`)
@@ -98,10 +95,6 @@
     $goto(`../../table/${table._id}`)
   }
 
-  function setUnsaved() {
-    unsaved = true
-  }
-
   function openRelationshipModal(fromRelationship, toRelationship) {
     selectedFromRelationship = fromRelationship || {}
     selectedToRelationship = toRelationship || {}
@@ -111,16 +104,6 @@
   function openDisplayColumnModal() {
     displayColumnModal.show()
   }
-
-  $beforeUrlChange(() => {
-    if (unsaved) {
-      notifications.error(
-        "Unsaved changes. Please save your datasource configuration before leaving."
-      )
-      return false
-    }
-    return true
-  })
 </script>
 
 <Modal bind:this={relationshipModal}>
@@ -164,7 +147,6 @@
         <IntegrationConfigForm
           schema={integration.datasource}
           integration={datasource.config}
-          on:change={setUnsaved}
         />
       </div>
       {#if datasource.plus}
