@@ -256,17 +256,20 @@
     { type: ActionTypes.ClearForm, callback: formApi.clear },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
   ]
+
+  // Create data context to provide
+  $: dataContext = {
+    ...initialValues,
+    ...$values,
+
+    // These static values are prefixed to avoid clashes with actual columns
+    __valid: valid,
+    __currentStep: $currentStep,
+    __currentStepValid: $currentStepValid,
+  }
 </script>
 
-<Provider
-  {actions}
-  data={{
-    ...$values,
-    valid,
-    currentStep: $currentStep,
-    currentStepValid: $currentStepValid,
-  }}
->
+<Provider {actions} data={dataContext}>
   <div use:styleable={$component.styles}>
     <slot />
   </div>
