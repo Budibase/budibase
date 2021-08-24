@@ -2036,11 +2036,7 @@
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
-        "defaultValue": false,
-        "dependsOn": {
-          "setting": "optionsType",
-          "value": "select"
-        }
+        "defaultValue": false
       },
       {
         "type": "boolean",

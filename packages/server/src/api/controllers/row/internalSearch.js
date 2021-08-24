@@ -17,6 +17,7 @@ class QueryBuilder {
       notEqual: {},
       empty: {},
       notEmpty: {},
+      contains: {},
       ...base,
     }
     this.limit = 50
@@ -104,6 +105,12 @@ class QueryBuilder {
     return this
   }
 
+  addContains(key, value) {
+    this.query.contains[key] = value
+    return this
+  }
+
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -121,7 +128,7 @@ class QueryBuilder {
     }
     // Escape characters
     if (escape && originalType === "string") {
-      value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
+      value = `${value}`.replace(/[ #+\-&|!{}\]^"~*?:\\]/g, "\\$&")
     }
     // Wrap in quotes
     if (hasVersion && wrap) {
@@ -212,6 +219,19 @@ class QueryBuilder {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
 
+    if (this.query.contains) {
+      build(this.query.contains, (key, value) => {
+        if (!value) {
+          return null
+        }
+        let opts = []
+        value.forEach(val => opts.push(`${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`))
+        const joined = opts.join(' AND ')
+        return joined
+      })
+
+    }
+
     return query
   }
 
@@ -253,6 +273,7 @@ const runQuery = async (url, body) => {
     method: "POST",
   })
   const json = await response.json()
+  console.log(json)
   let output = {
     rows: [],
   }

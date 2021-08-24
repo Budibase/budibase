@@ -31,6 +31,11 @@ export const OperatorOptions = {
     value: "rangeHigh",
     label: "Less than",
   },
+  Contains: {
+    value: "contains",
+    label: "Contains",
+  },
+
 }
 
 export const getValidOperatorsForType = type => {
@@ -55,6 +60,8 @@ export const getValidOperatorsForType = type => {
     ]
   } else if (type === "options") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+  } else if (type === "array") {
+    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.Contains]
   } else if (type === "boolean") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {

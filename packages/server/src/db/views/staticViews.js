@@ -94,12 +94,18 @@ exports.createAllSearchIndex = async appId => {
   await searchIndex(
     appId,
     SearchIndexes.ROWS,
-    function (doc) {
+    function (doc) {      
       function idx(input, prev) {
         for (let key of Object.keys(input)) {
           let idxKey = prev != null ? `${prev}.${key}` : key
           idxKey = idxKey.replace(/ /, "_")
-          if (key === "_id" || key === "_rev" || input[key] == null) {
+
+        
+          if (Array.isArray(input[key])) {
+            for (val in input[key]) {
+              index(`${idxKey}.${input[key][v]}`, input[key][v], { store: true });
+            }
+          } else if (key === "_id" || key === "_rev" || input[key] == null) {
             continue
           }
           if (typeof input[key] === "string") {
