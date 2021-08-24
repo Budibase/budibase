@@ -43,7 +43,7 @@
     "lint:fix": "yarn run lint:fix:ts && yarn run lint:fix:prettier && yarn run lint:fix:eslint",
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci",
-    "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION && cd -",
+    "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION release && cd -",
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "release:helm": "./scripts/release_helm_chart.sh",
     "multi:enable": "lerna run multi:enable",
