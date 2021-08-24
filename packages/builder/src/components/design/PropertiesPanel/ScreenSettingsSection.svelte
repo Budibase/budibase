@@ -37,7 +37,7 @@
       key: "routing.route",
       label: "Route",
       control: Input,
-      parser: val => val.replaceAll(" ", "-"),
+      parser: val => val.replace(/ +/g, "-"),
     },
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
