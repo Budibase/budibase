@@ -55,6 +55,10 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
+        {{ if .Values.services.objectStore.region }}
+        - name: AWS_REGION
+          value: {{ .Values.services.objectStore.region }}
+        {{ end }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
