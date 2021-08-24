@@ -58,7 +58,7 @@
   // By deleting all _rev properties we can avoid this and increase
   // performance.
   $: json = JSON.stringify(previewData)
-  $: strippedJson = json.replaceAll(/"_rev":\s*"[^"]+"/g, `"_rev":""`)
+  $: strippedJson = json.replace(/"_rev":\s*"[^"]+"/g, `"_rev":""`)
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
