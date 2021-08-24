@@ -60,6 +60,8 @@
     width: calc(100% - 520px);
     background: var(--background);
     border-top: var(--border-light);
+    border-left: var(--border-light);
+    border-right: var(--border-light);
     z-index: 2;
   }
 

@@ -57,6 +57,7 @@ export { default as Pagination } from "./Pagination/Pagination.svelte"
 export { default as Badge } from "./Badge/Badge.svelte"
 export { default as StatusLight } from "./StatusLight/StatusLight.svelte"
 export { default as ColorPicker } from "./ColorPicker/ColorPicker.svelte"
+export { default as SplitPane } from "./SplitPane/SplitPane.svelte"
 
 // Typography
 export { default as Body } from "./Typography/Body.svelte"

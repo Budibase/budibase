@@ -9,6 +9,7 @@
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
   import ComponentSelectionList from "components/design/AppPreview/ComponentSelectionList.svelte"
   import FrontendNavigatePane from "components/design/NavigationPanel/FrontendNavigatePane.svelte"
+  import { SplitPane } from "@budibase/bbui"
   import { goto, leftover, params } from "@roxi/routify"
   import { FrontendTypes } from "constants"
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
@@ -142,63 +143,59 @@
 
 <!-- routify:options index=1 -->
 <div class="root">
-  <div class="ui-nav">
-    <FrontendNavigatePane />
-  </div>
+  <SplitPane type="horizontal" pos="85">
+    <SplitPane type="horizontal" slot="a" pos="25">
+      <div class="ui-nav" slot="a">
+        <FrontendNavigatePane />
+      </div>
 
-  <div class="preview-pane">
-    {#if $currentAsset}
-      <div class="preview-header">
-        <ComponentSelectionList />
-        {#if $store.clientFeatures.spectrumThemes}
-          <AppThemeSelect />
+      <div class="preview-pane" slot="b">
+        {#if $currentAsset}
+          <div class="preview-header">
+            <ComponentSelectionList />
+            {#if $store.clientFeatures.spectrumThemes}
+              <AppThemeSelect />
+            {/if}
+          </div>
+          <div class="preview-content">
+            {#key $store.version}
+              <CurrentItemPreview />
+            {/key}
+          </div>
         {/if}
       </div>
-      <div class="preview-content">
-        {#key $store.version}
-          <CurrentItemPreview />
-        {/key}
-      </div>
-    {/if}
-  </div>
-
-  {#if $selectedComponent != null}
-    <div class="components-pane">
-      <PropertiesPanel />
+    </SplitPane>
+      <div class="components-pane" slot="b">
+        {#if $selectedComponent != null}
+          <PropertiesPanel />
+        {/if}
     </div>
-  {/if}
+  </SplitPane>
 </div>
 
 <slot />
 
 <style>
   .root {
-    display: grid;
-    grid-template-columns: 260px 1fr 260px;
-    align-items: stretch;
     flex: 1 1 auto;
     height: 0;
   }
 
   .ui-nav {
-    grid-column: 1;
     background-color: var(--background);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-l);
     padding: 0 0 60px 0;
     overflow-y: auto;
-    border-right: var(--border-light);
+    width: 100%;
   }
 
   .preview-pane {
-    grid-column: 2;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-m);
     padding: var(--spacing-xl) 40px;
   }
   .preview-header {
@@ -210,14 +207,13 @@
   }
 
   .components-pane {
-    grid-column: 3;
     background-color: var(--background);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    border-left: var(--border-light);
     overflow-x: hidden;
+    width: 100%;
   }
 </style>
