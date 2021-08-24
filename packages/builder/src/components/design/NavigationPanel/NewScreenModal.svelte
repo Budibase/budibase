@@ -84,7 +84,7 @@
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
-    route = route.replaceAll(" ", "-")
+    route = route.replace(/ +/g, "-")
   }
 </script>
 
