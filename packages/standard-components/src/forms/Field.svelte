@@ -32,12 +32,12 @@
   )
 
   // Update form properties in parent component on every store change
-  const unsubscribe = formField.subscribe(value => {
+  const unsubscribe = formField?.subscribe(value => {
     fieldState = value?.fieldState
     fieldApi = value?.fieldApi
     fieldSchema = value?.fieldSchema
   })
-  onDestroy(unsubscribe)
+  onDestroy(() => unsubscribe && unsubscribe())
 
   // Keep validation rules up to date
   $: updateValidation(validation)
