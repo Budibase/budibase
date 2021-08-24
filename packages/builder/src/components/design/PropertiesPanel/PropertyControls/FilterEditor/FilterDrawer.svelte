@@ -9,6 +9,7 @@
     DrawerContent,
     Layout,
     Body,
+    Multiselect,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
@@ -59,6 +60,14 @@
       expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
+
+    // if changed to an array, change default value to empty array
+    const idx = filters.findIndex(x => (x.field = field))
+    if (expression.type === "array") {
+      filters[idx].value = []
+    } else {
+      filters[idx].value = null
+    }
   }
 
   const onOperatorChange = (expression, operator) => {
@@ -74,7 +83,12 @@
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
-    return schema?.constraints?.inclusion || []
+    const opt =
+      schema.type == "array"
+        ? schema?.constraints?.inclusion[0]
+        : schema?.constraints?.inclusion || []
+
+    return opt
   }
 </script>
 
@@ -127,6 +141,14 @@
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}
                 bind:value={filter.value}
+              />
+            {:else if filter.type === "array"}
+              <Multiselect
+                disabled={filter.noValue}
+                options={getFieldOptions(filter.field)}
+                bind:value={filter.value}
+                getOptionLabel={x => x}
+                getOptionValue={x => x}
               />
             {:else if filter.type === "boolean"}
               <Combobox
