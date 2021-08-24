@@ -42,7 +42,9 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek } = action.parameters
   if (url) {
-    if (peek) {
+    // If we're already peeking, don't peek again
+    const isPeeking = get(routeStore).queryParams?.peek
+    if (peek && !isPeeking) {
       peekStore.actions.showPeek(url)
     } else {
       const external = !url.startsWith("/")
