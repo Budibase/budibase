@@ -23,6 +23,7 @@ async function activate() {
   if (posthogConfigured) {
     posthog.init(process.env.POSTHOG_TOKEN, {
       autocapture: false,
+      capture_pageview: false,
       api_host: process.env.POSTHOG_URL,
     })
     posthog.set_config({ persistence: "cookie" })
