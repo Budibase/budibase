@@ -2326,6 +2326,22 @@
         "placeholder": "All columns"
       },
       {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
