@@ -1726,6 +1726,21 @@
         }
       },
       {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          }, {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
