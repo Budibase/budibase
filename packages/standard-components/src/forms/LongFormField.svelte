@@ -25,11 +25,11 @@
 >
   {#if fieldState}
     <CoreTextArea
-      value={$fieldState.value}
+      value={fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
-      id={$fieldState.fieldId}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      id={fieldState.fieldId}
       {placeholder}
     />
   {/if}

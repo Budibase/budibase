@@ -85,6 +85,8 @@
           props={{
             options: setting.options || [],
             placeholder: setting.placeholder || null,
+            min: setting.min || null,
+            max: setting.max || null,
           }}
           {bindings}
           {componentDefinition}
