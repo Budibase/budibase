@@ -42,9 +42,9 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title="Update Datasource"
+    title="Edit Datasource"
     size="L"
-    confirmText="Update"
+    confirmText="Save"
     onConfirm={updateDatasource}
     disabled={error || !name || !datasource?.type}
   >
