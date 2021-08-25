@@ -165,10 +165,10 @@
         {/if}
       </div>
     </SplitPane>
-      <div class="components-pane" slot="b">
-        {#if $selectedComponent != null}
-          <PropertiesPanel />
-        {/if}
+    <div class="components-pane" slot="b">
+      {#if $selectedComponent != null}
+        <PropertiesPanel />
+      {/if}
     </div>
   </SplitPane>
 </div>
