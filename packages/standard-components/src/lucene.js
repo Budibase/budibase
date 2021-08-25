@@ -11,7 +11,8 @@ export const buildLuceneQuery = filter => {
     notEqual: {},
     empty: {},
     notEmpty: {},
-    contains: {}
+    contains: {},
+    notContains: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {

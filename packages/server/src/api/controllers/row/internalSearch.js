@@ -18,6 +18,7 @@ class QueryBuilder {
       empty: {},
       notEmpty: {},
       contains: {},
+      notContains: {},
       ...base,
     }
     this.limit = 50
@@ -110,6 +111,10 @@ class QueryBuilder {
     return this
   }
 
+  addNotContains(key, value) {
+    this.query.notContains[key] = value
+    return this
+  }
 
   /**
    * Preprocesses a value before going into a lucene search.
@@ -232,6 +237,20 @@ class QueryBuilder {
 
     }
 
+    if (this.query.notContains) {
+      build(this.query.notContains, (key, value) => {
+        if (!value) {
+          return null
+        }
+        let opts = []
+        value.forEach(val => opts.push(`!${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`))
+        const joined = opts.join(' AND ')
+        return joined
+      })
+
+    }
+
+
     return query
   }
 
@@ -273,7 +292,7 @@ const runQuery = async (url, body) => {
     method: "POST",
   })
   const json = await response.json()
-  console.log(json)
+
   let output = {
     rows: [],
   }

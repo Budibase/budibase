@@ -86,7 +86,6 @@
       let arr = field.constraints.inclusion
       let newArr = []
       newArr.push(arr)
-      console.log(newArr)
       field.constraints.inclusion = newArr
     }
     tables.saveField({
