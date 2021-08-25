@@ -38,3 +38,4 @@ dependencies:
   - name: ingress-nginx
     version: 3.35.0 
     repository: https://github.com/kubernetes/ingress-nginx
+    condition: services.ingress.nginx
