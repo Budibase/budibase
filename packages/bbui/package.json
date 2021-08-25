@@ -1,7 +1,7 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "0.9.105-alpha.28",
+  "version": "0.9.105-alpha.31",
   "license": "AGPL-3.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
@@ -65,6 +65,7 @@
     "@spectrum-css/search": "^3.0.2",
     "@spectrum-css/sidenav": "^3.0.2",
     "@spectrum-css/statuslight": "^3.0.2",
+    "@spectrum-css/stepper": "^3.0.3",
     "@spectrum-css/switch": "^1.0.2",
     "@spectrum-css/table": "^3.0.1",
     "@spectrum-css/tabs": "^3.0.1",

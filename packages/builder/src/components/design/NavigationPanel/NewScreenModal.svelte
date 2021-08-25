@@ -1,7 +1,6 @@
 <script>
   import { store, allScreens, selectedAccessRole } from "builderStore"
-  import { tables } from "stores/backend"
-  import { roles } from "stores/backend"
+  import { tables, roles } from "stores/backend"
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"
@@ -16,7 +15,7 @@
   let createLink = true
   let roleId = $selectedAccessRole || "BASIC"
 
-  $: templates = getTemplates($store, $tables.list)
+  $: templates = getTemplates($store, tables.getDataSources())
   $: route = !route && $allScreens.length === 0 ? "*" : route
   $: {
     if (templates && templateIndex === undefined) {

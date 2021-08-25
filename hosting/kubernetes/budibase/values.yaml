@@ -41,6 +41,7 @@ service:
 
 ingress:
   enabled: true
+  nginx: true
   certificateArn: ""
   className: ""
   annotations: 
@@ -135,6 +136,7 @@ services:
     replicaCount: 1
     accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
     secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret 
+    region: "" # AWS_REGION if using S3 or existing minio secret 
     url: "" # only change if pointing to existing minio cluster and minio: false 
     storage: 100Mi
 

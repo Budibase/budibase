@@ -1,4 +1,4 @@
-import { Checkbox, Input, Select } from "@budibase/bbui"
+import { Checkbox, Input, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import EventsEditor from "./EventsEditor"
@@ -22,7 +22,7 @@ const componentMap = {
   dataSource: DataSourceSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
-  number: Input,
+  number: Stepper,
   event: EventsEditor,
   table: TableSelect,
   color: ColorPicker,

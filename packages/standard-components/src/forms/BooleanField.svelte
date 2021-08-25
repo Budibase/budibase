@@ -39,10 +39,10 @@
 >
   {#if fieldState}
     <CoreCheckbox
-      value={$fieldState.value}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
-      id={$fieldState.fieldId}
+      value={fieldState.value}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      id={fieldState.fieldId}
       {size}
       on:change={e => fieldApi.setValue(e.detail)}
       {text}

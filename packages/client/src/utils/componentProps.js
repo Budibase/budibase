@@ -51,6 +51,12 @@ export const enrichProps = (props, context) => {
           condition.settingValue,
           totalContext
         )
+
+        // If there is an onclick function in here then it won't be serialised
+        // properly, and therefore will not be updated properly.
+        // The solution to this is add a rand which will ensure diffs happen
+        // every time.
+        condition.rand = Math.random()
       }
     })
   }
