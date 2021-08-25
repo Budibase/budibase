@@ -229,14 +229,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        let opts = []
-        value.forEach(val =>
-          opts.push(
-            `${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`
-          )
-        )
-        const joined = opts.join(" AND ")
-        return joined
+        return `${key}.${value}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
 
@@ -245,14 +238,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        let opts = []
-        value.forEach(val =>
-          opts.push(
-            `!${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`
-          )
-        )
-        const joined = opts.join(" AND ")
-        return joined
+        return `!${key}.${value}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
 
