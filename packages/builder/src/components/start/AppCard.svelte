@@ -54,9 +54,7 @@
           </MenuItem>
         {/if}
         {#if !app.deployed}
-          <MenuItem on:click={() => updateApp(app)} icon="Edit">
-            Update
-          </MenuItem>
+          <MenuItem on:click={() => updateApp(app)} icon="Edit">Edit</MenuItem>
           <MenuItem on:click={() => deleteApp(app)} icon="Delete">
             Delete
           </MenuItem>

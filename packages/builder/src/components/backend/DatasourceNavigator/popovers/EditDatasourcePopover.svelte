@@ -26,7 +26,7 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Update</MenuItem>
+  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
