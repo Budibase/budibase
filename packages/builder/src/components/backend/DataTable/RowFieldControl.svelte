@@ -19,6 +19,7 @@
     data-cy="{meta.name}-select"
     bind:value
     options={meta.constraints.inclusion}
+    sort
   />
 {:else if type === "datetime"}
   <DatePicker {label} bind:value />

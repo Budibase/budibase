@@ -19,7 +19,7 @@
 
 <li
   data-cy={dataCy}
-  on:click|preventDefault={onClick}
+  on:click|preventDefault={disabled ? null : onClick}
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
