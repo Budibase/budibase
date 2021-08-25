@@ -229,7 +229,10 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `${key}.${value}:${builder.preprocess(value, allPreProcessingOpts)}`
+        return `${key}.${value}:${builder.preprocess(
+          value,
+          allPreProcessingOpts
+        )}`
       })
     }
 
@@ -238,7 +241,10 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `!${key}.${value}:${builder.preprocess(value, allPreProcessingOpts)}`
+        return `!${key}.${value}:${builder.preprocess(
+          value,
+          allPreProcessingOpts
+        )}`
       })
     }
 
