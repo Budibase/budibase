@@ -2101,7 +2101,7 @@
         }
       },
       {
-        "type": "validation/string",
+        "type": "validation/array",
         "label": "Validation",
         "key": "validation"
       }

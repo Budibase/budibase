@@ -25,7 +25,7 @@ export const createValidatorFromConstraints = (
       schemaConstraints.presence?.allowEmpty === false
     ) {
       rules.push({
-        type: "string",
+        type: schemaConstraints.type == "array" ? "array" : "string",
         constraint: "required",
         error: "Required",
       })
@@ -63,7 +63,7 @@ export const createValidatorFromConstraints = (
     }
 
     // Inclusion constraint
-    if (exists(schemaConstraints.inclusion)) {
+    if (!schemaConstraints.type == "array" ? exists(schemaConstraints.inclusion) : false) {
       const options = schemaConstraints.inclusion || []
       rules.push({
         type: "string",
@@ -72,6 +72,18 @@ export const createValidatorFromConstraints = (
         error: "Invalid value",
       })
     }
+
+    // Inclusion constraint
+    if (schemaConstraints.type == "array" ? exists(schemaConstraints.inclusion[0]) : false ) {
+      const options = schemaConstraints.inclusion[0] || []
+      rules.push({
+        type: "array",
+        constraint: "inclusion",
+        value: options,
+        error: "Invalid value",
+      })
+    }
+    
 
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
@@ -142,7 +154,7 @@ const evaluateRule = (rule, value) => {
  * in the same format.
  * @param value the value to parse
  * @param type the type to parse
- * @returns {boolean|string|*|number|null} the parsed value, or null if invalid
+ * @returns {boolean|string|*|number|null|array} the parsed value, or null if invalid
  */
 const parseType = (value, type) => {
   // Treat nulls or empty strings as null
@@ -202,6 +214,13 @@ const parseType = (value, type) => {
     return value
   }
 
+  if (type === "array") {
+    if (!Array.isArray(value) || !value.length) {
+      return null
+    }
+    return value
+    }
+
   // If some unknown type, treat as null to avoid breaking validators
   return null
 }
@@ -239,7 +258,7 @@ const maxValueHandler = (value, rule) => {
 
 // Evaluates an inclusion constraint
 const inclusionHandler = (value, rule) => {
-  return value == null || rule.value.includes(value)
+  return value == null || rule.type == "array" ? rule.value.map(val => val === value) : rule.value.includes(value)
 }
 
 // Evaluates an equal constraint
