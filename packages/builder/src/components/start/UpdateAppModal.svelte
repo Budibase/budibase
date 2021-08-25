@@ -103,8 +103,8 @@
 
 <Modal bind:this={modal} on:hide={onCancel} on:show={onShow}>
   <ModalContent
-    title={"Update app"}
-    confirmText={"Update app"}
+    title={"Edit app"}
+    confirmText={"Save"}
     onConfirm={updateApp}
     disabled={!(valid && dirty)}
   >
