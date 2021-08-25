@@ -9,13 +9,13 @@
     Body,
     Input,
     DatePicker,
-    Multiselect,
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { getSchemaForDatasource } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
+  import Multiselect from "../../../../../../../bbui/src/Form/Core/Multiselect.svelte"
 
   export let rules = []
   export let bindings = []
@@ -58,12 +58,20 @@
       label: "Must not match regex",
       value: "notRegex",
     },
-    Contains: {
+    ContainsRowID: {
       label: "Must contain row ID",
       value: "contains",
     },
-    NotContains: {
+    NotContainsRowID: {
       label: "Must not contain row ID",
+      value: "notContains",
+    },
+    Contains: {
+      label: "Must contain one of",
+      value: "contains",
+    },
+    NotContains: {
+      label: "Must not contain one of",
       value: "notContains",
     },
   }
@@ -98,8 +106,8 @@
     ["attachment"]: [Constraints.Required],
     ["link"]: [
       Constraints.Required,
-      Constraints.Contains,
-      Constraints.NotContains,
+      Constraints.ContainsRowID,
+      Constraints.NotContainsRowID,
       Constraints.MinLength,
       Constraints.MaxLength,
     ],
@@ -107,6 +115,8 @@
       Constraints.Required,
       Constraints.MinLength,
       Constraints.MaxLength,
+      Constraints.Contains,
+      Constraints.NotContains,
     ],
   }
 
@@ -195,6 +205,7 @@
         valueType: "Binding",
         type: fieldType,
         id: generate(),
+        value: fieldType == "array" ? [] : null,
       },
     ]
   }
@@ -280,7 +291,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
+                {:else if ["maxLength", "minLength", "regex", "notRegex", "containsRowID", "notContainsRowID"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
@@ -288,11 +299,21 @@
                   />
                 {:else}
                   <!-- Otherwise we render a component based on the type -->
-                  {#if ["string", "number", "options", "longform", "array"].includes(rule.type)}
+                  {#if ["string", "number", "options", "longform"].includes(rule.type)}
                     <Input
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}
                       placeholder="Constraint value"
+                    />
+                  {:else if rule.type === "array" && ["contains", "notContains"].includes(rule.constraint)}
+                    <Multiselect
+                      disabled={rule.constraint === "required"}
+                      options={dataSourceSchema.schema[field].constraints
+                        .inclusion[0]}
+                      getOptionLabel={x => x}
+                      getOptionValue={x => x}
+                      on:change={e => (rule.value = e.detail)}
+                      bind:value={rule.value}
                     />
                   {:else if rule.type === "boolean"}
                     <Select

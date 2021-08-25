@@ -38,7 +38,7 @@ export const OperatorOptions = {
   NotContains: {
     value: "notContains",
     label: "Does Not Contain",
-  }
+  },
 }
 
 export const getValidOperatorsForType = type => {

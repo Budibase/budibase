@@ -230,11 +230,14 @@ class QueryBuilder {
           return null
         }
         let opts = []
-        value.forEach(val => opts.push(`${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`))
-        const joined = opts.join(' AND ')
+        value.forEach(val =>
+          opts.push(
+            `${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`
+          )
+        )
+        const joined = opts.join(" AND ")
         return joined
       })
-
     }
 
     if (this.query.notContains) {
@@ -243,13 +246,15 @@ class QueryBuilder {
           return null
         }
         let opts = []
-        value.forEach(val => opts.push(`!${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`))
-        const joined = opts.join(' AND ')
+        value.forEach(val =>
+          opts.push(
+            `!${key}.${val}:${builder.preprocess(val, allPreProcessingOpts)}`
+          )
+        )
+        const joined = opts.join(" AND ")
         return joined
       })
-
     }
-
 
     return query
   }

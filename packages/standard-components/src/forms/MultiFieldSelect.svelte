@@ -1,5 +1,5 @@
 <script>
-  import { Multiselect } from "@budibase/bbui"
+  import { CoreMultiselect } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
   export let field
@@ -13,6 +13,7 @@
   export let labelColumn
   export let valueColumn
   export let customOptions
+  export let autocomplete = false
 
   let fieldState
   let fieldApi
@@ -41,7 +42,9 @@
   bind:fieldSchema
 >
   {#if fieldState}
-    <Multiselect
+    <CoreMultiselect
+      value={$fieldState.value}
+      error={$fieldState.error}
       getOptionLabel={flatOptions ? x => x : x => x.label}
       getOptionValue={flatOptions ? x => x : x => x.value}
       id={$fieldState.fieldId}
@@ -49,6 +52,7 @@
       on:change={e => fieldApi.setValue(e.detail)}
       {placeholder}
       {options}
+      {autocomplete}
     />
   {/if}
 </Field>
