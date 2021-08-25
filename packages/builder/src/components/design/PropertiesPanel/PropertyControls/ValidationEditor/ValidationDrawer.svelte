@@ -9,6 +9,7 @@
     Body,
     Input,
     DatePicker,
+    Multiselect,
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
@@ -102,6 +103,11 @@
       Constraints.MinLength,
       Constraints.MaxLength,
     ],
+    ["array"]: [
+      Constraints.Required,
+      Constraints.MinLength,
+      Constraints.MaxLength,
+    ],
   }
 
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
@@ -109,7 +115,6 @@
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
-
   const getConstraintsForType = type => {
     return ConstraintMap[type]
   }
@@ -283,7 +288,7 @@
                   />
                 {:else}
                   <!-- Otherwise we render a component based on the type -->
-                  {#if ["string", "number", "options", "longform"].includes(rule.type)}
+                  {#if ["string", "number", "options", "longform", "array"].includes(rule.type)}
                     <Input
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}

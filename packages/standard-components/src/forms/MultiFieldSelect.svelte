@@ -40,10 +40,15 @@
   bind:fieldApi
   bind:fieldSchema
 >
-  <Multiselect
-    getOptionLabel={flatOptions ? x => x : x => x.label}
-    getOptionValue={flatOptions ? x => x : x => x.value}
-    {placeholder}
-    {options}
-  />
+  {#if fieldState}
+    <Multiselect
+      getOptionLabel={flatOptions ? x => x : x => x.label}
+      getOptionValue={flatOptions ? x => x : x => x.value}
+      id={$fieldState.fieldId}
+      disabled={$fieldState.disabled}
+      on:change={e => fieldApi.setValue(e.detail)}
+      {placeholder}
+      {options}
+    />
+  {/if}
 </Field>
