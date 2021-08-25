@@ -7,6 +7,7 @@
   export let dataSource
   export let disabled = false
   export let initialValues
+  export let size
 
   const component = getContext("component")
   const { styleable, API, Provider, ActionTypes } = getContext("sdk")
@@ -231,7 +232,7 @@
   {actions}
   data={{ ...$formState.values, tableId: dataSource?.tableId }}
 >
-  <div use:styleable={$component.styles}>
+  <div use:styleable={$component.styles} class={size}>
     {#if loaded}
       <slot />
     {/if}
