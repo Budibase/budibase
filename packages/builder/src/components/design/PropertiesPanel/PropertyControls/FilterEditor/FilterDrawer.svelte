@@ -136,7 +136,7 @@
               />
             {:else if ["string", "longform", "number"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if filter.type === "options"}
+            {:else if filter.type === "options" || filter.type === "array"}
               <Combobox
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}
