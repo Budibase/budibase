@@ -272,7 +272,7 @@
   {:else if field.type === "array"}
     <ValuesList
       label="Options (one per line)"
-      bind:values={field.constraints.inclusion}
+      bind:values={field.constraints.inclusion[0]}
     />
   {:else if field.type === "datetime"}
     <DatePicker
