@@ -63,7 +63,11 @@ export const createValidatorFromConstraints = (
     }
 
     // Inclusion constraint
-    if (!schemaConstraints.type == "array" ? exists(schemaConstraints.inclusion) : false) {
+    if (
+      !schemaConstraints.type == "array"
+        ? exists(schemaConstraints.inclusion)
+        : false
+    ) {
       const options = schemaConstraints.inclusion || []
       rules.push({
         type: "string",
@@ -73,8 +77,12 @@ export const createValidatorFromConstraints = (
       })
     }
 
-    // Inclusion constraint
-    if (schemaConstraints.type == "array" ? exists(schemaConstraints.inclusion[0]) : false ) {
+    // Handle the array type but link also returns as an array, so handle via the inclusion check
+    if (
+      schemaConstraints.type == "array" && schemaConstraints.inclusion
+        ? exists(schemaConstraints.inclusion[0])
+        : false
+    ) {
       const options = schemaConstraints.inclusion[0] || []
       rules.push({
         type: "array",
@@ -83,7 +91,6 @@ export const createValidatorFromConstraints = (
         error: "Invalid value",
       })
     }
-    
 
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
@@ -219,7 +226,7 @@ const parseType = (value, type) => {
       return null
     }
     return value
-    }
+  }
 
   // If some unknown type, treat as null to avoid breaking validators
   return null
@@ -258,7 +265,9 @@ const maxValueHandler = (value, rule) => {
 
 // Evaluates an inclusion constraint
 const inclusionHandler = (value, rule) => {
-  return value == null || rule.type == "array" ? rule.value.map(val => val === value) : rule.value.includes(value)
+  return value == null || rule.type == "array"
+    ? rule.value.map(val => val === value)
+    : rule.value.includes(value)
 }
 
 // Evaluates an equal constraint
@@ -288,14 +297,26 @@ const notRegexHandler = (value, rule) => {
 }
 
 // Evaluates a contains constraint
-const containsHandler = (value, rule) => {
+const containsRowIDHandler = (value, rule) => {
   const expectedValue = parseType(rule.value, "string")
   return value && value.includes(expectedValue)
 }
 
 // Evaluates a not contains constraint
-const notContainsHandler = (value, rule) => {
+const notContainsRowIDHandler = (value, rule) => {
   return !containsHandler(value, rule)
+}
+
+// Evaluates a contains constraint
+const containsHandler = (value, rule) => {
+  const ruleValue = parseType(rule.value, "array")
+  return value && value.some(val => ruleValue.includes(val))
+}
+
+// Evaluates a not contains constraint
+const notContainsHandler = (value, rule) => {
+  const ruleValue = parseType(rule.value, "array")
+  return value && !value.some(val => ruleValue.includes(val))
 }
 
 /**
@@ -312,6 +333,8 @@ const handlerMap = {
   notEqual: notEqualHandler,
   regex: regexHandler,
   notRegex: notRegexHandler,
+  containsRowID: containsRowIDHandler,
+  notContainsRowID: notContainsRowIDHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
 }
