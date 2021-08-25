@@ -1,6 +1,6 @@
 <script>
-  import { setContext, getContext, onMount } from "svelte"
-  import { writable, get } from "svelte/store"
+  import { setContext, getContext } from "svelte"
+  import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { generateID } from "../helpers"
 
@@ -8,28 +8,81 @@
   export let disabled = false
   export let initialValues
   export let size
+  export let schema
+  export let table
 
   const component = getContext("component")
-  const { styleable, API, Provider, ActionTypes } = getContext("sdk")
+  const { styleable, Provider, ActionTypes } = getContext("sdk")
 
-  let loaded = false
-  let schema
-  let table
-  let fieldMap = {}
+  let fields = []
+  const currentStep = writable(1)
+  const formState = writable({
+    values: {},
+    errors: {},
+    valid: true,
+    currentStep: 1,
+  })
 
-  // Form state contains observable data about the form
-  const formState = writable({ values: initialValues, errors: {}, valid: true })
+  // Reactive derived stores to derive form state from field array
+  $: values = deriveFieldProperty(fields, f => f.fieldState.value)
+  $: errors = deriveFieldProperty(fields, f => f.fieldState.error)
+  $: valid = !Object.values($errors).some(error => error != null)
 
-  // Form API contains functions to control the form
+  // Derive whether the current form step is valid
+  $: currentStepValid = derived(
+    [currentStep, ...fields],
+    ([currentStepValue, ...fieldsValue]) => {
+      return !fieldsValue
+        .filter(f => f.step === currentStepValue)
+        .some(f => f.fieldState.error != null)
+    }
+  )
+
+  // Update form state store from derived stores
+  $: {
+    formState.set({
+      values: $values,
+      errors: $errors,
+      valid,
+      currentStep: $currentStep,
+    })
+  }
+
+  // Generates a derived store from an array of fields, comprised of a map of
+  // extracted values from the field array
+  const deriveFieldProperty = (fieldStores, getProp) => {
+    return derived(fieldStores, fieldValues => {
+      const reducer = (map, field) => ({ ...map, [field.name]: getProp(field) })
+      return fieldValues.reduce(reducer, {})
+    })
+  }
+
+  // Searches the field array for a certain field
+  const getField = name => {
+    return fields.find(field => get(field).name === name)
+  }
+
   const formApi = {
     registerField: (
       field,
       defaultValue = null,
       fieldDisabled = false,
-      validationRules
+      validationRules,
+      step = 1
     ) => {
       if (!field) {
         return
+      }
+
+      // If we've already registered this field then wipe any errors and
+      // return the existing field
+      const existingField = getField(field)
+      if (existingField) {
+        existingField.update(state => {
+          state.fieldState.error = null
+          return state
+        })
+        return existingField
       }
 
       // Auto columns are always disabled
@@ -44,85 +97,86 @@
         table
       )
 
-      // Construct field object
-      fieldMap[field] = {
-        fieldState: makeFieldState(
-          field,
-          validator,
+      // Construct field info
+      const fieldInfo = writable({
+        name: field,
+        step: step || 1,
+        fieldState: {
+          fieldId: `id-${generateID()}`,
+          value: initialValues[field] ?? defaultValue,
+          error: null,
+          disabled: disabled || fieldDisabled || isAutoColumn,
           defaultValue,
-          disabled || fieldDisabled || isAutoColumn
-        ),
+          validator,
+        },
         fieldApi: makeFieldApi(field, defaultValue),
         fieldSchema: schema?.[field] ?? {},
+      })
+
+      // Add this field
+      fields = [...fields, fieldInfo]
+
+      return fieldInfo
+    },
+    validate: (onlyCurrentStep = false) => {
+      let valid = true
+      let validationFields = fields
+
+      // Reduce fields to only the current step if required
+      if (onlyCurrentStep) {
+        validationFields = fields.filter(f => get(f).step === get(currentStep))
       }
 
-      // Set initial value
-      const initialValue = get(fieldMap[field].fieldState).value
-      formState.update(state => ({
-        ...state,
-        values: {
-          ...state.values,
-          [field]: initialValue,
-        },
-      }))
-
-      return fieldMap[field]
-    },
-    validate: () => {
-      const fields = Object.keys(fieldMap)
-      fields.forEach(field => {
-        const { fieldApi } = fieldMap[field]
-        fieldApi.validate()
+      // Validate fields and check if any are invalid
+      validationFields.forEach(field => {
+        if (!get(field).fieldApi.validate()) {
+          valid = false
+        }
       })
-      return get(formState).valid
+      return valid
     },
     clear: () => {
-      const fields = Object.keys(fieldMap)
+      // Clear the form by clearing each individual field
       fields.forEach(field => {
-        const { fieldApi } = fieldMap[field]
-        fieldApi.clearValue()
+        get(field).fieldApi.clearValue()
       })
     },
+    changeStep: ({ type, number }) => {
+      if (type === "next") {
+        currentStep.update(step => step + 1)
+      } else if (type === "prev") {
+        currentStep.update(step => Math.max(1, step - 1))
+      } else if (type === "first") {
+        currentStep.set(1)
+      } else if (type === "specific" && number && !isNaN(number)) {
+        currentStep.set(number)
+      }
+    },
+    setStep: step => {
+      if (step) {
+        currentStep.set(step)
+      }
+    },
   }
-
-  // Provide both form API and state to children
-  setContext("form", { formApi, formState, dataSource })
-
-  // Action context to pass to children
-  const actions = [
-    { type: ActionTypes.ValidateForm, callback: formApi.validate },
-    { type: ActionTypes.ClearForm, callback: formApi.clear },
-  ]
 
   // Creates an API for a specific field
   const makeFieldApi = field => {
     // Sets the value for a certain field and invokes validation
     const setValue = (value, skipCheck = false) => {
-      const { fieldState } = fieldMap[field]
-      const { validator } = get(fieldState)
+      const fieldInfo = getField(field)
+      const { fieldState } = get(fieldInfo)
+      const { validator } = fieldState
 
       // Skip if the value is the same
-      if (!skipCheck && get(fieldState).value === value) {
+      if (!skipCheck && fieldState.value === value) {
         return
       }
 
       // Update field state
       const error = validator ? validator(value) : null
-      fieldState.update(state => {
-        state.value = value
-        state.error = error
-        return state
-      })
-
-      // Update form state
-      formState.update(state => {
-        state.values = { ...state.values, [field]: value }
-        if (error) {
-          state.errors = { ...state.errors, [field]: error }
-        } else {
-          delete state.errors[field]
-        }
-        state.valid = Object.keys(state.errors).length === 0
+      fieldInfo.update(state => {
+        state.fieldState.value = value
+        state.fieldState.error = error
         return state
       })
 
@@ -131,30 +185,23 @@
 
     // Clears the value of a certain field back to the initial value
     const clearValue = () => {
-      const { fieldState } = fieldMap[field]
-      const { defaultValue } = get(fieldState)
-      const newValue = initialValues[field] ?? defaultValue
+      const fieldInfo = getField(field)
+      const { fieldState } = get(fieldInfo)
+      const newValue = initialValues[field] ?? fieldState.defaultValue
 
       // Update field state
-      fieldState.update(state => {
-        state.value = newValue
-        state.error = null
-        return state
-      })
-
-      // Update form state
-      formState.update(state => {
-        state.values = { ...state.values, [field]: newValue }
-        delete state.errors[field]
-        state.valid = Object.keys(state.errors).length === 0
+      fieldInfo.update(state => {
+        state.fieldState.value = newValue
+        state.fieldState.error = null
         return state
       })
     }
 
     // Updates the validator rules for a certain field
     const updateValidation = validationRules => {
-      const { fieldState } = fieldMap[field]
-      const { value, error } = get(fieldState)
+      const fieldInfo = getField(field)
+      const { fieldState } = get(fieldInfo)
+      const { value, error } = fieldState
 
       // Create new validator
       const schemaConstraints = schema?.[field]?.constraints
@@ -166,8 +213,8 @@
       )
 
       // Update validator
-      fieldState.update(state => {
-        state.validator = validator
+      fieldInfo.update(state => {
+        state.fieldState.validator = validator
         return state
       })
 
@@ -183,58 +230,48 @@
       clearValue,
       updateValidation,
       validate: () => {
-        const { fieldState } = fieldMap[field]
-        setValue(get(fieldState).value, true)
+        // Validate the field by force setting the same value again
+        const { fieldState } = get(getField(field))
+        return setValue(fieldState.value, true)
       },
     }
   }
 
-  // Creates observable state data about a specific field
-  const makeFieldState = (field, validator, defaultValue, fieldDisabled) => {
-    return writable({
-      field,
-      fieldId: `id-${generateID()}`,
-      value: initialValues[field] ?? defaultValue,
-      error: null,
-      disabled: fieldDisabled,
-      defaultValue,
-      validator,
-    })
-  }
+  // Provide form state and api for full control by children
+  setContext("form", {
+    formState,
+    formApi,
 
-  // Fetches the form schema from this form's dataSource, if one exists
-  const fetchSchema = async () => {
-    if (!dataSource?.tableId) {
-      schema = {}
-      table = null
-    } else {
-      table = await API.fetchTableDefinition(dataSource?.tableId)
-      if (table) {
-        if (dataSource?.type === "query") {
-          schema = {}
-          const params = table.parameters || []
-          params.forEach(param => {
-            schema[param.name] = { ...param, type: "string" }
-          })
-        } else {
-          schema = table.schema || {}
-        }
-      }
-    }
-    loaded = true
-  }
+    // Data source is needed by attachment fields to be able to upload files
+    // to the correct table ID
+    dataSource,
+  })
 
-  // Load the form schema on mount
-  onMount(fetchSchema)
+  // Provide form step context so that forms without any step components
+  // register their fields to step 1
+  setContext("form-step", 1)
+
+  // Action context to pass to children
+  const actions = [
+    { type: ActionTypes.ValidateForm, callback: formApi.validate },
+    { type: ActionTypes.ClearForm, callback: formApi.clear },
+    { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
+  ]
+
+  // Create data context to provide
+  $: dataContext = {
+    ...initialValues,
+    ...$values,
+
+    // These static values are prefixed to avoid clashes with actual columns
+    __valid: valid,
+    __currentStep: $currentStep,
+    __currentStepValid: $currentStepValid,
+  }
 </script>
 
-<Provider
-  {actions}
-  data={{ ...$formState.values, tableId: dataSource?.tableId }}
->
+<Provider {actions} data={dataContext}>
   <div use:styleable={$component.styles} class={size}>
-    {#if loaded}
-      <slot />
-    {/if}
+    <slot />
   </div>
 </Provider>

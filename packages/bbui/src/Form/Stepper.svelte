@@ -1,19 +1,20 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import Multiselect from "./Core/Multiselect.svelte"
   import Field from "./Field.svelte"
+  import Stepper from "./Core/Stepper.svelte"
+  import { createEventDispatcher } from "svelte"
 
-  export let value = []
+  export let value = null
   export let label = null
+  export let labelPosition = "above"
+  export let placeholder = null
   export let disabled = false
   export let readonly = false
-  export let labelPosition = "above"
   export let error = null
-  export let placeholder = null
-  export let options = []
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
-  export let sort = false
+  export let updateOnChange = true
+  export let quiet = false
+  export let min = null
+  export let max = null
+  export let step = 1
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -23,17 +24,22 @@
 </script>
 
 <Field {label} {labelPosition} {error}>
-  <Multiselect
+  <Stepper
+    {updateOnChange}
     {error}
     {disabled}
     {readonly}
     {value}
-    {options}
     {placeholder}
-    {sort}
-    {getOptionLabel}
-    {getOptionValue}
+    {quiet}
+    {min}
+    {max}
+    {step}
     on:change={onChange}
     on:click
+    on:input
+    on:blur
+    on:focus
+    on:keyup
   />
 </Field>

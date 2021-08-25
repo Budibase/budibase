@@ -25,7 +25,7 @@
     align-items: center;
     gap: var(--spacing-m);
     grid-template-columns: auto 1fr;
-    max-width: 800px;
+    max-width: 400px;
     margin: 0 auto;
   }
 </style>

@@ -1,7 +1,12 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
+import {
+  findComponentPathById,
+  findChildrenByType,
+  findComponentById,
+} from "../utils/components"
 
 const createScreenStore = () => {
   const store = derived(
@@ -36,8 +41,39 @@ const createScreenStore = () => {
     }
   )
 
+  // Utils to parse component definitions
+  const actions = {
+    findComponentById: componentId => {
+      const { activeScreen, activeLayout } = get(store)
+      let result = findComponentById(activeScreen?.props, componentId)
+      if (result) {
+        return result
+      }
+      return findComponentById(activeLayout?.props)
+    },
+    findComponentPathById: componentId => {
+      const { activeScreen, activeLayout } = get(store)
+      let result = findComponentPathById(activeScreen?.props, componentId)
+      if (result) {
+        return result
+      }
+      return findComponentPathById(activeLayout?.props)
+    },
+    findChildrenByType: (componentId, type) => {
+      const component = actions.findComponentById(componentId)
+      if (!component || !component._children) {
+        return null
+      }
+      let children = []
+      findChildrenByType(component, type, children)
+      console.log(children)
+      return children
+    },
+  }
+
   return {
     subscribe: store.subscribe,
+    actions,
   }
 }
 
