@@ -82,7 +82,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: ["John%", limit],
-      sql: `select * from "${TABLE_NAME}" where "${TABLE_NAME}"."name" like $1 limit $2`
+      sql: `select * from "${TABLE_NAME}" where "${TABLE_NAME}"."name" ilike $1 limit $2`
     })
   })
 

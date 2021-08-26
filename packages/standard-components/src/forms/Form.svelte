@@ -29,12 +29,9 @@
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
-    // Only inherit values if the table ID matches
+    // Always inherit the closest data source
     const closestContext = context[`${context.closestComponentId}`] || {}
-    if (dataSource.tableId !== closestContext?.tableId) {
-      return {}
-    }
-    return closestContext
+    return closestContext || {}
   }
 
   // Fetches the form schema from this form's dataSource, if one exists
