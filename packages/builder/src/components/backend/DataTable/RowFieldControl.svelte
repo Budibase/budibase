@@ -34,11 +34,7 @@
 {:else if type === "boolean"}
   <Toggle text={label} bind:value data-cy="{meta.name}-input" />
 {:else if type === "array"}
-  <Multiselect
-    bind:value
-    {label}
-    options={meta.constraints.inclusion.reduce((p, n) => p.concat(n), [])}
-  />
+  <Multiselect bind:value {label} options={meta.constraints.inclusion.flat()} />
 {:else if type === "link"}
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />
 {:else if type === "longform"}

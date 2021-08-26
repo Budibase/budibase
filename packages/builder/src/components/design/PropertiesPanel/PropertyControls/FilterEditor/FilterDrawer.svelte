@@ -62,7 +62,7 @@
     }
 
     // if changed to an array, change default value to empty array
-    const idx = filters.findIndex(x => (x.field = field))
+    const idx = filters.findIndex(x => x.field === field)
     if (expression.type === "array") {
       filters[idx].value = []
     } else {

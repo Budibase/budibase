@@ -133,7 +133,7 @@ class QueryBuilder {
     }
     // Escape characters
     if (escape && originalType === "string") {
-      value = `${value}`.replace(/[ #+\-&|!{}\]^"~*?:\\]/g, "\\$&")
+      value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
     // Wrap in quotes
     if (hasVersion && wrap) {
