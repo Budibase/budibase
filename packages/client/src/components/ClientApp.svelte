@@ -22,6 +22,7 @@
   import ErrorSVG from "../../../builder/assets/error.svg"
   import UserBindingsProvider from "./UserBindingsProvider.svelte"
   import DeviceBindingsProvider from "./DeviceBindingsProvider.svelte"
+  import StateBindingsProvider from "./StateBindingsProvider.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -85,28 +86,30 @@
     {:else if $screenStore.activeLayout}
       <UserBindingsProvider>
         <DeviceBindingsProvider>
-          <div id="app-root" class:preview={$builderStore.inBuilder}>
-            {#key $screenStore.activeLayout._id}
-              <Component instance={$screenStore.activeLayout.props} />
+          <StateBindingsProvider>
+            <div id="app-root" class:preview={$builderStore.inBuilder}>
+              {#key $screenStore.activeLayout._id}
+                <Component instance={$screenStore.activeLayout.props} />
+              {/key}
+            </div>
+            <NotificationDisplay />
+            <ConfirmationDisplay />
+            <PeekScreenDisplay />
+            <!-- Key block needs to be outside the if statement or it breaks -->
+            {#key $builderStore.selectedComponentId}
+              {#if $builderStore.inBuilder}
+                <SettingsBar />
+              {/if}
             {/key}
-          </div>
-          <NotificationDisplay />
-          <ConfirmationDisplay />
-          <PeekScreenDisplay />
-          <!-- Key block needs to be outside the if statement or it breaks -->
-          {#key $builderStore.selectedComponentId}
+            <!--
+                We don't want to key these by componentID as they control their own
+                re-mounting to avoid flashes.
+              -->
             {#if $builderStore.inBuilder}
-              <SettingsBar />
+              <SelectionIndicator />
+              <HoverIndicator />
             {/if}
-          {/key}
-          <!--
-              We don't want to key these by componentID as they control their own
-              re-mounting to avoid flashes.
-            -->
-          {#if $builderStore.inBuilder}
-            <SelectionIndicator />
-            <HoverIndicator />
-          {/if}
+          </StateBindingsProvider>
         </DeviceBindingsProvider>
       </UserBindingsProvider>
     {/if}
