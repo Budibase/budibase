@@ -9,7 +9,6 @@
     DrawerContent,
     Layout,
     Body,
-    Multiselect,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
