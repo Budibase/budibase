@@ -2006,7 +2006,7 @@
     ]
   },
   "multifieldselect": {
-    "name": "MultiField Picker",
+    "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
     "illegalChildren": ["section"],
