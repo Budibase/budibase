@@ -31,7 +31,7 @@
   export let bindings = []
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = tablesStore.getDataSources().map(m => ({
+  $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
     type: "table",
