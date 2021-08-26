@@ -114,7 +114,7 @@
       value: FIELDS.OPTIONS.type,
     },
     {
-      label: "List",
+      label: "Multi-select",
       value: FIELDS.ARRAY.type,
     },
   ]
