@@ -29,7 +29,6 @@
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
-  const ARRAY_TYPE = FIELDS.ARRAY.type
   const LINK_TYPE = FIELDS.LINK.type
   let fieldDefinitions = cloneDeep(FIELDS)
   const { hide } = getContext(Context.Modal)
@@ -81,12 +80,6 @@
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
-    }
-    if (field.type === ARRAY_TYPE) {
-      let arr = field.constraints.inclusion
-      let newArr = []
-      newArr.push(arr)
-      field.constraints.inclusion = newArr
     }
     tables.saveField({
       originalName,
@@ -272,7 +265,7 @@
   {:else if field.type === "array"}
     <ValuesList
       label="Options (one per line)"
-      bind:values={field.constraints.inclusion[0]}
+      bind:values={field.constraints.inclusion}
     />
   {:else if field.type === "datetime"}
     <DatePicker

@@ -9,9 +9,6 @@ export const getOptions = (
   const isArray = fieldSchema?.type === "array"
   // Take options from schema
   if (optionsSource == null || optionsSource === "schema") {
-    if (isArray) {
-      return fieldSchema?.constraints?.inclusion[0] ?? []
-    }
     return fieldSchema?.constraints?.inclusion ?? []
   }
 

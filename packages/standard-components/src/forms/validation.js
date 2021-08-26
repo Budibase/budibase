@@ -64,9 +64,8 @@ export const createValidatorFromConstraints = (
 
     // Inclusion constraint
     if (
-      !schemaConstraints.type == "array"
-        ? exists(schemaConstraints.inclusion)
-        : false
+      exists(schemaConstraints.inclusion) &&
+      schemaConstraints.type !== "array"
     ) {
       const options = schemaConstraints.inclusion || []
       rules.push({
@@ -77,13 +76,11 @@ export const createValidatorFromConstraints = (
       })
     }
 
-    // Handle the array type but link also returns as an array, so handle via the inclusion check
     if (
-      schemaConstraints.type == "array" && schemaConstraints.inclusion
-        ? exists(schemaConstraints.inclusion[0])
-        : false
+      schemaConstraints.type === "array" &&
+      exists(schemaConstraints.inclusion)
     ) {
-      const options = schemaConstraints.inclusion[0] || []
+      const options = schemaConstraints.inclusion || []
       rules.push({
         type: "array",
         constraint: "inclusion",
@@ -297,26 +294,18 @@ const notRegexHandler = (value, rule) => {
 }
 
 // Evaluates a contains constraint
-const containsRowIDHandler = (value, rule) => {
+const containsHandler = (value, rule) => {
+  if (rule.type == "array") {
+    const expectedValue = parseType(rule.value, "array")
+    return value && value.some(val => expectedValue.includes(val))
+  }
   const expectedValue = parseType(rule.value, "string")
   return value && value.includes(expectedValue)
 }
 
 // Evaluates a not contains constraint
-const notContainsRowIDHandler = (value, rule) => {
-  return !containsHandler(value, rule)
-}
-
-// Evaluates a contains constraint
-const containsHandler = (value, rule) => {
-  const ruleValue = parseType(rule.value, "array")
-  return value && value.some(val => ruleValue.includes(val))
-}
-
-// Evaluates a not contains constraint
 const notContainsHandler = (value, rule) => {
-  const ruleValue = parseType(rule.value, "array")
-  return value && !value.some(val => ruleValue.includes(val))
+  return !containsHandler(value, rule)
 }
 
 /**
@@ -333,8 +322,6 @@ const handlerMap = {
   notEqual: notEqualHandler,
   regex: regexHandler,
   notRegex: notRegexHandler,
-  containsRowID: containsRowIDHandler,
-  notContainsRowID: notContainsRowIDHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
 }
