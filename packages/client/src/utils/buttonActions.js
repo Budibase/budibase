@@ -124,9 +124,9 @@ const closeScreenModalHandler = () => {
 }
 
 const updateStateHandler = action => {
-  const { type, key, value } = action.parameters
+  const { type, key, value, persist } = action.parameters
   if (type === "set") {
-    stateStore.actions.setValue(key, value)
+    stateStore.actions.setValue(key, value, persist)
   } else if (type === "delete") {
     stateStore.actions.deleteValue(key)
   }

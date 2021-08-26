@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Combobox } from "@budibase/bbui"
+  import { Select, Label, Combobox, Checkbox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { getAllStateVariables } from "builderStore/dataBinding"
@@ -42,6 +42,8 @@
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}
     />
+    <div />
+    <Checkbox bind:value={parameters.persist} text="Persist this value" />
   {/if}
 </div>
 
