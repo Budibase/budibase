@@ -4,6 +4,7 @@ import {
   builderStore,
   confirmationStore,
   authStore,
+  peekStore,
 } from "../store"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
 import { ActionTypes } from "../constants"
@@ -39,13 +40,19 @@ const triggerAutomationHandler = async action => {
 }
 
 const navigationHandler = action => {
-  const { url } = action.parameters
+  const { url, peek } = action.parameters
   if (url) {
-    const external = !url.startsWith("/")
-    if (external) {
-      window.location.href = url
+    // If we're already peeking, don't peek again
+    const isPeeking = get(routeStore).queryParams?.peek
+    if (peek && !isPeeking) {
+      peekStore.actions.showPeek(url)
     } else {
-      routeStore.actions.navigate(action.parameters.url)
+      const external = !url.startsWith("/")
+      if (external) {
+        window.location.href = url
+      } else {
+        routeStore.actions.navigate(action.parameters.url)
+      }
     }
   }
 }
@@ -59,10 +66,15 @@ const queryExecutionHandler = async action => {
   })
 }
 
-const executeActionHandler = async (context, componentId, actionType) => {
+const executeActionHandler = async (
+  context,
+  componentId,
+  actionType,
+  params
+) => {
   const fn = context[`${componentId}_${actionType}`]
   if (fn) {
-    return await fn()
+    return await fn(params)
   }
 }
 
@@ -70,7 +82,8 @@ const validateFormHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
-    ActionTypes.ValidateForm
+    ActionTypes.ValidateForm,
+    action.parameters.onlyCurrentStep
   )
 }
 
@@ -94,6 +107,21 @@ const clearFormHandler = async (action, context) => {
   )
 }
 
+const changeFormStepHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ChangeFormStep,
+    action.parameters
+  )
+}
+
+const closeScreenModalHandler = () => {
+  // Emit this as a window event, so parent screens which are iframing us in
+  // can close the modal
+  window.dispatchEvent(new Event("close-screen-modal"))
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -104,6 +132,8 @@ const handlerMap = {
   ["Refresh Datasource"]: refreshDatasourceHandler,
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
+  ["Close Screen Modal"]: closeScreenModalHandler,
+  ["Change Form Step"]: changeFormStepHandler,
 }
 
 const confirmTextMap = {

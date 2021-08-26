@@ -7,6 +7,7 @@
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",
     "eslint-plugin-svelte3": "^3.2.0",
+    "husky": "^7.0.1",
     "kill-port": "^1.6.1",
     "lerna": "3.14.1",
     "prettier": "^2.3.1",
@@ -16,7 +17,7 @@
     "svelte": "^3.38.2"
   },
   "scripts": {
-    "setup": "./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
+    "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna link && lerna bootstrap",
     "build": "lerna run build",
     "initialise": "lerna run initialise",
@@ -42,7 +43,11 @@
     "lint:fix": "yarn run lint:fix:ts && yarn run lint:fix:prettier && yarn run lint:fix:eslint",
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci",
-    "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh && cd -",
-    "build:docker:develop": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -"
+    "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION release && cd -",
+    "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
+    "release:helm": "./scripts/release_helm_chart.sh",
+    "multi:enable": "lerna run multi:enable",
+    "multi:disable": "lerna run multi:disable",
+    "postinstall": "husky install"
   }
 }

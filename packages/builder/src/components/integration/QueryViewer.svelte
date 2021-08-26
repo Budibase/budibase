@@ -15,6 +15,7 @@
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import api from "builderStore/api"
+  import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
@@ -58,6 +59,14 @@
   function deleteField(idx) {
     fields.splice(idx, 1)
     fields = fields
+  }
+
+  function resetDependentFields() {
+    if (query.fields.extra) query.fields.extra = {}
+  }
+
+  function populateExtraQuery(extraQueryFields) {
+    query.fields.extra = extraQueryFields
   }
 
   async function previewQuery() {
@@ -127,11 +136,19 @@
         <Label>Function</Label>
         <Select
           bind:value={query.queryVerb}
+          on:change={resetDependentFields}
           options={Object.keys(queryConfig)}
           getOptionLabel={verb =>
             queryConfig[verb]?.displayName || capitalise(verb)}
         />
       </div>
+      {#if integrationInfo?.extra && query.queryVerb}
+        <ExtraQueryConfig
+          {query}
+          {populateExtraQuery}
+          config={integrationInfo.extra}
+        />
+      {/if}
       <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
     {/if}
   </div>

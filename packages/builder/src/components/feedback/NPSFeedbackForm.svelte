@@ -31,8 +31,8 @@
 
   // Data to send off
   let rating
-  let improvements
-  let comment
+  let improvements = ""
+  let comment = ""
 
   function selectNumber(n) {
     rating = n
@@ -106,11 +106,7 @@
           <Detail size="S">STEP 2 OF 3</Detail>
           <ButtonGroup>
             <Button secondary on:click={() => (step -= 1)}>Previous</Button>
-            <Button
-              disabled={!improvements}
-              primary
-              on:click={() => (step += 1)}>Next</Button
-            >
+            <Button primary on:click={() => (step += 1)}>Next</Button>
           </ButtonGroup>
         </div>
       {:else}
@@ -121,9 +117,7 @@
           <Detail size="S">STEP 3 OF 3</Detail>
           <ButtonGroup>
             <Button secondary on:click={() => (step -= 1)}>Previous</Button>
-            <Button disabled={!comment} cta on:click={submitFeedback}
-              >Complete</Button
-            >
+            <Button cta on:click={submitFeedback}>Complete</Button>
           </ButtonGroup>
         </div>
       {/if}

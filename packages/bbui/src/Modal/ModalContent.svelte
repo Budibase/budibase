@@ -15,6 +15,7 @@
   export let showCloseIcon = true
   export let onConfirm = undefined
   export let disabled = false
+  export let showDivider = true
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -41,11 +42,17 @@
   aria-modal="true"
 >
   <div class="spectrum-Dialog-grid">
-    <h1 class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader">
-      {title}
-    </h1>
-
-    <Divider size="M" />
+    {#if title}
+      <h1
+        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
+        class:noDivider={!showDivider}
+      >
+        {title}
+      </h1>
+      {#if showDivider}
+        <Divider size="M" />
+      {/if}
+    {/if}
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />
@@ -72,8 +79,8 @@
       </div>
     {/if}
     {#if showCloseIcon}
-      <div class="close-icon" on:click={hide}>
-        <Icon hoverable name="Close" />
+      <div class="close-icon">
+        <Icon hoverable name="Close" on:click={cancel} />
       </div>
     {/if}
   </div>
@@ -95,6 +102,9 @@
   }
   .spectrum-Dialog-heading {
     font-family: var(--font-sans);
+  }
+  .spectrum-Dialog-heading.noDivider {
+    margin-bottom: 12px;
   }
 
   .spectrum-Dialog-buttonGroup {

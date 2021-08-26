@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "couchdb.fullname" . }}
+  labels:
+    app: {{ template "couchdb.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+  inifile: |
+    {{ $couchdbConfig := dict "couchdb" (dict "uuid" (include "couchdb.uuid" .)) -}}
+    {{- $couchdbConfig := merge $couchdbConfig .Values.couchdbConfig -}}
+    {{- range $section, $settings := $couchdbConfig -}}
+    {{ printf "[%s]" $section }}
+    {{ range $key, $value := $settings -}}
+    {{ printf "%s = %s" $key ($value | toString) }}
+    {{ end }}
+    {{ end }}
+
+  seedlistinifile: |
+    [cluster]
+    seedlist = {{ template "couchdb.seedlist" . }}

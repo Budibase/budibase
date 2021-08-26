@@ -104,10 +104,10 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/dialog/-/dialog-3.0.2.tgz#ae4db17c9772d822c538474f66bf838cea02217f"
   integrity sha512-9aToA1fO5kE3ednoTKGKmaS8+X6noFJ4PvwZD1FgAZIA842PgHNW6e6hPw+MngZvqKqNcZsiuiJeRCq7TRkd4g==
 
-"@spectrum-css/divider@^1.0.1":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/divider/-/divider-1.0.2.tgz#40a9d5fba56cbcc3dbad53408886d2d35159ce40"
-  integrity sha512-piNbNcJ4W3lsnhrhru3SBh1et6lfKKexGKSP3gRFFlbjTT1+/AZGeztqYvdBwE523b7A9xJFekl5Fc0VJ1Flow==
+"@spectrum-css/divider@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/divider/-/divider-1.0.3.tgz#639e2ebaa0834efa40f42397668bbd5c153ea385"
+  integrity sha512-Zy4Rn40w8UtzMh3wx/U9+CepSCpm1aOCGftHgWDub0XZuVTzh0c1WwyzTuLCx2Hf21z5VRGNiDh8bGEEzSbtNA==
   dependencies:
     "@spectrum-css/vars" "^3.0.2"
 
@@ -205,6 +205,11 @@
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/statuslight/-/statuslight-3.0.2.tgz#dc54b6cd113413dcdb909c486b5d7bae60db65c5"
   integrity sha512-xodB8g8vGJH20XmUj9ZsPlM1jHrGeRbvmVXkz0q7YvQrYAhim8pP3W+XKKZAletPFAuu8cmUOc6SWn6i4X4z6w==
+
+"@spectrum-css/stepper@^3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/stepper/-/stepper-3.0.3.tgz#ae89846886431e3edeee060207b8f81540f73a34"
+  integrity sha512-prAD61ImlOTs9b6PfB3cB08x4lAfxtvnW+RZiTYky0E8GgZdrc/MfCkL5/oqQaIQUtyQv/3Lb7ELAf/0K8QTXw==
 
 "@spectrum-css/switch@^1.0.2":
   version "1.0.2"

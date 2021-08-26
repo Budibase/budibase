@@ -14,6 +14,7 @@ export const margin = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -34,6 +35,7 @@ export const margin = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -54,6 +56,7 @@ export const margin = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -74,6 +77,7 @@ export const margin = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -101,6 +105,7 @@ export const padding = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -121,6 +126,7 @@ export const padding = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -141,6 +147,7 @@ export const padding = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },
@@ -161,6 +168,7 @@ export const padding = {
       options: [
         { label: "4px", value: "4px" },
         { label: "8px", value: "8px" },
+        { label: "12px", value: "12px" },
         { label: "16px", value: "16px" },
         { label: "20px", value: "20px" },
         { label: "32px", value: "32px" },

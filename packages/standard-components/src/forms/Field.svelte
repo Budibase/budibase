@@ -1,7 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
-  import { getContext } from "svelte"
+  import { getContext, onDestroy } from "svelte"
 
   export let label
   export let field
@@ -11,22 +11,39 @@
   export let defaultValue
   export let type
   export let disabled = false
+  export let validation
 
   // Get contexts
   const formContext = getContext("form")
-  const fieldGroupContext = getContext("fieldGroup")
+  const formStepContext = getContext("form-step")
+  const fieldGroupContext = getContext("field-group")
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPosition = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(field, defaultValue, disabled)
+  const formField = formApi?.registerField(
+    field,
+    defaultValue,
+    disabled,
+    validation,
+    formStepContext || 1
+  )
 
-  // Expose field properties to parent component
-  fieldState = formField?.fieldState
-  fieldApi = formField?.fieldApi
-  fieldSchema = formField?.fieldSchema
+  // Update form properties in parent component on every store change
+  const unsubscribe = formField?.subscribe(value => {
+    fieldState = value?.fieldState
+    fieldApi = value?.fieldApi
+    fieldSchema = value?.fieldSchema
+  })
+  onDestroy(() => unsubscribe && unsubscribe())
+
+  // Keep validation rules up to date
+  $: updateValidation(validation)
+  const updateValidation = validation => {
+    fieldApi?.updateValidation(validation)
+  }
 
   // Extract label position from field group context
   $: labelPositionClass =
@@ -37,7 +54,7 @@
   <div class="spectrum-Form-item" use:styleable={$component.styles}>
     <label
       class:hidden={!label}
-      for={$fieldState?.fieldId}
+      for={fieldState?.fieldId}
       class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}
     >
       {label || ""}
@@ -55,8 +72,8 @@
         />
       {:else}
         <slot />
-        {#if $fieldState.error}
-          <div class="error">{$fieldState.error}</div>
+        {#if fieldState.error}
+          <div class="error">{fieldState.error}</div>
         {/if}
       {/if}
     </div>

@@ -7,6 +7,8 @@
   export let placeholder
   export let type = "text"
   export let disabled = false
+  export let validation
+  export let defaultValue = ""
 
   let fieldState
   let fieldApi
@@ -16,6 +18,8 @@
   {label}
   {field}
   {disabled}
+  {validation}
+  {defaultValue}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
   bind:fieldApi
@@ -23,11 +27,11 @@
   {#if fieldState}
     <CoreTextField
       updateOnChange={false}
-      value={$fieldState.value}
+      value={fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
-      id={$fieldState.fieldId}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      id={fieldState.fieldId}
       {placeholder}
       {type}
     />

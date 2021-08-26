@@ -20,7 +20,12 @@ import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
 import analytics from "analytics"
-import { findComponentType, findComponentParent } from "../storeUtils"
+import {
+  findComponentType,
+  findComponentParent,
+  findClosestMatchingComponent,
+  findAllMatchingComponents,
+} from "../storeUtils"
 import { uuid } from "../uuid"
 import { removeBindings } from "../dataBinding"
 
@@ -35,6 +40,7 @@ const INITIAL_FRONTEND_STATE = {
   clientFeatures: {
     spectrumThemes: false,
     intelligentLoading: false,
+    deviceAwareness: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
@@ -332,6 +338,18 @@ export const getFrontendStore = () => {
         let extras = {}
         if (definition.hasChildren) {
           extras._children = []
+        }
+        if (componentName.endsWith("/formstep")) {
+          const parentForm = findClosestMatchingComponent(
+            get(currentAsset).props,
+            get(selectedComponent)._id,
+            component => component._component.endsWith("/form")
+          )
+          const formSteps = findAllMatchingComponents(parentForm, component =>
+            component._component.endsWith("/formstep")
+          )
+          extras.step = formSteps.length + 1
+          extras._instanceName = `Step ${formSteps.length + 1}`
         }
 
         return {

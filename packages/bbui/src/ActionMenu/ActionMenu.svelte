@@ -23,8 +23,11 @@
     dropdown.show()
   }
 
-  const openMenu = () => {
-    if (!disabled) show()
+  const openMenu = event => {
+    if (!disabled) {
+      event.stopPropagation()
+      show()
+    }
   }
 
   setContext("actionMenu", { show, hide })

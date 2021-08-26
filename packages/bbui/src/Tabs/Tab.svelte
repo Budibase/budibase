@@ -30,6 +30,7 @@
   on:click={onClick}
   class:is-selected={$selected.title === title}
   class="spectrum-Tabs-item"
+  class:emphasized={$selected.title === title && $selected.emphasized}
   tabindex="0"
 >
   {#if icon}
@@ -49,3 +50,9 @@
     <slot />
   </Portal>
 {/if}
+
+<style>
+  .emphasized {
+    color: var(--spectrum-global-color-blue-600);
+  }
+</style>

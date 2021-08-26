@@ -1,10 +1,11 @@
 const PouchDB = require("pouchdb")
+const { getCouchUrl } = require("@budibase/auth/db")
 const replicationStream = require("pouchdb-replication-stream")
 const allDbs = require("pouchdb-all-dbs")
 const find = require("pouchdb-find")
 const env = require("../environment")
 
-const COUCH_DB_URL = env.COUCH_DB_URL || "http://localhost:10000/db/"
+const COUCH_DB_URL = getCouchUrl() || "http://localhost:10000/db/"
 
 PouchDB.plugin(replicationStream.plugin)
 PouchDB.plugin(find)

@@ -1,5 +1,6 @@
 const setup = require("./utilities")
 const { EmailTemplatePurpose } = require("../../../constants")
+const { TENANT_ID } = require("./utilities/structures")
 
 // mock the email system
 const sendMailMock = jest.fn()
@@ -10,7 +11,7 @@ nodemailer.createTransport.mockReturnValue({
   verify: jest.fn()
 })
 
-describe("/api/admin/email", () => {
+describe("/api/global/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
@@ -25,10 +26,11 @@ describe("/api/admin/email", () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
     const res = await request
-      .post(`/api/admin/email/send`)
+      .post(`/api/global/email/send`)
       .send({
         email: "test@test.com",
         purpose: EmailTemplatePurpose.INVITATION,
+        tenantId: TENANT_ID,
       })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)

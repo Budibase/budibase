@@ -17,6 +17,7 @@ if (!LOADED && isDev() && !isTest()) {
 }
 
 module.exports = {
+  NODE_ENV: process.env.NODE_ENV,
   SELF_HOSTED: process.env.SELF_HOSTED,
   PORT: process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
@@ -30,9 +31,8 @@ module.exports = {
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-  /* TODO: to remove - once deployment removed */
-  COUCH_DB_USERNAME: process.env.COUCH_DB_USERNAME,
-  COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
+  MULTI_TENANCY: process.env.MULTI_TENANCY,
+  SANDBOX: process.env.SANDBOX,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

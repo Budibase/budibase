@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: budibase-proxy
+  name: proxy-service
+spec:
+  replicas: {{ .Values.services.proxy.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: budibase-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: budibase-proxy
+    spec:
+      containers:
+      - image: budibase/proxy
+        imagePullPolicy: ""
+        name: proxy-service
+        ports:
+        - containerPort: {{ .Values.services.proxy.port }}
+        resources: {}
+        volumeMounts:
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+status: {}

@@ -5,7 +5,7 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-  setContext("fieldGroup", { labelPosition })
+  setContext("field-group", { labelPosition })
 </script>
 
 <div class="wrapper" use:styleable={$component.styles}>
@@ -24,5 +24,8 @@
   }
   .spectrum-Form {
     width: 100%;
+  }
+  .spectrum-Form--labelsAbove {
+    gap: var(--spectrum-global-dimension-size-100);
   }
 </style>

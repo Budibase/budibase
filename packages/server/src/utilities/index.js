@@ -1,14 +1,12 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { getAllApps } = require("@budibase/auth/db")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 
-const BB_CDN = "https://d14h4vmm231itd.cloudfront.net"
+const BB_CDN = "https://cdn.budi.live"
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
-exports.getAllApps = getAllApps
 
 /**
  * Makes sure that a URL has the correct number of slashes, while maintaining the
