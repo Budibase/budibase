@@ -18,7 +18,9 @@ export const getBindableProperties = (asset, componentId) => {
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
+  const stateBindings = getStateBindings()
   return [
+    ...stateBindings,
     ...deviceBindings,
     ...urlBindings,
     ...contextBindings,
@@ -254,6 +256,19 @@ const getDeviceBindings = () => {
     })
   }
   return bindings
+}
+
+/**
+ * Gets all state bindings that are globally available.
+ */
+const getStateBindings = () => {
+  return [
+    {
+      type: "context",
+      runtimeBinding: makePropSafe("state"),
+      readableBinding: `State`,
+    },
+  ]
 }
 
 /**
