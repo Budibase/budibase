@@ -1,11 +1,13 @@
 <script>
-  import { Select, Label, Input } from "@budibase/bbui"
+  import { Select, Label, Combobox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { getAllStateVariables } from "builderStore/dataBinding"
 
   export let parameters
   export let bindings = []
 
+  const keyOptions = getAllStateVariables()
   const typeOptions = [
     {
       label: "Set value",
@@ -32,7 +34,7 @@
     options={typeOptions}
   />
   <Label small>Key</Label>
-  <Input bind:value={parameters.key} />
+  <Combobox bind:value={parameters.key} options={keyOptions} />
   {#if parameters.type === "set"}
     <Label small>Value</Label>
     <DrawerBindableInput
