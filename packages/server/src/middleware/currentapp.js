@@ -70,5 +70,6 @@ module.exports = async (ctx, next) => {
   ) {
     setCookie(ctx, { appId }, Cookies.CurrentApp)
   }
+
   return next()
 }

@@ -13,6 +13,7 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +30,7 @@
     {value}
     {options}
     {placeholder}
+    {sort}
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}

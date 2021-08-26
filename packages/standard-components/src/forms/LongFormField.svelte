@@ -6,6 +6,8 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let validation
+  export let defaultValue = ""
 
   let fieldState
   let fieldApi
@@ -15,18 +17,19 @@
   {label}
   {field}
   {disabled}
+  {validation}
+  {defaultValue}
   type="longform"
   bind:fieldState
   bind:fieldApi
-  defaultValue=""
 >
   {#if fieldState}
     <CoreTextArea
-      value={$fieldState.value}
+      value={fieldState.value}
       on:change={e => fieldApi.setValue(e.detail)}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
-      id={$fieldState.fieldId}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      id={fieldState.fieldId}
       {placeholder}
     />
   {/if}

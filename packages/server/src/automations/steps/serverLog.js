@@ -19,7 +19,7 @@ module.exports.definition = {
       properties: {
         text: {
           type: "string",
-          title: "URL",
+          title: "Log",
         },
       },
       required: ["text"],

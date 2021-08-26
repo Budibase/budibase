@@ -9,6 +9,8 @@ function isTest() {
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
+  COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
+  COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -16,6 +18,7 @@ module.exports = {
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   MINIO_URL: process.env.MINIO_URL,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+  MULTI_TENANCY: process.env.MULTI_TENANCY,
   isTest,
   _set(key, value) {
     process.env[key] = value

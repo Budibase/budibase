@@ -1,0 +1,9 @@
+sidecars:
+  - name: foo
+    image: "busybox"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 10Mi
+    command: ['while true; do echo "foo"; sleep 5; done;']

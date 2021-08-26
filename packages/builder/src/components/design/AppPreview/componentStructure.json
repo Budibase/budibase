@@ -10,6 +10,7 @@
     "icon": "Form",
     "children": [
       "form",
+      "formstep",
       "fieldgroup",
       "stringfield",
       "numberfield",
@@ -49,6 +50,7 @@
     "children": [
       "heading",
       "text",
+      "divider",
       "image",
       "backgroundimage",
       "link",

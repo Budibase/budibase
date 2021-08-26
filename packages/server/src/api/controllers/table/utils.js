@@ -75,6 +75,7 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
       const processed = inputProcessing(user, table, row)
       table = processed.table
       row = processed.row
+
       // make sure link rows are up to date
       row = await linkRows.updateLinks({
         appId,

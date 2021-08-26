@@ -1,56 +1,63 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
+import { generate } from "shortid"
+import { routeStore } from "./routes"
 
 const NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
-  const timeoutIds = new Set()
-  const _notifications = writable([], () => {
+  let timeout
+  let block = false
+
+  const store = writable(null, () => {
     return () => {
-      // clear all the timers
-      timeoutIds.forEach(timeoutId => {
-        clearTimeout(timeoutId)
-      })
-      _notifications.set([])
+      clearTimeout(timeout)
     }
   })
-  let block = false
 
   const blockNotifications = (timeout = 1000) => {
     block = true
     setTimeout(() => (block = false), timeout)
   }
 
-  const send = (message, type = "default") => {
+  const send = (message, type = "info", icon) => {
     if (block) {
       return
     }
-    let _id = id()
-    _notifications.update(state => {
-      return [...state, { id: _id, type, message }]
-    })
-    const timeoutId = setTimeout(() => {
-      _notifications.update(state => {
-        return state.filter(({ id }) => id !== _id)
-      })
-    }, NOTIFICATION_TIMEOUT)
-    timeoutIds.add(timeoutId)
-  }
 
-  const { subscribe } = _notifications
+    // If peeking, pass notifications back to parent window
+    if (get(routeStore).queryParams?.peek) {
+      window.dispatchEvent(
+        new CustomEvent("notification", {
+          detail: { message, type, icon },
+        })
+      )
+      return
+    }
+
+    store.set({
+      id: generate(),
+      type,
+      message,
+      icon,
+      delay: get(store) != null,
+    })
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      store.set(null)
+    }, NOTIFICATION_TIMEOUT)
+  }
 
   return {
-    subscribe,
-    send,
-    danger: msg => send(msg, "danger"),
-    warning: msg => send(msg, "warning"),
-    info: msg => send(msg, "info"),
-    success: msg => send(msg, "success"),
-    blockNotifications,
+    subscribe: store.subscribe,
+    actions: {
+      send,
+      info: msg => send(msg, "info", "Info"),
+      success: msg => send(msg, "success", "CheckmarkCircle"),
+      warning: msg => send(msg, "warning", "Alert"),
+      error: msg => send(msg, "error", "Alert"),
+      blockNotifications,
+    },
   }
-}
-
-function id() {
-  return "_" + Math.random().toString(36).substr(2, 9)
 }
 
 export const notificationStore = createNotificationStore()

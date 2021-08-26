@@ -9,6 +9,7 @@ const createRouteStore = () => {
     activeRoute: null,
     routeSessionId: Math.random(),
     routerLoaded: false,
+    queryParams: {},
   }
   const store = writable(initialState)
 
@@ -41,6 +42,17 @@ const createRouteStore = () => {
       return state
     })
   }
+  const setQueryParams = queryParams => {
+    store.update(state => {
+      state.queryParams = {
+        ...queryParams,
+        // Never unset the peek param - screen peek modals should always be
+        // in a peek state, even if they navigate to a different page
+        peek: queryParams.peek || state.queryParams?.peek,
+      }
+      return state
+    })
+  }
   const setActiveRoute = route => {
     store.update(state => {
       state.activeRoute = state.routes.find(x => x.path === route)
@@ -58,6 +70,7 @@ const createRouteStore = () => {
       fetchRoutes,
       navigate,
       setRouteParams,
+      setQueryParams,
       setActiveRoute,
       setRouterLoaded,
     },

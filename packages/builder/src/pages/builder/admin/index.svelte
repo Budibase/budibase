@@ -6,20 +6,25 @@
     Layout,
     Input,
     Body,
+    ActionButton,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import api from "builderStore/api"
-  import { admin } from "stores/portal"
+  import { admin, auth } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import Logo from "assets/bb-emblem.svg"
 
   let adminUser = {}
   let error
 
+  $: tenantId = $auth.tenantId
+  $: multiTenancyEnabled = $admin.multiTenancy
+
   async function save() {
     try {
+      adminUser.tenantId = tenantId
       // Save the admin user
-      const response = await api.post(`/api/admin/users/init`, adminUser)
+      const response = await api.post(`/api/global/users/init`, adminUser)
       const json = await response.json()
       if (response.status !== 200) {
         throw new Error(json.message)
@@ -47,9 +52,22 @@
         <Input label="Email" bind:value={adminUser.email} />
         <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>
-      <Button cta disabled={error} on:click={save}>
-        Create super admin user
-      </Button>
+      <Layout gap="XS" noPadding>
+        <Button cta disabled={error} on:click={save}>
+          Create super admin user
+        </Button>
+        {#if multiTenancyEnabled}
+          <ActionButton
+            quiet
+            on:click={() => {
+              admin.unload()
+              $goto("../auth/org")
+            }}
+          >
+            Change organisation
+          </ActionButton>
+        {/if}
+      </Layout>
     </Layout>
   </div>
 </section>

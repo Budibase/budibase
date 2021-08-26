@@ -161,7 +161,11 @@ export function makeDatasourceFormComponents(datasource) {
           placeholder: field,
         })
       if (fieldType === "options") {
-        component.customProps({ placeholder: "Choose an option " })
+        component.customProps({
+          placeholder: "Choose an option",
+          optionsType: "select",
+          optionsSource: "schema",
+        })
       }
       if (fieldType === "link") {
         let placeholder =
