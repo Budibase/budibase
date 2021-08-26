@@ -229,10 +229,7 @@ class QueryBuilder {
         if (!value) {
           return null
         }
-        return `${key}.${value}:${builder.preprocess(
-          value,
-          allPreProcessingOpts
-        )}`
+        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
 
