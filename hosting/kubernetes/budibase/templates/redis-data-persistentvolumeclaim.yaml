@@ -1,0 +1,16 @@
+{{- if .Values.services.redis.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: redis-data
+  name: redis-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.services.redis.storage }}
+status: {}
+{{- end }}

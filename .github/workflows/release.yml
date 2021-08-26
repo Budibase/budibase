@@ -42,6 +42,10 @@ jobs:
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release
 
+      - name: Get Previous tag
+          id: previoustag
+          uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
       - name: Build/release Docker images
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
@@ -50,3 +54,18 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
+      - uses: azure/setup-helm@v1
+        id: install
+
+      # So, we need to inject the values into this
+      - run: yarn release:helm
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.1.0
+        with:
+          charts_dir: docs
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+    

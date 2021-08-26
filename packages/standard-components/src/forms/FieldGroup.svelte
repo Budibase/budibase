@@ -5,7 +5,7 @@
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-  setContext("fieldGroup", { labelPosition })
+  setContext("field-group", { labelPosition })
 </script>
 
 <div class="wrapper" use:styleable={$component.styles}>

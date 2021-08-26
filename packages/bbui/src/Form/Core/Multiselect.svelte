@@ -12,6 +12,7 @@
   export let getOptionValue = option => option
   export let readonly = false
   export let autocomplete = false
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   $: selectedLookupMap = getSelectedLookupMap(value)
@@ -83,4 +84,5 @@
   {getOptionLabel}
   {getOptionValue}
   onSelectOption={toggleOption}
+  {sort}
 />

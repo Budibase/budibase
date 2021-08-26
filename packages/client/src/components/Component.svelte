@@ -63,6 +63,7 @@
   $: selected =
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
+  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
   $: interactive = $builderStore.previewType === "layout" || insideScreenslot
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
@@ -74,7 +75,6 @@
     styles: { ...instance._styles, id, empty, interactive },
     empty,
     selected,
-    props: componentSettings,
     name,
   })
 
@@ -175,13 +175,12 @@
 </script>
 
 {#key propsHash}
-  {#if constructor && componentSettings && visible}
+  {#if constructor && componentSettings && (visible || inSelectedPath)}
     <div
       class={`component ${id}`}
       data-type={interactive ? "component" : ""}
       data-id={id}
       data-name={name}
-      class:hidden={!visible}
     >
       <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}

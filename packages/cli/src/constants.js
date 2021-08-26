@@ -15,5 +15,6 @@ exports.AnalyticsEvents = {
   SelfHostInit: "hosting_init",
 }
 
-exports.BUDIBASE_POSTHOG_URL = "https://posthog.budi.live"
-exports.BUDIBASE_POSTHOG_TOKEN = "Oeq9KzIpZYaNsXIvHw5QTZWNpfiG_EOjAOpjTyAiitY"
+exports.BUDIBASE_POSTHOG_URL = "https://app.posthog.com"
+exports.BUDIBASE_POSTHOG_TOKEN =
+  "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS"

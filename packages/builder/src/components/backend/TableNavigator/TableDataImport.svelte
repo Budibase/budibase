@@ -157,6 +157,7 @@
       label="Display Column"
       bind:value={primaryDisplay}
       options={fields}
+      sort
     />
   </div>
 {/if}

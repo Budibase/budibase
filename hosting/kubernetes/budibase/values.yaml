@@ -1,0 +1,142 @@
+# Default values for budibase.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+# fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 10000
+
+ingress:
+  enabled: true
+  nginx: true
+  certificateArn: ""
+  className: ""
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: # change if using custom domain
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: proxy-service
+            port:
+              number: 10000 
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+globals:
+  budibaseEnv: PRODUCTION
+  enableAnalytics: false
+  posthogToken: ""
+  sentryDSN: "" 
+  logLevel: info
+  selfHosted: 1
+  createSecrets: true # creates an internal API key, JWT secrets and redis password for you
+
+  # if createSecrets is set to false, you can hard-code your secrets here
+  internalApiKey: ""
+  jwtSecret: ""
+
+
+services:
+  dns: cluster.local
+
+  proxy:
+    port: 10000
+    replicaCount: 1
+
+  apps:
+    port: 4002
+    replicaCount: 1
+    logLevel: info
+
+  worker:
+    port: 4001
+    replicaCount: 1
+
+  couchdb:
+    enabled: true
+    replicaCount: 3
+    url: "" # only change if pointing to existing couch server
+    user: "" # only change if pointing to existing couch server
+    password: "" # only change if pointing to existing couch server
+    port: 5984
+    storage: 100Mi
+  
+  redis:
+    enabled: true # disable if using external redis
+    port: 6379
+    replicaCount: 1
+    url: "" # only change if pointing to existing redis cluster and enabled: false
+    password: "budibase" # recommended to override if using built-in redis
+    storage: 100Mi
+  
+  objectStore:
+    minio: true
+    browser: true
+    port: 9000
+    replicaCount: 1
+    accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
+    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret 
+    region: "" # AWS_REGION if using S3 or existing minio secret 
+    url: "" # only change if pointing to existing minio cluster and minio: false 
+    storage: 100Mi
+
