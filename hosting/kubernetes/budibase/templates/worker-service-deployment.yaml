@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: worker-service
+  name: worker-service
+spec:
+  replicas: {{ .Values.services.worker.replicaCount }}
+
+  selector:
+    matchLabels:
+      io.kompose.service: worker-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: worker-service
+    spec:
+      containers:
+      - env:
+        - name: CLUSTER_PORT
+          value: {{ .Values.services.worker.port | quote }}
+        - name: COUCH_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminUsername
+        - name: COUCH_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminPassword
+        - name: COUCH_DB_URL
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
+        - name: INTERNAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: internalApiKey
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: jwtSecret
+        {{ if .Values.services.objectStore.region }}
+        - name: AWS_REGION
+          value: {{ .Values.services.objectStore.region }}
+        {{ end }}
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreAccess
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreSecret
+        - name: MINIO_URL
+          {{ if .Values.services.objectStore.url }}
+          value: {{ .Values.services.objectStore.url }}
+          {{ else }}
+          value: http://minio-service:{{ .Values.services.objectStore.port }}
+          {{ end }}
+        - name: PORT
+          value: {{ .Values.services.worker.port | quote }}
+        - name: REDIS_PASSWORD
+          value: {{ .Values.services.redis.password | quote }}
+        - name: REDIS_URL
+          {{ if .Values.services.redis.url }}
+          value: {{ .Values.services.redis.url }}
+          {{ else }}
+          value: redis-service:{{ .Values.services.redis.port }}
+          {{ end }}
+        - name: SELF_HOSTED
+          value: {{ .Values.globals.selfHosted | quote }}
+        image: budibase/worker
+        imagePullPolicy: Always
+        name: bbworker
+        ports:
+        - containerPort: {{ .Values.services.worker.port }}
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status: {}

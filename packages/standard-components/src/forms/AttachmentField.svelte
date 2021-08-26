@@ -42,11 +42,11 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  {#if $fieldState}
+  {#if fieldState}
     <CoreDropzone
-      value={$fieldState.value}
-      disabled={$fieldState.disabled}
-      error={$fieldState.error}
+      value={fieldState.value}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
       on:change={e => {
         fieldApi.setValue(e.detail)
       }}

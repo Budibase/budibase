@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: app-service
+  name: app-service
+spec:
+  replicas: {{ .Values.services.apps.replicaCount }}
+  selector:
+    matchLabels:
+      io.kompose.service: app-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: app-service
+    spec:
+      containers:
+      - env:
+        - name: BUDIBASE_ENVIRONMENT
+          value: {{ .Values.globals.budibaseEnv }}
+        - name: COUCH_DB_URL
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
+        - name: COUCH_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminUsername
+        - name: COUCH_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminPassword
+        - name: ENABLE_ANALYTICS
+          value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: INTERNAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: internalApiKey
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: jwtSecret
+        - name: LOG_LEVEL
+          value: {{ .Values.services.apps.logLevel | default "info" | quote }}
+        {{ if .Values.services.objectStore.region }}
+        - name: AWS_REGION
+          value: {{ .Values.services.objectStore.region }}
+        {{ end }}
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreAccess
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreSecret
+        - name: MINIO_URL
+          {{ if .Values.services.objectStore.url }}
+          value: {{ .Values.services.objectStore.url }}
+          {{ else }}
+          value: http://minio-service:{{ .Values.services.objectStore.port }}
+          {{ end }}
+        - name: PORT
+          value: {{ .Values.services.apps.port | quote }}
+        - name: REDIS_PASSWORD
+          value: {{ .Values.services.redis.password }}
+        - name: REDIS_URL
+          {{ if .Values.services.redis.url }}
+          value: {{ .Values.services.redis.url }}
+          {{ else }}
+          value: redis-service:{{ .Values.services.redis.port }}
+          {{ end }}
+        - name: SELF_HOSTED
+          value: {{ .Values.globals.selfHosted | quote }}
+        - name: SENTRY_DSN
+          value: {{ .Values.globals.sentryDSN }}
+        - name: WORKER_URL
+          value: worker-service:{{ .Values.services.worker.port }}
+        image: budibase/apps
+        imagePullPolicy: Always
+        name: bbapps
+        ports:
+        - containerPort: {{ .Values.services.apps.port }}
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status: {}

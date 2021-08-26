@@ -1702,10 +1702,11 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "form"],
     "actions": [
       "ValidateForm",
-      "ClearForm"
+      "ClearForm",
+      "ChangeFormStep"
     ],
     "styles": ["size"],
     "settings": [
@@ -1732,9 +1733,44 @@
         "defaultValue": false
       }
     ],
-    "context": {
-      "type": "form"
-    }
+    "context": [
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Valid",
+            "key": "__valid"
+          },
+          {
+            "label": "Current Step",
+            "key": "__currentStep"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "__currentStepValid"
+          }
+        ]
+      },
+      {
+        "type": "form"
+      }
+    ]
+  },
+  "formstep": {
+    "name": "Form Step",
+    "icon": "AssetsAdded",
+    "hasChildren": true,
+    "illegalChildren": ["section", "form", "form step"],
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "number",
+        "label": "Step",
+        "key": "step",
+        "defaultValue": 1,
+        "min": 1
+      }
+    ]
   },
   "fieldgroup": {
     "name": "Field Group",

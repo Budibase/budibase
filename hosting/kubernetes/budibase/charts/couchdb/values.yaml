@@ -1,0 +1,201 @@
+## clusterSize is the initial size of the CouchDB cluster.
+clusterSize: 3
+
+## If allowAdminParty is enabled the cluster will start up without any database
+## administrator account; i.e., all users will be granted administrative
+## access. Otherwise, the system will look for a Secret called
+## <ReleaseName>-couchdb containing `adminUsername`, `adminPassword` and
+## `cookieAuthSecret` keys. See the `createAdminSecret` flag.
+## ref: https://kubernetes.io/docs/concepts/configuration/secret/
+allowAdminParty: false
+
+## If createAdminSecret is enabled a Secret called <ReleaseName>-couchdb will
+## be created containing auto-generated credentials. Users who prefer to set
+## these values themselves have a couple of options:
+##
+## 1) The `adminUsername`, `adminPassword`, `adminHash`, and `cookieAuthSecret`
+##    can be defined directly in the chart's values. Note that all of a chart's
+##    values are currently stored in plaintext in a ConfigMap in the tiller
+##    namespace.
+##
+## 2) This flag can be disabled and a Secret with the required keys can be
+##    created ahead of time.
+createAdminSecret: true
+
+# adminUsername: budibase
+# adminPassword: budibase
+# adminHash: -pbkdf2-this_is_not_necessarily_secure_either
+# cookieAuthSecret: admin
+
+## When enabled, will deploy a networkpolicy that allows CouchDB pods to
+## communicate with each other for clustering and ingress on port 5984
+networkPolicy:
+  enabled: true
+
+## Use an alternate scheduler, e.g. "stork".
+## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+##
+# schedulerName:
+
+# Use a service account
+serviceAccount:
+  enabled: true
+  create: true
+# name:
+# imagePullSecrets:
+# - name: myimagepullsecret
+
+## The storage volume used by each Pod in the StatefulSet. If a
+## persistentVolume is not enabled, the Pods will use `emptyDir` ephemeral
+## local storage. Setting the storageClass attribute to "-" disables dynamic
+## provisioning of Persistent Volumes; leaving it unset will invoke the default
+## provisioner.
+persistentVolume:
+  enabled: false
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  storageClass: ""
+
+## The CouchDB image
+image:
+  repository: couchdb
+  tag: 3.1.0
+  pullPolicy: IfNotPresent
+
+## Experimental integration with Lucene-powered fulltext search
+searchImage:
+  repository: kocolosk/couchdb-search
+  tag: 0.2.0
+  pullPolicy: IfNotPresent
+
+## Flip this to flag to include the Search container in each Pod
+enableSearch: true
+
+initImage:
+  repository: busybox
+  tag: latest
+  pullPolicy: Always
+
+## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
+## problems you can try setting podManagementPolicy to the StatefulSet default
+## `OrderedReady`
+podManagementPolicy: Parallel
+
+## To better tolerate Node failures, we can prevent Kubernetes scheduler from
+## assigning more than one Pod of CouchDB StatefulSet per Node using podAntiAffinity.
+affinity: {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - labelSelector:
+  #         matchExpressions:
+  #           - key: "app"
+  #             operator: In
+  #             values:
+  #             - couchdb
+  #       topologyKey: "kubernetes.io/hostname"
+
+## Optional pod annotations
+annotations: {}
+
+## Optional tolerations
+tolerations: []
+
+## A StatefulSet requires a headless Service to establish the stable network
+## identities of the Pods, and that Service is created automatically by this
+## chart without any additional configuration. The Service block below refers
+## to a second Service that governs how clients connect to the CouchDB cluster.
+service:
+  # annotations:
+  enabled: true
+  type: ClusterIP
+  externalPort: 5984
+
+## An Ingress resource can provide name-based virtual hosting and TLS
+## termination among other things for CouchDB deployments which are accessed
+## from outside the Kubernetes cluster.
+## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  hosts:
+    - chart-example.local
+  path: /
+  annotations: []
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls:
+    # Secrets must be manually created in the namespace.
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+
+## Optional resource requests and limits for the CouchDB container
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+  {}
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # limits:
+  #  cpu: 56
+  #  memory: 256Gi
+
+## erlangFlags is a map that is passed to the Erlang VM as flags using the
+## ERL_FLAGS env. `name` and `setcookie` flags are minimally required to
+## establish connectivity between cluster nodes.
+## ref: http://erlang.org/doc/man/erl.html#init_flags
+erlangFlags:
+  name: couchdb
+  setcookie: monster
+
+## couchdbConfig will override default CouchDB configuration settings.
+## The contents of this map are reformatted into a .ini file laid down
+## by a ConfigMap object.
+## ref: http://docs.couchdb.org/en/latest/config/index.html
+couchdbConfig:
+  couchdb:
+   uuid: budibase-couchdb # REQUIRED: Unique identifier for this CouchDB server instance
+  # cluster:
+  #   q: 8 # Create 8 shards for each database
+  chttpd:
+    bind_address: any
+    # chttpd.require_valid_user disables all the anonymous requests to the port
+    # 5984 when is set to true.
+    require_valid_user: false
+
+# Kubernetes local cluster domain.
+# This is used to generate FQDNs for peers when joining the CouchDB cluster.
+dns:
+  clusterDomainSuffix: cluster.local
+
+## Configure liveness and readiness probe values
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+livenessProbe:
+  enabled: true
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+readinessProbe:
+  enabled: true
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+# Configure arbitrary sidecar containers for CouchDB pods created by the
+# StatefulSet
+sidecars: {}
+  # - name: foo
+  #   image: "busybox"
+  #   imagePullPolicy: IfNotPresent
+  #   resources:
+  #     requests:
+  #       cpu: "0.1"
+  #       memory: 10Mi
+  #   command: ['echo "foo";']
+  #   volumeMounts:
+  #     - name: database-storage
+  #       mountPath: /opt/couchdb/data/
