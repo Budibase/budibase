@@ -58,20 +58,12 @@
       label: "Must not match regex",
       value: "notRegex",
     },
-    ContainsRowID: {
-      label: "Must contain row ID",
-      value: "contains",
-    },
-    NotContainsRowID: {
-      label: "Must not contain row ID",
-      value: "notContains",
-    },
     Contains: {
-      label: "Must contain one of",
+      label: "Must contain one",
       value: "contains",
     },
     NotContains: {
-      label: "Must not contain one of",
+      label: "Must not contain ",
       value: "notContains",
     },
   }
@@ -291,7 +283,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if ["maxLength", "minLength", "regex", "notRegex", "containsRowID", "notContainsRowID"].includes(rule.constraint)}
+                {:else if ["maxLength", "minLength", "regex", "notRegex"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
@@ -309,7 +301,7 @@
                     <Multiselect
                       disabled={rule.constraint === "required"}
                       options={dataSourceSchema.schema[field].constraints
-                        .inclusion[0]}
+                        .inclusion}
                       getOptionLabel={x => x}
                       getOptionValue={x => x}
                       on:change={e => (rule.value = e.detail)}

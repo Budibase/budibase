@@ -83,10 +83,7 @@
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
-    const opt =
-      schema.type == "array"
-        ? schema?.constraints?.inclusion[0]
-        : schema?.constraints?.inclusion || []
+    const opt = schema?.constraints?.inclusion || []
 
     return opt
   }
@@ -136,7 +133,7 @@
               />
             {:else if ["string", "longform", "number"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if filter.type === "options" || filter.type === "array"}
+            {:else if filter.type === "options"}
               <Combobox
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}

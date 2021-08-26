@@ -27,7 +27,7 @@ export const FIELDS = {
     },
   },
   ARRAY: {
-    name: "List",
+    name: "Multi-select",
     type: "array",
     constraints: {
       type: "array",
