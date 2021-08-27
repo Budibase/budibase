@@ -17,8 +17,6 @@ class QueryBuilder {
       notEqual: {},
       empty: {},
       notEmpty: {},
-      contains: {},
-      notContains: {},
       ...base,
     }
     this.limit = 50
@@ -103,16 +101,6 @@ class QueryBuilder {
 
   addNotEmpty(key, value) {
     this.query.notEmpty[key] = value
-    return this
-  }
-
-  addContains(key, value) {
-    this.query.contains[key] = value
-    return this
-  }
-
-  addNotContains(key, value) {
-    this.query.notContains[key] = value
     return this
   }
 
@@ -223,28 +211,6 @@ class QueryBuilder {
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
-
-    if (this.query.contains) {
-      build(this.query.contains, (key, value) => {
-        if (!value) {
-          return null
-        }
-        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
-      })
-    }
-
-    if (this.query.notContains) {
-      build(this.query.notContains, (key, value) => {
-        if (!value) {
-          return null
-        }
-        return `!${key}.${value}:${builder.preprocess(
-          value,
-          allPreProcessingOpts
-        )}`
-      })
-    }
-
     return query
   }
 
