@@ -66,7 +66,7 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     }
     let res
 
-    // Validate.js doesn't seem to handle array of array very well
+    // Validate.js doesn't seem to handle array
     if (table.schema[fieldName].type === FieldTypes.ARRAY) {
       row[fieldName].map(val => {
         if (!constraints.inclusion.includes(val)) {

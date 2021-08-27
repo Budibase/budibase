@@ -102,7 +102,7 @@ exports.createAllSearchIndex = async appId => {
           if (Array.isArray(input[key])) {
             for (let val in input[key]) {
               // eslint-disable-next-line no-undef
-              index(`${idxKey}`, input[key][val], {
+              index(idxKey, input[key][val], {
                 store: true,
               })
             }
