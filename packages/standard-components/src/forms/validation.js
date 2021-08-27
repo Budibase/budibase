@@ -76,19 +76,6 @@ export const createValidatorFromConstraints = (
       })
     }
 
-    if (
-      schemaConstraints.type === "array" &&
-      exists(schemaConstraints.inclusion)
-    ) {
-      const options = schemaConstraints.inclusion || []
-      rules.push({
-        type: "array",
-        constraint: "inclusion",
-        value: options,
-        error: "Invalid value",
-      })
-    }
-
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
       const limit = schemaConstraints.datetime.earliest
@@ -262,9 +249,7 @@ const maxValueHandler = (value, rule) => {
 
 // Evaluates an inclusion constraint
 const inclusionHandler = (value, rule) => {
-  return value == null || rule.type == "array"
-    ? rule.value.map(val => val === value)
-    : rule.value.includes(value)
+  return value == null || rule.value.includes(value)
 }
 
 // Evaluates an equal constraint
@@ -295,10 +280,6 @@ const notRegexHandler = (value, rule) => {
 
 // Evaluates a contains constraint
 const containsHandler = (value, rule) => {
-  if (rule.type == "array") {
-    const expectedValue = parseType(rule.value, "array")
-    return value && value.some(val => expectedValue.includes(val))
-  }
   const expectedValue = parseType(rule.value, "string")
   return value && value.includes(expectedValue)
 }

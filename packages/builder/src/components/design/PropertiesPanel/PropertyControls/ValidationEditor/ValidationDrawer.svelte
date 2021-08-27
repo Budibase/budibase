@@ -15,7 +15,6 @@
   import { getSchemaForDatasource } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
-  import Multiselect from "../../../../../../../bbui/src/Form/Core/Multiselect.svelte"
 
   export let rules = []
   export let bindings = []
@@ -59,11 +58,11 @@
       value: "notRegex",
     },
     Contains: {
-      label: "Must contain one",
+      label: "Must contain",
       value: "contains",
     },
     NotContains: {
-      label: "Must not contain ",
+      label: "Must not contain",
       value: "notContains",
     },
   }
@@ -98,8 +97,8 @@
     ["attachment"]: [Constraints.Required],
     ["link"]: [
       Constraints.Required,
-      Constraints.ContainsRowID,
-      Constraints.NotContainsRowID,
+      Constraints.Contains,
+      Constraints.NotContains,
       Constraints.MinLength,
       Constraints.MaxLength,
     ],
@@ -283,7 +282,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if ["maxLength", "minLength", "regex", "notRegex"].includes(rule.constraint)}
+                {:else if rule.type !== "array" && ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
@@ -297,15 +296,14 @@
                       bind:value={rule.value}
                       placeholder="Constraint value"
                     />
-                  {:else if rule.type === "array" && ["contains", "notContains"].includes(rule.constraint)}
-                    <Multiselect
+                  {:else if rule.type === "array"}
+                    <Select
                       disabled={rule.constraint === "required"}
                       options={dataSourceSchema.schema[field].constraints
                         .inclusion}
                       getOptionLabel={x => x}
                       getOptionValue={x => x}
-                      on:change={e => (rule.value = e.detail)}
-                      bind:value={rule.value}
+                      value={rule.value}
                     />
                   {:else if rule.type === "boolean"}
                     <Select

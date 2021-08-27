@@ -43,12 +43,12 @@
 >
   {#if fieldState}
     <CoreMultiselect
-      value={$fieldState.value}
-      error={$fieldState.error}
+      value={fieldState.value || []}
+      error={fieldState.error}
       getOptionLabel={flatOptions ? x => x : x => x.label}
       getOptionValue={flatOptions ? x => x : x => x.value}
-      id={$fieldState.fieldId}
-      disabled={$fieldState.disabled}
+      id={fieldState.fieldId}
+      disabled={fieldState.disabled}
       on:change={e => fieldApi.setValue(e.detail)}
       {placeholder}
       {options}
