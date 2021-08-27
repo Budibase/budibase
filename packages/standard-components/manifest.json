@@ -1727,6 +1727,21 @@
         }
       },
       {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          }, {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2447,6 +2462,22 @@
         "key": "columns",
         "dependsOn": "dataProvider",
         "placeholder": "All columns"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
       },
       {
         "type": "boolean",

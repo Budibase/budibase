@@ -8,6 +8,7 @@
   export let showAutoColumns
   export let rowCount
   export let quiet
+  export let size
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
@@ -71,7 +72,7 @@
   }
 </script>
 
-<div use:styleable={$component.styles}>
+<div use:styleable={$component.styles} class={size}>
   <Table
     {data}
     {schema}

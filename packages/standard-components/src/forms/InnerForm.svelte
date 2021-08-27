@@ -7,6 +7,7 @@
   export let dataSource
   export let disabled = false
   export let initialValues
+  export let size
   export let schema
   export let table
 
@@ -270,7 +271,7 @@
 </script>
 
 <Provider {actions} data={dataContext}>
-  <div use:styleable={$component.styles}>
+  <div use:styleable={$component.styles} class={size}>
     <slot />
   </div>
 </Provider>
