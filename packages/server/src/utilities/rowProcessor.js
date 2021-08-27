@@ -29,6 +29,11 @@ const TYPE_TRANSFORM_MAP = {
     [null]: null,
     [undefined]: undefined,
   },
+  [FieldTypes.ARRAY]: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
   [FieldTypes.STRING]: {
     "": "",
     [null]: "",

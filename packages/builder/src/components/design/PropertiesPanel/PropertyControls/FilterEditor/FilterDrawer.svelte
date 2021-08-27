@@ -59,6 +59,14 @@
       expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
+
+    // if changed to an array, change default value to empty array
+    const idx = filters.findIndex(x => x.field === field)
+    if (expression.type === "array") {
+      filters[idx].value = []
+    } else {
+      filters[idx].value = null
+    }
   }
 
   const onOperatorChange = (expression, operator) => {
@@ -74,7 +82,9 @@
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
-    return schema?.constraints?.inclusion || []
+    const opt = schema?.constraints?.inclusion || []
+
+    return opt
   }
 </script>
 
@@ -122,7 +132,7 @@
               />
             {:else if ["string", "longform", "number"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if filter.type === "options"}
+            {:else if filter.type === "options" || "array"}
               <Combobox
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}
