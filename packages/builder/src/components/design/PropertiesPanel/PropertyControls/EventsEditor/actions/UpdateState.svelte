@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Combobox, Checkbox } from "@budibase/bbui"
+  import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { getAllStateVariables } from "builderStore/dataBinding"
@@ -44,6 +44,11 @@
     />
     <div />
     <Checkbox bind:value={parameters.persist} text="Persist this value" />
+    <div />
+    <Body size="XS">
+      Persisted values will remain even after reloading the page or closing the
+      browser.
+    </Body>
   {/if}
 </div>
 
