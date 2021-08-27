@@ -1,13 +1,11 @@
 <script>
   import { automationStore } from "builderStore"
-  import { database } from "stores/backend"
   import { notifications, Button, Modal, Heading, Toggle } from "@budibase/bbui"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
   import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
   let webhookModal
 
-  $: instanceId = $database._id
   $: automation = $automationStore.selectedAutomation?.automation
   $: automationLive = automation?.live
 
@@ -16,7 +14,7 @@
       return
     }
     automation.live = live
-    automationStore.actions.save({ instanceId, automation })
+    automationStore.actions.save(automation)
     if (live) {
       notifications.info(`Automation ${automation.name} enabled.`)
     } else {
@@ -38,10 +36,7 @@
   }
 
   async function saveAutomation() {
-    await automationStore.actions.save({
-      instanceId,
-      automation,
-    })
+    await automationStore.actions.save(automation)
     notifications.success(`Automation ${automation.name} saved.`)
   }
 </script>
