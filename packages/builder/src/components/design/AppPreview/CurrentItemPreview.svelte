@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
@@ -103,8 +103,7 @@
       } else if (type === "update-prop") {
         store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
-        idToDelete = data.id
-        confirmDeleteDialog.show()
+        confirmDeleteComponent(data.id)
       } else if (type === "preview-loaded") {
         // Wait for this event to show the client library if intelligent
         // loading is supported
@@ -113,7 +112,26 @@
         console.warning(`Client sent unknown event type: ${type}`)
       }
     })
+
+    iframe.contentWindow.addEventListener("keydown", event => {
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedComponentId) {
+        confirmDeleteComponent(selectedComponentId);
+      }
+    })
   })
+
+  // remove all iframe event listeners on component destroy
+  onDestroy(() => {
+    iframe.contentWindow.removeEventListener("ready")
+    iframe.contentWindow.removeEventListener("error")
+    iframe.contentWindow.removeEventListener("bb-event")
+    iframe.contentWindow.removeEventListener("keydown")
+  })
+
+  const confirmDeleteComponent = (componentId) => {
+    idToDelete = componentId
+    confirmDeleteDialog.show()
+  }
 
   const deleteComponent = () => {
     store.actions.components.delete({ _id: idToDelete })
