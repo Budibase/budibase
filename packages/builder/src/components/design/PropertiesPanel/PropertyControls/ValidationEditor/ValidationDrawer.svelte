@@ -59,11 +59,11 @@
       value: "notRegex",
     },
     Contains: {
-      label: $t('must-contain'),
+      label: $t("must-contain"),
       value: "contains",
     },
     NotContains: {
-      label: $t('must-not-contain'),
+      label: $t("must-not-contain"),
       value: "notContains",
     },
   }
