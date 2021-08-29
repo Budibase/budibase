@@ -15,19 +15,19 @@
 
   const typeOptions = [
     {
-      label: $t('next-step'),
+      label: $t("next-step"),
       value: "next",
     },
     {
-      label: $t('previous-step'),
+      label: $t("previous-step"),
       value: "prev",
     },
     {
-      label: $t('first-step'),
+      label: $t("first-step"),
       value: "first",
     },
     {
-      label: $t('specific-step'),
+      label: $t("specific-step"),
       value: "specific",
     },
   ]
@@ -40,7 +40,7 @@
 </script>
 
 <div class="root">
-  <Label small>{ $t('Form') }</Label>
+  <Label small>{$t("Form")}</Label>
   <Select
     placeholder={null}
     bind:value={parameters.componentId}
@@ -48,10 +48,10 @@
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
   />
-  <Label small>{ $t('step') }</Label>
+  <Label small>{$t("step")}</Label>
   <Select bind:value={parameters.type} options={typeOptions} />
   {#if parameters.type === "specific"}
-    <Label small>{ $t('number') }</Label>
+    <Label small>{$t("number")}</Label>
     <Stepper bind:value={parameters.number} />
   {/if}
 </div>
