@@ -15,7 +15,7 @@
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
     await datasources.delete(datasource)
-    notifications.success($t('datasource-deleted'))
+    notifications.success($t("datasource-deleted"))
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
       $goto("./datasource")
@@ -27,19 +27,23 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>{ $t('update') }</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
+  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}
+    >{$t("update")}</MenuItem
+  >
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$t("delete")}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={ $t('delete-datasource') }
+  okText={$t("delete-datasource")}
   onOk={deleteDatasource}
-  title={ $t('confirm-deletion-0') }
+  title={$t("confirm-deletion-0")}
 >
-  { $t('are-you-sure-you-wish-to-delete-the-datasource') }
+  {$t("are-you-sure-you-wish-to-delete-the-datasource")}
   <i>{datasource.name}?</i>
-  { $t('this-action-cannot-be-undone') }
+  {$t("this-action-cannot-be-undone")}
 </ConfirmDialog>
 <UpdateDatasourceModal {datasource} bind:this={updateDatasourceDialog} />
 

@@ -6,7 +6,12 @@
 
 <Layout justifyItems="end">
   <div style="width: 100px;">
-    <Select options={$localeStore.options} placeholder={null} bind:value={$localeStore.locale} getOptionLabel={getLabel} />
+    <Select
+      options={$localeStore.options}
+      placeholder={null}
+      bind:value={$localeStore.locale}
+      getOptionLabel={getLabel}
+    />
   </div>
 </Layout>
 

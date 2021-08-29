@@ -37,7 +37,7 @@
         <div class="horizontal">
           <Label small>{field}</Label>
           <Input
-            placeholder={$t('enter') + ` ${field}`}
+            placeholder={$t("enter") + ` ${field}`}
             outline
             disabled={!editable}
             type={schema.fields[field]?.type}
@@ -51,7 +51,7 @@
 </form>
 {#if schema.customisable}
   <Editor
-    label={ $t('query') }
+    label={$t("query")}
     mode="json"
     on:change={updateCustomFields}
     readOnly={!editable}

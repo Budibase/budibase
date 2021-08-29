@@ -42,22 +42,26 @@
 </script>
 
 <ModalContent
-  title={ $t('webhook-setup') }
-  confirmText={ $t('finished') }
+  title={$t("webhook-setup")}
+  confirmText={$t("finished")}
   showConfirmButton={finished}
-  cancelText={ $t('skip') }
+  cancelText={$t("skip")}
 >
   <p>
-    { $t('webhooks-are-for-receiving-data-to-make-them-easier-please-use-the-url-shown-below-and-send-a') }
+    {$t(
+      "webhooks-are-for-receiving-data-to-make-them-easier-please-use-the-url-shown-below-and-send-a"
+    )}
     <code>POST</code>
-    { $t('request-to-it-from-your-other-application-if-youre-unable-to-do-this-now-then-you-can-skip-this-step-however-we-will-not-be-able-to-configure-bindings-for-your-later-actions') }
+    {$t(
+      "request-to-it-from-your-other-application-if-youre-unable-to-do-this-now-then-you-can-skip-this-step-however-we-will-not-be-able-to-configure-bindings-for-your-later-actions"
+    )}
   </p>
   <WebhookDisplay value={schemaURL} />
   {#if finished}
     <p class="finished-text">
-      { $t('request-received-we-found') }
+      {$t("request-received-we-found")}
       {propCount}
-      { $t('bindable-value') }{propCount > 1 ? "s" : ""}.
+      {$t("bindable-value")}{propCount > 1 ? "s" : ""}.
     </p>
   {/if}
   <a
@@ -66,7 +70,7 @@
     href="https://docs.budibase.com/automate/steps/triggers"
   >
     <Icon name="InfoOutline" />
-    <span>{ $t('learn-about-webhooks') }</span>
+    <span>{$t("learn-about-webhooks")}</span>
   </a>
 </ModalContent>
 

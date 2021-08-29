@@ -84,9 +84,11 @@
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
-          { $t('add-your-first-filter-column') }
+          {$t("add-your-first-filter-column")}
         {:else}
-          { $t('results-are-filtered-to-only-those-which-match-all-of-the-following-constraints') }
+          {$t(
+            "results-are-filtered-to-only-those-which-match-all-of-the-following-constraints"
+          )}
         {/if}
       </Body>
       {#if filters?.length}
@@ -96,7 +98,7 @@
               bind:value={filter.field}
               options={fieldOptions}
               on:change={e => onFieldChange(filter, e.detail)}
-              placeholder={ $t('column') }
+              placeholder={$t("column")}
             />
             <Select
               disabled={!filter.field}
@@ -114,9 +116,9 @@
             {#if filter.valueType === "Binding"}
               <DrawerBindableInput
                 disabled={filter.noValue}
-                title={$t('value-for') + ` "${filter.field}"`}
+                title={$t("value-for") + ` "${filter.field}"`}
                 value={filter.value}
-                placeholder={ $t('value') }
+                placeholder={$t("value")}
                 {bindings}
                 on:change={event => (filter.value = event.detail)}
               />
@@ -132,8 +134,8 @@
               <Combobox
                 disabled={filter.noValue}
                 options={[
-                  { label: $t('true'), value: "true" },
-                  { label: $t('false'), value: "false" },
+                  { label: $t("true"), value: "true" },
+                  { label: $t("false"), value: "false" },
                 ]}
                 bind:value={filter.value}
               />
@@ -159,7 +161,7 @@
       {/if}
       <div>
         <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
-          { $t('add-filter') }
+          {$t("add-filter")}
         </Button>
       </div>
     </Layout>

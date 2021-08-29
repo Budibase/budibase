@@ -14,7 +14,7 @@
 </script>
 
 <div class="root">
-  <Label small>{ $t('form') }</Label>
+  <Label small>{$t("form")}</Label>
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}

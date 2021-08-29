@@ -76,7 +76,7 @@
       console.error(err)
       clearInterval(poll)
       notifications.error(
-        $t('error-fetching-deployment-history-please-try-again')
+        $t("error-fetching-deployment-history-please-try-again")
       )
     }
   }
@@ -98,11 +98,15 @@
 {#if deployments.length > 0}
   <section class="deployment-history" in:slide>
     <header>
-      <Heading>{ $t('deployment-history') }</Heading>
+      <Heading>{$t("deployment-history")}</Heading>
       <div class="deploy-div">
         {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
-          <a target="_blank" href={deploymentUrl}> { $t('view-your-deployed-app') } </a>
-          <Button primary on:click={() => modal.show()}>{ $t('view-webhooks') }</Button>
+          <a target="_blank" href={deploymentUrl}>
+            {$t("view-your-deployed-app")}
+          </a>
+          <Button primary on:click={() => modal.show()}
+            >{$t("view-webhooks")}</Button
+          >
         {/if}
       </div>
     </header>
@@ -143,8 +147,8 @@
 </Modal>
 <Modal bind:this={errorReasonModal} width="30%">
   <ModalContent
-    title={ $t('deployment-error') }
-    confirmText={ $t('ok') }
+    title={$t("deployment-error")}
+    confirmText={$t("ok")}
     showCancelButton={false}
   >
     {errorReason}

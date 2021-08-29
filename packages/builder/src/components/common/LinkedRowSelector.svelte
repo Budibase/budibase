@@ -36,9 +36,9 @@
 {#if linkedTable.primaryDisplay == null}
   <Label extraSmall grey>{label}</Label>
   <Label small black>
-    { $t('please-choose-a-display-column-for-the') }
+    {$t("please-choose-a-display-column-for-the")}
     <b>{linkedTable.name}</b>
-    { $t('table-0') }.
+    {$t("table-0")}.
   </Label>
 {:else if schema.relationshipType === "one-to-many"}
   <Select

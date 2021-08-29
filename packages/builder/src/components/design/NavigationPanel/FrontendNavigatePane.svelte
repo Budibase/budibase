@@ -66,20 +66,20 @@
 
 <div class="title">
   <Tabs {selected} on:select={navigate}>
-    <Tab title="Screens" label={ $t('screens') } >
+    <Tab title="Screens" label={$t("screens")}>
       <div class="tab-content-padding">
         <div class="role-select">
           <Select
             on:change={updateAccessRole}
             value={$selectedAccessRole}
-            label={ $t('filter-by-access') }
+            label={$t("filter-by-access")}
             getOptionLabel={role => role.name}
             getOptionValue={role => role._id}
             options={$roles}
           />
           <Search
-            placeholder={ $t('enter-a-route-to-search') }
-            label={ $t('search-screens') }
+            placeholder={$t("enter-a-route-to-search")}
+            label={$t("search-screens")}
             bind:value={$screenSearchString}
           />
         </div>
@@ -91,7 +91,7 @@
         </Modal>
       </div>
     </Tab>
-    <Tab title="Layouts" label={ $t('layouts') } >
+    <Tab title="Layouts" label={$t("layouts")}>
       <div class="tab-content-padding">
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />

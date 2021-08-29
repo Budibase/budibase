@@ -17,7 +17,7 @@
   >
     <div class="inner">
       <img src={GoogleLogo} alt="google icon" />
-      <p>{ $t('sign-in-with-google') }</p>
+      <p>{$t("sign-in-with-google")}</p>
     </div>
   </ActionButton>
 {/if}

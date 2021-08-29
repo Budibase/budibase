@@ -31,12 +31,14 @@
 
 <div class="root">
   <Body size="S">
-    { $t('choosing-a-data-source-will-automatically-use-the-data-it-provides-but-its-optional') }<br />
-    { $t('you-can-always-add-or-override-fields-manually') }
+    {$t(
+      "choosing-a-data-source-will-automatically-use-the-data-it-provides-but-its-optional"
+    )}<br />
+    {$t("you-can-always-add-or-override-fields-manually")}
   </Body>
 
   <div class="params">
-    <Label small>{ $t('data-source') }</Label>
+    <Label small>{$t("data-source")}</Label>
     <Select
       bind:value={parameters.providerId}
       options={dataProviderComponents}
@@ -45,7 +47,7 @@
       getOptionValue={option => option._id}
     />
 
-    <Label small>{ $t('table') }</Label>
+    <Label small>{$t("table")}</Label>
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
@@ -54,12 +56,15 @@
     />
 
     <Label small />
-    <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
+    <Checkbox
+      text={$t("require-confirmation")}
+      bind:value={parameters.confirm}
+    />
 
     {#if parameters.confirm}
-      <Label small>{ $t('confirm-text') }</Label>
+      <Label small>{$t("confirm-text")}</Label>
       <Input
-        placeholder={ $t('are-you-sure-you-want-to-save-this-row') }
+        placeholder={$t("are-you-sure-you-want-to-save-this-row")}
         bind:value={parameters.confirmText}
       />
     {/if}

@@ -29,10 +29,10 @@
   let parameters
   let data = []
   const typeOptions = [
-    { label: $t('text'), value: "STRING" },
-    { label: $t('number'), value: "NUMBER" },
-    { label: $t('boolean'), value: "BOOLEAN" },
-    { label: $t('datetime'), value: "DATETIME" },
+    { label: $t("text"), value: "STRING" },
+    { label: $t("number"), value: "NUMBER" },
+    { label: $t("boolean"), value: "BOOLEAN" },
+    { label: $t("datetime"), value: "DATETIME" },
   ]
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
@@ -92,12 +92,14 @@
 
       if (data.length === 0) {
         notifications.info(
-          $t('query-results-empty-please-execute-a-query-with-results-to-create-your-schema')
+          $t(
+            "query-results-empty-please-execute-a-query-with-results-to-create-your-schema"
+          )
         )
         return
       }
 
-      notifications.success($t('query-executed-successfully'))
+      notifications.success($t("query-executed-successfully"))
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
@@ -106,7 +108,7 @@
         type: "STRING",
       }))
     } catch (err) {
-      notifications.error($t('query-error') + `: ${err.message}`)
+      notifications.error($t("query-error") + `: ${err.message}`)
       console.error(err)
     }
   }
@@ -114,27 +116,27 @@
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
-      notifications.success($t('query-saved-successfully') + `.`)
+      notifications.success($t("query-saved-successfully") + `.`)
       $goto(`../${_id}`)
     } catch (err) {
       console.error(err)
-      notifications.error($t('error-creating-query') + `. ${err.message}`)
+      notifications.error($t("error-creating-query") + `. ${err.message}`)
     }
   }
 </script>
 
 <Layout gap="S" noPadding>
-  <Heading size="M">{ $t('query') } {integrationInfo?.friendlyName}</Heading>
+  <Heading size="M">{$t("query")} {integrationInfo?.friendlyName}</Heading>
   <Divider />
-  <Heading size="S">{ $t('config') }</Heading>
+  <Heading size="S">{$t("config")}</Heading>
   <div class="config">
     <div class="config-field">
-      <Label>{ $t('query-name') }</Label>
+      <Label>{$t("query-name")}</Label>
       <Input bind:value={query.name} />
     </div>
     {#if queryConfig}
       <div class="config-field">
-        <Label>{ $t('function') }</Label>
+        <Label>{$t("function")}</Label>
         <Select
           bind:value={query.queryVerb}
           on:change={resetDependentFields}
@@ -156,8 +158,8 @@
   {#if shouldShowQueryConfig}
     <Divider />
     <div class="config">
-      <Heading size="S">{ $t('fields') }</Heading>
-      <Body size="S">{ $t('fill-in-the-fields-specific-to-this-query') }</Body>
+      <Heading size="S">{$t("fields")}</Heading>
+      <Body size="S">{$t("fill-in-the-fields-specific-to-this-query")}</Body>
       <IntegrationQueryEditor
         {datasource}
         {query}
@@ -168,21 +170,23 @@
       <Divider />
     </div>
     <div class="viewer-controls">
-      <Heading size="S">{ $t('results') }</Heading>
+      <Heading size="S">{$t("results")}</Heading>
       <ButtonGroup>
         <Button cta disabled={queryInvalid} on:click={saveQuery}>
-          { $t('save-query') }
+          {$t("save-query")}
         </Button>
-        <Button secondary on:click={previewQuery}>{ $t('run-query') }</Button>
+        <Button secondary on:click={previewQuery}>{$t("run-query")}</Button>
       </ButtonGroup>
     </div>
     <Body size="S">
-      { $t('below-you-can-preview-the-results-from-your-query-and-change-the-schema') }
+      {$t(
+        "below-you-can-preview-the-results-from-your-query-and-change-the-schema"
+      )}
     </Body>
     <section class="viewer">
       {#if data}
         <Tabs selected="JSON">
-          <Tab title="JSON" label="JSON" >
+          <Tab title="JSON" label="JSON">
             <pre
               class="preview">
                 <!-- prettier-ignore -->
@@ -193,21 +197,24 @@
                 {/if}
               </pre>
           </Tab>
-          <Tab title="Schema" label={ $t('schema') } >
+          <Tab title="Schema" label={$t("schema")}>
             <Layout gap="S">
               {#each fields as field, idx}
                 <div class="field">
-                  <Input placeholder={ $t('field-name') } bind:value={field.name} />
+                  <Input
+                    placeholder={$t("field-name")}
+                    bind:value={field.name}
+                  />
                   <Select bind:value={field.type} options={typeOptions} />
                   <Icon name="bleClose" on:click={() => deleteField(idx)} />
                 </div>
               {/each}
               <div>
-                <Button secondary on:click={newField}>{ $t('add-field') }</Button>
+                <Button secondary on:click={newField}>{$t("add-field")}</Button>
               </div>
             </Layout>
           </Tab>
-          <Tab title="Preview" label={ $t('preview') }>
+          <Tab title="Preview" label={$t("preview")}>
             <ExternalDataSourceTable {query} {data} />
           </Tab>
         </Tabs>

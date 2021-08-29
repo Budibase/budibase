@@ -108,7 +108,7 @@
       </div>
     {/if}
     <ActionMenu>
-      <Button slot="control" secondary>{ $t('add-action') }</Button>
+      <Button slot="control" secondary>{$t("add-action")}</Button>
       {#each actionTypes as actionType}
         <MenuItem on:click={addAction(actionType)}>
           {actionType.name}

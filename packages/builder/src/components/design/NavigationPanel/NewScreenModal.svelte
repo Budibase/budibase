@@ -44,10 +44,10 @@
 
   const save = async () => {
     if (!route) {
-      routeError = $t('url-is-required')
+      routeError = $t("url-is-required")
     } else {
       if (routeExists(route, roleId)) {
-        routeError = $t('this-url-is-already-taken-for-this-access-role')
+        routeError = $t("this-url-is-already-taken-for-this-access-role")
       } else {
         routeError = ""
       }
@@ -89,9 +89,13 @@
   }
 </script>
 
-<ModalContent title={ $t('new-screen') } confirmText={ $t('create-screen') } onConfirm={save}>
+<ModalContent
+  title={$t("new-screen")}
+  confirmText={$t("create-screen")}
+  onConfirm={save}
+>
   <Select
-    label={ $t('choose-a-template') }
+    label={$t("choose-a-template")}
     bind:value={templateIndex}
     on:change={ev => templateChanged(ev.detail)}
     options={templates}
@@ -99,19 +103,19 @@
     getOptionLabel={x => x.name}
     getOptionValue={(x, idx) => idx}
   />
-  <Input label={ $t('name') } bind:value={name} />
+  <Input label={$t("name")} bind:value={name} />
   <Input
-    label={ $t('url') }
+    label={$t("url")}
     error={routeError}
     bind:value={route}
     on:change={routeChanged}
   />
   <Select
-    label={ $t('access') }
+    label={$t("access")}
     bind:value={roleId}
     options={$roles}
     getOptionLabel={x => x.name}
     getOptionValue={x => x._id}
   />
-  <Toggle text={ $t('create-link-in-navigation-bar') } bind:value={createLink} />
+  <Toggle text={$t("create-link-in-navigation-bar")} bind:value={createLink} />
 </ModalContent>

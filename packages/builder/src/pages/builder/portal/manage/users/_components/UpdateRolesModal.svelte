@@ -24,9 +24,9 @@
       },
     })
     if (res.status === 400) {
-      notifications.error($t('failed-to-update-role'))
+      notifications.error($t("failed-to-update-role"))
     } else {
-      notifications.success($t('role-updated'))
+      notifications.success($t("role-updated"))
       dispatch("update")
     }
   }
@@ -34,21 +34,22 @@
 
 <ModalContent
   onConfirm={updateUserRoles}
-  title={ $t('update-app-role') }
-  confirmText={ $t('update-role') }
-  cancelText={ $t('cancel') }
+  title={$t("update-app-role")}
+  confirmText={$t("update-role")}
+  cancelText={$t("cancel")}
   size="M"
   showCloseIcon={false}
 >
   <Body>
-    { $t('update') } {user.email}{ $t('s-role-for') } <strong>{app.name}</strong>.
+    {$t("update")}
+    {user.email}{$t("s-role-for")} <strong>{app.name}</strong>.
   </Body>
   <Select
     placeholder={null}
     bind:value={selectedRole}
     on:change
     {options}
-    label={ $t('role') }
+    label={$t("role")}
     getOptionLabel={role => role.label}
     getOptionValue={role => role.value}
   />

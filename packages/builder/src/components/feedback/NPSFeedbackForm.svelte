@@ -80,7 +80,9 @@
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
-          >{ $t('how-likely-are-you-to-recommend-budibase-to-a-colleague') }</Heading
+          >{$t(
+            "how-likely-are-you-to-recommend-budibase-to-a-colleague"
+          )}</Heading
         >
         <Divider />
         <div class="ratings">
@@ -96,29 +98,39 @@
           {/each}
         </div>
         <div class="footer">
-          <Detail size="S">{ $t('not-likely') }</Detail>
-          <Detail size="S">{ $t('extremely-likely') }</Detail>
+          <Detail size="S">{$t("not-likely")}</Detail>
+          <Detail size="S">{$t("extremely-likely")}</Detail>
         </div>
       {:else if step === 1}
-        <Heading size="XS">{ $t('what-could-be-improved-most-in-budibase') }</Heading>
+        <Heading size="XS"
+          >{$t("what-could-be-improved-most-in-budibase")}</Heading
+        >
         <Divider />
-        <RadioGroup bind:value={improvements} {options} getOptionLabel={option => $t(option)} />
+        <RadioGroup
+          bind:value={improvements}
+          {options}
+          getOptionLabel={option => $t(option)}
+        />
         <div class="footer">
-          <Detail size="S">{ $t('step-2-of-3') }</Detail>
+          <Detail size="S">{$t("step-2-of-3")}</Detail>
           <ButtonGroup>
-            <Button secondary on:click={() => (step -= 1)}>{ $t('previous') }</Button>
-            <Button primary on:click={() => (step += 1)}>{ $t('next') }</Button>
+            <Button secondary on:click={() => (step -= 1)}
+              >{$t("previous")}</Button
+            >
+            <Button primary on:click={() => (step += 1)}>{$t("next")}</Button>
           </ButtonGroup>
         </div>
       {:else}
-        <Heading size="XS">{ $t('how-can-we-improve-your-experience') }</Heading>
+        <Heading size="XS">{$t("how-can-we-improve-your-experience")}</Heading>
         <Divider />
-        <TextArea bind:value={comment} placeholder={ $t('add-comments') } />
+        <TextArea bind:value={comment} placeholder={$t("add-comments")} />
         <div class="footer">
-          <Detail size="S">{ $t('step-3-of-3') }</Detail>
+          <Detail size="S">{$t("step-3-of-3")}</Detail>
           <ButtonGroup>
-            <Button secondary on:click={() => (step -= 1)}>{ $t('previous') }</Button>
-            <Button cta on:click={submitFeedback}>{ $t('complete') }</Button>
+            <Button secondary on:click={() => (step -= 1)}
+              >{$t("previous")}</Button
+            >
+            <Button cta on:click={submitFeedback}>{$t("complete")}</Button>
           </ButtonGroup>
         </div>
       {/if}

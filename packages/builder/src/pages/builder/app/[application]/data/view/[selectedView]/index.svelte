@@ -8,7 +8,7 @@
 
 {#if $database._id && selectedView}
   <ViewDataTable view={selectedView} />
-{:else}<i>{ $t('create-your-first-table-to-start-building') }</i>{/if}
+{:else}<i>{$t("create-your-first-table-to-start-building")}</i>{/if}
 
 <style>
   i {

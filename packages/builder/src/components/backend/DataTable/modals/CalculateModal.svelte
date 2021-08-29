@@ -7,15 +7,15 @@
 
   const CALCULATIONS = [
     {
-      name: $t('statistics'),
+      name: $t("statistics"),
       key: "stats",
     },
     {
-      name: $t('count'),
+      name: $t("count"),
       key: "count",
     },
     {
-      name: $t('sum'),
+      name: $t("sum"),
       key: "sum",
     },
   ]
@@ -40,19 +40,19 @@
 
   function saveView() {
     views.save(view)
-    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
-    analytics.captureEvent($t('added-view-calculate'), { field: view.field })
+    notifications.success($t("view") + ` ${view.name} ` + $t("saved") + `.`)
+    analytics.captureEvent($t("added-view-calculate"), { field: view.field })
   }
 </script>
 
 <ModalContent
-  title={ $t('calculate') }
-  confirmText={ $t('save') }
+  title={$t("calculate")}
+  confirmText={$t("save")}
   onConfirm={saveView}
   disabled={!view.field}
 >
   <div class="input-group-row">
-    <Label>{ $t('the') }</Label>
+    <Label>{$t("the")}</Label>
     <Select
       bind:value={view.calculation}
       options={CALCULATIONS}
@@ -60,7 +60,7 @@
       getOptionValue={x => x.key}
     />
     {#if view.calculation}
-      <Label>{ $t('of') }</Label>
+      <Label>{$t("of")}</Label>
       <Select bind:value={view.field} options={fields} />
     {/if}
   </div>

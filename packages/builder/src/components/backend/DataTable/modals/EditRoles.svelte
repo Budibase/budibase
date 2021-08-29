@@ -59,10 +59,10 @@
 
     // Validation
     if (!selectedRole.name || selectedRole.name.trim() === "") {
-      errors.push({ message: $t('please-enter-a-role-name') })
+      errors.push({ message: $t("please-enter-a-role-name") })
     }
     if (!selectedRole.permissionId) {
-      errors.push({ message: $t('please-choose-permissions') })
+      errors.push({ message: $t("please-choose-permissions") })
     }
     if (errors.length) {
       return false
@@ -71,9 +71,9 @@
     // Save/create the role
     const response = await roles.save(selectedRole)
     if (response.status === 200) {
-      notifications.success($t('role-saved-successfully'))
+      notifications.success($t("role-saved-successfully"))
     } else {
-      notifications.error($t('error-saving-role'))
+      notifications.error($t("error-saving-role"))
       return false
     }
   }
@@ -83,9 +83,9 @@
     const response = await roles.delete(selectedRole)
     if (response.status === 200) {
       changeRole()
-      notifications.success($t('role-deleted-successfully'))
+      notifications.success($t("role-deleted-successfully"))
     } else {
-      notifications.error($t('error-deleting-role'))
+      notifications.error($t("error-deleting-role"))
     }
   }
 
@@ -93,8 +93,8 @@
 </script>
 
 <ModalContent
-  title={ $t('edit-roles') }
-  confirmText={isCreating ? $t('create') : $t('save')}
+  title={$t("edit-roles")}
+  confirmText={isCreating ? $t("create") : $t("save")}
   onConfirm={saveRole}
   disabled={!valid}
 >
@@ -104,22 +104,22 @@
   <Select
     thin
     secondary
-    label={ $t('role') }
+    label={$t("role")}
     value={selectedRoleId}
     on:change={changeRole}
     options={editableRoles}
-    placeholder={ $t('create-new-role') }
+    placeholder={$t("create-new-role")}
     getOptionValue={role => role._id}
     getOptionLabel={role => role.name}
   />
   {#if selectedRole}
     <Input
-      label={ $t('name-0') }
+      label={$t("name-0")}
       bind:value={selectedRole.name}
       disabled={builtInRoles.includes(selectedRole.name)}
     />
     <Select
-      label={ $t('inherits-role') }
+      label={$t("inherits-role")}
       bind:value={selectedRole.inherits}
       options={otherRoles}
       getOptionValue={role => role._id}
@@ -127,7 +127,7 @@
       disabled={builtInRoles.includes(selectedRole.name)}
     />
     <Select
-      label={ $t('base-permissions') }
+      label={$t("base-permissions")}
       bind:value={selectedRole.permissionId}
       options={basePermissions}
       getOptionValue={x => x._id}
@@ -137,7 +137,7 @@
   {/if}
   <div slot="footer">
     {#if !isCreating}
-      <Button warning on:click={deleteRole}>{ $t('delete-0') }</Button>
+      <Button warning on:click={deleteRole}>{$t("delete-0")}</Button>
     {/if}
   </div>
 </ModalContent>

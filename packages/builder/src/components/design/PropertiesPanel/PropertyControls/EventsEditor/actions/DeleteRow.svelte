@@ -11,7 +11,7 @@
 </script>
 
 <div class="root">
-  <Label>{ $t('table') }</Label>
+  <Label>{$t("table")}</Label>
   <Select
     bind:value={parameters.tableId}
     options={tableOptions}
@@ -19,29 +19,29 @@
     getOptionValue={table => table._id}
   />
 
-  <Label small>{ $t('row-id') }</Label>
+  <Label small>{$t("row-id")}</Label>
   <DrawerBindableInput
     {bindings}
-    title={ $t('row-id-to-delete') }
+    title={$t("row-id-to-delete")}
     value={parameters.rowId}
     on:change={value => (parameters.rowId = value.detail)}
   />
 
-  <Label small>{ $t('row-rev') }</Label>
+  <Label small>{$t("row-rev")}</Label>
   <DrawerBindableInput
     {bindings}
-    title={ $t('row-rev-to-delete') }
+    title={$t("row-rev-to-delete")}
     value={parameters.revId}
     on:change={value => (parameters.revId = value.detail)}
   />
 
   <Label small />
-  <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
+  <Checkbox text={$t("require-confirmation")} bind:value={parameters.confirm} />
 
   {#if parameters.confirm}
-    <Label small>{ $t('confirm-text') }</Label>
+    <Label small>{$t("confirm-text")}</Label>
     <Input
-      placeholder={ $t('are-you-sure-you-want-to-delete-this-row') }
+      placeholder={$t("are-you-sure-you-want-to-delete-this-row")}
       bind:value={parameters.confirmText}
     />
   {/if}

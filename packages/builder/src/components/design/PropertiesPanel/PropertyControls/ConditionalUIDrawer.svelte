@@ -24,34 +24,34 @@
   const flipDurationMs = 150
   const actionOptions = [
     {
-      label: $t('hide-component'),
+      label: $t("hide-component"),
       value: "hide",
     },
     {
-      label: $t('show-component'),
+      label: $t("show-component"),
       value: "show",
     },
     {
-      label: $t('update-setting'),
+      label: $t("update-setting"),
       value: "update",
     },
   ]
   const valueTypeOptions = [
     {
       value: "string",
-      label: $t('binding'),
+      label: $t("binding"),
     },
     {
       value: "number",
-      label: $t('number'),
+      label: $t("number"),
     },
     {
       value: "datetime",
-      label: $t('date'),
+      label: $t("date"),
     },
     {
       value: "boolean",
-      label: $t('boolean'),
+      label: $t("boolean"),
     },
   ]
 
@@ -255,11 +255,11 @@
           {/each}
         </div>
       {:else}
-        <Body size="S">{ $t('add-your-first-condition-to-get-started') }</Body>
+        <Body size="S">{$t("add-your-first-condition-to-get-started")}</Body>
       {/if}
       <div>
         <Button secondary icon="Add" on:click={addCondition}>
-          { $t('add-condition') }
+          {$t("add-condition")}
         </Button>
       </div>
     </Layout>

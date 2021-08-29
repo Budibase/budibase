@@ -10,19 +10,19 @@
   const updatePassword = async () => {
     try {
       await auth.updateSelf({ password })
-      notifications.success($t('password-changed-successfully'))
+      notifications.success($t("password-changed-successfully"))
     } catch (error) {
-      notifications.error($t('failed-to-update-password'))
+      notifications.error($t("failed-to-update-password"))
     }
   }
 </script>
 
 <ModalContent
-  title={ $t('update-password') }
-  confirmText={ $t('update-password') }
+  title={$t("update-password")}
+  confirmText={$t("update-password")}
   onConfirm={updatePassword}
   disabled={error || !password}
 >
-  <Body size="S">{ $t('enter-your-new-password-below') }</Body>
+  <Body size="S">{$t("enter-your-new-password-below")}</Body>
   <PasswordRepeatInput bind:password bind:error />
 </ModalContent>

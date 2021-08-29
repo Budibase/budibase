@@ -61,7 +61,7 @@
     }
 
     if (response.status !== 200) {
-      notifications.error($t('csv-invalid-please-try-another-csv-file'))
+      notifications.error($t("csv-invalid-please-try-another-csv-file"))
       return []
     }
   }
@@ -70,9 +70,10 @@
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
-        $t('files-cannot-exceed') + ` ${
-          FILE_SIZE_LIMIT / BYTES_IN_MB
-        }MB. ` + $t('please-try-again-with-smaller-files') + `.`
+        $t("files-cannot-exceed") +
+          ` ${FILE_SIZE_LIMIT / BYTES_IN_MB}MB. ` +
+          $t("please-try-again-with-smaller-files") +
+          `.`
       )
       return
     }
@@ -99,19 +100,19 @@
 
   const typeOptions = [
     {
-      label: $t('text'),
+      label: $t("text"),
       value: FIELDS.STRING.type,
     },
     {
-      label: $t('number'),
+      label: $t("number"),
       value: FIELDS.NUMBER.type,
     },
     {
-      label: $t('date'),
+      label: $t("date"),
       value: FIELDS.DATETIME.type,
     },
     {
-      label: $t('options'),
+      label: $t("options"),
       value: FIELDS.OPTIONS.type,
     },
   ]
@@ -137,7 +138,7 @@
           getOptionValue={option => option.value}
         />
         <span class="field-status" class:error={!schema[columnName].success}>
-          {schema[columnName].success ? $t('success') : $t('failure')}
+          {schema[columnName].success ? $t("success") : $t("failure")}
         </span>
         <i
           class="omit-button ri-close-circle-fill"
@@ -151,7 +152,7 @@
 {#if fields.length}
   <div class="display-column">
     <Select
-      label={ $t('display-column') }
+      label={$t("display-column")}
       bind:value={primaryDisplay}
       options={fields}
     />

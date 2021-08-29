@@ -24,14 +24,14 @@
       originalName,
       ...view,
     })
-    notifications.success($t('view-renamed-successfully'))
+    notifications.success($t("view-renamed-successfully"))
   }
 
   async function deleteView() {
     const name = view.name
     const id = view.tableId
     await views.delete(name)
-    notifications.success($t('view-deleted'))
+    notifications.success($t("view-deleted"))
     $goto(`./table/${id}`)
   }
 </script>
@@ -41,17 +41,26 @@
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Edit" on:click={editorModal.show}>$t('edit')</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>$t('delete')</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >$t('delete')</MenuItem
+  >
 </ActionMenu>
 <Modal bind:this={editorModal}>
-  <ModalContent title={ $t('edit-view') } onConfirm={save} confirmText={ $t('save') }>
-    <Input label={ $t('view-name') } thin bind:value={view.name} />
+  <ModalContent
+    title={$t("edit-view")}
+    onConfirm={save}
+    confirmText={$t("save")}
+  >
+    <Input label={$t("view-name")} thin bind:value={view.name} />
   </ModalContent>
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={$t('are-you-sure-you-wish-to-delete-the-view') + ` '${view.name}'? ` + $t('your-data-will-be-deleted-and-this-action-cannot-be-undone') + `.`}
-  okText={ $t('delete-view') }
+  body={$t("are-you-sure-you-wish-to-delete-the-view") +
+    ` '${view.name}'? ` +
+    $t("your-data-will-be-deleted-and-this-action-cannot-be-undone") +
+    `.`}
+  okText={$t("delete-view")}
   onOk={deleteView}
-  title={ $t('confirm-deletion') }
+  title={$t("confirm-deletion")}
 />

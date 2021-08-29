@@ -10,9 +10,10 @@
 
   function handleFileTooLarge(fileSizeLimit) {
     notifications.error(
-      $t('files-cannot-exceed') + ` ${
-        fileSizeLimit / BYTES_IN_MB
-      }MB. ` + $t('please-try-again-with-smaller-files') + `.`
+      $t("files-cannot-exceed") +
+        ` ${fileSizeLimit / BYTES_IN_MB}MB. ` +
+        $t("please-try-again-with-smaller-files") +
+        `.`
     )
   }
 

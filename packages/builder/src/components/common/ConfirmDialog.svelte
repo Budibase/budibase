@@ -4,8 +4,8 @@
 
   export let title = ""
   export let body = ""
-  export let okText = $t('confirm') 
-  export let cancelText = $t('cancel')
+  export let okText = $t("confirm")
+  export let cancelText = $t("cancel")
   export let onOk = undefined
   export let onCancel = undefined
   export let warning = true

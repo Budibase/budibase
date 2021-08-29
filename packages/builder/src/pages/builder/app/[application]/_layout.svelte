@@ -12,8 +12,8 @@
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
   import UpgradeModal from "../../../../components/upgrade/UpgradeModal.svelte"
-  import { _ as t } from "svelte-i18n";
-  
+  import { _ as t } from "svelte-i18n"
+
   // Get Package and set store
   export let application
   let promise = getPackage()
@@ -75,7 +75,7 @@
             on:click={() => $goto(`../../portal/`)}
           />
         </button>
-        
+
         <div class="tabs">
           <Tabs {selected}>
             {#each $layout.children as { path, title }}
@@ -106,7 +106,7 @@
     <slot />
   </div>
 {:catch error}
-  <p>{ $t('something-went-wrong') } {error.message}</p>
+  <p>{$t("something-went-wrong")} {error.message}</p>
 {/await}
 
 {#if userShouldPostFeedback}

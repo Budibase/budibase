@@ -11,7 +11,7 @@
   export let panel = BindingPanel
   export let value = ""
   export let bindings = []
-  export let title = $t('bindings')
+  export let title = $t("bindings")
   export let placeholder
   export let label
   export let disabled = false
@@ -48,10 +48,10 @@
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
   <svelte:fragment slot="description">
-    { $t('add-the-objects-on-the-left-to-enrich-your-text') }
+    {$t("add-the-objects-on-the-left-to-enrich-your-text")}
   </svelte:fragment>
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    { $t('save') }
+    {$t("save")}
   </Button>
   <svelte:component
     this={panel}

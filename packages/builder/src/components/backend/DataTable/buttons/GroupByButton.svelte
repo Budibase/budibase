@@ -16,7 +16,7 @@
   active={!!view.groupBy}
   on:click={modal.show}
 >
-  { $t('group-by-0') }
+  {$t("group-by-0")}
 </Button>
 <Modal bind:this={modal}>
   <GroupByModal {view} />

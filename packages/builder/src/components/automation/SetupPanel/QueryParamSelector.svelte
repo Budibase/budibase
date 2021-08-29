@@ -18,7 +18,7 @@
 
 <div class="block-field">
   <Select
-    label={ $t('query') }
+    label={$t("query")}
     bind:value={value.queryId}
     options={$queries.list}
     getOptionValue={query => query._id}

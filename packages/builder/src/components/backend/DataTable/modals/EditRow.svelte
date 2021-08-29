@@ -14,7 +14,9 @@
   }
 </script>
 
-<Button data-cy="edit-row" secondary small on:click={showModal}>{ $t('edit') }</Button>
+<Button data-cy="edit-row" secondary small on:click={showModal}
+  >{$t("edit")}</Button
+>
 <Modal bind:this={modal}>
   <svelte:component this={modalContentComponent} {row} />
 </Modal>

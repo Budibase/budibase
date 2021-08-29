@@ -46,10 +46,15 @@
           <div class="info-title">
             <Layout noPadding gap="XS">
               <Heading size="L">
-                { $t('hey') } {$auth.user.firstName || $auth.user.email}
+                {$t("hey")}
+                {$auth.user.firstName || $auth.user.email}
               </Heading>
               <Body>
-                { $t('welcome-to-the') } {$organisation.company} { $t('portal-below-youll-find-the-list-of-apps-that-you-have-access-to') }
+                {$t("welcome-to-the")}
+                {$organisation.company}
+                {$t(
+                  "portal-below-youll-find-the-list-of-apps-that-you-have-access-to"
+                )}
               </Body>
             </Layout>
             <ActionMenu align="right">
@@ -62,28 +67,30 @@
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                { $t('update-user-information') }
+                {$t("update-user-information")}
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
                 on:click={() => changePasswordModal.show()}
               >
-                { $t('update-password') }
+                {$t("update-password")}
               </MenuItem>
               {#if $auth.isBuilder}
                 <MenuItem
                   icon="UserDeveloper"
                   on:click={() => $goto("../portal")}
                 >
-                  { $t('open-developer-mode') }
+                  {$t("open-developer-mode")}
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={auth.logout}>{ $t('log-out') }</MenuItem>
+              <MenuItem icon="LogOut" on:click={auth.logout}
+                >{$t("log-out")}</MenuItem
+              >
             </ActionMenu>
           </div>
           <Divider />
           {#if publishedApps.length}
-            <Heading>{ $t('apps') }</Heading>
+            <Heading>{$t("apps")}</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each publishedApps as app, idx (app.appId)}
@@ -113,9 +120,11 @@
             </div>
           {:else}
             <Layout gap="XS" noPadding>
-              <Heading size="S">{ $t('you-dont-have-access-to-any-apps-yet') }</Heading>
+              <Heading size="S"
+                >{$t("you-dont-have-access-to-any-apps-yet")}</Heading
+              >
               <Body size="S">
-                { $t('the-apps-you-have-access-to-will-be-listed-here') }
+                {$t("the-apps-you-have-access-to-will-be-listed-here")}
               </Body>
             </Layout>
           {/if}

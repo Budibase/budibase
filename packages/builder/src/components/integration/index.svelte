@@ -32,7 +32,7 @@
     {#if schema.type === QueryTypes.SQL}
       <Editor
         editorHeight={height}
-        label={ $t('query') }
+        label={$t("query")}
         mode="sql"
         on:change={updateQuery}
         readOnly={!editable}
@@ -42,7 +42,7 @@
     {:else if schema.type === QueryTypes.JSON}
       <Editor
         editorHeight={height}
-        label={ $t('query') }
+        label={$t("query")}
         mode="json"
         on:change={updateQuery}
         readOnly={!editable}
@@ -53,7 +53,7 @@
       <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
       {#if schema.urlDisplay}
         <div class="url-row">
-          <Label small>{ $t('url') }</Label>
+          <Label small>{$t("url")}</Label>
           <Input thin outline disabled value={urlDisplay} />
         </div>
       {/if}

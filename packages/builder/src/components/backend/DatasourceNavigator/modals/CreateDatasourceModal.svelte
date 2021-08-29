@@ -23,7 +23,10 @@
     if (
       $datasources?.list.some(datasource => datasource.name === datasourceName)
     ) {
-      error = $t('datasource-with-name') + ` ${datasourceName} ` + $t('already-exists-please-choose-another-name')
+      error =
+        $t("datasource-with-name") +
+        ` ${datasourceName} ` +
+        $t("already-exists-please-choose-another-name")
       return
     }
     error = ""
@@ -45,7 +48,9 @@
       config,
       plus,
     })
-    notifications.success($t('datasource') + ` ${name} ${$t('created-successfully')}.`)
+    notifications.success(
+      $t("datasource") + ` ${name} ${$t("created-successfully")}.`
+    )
     analytics.captureEvent("Datasource Created", { name, type })
 
     // Navigate to new datasource
@@ -57,19 +62,19 @@
   <CreateTableModal bind:name />
 </Modal>
 <ModalContent
-  title={ $t('create-datasource') }
+  title={$t("create-datasource")}
   size="L"
-  confirmText={ $t('create') }
+  confirmText={$t("create")}
   onConfirm={saveDatasource}
   disabled={error || !name || !integration?.type}
 >
   <Input
     data-cy="datasource-name-input"
-    label={ $t('datasource-name') }
+    label={$t("datasource-name")}
     on:input={checkValid}
     bind:value={name}
     {error}
   />
-  <Label>{ $t('datasource-type') }</Label>
+  <Label>{$t("datasource-type")}</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

@@ -15,7 +15,7 @@
       if (!res) {
         throw new Error(res.message)
       }
-      notifications.success($t('user-created'))
+      notifications.success($t("user-created"))
       $goto("../auth/login")
     } catch (err) {
       notifications.error(err)
@@ -28,14 +28,14 @@
     <Layout>
       <img src={Logo} alt="logo" />
       <Layout gap="XS" justifyItems="center" noPadding>
-        <Heading size="M">{ $t('accept-invitation') }</Heading>
+        <Heading size="M">{$t("accept-invitation")}</Heading>
         <Body textAlign="center" size="M">
-          { $t('accept-invitation') }
+          {$t("accept-invitation")}
         </Body>
       </Layout>
       <PasswordRepeatInput bind:error bind:password />
       <Button disabled={error} cta on:click={acceptInvite}>
-        { $t('accept-invite') }
+        {$t("accept-invite")}
       </Button>
     </Layout>
   </div>

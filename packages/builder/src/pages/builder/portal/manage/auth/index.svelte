@@ -96,7 +96,7 @@
       icon: OidcLogoPng,
     },
     {
-      label: $t('upload-your-own'),
+      label: $t("upload-your-own"),
       value: "Upload",
     },
   ]
@@ -171,7 +171,9 @@
         if (partialOidc) {
           if (!oidcComplete) {
             notifications.error(
-              $t('please-fill-in-all-required') + ` ${ConfigTypes.OIDC} ` + $t('fields')
+              $t("please-fill-in-all-required") +
+                ` ${ConfigTypes.OIDC} ` +
+                $t("fields")
             )
           } else {
             calls.push(api.post(`/api/global/configs`, element))
@@ -185,7 +187,9 @@
         if (partialGoogle) {
           if (!googleComplete) {
             notifications.error(
-              $t('please-fill-in-all-required') + ` ${ConfigTypes.Google} ` + $t('fields')
+              $t("please-fill-in-all-required") +
+                ` ${ConfigTypes.Google} ` +
+                $t("fields")
             )
           } else {
             calls.push(api.post(`/api/global/configs`, element))
@@ -209,10 +213,10 @@
             providers[res.type]._rev = res._rev
             providers[res.type]._id = res._id
           })
-          notifications.success($t('settings-saved'))
+          notifications.success($t("settings-saved"))
         })
         .catch(err => {
-          notifications.error($t('failed-to-update-auth-settings') + ` ${err}`)
+          notifications.error($t("failed-to-update-auth-settings") + ` ${err}`)
           throw new Error(err.message)
         })
   }
@@ -275,9 +279,11 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading size="M">{ $t('authentication') }</Heading>
+    <Heading size="M">{$t("authentication")}</Heading>
     <Body>
-      { $t('every-budibase-app-comes-with-basic-authentication-email-password-included-you-can-add-additional-authentication-methods-from-the-options-below') }
+      {$t(
+        "every-budibase-app-comes-with-basic-authentication-email-password-included-you-can-add-additional-authentication-methods-from-the-options-below"
+      )}
     </Body>
   </Layout>
   {#if providers.google}
@@ -293,14 +299,16 @@
                 disabled={googleSaveButtonDisabled}
                 size="s"
                 cta
-                on:click={() => save([providers.google])}>{ $t('save') }</Button
+                on:click={() => save([providers.google])}>{$t("save")}</Button
               >
             </div>
           </div>
         </div>
       </Heading>
       <Body size="S">
-        { $t('to-allow-users-to-authenticate-using-their-google-accounts-fill-out-the-fields-below') }
+        {$t(
+          "to-allow-users-to-authenticate-using-their-google-accounts-fill-out-the-fields-below"
+        )}
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -316,7 +324,7 @@
       {/each}
       <div class="form-row">
         <div class="field">
-          <Label size="L">{ $t('activated') }</Label>
+          <Label size="L">{$t("activated")}</Label>
           <span class="alignedToggle">
             <Toggle text="" bind:value={providers.google.config.activated} />
           </span>
@@ -337,14 +345,16 @@
                 disabled={oidcSaveButtonDisabled}
                 size="s"
                 cta
-                on:click={() => save([providers.oidc])}>{ $t('save') }</Button
+                on:click={() => save([providers.oidc])}>{$t("save")}</Button
               >
             </div>
           </div>
         </div></Heading
       >
       <Body size="S">
-        { $t('to-allow-users-to-authenticate-using-oidc-fill-out-the-fields-below') }
+        {$t(
+          "to-allow-users-to-authenticate-using-oidc-fill-out-the-fields-below"
+        )}
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -360,14 +370,14 @@
       {/each}
       <br />
       <Body size="S">
-        { $t('to-customize-your-login-button-fill-out-the-fields-below') }
+        {$t("to-customize-your-login-button-fill-out-the-fields-below")}
       </Body>
       <div class="form-row">
-        <Label size="L">{ $t('name') }</Label>
+        <Label size="L">{$t("name")}</Label>
         <Input bind:value={providers.oidc.config.configs[0].name} />
       </div>
       <div class="form-row">
-        <Label size="L">{ $t('icon') }</Label>
+        <Label size="L">{$t("icon")}</Label>
         <Select
           label=""
           bind:value={providers.oidc.config.configs[0].logo}
@@ -384,7 +394,7 @@
     </Layout>
     <div class="form-row">
       <div class="field">
-        <Label size="L">{ $t('activated') }</Label>
+        <Label size="L">{$t("activated")}</Label>
         <span class="alignedToggle">
           <Toggle
             text=""

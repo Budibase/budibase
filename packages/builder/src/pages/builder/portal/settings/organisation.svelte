@@ -74,7 +74,7 @@
     // Update settings
     const res = await organisation.save(config)
     if (res.status === 200) {
-      notifications.success($t('settings-saved-successfully'))
+      notifications.success($t("settings-saved-successfully"))
     } else {
       notifications.error(res.message)
     }
@@ -86,19 +86,23 @@
 {#if $auth.isAdmin}
   <Layout>
     <Layout gap="XS" noPadding>
-      <Heading size="M">{ $t('organisation') }</Heading>
+      <Heading size="M">{$t("organisation")}</Heading>
       <Body>
-        { $t('organisation-settings-is-where-you-can-edit-your-organisation-name-and-logo-you-can-also-configure-your-platform-url-and-enable-or-disable-analytics') }
+        {$t(
+          "organisation-settings-is-where-you-can-edit-your-organisation-name-and-logo-you-can-also-configure-your-platform-url-and-enable-or-disable-analytics"
+        )}
       </Body>
     </Layout>
     <Divider size="S" />
     <Layout gap="XS" noPadding>
-      <Heading size="S">{ $t('information') }</Heading>
-      <Body size="S">{ $t('here-you-can-update-your-logo-and-organization-name') }</Body>
+      <Heading size="S">{$t("information")}</Heading>
+      <Body size="S"
+        >{$t("here-you-can-update-your-logo-and-organization-name")}</Body
+      >
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">{ $t('organization-name') }</Label>
+        <Label size="L">{$t("organization-name")}</Label>
         <Input thin bind:value={$values.company} />
       </div>
       <div class="field logo">
@@ -119,31 +123,36 @@
     </div>
     <Divider size="S" />
     <Layout gap="XS" noPadding>
-      <Heading size="S">{ $t('platform') }</Heading>
-      <Body size="S">{ $t('here-you-can-set-up-general-platform-settings') }</Body>
+      <Heading size="S">{$t("platform")}</Heading>
+      <Body size="S">{$t("here-you-can-set-up-general-platform-settings")}</Body
+      >
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">{ $t('platform-url') }</Label>
+        <Label size="L">{$t("platform-url")}</Label>
         <Input thin bind:value={$values.platformUrl} />
       </div>
     </div>
     <Divider size="S" />
     <Layout gap="S" noPadding>
       <Layout gap="XS" noPadding>
-        <Heading size="S">{ $t('analytics') }</Heading>
+        <Heading size="S">{$t("analytics")}</Heading>
         <Body size="S">
-          { $t('if-you-would-like-to-send-analytics-that-help-us-make-budibase-better-please-let-us-know-below') }
+          {$t(
+            "if-you-would-like-to-send-analytics-that-help-us-make-budibase-better-please-let-us-know-below"
+          )}
         </Body>
       </Layout>
       <div class="fields">
         <div class="field">
-          <Label size="L">{ $t('send-analytics-to-budibase') }</Label>
+          <Label size="L">{$t("send-analytics-to-budibase")}</Label>
           <Toggle text="" bind:value={$values.analytics} />
         </div>
       </div>
       <div>
-        <Button disabled={loading} on:click={saveConfig} cta>{ $t('save') }</Button>
+        <Button disabled={loading} on:click={saveConfig} cta
+          >{$t("save")}</Button
+        >
       </div>
     </Layout>
   </Layout>

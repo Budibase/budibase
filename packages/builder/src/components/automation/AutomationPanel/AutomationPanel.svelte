@@ -9,7 +9,7 @@
 
 <div class="title">
   <Tabs selected="Automations">
-    <Tab title="Automations" label={ $t('automations') }>
+    <Tab title="Automations" label={$t("automations")}>
       <div class="tab-content-padding">
         <AutomationList />
         <Modal bind:this={modal}>

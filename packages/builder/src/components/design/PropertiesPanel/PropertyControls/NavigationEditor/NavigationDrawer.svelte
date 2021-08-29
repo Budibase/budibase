@@ -70,10 +70,10 @@
               >
                 <Icon name="DragHandle" size="XL" />
               </div>
-              <Input bind:value={link.text} placeholder={ $t('text') } />
+              <Input bind:value={link.text} placeholder={$t("text")} />
               <Combobox
                 bind:value={link.url}
-                placeholder={ $t('url') }
+                placeholder={$t("url")}
                 options={urlOptions}
               />
               <Icon
@@ -87,7 +87,8 @@
         </div>
       {/if}
       <div>
-        <Button secondary icon="Add" on:click={addLink}>{ $t('add-link') }</Button>
+        <Button secondary icon="Add" on:click={addLink}>{$t("add-link")}</Button
+        >
       </div>
     </Layout>
   </div>

@@ -12,7 +12,7 @@
   export let value = ""
   export let bindings = []
   export let thin = true
-  export let title = $t('bindings')
+  export let title = $t("bindings")
   export let placeholder
   export let label
 
@@ -47,7 +47,7 @@
 <Modal bind:this={bindingModal}>
   <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
     <Body extraSmall grey>
-      { $t('add-the-objects-on-the-left-to-enrich-your-text') }
+      {$t("add-the-objects-on-the-left-to-enrich-your-text")}
     </Body>
     <div class="panel-wrapper">
       <svelte:component

@@ -23,47 +23,47 @@
 
   const Constraints = {
     Required: {
-      label: $t('required'),
+      label: $t("required"),
       value: "required",
     },
     MinLength: {
-      label: $t('min-length'),
+      label: $t("min-length"),
       value: "minLength",
     },
     MaxLength: {
-      label: $t('max-length'),
+      label: $t("max-length"),
       value: "maxLength",
     },
     MaxValue: {
-      label: $t('max-value'),
+      label: $t("max-value"),
       value: "maxValue",
     },
     MinValue: {
-      label: $t('min-value'),
+      label: $t("min-value"),
       value: "minValue",
     },
     Equal: {
-      label: $t('must-equal'),
+      label: $t("must-equal"),
       value: "equal",
     },
     NotEqual: {
-      label: $t('must-not-equal'),
+      label: $t("must-not-equal"),
       value: "notEqual",
     },
     Regex: {
-      label: $t('must-match-regex'),
+      label: $t("must-match-regex"),
       value: "regex",
     },
     NotRegex: {
-      label: $t('must-not-match-regex'),
+      label: $t("must-not-match-regex"),
       value: "notRegex",
     },
     Contains: {
-      label: $t('must-contain-row-id'),
+      label: $t("must-contain-row-id"),
       value: "contains",
     },
     NotContains: {
-      label: $t('must-not-contain-row-id'),
+      label: $t("must-not-contain-row-id"),
       value: "notContains",
     },
   }
@@ -145,7 +145,7 @@
     ) {
       rules.push({
         constraint: "required",
-        error: $t('required-field'),
+        error: $t("required-field"),
       })
     }
 
@@ -155,7 +155,7 @@
       rules.push({
         constraint: "maxLength",
         value: length,
-        error: $t('maximum') + ` ${length} ` + $t('characters'),
+        error: $t("maximum") + ` ${length} ` + $t("characters"),
       })
     }
 
@@ -165,7 +165,7 @@
       rules.push({
         constraint: "minValue",
         value: min,
-        error: $t('minimum-value-is') + ` ${min}`,
+        error: $t("minimum-value-is") + ` ${min}`,
       })
     }
     if (exists(constraints.numericality?.lessThanOrEqualTo)) {
@@ -173,7 +173,7 @@
       rules.push({
         constraint: "maxValue",
         value: max,
-        error: $t('maximum-value-is') + ` ${max}`,
+        error: $t("maximum-value-is") + ` ${max}`,
       })
     }
 
@@ -210,13 +210,13 @@
   <div class="container">
     <Layout noPadding gap="M">
       <Layout noPadding gap={schemaRules?.length ? "S" : "XS"}>
-        <Heading size="XS">{ $t('schema-validation-rules') }</Heading>
+        <Heading size="XS">{$t("schema-validation-rules")}</Heading>
         {#if schemaRules?.length}
           <div class="links">
             {#each schemaRules as rule}
               <div class="rule schema">
                 <Select
-                  placeholder={ $t('constraint') }
+                  placeholder={$t("constraint")}
                   value={rule.constraint}
                   options={constraintOptions}
                   disabled
@@ -228,13 +228,13 @@
                   disabled
                 />
                 <DrawerBindableInput
-                  placeholder={ $t('constraint-value') }
+                  placeholder={$t("constraint-value")}
                   value={rule.value}
                   {bindings}
                   disabled
                 />
                 <DrawerBindableInput
-                  placeholder={ $t('error-message') }
+                  placeholder={$t("error-message")}
                   value={rule.error}
                   {bindings}
                   disabled
@@ -245,12 +245,12 @@
           </div>
         {:else}
           <Body size="S">
-            { $t('there-are-no-built-in-validation-rules-from-the-schema') }
+            {$t("there-are-no-built-in-validation-rules-from-the-schema")}
           </Body>
         {/if}
       </Layout>
       <Layout noPadding gap="S">
-        <Heading size="XS">{ $t('custom-validation-rules') }</Heading>
+        <Heading size="XS">{$t("custom-validation-rules")}</Heading>
         {#if rules?.length}
           <div class="links">
             {#each rules as rule (rule.id)}
@@ -258,7 +258,7 @@
                 <Select
                   bind:value={rule.constraint}
                   options={constraintOptions}
-                  placeholder={ $t('constraint') }
+                  placeholder={$t("constraint")}
                 />
                 <Select
                   disabled={rule.constraint === "required"}
@@ -270,7 +270,7 @@
                 {#if rule.valueType === "Binding"}
                   <!-- Bindings always get a bindable input -->
                   <DrawerBindableInput
-                    placeholder={ $t('constraint-value') }
+                    placeholder={$t("constraint-value")}
                     value={rule.value}
                     {bindings}
                     disabled={rule.constraint === "required"}
@@ -280,7 +280,7 @@
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
-                    placeholder={ $t('constraint-value') }
+                    placeholder={$t("constraint-value")}
                   />
                 {:else}
                   <!-- Otherwise we render a component based on the type -->
@@ -288,14 +288,14 @@
                     <Input
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}
-                      placeholder={ $t('constraint-value') }
+                      placeholder={$t("constraint-value")}
                     />
                   {:else if rule.type === "boolean"}
                     <Select
                       disabled={rule.constraint === "required"}
                       options={[
-                        { label: $t('true'), value: "true" },
-                        { label: $t('false'), value: "false" },
+                        { label: $t("true"), value: "true" },
+                        { label: $t("false"), value: "false" },
                       ]}
                       bind:value={rule.value}
                     />
@@ -310,7 +310,7 @@
                   {/if}
                 {/if}
                 <DrawerBindableInput
-                  placeholder={ $t('error-message') }
+                  placeholder={$t("error-message")}
                   value={rule.error}
                   {bindings}
                   on:change={e => (rule.error = e.detail)}
@@ -332,7 +332,9 @@
           </div>
         {/if}
         <div class="button">
-          <Button secondary icon="Add" on:click={addRule}>{ $t('add-rule') }</Button>
+          <Button secondary icon="Add" on:click={addRule}
+            >{$t("add-rule")}</Button
+          >
         </div>
       </Layout>
     </Layout>

@@ -31,7 +31,7 @@
   export let showAllQueries
   export let bindings = []
 
-  $: text = value?.label ?? $t('choose-an-option')
+  $: text = value?.label ?? $t("choose-an-option")
   $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
@@ -119,12 +119,12 @@
         slot="buttons"
         cta
         on:click={() => {
-          notifications.success($t('query-parameters-saved'))
+          notifications.success($t("query-parameters-saved"))
           handleSelected(value)
           drawer.hide()
         }}
       >
-        { $t('save') }
+        {$t("save")}
       </Button>
       <DrawerContent slot="body">
         <Layout noPadding>
@@ -153,7 +153,7 @@
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading size="XS">{ $t('tables') }</Heading>
+      <Heading size="XS">{$t("tables")}</Heading>
     </div>
     <ul>
       {#each tables as table}
@@ -162,7 +162,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">{ $t('views') }</Heading>
+      <Heading size="XS">{$t("views")}</Heading>
     </div>
     <ul>
       {#each views as view}
@@ -171,7 +171,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">{ $t('relationships') }</Heading>
+      <Heading size="XS">{$t("relationships")}</Heading>
     </div>
     <ul>
       {#each links as link}
@@ -180,7 +180,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">{ $t('queries') }</Heading>
+      <Heading size="XS">{$t("queries")}</Heading>
     </div>
     <ul>
       {#each queries as query}
@@ -194,7 +194,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">{ $t('data-providers') }</Heading>
+      <Heading size="XS">{$t("data-providers")}</Heading>
     </div>
     <ul>
       {#each dataProviders as provider}
@@ -209,7 +209,7 @@
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">
-        <Heading size="XS">{ $t('other') }</Heading>
+        <Heading size="XS">{$t("other")}</Heading>
       </div>
       <ul>
         {#each otherSources as source}

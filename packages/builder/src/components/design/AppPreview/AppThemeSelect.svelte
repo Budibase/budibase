@@ -5,19 +5,19 @@
 
   const themeOptions = [
     {
-      label: $t('lightest'),
+      label: $t("lightest"),
       value: "spectrum--lightest",
     },
     {
-      label: $t('light'),
+      label: $t("light"),
       value: "spectrum--light",
     },
     {
-      label: $t('dark'),
+      label: $t("dark"),
       value: "spectrum--dark",
     },
     {
-      label: $t('darkest'),
+      label: $t("darkest"),
       value: "spectrum--darkest",
     },
   ]

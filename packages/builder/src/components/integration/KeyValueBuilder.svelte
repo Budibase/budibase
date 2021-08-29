@@ -35,7 +35,7 @@
 </div>
 {#if !readOnly}
   <div>
-    <Button secondary thin outline on:click={addEntry}>{ $t('add') }</Button>
+    <Button secondary thin outline on:click={addEntry}>{$t("add")}</Button>
   </div>
 {/if}
 

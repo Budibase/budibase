@@ -15,18 +15,20 @@
     quiet
     primary
     size="M"
-    icon="DownloadFromCloud">{ $t('self-host-budibase') }</Button
+    icon="DownloadFromCloud">{$t("self-host-budibase")}</Button
   >
 </div>
 <Modal bind:this={upgradeModal}>
   <ModalContent
     size="M"
     {onConfirm}
-    title={ $t('upgrade-to-self-hosted') }
-    confirmText={ $t('upgrade') }
+    title={$t("upgrade-to-self-hosted")}
+    confirmText={$t("upgrade")}
   >
     <span
-      >{ $t('upgrade-to-budibase-self-hosting-for-free-and-get-sso-unlimited-apps-and-more-and-it-only-takes-a-few-minutes') }</span
+      >{$t(
+        "upgrade-to-budibase-self-hosting-for-free-and-get-sso-unlimited-apps-and-more-and-it-only-takes-a-few-minutes"
+      )}</span
     >
   </ModalContent>
 </Modal>

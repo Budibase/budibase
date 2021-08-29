@@ -8,23 +8,23 @@
 
   const CRON_EXPRESSIONS = [
     {
-      label: $t('every-minute'),
+      label: $t("every-minute"),
       value: "* * * * *",
     },
     {
-      label: $t('every-hour'),
+      label: $t("every-hour"),
       value: "0 * * * *",
     },
     {
-      label: $t('every-morning-at-8am'),
+      label: $t("every-morning-at-8am"),
       value: "0 8 * * *",
     },
     {
-      label: $t('every-night-at-midnight'),
+      label: $t("every-night-at-midnight"),
       value: "0 0 * * *",
     },
     {
-      label: $t('every-budibase-reboot'),
+      label: $t("every-budibase-reboot"),
       value: "@reboot",
     },
   ]
@@ -35,14 +35,14 @@
 
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
-      >{presets ? "Hide" : "Show"} {$t('presets')}</Button
+      >{presets ? "Hide" : "Show"} {$t("presets")}</Button
     >
     {#if presets}
       <Select
         bind:value
         secondary
         extraThin
-        label={ $t('presets') }
+        label={$t("presets")}
         options={CRON_EXPRESSIONS}
       />
     {/if}

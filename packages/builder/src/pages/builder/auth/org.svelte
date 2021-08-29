@@ -40,15 +40,15 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={Logo} />
-        <Heading>{ $t('set-budibase-organisation') }</Heading>
+        <Heading>{$t("set-budibase-organisation")}</Heading>
       </Layout>
       <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">{ $t('set-organisation') }</Body>
-        <Input label={ $t('organisation') } bind:value={tenantId} />
+        <Body size="S" textAlign="center">{$t("set-organisation")}</Body>
+        <Input label={$t("organisation")} bind:value={tenantId} />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={setOrg}>{ $t('set-organisation') }</Button>
+        <Button cta on:click={setOrg}>{$t("set-organisation")}</Button>
       </Layout>
     </Layout>
   </div>

@@ -72,50 +72,53 @@
       <Icon size="S" hoverable name="MoreSmallList" />
     </div>
     <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>
-      { $t('delete') }
+      {$t("delete")}
     </MenuItem>
     <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>
-      { $t('move-up') }
+      {$t("move-up")}
     </MenuItem>
     <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}>
-      { $t('move-down') }
+      {$t("move-down")}
     </MenuItem>
     <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}>
-      { $t('duplicate') }
+      {$t("duplicate")}
     </MenuItem>
     <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}>
-      { $t('cut') }
+      {$t("cut")}
     </MenuItem>
     <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}>
-      { $t('copy') }
+      {$t("copy")}
     </MenuItem>
     <MenuItem
       icon="LayersBringToFront"
       on:click={() => pasteComponent("above")}
       disabled={noPaste}
     >
-      { $t('paste-above') }
+      {$t("paste-above")}
     </MenuItem>
     <MenuItem
       icon="LayersSendToBack"
       on:click={() => pasteComponent("below")}
       disabled={noPaste}
     >
-      { $t('paste-below') }
+      {$t("paste-below")}
     </MenuItem>
     <MenuItem
       icon="ShowOneLayer"
       on:click={() => pasteComponent("inside")}
       disabled={noPaste || noChildrenAllowed}
     >
-      { $t('paste-inside') }
+      {$t("paste-inside")}
     </MenuItem>
   </ActionMenu>
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
-    title={ $t('confirm-deletion') }
-    body={$t('are-you-sure-you-wish-to-delete-this') + ` '${definition?.name}' ` + $t('component') + `?`}
-    okText={ $t('delete-component') }
+    title={$t("confirm-deletion")}
+    body={$t("are-you-sure-you-wish-to-delete-this") +
+      ` '${definition?.name}' ` +
+      $t("component") +
+      `?`}
+    okText={$t("delete-component")}
     onOk={deleteComponent}
   />
 {/if}

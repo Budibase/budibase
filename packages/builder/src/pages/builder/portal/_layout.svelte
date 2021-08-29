@@ -21,36 +21,36 @@
   let loaded = false
   let userInfoModal
   let changePasswordModal
-  
+
   const buildMenu = admin => {
-    let menu = [{ title: $t('apps'), href: "/builder/portal/apps" }]
+    let menu = [{ title: $t("apps"), href: "/builder/portal/apps" }]
     if (admin) {
       menu = menu.concat([
         {
-          title: $t('users'),
+          title: $t("users"),
           href: "/builder/portal/manage/users",
-          heading: $t('manage'),
+          heading: $t("manage"),
         },
-        { title: $t('auth'), href: "/builder/portal/manage/auth" },
-        { title: $t('email'), href: "/builder/portal/manage/email" },
+        { title: $t("auth"), href: "/builder/portal/manage/auth" },
+        { title: $t("email"), href: "/builder/portal/manage/email" },
         {
-          title: $t('organisation'),
+          title: $t("organisation"),
           href: "/builder/portal/settings/organisation",
-          heading: $t('settings'),
+          heading: $t("settings"),
         },
         {
-          title: $t('theming-and-language'),
+          title: $t("theming-and-language"),
           href: "/builder/portal/settings/theming",
         },
         {
-          title: $t('updates'),
+          title: $t("updates"),
           href: "/builder/portal/settings/update",
         },
       ])
     } else {
       menu = menu.concat([
         {
-          title: $t('theming-and-language'),
+          title: $t("theming-and-language"),
           href: "/builder/portal/settings/theming",
           heading: "Settings",
         },
@@ -59,8 +59,8 @@
     return menu
   }
   let menu = buildMenu($auth.isAdmin)
-  
-  locale.subscribe(() => menu = buildMenu($auth.isAdmin))
+
+  locale.subscribe(() => (menu = buildMenu($auth.isAdmin)))
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
@@ -110,18 +110,20 @@
             <Icon size="XL" name="ChevronDown" />
           </div>
           <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-            { $t('update-user-information') }
+            {$t("update-user-information")}
           </MenuItem>
           <MenuItem
             icon="LockClosed"
             on:click={() => changePasswordModal.show()}
           >
-            { $t('update-password') }
+            {$t("update-password")}
           </MenuItem>
           <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-            { $t('close-developer-mode') }
+            {$t("close-developer-mode")}
           </MenuItem>
-          <MenuItem icon="LogOut" on:click={auth.logout}>{ $t('log-out') }</MenuItem>
+          <MenuItem icon="LogOut" on:click={auth.logout}
+            >{$t("log-out")}</MenuItem
+          >
         </ActionMenu>
       </div>
       <div class="content">

@@ -4,7 +4,6 @@
   export let title
   export let label
   export let icon = ""
-  export let labelFn = title => title
 
   const dispatch = createEventDispatcher()
   const selected = getContext("tab")

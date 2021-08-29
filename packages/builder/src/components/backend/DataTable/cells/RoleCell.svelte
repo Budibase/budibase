@@ -5,7 +5,7 @@
   export let value
 
   $: role = $roles.find(role => role._id === value)
-  $: roleName = role?.name ?? $t('unknown-role')
+  $: roleName = role?.name ?? $t("unknown-role")
 </script>
 
 {roleName}

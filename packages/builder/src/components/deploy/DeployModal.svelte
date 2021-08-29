@@ -22,13 +22,13 @@
     try {
       const response = await api.post("/api/deploy")
       if (response.status !== 200) {
-        throw new Error($t('status') + ` ${response.status}`)
+        throw new Error($t("status") + ` ${response.status}`)
       } else {
-        notifications.success($t('application-published-successfully'))
+        notifications.success($t("application-published-successfully"))
       }
     } catch (err) {
       analytics.captureException(err)
-      notifications.error($t('error-publishing-app') + `: ${err}`)
+      notifications.error($t("error-publishing-app") + `: ${err}`)
     }
   }
 
@@ -46,7 +46,7 @@
       console.error(err)
       clearInterval(poll)
       notifications.error(
-        $t('error-fetching-deployment-history-please-try-again')
+        $t("error-fetching-deployment-history-please-try-again")
       )
     }
   }
@@ -71,7 +71,7 @@
             notifications.error(incomingDeployment.err)
           } else {
             notifications.send(
-              $t('published-to-production'),
+              $t("published-to-production"),
               "success",
               "CheckmarkCircle"
             )
@@ -89,10 +89,10 @@
   onDestroy(() => clearInterval(poll))
 </script>
 
-<Button secondary on:click={publishModal.show}>{ $t('publish') }</Button>
+<Button secondary on:click={publishModal.show}>{$t("publish")}</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
-    title={ $t('enjoying-budibase') }
+    title={$t("enjoying-budibase")}
     size="L"
     showConfirmButton={false}
     showCancelButton={false}
@@ -100,12 +100,14 @@
 </Modal>
 <Modal bind:this={publishModal}>
   <ModalContent
-    title={ $t('publish-to-production') }
-    confirmText={ $t('publish') }
+    title={$t("publish-to-production")}
+    confirmText={$t("publish")}
     onConfirm={deployApp}
   >
     <span
-      >{ $t('the-changes-you-have-made-will-be-published-to-the-production-version-of-the-application') }</span
+      >{$t(
+        "the-changes-you-have-made-will-be-published-to-the-production-version-of-the-application"
+      )}</span
     >
   </ModalContent>
 </Modal>

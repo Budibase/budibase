@@ -8,7 +8,7 @@
 
 <div class="block-field">
   <Select bind:value secondary extraThin>
-    <option value="">{ $t('choose-an-option') }</option>
+    <option value="">{$t("choose-an-option")}</option>
     {#each $queries.list as query}
       <option value={query._id}>{query.name}</option>
     {/each}

@@ -27,12 +27,14 @@
 </script>
 
 <ModalContent
-  title={ $t('edit-display-columns') }
-  confirmText={ $t('save') }
+  title={$t("edit-display-columns")}
+  confirmText={$t("save")}
   onConfirm={saveDisplayColumns}
 >
   <Body
-    >{ $t('select-the-columns-that-will-be-shown-when-displaying-relationships') }</Body
+    >{$t(
+      "select-the-columns-that-will-be-shown-when-displaying-relationships"
+    )}</Body
   >
   {#each plusTables as table}
     <Select

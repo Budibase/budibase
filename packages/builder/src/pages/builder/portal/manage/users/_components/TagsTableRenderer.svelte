@@ -19,7 +19,7 @@
       </Tag>
     {/each}
     {#if leftover}
-      <Tag>+{leftover} { $t('more') }</Tag>
+      <Tag>+{leftover} {$t("more")}</Tag>
     {/if}
   </Tags>
 </div>

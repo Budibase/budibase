@@ -9,7 +9,7 @@
 </script>
 
 <ActionButton icon="Download" size="S" quiet on:click={modal.show}>
-  { $t('export') }
+  {$t("export")}
 </ActionButton>
 <Modal bind:this={modal}>
   <ExportModal {view} />

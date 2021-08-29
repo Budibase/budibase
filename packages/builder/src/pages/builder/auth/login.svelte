@@ -36,13 +36,13 @@
         if ($params["?returnUrl"]) {
           window.location = decodeURIComponent($params["?returnUrl"])
         } else {
-          notifications.success($t('logged-in-successfully'))
+          notifications.success($t("logged-in-successfully"))
           $goto("../portal")
         }
       }
     } catch (err) {
       console.error(err)
-      notifications.error($t('invalid-credentials'))
+      notifications.error($t("invalid-credentials"))
     }
   }
 
@@ -62,7 +62,7 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading>{ $t('sign-in-to') } {company}</Heading>
+        <Heading>{$t("sign-in-to")} {company}</Heading>
       </Layout>
       {#if loaded}
         <GoogleButton />
@@ -70,19 +70,19 @@
       {/if}
       <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">{ $t('sign-in-with-email') }</Body>
-        <Input label={ $t('email') } bind:value={username} />
+        <Body size="S" textAlign="center">{$t("sign-in-with-email")}</Body>
+        <Input label={$t("email")} bind:value={username} />
         <Input
-          label={ $t('password') }
+          label={$t("password")}
           type="password"
           on:change
           bind:value={password}
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>{ $t('sign-in-to') } {company}</Button>
+        <Button cta on:click={login}>{$t("sign-in-to")} {company}</Button>
         <ActionButton quiet on:click={() => $goto("./forgot")}>
-          { $t('forgot-password') }
+          {$t("forgot-password")}
         </ActionButton>
         {#if multiTenancyEnabled}
           <ActionButton
@@ -92,7 +92,7 @@
               $goto("./org")
             }}
           >
-            { $t('change-organisation') }
+            {$t("change-organisation")}
           </ActionButton>
         {/if}
       </Layout>

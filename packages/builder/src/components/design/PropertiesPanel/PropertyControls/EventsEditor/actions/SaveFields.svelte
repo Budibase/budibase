@@ -8,8 +8,8 @@
 
   export let parameterFields
   export let schemaFields
-  export let fieldLabel = $t('column')
-  export let valueLabel = $t('value')
+  export let fieldLabel = $t("column")
+  export let valueLabel = $t("value")
   export let bindings = []
 
   let fields = Object.entries(parameterFields || {})
@@ -63,7 +63,7 @@
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput
-      title={$t('value-for') + ` "${field[0]}"`}
+      title={$t("value-for") + ` "${field[0]}"`}
       value={field[1]}
       {bindings}
       on:change={event => updateFieldValue(idx, event.detail)}
@@ -77,7 +77,7 @@
   {/each}
   <div style="margin-top: 10px">
     <Button icon="AddCircle" secondary on:click={addField}>
-      { $t('add') }
+      {$t("add")}
       {fieldLabel}
     </Button>
   </div>

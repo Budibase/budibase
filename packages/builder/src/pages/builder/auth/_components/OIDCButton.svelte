@@ -39,7 +39,7 @@
   >
     <div class="inner">
       <img {src} alt="oidc icon" />
-      <p>{$t('sign-in-with') + ` ${$oidc.name || "OIDC"}`}</p>
+      <p>{$t("sign-in-with") + ` ${$oidc.name || "OIDC"}`}</p>
     </div>
   </ActionButton>
 {/if}

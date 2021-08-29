@@ -15,17 +15,17 @@
 </script>
 
 <Button icon="Delete" size="s" primary quiet on:click={modal.show}>
-  { $t('delete') }
+  {$t("delete")}
   {selectedRows.length}
-  { $t('row-s') }
+  {$t("row-s")}
 </Button>
 <ConfirmDialog
   bind:this={modal}
-  okText={ $t('delete') }
+  okText={$t("delete")}
   onOk={confirmDeletion}
-  title={ $t('confirm-deletion-0') }
+  title={$t("confirm-deletion-0")}
 >
-  { $t('are-you-sure-you-want-to-delete') }
+  {$t("are-you-sure-you-want-to-delete")}
   {selectedRows.length}
-  { $t('row') }{selectedRows.length > 1 ? "s" : ""}?
+  {$t("row")}{selectedRows.length > 1 ? "s" : ""}?
 </ConfirmDialog>

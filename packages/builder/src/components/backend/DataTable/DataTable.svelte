@@ -62,7 +62,7 @@
   {#if schema && Object.keys(schema).length > 0}
     {#if !isUsersTable}
       <CreateRowButton
-        title={$t('create-row')}
+        title={$t("create-row")}
         modalContentComponent={CreateEditRow}
       />
     {/if}

@@ -10,7 +10,7 @@
 
   async function deleteQuery() {
     await queries.delete(query)
-    notifications.success($t('query-deleted'))
+    notifications.success($t("query-deleted"))
   }
 </script>
 
@@ -18,16 +18,20 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$t("delete")}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={ $t('delete-query') }
+  okText={$t("delete-query")}
   onOk={deleteQuery}
-  title={ $t('confirm-deletion-0') }
+  title={$t("confirm-deletion-0")}
 >
-  { $t('are-you-sure-you-wish-to-delete-this-query-this-action-cannot-be-undone') }
+  {$t(
+    "are-you-sure-you-wish-to-delete-this-query-this-action-cannot-be-undone"
+  )}
 </ConfirmDialog>
 
 <style>

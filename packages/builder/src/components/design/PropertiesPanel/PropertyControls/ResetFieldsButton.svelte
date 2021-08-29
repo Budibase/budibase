@@ -31,14 +31,16 @@
     wide
     on:click={() => confirmResetFieldsDialog?.show()}
   >
-    { $t('update-form-fields') }
+    {$t("update-form-fields")}
   </ActionButton>
 </div>
 
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}
-  body={$t('all-components-inside-this-group-will-be-deleted-and-replaced-with-fields-to-match-the-schema-are-you-sure-you-want-to-update-this-field-group')}
-  okText={ $t('update') }
+  body={$t(
+    "all-components-inside-this-group-will-be-deleted-and-replaced-with-fields-to-match-the-schema-are-you-sure-you-want-to-update-this-field-group"
+  )}
+  okText={$t("update")}
   onOk={resetFormFields}
-  title={ $t('confirm-form-field-update') }
+  title={$t("confirm-form-field-update")}
 />

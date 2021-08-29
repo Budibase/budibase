@@ -27,12 +27,14 @@
   const validator = {
     name: string()
       .trim()
-      .required($t('your-application-must-have-a-name'))
+      .required($t("your-application-must-have-a-name"))
       .matches(
         APP_NAME_REGEX,
-        $t('app-name-must-be-letters-numbers-and-spaces-only')
+        $t("app-name-must-be-letters-numbers-and-spaces-only")
       ),
-    file: template ? mixed().required($t('please-choose-a-file-to-import')) : null,
+    file: template
+      ? mixed().required($t("please-choose-a-file-to-import"))
+      : null,
   }
 
   let submitting = false
@@ -44,11 +46,11 @@
     const existingAppNames = svelteGet(hostingStore).deployedAppNames
     validator.name = string()
       .trim()
-      .required($t('your-application-must-have-a-name'))
-      .matches(APP_NAME_REGEX, $t('app-name-must-be-letters-and-numbers-only'))
+      .required($t("your-application-must-have-a-name"))
+      .matches(APP_NAME_REGEX, $t("app-name-must-be-letters-and-numbers-only"))
       .test(
         "non-existing-app-name",
-        $t('another-app-with-the-same-name-already-exists'),
+        $t("another-app-with-the-same-name-already-exists"),
         value => {
           return !existingAppNames.some(
             appName => appName.toLowerCase() === value.toLowerCase()
@@ -75,7 +77,7 @@
 
     // Check a template exists if we are important
     if (template && !$values.file) {
-      $errors.file = $t('please-choose-a-file-to-import')
+      $errors.file = $t("please-choose-a-file-to-import")
       valid = false
       submitting = false
       return false
@@ -135,9 +137,9 @@
 </script>
 
 <ModalContent
-  title={template ? $t('import-app') : $t('create-new-app')}
-  confirmText={template ? $t('import-app') : $t('create-app')}
-  cancelText={$t('cancel')}
+  title={template ? $t("import-app") : $t("create-new-app")}
+  confirmText={template ? $t("import-app") : $t("create-app")}
+  cancelText={$t("cancel")}
   onConfirm={createNewApp}
   disabled={!valid}
 >
@@ -145,7 +147,7 @@
     <Dropzone
       error={$touched.file && $errors.file}
       gallery={false}
-      label={ $t('file-to-import') }
+      label={$t("file-to-import")}
       value={[$values.file]}
       on:change={e => {
         $values.file = e.detail?.[0]
@@ -154,13 +156,20 @@
     />
   {/if}
   <Body size="S">
-    { $t('give-your-new-app-a-name-and-choose-which-groups-have-access-paid-plans-only') }
+    {$t(
+      "give-your-new-app-a-name-and-choose-which-groups-have-access-paid-plans-only"
+    )}
   </Body>
   <Input
     bind:value={$values.name}
     error={$touched.name && $errors.name}
     on:blur={() => ($touched.name = true)}
-    label={ $t('name') }
+    label={$t("name")}
   />
-  <Checkbox label={ $t('group-access') } disabled value={true} text={ $t('all-users') } />
+  <Checkbox
+    label={$t("group-access")}
+    disabled
+    value={true}
+    text={$t("all-users")}
+  />
 </ModalContent>

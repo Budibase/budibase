@@ -15,7 +15,7 @@
   on:click={modal.show}
   active={view.field && view.calculation}
 >
-  { $t('calculate') }
+  {$t("calculate")}
 </ActionButton>
 <Modal bind:this={modal}>
   <CalculateModal {view} />

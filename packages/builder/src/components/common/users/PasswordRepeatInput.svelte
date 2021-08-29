@@ -29,17 +29,17 @@
 
 <Layout gap="XS" noPadding>
   <Input
-    label={ $t('password') }
+    label={$t("password")}
     type="password"
     error={$firstTouched && $passwordError}
     bind:value={$firstPassword}
   />
   <Input
-    label={ $t('repeat-password') }
+    label={$t("repeat-password")}
     type="password"
     error={$repeatTouched &&
       $firstPassword !== $repeatPassword &&
-      $t('passwords-must-match') }
+      $t("passwords-must-match")}
     bind:value={$repeatPassword}
   />
 </Layout>

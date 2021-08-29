@@ -16,42 +16,42 @@
 
   const CONDITIONS = [
     {
-      name: $t('equals'),
+      name: $t("equals"),
       key: "EQUALS",
     },
     {
-      name: $t('not-equals'),
+      name: $t("not-equals"),
       key: "NOT_EQUALS",
     },
     {
-      name: $t('less-than'),
+      name: $t("less-than"),
       key: "LT",
     },
     {
-      name: $t('less-than-or-equal'),
+      name: $t("less-than-or-equal"),
       key: "LTE",
     },
     {
-      name: $t('more-than'),
+      name: $t("more-than"),
       key: "MT",
     },
     {
-      name: $t('more-than-or-equal'),
+      name: $t("more-than-or-equal"),
       key: "MTE",
     },
     {
-      name: $t('contains'),
+      name: $t("contains"),
       key: "CONTAINS",
     },
   ]
 
   const CONJUNCTIONS = [
     {
-      name: $t('or'),
+      name: $t("or"),
       key: "OR",
     },
     {
-      name: $t('and'),
+      name: $t("and"),
       key: "AND",
     },
   ]
@@ -65,7 +65,7 @@
 
   function saveView() {
     views.save(view)
-    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
+    notifications.success($t("view") + ` ${view.name} ` + $t("saved") + `.`)
     analytics.captureEvent("Added View Filter", {
       filters: JSON.stringify(view.filters),
     })
@@ -119,12 +119,17 @@
   const getOptionValue = x => x.key
 </script>
 
-<ModalContent title={ $t('filter') } confirmText={ $t('save') } onConfirm={saveView} size="L">
+<ModalContent
+  title={$t("filter")}
+  confirmText={$t("save")}
+  onConfirm={saveView}
+  size="L"
+>
   {#if view.filters.length}
     <div class="input-group-row">
       {#each view.filters as filter, idx}
         {#if idx === 0}
-          <Label>{ $t('where') }</Label>
+          <Label>{$t("where")}</Label>
         {:else}
           <Select
             bind:value={filter.conjunction}
@@ -172,10 +177,10 @@
       {/each}
     </div>
   {:else}
-    <Body size="S">{ $t('add-a-filter-to-get-started') }</Body>
+    <Body size="S">{$t("add-a-filter-to-get-started")}</Body>
   {/if}
   <div slot="footer">
-    <Button secondary on:click={addFilter}>{ $t('add-filter') }</Button>
+    <Button secondary on:click={addFilter}>{$t("add-filter")}</Button>
   </div>
 </ModalContent>
 

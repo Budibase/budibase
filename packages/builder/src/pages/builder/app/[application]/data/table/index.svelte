@@ -10,8 +10,8 @@
 </script>
 
 {#if $tables.list.length === 0}
-  <i>{ $t('create-your-first-table-to-start-building') }</i>
-{:else}<i>{ $t('select-a-table-to-edit') }</i>{/if}
+  <i>{$t("create-your-first-table-to-start-building")}</i>
+{:else}<i>{$t("select-a-table-to-edit")}</i>{/if}
 
 <style>
   i {

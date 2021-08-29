@@ -116,7 +116,9 @@
   {/each}
 </div>
 {#if stepId === "WEBHOOK"}
-  <Button secondary on:click={() => webhookModal.show()}>{ $t('set-up-webhook') }</Button>
+  <Button secondary on:click={() => webhookModal.show()}
+    >{$t("set-up-webhook")}</Button
+  >
 {/if}
 
 <style>

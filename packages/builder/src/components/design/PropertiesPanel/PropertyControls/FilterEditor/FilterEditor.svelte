@@ -25,14 +25,14 @@
 
   const saveFilter = async () => {
     dispatch("change", tempValue)
-    notifications.success($t('filters-saved'))
+    notifications.success($t("filters-saved"))
     drawer.hide()
   }
 </script>
 
 <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-<Drawer bind:this={drawer} title={ $t('filtering') }>
-  <Button cta slot="buttons" on:click={saveFilter}>{ $t('save') }</Button>
+<Drawer bind:this={drawer} title={$t("filtering")}>
+  <Button cta slot="buttons" on:click={saveFilter}>{$t("save")}</Button>
   <FilterDrawer
     slot="body"
     bind:filters={tempValue}

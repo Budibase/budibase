@@ -4,7 +4,7 @@
   import { _ as t } from "svelte-i18n"
 
   export let modalContentComponent = CreateEditRow
-  export let title = $t('create-row')
+  export let title = $t("create-row")
 
   let modal
 </script>

@@ -26,13 +26,15 @@
   collapsible={false}
 >
   <div>
-    <ActionButton on:click={openDrawer}>{ $t('configure-conditions') }</ActionButton>
+    <ActionButton on:click={openDrawer}
+      >{$t("configure-conditions")}</ActionButton
+    >
   </div>
 </DetailSummary>
-<Drawer bind:this={drawer} title={ $t('conditions') }>
+<Drawer bind:this={drawer} title={$t("conditions")}>
   <svelte:fragment slot="description">
-    { $t('show-hide-and-update-components-in-response-to-conditions-being-met') }
+    {$t("show-hide-and-update-components-in-response-to-conditions-being-met")}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={() => save()}>{ $t('save') }</Button>
+  <Button cta slot="buttons" on:click={() => save()}>{$t("save")}</Button>
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>

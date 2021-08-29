@@ -10,14 +10,14 @@
 <div class="root">
   <Label small>Screen</Label>
   <DrawerBindableInput
-    title={ $t('destination-url') }
+    title={$t("destination-url")}
     placeholder="/screen"
     value={parameters.url}
     on:change={value => (parameters.url = value.detail)}
     {bindings}
   />
   <div />
-  <Checkbox text={ $t('open-screen-in-modal') } bind:value={parameters.peek} />
+  <Checkbox text={$t("open-screen-in-modal")} bind:value={parameters.peek} />
 </div>
 
 <style>

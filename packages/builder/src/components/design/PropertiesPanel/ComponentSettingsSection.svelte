@@ -16,10 +16,10 @@
 
   const layoutDefinition = []
   const screenDefinition = [
-    { key: "description", label: $t('description'), control: Input },
-    { key: "routing.route", label: $t('route'), control: Input },
-    { key: "routing.roleId", label: $t('access'), control: RoleSelect },
-    { key: "layoutId", label: $t('layout'), control: LayoutSelect },
+    { key: "description", label: $t("description"), control: Input },
+    { key: "routing.route", label: $t("route"), control: Input },
+    { key: "routing.roleId", label: $t("access"), control: RoleSelect },
+    { key: "layoutId", label: $t("layout"), control: LayoutSelect },
   ]
 
   $: settings = componentDefinition?.settings ?? []
@@ -65,7 +65,7 @@
     <PropertyControl
       bindable={false}
       control={Input}
-      label={$t('name')}
+      label={$t("name")}
       key="_instanceName"
       value={componentInstance._instanceName}
       onChange={val => updateProp("_instanceName", val)}

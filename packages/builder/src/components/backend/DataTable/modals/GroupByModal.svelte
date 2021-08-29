@@ -21,10 +21,14 @@
 
   function saveView() {
     views.save(view)
-    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
+    notifications.success($t("view") + ` ${view.name} ` + $t("saved") + `.`)
   }
 </script>
 
-<ModalContent title={ $t('group-by') } confirmText={ $t('save') } onConfirm={saveView}>
+<ModalContent
+  title={$t("group-by")}
+  confirmText={$t("save")}
+  onConfirm={saveView}
+>
   <Select bind:value={view.groupBy} options={fields} />
 </ModalContent>

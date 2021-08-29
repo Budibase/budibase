@@ -22,10 +22,13 @@
 
   const schema = {
     email: {},
-    developmentAccess: { displayName: $t('development-access'), type: "boolean" },
-    adminAccess: { displayName: $t('admin-access'), type: "boolean" },
+    developmentAccess: {
+      displayName: $t("development-access"),
+      type: "boolean",
+    },
+    adminAccess: { displayName: $t("admin-access"), type: "boolean" },
     // role: { type: "options" },
-    group: { displayName: $t('group') },
+    group: { displayName: $t("group") },
     // access: {},
     // group: {}
   }
@@ -52,22 +55,25 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading>{ $t('users') }</Heading>
+    <Heading>{$t("users")}</Heading>
     <Body>
-      { $t('each-user-is-assigned-to-a-group-that-contains-apps-and-permissions-in-this-section-you-can-add-users-or-edit-and-delete-an-existing-user') }
+      {$t(
+        "each-user-is-assigned-to-a-group-that-contains-apps-and-permissions-in-this-section-you-can-add-users-or-edit-and-delete-an-existing-user"
+      )}
     </Body>
   </Layout>
   <Divider size="S" />
   <Layout gap="S" noPadding>
     <div class="users-heading">
-      <Heading size="S">{ $t('users') }</Heading>
+      <Heading size="S">{$t("users")}</Heading>
       <ButtonGroup>
-        <Button disabled secondary>{ $t('import-users') }</Button>
-        <Button primary on:click={createUserModal.show}>{ $t('add-user') }</Button>
+        <Button disabled secondary>{$t("import-users")}</Button>
+        <Button primary on:click={createUserModal.show}>{$t("add-user")}</Button
+        >
       </ButtonGroup>
     </div>
     <div class="field">
-      <Label size="L">{ $t('search-filter') }</Label>
+      <Label size="L">{$t("search-filter")}</Label>
       <Search bind:value={search} placeholder="" />
     </div>
     <Table

@@ -14,7 +14,7 @@
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { _ as t } from "svelte-i18n"
-  
+
   let adminUser = {}
   let error
 
@@ -30,11 +30,11 @@
       if (response.status !== 200) {
         throw new Error(json.message)
       }
-      notifications.success($t('admin-user-created'))
+      notifications.success($t("admin-user-created"))
       await admin.init()
       $goto("../portal")
     } catch (err) {
-      notifications.error($t('failed-to-create-admin-user'))
+      notifications.error($t("failed-to-create-admin-user"))
     }
   }
 </script>
@@ -44,18 +44,18 @@
     <Layout>
       <img alt="logo" src={Logo} />
       <Layout gap="XS" justifyItems="center" noPadding>
-        <Heading size="M">{ $t('create-an-admin-user') }</Heading>
+        <Heading size="M">{$t("create-an-admin-user")}</Heading>
         <Body size="M" textAlign="center">
-          { $t('the-admin-user-has-access-to-everything-in-budibase') }
+          {$t("the-admin-user-has-access-to-everything-in-budibase")}
         </Body>
       </Layout>
       <Layout gap="XS" noPadding>
-        <Input label="{ $t('email') }" bind:value={adminUser.email} />
+        <Input label={$t("email")} bind:value={adminUser.email} />
         <PasswordRepeatInput bind:password={adminUser.password} bind:error />
       </Layout>
       <Layout gap="XS" noPadding>
         <Button cta disabled={error} on:click={save}>
-          { $t('create-super-admin-user') }
+          {$t("create-super-admin-user")}
         </Button>
         {#if multiTenancyEnabled}
           <ActionButton
@@ -65,7 +65,7 @@
               $goto("../auth/org")
             }}
           >
-            { $t('change-organisation') }
+            {$t("change-organisation")}
           </ActionButton>
         {/if}
       </Layout>

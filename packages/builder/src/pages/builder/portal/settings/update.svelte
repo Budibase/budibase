@@ -24,16 +24,16 @@
 
   async function updateBudibase() {
     try {
-      notifications.info($t('updating-budibase'))
+      notifications.info($t("updating-budibase"))
       await fetch("/v1/update", {
         headers: {
           Authorization: "Bearer budibase",
         },
       })
-      notifications.success($t('your-budibase-installation-is-up-to-date'))
+      notifications.success($t("your-budibase-installation-is-up-to-date"))
       getVersion()
     } catch (err) {
-      notifications.error($t('error-installing-budibase-update') + ` ${err}`)
+      notifications.error($t("error-installing-budibase-update") + ` ${err}`)
     }
   }
 
@@ -50,20 +50,22 @@
 {#if $auth.isAdmin}
   <Layout>
     <Layout gap="XS" noPadding>
-      <Heading size="M">{ $t('update') }</Heading>
+      <Heading size="M">{$t("update")}</Heading>
       <Body>
-        { $t('keep-your-budibase-installation-up-to-date-to-take-advantage-of-the-latest-features-security-updates-and-much-more') }
+        {$t(
+          "keep-your-budibase-installation-up-to-date-to-take-advantage-of-the-latest-features-security-updates-and-much-more"
+        )}
       </Body>
     </Layout>
     <Divider size="S" />
     <div class="fields">
       <div class="field">
         {#if version}
-          { $t('current-version') }: {version}
+          {$t("current-version")}: {version}
         {/if}
       </div>
       <div class="field">
-        <Button cta on:click={updateBudibase}>{ $t('check-for-updates') }</Button>
+        <Button cta on:click={updateBudibase}>{$t("check-for-updates")}</Button>
       </div>
     </div>
   </Layout>

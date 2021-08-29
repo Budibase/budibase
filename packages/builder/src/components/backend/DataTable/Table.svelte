@@ -48,19 +48,19 @@
         }
       })
       if (schema.email) {
-        schema.email.displayName = $t('email')
+        schema.email.displayName = $t("email")
       }
       if (schema.roleId) {
-        schema.roleId.displayName = $t('role')
+        schema.roleId.displayName = $t("role")
       }
       if (schema.firstName) {
-        schema.firstName.displayName = $t('first-name')
+        schema.firstName.displayName = $t("first-name")
       }
       if (schema.lastName) {
-        schema.lastName.displayName = $t('last-name')
+        schema.lastName.displayName = $t("last-name")
       }
       if (schema.status) {
-        schema.status.displayName = $t('status')
+        schema.status.displayName = $t("status")
       }
     }
   }
@@ -80,7 +80,9 @@
       rows: selectedRows,
     })
     data = data.filter(row => !selectedRows.includes(row))
-    notifications.success($t('successfully-deleted') + ` ${selectedRows.length} ` + $t('rows'))
+    notifications.success(
+      $t("successfully-deleted") + ` ${selectedRows.length} ` + $t("rows")
+    )
     selectedRows = []
   }
 

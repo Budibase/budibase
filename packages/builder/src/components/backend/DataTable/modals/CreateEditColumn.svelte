@@ -92,10 +92,12 @@
 
   function deleteColumn() {
     if (field.name === $tables.selected.primaryDisplay) {
-      notifications.error($t('you-cannot-delete-the-display-column'))
+      notifications.error($t("you-cannot-delete-the-display-column"))
     } else {
       tables.deleteField(field)
-      notifications.success($t('column') + ` ${field.name} ` + $t('deleted') + `.`)
+      notifications.success(
+        $t("column") + ` ${field.name} ` + $t("deleted") + `.`
+      )
       confirmDeleteDialog.hide()
       hide()
       deletion = false
@@ -169,18 +171,60 @@
       linkName = truncate(linkTable.name, { length: 14 })
     return [
       {
-        name: $t('many') + ` ${thisName} ` + $t('rows') + ` → ` + $t('many-0') + ` ${linkName} ` + $t('rows-0'),
-        alt: $t('many') + ` ${table.name} ` + $t('rows') + ` → ` + $t('many-0') + ` ${linkTable.name} ` + $t('rows-0'),
+        name:
+          $t("many") +
+          ` ${thisName} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${linkName} ` +
+          $t("rows-0"),
+        alt:
+          $t("many") +
+          ` ${table.name} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${linkTable.name} ` +
+          $t("rows-0"),
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: $t('one-0') + ` ${linkName} ` + $t('rows') + ` → ` + $t('many-0') + ` ${thisName} ` + $t('rows-0'),
-        alt: $t('one-0') + ` ${linkTable.name} ` + $t('rows') + ` → ` + $t('many-0') + ` ${table.name} ` + $t('rows-0'),
+        name:
+          $t("one-0") +
+          ` ${linkName} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${thisName} ` +
+          $t("rows-0"),
+        alt:
+          $t("one-0") +
+          ` ${linkTable.name} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${table.name} ` +
+          $t("rows-0"),
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
-        name: $t('one-0') + ` ${thisName} ` + $t('rows') + ` → ` + $t('many-0') + ` ${linkName} ` + $t('rows-0'),
-        alt: $t('one-0') + ` ${table.name} ` + $t('rows') + ` → ` + $t('many-0') + ` ${linkTable.name} ` + $t('rows-0'),
+        name:
+          $t("one-0") +
+          ` ${thisName} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${linkName} ` +
+          $t("rows-0"),
+        alt:
+          $t("one-0") +
+          ` ${table.name} ` +
+          $t("rows") +
+          ` → ` +
+          $t("many-0") +
+          ` ${linkTable.name} ` +
+          $t("rows-0"),
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -188,20 +232,20 @@
 </script>
 
 <ModalContent
-  title={originalName ? $t('edit-column') : $t('create-column')}
-  confirmText={ $t('save-column') }
+  title={originalName ? $t("edit-column") : $t("create-column")}
+  confirmText={$t("save-column")}
   onConfirm={saveColumn}
   disabled={invalid}
 >
   <Input
-    label={$t('name')}
+    label={$t("name")}
     bind:value={field.name}
     disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
   />
 
   <Select
     disabled={originalName}
-    label={$t('type')}
+    label={$t("type")}
     bind:value={field.type}
     on:change={handleTypeChange}
     options={[
@@ -220,7 +264,7 @@
           on:change={onChangeRequired}
           disabled={primaryDisplay}
           thin
-          text={$t('required')}
+          text={$t("required")}
         />
       {/if}
       {#if canBeDisplay}
@@ -228,7 +272,7 @@
           bind:value={primaryDisplay}
           on:change={onChangePrimaryDisplay}
           thin
-          text={ $t('use-as-table-display-column') }
+          text={$t("use-as-table-display-column")}
         />
       {/if}
     </div>
@@ -236,18 +280,18 @@
 
   {#if canBeSearched}
     <div>
-      <Label grey small>{ $t('search-indexes') }</Label>
+      <Label grey small>{$t("search-indexes")}</Label>
       <Toggle
         value={indexes[0] === field.name}
         disabled={indexes[1] === field.name}
         on:change={onChangePrimaryIndex}
-        text={ $t('primary') }
+        text={$t("primary")}
       />
       <Toggle
         value={indexes[1] === field.name}
         disabled={!indexes[0] || indexes[0] === field.name}
         on:change={onChangeSecondaryIndex}
-        text={ $t('secondary') }
+        text={$t("secondary")}
       />
     </div>
   {/if}
@@ -255,34 +299,37 @@
   {#if field.type === "string"}
     <Input
       type="number"
-      label={ $t('max-length-0') }
+      label={$t("max-length-0")}
       bind:value={field.constraints.length.maximum}
     />
   {:else if field.type === "options"}
     <ValuesList
-      label={ $t('options-one-per-line') }
+      label={$t("options-one-per-line")}
       bind:values={field.constraints.inclusion}
     />
   {:else if field.type === "datetime"}
     <DatePicker
-      label={ $t('earliest') }
+      label={$t("earliest")}
       bind:value={field.constraints.datetime.earliest}
     />
-    <DatePicker label={ $t('latest') } bind:value={field.constraints.datetime.latest} />
+    <DatePicker
+      label={$t("latest")}
+      bind:value={field.constraints.datetime.latest}
+    />
   {:else if field.type === "number"}
     <Input
       type="number"
-      label={ $t('min-value-0') }
+      label={$t("min-value-0")}
       bind:value={field.constraints.numericality.greaterThanOrEqualTo}
     />
     <Input
       type="number"
-      label={ $t('max-value-0') }
+      label={$t("max-value-0")}
       bind:value={field.constraints.numericality.lessThanOrEqualTo}
     />
   {:else if field.type === "link"}
     <Select
-      label={$t('table')}
+      label={$t("table")}
       disabled={linkEditDisabled}
       bind:value={field.tableId}
       options={tableOptions}
@@ -292,7 +339,7 @@
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
         disabled={linkEditDisabled}
-        label={$t('define-the-relationship')}
+        label={$t("define-the-relationship")}
         bind:value={field.relationshipType}
         options={relationshipOptions}
         getOptionLabel={option => option.name}
@@ -301,13 +348,13 @@
     {/if}
     <Input
       disabled={linkEditDisabled}
-      label={$t('column-name-in-other-table')}
+      label={$t("column-name-in-other-table")}
       bind:value={field.fieldName}
     />
   {:else if field.type === FORMULA_TYPE}
     <ModalBindableInput
-      title={ $t('handlebars-formula') }
-      label={$t('formula')}
+      title={$t("handlebars-formula")}
+      label={$t("formula")}
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
       bindings={getBindings({ table })}
@@ -315,7 +362,7 @@
     />
   {:else if field.type === AUTO_TYPE}
     <Select
-      label={$t('auto-column-type')}
+      label={$t("auto-column-type")}
       value={field.subtype}
       on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
@@ -326,15 +373,17 @@
 
   <div slot="footer">
     {#if !uneditable && originalName != null}
-      <Button warning text on:click={confirmDelete}>{ $t('delete') }</Button>
+      <Button warning text on:click={confirmDelete}>{$t("delete")}</Button>
     {/if}
   </div>
 </ModalContent>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={$t('are-you-sure-you-wish-to-delete-this-column-your-data-will-be-deleted-and-this-action-cannot-be-undone')}
-  okText={ $t('delete-column') }
+  body={$t(
+    "are-you-sure-you-wish-to-delete-this-column-your-data-will-be-deleted-and-this-action-cannot-be-undone"
+  )}
+  okText={$t("delete-column")}
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title={ $t('confirm-deletion') }
+  title={$t("confirm-deletion")}
 />

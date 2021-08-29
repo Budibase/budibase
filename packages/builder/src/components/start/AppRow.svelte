@@ -31,11 +31,14 @@
 </div>
 <div>
   {#if app.updatedAt}
-    {processStringSync($t('updated') + " {{ duration time 'millisecond' }} " + $t('ago'), {
-      time: new Date().getTime() - new Date(app.updatedAt).getTime(),
-    })}
+    {processStringSync(
+      $t("updated") + " {{ duration time 'millisecond' }} " + $t("ago"),
+      {
+        time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+      }
+    )}
   {:else}
-    { $t('never-updated') }
+    {$t("never-updated")}
   {/if}
 </div>
 <div>
@@ -45,17 +48,17 @@
     negative={app.lockedOther}
   >
     {#if app.lockedYou}
-      { $t('locked-by-you') }
+      {$t("locked-by-you")}
     {:else if app.lockedOther}
-      { $t('locked-by') } {app.lockedBy.email}
+      {$t("locked-by")} {app.lockedBy.email}
     {:else}
-      { $t('open') }
+      {$t("open")}
     {/if}
   </StatusLight>
 </div>
 <div>
   <StatusLight active={app.deployed} neutral={!app.deployed}>
-    {#if app.deployed}{ $t('published') }{:else}{ $t('unpublished') }{/if}
+    {#if app.deployed}{$t("published")}{:else}{$t("unpublished")}{/if}
   </StatusLight>
 </div>
 <div>
@@ -63,29 +66,35 @@
     disabled={app.lockedOther}
     on:click={() => editApp(app)}
     size="S"
-    secondary>{ $t('open') }</Button
+    secondary>{$t("open")}</Button
   >
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     {#if app.deployed}
       <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
-        { $t('view-published-app') }
+        {$t("view-published-app")}
       </MenuItem>
     {/if}
     {#if app.lockedYou}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
-        { $t('release-lock') }
+        {$t("release-lock")}
       </MenuItem>
     {/if}
-    <MenuItem on:click={() => exportApp(app)} icon="Download">{ $t('export') }</MenuItem>
+    <MenuItem on:click={() => exportApp(app)} icon="Download"
+      >{$t("export")}</MenuItem
+    >
     {#if app.deployed}
       <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-        { $t('unpublish') }
+        {$t("unpublish")}
       </MenuItem>
     {/if}
     {#if !app.deployed}
-      <MenuItem on:click={() => updateApp(app)} icon="Edit">{ $t('update') }</MenuItem>
-      <MenuItem on:click={() => deleteApp(app)} icon="Delete">{ $t('delete') }</MenuItem>
+      <MenuItem on:click={() => updateApp(app)} icon="Edit"
+        >{$t("update")}</MenuItem
+      >
+      <MenuItem on:click={() => deleteApp(app)} icon="Delete"
+        >{$t("delete")}</MenuItem
+      >
     {/if}
   </ActionMenu>
 </div>

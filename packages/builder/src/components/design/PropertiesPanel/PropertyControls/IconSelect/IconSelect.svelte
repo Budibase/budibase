@@ -114,7 +114,7 @@
   $: pageEndIdx = maxIconsPerPage * currentPage
   $: pagedIcons = filteredIcons.slice(pageEndIdx - maxIconsPerPage, pageEndIdx)
 
-  $: pagerText = $t('page') + ` ${currentPage} of ${totalPages}`
+  $: pagerText = $t("page") + ` ${currentPage} of ${totalPages}`
 </script>
 
 <div bind:this={buttonAnchor}>
@@ -139,7 +139,7 @@
         <div class="input-wrapper">
           <Input bind:value={searchTerm} thin placeholder="Search Icon" />
         </div>
-        <Button secondary on:click={searchForIcon}>{ $t('search') }</Button>
+        <Button secondary on:click={searchForIcon}>{$t("search")}</Button>
       </div>
       <div class="page-area">
         <div class="pager">
@@ -183,7 +183,8 @@
     {:else}
       <div class="no-icons">
         <h5>
-          {$t('there-is-no-icons-for-this') + ` ${searchTerm ? $t('search') : $t('page')}`}
+          {$t("there-is-no-icons-for-this") +
+            ` ${searchTerm ? $t("search") : $t("page")}`}
         </h5>
       </div>
     {/if}

@@ -11,19 +11,19 @@
   let modal
   let layoutMap = {
     mainSidebar: {
-      name: $t('main-with-sidebar'),
+      name: $t("main-with-sidebar"),
       icon: "ColumnTwoB",
     },
     sidebarMain: {
-      name: $t('sidebar-with-main'),
+      name: $t("sidebar-with-main"),
       icon: "ColumnTwoC",
     },
     twoColumns: {
-      name: $t('two-columns'),
+      name: $t("two-columns"),
       icon: "ColumnTwoA",
     },
     threeColumns: {
-      name: $t('three-columns'),
+      name: $t("three-columns"),
       icon: "ViewColumn",
     },
   }
@@ -34,7 +34,7 @@
   <ModalContent
     onConfirm={() => dispatch("change", selected)}
     size="L"
-    title={ $t('select-layout') }
+    title={$t("select-layout")}
   >
     <div class="container">
       {#each Object.entries(layoutMap) as [key, value]}

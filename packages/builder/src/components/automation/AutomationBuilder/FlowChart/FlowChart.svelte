@@ -20,7 +20,9 @@
   }
 </script>
 
-{#if !blocks.length}<i>{ $t('add-a-trigger-to-your-automation-to-get-started') }</i>{/if}
+{#if !blocks.length}<i
+    >{$t("add-a-trigger-to-your-automation-to-get-started")}</i
+  >{/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
     <div

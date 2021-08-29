@@ -95,10 +95,10 @@
       </div>
       <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
         <svelte:fragment slot="description">
-          { $t('add-the-objects-on-the-left-to-enrich-your-text') }
+          {$t("add-the-objects-on-the-left-to-enrich-your-text")}
         </svelte:fragment>
         <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>
-          { $t('save') }
+          {$t("save")}
         </Button>
         <BindingPanel
           slot="body"

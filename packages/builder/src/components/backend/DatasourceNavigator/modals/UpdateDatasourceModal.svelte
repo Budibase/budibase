@@ -23,7 +23,10 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if ($datasources?.list.some(ds => ds.name === datasourceName)) {
-      error = $t('datasource-with-name') + ` ${datasourceName} ` + $t('already-exists-please-choose-another-name')
+      error =
+        $t("datasource-with-name") +
+        ` ${datasourceName} ` +
+        $t("already-exists-please-choose-another-name")
       return
     }
     error = ""
@@ -35,7 +38,9 @@
       name,
     }
     await datasources.save(updatedDatasource)
-    notifications.success($t('datasource') + ` ${name} ` + $t('updated-successfully') + `.`)
+    notifications.success(
+      $t("datasource") + ` ${name} ` + $t("updated-successfully") + `.`
+    )
     analytics.captureEvent("Datasource Updated", updatedDatasource)
     hide()
   }
@@ -43,15 +48,15 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title={ $t('update-datasource') }
+    title={$t("update-datasource")}
     size="L"
-    confirmText={ $t('update') }
+    confirmText={$t("update")}
     onConfirm={updateDatasource}
     disabled={error || !name || !datasource?.type}
   >
     <Input
       data-cy="datasource-name-input"
-      label={ $t('datasource-name') }
+      label={$t("datasource-name")}
       on:input={checkValid}
       bind:value={name}
       {error}

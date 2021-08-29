@@ -16,9 +16,9 @@
       await store.actions.screens.delete(screen)
       await store.actions.routing.fetch()
       $goto("../")
-      notifications.success($t('deleted-screen-successfully'))
+      notifications.success($t("deleted-screen-successfully"))
     } catch (err) {
-      notifications.error($t('error-deleting-screen'))
+      notifications.error($t("error-deleting-screen"))
     }
   }
 </script>
@@ -27,13 +27,15 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$t("delete")}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title={ $t('confirm-deletion') }
-  body={$t('are-you-sure-you-wish-to-delete-this-screen')}
-  okText={ $t('delete-screen') }
+  title={$t("confirm-deletion")}
+  body={$t("are-you-sure-you-wish-to-delete-this-screen")}
+  okText={$t("delete-screen")}
   onOk={deleteScreen}
 />

@@ -19,7 +19,7 @@
   let exportFormat = FORMATS[0].key
 
   async function exportView() {
-    const filename = $t('export-0') + ` ${exportFormat}`
+    const filename = $t("export-0") + ` ${exportFormat}`
     download(
       `/api/views/export?view=${encodeURIComponent(
         view
@@ -29,9 +29,13 @@
   }
 </script>
 
-<ModalContent title={ $t('export-data') } confirmText={ $t('export') } onConfirm={exportView}>
+<ModalContent
+  title={$t("export-data")}
+  confirmText={$t("export")}
+  onConfirm={exportView}
+>
   <Select
-    label={ $t('format') }
+    label={$t("format")}
     bind:value={exportFormat}
     options={FORMATS}
     placeholder={null}

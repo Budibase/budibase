@@ -15,7 +15,7 @@
 </script>
 
 <div class="root">
-  <Heading size="M">{ $t('start-with-a-template') }</Heading>
+  <Heading size="M">{$t("start-with-a-template")}</Heading>
   {#await templatesPromise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -30,7 +30,7 @@
           <div><img alt="template" src={template.image} width="100%" /></div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>
-              { $t('create') }
+              {$t("create")}
               {template.name}
             </Button>
           </div>

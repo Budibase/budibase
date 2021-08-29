@@ -17,27 +17,27 @@
       name,
       instanceId,
     })
-    notifications.success(`${$t('automation')} ${name} ${$t('created')}.`)
+    notifications.success(`${$t("automation")} ${name} ${$t("created")}.`)
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent($t('automation-created'), { name })
+    analytics.captureEvent($t("automation-created"), { name })
   }
 </script>
 
 <ModalContent
-  title={ $t('create-automation') }
-  confirmText={ $t('create-0') }
+  title={$t("create-automation")}
+  confirmText={$t("create-0")}
   size="L"
   onConfirm={createAutomation}
   disabled={!valid}
 >
-  <Input bind:value={name} label={ $t('name') } />
+  <Input bind:value={name} label={$t("name")} />
   <a
     slot="footer"
     target="_blank"
     href="https://docs.budibase.com/automate/introduction-to-automate"
   >
     <Icon name="InfoOutline" />
-    <span>{ $t('learn-about-automations') }</span>
+    <span>{$t("learn-about-automations")}</span>
   </a>
 </ModalContent>
 

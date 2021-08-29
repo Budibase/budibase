@@ -17,7 +17,7 @@
   })
 </script>
 
-<i>{ $t('create-your-first-automation-to-get-started') }</i>
+<i>{$t("create-your-first-automation-to-get-started")}</i>
 
 <style>
   i {

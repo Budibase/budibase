@@ -16,7 +16,7 @@
       instanceId,
       automation,
     })
-    notifications.success($t('automation-deleted'))
+    notifications.success($t("automation-deleted"))
     $goto("../automate")
   }
 </script>
@@ -26,19 +26,19 @@
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
-    {$t('delete')}
+    {$t("delete")}
   </MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={ $t('delete-automation') }
+  okText={$t("delete-automation")}
   onOk={deleteAutomation}
-  title={ $t('confirm-deletion-0') }
+  title={$t("confirm-deletion-0")}
 >
-  { $t('are-you-sure-you-wish-to-delete-the-automation') }
+  {$t("are-you-sure-you-wish-to-delete-the-automation")}
   <i>{automation.name}?</i>
-  { $t('this-action-cannot-be-undone') }
+  {$t("this-action-cannot-be-undone")}
 </ConfirmDialog>
 
 <style>

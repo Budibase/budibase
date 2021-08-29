@@ -32,21 +32,21 @@
   <div class="container">
     <Layout noPadding gap="S">
       {#if !options.length}
-        <Body size="S">{ $t('add-an-option-to-get-started') }</Body>
+        <Body size="S">{$t("add-an-option-to-get-started")}</Body>
       {/if}
       {#if options?.length}
         <div class="options">
           {#each options as option (option.id)}
             <Input
-              placeholder={ $t('label') }
+              placeholder={$t("label")}
               bind:value={option.label}
-              label={ $t('label') }
+              label={$t("label")}
               labelPosition="left"
             />
             <Input
-              placeholder={ $t('value') }
+              placeholder={$t("value")}
               bind:value={option.value}
-              label={ $t('value') }
+              label={$t("value")}
               labelPosition="left"
             />
             <Icon
@@ -60,7 +60,7 @@
       {/if}
       <div>
         <Button icon="AddCircle" size="M" on:click={addOption} secondary>
-          { $t('add-option') }
+          {$t("add-option")}
         </Button>
       </div>
     </Layout>

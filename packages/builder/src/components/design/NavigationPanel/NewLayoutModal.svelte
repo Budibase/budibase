@@ -9,13 +9,19 @@
   async function save() {
     try {
       await store.actions.layouts.save({ name })
-      notifications.success($t('layout') + ` ${name} ` + $t('created-successfully'))
+      notifications.success(
+        $t("layout") + ` ${name} ` + $t("created-successfully")
+      )
     } catch (err) {
-      notifications.error($t('error-creating-layout') + ` ${name}.`)
+      notifications.error($t("error-creating-layout") + ` ${name}.`)
     }
   }
 </script>
 
-<ModalContent title={ $t('create-layout') } confirmText={ $t('create') } onConfirm={save}>
-  <Input thin label={ $t('name') } bind:value={name} />
+<ModalContent
+  title={$t("create-layout")}
+  confirmText={$t("create")}
+  onConfirm={save}
+>
+  <Input thin label={$t("name")} bind:value={name} />
 </ModalContent>

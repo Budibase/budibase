@@ -9,19 +9,19 @@
   $: hasTrigger = $automationStore.selectedAutomation.hasTrigger()
   $: tabs = [
     {
-      label: $t('trigger'),
+      label: $t("trigger"),
       value: "TRIGGER",
       icon: "Algorithm",
       disabled: hasTrigger,
     },
     {
-      label: $t('action'),
+      label: $t("action"),
       value: "ACTION",
       icon: "Actions",
       disabled: !hasTrigger,
     },
     {
-      label: $t('logic'),
+      label: $t("logic"),
       value: "LOGIC",
       icon: "Filter",
       disabled: !hasTrigger,

@@ -16,7 +16,7 @@
 </script>
 
 <ActionButton icon="LockClosed" size="S" quiet on:click={openDropdown}>
-  { $t('manage-access-0') }
+  {$t("manage-access-0")}
 </ActionButton>
 <Modal bind:this={modal}>
   <ManageAccessModal

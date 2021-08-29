@@ -23,17 +23,23 @@
 
     // Show updated permissions in UI: REMOVE
     permissions = await permissionsStore.forResource(resourceId)
-    notifications.success($t('updated-permissions'))
+    notifications.success($t("updated-permissions"))
     // TODO: update permissions
     // permissions[]
   }
 </script>
 
-<ModalContent title={$t('manage-access')} showCancelButton={false} confirmText={ $t('done') }>
-  <Body size="S">{ $t('specify-the-minimum-access-level-role-for-this-data') }</Body>
+<ModalContent
+  title={$t("manage-access")}
+  showCancelButton={false}
+  confirmText={$t("done")}
+>
+  <Body size="S"
+    >{$t("specify-the-minimum-access-level-role-for-this-data")}</Body
+  >
   <div class="row">
-    <Label extraSmall grey>{ $t('level') }</Label>
-    <Label extraSmall grey>{ $t('role') }</Label>
+    <Label extraSmall grey>{$t("level")}</Label>
+    <Label extraSmall grey>{$t("role")}</Label>
     {#each Object.keys(permissions) as level}
       <Input value={capitalise(level)} disabled />
       <Select

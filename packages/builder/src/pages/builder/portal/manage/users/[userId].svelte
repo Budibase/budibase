@@ -31,8 +31,8 @@
   let resetPasswordModal
 
   const roleSchema = {
-    name: { displayName: $t('app') },
-    role: { displayName: $t('role') },
+    name: { displayName: $t("app") },
+    role: { displayName: $t("role") },
   }
 
   $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : "BASIC"
@@ -54,10 +54,12 @@
   async function deleteUser() {
     const res = await users.delete(userId)
     if (res.message) {
-      notifications.success($t('user') + ` ${$userFetch?.data?.email} ` + $t('deleted') + `.`)
+      notifications.success(
+        $t("user") + ` ${$userFetch?.data?.email} ` + $t("deleted") + `.`
+      )
       $goto("./")
     } else {
-      notifications.error($t('failed-to-delete-user'))
+      notifications.error($t("failed-to-delete-user"))
     }
   }
 
@@ -103,28 +105,30 @@
         size="S"
         icon="BackAndroid"
       >
-        { $t('back-to-users') }
+        {$t("back-to-users")}
       </ActionButton>
     </div>
-    <Heading>{ $t('user') }: {$userFetch?.data?.email}</Heading>
+    <Heading>{$t("user")}: {$userFetch?.data?.email}</Heading>
     <Body>
-      { $t('change-user-settings-and-update-their-app-roles-also-contains-the-ability-to-delete-the-user-as-well-as-force-reset-their-password') }
+      {$t(
+        "change-user-settings-and-update-their-app-roles-also-contains-the-ability-to-delete-the-user-as-well-as-force-reset-their-password"
+      )}
     </Body>
   </Layout>
   <Divider size="S" />
   <Layout gap="S" noPadding>
-    <Heading size="S">{ $t('general') }</Heading>
+    <Heading size="S">{$t("general")}</Heading>
     <div class="fields">
       <div class="field">
-        <Label size="L">{ $t('email') }</Label>
+        <Label size="L">{$t("email")}</Label>
         <Input disabled thin value={$userFetch?.data?.email} />
       </div>
       <div class="field">
-        <Label size="L">{ $t('group-s') }</Label>
+        <Label size="L">{$t("group-s")}</Label>
         <Select disabled options={["All users"]} value="All users" />
       </div>
       <div class="field">
-        <Label size="L">{ $t('first-name') }</Label>
+        <Label size="L">{$t("first-name")}</Label>
         <Input
           thin
           value={$userFetch?.data?.firstName}
@@ -132,7 +136,7 @@
         />
       </div>
       <div class="field">
-        <Label size="L">{ $t('last-name') }</Label>
+        <Label size="L">{$t("last-name")}</Label>
         <Input
           thin
           value={$userFetch?.data?.lastName}
@@ -142,7 +146,7 @@
       <!-- don't let a user remove the privileges that let them be here -->
       {#if userId !== $auth.user._id}
         <div class="field">
-          <Label size="L">{ $t('development-access') }</Label>
+          <Label size="L">{$t("development-access")}</Label>
           <Toggle
             text=""
             value={$userFetch?.data?.builder?.global}
@@ -151,7 +155,7 @@
           />
         </div>
         <div class="field">
-          <Label size="L">{ $t('administration-access') }</Label>
+          <Label size="L">{$t("administration-access")}</Label>
           <Toggle
             text=""
             value={$userFetch?.data?.admin?.global}
@@ -166,13 +170,14 @@
         size="S"
         icon="Refresh"
         quiet
-        on:click={resetPasswordModal.show}>{ $t('force-password-reset') }</ActionButton
+        on:click={resetPasswordModal.show}
+        >{$t("force-password-reset")}</ActionButton
       >
     </div>
   </Layout>
   <Divider size="S" />
   <Layout gap="S" noPadding>
-    <Heading size="S">{ $t('configure-roles') }</Heading>
+    <Heading size="S">{$t("configure-roles")}</Heading>
     <Table
       on:click={openUpdateRolesModal}
       schema={roleSchema}
@@ -185,11 +190,13 @@
   </Layout>
   <Divider size="S" />
   <Layout gap="XS" noPadding>
-    <Heading size="S">{ $t('delete-user') }</Heading>
-    <Body>{ $t('deleting-a-user-completely-removes-them-from-your-account') }</Body>
+    <Heading size="S">{$t("delete-user")}</Heading>
+    <Body
+      >{$t("deleting-a-user-completely-removes-them-from-your-account")}</Body
+    >
   </Layout>
   <div class="delete-button">
-    <Button warning on:click={deleteUserModal.show}>{ $t('delete-user') }</Button>
+    <Button warning on:click={deleteUserModal.show}>{$t("delete-user")}</Button>
   </div>
 </Layout>
 
@@ -197,13 +204,14 @@
   <ModalContent
     warning
     onConfirm={deleteUser}
-    title={ $t('delete-user') }
-    confirmText={ $t('delete-user') }
-    cancelText={ $t('cancel') }
+    title={$t("delete-user")}
+    confirmText={$t("delete-user")}
+    cancelText={$t("cancel")}
     showCloseIcon={false}
   >
     <Body>
-      { $t('are-you-sure-you-want-to-delete') } <strong>{$userFetch?.data?.email}</strong>
+      {$t("are-you-sure-you-want-to-delete")}
+      <strong>{$userFetch?.data?.email}</strong>
     </Body>
   </ModalContent>
 </Modal>

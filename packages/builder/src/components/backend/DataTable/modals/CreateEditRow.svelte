@@ -42,14 +42,14 @@
       return false
     }
 
-    notifications.success($t('row-saved-successfully'))
+    notifications.success($t("row-saved-successfully"))
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? $t('create-row-0') : $t('edit-row')}
-  confirmText={creating ? $t('create-row-0') : $t('save-row')}
+  title={creating ? $t("create-row-0") : $t("edit-row")}
+  confirmText={creating ? $t("create-row-0") : $t("save-row")}
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />

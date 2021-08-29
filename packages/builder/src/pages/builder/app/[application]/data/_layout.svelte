@@ -4,7 +4,7 @@
   import { BUDIBASE_INTERNAL_DB } from "constants"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
-  import { _ as t } from "svelte-i18n";
+  import { _ as t } from "svelte-i18n"
 
   let selected = "Sources"
   let modal

@@ -43,10 +43,10 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        $t('app-updated-successfully-to-version') + ` ${clientPackage.version}`
+        $t("app-updated-successfully-to-version") + ` ${clientPackage.version}`
       )
     } catch (err) {
-      notifications.error($t('error-updating-app') + `: ${err}`)
+      notifications.error($t("error-updating-app") + `: ${err}`)
     }
   }
 
@@ -64,10 +64,10 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        $t('app-reverted-successfully-to-version') + ` ${revertableVersion}`
+        $t("app-reverted-successfully-to-version") + ` ${revertableVersion}`
       )
     } catch (err) {
-      notifications.error($t('error-reverting-app') + `: ${err}`)
+      notifications.error($t("error-reverting-app") + `: ${err}`)
     }
     updateModal.hide()
   }
@@ -78,32 +78,38 @@
 </div>
 <Modal bind:this={updateModal}>
   <ModalContent
-    title="{ $t('app-version') }"
-    confirmText={ $t('update') }
-    cancelText={updateAvailable ? $t('cancel') : $t('close')}
+    title={$t("app-version")}
+    confirmText={$t("update")}
+    cancelText={updateAvailable ? $t("cancel") : $t("close")}
     onConfirm={update}
     showConfirmButton={updateAvailable}
   >
     <div slot="footer">
       {#if revertAvailable}
-        <Button quiet secondary on:click={revert}>{ $t('revert') }</Button>
+        <Button quiet secondary on:click={revert}>{$t("revert")}</Button>
       {/if}
     </div>
     {#if updateAvailable}
       <Body size="S">
-        { $t('this-app-is-currently-using-version') } <b>{$store.version}</b>, { $t('but-version') }
-        <b>{clientPackage.version}</b> { $t('is-available-updates-can-contain-new-features-performance-improvements-and-bug-fixes') }
+        {$t("this-app-is-currently-using-version")} <b>{$store.version}</b>, {$t(
+          "but-version"
+        )}
+        <b>{clientPackage.version}</b>
+        {$t(
+          "is-available-updates-can-contain-new-features-performance-improvements-and-bug-fixes"
+        )}
       </Body>
     {:else}
       <Body size="S">
-        { $t('this-app-is-currently-using-version') } <b>{$store.version}</b> { $t('which-is-the-latest-version-available') }
+        {$t("this-app-is-currently-using-version")} <b>{$store.version}</b>
+        {$t("which-is-the-latest-version-available")}
       </Body>
     {/if}
     {#if revertAvailable}
       <Body size="S">
-        { $t('you-can-revert-this-app-to-version') }
+        {$t("you-can-revert-this-app-to-version")}
         <b>{$store.revertableVersion}</b>
-        { $t('if-youre-experiencing-issues-with-the-current-version') }
+        {$t("if-youre-experiencing-issues-with-the-current-version")}
       </Body>
     {/if}
   </ModalContent>

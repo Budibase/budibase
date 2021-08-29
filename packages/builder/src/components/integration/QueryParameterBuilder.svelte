@@ -32,22 +32,26 @@
 
 <Layout paddingX="none" gap="S">
   <div class="controls">
-    <Heading size="XS">{ $t('parameters') }</Heading>
+    <Heading size="XS">{$t("parameters")}</Heading>
     {#if !bindable}
-      <Button secondary on:click={newQueryParameter}>{ $t('add-param') }</Button>
+      <Button secondary on:click={newQueryParameter}>{$t("add-param")}</Button>
     {/if}
   </div>
   <Body size="S">
     {#if !bindable}
-      { $t('parameters-come-in-two-parts-the-parameter-name-and-a-default-fallback-value') }
+      {$t(
+        "parameters-come-in-two-parts-the-parameter-name-and-a-default-fallback-value"
+      )}
     {:else}
-      { $t('enter-a-value-for-each-parameter-the-default-values-will-be-used-for-any-values-left-blank') }
+      {$t(
+        "enter-a-value-for-each-parameter-the-default-values-will-be-used-for-any-values-left-blank"
+      )}
     {/if}
   </Body>
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
       <Input
-        placeholder={ $t('parameter-name') }
+        placeholder={$t("parameter-name")}
         thin
         disabled={bindable}
         bind:value={parameter.name}
@@ -60,7 +64,7 @@
       />
       {#if bindable}
         <DrawerBindableInput
-          title={$t('query-parameter') + ` "${parameter.name}"`}
+          title={$t("query-parameter") + ` "${parameter.name}"`}
           placeholder="Value"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}

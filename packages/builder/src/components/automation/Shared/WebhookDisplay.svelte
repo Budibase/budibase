@@ -27,7 +27,7 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifications.success($t('url-copied-to-clipboard'))
+    notifications.success($t("url-copied-to-clipboard"))
   }
 </script>
 

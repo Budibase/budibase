@@ -24,7 +24,7 @@
     }
 
     dispatch("change", value)
-    notifications.success($t('component-actions-saved'))
+    notifications.success($t("component-actions-saved"))
     drawer.hide()
   }
 
@@ -53,11 +53,11 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>{ $t('define-actions') }</ActionButton>
-<Drawer bind:this={drawer} title={$t('actions')}>
+<ActionButton on:click={drawer.show}>{$t("define-actions")}</ActionButton>
+<Drawer bind:this={drawer} title={$t("actions")}>
   <svelte:fragment slot="description">
-    { $t('define-what-actions-to-run') }
+    {$t("define-what-actions-to-run")}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveEventData}>{ $t('save') }</Button>
+  <Button cta slot="buttons" on:click={saveEventData}>{$t("save")}</Button>
   <EventEditor slot="body" bind:actions={value} eventType={name} {bindings} />
 </Drawer>

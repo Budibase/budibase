@@ -15,7 +15,7 @@
   on:click={modal.show}
   active={view.filters?.length}
 >
-  { $t('filter') }
+  {$t("filter")}
 </ActionButton>
 <Modal bind:this={modal}>
   <FilterModal {view} />

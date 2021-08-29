@@ -4,9 +4,9 @@ const path = require("path")
 const fs = require("fs")
 const { processStringSync } = require("@budibase/string-templates")
 
-function isLinux() {
-  return process.platform !== "darwin" && process.platform !== "win32"
-}
+// function isLinux() {
+//   return process.platform !== "darwin" && process.platform !== "win32"
+// }
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -28,7 +28,7 @@ async function init() {
   const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
   const contents = fs.readFileSync(envoyHbsPath, "utf8")
   const config = {
-    address: "host.docker.internal"
+    address: "host.docker.internal",
   }
   fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
 

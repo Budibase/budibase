@@ -34,12 +34,12 @@
   <svelte:fragment slot="sidebar">
     <div class="container">
       <section>
-        <div class="heading">{ $t('search') }</div>
-        <Search placeholder={ $t('search') } bind:value={search} />
+        <div class="heading">{$t("search")}</div>
+        <Search placeholder={$t("search")} bind:value={search} />
       </section>
       {#if filteredColumns?.length}
         <section>
-          <div class="heading">{ $t('bindable-values') }</div>
+          <div class="heading">{$t("bindable-values")}</div>
           <ul>
             {#each filteredColumns as { readableBinding }}
               <li
@@ -55,7 +55,7 @@
       {/if}
       {#if filteredHelpers?.length}
         <section>
-          <div class="heading">{ $t('helpers') }</div>
+          <div class="heading">{$t("helpers")}</div>
           <ul>
             {#each filteredHelpers as helper}
               <li
@@ -81,13 +81,15 @@
     <TextArea
       bind:getCaretPosition
       bind:value
-      placeholder={ $t('add-text-or-click-the-objects-on-the-left-to-add-them-to-the-textbox') }
+      placeholder={$t(
+        "add-text-or-click-the-objects-on-the-left-to-add-them-to-the-textbox"
+      )}
     />
     {#if !valid}
       <p class="syntax-error">
-        { $t('current-handlebars-syntax-is-invalid-please-check-the-guide') }
-        <a href="https://handlebarsjs.com/guide/">{ $t('here') }</a>
-        { $t('for-more-details') }
+        {$t("current-handlebars-syntax-is-invalid-please-check-the-guide")}
+        <a href="https://handlebarsjs.com/guide/">{$t("here")}</a>
+        {$t("for-more-details")}
       </p>
     {/if}
   </div>

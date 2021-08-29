@@ -43,10 +43,10 @@
 
     // Do some basic front end validation first
     if (!row.email) {
-      errors = [...errors, { message: $t('email-is-required') }]
+      errors = [...errors, { message: $t("email-is-required") }]
     }
     if (!row.roleId) {
-      errors = [...errors, { message: $t('role-is-required') }]
+      errors = [...errors, { message: $t("role-is-required") }]
     }
     if (errors.length) {
       return false
@@ -70,36 +70,44 @@
       return false
     }
 
-    notifications.success($t('user-saved-successfully'))
+    notifications.success($t("user-saved-successfully"))
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? $t('create-user') : $t('edit-user')}
-  confirmText={creating ? $t('create-user') : $t('save-user')}
+  title={creating ? $t("create-user") : $t("edit-user")}
+  confirmText={creating ? $t("create-user") : $t("save-user")}
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />
   <RowFieldControl
-    meta={{ ...tableSchema.email, name: "Email" , label: $t('email') }}
+    meta={{ ...tableSchema.email, name: "Email", label: $t("email") }}
     bind:value={row.email}
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ ...tableSchema.firstName, name: "First Name" , label: $t('first-name-0') }}
+    meta={{
+      ...tableSchema.firstName,
+      name: "First Name",
+      label: $t("first-name-0"),
+    }}
     bind:value={row.firstName}
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ ...tableSchema.lastName, name: "Last Name", label: $t('last-name-0') }}
+    meta={{
+      ...tableSchema.lastName,
+      name: "Last Name",
+      label: $t("last-name-0"),
+    }}
     bind:value={row.lastName}
     readonly={!creating}
   />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
   <Select
-    label={$t('role')}
+    label={$t("role")}
     data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}

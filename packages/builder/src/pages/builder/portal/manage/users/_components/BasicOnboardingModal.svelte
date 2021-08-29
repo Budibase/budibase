@@ -21,7 +21,7 @@
     if (res.status) {
       notifications.error(res.message)
     } else {
-      notifications.success($t('successfully-created-user'))
+      notifications.success($t("successfully-created-user"))
     }
   }
 </script>
@@ -29,30 +29,32 @@
 <ModalContent
   onConfirm={createUser}
   size="M"
-  title={ $t('basic-user-onboarding') }
-  confirmText={ $t('continue') }
-  cancelText={ $t('cancel') }
+  title={$t("basic-user-onboarding")}
+  confirmText={$t("continue")}
+  cancelText={$t("cancel")}
   disabled={$error}
   error={$touched && $error}
   showCloseIcon={false}
 >
   <Body size="S">
-    { $t('below-you-will-find-the-users-username-and-password-the-password-will-not-be-accessible-from-this-point-please-save-the-credentials') }
+    {$t(
+      "below-you-will-find-the-users-username-and-password-the-password-will-not-be-accessible-from-this-point-please-save-the-credentials"
+    )}
   </Body>
   <Input
     type="email"
-    label={ $t('username') }
+    label={$t("username")}
     bind:value={$email}
     error={$touched && $error}
   />
-  <Input disabled label={ $t('password') } value={password} />
+  <Input disabled label={$t("password")} value={password} />
   <div>
     <div class="toggle">
-      <Label size="L">{ $t('development-access') }</Label>
+      <Label size="L">{$t("development-access")}</Label>
       <Toggle text="" bind:value={builder} />
     </div>
     <div class="toggle">
-      <Label size="L">{ $t('administration-access') }</Label>
+      <Label size="L">{$t("administration-access")}</Label>
       <Toggle text="" bind:value={admin} />
     </div>
   </div>

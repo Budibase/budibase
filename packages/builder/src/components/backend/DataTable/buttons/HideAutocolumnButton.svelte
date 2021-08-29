@@ -10,5 +10,7 @@
 </script>
 
 <ActionButton icon="MagicWand" primary size="S" quiet on:click={hideOrUnhide}>
-  {#if hideAutocolumns}{ $t('show-auto-columns') }{:else}{ $t('hide-auto-columns') }{/if}
+  {#if hideAutocolumns}{$t("show-auto-columns")}{:else}{$t(
+      "hide-auto-columns"
+    )}{/if}
 </ActionButton>

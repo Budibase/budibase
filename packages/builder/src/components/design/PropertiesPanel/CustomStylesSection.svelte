@@ -33,7 +33,7 @@
   collapsible={false}
 >
   <div>
-    <ActionButton on:click={openDrawer}>{ $t('edit-custom-css') }</ActionButton>
+    <ActionButton on:click={openDrawer}>{$t("edit-custom-css")}</ActionButton>
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
@@ -42,8 +42,10 @@
     <DrawerContent slot="body">
       <div class="content">
         <Layout gap="S" noPadding>
-          <Body size="S">{ $t('custom-css-overrides-all-other-component-styles') }</Body>
-          <TextArea bind:value={tempValue} placeholder={ $t('enter-some-css') } />
+          <Body size="S"
+            >{$t("custom-css-overrides-all-other-component-styles")}</Body
+          >
+          <TextArea bind:value={tempValue} placeholder={$t("enter-some-css")} />
         </Layout>
       </div>
     </DrawerContent>

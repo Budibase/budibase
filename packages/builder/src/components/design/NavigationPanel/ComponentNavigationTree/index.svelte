@@ -63,7 +63,7 @@
 
   {#if !paths.length}
     <div class="empty">
-      { $t('there-arent-any-screens-configured-with-this-access-role') }
+      {$t("there-arent-any-screens-configured-with-this-access-role")}
     </div>
   {/if}
 </div>

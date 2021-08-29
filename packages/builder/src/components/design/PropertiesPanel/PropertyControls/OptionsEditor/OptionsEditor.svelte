@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
   import OptionsDrawer from "./OptionsDrawer.svelte"
   import { _ as t } from "svelte-i18n"
-  
+
   const dispatch = createEventDispatcher()
 
   export let value
@@ -19,11 +19,11 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>{ $t('define-options') }</ActionButton>
+<ActionButton on:click={drawer.show}>{$t("define-options")}</ActionButton>
 <Drawer bind:this={drawer} title="Options">
   <svelte:fragment slot="description">
-    { $t('define-the-options-for-this-picker') }
+    {$t("define-the-options-for-this-picker")}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveFilter}>{ $t('save') }</Button>
+  <Button cta slot="buttons" on:click={saveFilter}>{$t("save")}</Button>
   <OptionsDrawer bind:options={tempValue} slot="body" />
 </Drawer>

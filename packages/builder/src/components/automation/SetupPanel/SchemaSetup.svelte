@@ -9,19 +9,19 @@
   }))
   const typeOptions = [
     {
-      label: $t('text'),
+      label: $t("text"),
       value: "string",
     },
     {
-      label: $t('number'),
+      label: $t("number"),
       value: "number",
     },
     {
-      label: $t('boolean'),
+      label: $t("boolean"),
       value: "boolean",
     },
     {
-      label: $t('datetime-0'),
+      label: $t("datetime-0"),
       value: "datetime",
     },
   ]
@@ -64,7 +64,7 @@
       <Input
         value={field.name}
         secondary
-        placeholder={ $t('enter-field-name') }
+        placeholder={$t("enter-field-name")}
         on:change={fieldNameChanged(field.name)}
       />
       <Select

@@ -23,7 +23,7 @@
 
 <Layout gap="XS" noPadding>
   <Select
-    label={ $t('datasource') }
+    label={$t("datasource")}
     bind:value={parameters.datasourceId}
     options={$datasources.list}
     getOptionLabel={source => source.name}
@@ -32,7 +32,7 @@
 
   {#if parameters.datasourceId}
     <Select
-      label={ $t('query') }
+      label={$t("query")}
       bind:value={parameters.queryId}
       options={$queries.list.filter(
         query => query.datasourceId === datasource._id
@@ -42,12 +42,15 @@
     />
 
     {#if parameters.queryId}
-      <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
+      <Checkbox
+        text={$t("require-confirmation")}
+        bind:value={parameters.confirm}
+      />
 
       {#if parameters.confirm}
         <Input
-          label={ $t('confirm-text') }
-          placeholder={ $t('are-you-sure-you-want-to-execute-this-query') }
+          label={$t("confirm-text")}
+          placeholder={$t("are-you-sure-you-want-to-execute-this-query")}
           bind:value={parameters.confirmText}
         />
       {/if}

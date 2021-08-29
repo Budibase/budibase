@@ -11,8 +11,8 @@
 </script>
 
 {#if $datasources.list.length === 0}
-  <i>{ $t('connect-your-first-datasource-to-start-building') }</i>
-{:else}<i>{ $t('select-a-datasource-to-edit') }</i>{/if}
+  <i>{$t("connect-your-first-datasource-to-start-building")}</i>
+{:else}<i>{$t("select-a-datasource-to-edit")}</i>{/if}
 
 <style>
   i {

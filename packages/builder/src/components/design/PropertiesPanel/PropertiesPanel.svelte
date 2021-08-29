@@ -17,7 +17,7 @@
 </script>
 
 <Tabs selected="Settings" noPadding>
-  <Tab title="Settings" label={ $t('settings') } >
+  <Tab title="Settings" label={$t("settings")}>
     <div class="container">
       {#key componentInstance?._id}
         <ScreenSettingsSection

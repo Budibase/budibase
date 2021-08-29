@@ -61,7 +61,7 @@
         value={AUTOMATION_STATUS.NEW}
         bind:group={automationStatus}
       />
-      <Label small>{ $t('create-a-new-automation') }</Label>
+      <Label small>{$t("create-a-new-automation")}</Label>
     </div>
     <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
       <input
@@ -70,17 +70,19 @@
         bind:group={automationStatus}
         disabled={!hasAutomations}
       />
-      <Label small grey={!hasAutomations}>{ $t('use-an-existing-automation') }</Label>
+      <Label small grey={!hasAutomations}
+        >{$t("use-an-existing-automation")}</Label
+      >
     </div>
   </div>
 
   <div class="params">
-    <Label small>{ $t('automation') }</Label>
+    <Label small>{$t("automation")}</Label>
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
         bind:value={parameters.automationId}
-        placeholder={ $t('choose-automation') }
+        placeholder={$t("choose-automation")}
         options={automations}
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
@@ -88,17 +90,20 @@
     {:else}
       <Input
         bind:value={parameters.newAutomationName}
-        placeholder={ $t('enter-automation-name') }
+        placeholder={$t("enter-automation-name")}
       />
     {/if}
 
     <Label small />
-    <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
+    <Checkbox
+      text={$t("require-confirmation")}
+      bind:value={parameters.confirm}
+    />
 
     {#if parameters.confirm}
-      <Label small>{ $t('confirm-text') }</Label>
+      <Label small>{$t("confirm-text")}</Label>
       <Input
-        placeholder={ $t('are-you-sure-you-want-to-trigger-this-automation') }
+        placeholder={$t("are-you-sure-you-want-to-trigger-this-automation")}
         bind:value={parameters.confirmText}
       />
     {/if}
@@ -109,7 +114,7 @@
       <SaveFields
         schemaFields={selectedSchema}
         parameterFields={parameters.fields}
-        fieldLabel={ $t('field') }
+        fieldLabel={$t("field")}
         on:change={onFieldsChanged}
         {bindings}
       />

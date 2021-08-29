@@ -10,10 +10,10 @@
   import { _ as t } from "svelte-i18n"
 
   const MESSAGES = {
-    apps: $t('create-your-first-app'),
-    smtp: $t('set-up-email'),
-    adminUser: $t('create-your-first-user'),
-    sso: $t('set-up-single-sign-on'),
+    apps: $t("create-your-first-app"),
+    smtp: $t("set-up-email"),
+    adminUser: $t("create-your-first-user"),
+    sso: $t("set-up-single-sign-on"),
   }
 </script>
 

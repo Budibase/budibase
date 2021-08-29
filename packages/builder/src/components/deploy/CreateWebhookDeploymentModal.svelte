@@ -24,11 +24,11 @@
 </script>
 
 <ModalContent
-  title={ $t('webhook-endpoints') }
-  confirmText={ $t('ok') }
+  title={$t("webhook-endpoints")}
+  confirmText={$t("ok")}
   showCancelButton={false}
 >
-  <p>{ $t('see-below-the-list-of-deployed-webhook-urls') }</p>
+  <p>{$t("see-below-the-list-of-deployed-webhook-urls")}</p>
   {#each webhookUrls as webhookUrl}
     <div>
       <h5>{webhookUrl.type} - {webhookUrl.name}</h5>
@@ -36,7 +36,7 @@
     </div>
   {/each}
   {#if webhookUrls.length === 0}
-    <h5>{ $t('no-webhooks-found') }</h5>
+    <h5>{$t("no-webhooks-found")}</h5>
   {/if}
   <a
     slot="footer"
@@ -44,7 +44,7 @@
     href="https://docs.budibase.com/automate/steps/triggers"
   >
     <i class="ri-information-line" />
-    <span>{ $t('learn-about-webhooks') }</span>
+    <span>{$t("learn-about-webhooks")}</span>
   </a>
 </ModalContent>
 

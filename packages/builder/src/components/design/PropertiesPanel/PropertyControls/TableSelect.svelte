@@ -8,7 +8,7 @@
 
 <div>
   <Select extraThin secondary wide on:change {value}>
-    <option value="">{ $t('choose-a-table') }</option>
+    <option value="">{$t("choose-a-table")}</option>
     {#each $tables.list as table}
       <option value={table._id}>{table.name}</option>
     {/each}
