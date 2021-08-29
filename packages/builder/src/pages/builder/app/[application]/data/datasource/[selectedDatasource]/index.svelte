@@ -8,6 +8,7 @@
   import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
+  import { _ as t } from "svelte-i18n"
 
   let relationshipModal
   let displayColumnModal
@@ -47,10 +48,10 @@
       if (!tableId || typeof tableId !== "string") {
         return null
       }
-      return plusTables.find(table => table._id === tableId)?.name || "Unknown"
+      return plusTables.find(table => table._id === tableId)?.name || $t('unknown')
     }
     if (!toCol || !fromCol) {
-      return "Cannot build name"
+      return $t('cannot-build-name')
     }
     const fromTableName = getTableName(toCol.tableId)
     const toTableName = getTableName(fromCol.tableId)
@@ -58,7 +59,7 @@
 
     let displayString
     if (throughTableName) {
-      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
+      displayString = `${fromTableName} ` +  $t('through') + ` ${throughTableName} → ${toTableName}`
     } else {
       displayString = `${fromTableName} → ${toTableName}`
     }
@@ -69,19 +70,19 @@
     try {
       // Create datasource
       await datasources.save(datasource)
-      notifications.success(`Datasource ${name} updated successfully.`)
+      notifications.success($t('datasource') + ` ${name} ` + $t('updated-successfully') + `.`)
     } catch (err) {
-      notifications.error(`Error saving datasource: ${err}`)
+      notifications.error($t('error-saving-datasource') + `: ${err}`)
     }
   }
 
   async function updateDatasourceSchema() {
     try {
       await datasources.updateSchema(datasource)
-      notifications.success(`Datasource ${name} tables updated successfully.`)
+      notifications.success($t('datasource') + ` ${name} ` + $t('tables-updated-successfully') + `.`)
       await tables.fetch()
     } catch (err) {
-      notifications.error(`Error updating datasource schema: ${err}`)
+      notifications.error($t('error-updating-datasource-schema') + `: ${err}`)
     }
   }
 
@@ -138,11 +139,11 @@
       <Divider />
       <div class="container">
         <div class="config-header">
-          <Heading size="S">Configuration</Heading>
-          <Button secondary on:click={saveDatasource}>Save</Button>
+          <Heading size="S">{ $t('configuration') }</Heading>
+          <Button secondary on:click={saveDatasource}>{ $t('save') }</Button>
         </div>
         <Body size="S">
-          Connect your database to Budibase using the config below.
+          { $t('connect-your-database-to-budibase-using-the-config-below') }
         </Body>
         <IntegrationConfigForm
           schema={integration.datasource}
@@ -152,30 +153,28 @@
       {#if datasource.plus}
         <Divider />
         <div class="query-header">
-          <Heading size="S">Tables</Heading>
+          <Heading size="S">{ $t('tables') }</Heading>
           <div class="table-buttons">
             {#if plusTables && plusTables.length !== 0}
               <Button primary on:click={openDisplayColumnModal}>
-                Update display columns
+                { $t('update-display-columns') }
               </Button>
             {/if}
             <div>
               <Button primary on:click={updateDatasourceSchema}>
-                Fetch tables from database
+                { $t('fetch-tables-from-database') }
               </Button>
             </div>
           </div>
         </div>
         <Body>
-          This datasource can determine tables automatically. Budibase can fetch
-          your tables directly from the database and you can use them without
-          having to write any queries at all.
+          { $t('this-datasource-can-determine-tables-automatically-budibase-can-fetch-your-tables-directly-from-the-database-and-you-can-use-them-without-having-to-write-any-queries-at-all') }
         </Body>
         <div class="query-list">
           {#each plusTables as table}
             <div class="query-list-item" on:click={() => onClickTable(table)}>
               <p class="query-name">{table.name}</p>
-              <p>Primary Key: {table.primary}</p>
+              <p>{ $t('primary-key') }: {table.primary}</p>
               <p>→</p>
             </div>
           {/each}
@@ -183,14 +182,13 @@
         {#if plusTables?.length !== 0}
           <Divider />
           <div class="query-header">
-            <Heading size="S">Relationships</Heading>
+            <Heading size="S">{ $t('relationships') }</Heading>
             <Button primary on:click={() => openRelationshipModal()}
-              >Create relationship</Button
+              >{ $t('create-relationship') }</Button
             >
           </div>
           <Body>
-            Tell budibase how your tables are related to get even more smart
-            features.
+            { $t('tell-budibase-how-your-tables-are-related-to-get-even-more-smart-features') }
           </Body>
         {/if}
         <div class="query-list">
@@ -214,8 +212,8 @@
       {/if}
       <Divider />
       <div class="query-header">
-        <Heading size="S">Queries</Heading>
-        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+        <Heading size="S">{ $t('queries') }</Heading>
+        <Button secondary on:click={() => $goto("./new")}>{ $t('add-query') }</Button>
       </div>
       <div class="query-list">
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}

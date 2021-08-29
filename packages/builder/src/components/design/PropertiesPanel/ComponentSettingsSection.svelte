@@ -7,6 +7,7 @@
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
   import { getComponentForSettingType } from "./PropertyControls/componentSettings"
+  import { _ as t } from "svelte-i18n"
 
   export let componentDefinition
   export let componentInstance
@@ -15,10 +16,10 @@
 
   const layoutDefinition = []
   const screenDefinition = [
-    { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
+    { key: "description", label: $t('description'), control: Input },
+    { key: "routing.route", label: $t('route'), control: Input },
+    { key: "routing.roleId", label: $t('access'), control: RoleSelect },
+    { key: "layoutId", label: $t('layout'), control: LayoutSelect },
   ]
 
   $: settings = componentDefinition?.settings ?? []
@@ -64,7 +65,7 @@
     <PropertyControl
       bindable={false}
       control={Input}
-      label="Name"
+      label={$t('name')}
       key="_instanceName"
       value={componentInstance._instanceName}
       onChange={val => updateProp("_instanceName", val)}

@@ -25,6 +25,7 @@
   import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
+  import { _ as t } from "svelte-i18n"
 
   let layout = "grid"
   let sortBy = "name"
@@ -98,7 +99,7 @@
   const editApp = app => {
     if (app.lockedOther) {
       notifications.error(
-        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+        $t('app-locked-by') + ` ${app.lockedBy.email}. ` + $t('please-allow-lock-to-expire-or-have-them-unlock-this-app')
       )
       return
     }
@@ -113,9 +114,9 @@
           app.name
         )}`
       )
-      notifications.success("App exported successfully")
+      notifications.success($t('app-exported-successfully'))
     } catch (err) {
-      notifications.error(`Error exporting app: ${err}`)
+      notifications.error($t('error-exporting-app') + ` ${err}`)
     }
   }
 
@@ -137,9 +138,9 @@
         throw json.message
       }
       await apps.load()
-      notifications.success("App unpublished successfully")
+      notifications.success($t('app-unpublished-successfully'))
     } catch (err) {
-      notifications.error(`Error unpublishing app: ${err}`)
+      notifications.error($t('error-unpublishing-app') + ` ${err}`)
     }
   }
 
@@ -161,9 +162,9 @@
       await apps.load()
       // get checklist, just in case that was the last app
       await admin.init()
-      notifications.success("App deleted successfully")
+      notifications.success($t('app-deleted-successfully'))
     } catch (err) {
-      notifications.error(`Error deleting app: ${err}`)
+      notifications.error($t('error-deleting-app') + ` ${err}`)
     }
     selectedApp = null
   }
@@ -181,9 +182,9 @@
         throw json.message
       }
       await apps.load()
-      notifications.success("Lock released successfully")
+      notifications.success($t('lock-released-successfully'))
     } catch (err) {
-      notifications.error(`Error releasing lock: ${err}`)
+      notifications.error($t('error-releasing-lock') + ` ${err}`)
     }
   }
 
@@ -198,10 +199,10 @@
   {#if loaded && enrichedApps.length}
     <Layout noPadding>
       <div class="title">
-        <Heading>Apps</Heading>
+        <Heading>{ $t('apps') }</Heading>
         <ButtonGroup>
-          <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create new app</Button>
+          <Button secondary on:click={initiateAppImport}>{ $t('import-app') }</Button>
+          <Button cta on:click={initiateAppCreation}>{ $t('create-new-app') }</Button>
         </ButtonGroup>
       </div>
       <div class="filter">
@@ -210,9 +211,9 @@
             bind:value={sortBy}
             placeholder={null}
             options={[
-              { label: "Sort by name", value: "name" },
-              { label: "Sort by recently updated", value: "updated" },
-              { label: "Sort by status", value: "status" },
+              { label: $t('sort-by-name'), value: "name" },
+              { label: $t('sort-by-recently-updated'), value: "updated" },
+              { label: $t('sort-by-status'), value: "status" },
             ]}
           />
         </div>
@@ -255,19 +256,18 @@
     <div class="empty-wrapper">
       <Modal inline>
         <ModalContent
-          title="Create your first app"
-          confirmText="Create app"
+          title={ $t('create-your-first-app') }
+          confirmText={ $t('create-app') }
           showCancelButton={false}
           showCloseIcon={false}
           onConfirm={initiateAppCreation}
           size="M"
         >
           <div slot="footer">
-            <Button on:click={initiateAppImport} secondary>Import app</Button>
+            <Button on:click={initiateAppImport} secondary>{ $t('import-app') }</Button>
           </div>
           <Body size="S">
-            The purpose of the Budibase builder is to help you build beautiful,
-            powerful applications quickly and easily.
+            { $t('the-purpose-of-the-budibase-builder-is-to-help-you-build-beautiful-powerful-applications-quickly-and-easily') }
           </Body>
         </ModalContent>
       </Modal>
@@ -284,19 +284,19 @@
 </Modal>
 <ConfirmDialog
   bind:this={deletionModal}
-  title="Confirm deletion"
-  okText="Delete app"
+  title={ $t('confirm-deletion') }
+  okText={ $t('delete-app') }
   onOk={confirmDeleteApp}
 >
-  Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
+  { $t('are-you-sure-you-want-to-delete-the-app') } <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 <ConfirmDialog
   bind:this={unpublishModal}
-  title="Confirm unpublish"
-  okText="Unpublish app"
+  title={ $t('confirm-unpublish') }
+  okText={ $t('unpublish-app') }
   onOk={confirmUnpublishApp}
 >
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+  { $t('are-you-sure-you-want-to-unpublish-the-app') } <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />

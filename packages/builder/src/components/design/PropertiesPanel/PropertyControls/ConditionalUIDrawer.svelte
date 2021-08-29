@@ -16,6 +16,7 @@
   import { selectedComponent, store } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let conditions = []
   export let bindings = []
@@ -23,34 +24,34 @@
   const flipDurationMs = 150
   const actionOptions = [
     {
-      label: "Hide component",
+      label: $t('hide-component'),
       value: "hide",
     },
     {
-      label: "Show component",
+      label: $t('show-component'),
       value: "show",
     },
     {
-      label: "Update setting",
+      label: $t('update-setting'),
       value: "update",
     },
   ]
   const valueTypeOptions = [
     {
       value: "string",
-      label: "Binding",
+      label: $t('binding'),
     },
     {
       value: "number",
-      label: "Number",
+      label: $t('number'),
     },
     {
       value: "datetime",
-      label: "Date",
+      label: $t('date'),
     },
     {
       value: "boolean",
-      label: "Boolean",
+      label: $t('boolean'),
     },
   ]
 
@@ -254,11 +255,11 @@
           {/each}
         </div>
       {:else}
-        <Body size="S">Add your first condition to get started.</Body>
+        <Body size="S">{ $t('add-your-first-condition-to-get-started') }</Body>
       {/if}
       <div>
         <Button secondary icon="Add" on:click={addCondition}>
-          Add condition
+          { $t('add-condition') }
         </Button>
       </div>
     </Layout>

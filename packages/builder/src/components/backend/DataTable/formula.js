@@ -1,6 +1,7 @@
 import { FIELDS } from "constants/backend"
 import { tables } from "stores/backend"
 import { get as svelteGet } from "svelte/store"
+import { _ as t } from "svelte-i18n"
 
 // currently supported level of relationship depth (server side)
 const MAX_DEPTH = 1
@@ -58,7 +59,7 @@ export function getBindings({
     const description =
       path == null
         ? undefined
-        : `Update the "0" with the index of relationships or use array helpers`
+        : $t('update-the-0-with-the-index-of-relationships-or-use-array-helpers')
     bindings.push({
       label: label,
       type: field.name === FIELDS.LINK.name ? "Array" : field.name,

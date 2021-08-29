@@ -2,6 +2,7 @@
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { writable } from "svelte/store"
   import { auth } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   const values = writable({
     firstName: $auth.user.firstName,
@@ -11,21 +12,21 @@
   const updateInfo = async () => {
     try {
       await auth.updateSelf($values)
-      notifications.success("Information updated successfully")
+      notifications.success($t('information-updated-successfully'))
     } catch (error) {
-      notifications.error("Failed to update information")
+      notifications.error($t('failed-to-update-information'))
     }
   }
 </script>
 
 <ModalContent
-  title="Update user information"
-  confirmText="Update information"
+  title={ $t('update-user-information') }
+  confirmText={ $t('update-information') }
   onConfirm={updateInfo}
 >
   <Body size="S">
-    Personalise the platform by adding your first name and last name.
+    { $t('personalise-the-platform-by-adding-your-first-name-and-last-name') }
   </Body>
-  <Input bind:value={$values.firstName} label="First name" />
-  <Input bind:value={$values.lastName} label="Last name" />
+  <Input bind:value={$values.firstName} label={ $t('first-name') } />
+  <Input bind:value={$values.lastName} label={ $t('last-name') } />
 </ModalContent>

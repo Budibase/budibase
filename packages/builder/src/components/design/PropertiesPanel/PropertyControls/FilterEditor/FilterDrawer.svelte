@@ -13,6 +13,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
   import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
+  import { _ as t } from "svelte-i18n"
 
   export let schemaFields
   export let filters = []
@@ -83,10 +84,9 @@
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
-          Add your first filter column.
+          { $t('add-your-first-filter-column') }
         {:else}
-          Results are filtered to only those which match all of the following
-          constraints.
+          { $t('results-are-filtered-to-only-those-which-match-all-of-the-following-constraints') }
         {/if}
       </Body>
       {#if filters?.length}
@@ -96,7 +96,7 @@
               bind:value={filter.field}
               options={fieldOptions}
               on:change={e => onFieldChange(filter, e.detail)}
-              placeholder="Column"
+              placeholder={ $t('column') }
             />
             <Select
               disabled={!filter.field}
@@ -114,9 +114,9 @@
             {#if filter.valueType === "Binding"}
               <DrawerBindableInput
                 disabled={filter.noValue}
-                title={`Value for "${filter.field}"`}
+                title={$t('value-for') + ` "${filter.field}"`}
                 value={filter.value}
-                placeholder="Value"
+                placeholder={ $t('value') }
                 {bindings}
                 on:change={event => (filter.value = event.detail)}
               />
@@ -132,8 +132,8 @@
               <Combobox
                 disabled={filter.noValue}
                 options={[
-                  { label: "True", value: "true" },
-                  { label: "False", value: "false" },
+                  { label: $t('true'), value: "true" },
+                  { label: $t('false'), value: "false" },
                 ]}
                 bind:value={filter.value}
               />
@@ -159,7 +159,7 @@
       {/if}
       <div>
         <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
-          Add filter
+          { $t('add-filter') }
         </Button>
       </div>
     </Layout>

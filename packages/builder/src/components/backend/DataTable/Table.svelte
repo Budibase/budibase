@@ -11,6 +11,7 @@
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let schema = {}
   export let data = []
@@ -47,19 +48,19 @@
         }
       })
       if (schema.email) {
-        schema.email.displayName = "Email"
+        schema.email.displayName = $t('email')
       }
       if (schema.roleId) {
-        schema.roleId.displayName = "Role"
+        schema.roleId.displayName = $t('role')
       }
       if (schema.firstName) {
-        schema.firstName.displayName = "First Name"
+        schema.firstName.displayName = $t('first-name')
       }
       if (schema.lastName) {
-        schema.lastName.displayName = "Last Name"
+        schema.lastName.displayName = $t('last-name')
       }
       if (schema.status) {
-        schema.status.displayName = "Status"
+        schema.status.displayName = $t('status')
       }
     }
   }
@@ -79,7 +80,7 @@
       rows: selectedRows,
     })
     data = data.filter(row => !selectedRows.includes(row))
-    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+    notifications.success($t('successfully-deleted') + ` ${selectedRows.length} ` + $t('rows'))
     selectedRows = []
   }
 

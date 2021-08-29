@@ -2,6 +2,7 @@
   import Editor from "./QueryEditor.svelte"
   import FieldsBuilder from "./QueryFieldsBuilder.svelte"
   import { Label, Input } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   const QueryTypes = {
     SQL: "sql",
@@ -31,7 +32,7 @@
     {#if schema.type === QueryTypes.SQL}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={ $t('query') }
         mode="sql"
         on:change={updateQuery}
         readOnly={!editable}
@@ -41,7 +42,7 @@
     {:else if schema.type === QueryTypes.JSON}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={ $t('query') }
         mode="json"
         on:change={updateQuery}
         readOnly={!editable}
@@ -52,7 +53,7 @@
       <FieldsBuilder bind:fields={query.fields} {schema} {editable} />
       {#if schema.urlDisplay}
         <div class="url-row">
-          <Label small>URL</Label>
+          <Label small>{ $t('url') }</Label>
           <Input thin outline disabled value={urlDisplay} />
         </div>
       {/if}

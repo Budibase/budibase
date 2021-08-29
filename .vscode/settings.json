@@ -3,5 +3,9 @@
     "editor.codeActionsOnSave": {
         "source.fixAll": true
     },
-    "editor.defaultFormatter": "svelte.svelte-vscode"
+    "editor.defaultFormatter": "svelte.svelte-vscode",
+    "i18n-ally.localesPaths": [
+        "i18n",
+        "packages/builder/assets/lang"
+    ]
 }

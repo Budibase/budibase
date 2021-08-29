@@ -11,6 +11,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import { store } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   export let links = []
 
@@ -69,10 +70,10 @@
               >
                 <Icon name="DragHandle" size="XL" />
               </div>
-              <Input bind:value={link.text} placeholder="Text" />
+              <Input bind:value={link.text} placeholder={ $t('text') } />
               <Combobox
                 bind:value={link.url}
-                placeholder="URL"
+                placeholder={ $t('url') }
                 options={urlOptions}
               />
               <Icon
@@ -86,7 +87,7 @@
         </div>
       {/if}
       <div>
-        <Button secondary icon="Add" on:click={addLink}>Add Link</Button>
+        <Button secondary icon="Add" on:click={addLink}>{ $t('add-link') }</Button>
       </div>
     </Layout>
   </div>

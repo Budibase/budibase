@@ -6,12 +6,13 @@
   } from "builderStore/dataBinding"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let panel = ServerBindingPanel
   export let value = ""
   export let bindings = []
   export let thin = true
-  export let title = "Bindings"
+  export let title = $t('bindings')
   export let placeholder
   export let label
 
@@ -46,7 +47,7 @@
 <Modal bind:this={bindingModal}>
   <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
     <Body extraSmall grey>
-      Add the objects on the left to enrich your text.
+      { $t('add-the-objects-on-the-left-to-enrich-your-text') }
     </Body>
     <div class="panel-wrapper">
       <svelte:component

@@ -2,6 +2,7 @@
   import { Button, Heading, Body } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
+  import { _ as t } from "svelte-i18n"
 
   export let onSelect
 
@@ -14,7 +15,7 @@
 </script>
 
 <div class="root">
-  <Heading size="M">Start With a Template</Heading>
+  <Heading size="M">{ $t('start-with-a-template') }</Heading>
   {#await templatesPromise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -29,7 +30,7 @@
           <div><img alt="template" src={template.image} width="100%" /></div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>
-              Create
+              { $t('create') }
               {template.name}
             </Button>
           </div>

@@ -1,6 +1,7 @@
 <script>
   import { Input, Icon, notifications } from "@budibase/bbui"
   import { store, hostingStore } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   export let value
   export let production = false
@@ -26,7 +27,7 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifications.success(`URL copied to clipboard`)
+    notifications.success($t('url-copied-to-clipboard'))
   }
 </script>
 

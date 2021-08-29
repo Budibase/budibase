@@ -4,6 +4,7 @@
   import { users } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { _ as t } from "svelte-i18n"
 
   const inviteCode = $params["?code"]
   let password, error
@@ -14,7 +15,7 @@
       if (!res) {
         throw new Error(res.message)
       }
-      notifications.success(`User created.`)
+      notifications.success($t('user-created'))
       $goto("../auth/login")
     } catch (err) {
       notifications.error(err)
@@ -27,14 +28,14 @@
     <Layout>
       <img src={Logo} alt="logo" />
       <Layout gap="XS" justifyItems="center" noPadding>
-        <Heading size="M">Accept Invitation</Heading>
+        <Heading size="M">{ $t('accept-invitation') }</Heading>
         <Body textAlign="center" size="M">
-          Please enter a password to set up your user.
+          { $t('accept-invitation') }
         </Body>
       </Layout>
       <PasswordRepeatInput bind:error bind:password />
       <Button disabled={error} cta on:click={acceptInvite}>
-        Accept invite
+        { $t('accept-invite') }
       </Button>
     </Layout>
   </div>

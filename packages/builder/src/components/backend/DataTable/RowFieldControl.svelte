@@ -10,7 +10,7 @@
   export let readonly
 
   $: type = meta.type
-  $: label = capitalise(meta.name)
+  $: label = meta.label || capitalise(meta.name)
 </script>
 
 {#if type === "options"}

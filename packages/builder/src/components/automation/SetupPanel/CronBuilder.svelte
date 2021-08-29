@@ -1,5 +1,6 @@
 <script>
   import { Button, Select, Input } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let value
 
@@ -7,23 +8,23 @@
 
   const CRON_EXPRESSIONS = [
     {
-      label: "Every Minute",
+      label: $t('every-minute'),
       value: "* * * * *",
     },
     {
-      label: "Every Hour",
+      label: $t('every-hour'),
       value: "0 * * * *",
     },
     {
-      label: "Every Morning at 8AM",
+      label: $t('every-morning-at-8am'),
       value: "0 8 * * *",
     },
     {
-      label: "Every Night at Midnight",
+      label: $t('every-night-at-midnight'),
       value: "0 0 * * *",
     },
     {
-      label: "Every Budibase Reboot",
+      label: $t('every-budibase-reboot'),
       value: "@reboot",
     },
   ]
@@ -34,14 +35,14 @@
 
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
-      >{presets ? "Hide" : "Show"} Presets</Button
+      >{presets ? "Hide" : "Show"} {$t('presets')}</Button
     >
     {#if presets}
       <Select
         bind:value
         secondary
         extraThin
-        label="Presets"
+        label={ $t('presets') }
         options={CRON_EXPRESSIONS}
       />
     {/if}

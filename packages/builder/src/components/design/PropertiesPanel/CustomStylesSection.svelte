@@ -10,6 +10,7 @@
     Button,
   } from "@budibase/bbui"
   import { store } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   export let componentInstance
 
@@ -32,7 +33,7 @@
   collapsible={false}
 >
   <div>
-    <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
+    <ActionButton on:click={openDrawer}>{ $t('edit-custom-css') }</ActionButton>
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
@@ -41,8 +42,8 @@
     <DrawerContent slot="body">
       <div class="content">
         <Layout gap="S" noPadding>
-          <Body size="S">Custom CSS overrides all other component styles.</Body>
-          <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
+          <Body size="S">{ $t('custom-css-overrides-all-other-component-styles') }</Body>
+          <TextArea bind:value={tempValue} placeholder={ $t('enter-some-css') } />
         </Layout>
       </div>
     </DrawerContent>

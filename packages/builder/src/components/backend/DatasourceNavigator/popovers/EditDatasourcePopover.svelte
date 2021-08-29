@@ -5,6 +5,7 @@
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let datasource
 
@@ -14,7 +15,7 @@
   async function deleteDatasource() {
     const wasSelectedSource = $datasources.selected
     await datasources.delete(datasource)
-    notifications.success("Datasource deleted")
+    notifications.success($t('datasource-deleted'))
     // navigate to first index page if the source you are deleting is selected
     if (wasSelectedSource === datasource._id) {
       $goto("./datasource")
@@ -26,19 +27,19 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Update</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>{ $t('update') }</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Datasource"
+  okText={ $t('delete-datasource') }
   onOk={deleteDatasource}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion-0') }
 >
-  Are you sure you wish to delete the datasource
+  { $t('are-you-sure-you-wish-to-delete-the-datasource') }
   <i>{datasource.name}?</i>
-  This action cannot be undone.
+  { $t('this-action-cannot-be-undone') }
 </ConfirmDialog>
 <UpdateDatasourceModal {datasource} bind:this={updateDatasourceDialog} />
 

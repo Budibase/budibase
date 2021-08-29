@@ -4,23 +4,24 @@
   import { ActionButton, Popover, Modal } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import CreateWebhookModal from "../Shared/CreateWebhookModal.svelte"
+  import { _ as t } from "svelte-i18n"
 
   $: hasTrigger = $automationStore.selectedAutomation.hasTrigger()
   $: tabs = [
     {
-      label: "Trigger",
+      label: $t('trigger'),
       value: "TRIGGER",
       icon: "Algorithm",
       disabled: hasTrigger,
     },
     {
-      label: "Action",
+      label: $t('action'),
       value: "ACTION",
       icon: "Actions",
       disabled: !hasTrigger,
     },
     {
-      label: "Logic",
+      label: $t('logic'),
       value: "LOGIC",
       icon: "Filter",
       disabled: !hasTrigger,

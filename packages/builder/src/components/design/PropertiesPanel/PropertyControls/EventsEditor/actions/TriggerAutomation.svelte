@@ -2,6 +2,7 @@
   import { Select, Label, Input, Checkbox } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let parameters = {}
   export let bindings = []
@@ -60,7 +61,7 @@
         value={AUTOMATION_STATUS.NEW}
         bind:group={automationStatus}
       />
-      <Label small>Create a new automation</Label>
+      <Label small>{ $t('create-a-new-automation') }</Label>
     </div>
     <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
       <input
@@ -69,17 +70,17 @@
         bind:group={automationStatus}
         disabled={!hasAutomations}
       />
-      <Label small grey={!hasAutomations}>Use an existing automation</Label>
+      <Label small grey={!hasAutomations}>{ $t('use-an-existing-automation') }</Label>
     </div>
   </div>
 
   <div class="params">
-    <Label small>Automation</Label>
+    <Label small>{ $t('automation') }</Label>
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
         bind:value={parameters.automationId}
-        placeholder="Choose automation"
+        placeholder={ $t('choose-automation') }
         options={automations}
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
@@ -87,17 +88,17 @@
     {:else}
       <Input
         bind:value={parameters.newAutomationName}
-        placeholder="Enter automation name"
+        placeholder={ $t('enter-automation-name') }
       />
     {/if}
 
     <Label small />
-    <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+    <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small>{ $t('confirm-text') }</Label>
       <Input
-        placeholder="Are you sure you want to trigger this automation?"
+        placeholder={ $t('are-you-sure-you-want-to-trigger-this-automation') }
         bind:value={parameters.confirmText}
       />
     {/if}
@@ -108,7 +109,7 @@
       <SaveFields
         schemaFields={selectedSchema}
         parameterFields={parameters.fields}
-        fieldLabel="Field"
+        fieldLabel={ $t('field') }
         on:change={onFieldsChanged}
         {bindings}
       />

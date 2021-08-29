@@ -4,6 +4,7 @@
   import { database } from "stores/backend"
   import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let automation
 
@@ -15,7 +16,7 @@
       instanceId,
       automation,
     })
-    notifications.success("Automation deleted.")
+    notifications.success($t('automation-deleted'))
     $goto("../automate")
   }
 </script>
@@ -25,19 +26,19 @@
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
-    Delete
+    {$t('delete')}
   </MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Automation"
+  okText={ $t('delete-automation') }
   onOk={deleteAutomation}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion-0') }
 >
-  Are you sure you wish to delete the automation
+  { $t('are-you-sure-you-wish-to-delete-the-automation') }
   <i>{automation.name}?</i>
-  This action cannot be undone.
+  { $t('this-action-cannot-be-undone') }
 </ConfirmDialog>
 
 <style>

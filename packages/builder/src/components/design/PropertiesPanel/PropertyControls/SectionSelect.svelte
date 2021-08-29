@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Body, Icon, Modal, ModalContent } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -10,19 +11,19 @@
   let modal
   let layoutMap = {
     mainSidebar: {
-      name: "Main with Sidebar",
+      name: $t('main-with-sidebar'),
       icon: "ColumnTwoB",
     },
     sidebarMain: {
-      name: "Sidebar with Main",
+      name: $t('sidebar-with-main'),
       icon: "ColumnTwoC",
     },
     twoColumns: {
-      name: "Two columns",
+      name: $t('two-columns'),
       icon: "ColumnTwoA",
     },
     threeColumns: {
-      name: "Three columns",
+      name: $t('three-columns'),
       icon: "ViewColumn",
     },
   }
@@ -33,7 +34,7 @@
   <ModalContent
     onConfirm={() => dispatch("change", selected)}
     size="L"
-    title="Select layout"
+    title={ $t('select-layout') }
   >
     <div class="container">
       {#each Object.entries(layoutMap) as [key, value]}

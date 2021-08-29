@@ -9,6 +9,7 @@
     StatusLight,
   } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
+  import { _ as t } from "svelte-i18n"
 
   export let app
   export let exportApp
@@ -30,11 +31,11 @@
 </div>
 <div>
   {#if app.updatedAt}
-    {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+    {processStringSync($t('updated') + " {{ duration time 'millisecond' }} " + $t('ago'), {
       time: new Date().getTime() - new Date(app.updatedAt).getTime(),
     })}
   {:else}
-    Never updated
+    { $t('never-updated') }
   {/if}
 </div>
 <div>
@@ -44,17 +45,17 @@
     negative={app.lockedOther}
   >
     {#if app.lockedYou}
-      Locked by you
+      { $t('locked-by-you') }
     {:else if app.lockedOther}
-      Locked by {app.lockedBy.email}
+      { $t('locked-by') } {app.lockedBy.email}
     {:else}
-      Open
+      { $t('open') }
     {/if}
   </StatusLight>
 </div>
 <div>
   <StatusLight active={app.deployed} neutral={!app.deployed}>
-    {#if app.deployed}Published{:else}Unpublished{/if}
+    {#if app.deployed}{ $t('published') }{:else}{ $t('unpublished') }{/if}
   </StatusLight>
 </div>
 <div>
@@ -62,29 +63,29 @@
     disabled={app.lockedOther}
     on:click={() => editApp(app)}
     size="S"
-    secondary>Open</Button
+    secondary>{ $t('open') }</Button
   >
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     {#if app.deployed}
       <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
-        View published app
+        { $t('view-published-app') }
       </MenuItem>
     {/if}
     {#if app.lockedYou}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
-        Release lock
+        { $t('release-lock') }
       </MenuItem>
     {/if}
-    <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
+    <MenuItem on:click={() => exportApp(app)} icon="Download">{ $t('export') }</MenuItem>
     {#if app.deployed}
       <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-        Unpublish
+        { $t('unpublish') }
       </MenuItem>
     {/if}
     {#if !app.deployed}
-      <MenuItem on:click={() => updateApp(app)} icon="Edit">Update</MenuItem>
-      <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
+      <MenuItem on:click={() => updateApp(app)} icon="Edit">{ $t('update') }</MenuItem>
+      <MenuItem on:click={() => deleteApp(app)} icon="Delete">{ $t('delete') }</MenuItem>
     {/if}
   </ActionMenu>
 </div>

@@ -4,6 +4,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let component
 
@@ -71,50 +72,50 @@
       <Icon size="S" hoverable name="MoreSmallList" />
     </div>
     <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>
-      Delete
+      { $t('delete') }
     </MenuItem>
     <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>
-      Move up
+      { $t('move-up') }
     </MenuItem>
     <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}>
-      Move down
+      { $t('move-down') }
     </MenuItem>
     <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}>
-      Duplicate
+      { $t('duplicate') }
     </MenuItem>
     <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}>
-      Cut
+      { $t('cut') }
     </MenuItem>
     <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}>
-      Copy
+      { $t('copy') }
     </MenuItem>
     <MenuItem
       icon="LayersBringToFront"
       on:click={() => pasteComponent("above")}
       disabled={noPaste}
     >
-      Paste above
+      { $t('paste-above') }
     </MenuItem>
     <MenuItem
       icon="LayersSendToBack"
       on:click={() => pasteComponent("below")}
       disabled={noPaste}
     >
-      Paste below
+      { $t('paste-below') }
     </MenuItem>
     <MenuItem
       icon="ShowOneLayer"
       on:click={() => pasteComponent("inside")}
       disabled={noPaste || noChildrenAllowed}
     >
-      Paste inside
+      { $t('paste-inside') }
     </MenuItem>
   </ActionMenu>
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
-    title="Confirm Deletion"
-    body={`Are you sure you wish to delete this '${definition?.name}' component?`}
-    okText="Delete Component"
+    title={ $t('confirm-deletion') }
+    body={$t('are-you-sure-you-wish-to-delete-this') + ` '${definition?.name}' ` + $t('component') + `?`}
+    okText={ $t('delete-component') }
     onOk={deleteComponent}
   />
 {/if}

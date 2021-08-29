@@ -12,6 +12,7 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let block
   export let webhookModal
@@ -115,7 +116,7 @@
   {/each}
 </div>
 {#if stepId === "WEBHOOK"}
-  <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
+  <Button secondary on:click={() => webhookModal.show()}>{ $t('set-up-webhook') }</Button>
 {/if}
 
 <style>

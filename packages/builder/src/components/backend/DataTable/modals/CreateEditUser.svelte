@@ -6,6 +6,7 @@
   import * as backendApi from "../api"
   import { ModalContent, Select } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let row = {}
 
@@ -42,10 +43,10 @@
 
     // Do some basic front end validation first
     if (!row.email) {
-      errors = [...errors, { message: "Email is required" }]
+      errors = [...errors, { message: $t('email-is-required') }]
     }
     if (!row.roleId) {
-      errors = [...errors, { message: "Role is required" }]
+      errors = [...errors, { message: $t('role-is-required') }]
     }
     if (errors.length) {
       return false
@@ -69,36 +70,36 @@
       return false
     }
 
-    notifications.success("User saved successfully")
+    notifications.success($t('user-saved-successfully'))
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? "Create User" : "Edit User"}
-  confirmText={creating ? "Create User" : "Save User"}
+  title={creating ? $t('create-user') : $t('edit-user')}
+  confirmText={creating ? $t('create-user') : $t('save-user')}
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />
   <RowFieldControl
-    meta={{ ...tableSchema.email, name: "Email" }}
+    meta={{ ...tableSchema.email, name: "Email" , label: $t('email') }}
     bind:value={row.email}
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ ...tableSchema.firstName, name: "First Name" }}
+    meta={{ ...tableSchema.firstName, name: "First Name" , label: $t('first-name-0') }}
     bind:value={row.firstName}
     readonly={!creating}
   />
   <RowFieldControl
-    meta={{ ...tableSchema.lastName, name: "Last Name" }}
+    meta={{ ...tableSchema.lastName, name: "Last Name", label: $t('last-name-0') }}
     bind:value={row.lastName}
     readonly={!creating}
   />
   <!-- Defer rendering this select until roles load, otherwise the initial
        selection is always undefined -->
   <Select
-    label="Role"
+    label={$t('role')}
     data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}

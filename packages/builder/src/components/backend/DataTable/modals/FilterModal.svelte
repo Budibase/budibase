@@ -12,45 +12,46 @@
   } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import analytics from "analytics"
+  import { _ as t } from "svelte-i18n"
 
   const CONDITIONS = [
     {
-      name: "Equals",
+      name: $t('equals'),
       key: "EQUALS",
     },
     {
-      name: "Not Equals",
+      name: $t('not-equals'),
       key: "NOT_EQUALS",
     },
     {
-      name: "Less Than",
+      name: $t('less-than'),
       key: "LT",
     },
     {
-      name: "Less Than Or Equal",
+      name: $t('less-than-or-equal'),
       key: "LTE",
     },
     {
-      name: "More Than",
+      name: $t('more-than'),
       key: "MT",
     },
     {
-      name: "More Than Or Equal",
+      name: $t('more-than-or-equal'),
       key: "MTE",
     },
     {
-      name: "Contains",
+      name: $t('contains'),
       key: "CONTAINS",
     },
   ]
 
   const CONJUNCTIONS = [
     {
-      name: "Or",
+      name: $t('or'),
       key: "OR",
     },
     {
-      name: "And",
+      name: $t('and'),
       key: "AND",
     },
   ]
@@ -64,7 +65,7 @@
 
   function saveView() {
     views.save(view)
-    notifications.success(`View ${view.name} saved.`)
+    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
     analytics.captureEvent("Added View Filter", {
       filters: JSON.stringify(view.filters),
     })
@@ -118,12 +119,12 @@
   const getOptionValue = x => x.key
 </script>
 
-<ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">
+<ModalContent title={ $t('filter') } confirmText={ $t('save') } onConfirm={saveView} size="L">
   {#if view.filters.length}
     <div class="input-group-row">
       {#each view.filters as filter, idx}
         {#if idx === 0}
-          <Label>Where</Label>
+          <Label>{ $t('where') }</Label>
         {:else}
           <Select
             bind:value={filter.conjunction}
@@ -171,10 +172,10 @@
       {/each}
     </div>
   {:else}
-    <Body size="S">Add a filter to get started.</Body>
+    <Body size="S">{ $t('add-a-filter-to-get-started') }</Body>
   {/if}
   <div slot="footer">
-    <Button secondary on:click={addFilter}>Add Filter</Button>
+    <Button secondary on:click={addFilter}>{ $t('add-filter') }</Button>
   </div>
 </ModalContent>
 

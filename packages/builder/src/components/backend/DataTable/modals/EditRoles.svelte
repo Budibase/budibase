@@ -5,6 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
+  import { _ as t } from "svelte-i18n"
 
   const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "Read/Write" }
 
@@ -58,10 +59,10 @@
 
     // Validation
     if (!selectedRole.name || selectedRole.name.trim() === "") {
-      errors.push({ message: "Please enter a role name" })
+      errors.push({ message: $t('please-enter-a-role-name') })
     }
     if (!selectedRole.permissionId) {
-      errors.push({ message: "Please choose permissions" })
+      errors.push({ message: $t('please-choose-permissions') })
     }
     if (errors.length) {
       return false
@@ -70,9 +71,9 @@
     // Save/create the role
     const response = await roles.save(selectedRole)
     if (response.status === 200) {
-      notifications.success("Role saved successfully.")
+      notifications.success($t('role-saved-successfully'))
     } else {
-      notifications.error("Error saving role.")
+      notifications.error($t('error-saving-role'))
       return false
     }
   }
@@ -82,9 +83,9 @@
     const response = await roles.delete(selectedRole)
     if (response.status === 200) {
       changeRole()
-      notifications.success("Role deleted successfully.")
+      notifications.success($t('role-deleted-successfully'))
     } else {
-      notifications.error("Error deleting role.")
+      notifications.error($t('error-deleting-role'))
     }
   }
 
@@ -92,8 +93,8 @@
 </script>
 
 <ModalContent
-  title="Edit Roles"
-  confirmText={isCreating ? "Create" : "Save"}
+  title={ $t('edit-roles') }
+  confirmText={isCreating ? $t('create') : $t('save')}
   onConfirm={saveRole}
   disabled={!valid}
 >
@@ -103,22 +104,22 @@
   <Select
     thin
     secondary
-    label="Role"
+    label={ $t('role') }
     value={selectedRoleId}
     on:change={changeRole}
     options={editableRoles}
-    placeholder="Create new role"
+    placeholder={ $t('create-new-role') }
     getOptionValue={role => role._id}
     getOptionLabel={role => role.name}
   />
   {#if selectedRole}
     <Input
-      label="Name"
+      label={ $t('name-0') }
       bind:value={selectedRole.name}
       disabled={builtInRoles.includes(selectedRole.name)}
     />
     <Select
-      label="Inherits Role"
+      label={ $t('inherits-role') }
       bind:value={selectedRole.inherits}
       options={otherRoles}
       getOptionValue={role => role._id}
@@ -126,7 +127,7 @@
       disabled={builtInRoles.includes(selectedRole.name)}
     />
     <Select
-      label="Base Permissions"
+      label={ $t('base-permissions') }
       bind:value={selectedRole.permissionId}
       options={basePermissions}
       getOptionValue={x => x._id}
@@ -136,7 +137,7 @@
   {/if}
   <div slot="footer">
     {#if !isCreating}
-      <Button warning on:click={deleteRole}>Delete</Button>
+      <Button warning on:click={deleteRole}>{ $t('delete-0') }</Button>
     {/if}
   </div>
 </ModalContent>

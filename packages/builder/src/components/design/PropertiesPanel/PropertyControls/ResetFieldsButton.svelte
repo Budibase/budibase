@@ -4,6 +4,7 @@
   import { findClosestMatchingComponent } from "builderStore/storeUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let componentInstance
 
@@ -30,14 +31,14 @@
     wide
     on:click={() => confirmResetFieldsDialog?.show()}
   >
-    Update form fields
+    { $t('update-form-fields') }
   </ActionButton>
 </div>
 
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}
-  body={`All components inside this group will be deleted and replaced with fields to match the schema. Are you sure you want to update this Field Group?`}
-  okText="Update"
+  body={$t('all-components-inside-this-group-will-be-deleted-and-replaced-with-fields-to-match-the-schema-are-you-sure-you-want-to-update-this-field-group')}
+  okText={ $t('update') }
   onOk={resetFormFields}
-  title="Confirm Form Field Update"
+  title={ $t('confirm-form-field-update') }
 />

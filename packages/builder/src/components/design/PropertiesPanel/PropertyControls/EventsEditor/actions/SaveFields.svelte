@@ -2,13 +2,14 @@
   import { Label, ActionButton, Button, Select, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
 
   export let parameterFields
   export let schemaFields
-  export let fieldLabel = "Column"
-  export let valueLabel = "Value"
+  export let fieldLabel = $t('column')
+  export let valueLabel = $t('value')
   export let bindings = []
 
   let fields = Object.entries(parameterFields || {})
@@ -62,7 +63,7 @@
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput
-      title={`Value for "${field[0]}"`}
+      title={$t('value-for') + ` "${field[0]}"`}
       value={field[1]}
       {bindings}
       on:change={event => updateFieldValue(idx, event.detail)}
@@ -76,7 +77,7 @@
   {/each}
   <div style="margin-top: 10px">
     <Button icon="AddCircle" secondary on:click={addField}>
-      Add
+      { $t('add') }
       {fieldLabel}
     </Button>
   </div>

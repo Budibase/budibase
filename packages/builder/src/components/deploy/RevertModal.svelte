@@ -2,6 +2,7 @@
   import { Icon, Modal, notifications, ModalContent } from "@budibase/bbui"
   import { store } from "builderStore"
   import api from "builderStore/api"
+  import { _ as t } from "svelte-i18n"
 
   let revertModal
 
@@ -24,19 +25,18 @@
         throw new Error(pkg)
       }
 
-      notifications.info("Changes reverted.")
+      notifications.info($t('changes-reverted'))
     } catch (err) {
-      notifications.error(`Error reverting changes: ${err}`)
+      notifications.error($t('error-reverting-changes') + `: ${err}`)
     }
   }
 </script>
 
 <Icon name="Revert" hoverable on:click={revertModal.show} />
 <Modal bind:this={revertModal}>
-  <ModalContent title="Revert Changes" confirmText="Revert" onConfirm={revert}>
+  <ModalContent title={ $t('revert-changes') } confirmText="Revert" onConfirm={revert}>
     <span
-      >The changes you have made will be deleted and the application reverted
-      back to its production state.</span
+      >{ $t('the-changes-you-have-made-will-be-deleted-and-the-application-reverted-back-to-its-production-state') }</span
     >
   </ModalContent>
 </Modal>

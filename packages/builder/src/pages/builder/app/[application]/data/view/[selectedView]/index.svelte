@@ -1,13 +1,14 @@
 <script>
   import ViewDataTable from "components/backend/DataTable/ViewDataTable.svelte"
   import { views, database } from "stores/backend"
+  import { _ as t } from "svelte-i18n"
 
   $: selectedView = $views.selected
 </script>
 
 {#if $database._id && selectedView}
   <ViewDataTable view={selectedView} />
-{:else}<i>Create your first table to start building</i>{/if}
+{:else}<i>{ $t('create-your-first-table-to-start-building') }</i>{/if}
 
 <style>
   i {

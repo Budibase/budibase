@@ -1,5 +1,6 @@
 <script>
   import { Button, Modal, ModalContent } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   let modal
 
@@ -14,7 +15,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     size="XL"
-    title="Edit Code"
+    title={ $t('edit-code') }
     showConfirmButton={false}
     showCancelButton={false}
   >
@@ -23,7 +24,7 @@
     </div>
   </ModalContent>
 </Modal>
-<Button primary on:click={show}>Edit Code</Button>
+<Button primary on:click={show}>{ $t('edit-code') }</Button>
 
 <style>
   .container :global(section > header) {

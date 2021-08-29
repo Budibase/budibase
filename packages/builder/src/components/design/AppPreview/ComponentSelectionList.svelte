@@ -2,6 +2,7 @@
   import { ActionMenu, ActionButton, MenuItem, Icon } from "@budibase/bbui"
   import { store, currentAssetName, selectedComponent } from "builderStore"
   import structure from "./componentStructure.json"
+  import { _ as t } from "svelte-i18n"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
 
@@ -54,7 +55,7 @@
         on:click={() => onItemChosen(item)}
       >
         <div class="buttonContent">
-          {item.name}
+          {$t(item.name)}
           {#if item.isCategory}
             <Icon size="S" name="ChevronDown" />
           {/if}
@@ -67,7 +68,7 @@
             icon={item.icon}
             on:click={() => onItemChosen(item)}
           >
-            {item.name}
+            {$t(item.name)}
           </MenuItem>
         {/if}
       {/each}

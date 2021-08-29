@@ -2,6 +2,7 @@
   import { DetailSummary, ActionButton, Drawer, Button } from "@budibase/bbui"
   import { store } from "builderStore"
   import ConditionalUIDrawer from "./PropertyControls/ConditionalUIDrawer.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let componentInstance
   export let bindings
@@ -25,13 +26,13 @@
   collapsible={false}
 >
   <div>
-    <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
+    <ActionButton on:click={openDrawer}>{ $t('configure-conditions') }</ActionButton>
   </div>
 </DetailSummary>
-<Drawer bind:this={drawer} title="Conditions">
+<Drawer bind:this={drawer} title={ $t('conditions') }>
   <svelte:fragment slot="description">
-    Show, hide and update components in response to conditions being met.
+    { $t('show-hide-and-update-components-in-response-to-conditions-being-met') }
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={() => save()}>Save</Button>
+  <Button cta slot="buttons" on:click={() => save()}>{ $t('save') }</Button>
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>

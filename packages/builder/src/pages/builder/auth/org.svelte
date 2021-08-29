@@ -5,6 +5,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { get } from "svelte/store"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
   $: multiTenancyEnabled = $admin.multiTenancy
@@ -39,15 +40,15 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={Logo} />
-        <Heading>Set Budibase organisation</Heading>
+        <Heading>{ $t('set-budibase-organisation') }</Heading>
       </Layout>
       <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Set organisation</Body>
-        <Input label="Organisation" bind:value={tenantId} />
+        <Body size="S" textAlign="center">{ $t('set-organisation') }</Body>
+        <Input label={ $t('organisation') } bind:value={tenantId} />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={setOrg}>Set organisation</Button>
+        <Button cta on:click={setOrg}>{ $t('set-organisation') }</Button>
       </Layout>
     </Layout>
   </div>

@@ -7,6 +7,7 @@
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
+  import { _ as t } from "svelte-i18n"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
@@ -16,7 +17,7 @@
 </script>
 
 <Tabs selected="Settings" noPadding>
-  <Tab title="Settings">
+  <Tab title="Settings" label={ $t('settings') } >
     <div class="container">
       {#key componentInstance?._id}
         <ScreenSettingsSection

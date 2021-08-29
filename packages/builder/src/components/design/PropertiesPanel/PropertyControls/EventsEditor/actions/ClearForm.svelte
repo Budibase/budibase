@@ -2,6 +2,7 @@
   import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
+  import { _ as t } from "svelte-i18n"
 
   export let parameters
 
@@ -13,7 +14,7 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label small>{ $t('form') }</Label>
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}

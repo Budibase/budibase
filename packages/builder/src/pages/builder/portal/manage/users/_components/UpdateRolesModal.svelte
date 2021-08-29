@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   export let app
   export let user
@@ -23,9 +24,9 @@
       },
     })
     if (res.status === 400) {
-      notifications.error("Failed to update role")
+      notifications.error($t('failed-to-update-role'))
     } else {
-      notifications.success("Role updated")
+      notifications.success($t('role-updated'))
       dispatch("update")
     }
   }
@@ -33,21 +34,21 @@
 
 <ModalContent
   onConfirm={updateUserRoles}
-  title="Update App Role"
-  confirmText="Update role"
-  cancelText="Cancel"
+  title={ $t('update-app-role') }
+  confirmText={ $t('update-role') }
+  cancelText={ $t('cancel') }
   size="M"
   showCloseIcon={false}
 >
   <Body>
-    Update {user.email}'s role for <strong>{app.name}</strong>.
+    { $t('update') } {user.email}{ $t('s-role-for') } <strong>{app.name}</strong>.
   </Body>
   <Select
     placeholder={null}
     bind:value={selectedRole}
     on:change
     {options}
-    label="Role"
+    label={ $t('role') }
     getOptionLabel={role => role.label}
     getOptionValue={role => role.value}
   />

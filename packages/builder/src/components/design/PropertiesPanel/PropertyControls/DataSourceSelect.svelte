@@ -20,6 +20,7 @@
   import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
+  import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -30,7 +31,7 @@
   export let showAllQueries
   export let bindings = []
 
-  $: text = value?.label ?? "Choose an option"
+  $: text = value?.label ?? $t('choose-an-option')
   $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
@@ -118,12 +119,12 @@
         slot="buttons"
         cta
         on:click={() => {
-          notifications.success("Query parameters saved.")
+          notifications.success($t('query-parameters-saved'))
           handleSelected(value)
           drawer.hide()
         }}
       >
-        Save
+        { $t('save') }
       </Button>
       <DrawerContent slot="body">
         <Layout noPadding>
@@ -152,7 +153,7 @@
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading size="XS">Tables</Heading>
+      <Heading size="XS">{ $t('tables') }</Heading>
     </div>
     <ul>
       {#each tables as table}
@@ -161,7 +162,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">Views</Heading>
+      <Heading size="XS">{ $t('views') }</Heading>
     </div>
     <ul>
       {#each views as view}
@@ -170,7 +171,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">Relationships</Heading>
+      <Heading size="XS">{ $t('relationships') }</Heading>
     </div>
     <ul>
       {#each links as link}
@@ -179,7 +180,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">Queries</Heading>
+      <Heading size="XS">{ $t('queries') }</Heading>
     </div>
     <ul>
       {#each queries as query}
@@ -193,7 +194,7 @@
     </ul>
     <Divider size="S" />
     <div class="title">
-      <Heading size="XS">Data Providers</Heading>
+      <Heading size="XS">{ $t('data-providers') }</Heading>
     </div>
     <ul>
       {#each dataProviders as provider}
@@ -208,7 +209,7 @@
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">
-        <Heading size="XS">Other</Heading>
+        <Heading size="XS">{ $t('other') }</Heading>
       </div>
       <ul>
         {#each otherSources as source}

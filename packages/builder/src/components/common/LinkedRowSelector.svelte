@@ -3,6 +3,7 @@
   import api from "builderStore/api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
+  import { _ as t } from "svelte-i18n"
 
   export let schema
   export let linkedRows = []
@@ -35,9 +36,9 @@
 {#if linkedTable.primaryDisplay == null}
   <Label extraSmall grey>{label}</Label>
   <Label small black>
-    Please choose a display column for the
+    { $t('please-choose-a-display-column-for-the') }
     <b>{linkedTable.name}</b>
-    table.
+    { $t('table-0') }.
   </Label>
 {:else if schema.relationshipType === "one-to-many"}
   <Select

@@ -3,6 +3,7 @@
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
+  import { _ as t } from "svelte-i18n"
 
   export let automation
   export let onSelect
@@ -19,7 +20,7 @@
   }
 </script>
 
-{#if !blocks.length}<i>Add a trigger to your automation to get started</i>{/if}
+{#if !blocks.length}<i>{ $t('add-a-trigger-to-your-automation-to-get-started') }</i>{/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
     <div

@@ -7,6 +7,7 @@
   import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
   import { store, hostingStore } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   const DeploymentStatus = {
     SUCCESS: "SUCCESS",
@@ -75,7 +76,7 @@
       console.error(err)
       clearInterval(poll)
       notifications.error(
-        "Error fetching deployment history. Please try again."
+        $t('error-fetching-deployment-history-please-try-again')
       )
     }
   }
@@ -97,11 +98,11 @@
 {#if deployments.length > 0}
   <section class="deployment-history" in:slide>
     <header>
-      <Heading>Deployment History</Heading>
+      <Heading>{ $t('deployment-history') }</Heading>
       <div class="deploy-div">
         {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
-          <a target="_blank" href={deploymentUrl}> View Your Deployed App → </a>
-          <Button primary on:click={() => modal.show()}>View webhooks</Button>
+          <a target="_blank" href={deploymentUrl}> { $t('view-your-deployed-app') } </a>
+          <Button primary on:click={() => modal.show()}>{ $t('view-webhooks') }</Button>
         {/if}
       </div>
     </header>
@@ -142,8 +143,8 @@
 </Modal>
 <Modal bind:this={errorReasonModal} width="30%">
   <ModalContent
-    title="Deployment Error"
-    confirmText="OK"
+    title={ $t('deployment-error') }
+    confirmText={ $t('ok') }
     showCancelButton={false}
   >
     {errorReason}

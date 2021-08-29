@@ -9,6 +9,7 @@
     ModalContent,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
+  import { _ as t } from "svelte-i18n"
 
   export let resourceId
   export let permissions
@@ -22,17 +23,17 @@
 
     // Show updated permissions in UI: REMOVE
     permissions = await permissionsStore.forResource(resourceId)
-    notifications.success("Updated permissions.")
+    notifications.success($t('updated-permissions'))
     // TODO: update permissions
     // permissions[]
   }
 </script>
 
-<ModalContent title="Manage Access" showCancelButton={false} confirmText="Done">
-  <Body size="S">Specify the minimum access level role for this data.</Body>
+<ModalContent title={$t('manage-access')} showCancelButton={false} confirmText={ $t('done') }>
+  <Body size="S">{ $t('specify-the-minimum-access-level-role-for-this-data') }</Body>
   <div class="row">
-    <Label extraSmall grey>Level</Label>
-    <Label extraSmall grey>Role</Label>
+    <Label extraSmall grey>{ $t('level') }</Label>
+    <Label extraSmall grey>{ $t('role') }</Label>
     {#each Object.keys(permissions) as level}
       <Input value={capitalise(level)} disabled />
       <Select

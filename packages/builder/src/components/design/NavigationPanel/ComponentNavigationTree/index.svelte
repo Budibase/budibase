@@ -1,6 +1,7 @@
 <script>
   import { store, selectedAccessRole } from "builderStore"
   import PathTree from "./PathTree.svelte"
+  import { _ as t } from "svelte-i18n"
 
   let routes = {}
   $: paths = Object.keys(routes || {}).sort()
@@ -62,7 +63,7 @@
 
   {#if !paths.length}
     <div class="empty">
-      There aren't any screens configured with this access role.
+      { $t('there-arent-any-screens-configured-with-this-access-role') }
     </div>
   {/if}
 </div>

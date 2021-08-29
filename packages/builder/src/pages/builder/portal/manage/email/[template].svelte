@@ -15,6 +15,7 @@
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
+  import { _ as t } from "svelte-i18n"
 
   // this is the email purpose
   export let template
@@ -36,9 +37,9 @@
     try {
       // Save your template config
       await email.templates.save(selectedTemplate)
-      notifications.success(`Template saved.`)
+      notifications.success($t('template-saved'))
     } catch (err) {
-      notifications.error(`Failed to update template settings. ${err}`)
+      notifications.error($t('failed-to-update-template-settings') + ` ${err}`)
     }
   }
 
@@ -79,24 +80,23 @@
       size="S"
       icon="BackAndroid"
     >
-      Back to email settings
+      { $t('back-to-email-settings') }
     </ActionButton>
   </div>
   <header>
     <Heading>
-      Email Template: {name}
+      { $t('email-template') } {name}
     </Heading>
-    <Button cta on:click={saveTemplate}>Save</Button>
+    <Button cta on:click={saveTemplate}>{ $t('save') }</Button>
   </header>
-  <Detail>Description</Detail>
+  <Detail>{ $t('description') }</Detail>
   <Body>{description}</Body>
   <Body
-    >Change the email template here. Add dynamic content by using the bindings
-    menu on the right.</Body
+    >{ $t('change-the-email-template-here-add-dynamic-content-by-using-the-bindings-menu-on-the-right') }</Body
   >
 </Layout>
 <Tabs selected="Edit" on:select={fixMountBug}>
-  <Tab title="Edit">
+  <Tab title="Edit" label={ $t('edit') }>
     <div class="template-editor">
       <Editor
         editorHeight={800}
@@ -108,19 +108,19 @@
         value={selectedTemplate?.contents}
       />
       <div class="bindings-editor">
-        <Detail size="L">Bindings</Detail>
+        <Detail size="L">{ $t('bindings') }</Detail>
         {#if mounted}
           <Tabs selected="Template">
-            <Tab title="Template">
+            <Tab title="Template" label={ $t('template') }>
               <TemplateBindings
-                title="Template Bindings"
+                title={ $t('template-bindings') }
                 bindings={templateBindings}
                 onBindingClick={setTemplateBinding}
               />
             </Tab>
-            <Tab title="Common">
+            <Tab title="Common" label={ $t('common') }>
               <TemplateBindings
-                title="Common Bindings"
+                title={ $t('common-bindings') }
                 bindings={$email?.definitions?.bindings?.common}
                 onBindingClick={setTemplateBinding}
               />
@@ -130,7 +130,7 @@
       </div>
     </div>
   </Tab>
-  <Tab title="Preview">
+  <Tab title="Preview"  label={ $t('preview') }>
     <div class="preview">
       <iframe title="preview" srcdoc={previewContent} />
     </div>

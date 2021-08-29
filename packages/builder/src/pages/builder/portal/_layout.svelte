@@ -16,42 +16,41 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { _ as t, locale } from "svelte-i18n"
 
   let loaded = false
   let userInfoModal
   let changePasswordModal
-
-  $: menu = buildMenu($auth.isAdmin)
-
+  
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [{ title: $t('apps'), href: "/builder/portal/apps" }]
     if (admin) {
       menu = menu.concat([
         {
-          title: "Users",
+          title: $t('users'),
           href: "/builder/portal/manage/users",
-          heading: "Manage",
+          heading: $t('manage'),
         },
-        { title: "Auth", href: "/builder/portal/manage/auth" },
-        { title: "Email", href: "/builder/portal/manage/email" },
+        { title: $t('auth'), href: "/builder/portal/manage/auth" },
+        { title: $t('email'), href: "/builder/portal/manage/email" },
         {
-          title: "Organisation",
+          title: $t('organisation'),
           href: "/builder/portal/settings/organisation",
-          heading: "Settings",
+          heading: $t('settings'),
         },
         {
-          title: "Theming",
+          title: $t('theming-and-language'),
           href: "/builder/portal/settings/theming",
         },
         {
-          title: "Updates",
+          title: $t('updates'),
           href: "/builder/portal/settings/update",
         },
       ])
     } else {
       menu = menu.concat([
         {
-          title: "Theming",
+          title: $t('theming-and-language'),
           href: "/builder/portal/settings/theming",
           heading: "Settings",
         },
@@ -59,6 +58,9 @@
     }
     return menu
   }
+  let menu = buildMenu($auth.isAdmin)
+  
+  locale.subscribe(() => menu = buildMenu($auth.isAdmin))
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
@@ -108,18 +110,18 @@
             <Icon size="XL" name="ChevronDown" />
           </div>
           <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-            Update user information
+            { $t('update-user-information') }
           </MenuItem>
           <MenuItem
             icon="LockClosed"
             on:click={() => changePasswordModal.show()}
           >
-            Update password
+            { $t('update-password') }
           </MenuItem>
           <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-            Close developer mode
+            { $t('close-developer-mode') }
           </MenuItem>
-          <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+          <MenuItem icon="LogOut" on:click={auth.logout}>{ $t('log-out') }</MenuItem>
         </ActionMenu>
       </div>
       <div class="content">

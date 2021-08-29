@@ -12,6 +12,7 @@
     notifications,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let table
 
@@ -28,8 +29,8 @@
     templateScreens = $allScreens.filter(
       screen => screen.autoTableId === table._id
     )
-    willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
+    willBeDeleted = [$t('all-table-data')].concat(
+      templateScreens.map(screen => $t('screen') + ` ${screen.props._instanceName}`)
     )
     confirmDeleteDialog.show()
   }
@@ -39,7 +40,7 @@
     await tables.delete(table)
     store.actions.screens.delete(templateScreens)
     await tables.fetch()
-    notifications.success("Table deleted")
+    notifications.success($t('table-deleted'))
     if (wasSelectedTable._id === table._id) {
       $goto("./table")
     }
@@ -47,14 +48,14 @@
 
   async function save() {
     await tables.save(table)
-    notifications.success("Table renamed successfully")
+    notifications.success($t('table-renamed-successfully'))
   }
 
   function checkValid(evt) {
     const tableName = evt.target.value
     error =
       originalName === tableName
-        ? `Table with name ${tableName} already exists. Please choose another name.`
+        ? $t('table-with-name') + ` ${tableName} ` + $t('already-exists-please-choose-another-name')
         : ""
   }
 </script>
@@ -63,21 +64,21 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  <MenuItem icon="Edit" on:click={editorModal.show}>{ $t('edit') }</MenuItem>
   {#if !external}
-    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+    <MenuItem icon="Delete" on:click={showDeleteModal}>{ $t('delete') }</MenuItem>
   {/if}
 </ActionMenu>
 
 <Modal bind:this={editorModal}>
   <ModalContent
-    title="Edit Table"
-    confirmText="Save"
+    title={ $t('edit-table') }
+    confirmText={ $t('save') }
     onConfirm={save}
     disabled={table.name === originalName || error}
   >
     <Input
-      label="Table Name"
+      label={ $t('table-name') }
       thin
       bind:value={table.name}
       on:input={checkValid}
@@ -87,13 +88,13 @@
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Table"
+  okText={ $t('delete-table') }
   onOk={deleteTable}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion') }
 >
-  Are you sure you wish to delete the table
+  { $t('are-you-sure-you-wish-to-delete-the-table') }
   <i>{table.name}?</i>
-  The following will also be deleted:
+  { $t('the-following-will-also-be-deleted') }
   <b>
     <div class="delete-items">
       {#each willBeDeleted as item}
@@ -101,7 +102,7 @@
       {/each}
     </div>
   </b>
-  This action cannot be undone.
+  { $t('this-action-cannot-be-undone') }
 </ConfirmDialog>
 
 <style>

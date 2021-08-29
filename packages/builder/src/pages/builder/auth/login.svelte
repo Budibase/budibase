@@ -15,6 +15,7 @@
   import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   let username = ""
   let password = ""
@@ -35,13 +36,13 @@
         if ($params["?returnUrl"]) {
           window.location = decodeURIComponent($params["?returnUrl"])
         } else {
-          notifications.success("Logged in successfully")
+          notifications.success($t('logged-in-successfully'))
           $goto("../portal")
         }
       }
     } catch (err) {
       console.error(err)
-      notifications.error("Invalid credentials")
+      notifications.error($t('invalid-credentials'))
     }
   }
 
@@ -61,7 +62,7 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading>Sign in to {company}</Heading>
+        <Heading>{ $t('sign-in-to') } {company}</Heading>
       </Layout>
       {#if loaded}
         <GoogleButton />
@@ -69,19 +70,19 @@
       {/if}
       <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Sign in with email</Body>
-        <Input label="Email" bind:value={username} />
+        <Body size="S" textAlign="center">{ $t('sign-in-with-email') }</Body>
+        <Input label={ $t('email') } bind:value={username} />
         <Input
-          label="Password"
+          label={ $t('password') }
           type="password"
           on:change
           bind:value={password}
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>Sign in to {company}</Button>
+        <Button cta on:click={login}>{ $t('sign-in-to') } {company}</Button>
         <ActionButton quiet on:click={() => $goto("./forgot")}>
-          Forgot password?
+          { $t('forgot-password') }
         </ActionButton>
         {#if multiTenancyEnabled}
           <ActionButton
@@ -91,7 +92,7 @@
               $goto("./org")
             }}
           >
-            Change organisation
+            { $t('change-organisation') }
           </ActionButton>
         {/if}
       </Layout>

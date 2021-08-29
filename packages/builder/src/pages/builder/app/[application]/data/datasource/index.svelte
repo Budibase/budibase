@@ -2,6 +2,7 @@
   import { datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   onMount(async () => {
     // navigate to first table in list, if not already selected
@@ -10,8 +11,8 @@
 </script>
 
 {#if $datasources.list.length === 0}
-  <i>Connect your first datasource to start building.</i>
-{:else}<i>Select a datasource to edit</i>{/if}
+  <i>{ $t('connect-your-first-datasource-to-start-building') }</i>
+{:else}<i>{ $t('select-a-datasource-to-edit') }</i>{/if}
 
 <style>
   i {

@@ -5,6 +5,7 @@
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics from "analytics"
+  import { _ as t } from "svelte-i18n"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -43,10 +44,10 @@
 
   const save = async () => {
     if (!route) {
-      routeError = "URL is required"
+      routeError = $t('url-is-required')
     } else {
       if (routeExists(route, roleId)) {
-        routeError = "This URL is already taken for this access role"
+        routeError = $t('this-url-is-already-taken-for-this-access-role')
       } else {
         routeError = ""
       }
@@ -88,9 +89,9 @@
   }
 </script>
 
-<ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>
+<ModalContent title={ $t('new-screen') } confirmText={ $t('create-screen') } onConfirm={save}>
   <Select
-    label="Choose a Template"
+    label={ $t('choose-a-template') }
     bind:value={templateIndex}
     on:change={ev => templateChanged(ev.detail)}
     options={templates}
@@ -98,19 +99,19 @@
     getOptionLabel={x => x.name}
     getOptionValue={(x, idx) => idx}
   />
-  <Input label="Name" bind:value={name} />
+  <Input label={ $t('name') } bind:value={name} />
   <Input
-    label="Url"
+    label={ $t('url') }
     error={routeError}
     bind:value={route}
     on:change={routeChanged}
   />
   <Select
-    label="Access"
+    label={ $t('access') }
     bind:value={roleId}
     options={$roles}
     getOptionLabel={x => x.name}
     getOptionValue={x => x._id}
   />
-  <Toggle text="Create link in navigation bar" bind:value={createLink} />
+  <Toggle text={ $t('create-link-in-navigation-bar') } bind:value={createLink} />
 </ModalContent>

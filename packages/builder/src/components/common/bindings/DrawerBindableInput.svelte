@@ -6,11 +6,12 @@
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let panel = BindingPanel
   export let value = ""
   export let bindings = []
-  export let title = "Bindings"
+  export let title = $t('bindings')
   export let placeholder
   export let label
   export let disabled = false
@@ -47,10 +48,10 @@
 </div>
 <Drawer bind:this={bindingDrawer} {title}>
   <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
+    { $t('add-the-objects-on-the-left-to-enrich-your-text') }
   </svelte:fragment>
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    Save
+    { $t('save') }
   </Button>
   <svelte:component
     this={panel}

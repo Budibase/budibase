@@ -1,10 +1,11 @@
 <script>
   import { Modal, ModalContent, Body } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let title = ""
   export let body = ""
-  export let okText = "Confirm"
-  export let cancelText = "Cancel"
+  export let okText = $t('confirm') 
+  export let cancelText = $t('cancel')
   export let onOk = undefined
   export let onCancel = undefined
   export let warning = true

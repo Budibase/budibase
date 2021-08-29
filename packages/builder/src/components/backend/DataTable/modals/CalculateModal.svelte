@@ -3,18 +3,19 @@
   import { tables, views } from "stores/backend"
   import analytics from "analytics"
   import { FIELDS } from "constants/backend"
+  import { _ as t } from "svelte-i18n"
 
   const CALCULATIONS = [
     {
-      name: "Statistics",
+      name: $t('statistics'),
       key: "stats",
     },
     {
-      name: "Count",
+      name: $t('count'),
       key: "count",
     },
     {
-      name: "Sum",
+      name: $t('sum'),
       key: "sum",
     },
   ]
@@ -39,19 +40,19 @@
 
   function saveView() {
     views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent("Added View Calculate", { field: view.field })
+    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
+    analytics.captureEvent($t('added-view-calculate'), { field: view.field })
   }
 </script>
 
 <ModalContent
-  title="Calculate"
-  confirmText="Save"
+  title={ $t('calculate') }
+  confirmText={ $t('save') }
   onConfirm={saveView}
   disabled={!view.field}
 >
   <div class="input-group-row">
-    <Label>The</Label>
+    <Label>{ $t('the') }</Label>
     <Select
       bind:value={view.calculation}
       options={CALCULATIONS}
@@ -59,7 +60,7 @@
       getOptionValue={x => x.key}
     />
     {#if view.calculation}
-      <Label>Of</Label>
+      <Label>{ $t('of') }</Label>
       <Select bind:value={view.field} options={fields} />
     {/if}
   </div>

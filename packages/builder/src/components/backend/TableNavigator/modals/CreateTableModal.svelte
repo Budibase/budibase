@@ -18,6 +18,7 @@
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
   import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
   import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
+  import { _ as t } from "svelte-i18n"
 
   const defaultScreens = [
     NEW_ROW_TEMPLATE,
@@ -46,7 +47,7 @@
   function checkValid(evt) {
     const tableName = evt.target.value
     if (tableNames.includes(tableName)) {
-      error = `Table with name ${tableName} already exists. Please choose another name.`
+      error = $t('table-with-name') + ` ${tableName} ` + $t('already-exists-please-choose-another-name')
       return
     }
     error = ""
@@ -66,7 +67,7 @@
 
     // Create table
     const table = await tables.save(newTable)
-    notifications.success(`Table ${name} created successfully.`)
+    notifications.success($t('table') + ` ${name} ${$t('created-successfully')}.`)
     analytics.captureEvent("Table Created", { name })
 
     // Create auto screens
@@ -100,41 +101,41 @@
 </script>
 
 <ModalContent
-  title="Create Table"
-  confirmText="Create"
+  title={ $t('create-table') }
+  confirmText={ $t('create') }
   onConfirm={saveTable}
   disabled={error || !name || (dataImport && !dataImport.valid)}
 >
   <Input
     data-cy="table-name-input"
     thin
-    label="Table Name"
+    label={ $t('table-name') }
     on:input={checkValid}
     bind:value={name}
     {error}
   />
   <div class="autocolumns">
-    <Label extraSmall grey>Auto Columns</Label>
+    <Label extraSmall grey>{ $t('auto-columns') }</Label>
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle text="Created by" bind:value={autoColumns.createdBy.enabled} />
-        <Toggle text="Created at" bind:value={autoColumns.createdAt.enabled} />
-        <Toggle text="Auto ID" bind:value={autoColumns.autoID.enabled} />
+        <Toggle text={ $t('created-by') } bind:value={autoColumns.createdBy.enabled} />
+        <Toggle text={ $t('created-at') } bind:value={autoColumns.createdAt.enabled} />
+        <Toggle text={ $t('auto-id') } bind:value={autoColumns.autoID.enabled} />
       </div>
       <div class="toggle-2">
-        <Toggle text="Updated by" bind:value={autoColumns.updatedBy.enabled} />
-        <Toggle text="Updated at" bind:value={autoColumns.updatedAt.enabled} />
+        <Toggle text={ $t('updated-by') } bind:value={autoColumns.updatedBy.enabled} />
+        <Toggle text={ $t('updated-at') } bind:value={autoColumns.updatedAt.enabled} />
       </div>
     </div>
     <Divider />
   </div>
   <Toggle
-    text="Generate screens in Design section"
+    text={ $t('generate-screens-in-design-section') }
     bind:value={createAutoscreens}
   />
   <div>
     <Layout gap="XS" noPadding>
-      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+      <Label grey extraSmall>{ $t('create-table-from-csv-optional') }</Label>
       <TableDataImport bind:dataImport />
     </Layout>
   </div>

@@ -3,6 +3,7 @@
   import { datasources, integrations, queries } from "stores/backend"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let parameters
   export let bindings = []
@@ -22,7 +23,7 @@
 
 <Layout gap="XS" noPadding>
   <Select
-    label="Datasource"
+    label={ $t('datasource') }
     bind:value={parameters.datasourceId}
     options={$datasources.list}
     getOptionLabel={source => source.name}
@@ -31,7 +32,7 @@
 
   {#if parameters.datasourceId}
     <Select
-      label="Query"
+      label={ $t('query') }
       bind:value={parameters.queryId}
       options={$queries.list.filter(
         query => query.datasourceId === datasource._id
@@ -41,12 +42,12 @@
     />
 
     {#if parameters.queryId}
-      <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+      <Checkbox text={ $t('require-confirmation') } bind:value={parameters.confirm} />
 
       {#if parameters.confirm}
         <Input
-          label="Confirm text"
-          placeholder="Are you sure you want to execute this query?"
+          label={ $t('confirm-text') }
+          placeholder={ $t('are-you-sure-you-want-to-execute-this-query') }
           bind:value={parameters.confirmText}
         />
       {/if}

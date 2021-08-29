@@ -4,6 +4,7 @@
   import { notifications } from "@budibase/bbui"
   import EventEditor from "./EventEditor.svelte"
   import { automationStore } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -23,7 +24,7 @@
     }
 
     dispatch("change", value)
-    notifications.success("Component actions saved.")
+    notifications.success($t('component-actions-saved'))
     drawer.hide()
   }
 
@@ -52,11 +53,11 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define actions</ActionButton>
-<Drawer bind:this={drawer} title={"Actions"}>
+<ActionButton on:click={drawer.show}>{ $t('define-actions') }</ActionButton>
+<Drawer bind:this={drawer} title={$t('actions')}>
   <svelte:fragment slot="description">
-    Define what actions to run.
+    { $t('define-what-actions-to-run') }
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveEventData}>Save</Button>
+  <Button cta slot="buttons" on:click={saveEventData}>{ $t('save') }</Button>
   <EventEditor slot="body" bind:actions={value} eventType={name} {bindings} />
 </Drawer>

@@ -2,6 +2,7 @@
   import { automationStore } from "builderStore"
   import AutomationBlockTagline from "./AutomationBlockTagline.svelte"
   import { Icon } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let onSelect
   export let block
@@ -26,16 +27,16 @@
   <header>
     {#if block.type === "TRIGGER"}
       <Icon name="Light" />
-      <span>When this happens...</span>
+      <span>{ $t('when-this-happens') }</span>
     {:else if block.type === "ACTION"}
       <Icon name="FlashOn" />
-      <span>Do this...</span>
+      <span>{ $t('do-this') }</span>
     {:else if block.type === "LOGIC"}
       <Icon name="Branch2" />
-      <span>Only continue if...</span>
+      <span>{ $t('only-continue-if') }</span>
     {/if}
     <div class="label">
-      {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
+      {#if block.type === "TRIGGER"}{ $t('trigger') }{:else}{ $t('step') } {blockIdx + 1}{/if}
     </div>
     {#if block.type !== "TRIGGER" || allowDeleteTrigger}
       <div on:click|stopPropagation={deleteStep}><Icon name="Close" /></div>

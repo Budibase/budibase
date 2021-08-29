@@ -4,6 +4,7 @@
     createValidationStore,
     requiredValidator,
   } from "../../../helpers/validation"
+  import { _ as t } from "svelte-i18n"
 
   export let password
   export let error
@@ -28,17 +29,17 @@
 
 <Layout gap="XS" noPadding>
   <Input
-    label="Password"
+    label={ $t('password') }
     type="password"
     error={$firstTouched && $passwordError}
     bind:value={$firstPassword}
   />
   <Input
-    label="Repeat Password"
+    label={ $t('repeat-password') }
     type="password"
     error={$repeatTouched &&
       $firstPassword !== $repeatPassword &&
-      "Passwords must match"}
+      $t('passwords-must-match') }
     bind:value={$repeatPassword}
   />
 </Layout>

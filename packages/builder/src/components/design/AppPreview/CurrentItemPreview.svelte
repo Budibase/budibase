@@ -7,6 +7,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
+  import { _ as t } from "svelte-i18n"
 
   let iframe
   let layout
@@ -90,7 +91,7 @@
       "error",
       event => {
         loading = false
-        error = event.detail || "An unknown error occurred"
+        error = event.detail || $t('an-unknown-error-occurred')
       },
       { once: true }
     )
@@ -110,7 +111,7 @@
         // loading is supported
         loading = false
       } else {
-        console.warning(`Client sent unknown event type: ${type}`)
+        console.warning($t('client-sent-unknown-event-type') + `: ${type}`)
       }
     })
   })
@@ -133,7 +134,7 @@
     <div class="center error">
       <Layout justifyItems="center" gap="S">
         {@html ErrorSVG}
-        <Heading size="L">App preview failed to load</Heading>
+        <Heading size="L">{ $t('app-preview-failed-to-load') }</Heading>
         <Body size="S">{error}</Body>
       </Layout>
     </div>
@@ -148,9 +149,9 @@
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Deletion"
-  body={`Are you sure you want to delete this component?`}
-  okText="Delete component"
+  title="{ $t('confirm-deletion') }"
+  body={$t('are-you-sure-you-want-to-delete-this-component') + `?`}
+  okText={ $t('delete-component') }
   onOk={deleteComponent}
   onCancel={cancelDeleteComponent}
 />

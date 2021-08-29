@@ -2,6 +2,7 @@
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
   import { auth, organisation } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   let show
 
@@ -16,7 +17,7 @@
   >
     <div class="inner">
       <img src={GoogleLogo} alt="google icon" />
-      <p>Sign in with Google</p>
+      <p>{ $t('sign-in-with-google') }</p>
     </div>
   </ActionButton>
 {/if}

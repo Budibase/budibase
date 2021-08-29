@@ -2,6 +2,7 @@
   import { Button, ActionButton, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import ValidationDrawer from "./ValidationDrawer.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let value = []
   export let bindings = []
@@ -17,12 +18,12 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure Validation</ActionButton>
-<Drawer bind:this={drawer} title="Validation Rules">
+<ActionButton on:click={drawer.show}>{ $t('configure-validation') }</ActionButton>
+<Drawer bind:this={drawer} title={ $t('validation-rules') }>
   <svelte:fragment slot="description">
-    Configure validation rules for this field.
+    { $t('configure-validation-rules-for-this-field') }
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={save}>Save</Button>
+  <Button cta slot="buttons" on:click={save}>{ $t('save') }</Button>
   <ValidationDrawer
     slot="body"
     bind:rules={value}

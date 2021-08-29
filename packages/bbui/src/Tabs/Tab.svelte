@@ -2,7 +2,9 @@
   import { getContext, onMount, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
   export let title
+  export let label
   export let icon = ""
+  export let labelFn = title => title
 
   const dispatch = createEventDispatcher()
   const selected = getContext("tab")
@@ -43,7 +45,7 @@
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
   {/if}
-  <span class="spectrum-Tabs-itemLabel">{title}</span>
+  <span class="spectrum-Tabs-itemLabel">{label || title}</span>
 </div>
 {#if $selected.title === title}
   <Portal target=".spectrum-Tabs-content-{$selected.id}">

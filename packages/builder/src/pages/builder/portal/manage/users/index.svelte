@@ -16,15 +16,16 @@
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   users.init()
 
   const schema = {
     email: {},
-    developmentAccess: { displayName: "Development Access", type: "boolean" },
-    adminAccess: { displayName: "Admin Access", type: "boolean" },
+    developmentAccess: { displayName: $t('development-access'), type: "boolean" },
+    adminAccess: { displayName: $t('admin-access'), type: "boolean" },
     // role: { type: "options" },
-    group: {},
+    group: { displayName: $t('group') },
     // access: {},
     // group: {}
   }
@@ -51,23 +52,22 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading>Users</Heading>
+    <Heading>{ $t('users') }</Heading>
     <Body>
-      Each user is assigned to a group that contains apps and permissions. In
-      this section, you can add users, or edit and delete an existing user.
+      { $t('each-user-is-assigned-to-a-group-that-contains-apps-and-permissions-in-this-section-you-can-add-users-or-edit-and-delete-an-existing-user') }
     </Body>
   </Layout>
   <Divider size="S" />
   <Layout gap="S" noPadding>
     <div class="users-heading">
-      <Heading size="S">Users</Heading>
+      <Heading size="S">{ $t('users') }</Heading>
       <ButtonGroup>
-        <Button disabled secondary>Import users</Button>
-        <Button primary on:click={createUserModal.show}>Add user</Button>
+        <Button disabled secondary>{ $t('import-users') }</Button>
+        <Button primary on:click={createUserModal.show}>{ $t('add-user') }</Button>
       </ButtonGroup>
     </div>
     <div class="field">
-      <Label size="L">Search / filter</Label>
+      <Label size="L">{ $t('search-filter') }</Label>
       <Search bind:value={search} placeholder="" />
     </div>
     <Table

@@ -5,6 +5,7 @@
   import { auth, organisation } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   const resetCode = $params["?code"]
   let password, error
@@ -21,12 +22,12 @@
         $goto("../portal/")
       } else {
         await auth.resetPassword(password, resetCode)
-        notifications.success("Password reset successfully")
+        notifications.success($t('password-reset-successfully'))
         // send them to login if reset successful
         $goto("./login")
       }
     } catch (err) {
-      notifications.error("Unable to reset password")
+      notifications.error($t('unable-to-reset-password'))
     }
   }
 
@@ -42,9 +43,9 @@
         <img src={$organisation.logoUrl || Logo} alt="Organisation logo" />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Heading textAlign="center">Reset your password</Heading>
+        <Heading textAlign="center">{ $t('reset-your-password') }</Heading>
         <Body size="S" textAlign="center">
-          Please enter the new password you'd like to use.
+          { $t('please-enter-the-new-password-youd-like-to-use') }
         </Body>
         <PasswordRepeatInput bind:password bind:error />
       </Layout>
@@ -53,7 +54,7 @@
         on:click={reset}
         disabled={error || (forceResetPassword ? false : !resetCode)}
       >
-        Reset your password
+        { $t('reset-your-password') }
       </Button>
     </Layout>
   </div>

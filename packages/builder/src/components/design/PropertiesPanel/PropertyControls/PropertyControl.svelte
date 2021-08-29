@@ -6,6 +6,7 @@
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { capitalise } from "helpers"
+  import { _ as t } from "svelte-i18n"
 
   export let label = ""
   export let bindable = true
@@ -94,10 +95,10 @@
       </div>
       <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
         <svelte:fragment slot="description">
-          Add the objects on the left to enrich your text.
+          { $t('add-the-objects-on-the-left-to-enrich-your-text') }
         </svelte:fragment>
         <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>
-          Save
+          { $t('save') }
         </Button>
         <BindingPanel
           slot="body"

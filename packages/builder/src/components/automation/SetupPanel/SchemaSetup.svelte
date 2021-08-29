@@ -1,5 +1,6 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let value = {}
   $: fieldsArray = Object.entries(value).map(([name, type]) => ({
@@ -8,19 +9,19 @@
   }))
   const typeOptions = [
     {
-      label: "Text",
+      label: $t('text'),
       value: "string",
     },
     {
-      label: "Number",
+      label: $t('number'),
       value: "number",
     },
     {
-      label: "Boolean",
+      label: $t('boolean'),
       value: "boolean",
     },
     {
-      label: "DateTime",
+      label: $t('datetime-0'),
       value: "datetime",
     },
   ]
@@ -63,7 +64,7 @@
       <Input
         value={field.name}
         secondary
-        placeholder="Enter field name"
+        placeholder={ $t('enter-field-name') }
         on:change={fieldNameChanged(field.name)}
       />
       <Select

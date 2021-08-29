@@ -23,6 +23,7 @@
   import api from "builderStore/api"
   import { organisation, auth, admin } from "stores/portal"
   import { uuid } from "builderStore/uuid"
+  import { _ as t } from "svelte-i18n"
 
   $: tenantId = $auth.tenantId
   $: multiTenancyEnabled = $admin.multiTenancy
@@ -95,7 +96,7 @@
       icon: OidcLogoPng,
     },
     {
-      label: "Upload your own",
+      label: $t('upload-your-own'),
       value: "Upload",
     },
   ]
@@ -170,7 +171,7 @@
         if (partialOidc) {
           if (!oidcComplete) {
             notifications.error(
-              `Please fill in all required ${ConfigTypes.OIDC} fields`
+              $t('please-fill-in-all-required') + ` ${ConfigTypes.OIDC} ` + $t('fields')
             )
           } else {
             calls.push(api.post(`/api/global/configs`, element))
@@ -184,7 +185,7 @@
         if (partialGoogle) {
           if (!googleComplete) {
             notifications.error(
-              `Please fill in all required ${ConfigTypes.Google} fields`
+              $t('please-fill-in-all-required') + ` ${ConfigTypes.Google} ` + $t('fields')
             )
           } else {
             calls.push(api.post(`/api/global/configs`, element))
@@ -208,10 +209,10 @@
             providers[res.type]._rev = res._rev
             providers[res.type]._id = res._id
           })
-          notifications.success(`Settings saved.`)
+          notifications.success($t('settings-saved'))
         })
         .catch(err => {
-          notifications.error(`Failed to update auth settings. ${err}`)
+          notifications.error($t('failed-to-update-auth-settings') + ` ${err}`)
           throw new Error(err.message)
         })
   }
@@ -274,11 +275,9 @@
 
 <Layout>
   <Layout gap="XS" noPadding>
-    <Heading size="M">Authentication</Heading>
+    <Heading size="M">{ $t('authentication') }</Heading>
     <Body>
-      Every budibase app comes with basic authentication (email/password)
-      included. You can add additional authentication methods from the options
-      below.
+      { $t('every-budibase-app-comes-with-basic-authentication-email-password-included-you-can-add-additional-authentication-methods-from-the-options-below') }
     </Body>
   </Layout>
   {#if providers.google}
@@ -294,15 +293,14 @@
                 disabled={googleSaveButtonDisabled}
                 size="s"
                 cta
-                on:click={() => save([providers.google])}>Save</Button
+                on:click={() => save([providers.google])}>{ $t('save') }</Button
               >
             </div>
           </div>
         </div>
       </Heading>
       <Body size="S">
-        To allow users to authenticate using their Google accounts, fill out the
-        fields below.
+        { $t('to-allow-users-to-authenticate-using-their-google-accounts-fill-out-the-fields-below') }
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -318,7 +316,7 @@
       {/each}
       <div class="form-row">
         <div class="field">
-          <Label size="L">Activated</Label>
+          <Label size="L">{ $t('activated') }</Label>
           <span class="alignedToggle">
             <Toggle text="" bind:value={providers.google.config.activated} />
           </span>
@@ -339,14 +337,14 @@
                 disabled={oidcSaveButtonDisabled}
                 size="s"
                 cta
-                on:click={() => save([providers.oidc])}>Save</Button
+                on:click={() => save([providers.oidc])}>{ $t('save') }</Button
               >
             </div>
           </div>
         </div></Heading
       >
       <Body size="S">
-        To allow users to authenticate using OIDC, fill out the fields below.
+        { $t('to-allow-users-to-authenticate-using-oidc-fill-out-the-fields-below') }
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -362,14 +360,14 @@
       {/each}
       <br />
       <Body size="S">
-        To customize your login button, fill out the fields below.
+        { $t('to-customize-your-login-button-fill-out-the-fields-below') }
       </Body>
       <div class="form-row">
-        <Label size="L">Name</Label>
+        <Label size="L">{ $t('name') }</Label>
         <Input bind:value={providers.oidc.config.configs[0].name} />
       </div>
       <div class="form-row">
-        <Label size="L">Icon</Label>
+        <Label size="L">{ $t('icon') }</Label>
         <Select
           label=""
           bind:value={providers.oidc.config.configs[0].logo}
@@ -386,7 +384,7 @@
     </Layout>
     <div class="form-row">
       <div class="field">
-        <Label size="L">Activated</Label>
+        <Label size="L">{ $t('activated') }</Label>
         <span class="alignedToggle">
           <Toggle
             text=""

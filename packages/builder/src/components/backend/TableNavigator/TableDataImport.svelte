@@ -3,6 +3,7 @@
   import { notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
+  import { _ as t } from "svelte-i18n"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -60,7 +61,7 @@
     }
 
     if (response.status !== 200) {
-      notifications.error("CSV Invalid, please try another CSV file")
+      notifications.error($t('csv-invalid-please-try-another-csv-file'))
       return []
     }
   }
@@ -69,9 +70,9 @@
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
-        `Files cannot exceed ${
+        $t('files-cannot-exceed') + ` ${
           FILE_SIZE_LIMIT / BYTES_IN_MB
-        }MB. Please try again with smaller files.`
+        }MB. ` + $t('please-try-again-with-smaller-files') + `.`
       )
       return
     }
@@ -98,19 +99,19 @@
 
   const typeOptions = [
     {
-      label: "Text",
+      label: $t('text'),
       value: FIELDS.STRING.type,
     },
     {
-      label: "Number",
+      label: $t('number'),
       value: FIELDS.NUMBER.type,
     },
     {
-      label: "Date",
+      label: $t('date'),
       value: FIELDS.DATETIME.type,
     },
     {
-      label: "Options",
+      label: $t('options'),
       value: FIELDS.OPTIONS.type,
     },
   ]
@@ -136,7 +137,7 @@
           getOptionValue={option => option.value}
         />
         <span class="field-status" class:error={!schema[columnName].success}>
-          {schema[columnName].success ? "Success" : "Failure"}
+          {schema[columnName].success ? $t('success') : $t('failure')}
         </span>
         <i
           class="omit-button ri-close-circle-fill"
@@ -150,7 +151,7 @@
 {#if fields.length}
   <div class="display-column">
     <Select
-      label="Display Column"
+      label={ $t('display-column') }
       bind:value={primaryDisplay}
       options={fields}
     />

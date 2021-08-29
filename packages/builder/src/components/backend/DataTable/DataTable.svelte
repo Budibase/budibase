@@ -12,6 +12,7 @@
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
+  import { _ as t } from "svelte-i18n"
 
   let hideAutocolumns = true
   let data = []
@@ -61,7 +62,7 @@
   {#if schema && Object.keys(schema).length > 0}
     {#if !isUsersTable}
       <CreateRowButton
-        title={"Create row"}
+        title={$t('create-row')}
         modalContentComponent={CreateEditRow}
       />
     {/if}

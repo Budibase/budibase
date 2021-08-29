@@ -1,5 +1,6 @@
 <script context="module">
   import iconData from "./icons.js"
+  import { _ as t } from "svelte-i18n"
 
   const icons = Object.keys(iconData).reduce(
     (acc, cat) => [...acc, ...Object.keys(iconData[cat])],
@@ -113,7 +114,7 @@
   $: pageEndIdx = maxIconsPerPage * currentPage
   $: pagedIcons = filteredIcons.slice(pageEndIdx - maxIconsPerPage, pageEndIdx)
 
-  $: pagerText = `Page ${currentPage} of ${totalPages}`
+  $: pagerText = $t('page') + ` ${currentPage} of ${totalPages}`
 </script>
 
 <div bind:this={buttonAnchor}>
@@ -138,7 +139,7 @@
         <div class="input-wrapper">
           <Input bind:value={searchTerm} thin placeholder="Search Icon" />
         </div>
-        <Button secondary on:click={searchForIcon}>Search</Button>
+        <Button secondary on:click={searchForIcon}>{ $t('search') }</Button>
       </div>
       <div class="page-area">
         <div class="pager">
@@ -182,7 +183,7 @@
     {:else}
       <div class="no-icons">
         <h5>
-          {`There is no icons for this ${searchTerm ? "search" : "page"}`}
+          {$t('there-is-no-icons-for-this') + ` ${searchTerm ? $t('search') : $t('page')}`}
         </h5>
       </div>
     {/if}

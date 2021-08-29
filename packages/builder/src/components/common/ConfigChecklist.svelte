@@ -7,12 +7,13 @@
     ProgressCircle,
   } from "@budibase/bbui"
   import { admin } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   const MESSAGES = {
-    apps: "Create your first app",
-    smtp: "Set up email",
-    adminUser: "Create your first user",
-    sso: "Set up single sign-on",
+    apps: $t('create-your-first-app'),
+    smtp: $t('set-up-email'),
+    adminUser: $t('create-your-first-user'),
+    sso: $t('set-up-single-sign-on'),
   }
 </script>
 
@@ -22,7 +23,7 @@
   </div>
   <MenuItem disabled>
     <header class="item">
-      <Heading size="XXS">Get Started Checklist</Heading>
+      <Heading size="XXS">$t('get-started-checklist')</Heading>
       <ProgressCircle size="S" value={$admin.onboardingProgress} />
     </header>
   </MenuItem>

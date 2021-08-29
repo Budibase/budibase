@@ -1,5 +1,7 @@
 <script>
   import { Tag, Tags } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
+
   export let value
 
   const displayLimit = 5
@@ -17,7 +19,7 @@
       </Tag>
     {/each}
     {#if leftover}
-      <Tag>+{leftover} more</Tag>
+      <Tag>+{leftover} { $t('more') }</Tag>
     {/if}
   </Tags>
 </div>

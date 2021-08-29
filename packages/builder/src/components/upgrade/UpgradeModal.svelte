@@ -1,5 +1,6 @@
 <script>
   import { Modal, ModalContent, Button } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   let upgradeModal
 
@@ -14,19 +15,18 @@
     quiet
     primary
     size="M"
-    icon="DownloadFromCloud">Self-host Budibase</Button
+    icon="DownloadFromCloud">{ $t('self-host-budibase') }</Button
   >
 </div>
 <Modal bind:this={upgradeModal}>
   <ModalContent
     size="M"
     {onConfirm}
-    title="Upgrade to self-hosted"
-    confirmText="Upgrade"
+    title={ $t('upgrade-to-self-hosted') }
+    confirmText={ $t('upgrade') }
   >
     <span
-      >Upgrade to Budibase self-hosting for free, and get SSO, unlimited apps,
-      and more - and it only takes a few minutes!</span
+      >{ $t('upgrade-to-budibase-self-hosting-for-free-and-get-sso-unlimited-apps-and-more-and-it-only-takes-a-few-minutes') }</span
     >
   </ModalContent>
 </Modal>

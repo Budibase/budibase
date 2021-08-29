@@ -1,6 +1,7 @@
 <script>
   import { ModalContent, Select, Body } from "@budibase/bbui"
   import { tables } from "stores/backend"
+  import { _ as t } from "svelte-i18n"
 
   export let datasource
   export let plusTables
@@ -26,12 +27,12 @@
 </script>
 
 <ModalContent
-  title="Edit display columns"
-  confirmText="Save"
+  title={ $t('edit-display-columns') }
+  confirmText={ $t('save') }
   onConfirm={saveDisplayColumns}
 >
   <Body
-    >Select the columns that will be shown when displaying relationships.</Body
+    >{ $t('select-the-columns-that-will-be-shown-when-displaying-relationships') }</Body
   >
   {#each plusTables as table}
     <Select

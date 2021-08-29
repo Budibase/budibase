@@ -2,6 +2,7 @@
   import { Label, Layout, Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let fields = {}
   export let schema
@@ -36,7 +37,7 @@
         <div class="horizontal">
           <Label small>{field}</Label>
           <Input
-            placeholder="Enter {field}"
+            placeholder={$t('enter') + ` ${field}`}
             outline
             disabled={!editable}
             type={schema.fields[field]?.type}
@@ -50,7 +51,7 @@
 </form>
 {#if schema.customisable}
   <Editor
-    label="Query"
+    label={ $t('query') }
     mode="json"
     on:change={updateCustomFields}
     readOnly={!editable}

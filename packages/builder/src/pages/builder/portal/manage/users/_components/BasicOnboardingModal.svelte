@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   const [email, error, touched] = createValidationStore("", emailValidator)
   const password = Math.random().toString(36).substr(2, 20)
@@ -20,7 +21,7 @@
     if (res.status) {
       notifications.error(res.message)
     } else {
-      notifications.success("Successfully created user")
+      notifications.success($t('successfully-created-user'))
     }
   }
 </script>
@@ -28,31 +29,30 @@
 <ModalContent
   onConfirm={createUser}
   size="M"
-  title="Basic user onboarding"
-  confirmText="Continue"
-  cancelText="Cancel"
+  title={ $t('basic-user-onboarding') }
+  confirmText={ $t('continue') }
+  cancelText={ $t('cancel') }
   disabled={$error}
   error={$touched && $error}
   showCloseIcon={false}
 >
   <Body size="S">
-    Below you will find the user’s username and password. The password will not
-    be accessible from this point. Please save the credentials.
+    { $t('below-you-will-find-the-users-username-and-password-the-password-will-not-be-accessible-from-this-point-please-save-the-credentials') }
   </Body>
   <Input
     type="email"
-    label="Username"
+    label={ $t('username') }
     bind:value={$email}
     error={$touched && $error}
   />
-  <Input disabled label="Password" value={password} />
+  <Input disabled label={ $t('password') } value={password} />
   <div>
     <div class="toggle">
-      <Label size="L">Development access</Label>
+      <Label size="L">{ $t('development-access') }</Label>
       <Toggle text="" bind:value={builder} />
     </div>
     <div class="toggle">
-      <Label size="L">Administration access</Label>
+      <Label size="L">{ $t('administration-access') }</Label>
       <Toggle text="" bind:value={admin} />
     </div>
   </div>

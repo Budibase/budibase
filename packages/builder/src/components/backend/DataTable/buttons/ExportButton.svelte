@@ -1,6 +1,7 @@
 <script>
   import { ActionButton, Modal } from "@budibase/bbui"
   import ExportModal from "../modals/ExportModal.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let view
 
@@ -8,7 +9,7 @@
 </script>
 
 <ActionButton icon="Download" size="S" quiet on:click={modal.show}>
-  Export
+  { $t('export') }
 </ActionButton>
 <Modal bind:this={modal}>
   <ExportModal {view} />

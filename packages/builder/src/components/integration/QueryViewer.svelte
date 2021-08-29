@@ -21,6 +21,7 @@
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
+  import { _ as t } from "svelte-i18n"
 
   export let query
   export let fields = []
@@ -28,10 +29,10 @@
   let parameters
   let data = []
   const typeOptions = [
-    { label: "Text", value: "STRING" },
-    { label: "Number", value: "NUMBER" },
-    { label: "Boolean", value: "BOOLEAN" },
-    { label: "Datetime", value: "DATETIME" },
+    { label: $t('text'), value: "STRING" },
+    { label: $t('number'), value: "NUMBER" },
+    { label: $t('boolean'), value: "BOOLEAN" },
+    { label: $t('datetime'), value: "DATETIME" },
   ]
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
@@ -91,12 +92,12 @@
 
       if (data.length === 0) {
         notifications.info(
-          "Query results empty. Please execute a query with results to create your schema."
+          $t('query-results-empty-please-execute-a-query-with-results-to-create-your-schema')
         )
         return
       }
 
-      notifications.success("Query executed successfully.")
+      notifications.success($t('query-executed-successfully'))
 
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
@@ -105,7 +106,7 @@
         type: "STRING",
       }))
     } catch (err) {
-      notifications.error(`Query Error: ${err.message}`)
+      notifications.error($t('query-error') + `: ${err.message}`)
       console.error(err)
     }
   }
@@ -113,27 +114,27 @@
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
-      notifications.success(`Query saved successfully.`)
+      notifications.success($t('query-saved-successfully') + `.`)
       $goto(`../${_id}`)
     } catch (err) {
       console.error(err)
-      notifications.error(`Error creating query. ${err.message}`)
+      notifications.error($t('error-creating-query') + `. ${err.message}`)
     }
   }
 </script>
 
 <Layout gap="S" noPadding>
-  <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
+  <Heading size="M">{ $t('query') } {integrationInfo?.friendlyName}</Heading>
   <Divider />
-  <Heading size="S">Config</Heading>
+  <Heading size="S">{ $t('config') }</Heading>
   <div class="config">
     <div class="config-field">
-      <Label>Query Name</Label>
+      <Label>{ $t('query-name') }</Label>
       <Input bind:value={query.name} />
     </div>
     {#if queryConfig}
       <div class="config-field">
-        <Label>Function</Label>
+        <Label>{ $t('function') }</Label>
         <Select
           bind:value={query.queryVerb}
           on:change={resetDependentFields}
@@ -155,8 +156,8 @@
   {#if shouldShowQueryConfig}
     <Divider />
     <div class="config">
-      <Heading size="S">Fields</Heading>
-      <Body size="S">Fill in the fields specific to this query.</Body>
+      <Heading size="S">{ $t('fields') }</Heading>
+      <Body size="S">{ $t('fill-in-the-fields-specific-to-this-query') }</Body>
       <IntegrationQueryEditor
         {datasource}
         {query}
@@ -167,46 +168,46 @@
       <Divider />
     </div>
     <div class="viewer-controls">
-      <Heading size="S">Results</Heading>
+      <Heading size="S">{ $t('results') }</Heading>
       <ButtonGroup>
         <Button cta disabled={queryInvalid} on:click={saveQuery}>
-          Save Query
+          { $t('save-query') }
         </Button>
-        <Button secondary on:click={previewQuery}>Run Query</Button>
+        <Button secondary on:click={previewQuery}>{ $t('run-query') }</Button>
       </ButtonGroup>
     </div>
     <Body size="S">
-      Below, you can preview the results from your query and change the schema.
+      { $t('below-you-can-preview-the-results-from-your-query-and-change-the-schema') }
     </Body>
     <section class="viewer">
       {#if data}
         <Tabs selected="JSON">
-          <Tab title="JSON">
+          <Tab title="JSON" label="JSON" >
             <pre
               class="preview">
                 <!-- prettier-ignore -->
                 {#if !data[0]}
-                  Please run your query to fetch some data.
+                  { $t('please-run-your-query-to-fetch-some-data') }
                 {:else}
                   {JSON.stringify(data[0], undefined, 2)}
                 {/if}
               </pre>
           </Tab>
-          <Tab title="Schema">
+          <Tab title="Schema" label={ $t('schema') } >
             <Layout gap="S">
               {#each fields as field, idx}
                 <div class="field">
-                  <Input placeholder="Field Name" bind:value={field.name} />
+                  <Input placeholder={ $t('field-name') } bind:value={field.name} />
                   <Select bind:value={field.type} options={typeOptions} />
                   <Icon name="bleClose" on:click={() => deleteField(idx)} />
                 </div>
               {/each}
               <div>
-                <Button secondary on:click={newField}>Add Field</Button>
+                <Button secondary on:click={newField}>{ $t('add-field') }</Button>
               </div>
             </Layout>
           </Tab>
-          <Tab title="Preview">
+          <Tab title="Preview" label={ $t('preview') }>
             <ExternalDataSourceTable {query} {data} />
           </Tab>
         </Tabs>

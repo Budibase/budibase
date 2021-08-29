@@ -13,6 +13,7 @@
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
   import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   const tabs = [
     {
@@ -65,20 +66,20 @@
 
 <div class="title">
   <Tabs {selected} on:select={navigate}>
-    <Tab title="Screens">
+    <Tab title="Screens" label={ $t('screens') } >
       <div class="tab-content-padding">
         <div class="role-select">
           <Select
             on:change={updateAccessRole}
             value={$selectedAccessRole}
-            label="Filter by Access"
+            label={ $t('filter-by-access') }
             getOptionLabel={role => role.name}
             getOptionValue={role => role._id}
             options={$roles}
           />
           <Search
-            placeholder="Enter a route to search"
-            label="Search Screens"
+            placeholder={ $t('enter-a-route-to-search') }
+            label={ $t('search-screens') }
             bind:value={$screenSearchString}
           />
         </div>
@@ -90,7 +91,7 @@
         </Modal>
       </div>
     </Tab>
-    <Tab title="Layouts">
+    <Tab title="Layouts" label={ $t('layouts') } >
       <div class="tab-content-padding">
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />

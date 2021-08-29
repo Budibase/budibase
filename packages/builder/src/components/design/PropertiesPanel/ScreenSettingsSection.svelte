@@ -7,6 +7,7 @@
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import { currentAsset, store } from "builderStore"
   import { FrontendTypes } from "constants"
+  import { _ as t } from "svelte-i18n"
 
   export let componentInstance
   export let bindings
@@ -35,12 +36,12 @@
     // { key: "description", label: "Description", control: Input },
     {
       key: "routing.route",
-      label: "Route",
+      label: $t('route'),
       control: Input,
       parser: val => val.replaceAll(" ", "-"),
     },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
+    { key: "routing.roleId", label: $t('access'), control: RoleSelect },
+    { key: "layoutId", label: $t('layout'), control: LayoutSelect },
   ]
 </script>
 

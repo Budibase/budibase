@@ -1,5 +1,6 @@
 <script>
   import { Icon, Button, Input } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let defaults
   export let object = defaults || {}
@@ -34,7 +35,7 @@
 </div>
 {#if !readOnly}
   <div>
-    <Button secondary thin outline on:click={addEntry}>Add</Button>
+    <Button secondary thin outline on:click={addEntry}>{ $t('add') }</Button>
   </div>
 {/if}
 

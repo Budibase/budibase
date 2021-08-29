@@ -1,6 +1,7 @@
 <script>
   import { Label, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let parameters
   export let bindings = []
@@ -9,14 +10,14 @@
 <div class="root">
   <Label small>Screen</Label>
   <DrawerBindableInput
-    title="Destination URL"
+    title={ $t('destination-url') }
     placeholder="/screen"
     value={parameters.url}
     on:change={value => (parameters.url = value.detail)}
     {bindings}
   />
   <div />
-  <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+  <Checkbox text={ $t('open-screen-in-modal') } bind:value={parameters.peek} />
 </div>
 
 <style>

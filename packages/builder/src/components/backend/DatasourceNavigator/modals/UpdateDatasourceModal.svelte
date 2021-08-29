@@ -3,6 +3,7 @@
   import { notifications } from "@budibase/bbui"
   import { Input, ModalContent, Modal } from "@budibase/bbui"
   import analytics from "analytics"
+  import { _ as t } from "svelte-i18n"
 
   let error = ""
   let modal
@@ -22,7 +23,7 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if ($datasources?.list.some(ds => ds.name === datasourceName)) {
-      error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
+      error = $t('datasource-with-name') + ` ${datasourceName} ` + $t('already-exists-please-choose-another-name')
       return
     }
     error = ""
@@ -34,7 +35,7 @@
       name,
     }
     await datasources.save(updatedDatasource)
-    notifications.success(`Datasource ${name} updated successfully.`)
+    notifications.success($t('datasource') + ` ${name} ` + $t('updated-successfully') + `.`)
     analytics.captureEvent("Datasource Updated", updatedDatasource)
     hide()
   }
@@ -42,15 +43,15 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title="Update Datasource"
+    title={ $t('update-datasource') }
     size="L"
-    confirmText="Update"
+    confirmText={ $t('update') }
     onConfirm={updateDatasource}
     disabled={error || !name || !datasource?.type}
   >
     <Input
       data-cy="datasource-name-input"
-      label="Datasource Name"
+      label={ $t('datasource-name') }
       on:input={checkValid}
       bind:value={name}
       {error}

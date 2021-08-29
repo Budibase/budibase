@@ -8,6 +8,7 @@
     Body,
   } from "@budibase/bbui"
   import { generate } from "shortid"
+  import { _ as t } from "svelte-i18n"
 
   export let options = []
 
@@ -31,21 +32,21 @@
   <div class="container">
     <Layout noPadding gap="S">
       {#if !options.length}
-        <Body size="S">Add an option to get started.</Body>
+        <Body size="S">{ $t('add-an-option-to-get-started') }</Body>
       {/if}
       {#if options?.length}
         <div class="options">
           {#each options as option (option.id)}
             <Input
-              placeholder="Label"
+              placeholder={ $t('label') }
               bind:value={option.label}
-              label="Label"
+              label={ $t('label') }
               labelPosition="left"
             />
             <Input
-              placeholder="Value"
+              placeholder={ $t('value') }
               bind:value={option.value}
-              label="Value"
+              label={ $t('value') }
               labelPosition="left"
             />
             <Icon
@@ -59,7 +60,7 @@
       {/if}
       <div>
         <Button icon="AddCircle" size="M" on:click={addOption} secondary>
-          Add Option
+          { $t('add-option') }
         </Button>
       </div>
     </Layout>

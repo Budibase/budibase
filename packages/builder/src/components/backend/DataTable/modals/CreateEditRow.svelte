@@ -6,6 +6,7 @@
   import { ModalContent } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { FIELDS } from "constants/backend"
+  import { _ as t } from "svelte-i18n"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
 
@@ -41,14 +42,14 @@
       return false
     }
 
-    notifications.success("Row saved successfully.")
+    notifications.success($t('row-saved-successfully'))
     rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
-  title={creating ? "Create Row" : "Edit Row"}
-  confirmText={creating ? "Create Row" : "Save Row"}
+  title={creating ? $t('create-row-0') : $t('edit-row')}
+  confirmText={creating ? $t('create-row-0') : $t('save-row')}
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />

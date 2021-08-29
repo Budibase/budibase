@@ -1,5 +1,6 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let hideAutocolumns
 
@@ -9,5 +10,5 @@
 </script>
 
 <ActionButton icon="MagicWand" primary size="S" quiet on:click={hideOrUnhide}>
-  {#if hideAutocolumns}Show auto columns{:else}Hide auto columns{/if}
+  {#if hideAutocolumns}{ $t('show-auto-columns') }{:else}{ $t('hide-auto-columns') }{/if}
 </ActionButton>

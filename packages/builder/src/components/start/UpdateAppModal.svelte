@@ -13,6 +13,7 @@
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
   import { APP_NAME_REGEX } from "constants"
+  import { _ as t } from "svelte-i18n"
 
   const values = writable({ name: null })
   const errors = writable({})
@@ -20,10 +21,10 @@
   const validator = {
     name: string()
       .trim()
-      .required("Your application must have a name")
+      .required($t('your-application-must-have-a-name'))
       .matches(
         APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
+        $t('app-name-must-be-letters-numbers-and-spaces-only')
       ),
   }
 
@@ -45,14 +46,14 @@
     const existingAppNames = svelteGet(hostingStore).deployedAppNames
     validator.name = string()
       .trim()
-      .required("Your application must have a name")
+      .required($t('your-application-must-have-a-name'))
       .matches(
         APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
+        $t('app-name-must-be-letters-numbers-and-spaces-only')
       )
       .test(
         "non-existing-app-name",
-        "Another app with the same name already exists",
+        $t('another-app-with-the-same-name-already-exists'),
         value => {
           return !existingAppNames.some(
             appName => dirty && appName.toLowerCase() === value.toLowerCase()
@@ -108,13 +109,13 @@
     onConfirm={updateApp}
     disabled={!(valid && dirty)}
   >
-    <Body size="S">Update the name of your app.</Body>
+    <Body size="S">{ $t('update-the-name-of-your-app') }</Body>
     <Input
       bind:value={$values.name}
       error={$touched.name && $errors.name}
       on:blur={() => ($touched.name = true)}
       on:change={() => (dirty = true)}
-      label="Name"
+      label={ $t('name') }
     />
   </ModalContent>
 </Modal>

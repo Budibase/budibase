@@ -3,6 +3,7 @@
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let value
   export let bindings
@@ -17,7 +18,7 @@
 
 <div class="block-field">
   <Select
-    label="Query"
+    label={ $t('query') }
     bind:value={value.queryId}
     options={$queries.list}
     getOptionValue={query => query._id}

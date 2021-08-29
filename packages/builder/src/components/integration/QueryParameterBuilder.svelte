@@ -5,6 +5,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let bindable = true
   export let parameters = []
@@ -31,24 +32,22 @@
 
 <Layout paddingX="none" gap="S">
   <div class="controls">
-    <Heading size="XS">Parameters</Heading>
+    <Heading size="XS">{ $t('parameters') }</Heading>
     {#if !bindable}
-      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+      <Button secondary on:click={newQueryParameter}>{ $t('add-param') }</Button>
     {/if}
   </div>
   <Body size="S">
     {#if !bindable}
-      Parameters come in two parts: the parameter name, and a default/fallback
-      value.
+      { $t('parameters-come-in-two-parts-the-parameter-name-and-a-default-fallback-value') }
     {:else}
-      Enter a value for each parameter. The default values will be used for any
-      values left blank.
+      { $t('enter-a-value-for-each-parameter-the-default-values-will-be-used-for-any-values-left-blank') }
     {/if}
   </Body>
   <div class="parameters" class:bindable>
     {#each parameters as parameter, idx}
       <Input
-        placeholder="Parameter Name"
+        placeholder={ $t('parameter-name') }
         thin
         disabled={bindable}
         bind:value={parameter.name}
@@ -61,7 +60,7 @@
       />
       {#if bindable}
         <DrawerBindableInput
-          title={`Query parameter "${parameter.name}"`}
+          title={$t('query-parameter') + ` "${parameter.name}"`}
           placeholder="Value"
           thin
           on:change={evt => onBindingChange(parameter.name, evt.detail)}

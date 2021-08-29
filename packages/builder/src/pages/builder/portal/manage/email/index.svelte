@@ -16,6 +16,7 @@
   import { email } from "stores/portal"
   import api from "builderStore/api"
   import { cloneDeep } from "lodash/fp"
+  import { _ as t } from "svelte-i18n"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -23,11 +24,11 @@
 
   const templateSchema = {
     name: {
-      displayName: "Name",
+      displayName: $t('name'),
       editable: false,
     },
     category: {
-      displayName: "Category",
+      displayName: $t('category'),
       editable: false,
     },
   }
@@ -63,12 +64,12 @@
       } catch (err) {
         message = error
       }
-      notifications.error(`Failed to save email settings, reason: ${message}`)
+      notifications.error($t('failed-to-save-email-settings-reason') + ` ${message}`)
     } else {
       const json = await response.json()
       smtpConfig._rev = json._rev
       smtpConfig._id = json._id
-      notifications.success(`Settings saved.`)
+      notifications.success($t('settings-saved'))
     }
   }
 
@@ -109,11 +110,9 @@
 
 <Layout>
   <Layout noPadding gap="XS">
-    <Heading size="M">Email</Heading>
+    <Heading size="M">{ $t('email') }</Heading>
     <Body>
-      Sending email is not required, but highly recommended for processes such
-      as password recovery. To setup automated auth emails, simply add the
-      values below and click activate.
+      { $t('sending-email-is-not-required-but-highly-recommended-for-processes-such-as-password-recovery-to-setup-automated-auth-emails-simply-add-the-values-below-and-click-activate') }
     </Body>
   </Layout>
   <Divider />
@@ -121,17 +120,16 @@
     <Layout gap="XS" noPadding>
       <Heading size="S">SMTP</Heading>
       <Body size="S">
-        To allow your app to benefit from automated auth emails, add your SMTP
-        details below.
+        { $t('to-allow-your-app-to-benefit-from-automated-auth-emails-add-your-smtp-details-below') }
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
       <div class="form-row">
-        <Label size="L">Host</Label>
+        <Label size="L">{ $t('host') }</Label>
         <Input bind:value={smtpConfig.config.host} />
       </div>
       <div class="form-row">
-        <Label size="L">Security type</Label>
+        <Label size="L">{ $t('security-type') }</Label>
         <Select
           bind:value={smtpConfig.config.secure}
           options={[
@@ -141,34 +139,33 @@
         />
       </div>
       <div class="form-row">
-        <Label size="L">Port</Label>
+        <Label size="L">{ $t('port') }</Label>
         <Input type="number" bind:value={smtpConfig.config.port} />
       </div>
       <div class="form-row">
-        <Label size="L">From email address</Label>
+        <Label size="L">{ $t('from-email-address') }</Label>
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
-      <Checkbox bind:value={requireAuth} text="Require sign-in" />
+      <Checkbox bind:value={requireAuth} text={ $t('require-sign-in') } />
       {#if requireAuth}
         <div class="form-row">
-          <Label size="L">User</Label>
+          <Label size="L">{ $t('user') }</Label>
           <Input bind:value={smtpConfig.config.auth.user} />
         </div>
         <div class="form-row">
-          <Label size="L">Password</Label>
+          <Label size="L">{ $t('password') }</Label>
           <Input type="password" bind:value={smtpConfig.config.auth.pass} />
         </div>
       {/if}
     </Layout>
     <div>
-      <Button cta on:click={saveSmtp}>Save</Button>
+      <Button cta on:click={saveSmtp}>{ $t('save') }</Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Templates</Heading>
+      <Heading size="S">{ $t('templates') }</Heading>
       <Body size="S">
-        Budibase comes out of the box with ready-made email templates to help
-        with user onboarding. Please refrain from changing the links.
+        { $t('budibase-comes-out-of-the-box-with-ready-made-email-templates-to-help-with-user-onboarding-please-refrain-from-changing-the-links') }
       </Body>
     </Layout>
     <Table

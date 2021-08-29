@@ -4,6 +4,7 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { tables } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { _ as t } from "svelte-i18n"
 
   let modal
 </script>
@@ -17,15 +18,14 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Budibase Internal</Heading>
+        <Heading size="M">{ $t('budibase-internal') }</Heading>
       </header>
       <Body size="M">
-        Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
+        { $t('budibase-internal-tables-are-part-of-your-app-so-the-data-will-be-stored-in-your-apps-context') }
       </Body>
     </Layout>
     <Divider />
-    <Heading size="S">Tables</Heading>
+    <Heading size="S">{ $t('tables') }</Heading>
     <div class="table-list">
       {#each $tables.list.filter(table => table.type !== "external") as table}
         <div
@@ -34,13 +34,13 @@
         >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
-            <Body size="S">Display column: {table.primaryDisplay}</Body>
+            <Body size="S">{ $t('display-column') }: {table.primaryDisplay}</Body>
           {/if}
         </div>
       {/each}
     </div>
     <div>
-      <Button cta on:click={modal.show}>Create new table</Button>
+      <Button cta on:click={modal.show}>{ $t('create-new-table') }</Button>
     </div>
   </Layout>
 </section>

@@ -10,6 +10,7 @@
   } from "@budibase/bbui"
   import { gradient } from "actions"
   import { processStringSync } from "@budibase/string-templates"
+  import { _ as t } from "svelte-i18n"
 
   export let app
   export let exportApp
@@ -37,28 +38,28 @@
         <Icon slot="control" name="More" hoverable />
         {#if app.deployed}
           <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
-            View published app
+            { $t('view-published-app') }
           </MenuItem>
         {/if}
         {#if app.lockedYou}
           <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
-            Release lock
+            { $t('release-lock') }
           </MenuItem>
         {/if}
         <MenuItem on:click={() => exportApp(app)} icon="Download">
-          Export
+          { $t('export') }
         </MenuItem>
         {#if app.deployed}
           <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-            Unpublish
+            { $t('unpublish') }
           </MenuItem>
         {/if}
         {#if !app.deployed}
           <MenuItem on:click={() => updateApp(app)} icon="Edit">
-            Update
+            { $t('update') }
           </MenuItem>
           <MenuItem on:click={() => deleteApp(app)} icon="Delete">
-            Delete
+            { $t('delete') }
           </MenuItem>
         {/if}
       </ActionMenu>
@@ -66,15 +67,15 @@
     <div class="status">
       <Body size="S">
         {#if app.updatedAt}
-          {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+          {processStringSync($t('updated') + " {{ duration time 'millisecond' }} " + $t('ago'), {
             time: new Date().getTime() - new Date(app.updatedAt).getTime(),
           })}
         {:else}
-          Never updated
+          { $t('never-updated') }
         {/if}
       </Body>
       <StatusLight active={app.deployed} neutral={!app.deployed}>
-        {#if app.deployed}Published{:else}Unpublished{/if}
+        {#if app.deployed}{ $t('published') }{:else}{ $t('unpublished') }{/if}
       </StatusLight>
     </div>
   </Layout>

@@ -12,15 +12,16 @@
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { _ as t } from "svelte-i18n"
 
   let email = ""
 
   async function forgot() {
     try {
       await auth.forgotPassword(email)
-      notifications.success("Email sent - please check your inbox")
+      notifications.success($t('email-sent-please-check-your-inbox'))
     } catch (err) {
-      notifications.error("Unable to send reset password link")
+      notifications.error($t('unable-to-send-reset-password-link'))
     }
   }
 
@@ -36,18 +37,17 @@
         <img alt="logo" src={$organisation.logoUrl || Logo} />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Heading textAlign="center">Forgotten your password?</Heading>
+        <Heading textAlign="center">{ $t('forgotten-your-password') }</Heading>
         <Body size="S" textAlign="center">
-          No problem! Just enter your account's email address and we'll send you
-          a link to reset it.
+          { $t('no-problem-just-enter-your-accounts-email-address-and-well-send-you-a-link-to-reset-it') }
         </Body>
-        <Input label="Email" bind:value={email} />
+        <Input label={ $t('email') } bind:value={email} />
       </Layout>
       <Layout gap="XS" nopadding>
         <Button cta on:click={forgot} disabled={!email}>
-          Reset your password
+          { $t('reset-your-password') }
         </Button>
-        <ActionButton quiet on:click={() => $goto("../")}>Back</ActionButton>
+        <ActionButton quiet on:click={() => $goto("../")}>{ $t('back') }</ActionButton>
       </Layout>
     </Layout>
   </div>

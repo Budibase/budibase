@@ -5,6 +5,7 @@
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   const POLL_RATE_MS = 2500
   let interval
@@ -41,25 +42,22 @@
 </script>
 
 <ModalContent
-  title="Webhook Setup"
-  confirmText="Finished"
+  title={ $t('webhook-setup') }
+  confirmText={ $t('finished') }
   showConfirmButton={finished}
-  cancelText="Skip"
+  cancelText={ $t('skip') }
 >
   <p>
-    Webhooks are for receiving data. To make them easier please use the URL
-    shown below and send a
+    { $t('webhooks-are-for-receiving-data-to-make-them-easier-please-use-the-url-shown-below-and-send-a') }
     <code>POST</code>
-    request to it from your other application. If you're unable to do this now then
-    you can skip this step, however we will not be able to configure bindings for
-    your later actions!
+    { $t('request-to-it-from-your-other-application-if-youre-unable-to-do-this-now-then-you-can-skip-this-step-however-we-will-not-be-able-to-configure-bindings-for-your-later-actions') }
   </p>
   <WebhookDisplay value={schemaURL} />
   {#if finished}
     <p class="finished-text">
-      Request received! We found
+      { $t('request-received-we-found') }
       {propCount}
-      bindable value{propCount > 1 ? "s" : ""}.
+      { $t('bindable-value') }{propCount > 1 ? "s" : ""}.
     </p>
   {/if}
   <a
@@ -68,7 +66,7 @@
     href="https://docs.budibase.com/automate/steps/triggers"
   >
     <Icon name="InfoOutline" />
-    <span>Learn about webhooks</span>
+    <span>{ $t('learn-about-webhooks') }</span>
   </a>
 </ModalContent>
 

@@ -11,6 +11,7 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
 
   export let view
 
@@ -23,14 +24,14 @@
       originalName,
       ...view,
     })
-    notifications.success("View renamed successfully")
+    notifications.success($t('view-renamed-successfully'))
   }
 
   async function deleteView() {
     const name = view.name
     const id = view.tableId
     await views.delete(name)
-    notifications.success("View deleted")
+    notifications.success($t('view-deleted'))
     $goto(`./table/${id}`)
   }
 </script>
@@ -39,18 +40,18 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={editorModal.show}>$t('edit')</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>$t('delete')</MenuItem>
 </ActionMenu>
 <Modal bind:this={editorModal}>
-  <ModalContent title="Edit View" onConfirm={save} confirmText="Save">
-    <Input label="View Name" thin bind:value={view.name} />
+  <ModalContent title={ $t('edit-view') } onConfirm={save} confirmText={ $t('save') }>
+    <Input label={ $t('view-name') } thin bind:value={view.name} />
   </ModalContent>
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
-  okText="Delete View"
+  body={$t('are-you-sure-you-wish-to-delete-the-view') + ` '${view.name}'? ` + $t('your-data-will-be-deleted-and-this-action-cannot-be-undone') + `.`}
+  okText={ $t('delete-view') }
   onOk={deleteView}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion') }
 />

@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import actionTypes from "./actions"
   import { generate } from "shortid"
+  import { _ as t } from "svelte-i18n"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
@@ -107,7 +108,7 @@
       </div>
     {/if}
     <ActionMenu>
-      <Button slot="control" secondary>Add Action</Button>
+      <Button slot="control" secondary>{ $t('add-action') }</Button>
       {#each actionTypes as actionType}
         <MenuItem on:click={addAction(actionType)}>
           {actionType.name}

@@ -2,6 +2,7 @@
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { queries } from "stores/backend"
+  import { _ as t } from "svelte-i18n"
 
   export let query
 
@@ -9,7 +10,7 @@
 
   async function deleteQuery() {
     await queries.delete(query)
-    notifications.success("Query deleted")
+    notifications.success($t('query-deleted'))
   }
 </script>
 
@@ -17,16 +18,16 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Query"
+  okText={ $t('delete-query') }
   onOk={deleteQuery}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion-0') }
 >
-  Are you sure you wish to delete this query? This action cannot be undone.
+  { $t('are-you-sure-you-wish-to-delete-this-query-this-action-cannot-be-undone') }
 </ConfirmDialog>
 
 <style>

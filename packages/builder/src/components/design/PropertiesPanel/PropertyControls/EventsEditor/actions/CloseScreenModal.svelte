@@ -1,11 +1,13 @@
 <script>
   import { Body } from "@budibase/bbui"
+  import { _ as t } from "svelte-i18n"
+
 </script>
 
 <div class="root">
-  <Body size="S">This action doesn't require any additional settings.</Body>
+  <Body size="S">{ $t('this-action-doesnt-require-any-additional-settings') }</Body>
   <Body size="S">
-    This action won't do anything if there isn't a screen modal open.
+    { $t('this-action-wont-do-anything-if-there-isnt-a-screen-modal-open') }
   </Body>
 </div>
 

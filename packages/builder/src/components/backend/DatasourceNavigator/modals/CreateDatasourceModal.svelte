@@ -7,6 +7,7 @@
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import analytics from "analytics"
   import { getContext } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   const modalContext = getContext(Context.Modal)
 
@@ -22,7 +23,7 @@
     if (
       $datasources?.list.some(datasource => datasource.name === datasourceName)
     ) {
-      error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
+      error = $t('datasource-with-name') + ` ${datasourceName} ` + $t('already-exists-please-choose-another-name')
       return
     }
     error = ""
@@ -44,7 +45,7 @@
       config,
       plus,
     })
-    notifications.success(`Datasource ${name} created successfully.`)
+    notifications.success($t('datasource') + ` ${name} ${$t('created-successfully')}.`)
     analytics.captureEvent("Datasource Created", { name, type })
 
     // Navigate to new datasource
@@ -56,19 +57,19 @@
   <CreateTableModal bind:name />
 </Modal>
 <ModalContent
-  title="Create Datasource"
+  title={ $t('create-datasource') }
   size="L"
-  confirmText="Create"
+  confirmText={ $t('create') }
   onConfirm={saveDatasource}
   disabled={error || !name || !integration?.type}
 >
   <Input
     data-cy="datasource-name-input"
-    label="Datasource Name"
+    label={ $t('datasource-name') }
     on:input={checkValid}
     bind:value={name}
     {error}
   />
-  <Label>Datasource Type</Label>
+  <Label>{ $t('datasource-type') }</Label>
   <TableIntegrationMenu bind:integration />
 </ModalContent>

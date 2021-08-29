@@ -3,6 +3,7 @@
   import { ModalContent } from "@budibase/bbui"
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
+  import { _ as t } from "svelte-i18n"
 
   let webhookUrls = []
 
@@ -23,11 +24,11 @@
 </script>
 
 <ModalContent
-  title="Webhook Endpoints"
-  confirmText="OK"
+  title={ $t('webhook-endpoints') }
+  confirmText={ $t('ok') }
   showCancelButton={false}
 >
-  <p>See below the list of deployed webhook URLs.</p>
+  <p>{ $t('see-below-the-list-of-deployed-webhook-urls') }</p>
   {#each webhookUrls as webhookUrl}
     <div>
       <h5>{webhookUrl.type} - {webhookUrl.name}</h5>
@@ -35,7 +36,7 @@
     </div>
   {/each}
   {#if webhookUrls.length === 0}
-    <h5>No webhooks found.</h5>
+    <h5>{ $t('no-webhooks-found') }</h5>
   {/if}
   <a
     slot="footer"
@@ -43,7 +44,7 @@
     href="https://docs.budibase.com/automate/steps/triggers"
   >
     <i class="ri-information-line" />
-    <span>Learn about webhooks</span>
+    <span>{ $t('learn-about-webhooks') }</span>
   </a>
 </ModalContent>
 

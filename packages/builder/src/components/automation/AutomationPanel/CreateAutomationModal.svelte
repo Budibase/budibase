@@ -5,6 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import { Icon, Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
+  import { _ as t } from "svelte-i18n"
 
   let name
 
@@ -16,27 +17,27 @@
       name,
       instanceId,
     })
-    notifications.success(`Automation ${name} created.`)
+    notifications.success(`${$t('automation')} ${name} ${$t('created')}.`)
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent("Automation Created", { name })
+    analytics.captureEvent($t('automation-created'), { name })
   }
 </script>
 
 <ModalContent
-  title="Create Automation"
-  confirmText="Create"
+  title={ $t('create-automation') }
+  confirmText={ $t('create-0') }
   size="L"
   onConfirm={createAutomation}
   disabled={!valid}
 >
-  <Input bind:value={name} label="Name" />
+  <Input bind:value={name} label={ $t('name') } />
   <a
     slot="footer"
     target="_blank"
     href="https://docs.budibase.com/automate/introduction-to-automate"
   >
     <Icon name="InfoOutline" />
-    <span>Learn about automations</span>
+    <span>{ $t('learn-about-automations') }</span>
   </a>
 </ModalContent>
 

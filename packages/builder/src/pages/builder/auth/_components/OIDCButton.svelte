@@ -8,6 +8,7 @@
 
   import { oidc, organisation, auth } from "stores/portal"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   $: show = $organisation.oidc
 
@@ -38,7 +39,7 @@
   >
     <div class="inner">
       <img {src} alt="oidc icon" />
-      <p>{`Sign in with ${$oidc.name || "OIDC"}`}</p>
+      <p>{$t('sign-in-with') + ` ${$oidc.name || "OIDC"}`}</p>
     </div>
   </ActionButton>
 {/if}

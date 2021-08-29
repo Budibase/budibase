@@ -2,6 +2,7 @@
   import { Select, ModalContent, notifications } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import { FIELDS } from "constants/backend"
+  import { _ as t } from "svelte-i18n"
 
   export let view = {}
 
@@ -20,10 +21,10 @@
 
   function saveView() {
     views.save(view)
-    notifications.success(`View ${view.name} saved.`)
+    notifications.success($t('view') + ` ${view.name} ` + $t('saved') + `.`)
   }
 </script>
 
-<ModalContent title="Group By" confirmText="Save" onConfirm={saveView}>
+<ModalContent title={ $t('group-by') } confirmText={ $t('save') } onConfirm={saveView}>
   <Select bind:value={view.groupBy} options={fields} />
 </ModalContent>

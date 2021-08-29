@@ -28,7 +28,7 @@ async function init() {
   const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
   const contents = fs.readFileSync(envoyHbsPath, "utf8")
   const config = {
-    address: isLinux() ? "172.17.0.1" : "host.docker.internal",
+    address: "host.docker.internal"
   }
   fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
 
@@ -37,7 +37,7 @@ async function init() {
     const envFileJson = {
       PORT: 4001,
       MINIO_URL: "http://localhost:10000/",
-      COUCH_DB_URL: "http://@localhost:10000/db/",
+      COUCH_DB_URL: "http://localhost:10000/db/",
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",

@@ -1,6 +1,7 @@
 <script>
   import { Select, ModalContent } from "@budibase/bbui"
   import download from "downloadjs"
+  import { _ as t } from "svelte-i18n"
 
   const FORMATS = [
     {
@@ -18,7 +19,7 @@
   let exportFormat = FORMATS[0].key
 
   async function exportView() {
-    const filename = `export.${exportFormat}`
+    const filename = $t('export-0') + ` ${exportFormat}`
     download(
       `/api/views/export?view=${encodeURIComponent(
         view
@@ -28,9 +29,9 @@
   }
 </script>
 
-<ModalContent title="Export Data" confirmText="Export" onConfirm={exportView}>
+<ModalContent title={ $t('export-data') } confirmText={ $t('export') } onConfirm={exportView}>
   <Select
-    label="Format"
+    label={ $t('format') }
     bind:value={exportFormat}
     options={FORMATS}
     placeholder={null}

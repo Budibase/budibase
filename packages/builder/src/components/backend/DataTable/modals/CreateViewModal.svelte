@@ -4,6 +4,7 @@
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
   import analytics from "analytics"
+  import { _ as t } from "svelte-i18n"
 
   let name
   let field
@@ -12,7 +13,7 @@
 
   function saveView() {
     if (views.includes(name)) {
-      notifications.error(`View exists with name ${name}.`)
+      notifications.error($t('view-exists-with-name') + ` ${name}.`)
       return
     }
     viewsStore.save({
@@ -20,16 +21,16 @@
       tableId: $tables.selected._id,
       field,
     })
-    notifications.success(`View ${name} created`)
+    notifications.success($t('view-0') + ` ${name} ` + $t('created'))
     analytics.captureEvent("View Created", { name })
     $goto(`../../view/${name}`)
   }
 </script>
 
 <ModalContent
-  title="Create View"
-  confirmText="Create View"
+  title={ $t('create-view') }
+  confirmText={ $t('create-view-0') }
   onConfirm={saveView}
 >
-  <Input label="View Name" thin bind:value={name} />
+  <Input label={ $t('view-name-0') } thin bind:value={name} />
 </ModalContent>

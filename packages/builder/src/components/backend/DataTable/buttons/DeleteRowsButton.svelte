@@ -1,6 +1,7 @@
 <script>
   import { Button } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let selectedRows
   export let deleteRows
@@ -14,17 +15,17 @@
 </script>
 
 <Button icon="Delete" size="s" primary quiet on:click={modal.show}>
-  Delete
+  { $t('delete') }
   {selectedRows.length}
-  row(s)
+  { $t('row-s') }
 </Button>
 <ConfirmDialog
   bind:this={modal}
-  okText="Delete"
+  okText={ $t('delete') }
   onOk={confirmDeletion}
-  title="Confirm Deletion"
+  title={ $t('confirm-deletion-0') }
 >
-  Are you sure you want to delete
+  { $t('are-you-sure-you-want-to-delete') }
   {selectedRows.length}
-  row{selectedRows.length > 1 ? "s" : ""}?
+  { $t('row') }{selectedRows.length > 1 ? "s" : ""}?
 </ConfirmDialog>

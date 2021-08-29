@@ -11,7 +11,8 @@
   import { tables } from "stores/backend"
   import { uuid } from "builderStore/uuid"
   import { writable } from "svelte/store"
-
+  import { _ as t } from "svelte-i18n"
+  
   export let save
   export let datasource
   export let plusTables = []
@@ -41,7 +42,7 @@
   ) {
     const isMany =
       fromRelate.relationshipType === RelationshipTypes.MANY_TO_MANY
-    const tableNotSet = "Please specify a table"
+    const tableNotSet = $t('please-specify-a-table')
     const errors = {}
     if ($touched.from && !fromTable) {
       errors.from = tableNotSet
@@ -53,9 +54,9 @@
       errors.through = tableNotSet
     }
     if ($touched.foreign && !isMany && !fromRelate.fieldName) {
-      errors.foreign = "Please pick the foreign key"
+      errors.foreign = $t('please-pick-the-foreign-key')
     }
-    const colNotSet = "Please specify a column name"
+    const colNotSet = $t('please-specify-a-column-name')
     if ($touched.fromCol && !fromRelate.name) {
       errors.fromCol = colNotSet
     }
@@ -63,7 +64,7 @@
       errors.toCol = colNotSet
     }
     // currently don't support relationships back onto the table itself, needs to relate out
-    const tableError = "From/to/through tables must be different"
+    const tableError = $t('from-to-through-tables-must-be-different')
     if (fromTable && (fromTable === toTable || fromTable === throughTable)) {
       errors.from = tableError
     }
@@ -76,7 +77,7 @@
     ) {
       errors.through = tableError
     }
-    const colError = "Column name cannot be an existing column"
+    const colError = $t('column-name-cannot-be-an-existing-column')
     if (inSchema(fromTable, fromRelate.name, originalFromName)) {
       errors.fromCol = colError
     }
@@ -105,11 +106,11 @@
   $: linkTable = through || toTable
   $: relationshipTypes = [
     {
-      label: "Many",
+      label: $t('many'),
       value: RelationshipTypes.MANY_TO_MANY,
     },
     {
-      label: "One",
+      label: $t('one'),
       value: RelationshipTypes.MANY_TO_ONE,
     },
   ]
@@ -216,28 +217,28 @@
 </script>
 
 <ModalContent
-  title="Create Relationship"
-  confirmText="Save"
+  title={ $t('create-relationship') }
+  confirmText={ $t('save') }
   onConfirm={saveRelationship}
   disabled={!valid}
 >
   <Select
-    label="Relationship type"
+    label={ $t('relationship-type') }
     options={relationshipTypes}
     bind:value={fromRelationship.relationshipType}
   />
   <div class="headings">
-    <Detail>Tables</Detail>
+    <Detail>{ $t('tables') }</Detail>
   </div>
   <Select
-    label="Select from table"
+    label={ $t('select-from-table') }
     options={tableOptions}
     on:change={() => ($touched.from = true)}
     bind:error={errors.from}
     bind:value={toRelationship.tableId}
   />
   <Select
-    label={"Select to table"}
+    label={$t('select-to-table')}
     options={tableOptions}
     on:change={() => ($touched.to = true)}
     bind:error={errors.to}
@@ -245,7 +246,7 @@
   />
   {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
     <Select
-      label={"Through"}
+      label={$t('through')}
       options={tableOptions}
       on:change={() => ($touched.through = true)}
       bind:error={errors.through}
@@ -253,7 +254,7 @@
     />
   {:else if fromRelationship?.relationshipType && toTable}
     <Select
-      label={`Foreign Key (${toTable?.name})`}
+      label={$t('foreign-key') + ` (${toTable?.name})`}
       options={Object.keys(toTable?.schema).filter(
         field => toTable?.primary.indexOf(field) === -1
       )}
@@ -263,27 +264,26 @@
     />
   {/if}
   <div class="headings">
-    <Detail>Column names</Detail>
+    <Detail>{ $t('column-names') }</Detail>
   </div>
   <Body>
-    Budibase manages SQL relationships as a new column in the table, please
-    provide a name for these columns.
+    { $t('budibase-manages-sql-relationships-as-a-new-column-in-the-table-please-provide-a-name-for-these-columns') }
   </Body>
   <Input
     on:blur={() => ($touched.fromCol = true)}
     bind:error={errors.fromCol}
-    label="From table column"
+    label={ $t('from-table-column') }
     bind:value={fromRelationship.name}
   />
   <Input
     on:blur={() => ($touched.toCol = true)}
     bind:error={errors.toCol}
-    label="To table column"
+    label={ $t('to-table-column') }
     bind:value={toRelationship.name}
   />
   <div slot="footer">
     {#if originalFromName != null}
-      <Button warning text on:click={deleteRelationship}>Delete</Button>
+      <Button warning text on:click={deleteRelationship}>{ $t('delete') }</Button>
     {/if}
   </div>
 </ModalContent>

@@ -15,6 +15,7 @@
     Layout,
   } from "@budibase/bbui"
   import { auth } from "stores/portal"
+  import { _ as t } from "svelte-i18n"
 
   let step = 0
   let ratings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -79,7 +80,7 @@
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
-          >How likely are you to recommend Budibase to a colleague?</Heading
+          >{ $t('how-likely-are-you-to-recommend-budibase-to-a-colleague') }</Heading
         >
         <Divider />
         <div class="ratings">
@@ -95,29 +96,29 @@
           {/each}
         </div>
         <div class="footer">
-          <Detail size="S">NOT LIKELY</Detail>
-          <Detail size="S">EXTREMELY LIKELY</Detail>
+          <Detail size="S">{ $t('not-likely') }</Detail>
+          <Detail size="S">{ $t('extremely-likely') }</Detail>
         </div>
       {:else if step === 1}
-        <Heading size="XS">What could be improved most in Budibase?</Heading>
+        <Heading size="XS">{ $t('what-could-be-improved-most-in-budibase') }</Heading>
         <Divider />
-        <RadioGroup bind:value={improvements} {options} />
+        <RadioGroup bind:value={improvements} {options} getOptionLabel={option => $t(option)} />
         <div class="footer">
-          <Detail size="S">STEP 2 OF 3</Detail>
+          <Detail size="S">{ $t('step-2-of-3') }</Detail>
           <ButtonGroup>
-            <Button secondary on:click={() => (step -= 1)}>Previous</Button>
-            <Button primary on:click={() => (step += 1)}>Next</Button>
+            <Button secondary on:click={() => (step -= 1)}>{ $t('previous') }</Button>
+            <Button primary on:click={() => (step += 1)}>{ $t('next') }</Button>
           </ButtonGroup>
         </div>
       {:else}
-        <Heading size="XS">How can we improve your experience?</Heading>
+        <Heading size="XS">{ $t('how-can-we-improve-your-experience') }</Heading>
         <Divider />
-        <TextArea bind:value={comment} placeholder="Add comments" />
+        <TextArea bind:value={comment} placeholder={ $t('add-comments') } />
         <div class="footer">
-          <Detail size="S">STEP 3 OF 3</Detail>
+          <Detail size="S">{ $t('step-3-of-3') }</Detail>
           <ButtonGroup>
-            <Button secondary on:click={() => (step -= 1)}>Previous</Button>
-            <Button cta on:click={submitFeedback}>Complete</Button>
+            <Button secondary on:click={() => (step -= 1)}>{ $t('previous') }</Button>
+            <Button cta on:click={submitFeedback}>{ $t('complete') }</Button>
           </ButtonGroup>
         </div>
       {/if}

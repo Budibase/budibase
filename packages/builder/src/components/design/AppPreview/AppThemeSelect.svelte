@@ -1,22 +1,23 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { store } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   const themeOptions = [
     {
-      label: "Lightest",
+      label: $t('lightest'),
       value: "spectrum--lightest",
     },
     {
-      label: "Light",
+      label: $t('light'),
       value: "spectrum--light",
     },
     {
-      label: "Dark",
+      label: $t('dark'),
       value: "spectrum--dark",
     },
     {
-      label: "Darkest",
+      label: $t('darkest'),
       value: "spectrum--darkest",
     },
   ]
