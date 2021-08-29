@@ -20,6 +20,7 @@
 </div>
 <Modal bind:this={upgradeModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     size="M"
     {onConfirm}
     title={$t("upgrade-to-self-hosted")}

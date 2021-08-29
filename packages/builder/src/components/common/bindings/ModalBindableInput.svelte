@@ -45,7 +45,13 @@
   </div>
 </div>
 <Modal bind:this={bindingModal}>
-  <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
+  <ModalContent
+    cancelText={$t("cancel")}
+    {title}
+    onConfirm={saveBinding}
+    disabled={!valid}
+    size="XL"
+  >
     <Body extraSmall grey>
       {$t("add-the-objects-on-the-left-to-enrich-your-text")}
     </Body>

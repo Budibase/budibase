@@ -28,6 +28,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-view")}
   confirmText={$t("create-view-0")}
   onConfirm={saveView}

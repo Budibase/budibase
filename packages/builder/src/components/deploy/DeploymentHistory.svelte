@@ -147,6 +147,7 @@
 </Modal>
 <Modal bind:this={errorReasonModal} width="30%">
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("deployment-error")}
     confirmText={$t("ok")}
     showCancelButton={false}

@@ -92,6 +92,7 @@
 <Button secondary on:click={publishModal.show}>{$t("publish")}</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("enjoying-budibase")}
     size="L"
     showConfirmButton={false}
@@ -100,6 +101,7 @@
 </Modal>
 <Modal bind:this={publishModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("publish-to-production")}
     confirmText={$t("publish")}
     onConfirm={deployApp}

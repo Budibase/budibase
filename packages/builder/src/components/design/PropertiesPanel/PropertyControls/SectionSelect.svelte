@@ -32,6 +32,7 @@
 <ActionButton on:click={modal.show}>{layoutMap[value].name}</ActionButton>
 <Modal bind:this={modal}>
   <ModalContent
+    cancelText={$t("cancel")}
     onConfirm={() => dispatch("change", selected)}
     size="L"
     title={$t("select-layout")}

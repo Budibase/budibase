@@ -262,6 +262,7 @@
     <div class="empty-wrapper">
       <Modal inline>
         <ModalContent
+        cancelText={$t("cancel")}
           title={$t("create-your-first-app")}
           confirmText={$t("create-app")}
           showCancelButton={false}

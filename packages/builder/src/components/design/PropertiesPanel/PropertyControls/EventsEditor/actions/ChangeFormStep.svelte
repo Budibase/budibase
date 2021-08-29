@@ -3,6 +3,7 @@
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
   import { onMount } from "svelte"
+  import { _ as t } from "svelte-i18n"
 
   export let parameters
 
@@ -14,19 +15,19 @@
 
   const typeOptions = [
     {
-      label: "Next step",
+      label: $t('next-step'),
       value: "next",
     },
     {
-      label: "Previous step",
+      label: $t('previous-step'),
       value: "prev",
     },
     {
-      label: "First step",
+      label: $t('first-step'),
       value: "first",
     },
     {
-      label: "Specific step",
+      label: $t('specific-step'),
       value: "specific",
     },
   ]
@@ -39,7 +40,7 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label small>{ $t('Form') }</Label>
   <Select
     placeholder={null}
     bind:value={parameters.componentId}
@@ -47,10 +48,10 @@
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
   />
-  <Label small>Step</Label>
+  <Label small>{ $t('step') }</Label>
   <Select bind:value={parameters.type} options={typeOptions} />
   {#if parameters.type === "specific"}
-    <Label small>Number</Label>
+    <Label small>{ $t('number') }</Label>
     <Stepper bind:value={parameters.number} />
   {/if}
 </div>

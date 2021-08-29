@@ -217,6 +217,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-relationship")}
   confirmText={$t("save")}
   onConfirm={saveRelationship}

@@ -64,6 +64,7 @@
 
 <Modal bind:this={editLayoutNameModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("edit-layout-name")}
     confirmText={$t("save")}
     onConfirm={saveLayout}

@@ -93,6 +93,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("edit-roles")}
   confirmText={isCreating ? $t("create") : $t("save")}
   onConfirm={saveRole}

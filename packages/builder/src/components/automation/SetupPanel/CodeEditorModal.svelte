@@ -14,6 +14,7 @@
 
 <Modal bind:this={modal}>
   <ModalContent
+    cancelText={$t("cancel")}
     size="XL"
     title={$t("edit-code")}
     showConfirmButton={false}

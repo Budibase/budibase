@@ -30,6 +30,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("export-data")}
   confirmText={$t("export")}
   onConfirm={exportView}

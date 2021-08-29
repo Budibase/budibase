@@ -76,6 +76,7 @@
 
 <Modal bind:this={editorModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("edit-table")}
     confirmText={$t("save")}
     onConfirm={save}

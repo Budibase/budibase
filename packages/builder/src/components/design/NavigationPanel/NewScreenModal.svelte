@@ -90,6 +90,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("new-screen")}
   confirmText={$t("create-screen")}
   onConfirm={save}

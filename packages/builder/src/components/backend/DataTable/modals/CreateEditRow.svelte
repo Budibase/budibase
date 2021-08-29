@@ -48,6 +48,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={creating ? $t("create-row-0") : $t("edit-row")}
   confirmText={creating ? $t("create-row-0") : $t("save-row")}
   onConfirm={saveRow}

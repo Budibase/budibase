@@ -106,6 +106,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-table")}
   confirmText={$t("create")}
   onConfirm={saveTable}

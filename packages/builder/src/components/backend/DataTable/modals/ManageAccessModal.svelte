@@ -30,6 +30,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("manage-access")}
   showCancelButton={false}
   confirmText={$t("done")}

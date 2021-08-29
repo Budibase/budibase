@@ -18,6 +18,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("update-password")}
   confirmText={$t("update-password")}
   onConfirm={updatePassword}

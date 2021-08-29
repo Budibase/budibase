@@ -120,6 +120,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("filter")}
   confirmText={$t("save")}
   onConfirm={saveView}

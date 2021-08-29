@@ -24,6 +24,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("webhook-endpoints")}
   confirmText={$t("ok")}
   showCancelButton={false}

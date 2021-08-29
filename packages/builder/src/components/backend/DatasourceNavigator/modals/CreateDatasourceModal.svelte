@@ -62,6 +62,7 @@
   <CreateTableModal bind:name />
 </Modal>
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-datasource")}
   size="L"
   confirmText={$t("create")}

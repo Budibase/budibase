@@ -46,6 +46,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("calculate")}
   confirmText={$t("save")}
   onConfirm={saveView}

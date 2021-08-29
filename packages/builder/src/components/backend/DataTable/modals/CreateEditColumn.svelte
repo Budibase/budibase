@@ -232,6 +232,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={originalName ? $t("edit-column") : $t("create-column")}
   confirmText={$t("save-column")}
   onConfirm={saveColumn}

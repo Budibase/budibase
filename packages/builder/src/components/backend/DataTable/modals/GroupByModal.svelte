@@ -26,6 +26,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("group-by")}
   confirmText={$t("save")}
   onConfirm={saveView}

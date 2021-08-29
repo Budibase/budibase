@@ -27,6 +27,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("edit-display-columns")}
   confirmText={$t("save")}
   onConfirm={saveDisplayColumns}

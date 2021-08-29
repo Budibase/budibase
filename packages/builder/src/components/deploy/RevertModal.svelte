@@ -35,6 +35,7 @@
 <Icon name="Revert" hoverable on:click={revertModal.show} />
 <Modal bind:this={revertModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("revert-changes")}
     confirmText="Revert"
     onConfirm={revert}

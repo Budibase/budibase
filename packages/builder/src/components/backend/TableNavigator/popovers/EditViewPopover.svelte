@@ -47,6 +47,7 @@
 </ActionMenu>
 <Modal bind:this={editorModal}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("edit-view")}
     onConfirm={save}
     confirmText={$t("save")}

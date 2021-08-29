@@ -24,6 +24,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-automation")}
   confirmText={$t("create-0")}
   size="L"

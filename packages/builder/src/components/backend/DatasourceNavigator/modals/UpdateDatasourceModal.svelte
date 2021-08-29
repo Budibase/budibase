@@ -48,6 +48,7 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
+    cancelText={$t("cancel")}
     title={$t("edit-datasource")}
     size="L"
     confirmText={$t("save")}

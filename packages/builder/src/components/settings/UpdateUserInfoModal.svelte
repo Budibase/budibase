@@ -20,6 +20,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("update-user-information")}
   confirmText={$t("update-information")}
   onConfirm={updateInfo}

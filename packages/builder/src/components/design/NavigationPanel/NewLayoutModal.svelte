@@ -19,6 +19,7 @@
 </script>
 
 <ModalContent
+  cancelText={$t("cancel")}
   title={$t("create-layout")}
   confirmText={$t("create")}
   onConfirm={save}
