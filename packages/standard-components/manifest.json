@@ -1702,10 +1702,11 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "form"],
     "actions": [
       "ValidateForm",
-      "ClearForm"
+      "ClearForm",
+      "ChangeFormStep"
     ],
     "styles": ["size"],
     "settings": [
@@ -1732,9 +1733,44 @@
         "defaultValue": false
       }
     ],
-    "context": {
-      "type": "form"
-    }
+    "context": [
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Valid",
+            "key": "__valid"
+          },
+          {
+            "label": "Current Step",
+            "key": "__currentStep"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "__currentStepValid"
+          }
+        ]
+      },
+      {
+        "type": "form"
+      }
+    ]
+  },
+  "formstep": {
+    "name": "Form Step",
+    "icon": "AssetsAdded",
+    "hasChildren": true,
+    "illegalChildren": ["section", "form", "form step"],
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "number",
+        "label": "Step",
+        "key": "step",
+        "defaultValue": 1,
+        "min": 1
+      }
+    ]
   },
   "fieldgroup": {
     "name": "Field Group",
@@ -2000,6 +2036,108 @@
       },
       {
         "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
+  "multifieldselect": {
+    "name": "Multi-select Picker",
+    "icon": "ViewList",
+    "styles": ["size"],
+    "illegalChildren": ["section"],
+    "settings": [
+      {
+        "type": "field/array",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder",
+        "placeholder": "Choose an option"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Autocomplete",
+        "key": "autocomplete",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Options source",
+        "key": "optionsSource",
+        "defaultValue": "schema",
+        "placeholder": "Pick an options source",
+        "options": [
+          {
+            "label": "Schema",
+            "value": "schema"
+          },
+          {
+            "label": "Data provider",
+            "value": "provider"
+          },
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
+        ]
+      },
+      {
+        "type": "dataProvider",
+        "label": "Options Provider",
+        "key": "dataProvider",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Label Column",
+        "key": "labelColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      },
+      {
+        "type": "field",
+        "label": "Value Column",
+        "key": "valueColumn",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "provider"
+        }
+      }, 
+      {
+        "type": "options",
+        "key": "customOptions",
+        "dependsOn": {
+          "setting": "optionsSource",
+          "value": "custom"
+        }
+      },
+      {
+        "type": "validation/array",
         "label": "Validation",
         "key": "validation"
       }

@@ -90,7 +90,7 @@
     {/if}
     {#if !app.deployed}
       <MenuItem on:click={() => updateApp(app)} icon="Edit"
-        >{$t("update")}</MenuItem
+        >{$t("edit")}</MenuItem
       >
       <MenuItem on:click={() => deleteApp(app)} icon="Delete"
         >{$t("delete")}</MenuItem

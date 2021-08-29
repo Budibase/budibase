@@ -27,12 +27,8 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}
-    >{$t("update")}</MenuItem
-  >
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
-    >{$t("delete")}</MenuItem
-  >
+  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>{ $t('edit') }</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>{ $t('delete') }</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

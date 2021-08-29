@@ -38,7 +38,7 @@
       key: "routing.route",
       label: $t("route"),
       control: Input,
-      parser: val => val.replaceAll(" ", "-"),
+      parser: val => val.replace(/ +/g, "-"),
     },
     { key: "routing.roleId", label: $t("access"), control: RoleSelect },
     { key: "layoutId", label: $t("layout"), control: LayoutSelect },

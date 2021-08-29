@@ -115,6 +115,10 @@
       label: $t("options"),
       value: FIELDS.OPTIONS.type,
     },
+    {
+      label: "Multi-select",
+      value: FIELDS.ARRAY.type,
+    },
   ]
 </script>
 
@@ -155,6 +159,7 @@
       label={$t("display-column")}
       bind:value={primaryDisplay}
       options={fields}
+      sort
     />
   </div>
 {/if}

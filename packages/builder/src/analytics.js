@@ -23,6 +23,7 @@ async function activate() {
   if (posthogConfigured) {
     posthog.init(process.env.POSTHOG_TOKEN, {
       autocapture: false,
+      capture_pageview: false,
       api_host: process.env.POSTHOG_URL,
     })
     posthog.set_config({ persistence: "cookie" })
@@ -79,6 +80,7 @@ const isFeedbackTimeElapsed = sinceDateStr => {
   const feedbackMilliseconds = feedbackHours * 60 * 60 * 1000
   return Date.now() > sinceDate + feedbackMilliseconds
 }
+
 function submitFeedback(values) {
   if (!analyticsEnabled || !process.env.POSTHOG_TOKEN) return
   localStorage.setItem(FEEDBACK_SUBMITTED_KEY, Date.now())

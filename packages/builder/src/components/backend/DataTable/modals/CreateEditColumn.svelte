@@ -307,6 +307,11 @@
       label={$t("options-one-per-line")}
       bind:values={field.constraints.inclusion}
     />
+  {:else if field.type === "array"}
+    <ValuesList
+      label="Options (one per line)"
+      bind:values={field.constraints.inclusion}
+    />
   {:else if field.type === "datetime"}
     <DatePicker
       label={$t("earliest")}

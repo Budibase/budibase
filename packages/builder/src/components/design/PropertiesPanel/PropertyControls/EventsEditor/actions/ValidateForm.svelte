@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Checkbox } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
   import { _ as t } from "svelte-i18n"
@@ -21,6 +21,11 @@
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
   />
+  <div />
+  <Checkbox
+    text="Validate only current step"
+    bind:value={parameters.onlyCurrentStep}
+  />
 </div>
 
 <style>
@@ -30,7 +35,7 @@
     row-gap: var(--spacing-s);
     grid-template-columns: 60px 1fr;
     align-items: center;
-    max-width: 800px;
+    max-width: 400px;
     margin: 0 auto;
   }
 </style>

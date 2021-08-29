@@ -48,9 +48,9 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title={$t("update-datasource")}
+    title={$t('edit-datasource')}
     size="L"
-    confirmText={$t("update")}
+    confirmText={$t('save')}
     onConfirm={updateDatasource}
     disabled={error || !name || !datasource?.type}
   >

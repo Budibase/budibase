@@ -59,11 +59,11 @@
       value: "notRegex",
     },
     Contains: {
-      label: $t("must-contain-row-id"),
+      label: $t('must-contain'),
       value: "contains",
     },
     NotContains: {
-      label: $t("must-not-contain-row-id"),
+      label: $t('must-not-contain'),
       value: "notContains",
     },
   }
@@ -103,6 +103,13 @@
       Constraints.MinLength,
       Constraints.MaxLength,
     ],
+    ["array"]: [
+      Constraints.Required,
+      Constraints.MinLength,
+      Constraints.MaxLength,
+      Constraints.Contains,
+      Constraints.NotContains,
+    ],
   }
 
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
@@ -110,7 +117,6 @@
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
-
   const getConstraintsForType = type => {
     return ConstraintMap[type]
   }
@@ -191,6 +197,7 @@
         valueType: "Binding",
         type: fieldType,
         id: generate(),
+        value: fieldType == "array" ? [] : null,
       },
     ]
   }
@@ -276,7 +283,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
+                {:else if rule.type !== "array" && ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
@@ -289,6 +296,15 @@
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}
                       placeholder={$t("constraint-value")}
+                    />
+                  {:else if rule.type === "array"}
+                    <Select
+                      disabled={rule.constraint === "required"}
+                      options={dataSourceSchema.schema[field].constraints
+                        .inclusion}
+                      getOptionLabel={x => x}
+                      getOptionValue={x => x}
+                      value={rule.value}
                     />
                   {:else if rule.type === "boolean"}
                     <Select
