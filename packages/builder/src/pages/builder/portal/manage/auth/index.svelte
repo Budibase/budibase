@@ -183,7 +183,6 @@
   }
 
   async function save(docs) {
-    debugger
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
@@ -260,7 +259,6 @@
           notifications.success($t("settings-saved"))
         })
         .catch(err => {
-          debugger
           notifications.error($t("failed-to-update-auth-settings") + ` ${err}`)
           throw new Error(err.message)
         })

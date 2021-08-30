@@ -23,7 +23,7 @@
   </div>
   <MenuItem disabled>
     <header class="item">
-      <Heading size="XXS">{$t('get-started-checklist')}</Heading>
+      <Heading size="XXS">{$t("get-started-checklist")}</Heading>
       <ProgressCircle size="S" value={$admin.onboardingProgress} />
     </header>
   </MenuItem>

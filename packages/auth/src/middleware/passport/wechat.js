@@ -3,7 +3,6 @@ const WechatStrategy = require("passport-wechat").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 
 async function authenticate(accessToken, refreshToken, profile, done) {
-  debugger
   const thirdPartyUser = {
     provider: profile.provider, // should always be 'wechat'
     providerType: "wechat",
@@ -40,14 +39,14 @@ exports.strategyFactory = async function (config, callbackURL) {
 
     return new WechatStrategy(
       {
-        appID, 
-        appSecret, 
-        client: config.client, 
-        callbackURL, 
-        scope: config.scope, 
-        state: config.state, 
+        appID,
+        appSecret,
+        client: config.client,
+        callbackURL,
+        scope: config.scope,
+        state: config.state,
         getToken: config.getToken,
-        saveToken: config.saveToken
+        saveToken: config.saveToken,
       },
       authenticate
     )

@@ -40,9 +40,9 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>{$t('edit')}</MenuItem>
+  <MenuItem icon="Edit" on:click={editorModal.show}>{$t("edit")}</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
-    >{$t('delete')}</MenuItem
+    >{$t("delete")}</MenuItem
   >
 </ActionMenu>
 <Modal bind:this={editorModal}>

@@ -172,7 +172,7 @@ exports.googleAuth = async (ctx, next) => {
  * The initial call that wechat authentication makes to take you to the wechat login screen.
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
- exports.wechatPreAuth = async (ctx, next) => {
+exports.wechatPreAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
   const config = await authPkg.db.getScopedConfig(db, {
