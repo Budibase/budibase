@@ -23,6 +23,7 @@
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
+    "passport-wechat": "^2.0.4",
     "sanitize-s3-objectkey": "^0.0.1",
     "tar-fs": "^2.1.1",
     "uuid": "^8.3.2",

@@ -675,6 +675,7 @@
   "through": "through",
   "to-allow-users-to-authenticate-using-oidc-fill-out-the-fields-below": "To allow users to authenticate using OIDC, fill out the fields below.",
   "to-allow-users-to-authenticate-using-their-google-accounts-fill-out-the-fields-below": "To allow users to authenticate using their Google accounts, fill out the fields below.",
+  "to-allow-users-to-authenticate-using-their-wechat-accounts-fill-out-the-fields-below": "To allow users to authenticate using their Wechat accounts, fill out the fields below.",
   "to-allow-your-app-to-benefit-from-automated-auth-emails-add-your-smtp-details-below": "To allow your app to benefit from automated auth emails, add your SMTP details below.",
   "to-customize-your-login-button-fill-out-the-fields-below": "To customize your login button, fill out the fields below.",
   "to-table-column": "To table column",

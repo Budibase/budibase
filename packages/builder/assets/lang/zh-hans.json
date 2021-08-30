@@ -675,6 +675,7 @@
   "through": "通过",
   "to-allow-users-to-authenticate-using-oidc-fill-out-the-fields-below": "要允许用户使用 OIDC 进行身份验证，请填写以下字段。",
   "to-allow-users-to-authenticate-using-their-google-accounts-fill-out-the-fields-below": "要允许用户使用其 Google 帐户进行身份验证，请填写以下字段。",
+  "to-allow-users-to-authenticate-using-their-wechat-accounts-fill-out-the-fields-below": "要允许用户使用其 Wechat 帐户进行身份验证，请填写以下字段。",
   "to-allow-your-app-to-benefit-from-automated-auth-emails-add-your-smtp-details-below": "要让您的应用受益于自动身份验证电子邮件，请在下方添加您的 SMTP 详细信息。",
   "to-customize-your-login-button-fill-out-the-fields-below": "要自定义您的登录按钮，请填写以下字段。",
   "to-table-column": "到表列",

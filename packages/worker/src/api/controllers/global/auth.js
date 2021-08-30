@@ -1,6 +1,7 @@
 const authPkg = require("@budibase/auth")
 const { google } = require("@budibase/auth/src/middleware")
 const { oidc } = require("@budibase/auth/src/middleware")
+const { wechat } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
@@ -25,6 +26,19 @@ function googleCallbackUrl(config) {
     callbackUrl += `/${getTenantId()}`
   }
   callbackUrl += `/google/callback`
+  return callbackUrl
+}
+
+function wechatCallbackUrl(config) {
+  // incase there is a callback URL from before
+  if (config && config.callbackURL) {
+    return config.callbackURL
+  }
+  let callbackUrl = `/api/global/auth`
+  if (isMultiTenant()) {
+    callbackUrl += `/${getTenantId()}`
+  }
+  callbackUrl += `/wechat/callback`
   return callbackUrl
 }
 
@@ -142,6 +156,46 @@ exports.googleAuth = async (ctx, next) => {
   })
   const callbackUrl = googleCallbackUrl(config)
   const strategy = await google.strategyFactory(config, callbackUrl)
+
+  return passport.authenticate(
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
+    async (err, user, info) => {
+      await authInternal(ctx, user, err, info)
+
+      ctx.redirect("/")
+    }
+  )(ctx, next)
+}
+
+/**
+ * The initial call that wechat authentication makes to take you to the wechat login screen.
+ * On a successful login, you will be redirected to the googleAuth callback route.
+ */
+ exports.wechatPreAuth = async (ctx, next) => {
+  const db = getGlobalDB()
+
+  const config = await authPkg.db.getScopedConfig(db, {
+    type: Configs.WECHAT,
+    workspace: ctx.query.workspace,
+  })
+  let callbackUrl = wechatCallbackUrl(config)
+  const strategy = await google.strategyFactory(config, callbackUrl)
+
+  return passport.authenticate(strategy, {
+    scope: ["snsapi_userinfo"],
+  })(ctx, next)
+}
+
+exports.wechatAuth = async (ctx, next) => {
+  const db = getGlobalDB()
+
+  const config = await authPkg.db.getScopedConfig(db, {
+    type: Configs.WECHAT,
+    workspace: ctx.query.workspace,
+  })
+  const callbackUrl = wechatCallbackUrl(config)
+  const strategy = await wechat.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(
     strategy,

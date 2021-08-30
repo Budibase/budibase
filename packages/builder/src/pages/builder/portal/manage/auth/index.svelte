@@ -1,5 +1,6 @@
 <script>
   import GoogleLogo from "./_logos/Google.svelte"
+  import WechatLogo from "./_logos/Wechat.svelte"
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
@@ -30,6 +31,7 @@
 
   const ConfigTypes = {
     Google: "google",
+    Wechat: "wechat",
     OIDC: "oidc",
   }
 
@@ -51,6 +53,22 @@
         label: "Callback URL",
         readonly: true,
         placeholder: callbackUrl(tenantId, "/google/callback"),
+      },
+    ],
+  }
+
+  $: WechatConfigFields = {
+    Wechat: [
+      { name: "appID", label: "App ID" },
+      { name: "appSecret", label: "App secret" },
+      { name: "client", label: "Client" },
+      { name: "scope", label: "Scope" },
+      { name: "state", label: "State" },
+      {
+        name: "callbackURL",
+        label: "Callback URL",
+        readonly: true,
+        placeholder: callbackUrl(tenantId, "/wechat/callback"),
       },
     ],
   }
@@ -105,18 +123,24 @@
   let image
 
   let google
+  let wechat
   let oidc
-  const providers = { google, oidc }
+  const providers = { google, wechat, oidc }
 
   // control the state of the save button depending on whether form has changed
   let originalGoogleDoc
+  let originalWechatDoc
   let originalOidcDoc
   let googleSaveButtonDisabled
+  let wechatSaveButtonDisabled
   let oidcSaveButtonDisabled
   $: {
     isEqual(providers.google?.config, originalGoogleDoc?.config)
       ? (googleSaveButtonDisabled = true)
       : (googleSaveButtonDisabled = false)
+    isEqual(providers.wechat?.config, originalWechatDoc?.config)
+      ? (wechatSaveButtonDisabled = true)
+      : (wechatSaveButtonDisabled = false)
     isEqual(providers.oidc?.config, originalOidcDoc?.config)
       ? (oidcSaveButtonDisabled = true)
       : (oidcSaveButtonDisabled = false)
@@ -125,12 +149,16 @@
   // Create a flag so that it will only try to save completed forms
   $: partialGoogle =
     providers.google?.config?.clientID || providers.google?.config?.clientSecret
+  $: partialWechat =
+    providers.wechat?.config?.clientID || providers.wechat?.config?.clientSecret
   $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
     providers.oidc?.config?.configs[0].clientSecret
   $: googleComplete =
     providers.google?.config?.clientID && providers.google?.config?.clientSecret
+  $: wechatComplete =
+    providers.wechat?.config?.clientID && providers.wechat?.config?.clientSecret
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
@@ -155,6 +183,7 @@
   }
 
   async function save(docs) {
+    debugger
     // only if the user has provided an image, upload it.
     image && uploadLogo(image)
     let calls = []
@@ -198,6 +227,21 @@
           }
         }
       }
+      if (element.type === ConfigTypes.Wechat) {
+        if (partialWechat) {
+          if (!wechatComplete) {
+            notifications.error(
+              $t("please-fill-in-all-required") +
+                ` ${ConfigTypes.Wechat} ` +
+                $t("fields")
+            )
+          } else {
+            calls.push(api.post(`/api/global/configs`, element))
+            wechatSaveButtonDisabled = true
+            originalWechatDoc = cloneDeep(providers.wechat)
+          }
+        }
+      }
     })
     calls.length &&
       Promise.all(calls)
@@ -216,6 +260,7 @@
           notifications.success($t("settings-saved"))
         })
         .catch(err => {
+          debugger
           notifications.error($t("failed-to-update-auth-settings") + ` ${err}`)
           throw new Error(err.message)
         })
@@ -243,7 +288,25 @@
       originalGoogleDoc = cloneDeep(googleDoc)
       providers.google = googleDoc
     }
+    const wechatResponse = await api.get(
+      `/api/global/configs/${ConfigTypes.Wechat}`
+    )
+    const wechatDoc = await wechatResponse.json()
 
+    if (!wechatDoc._id) {
+      providers.wechat = {
+        type: ConfigTypes.Wechat,
+        config: { activated: true },
+      }
+      originalWechatDoc = cloneDeep(wechatDoc)
+    } else {
+      // default activated to true for older configs
+      if (wechatDoc.config.activated === undefined) {
+        wechatDoc.config.activated = true
+      }
+      originalWechatDoc = cloneDeep(wechatDoc)
+      providers.wechat = wechatDoc
+    }
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
     const res = await api.get(`/api/global/configs/logos_oidc`)
@@ -327,6 +390,52 @@
           <Label size="L">{$t("activated")}</Label>
           <span class="alignedToggle">
             <Toggle text="" bind:value={providers.google.config.activated} />
+          </span>
+        </div>
+      </div>
+    </Layout>
+  {/if}
+  {#if providers.wechat}
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">
+        <div>
+          <WechatLogo />
+          Wechat
+          <div class="wechat-save-button">
+            <div>
+              <Button
+                disabled={wechatSaveButtonDisabled}
+                size="s"
+                cta
+                on:click={() => save([providers.wechat])}>{$t("save")}</Button
+              >
+            </div>
+          </div>
+        </div>
+      </Heading>
+      <Body size="S">
+        {$t(
+          "to-allow-users-to-authenticate-using-their-wechat-accounts-fill-out-the-fields-below"
+        )}
+      </Body>
+    </Layout>
+    <Layout gap="XS" noPadding>
+      {#each WechatConfigFields.Wechat as field}
+        <div class="form-row">
+          <Label size="L">{field.label}</Label>
+          <Input
+            bind:value={providers.wechat.config[field.name]}
+            readonly={field.readonly}
+            placeholder={field.placeholder}
+          />
+        </div>
+      {/each}
+      <div class="form-row">
+        <div class="field">
+          <Label size="L">{$t("activated")}</Label>
+          <span class="alignedToggle">
+            <Toggle text="" bind:value={providers.wechat.config.activated} />
           </span>
         </div>
       </div>
@@ -433,6 +542,11 @@
   }
 
   .google-save-button {
+    display: inline-block;
+    margin-left: 400px;
+  }
+
+  .wechat-save-button {
     display: inline-block;
     margin-left: 400px;
   }
