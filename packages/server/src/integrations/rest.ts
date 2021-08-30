@@ -89,6 +89,26 @@ module RestModule {
           },
         },
       },
+      patch: {
+        displayName: "PATCH",
+        readable: true,
+        type: QueryTypes.FIELDS,
+        urlDisplay: true,
+        fields: {
+          path: {
+            type: DatasourceFieldTypes.STRING,
+          },
+          queryString: {
+            type: DatasourceFieldTypes.STRING,
+          },
+          headers: {
+            type: DatasourceFieldTypes.OBJECT,
+          },
+          requestBody: {
+            type: DatasourceFieldTypes.JSON,
+          },
+        },
+      },
       delete: {
         displayName: "DELETE",
         type: QueryTypes.FIELDS,
@@ -168,6 +188,21 @@ module RestModule {
 
       const response = await fetch(this.config.url + path + queryString, {
         method: "POST",
+        headers: this.headers,
+        body: JSON.stringify(json),
+      })
+
+      return await this.parseResponse(response)
+    }
+
+    async patch({ path = "", queryString = "", headers = {}, json = {} }) {
+      this.headers = {
+        ...this.config.defaultHeaders,
+        ...headers,
+      }
+
+      const response = await fetch(this.config.url + path + queryString, {
+        method: "PATCH",
         headers: this.headers,
         body: JSON.stringify(json),
       })
