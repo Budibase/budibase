@@ -243,6 +243,7 @@
 
   .viewer {
     min-height: 200px;
+    width: 640px;
   }
 
   .preview {
