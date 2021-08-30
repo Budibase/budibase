@@ -38,7 +38,7 @@
     let data = new FormData()
     data.append("file", file)
     const res = await post(
-      "/api/admin/configs/upload/settings/logoUrl",
+      "/api/global/configs/upload/settings/logoUrl",
       data,
       {}
     )
