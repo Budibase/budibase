@@ -99,7 +99,14 @@ exports.createAllSearchIndex = async appId => {
         for (let key of Object.keys(input)) {
           let idxKey = prev != null ? `${prev}.${key}` : key
           idxKey = idxKey.replace(/ /, "_")
-          if (key === "_id" || key === "_rev" || input[key] == null) {
+          if (Array.isArray(input[key])) {
+            for (let val in input[key]) {
+              // eslint-disable-next-line no-undef
+              index(idxKey, input[key][val], {
+                store: true,
+              })
+            }
+          } else if (key === "_id" || key === "_rev" || input[key] == null) {
             continue
           }
           if (typeof input[key] === "string") {

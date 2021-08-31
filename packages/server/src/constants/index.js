@@ -12,6 +12,7 @@ exports.FieldTypes = {
   OPTIONS: "options",
   NUMBER: "number",
   BOOLEAN: "boolean",
+  ARRAY: "array",
   DATETIME: "datetime",
   ATTACHMENT: "attachment",
   LINK: "link",
