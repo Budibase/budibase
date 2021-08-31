@@ -113,6 +113,10 @@
       label: "Options",
       value: FIELDS.OPTIONS.type,
     },
+    {
+      label: "Multi-select",
+      value: FIELDS.ARRAY.type,
+    },
   ]
 </script>
 

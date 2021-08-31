@@ -25,7 +25,7 @@ export const createValidatorFromConstraints = (
       schemaConstraints.presence?.allowEmpty === false
     ) {
       rules.push({
-        type: "string",
+        type: schemaConstraints.type == "array" ? "array" : "string",
         constraint: "required",
         error: "Required",
       })
@@ -63,7 +63,10 @@ export const createValidatorFromConstraints = (
     }
 
     // Inclusion constraint
-    if (exists(schemaConstraints.inclusion)) {
+    if (
+      exists(schemaConstraints.inclusion) &&
+      schemaConstraints.type !== "array"
+    ) {
       const options = schemaConstraints.inclusion || []
       rules.push({
         type: "string",
@@ -142,7 +145,7 @@ const evaluateRule = (rule, value) => {
  * in the same format.
  * @param value the value to parse
  * @param type the type to parse
- * @returns {boolean|string|*|number|null} the parsed value, or null if invalid
+ * @returns {boolean|string|*|number|null|array} the parsed value, or null if invalid
  */
 const parseType = (value, type) => {
   // Treat nulls or empty strings as null
@@ -196,6 +199,13 @@ const parseType = (value, type) => {
 
   // Parse links, treating no elements as null
   if (type === "link") {
+    if (!Array.isArray(value) || !value.length) {
+      return null
+    }
+    return value
+  }
+
+  if (type === "array") {
     if (!Array.isArray(value) || !value.length) {
       return null
     }

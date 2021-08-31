@@ -26,6 +26,15 @@ export const FIELDS = {
       inclusion: [],
     },
   },
+  ARRAY: {
+    name: "Multi-select",
+    type: "array",
+    constraints: {
+      type: "array",
+      presence: false,
+      inclusion: [],
+    },
+  },
   NUMBER: {
     name: "Number",
     type: "number",

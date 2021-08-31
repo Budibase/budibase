@@ -131,6 +131,7 @@ const fieldTypeToComponentMap = {
   string: "stringfield",
   number: "numberfield",
   options: "optionsfield",
+  array: "multifieldselect",
   boolean: "booleanfield",
   longform: "longformfield",
   datetime: "datetimefield",
@@ -167,6 +168,13 @@ export function makeDatasourceFormComponents(datasource) {
           optionsSource: "schema",
         })
       }
+      if (fieldType === "array") {
+        component.customProps({
+          placeholder: "Choose an option",
+          optionsSource: "schema",
+        })
+      }
+
       if (fieldType === "link") {
         let placeholder =
           fieldSchema.relationshipType === "one-to-many"
