@@ -29,6 +29,8 @@
     valueColumn,
     customOptions
   )
+
+  $: console.log(options)
 </script>
 
 <Field
