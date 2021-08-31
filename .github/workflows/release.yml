@@ -42,9 +42,9 @@ jobs:
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release
 
-      - name: Get Previous tag
-          id: previoustag
-          uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
         run: | 
