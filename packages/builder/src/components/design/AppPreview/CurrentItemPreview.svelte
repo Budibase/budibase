@@ -95,38 +95,41 @@
       { once: true }
     )
 
-    // Add listener for events sent by cliebt library in preview
-    iframe.contentWindow.addEventListener("bb-event", event => {
-      const { type, data } = event.detail
-      if (type === "select-component" && data.id) {
-        store.actions.components.select({ _id: data.id })
-      } else if (type === "update-prop") {
-        store.actions.components.updateProp(data.prop, data.value)
-      } else if (type === "delete-component" && data.id) {
-        confirmDeleteComponent(data.id)
-      } else if (type === "preview-loaded") {
-        // Wait for this event to show the client library if intelligent
-        // loading is supported
-        loading = false
-      } else {
-        console.warning(`Client sent unknown event type: ${type}`)
-      }
-    })
-
-    iframe.contentWindow.addEventListener("keydown", event => {
-      if ((event.key === "Delete" || event.key === "Backspace") && selectedComponentId) {
-        confirmDeleteComponent(selectedComponentId);
-      }
-    })
+    // Add listener for events sent by client library in preview
+    iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
   })
 
   // remove all iframe event listeners on component destroy
   onDestroy(() => {
-    iframe.contentWindow.removeEventListener("ready")
-    iframe.contentWindow.removeEventListener("error")
-    iframe.contentWindow.removeEventListener("bb-event")
-    iframe.contentWindow.removeEventListener("keydown")
+    iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+    iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
   })
+
+  const handleBudibaseEvent = event => {
+    const { type, data } = event.detail
+    if (type === "select-component" && data.id) {
+      store.actions.components.select({ _id: data.id })
+    } else if (type === "update-prop") {
+      store.actions.components.updateProp(data.prop, data.value)
+    } else if (type === "delete-component" && data.id) {
+      confirmDeleteComponent(data.id)
+    } else if (type === "preview-loaded") {
+      // Wait for this event to show the client library if intelligent
+      // loading is supported
+      loading = false
+    } else {
+      console.warning(`Client sent unknown event type: ${type}`)
+    }
+  };
+
+  const handleKeydownEvent = event => {
+    if ((event.key === "Delete" || event.key === "Backspace") &&
+      selectedComponentId &&
+      ['input', 'textarea'].indexOf(iframe.contentWindow.document.activeElement?.tagName.toLowerCase()) === -1) {
+      confirmDeleteComponent(selectedComponentId);
+    }
+  }
 
   const confirmDeleteComponent = (componentId) => {
     idToDelete = componentId
