@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
   company: "Budibase",
   oidc: undefined,
   google: undefined,
+  wechat: undefined,
 }
 
 export function createOrganisationStore() {
@@ -19,7 +20,6 @@ export function createOrganisationStore() {
     const tenantId = get(auth).tenantId
     const res = await api.get(`/api/global/configs/public?tenantId=${tenantId}`)
     const json = await res.json()
-
     if (json.status === 400) {
       set(DEFAULT_CONFIG)
     } else {

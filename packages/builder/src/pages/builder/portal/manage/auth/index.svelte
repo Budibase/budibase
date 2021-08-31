@@ -62,8 +62,6 @@
       { name: "appID", label: "App ID" },
       { name: "appSecret", label: "App secret" },
       { name: "client", label: "Client" },
-      { name: "scope", label: "Scope" },
-      { name: "state", label: "State" },
       {
         name: "callbackURL",
         label: "Callback URL",
@@ -150,7 +148,7 @@
   $: partialGoogle =
     providers.google?.config?.clientID || providers.google?.config?.clientSecret
   $: partialWechat =
-    providers.wechat?.config?.clientID || providers.wechat?.config?.clientSecret
+    providers.wechat?.config?.appID || providers.wechat?.config?.appSecret
   $: partialOidc =
     providers.oidc?.config?.configs[0].configUrl ||
     providers.oidc?.config?.configs[0].clientID ||
@@ -158,7 +156,7 @@
   $: googleComplete =
     providers.google?.config?.clientID && providers.google?.config?.clientSecret
   $: wechatComplete =
-    providers.wechat?.config?.clientID && providers.wechat?.config?.clientSecret
+    providers.wechat?.config?.appID && providers.wechat?.config?.appSecret
   $: oidcComplete =
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
@@ -376,11 +374,14 @@
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
           <Label size="L">{field.label}</Label>
-          <Input
-            bind:value={providers.google.config[field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          {#if field.readonly}
+            <Input readonly placeholder={field.placeholder} />
+          {:else}
+            <Input
+              bind:value={providers.google.config[field.name]}
+              placeholder={field.placeholder}
+            />
+          {/if}
         </div>
       {/each}
       <div class="form-row">
@@ -422,11 +423,14 @@
       {#each WechatConfigFields.Wechat as field}
         <div class="form-row">
           <Label size="L">{field.label}</Label>
-          <Input
-            bind:value={providers.wechat.config[field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          {#if field.readonly}
+            <Input readonly placeholder={field.placeholder} />
+          {:else}
+            <Input
+              bind:value={providers.wechat.config[field.name]}
+              placeholder={field.placeholder}
+            />
+          {/if}
         </div>
       {/each}
       <div class="form-row">
@@ -468,11 +472,14 @@
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
           <Label size="L">{field.label}</Label>
-          <Input
-            bind:value={providers.oidc.config.configs[0][field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          {#if field.readonly}
+            <Input readonly placeholder={field.placeholder} />
+          {:else}
+            <Input
+              bind:value={providers.oidc.config.configs[0][field.name]}
+              placeholder={field.placeholder}
+            />
+          {/if}
         </div>
       {/each}
       <br />
@@ -551,6 +558,6 @@
 
   .oidc-save-button {
     display: inline-block;
-    margin-left: 320px;
+    margin-left: 400px;
   }
 </style>

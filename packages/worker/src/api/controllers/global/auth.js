@@ -39,7 +39,7 @@ function wechatCallbackUrl(config) {
     callbackUrl += `/${getTenantId()}`
   }
   callbackUrl += `/wechat/callback`
-  return callbackUrl
+  return "http://rkba8m.natappfree.cc" + callbackUrl
 }
 
 async function authInternal(ctx, user, err = null, info = null) {
@@ -170,7 +170,7 @@ exports.googleAuth = async (ctx, next) => {
 
 /**
  * The initial call that wechat authentication makes to take you to the wechat login screen.
- * On a successful login, you will be redirected to the googleAuth callback route.
+ * On a successful login, you will be redirected to the wechatAuth callback route.
  */
 exports.wechatPreAuth = async (ctx, next) => {
   const db = getGlobalDB()
@@ -180,7 +180,7 @@ exports.wechatPreAuth = async (ctx, next) => {
     workspace: ctx.query.workspace,
   })
   let callbackUrl = wechatCallbackUrl(config)
-  const strategy = await google.strategyFactory(config, callbackUrl)
+  const strategy = await wechat.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(strategy, {
     scope: ["snsapi_userinfo"],
