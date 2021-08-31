@@ -29,19 +29,11 @@
   "keywords": [
     "svelte"
   ],
-<<<<<<< HEAD
-  "version": "0.9.116-alpha.3",
-  "license": "MIT",
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc",
-  "dependencies": {
-    "@budibase/bbui": "^0.9.116-alpha.3",
-=======
   "version": "0.9.116",
   "license": "MIT",
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc",
   "dependencies": {
     "@budibase/bbui": "^0.9.116",
->>>>>>> 7cddd772fd1122f791af443bc4a3c4ca1eef288d
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
     "@spectrum-css/divider": "^1.0.3",
