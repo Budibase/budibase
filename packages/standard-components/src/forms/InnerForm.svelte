@@ -26,6 +26,7 @@
   // Reactive derived stores to derive form state from field array
   $: values = deriveFieldProperty(fields, f => f.fieldState.value)
   $: errors = deriveFieldProperty(fields, f => f.fieldState.error)
+  $: enrichments = deriveBindingEnrichments(fields)
   $: valid = !Object.values($errors).some(error => error != null)
 
   // Derive whether the current form step is valid
@@ -57,6 +58,26 @@
     })
   }
 
+  // Derives any enrichments which need to be made so that bindings work for
+  // special data types like attachments. Relationships are currently not
+  // handled as we don't have the primaryDisplay field that is required.
+  const deriveBindingEnrichments = fieldStores => {
+    return derived(fieldStores, fieldValues => {
+      let enrichments = {}
+      fieldValues.forEach(field => {
+        if (field.type === "attachment") {
+          const value = field.fieldState.value
+          let url = null
+          if (Array.isArray(value) && value[0] != null) {
+            url = value[0].url
+          }
+          enrichments[`${field.name}_first`] = url
+        }
+      })
+      return enrichments
+    })
+  }
+
   // Searches the field array for a certain field
   const getField = name => {
     return fields.find(field => get(field).name === name)
@@ -65,6 +86,7 @@
   const formApi = {
     registerField: (
       field,
+      type,
       defaultValue = null,
       fieldDisabled = false,
       validationRules,
@@ -100,6 +122,7 @@
       // Construct field info
       const fieldInfo = writable({
         name: field,
+        type,
         step: step || 1,
         fieldState: {
           fieldId: `id-${generateID()}`,
@@ -262,6 +285,7 @@
   $: dataContext = {
     ...initialValues,
     ...$values,
+    ...$enrichments,
 
     // These static values are prefixed to avoid clashes with actual columns
     __valid: valid,
