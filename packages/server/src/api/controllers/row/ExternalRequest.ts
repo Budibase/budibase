@@ -264,7 +264,7 @@ module External {
     }
 
     outputProcessing(
-      rows: Row[],
+      rows: Row[] = [],
       table: Table,
       relationships: RelationshipsJson[]
     ) {
@@ -524,7 +524,7 @@ module External {
       // can't really use response right now
       const response = await makeExternalQuery(appId, json)
       // handle many to many relationships now if we know the ID (could be auto increment)
-      if (processed.manyRelationships) {
+      if (processed.manyRelationships && response) {
         await this.handleManyRelationships(
           response[0],
           processed.manyRelationships
