@@ -43,6 +43,7 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
+      size: "spectrum--medium",
     })
 
   const fieldGroup = new Component("@budibase/standard-components/fieldgroup")

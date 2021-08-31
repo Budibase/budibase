@@ -60,8 +60,8 @@ exports.buildSchemaFromDb = async function (ctx) {
 exports.update = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasourceId = ctx.params.datasourceId
-  const datasource = await db.get(datasourceId)
-  datasource.name = ctx.request.body.name
+  let datasource = await db.get(datasourceId)
+  datasource = { ...datasource, ...ctx.request.body }
 
   const response = await db.put(datasource)
   datasource._rev = response.rev

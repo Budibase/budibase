@@ -101,7 +101,6 @@ const createScreen = table => {
     .instanceName("Form")
     .customProps({
       actionType: "Update",
-      theme: "spectrum--lightest",
       size: "spectrum--medium",
       dataSource: {
         label: table.name,
