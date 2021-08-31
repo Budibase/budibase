@@ -4,7 +4,7 @@
   import DateTimeRenderer from "./DateTimeRenderer.svelte"
   import RelationshipRenderer from "./RelationshipRenderer.svelte"
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
-
+  import ArrayRenderer from "./ArrayRenderer.svelte"
   export let row
   export let schema
   export let value
@@ -19,6 +19,7 @@
     options: StringRenderer,
     number: StringRenderer,
     longform: StringRenderer,
+    array: ArrayRenderer,
   }
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)

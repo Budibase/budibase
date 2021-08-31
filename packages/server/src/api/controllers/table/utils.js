@@ -1,4 +1,5 @@
 const CouchDB = require("../../../db")
+const linkRows = require("../../../db/linkedRows")
 const csvParser = require("../../../utilities/csvParser")
 const {
   getRowParams,
@@ -74,6 +75,16 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
       const processed = inputProcessing(user, table, row)
       table = processed.table
       row = processed.row
+
+      // make sure link rows are up to date
+      row = await linkRows.updateLinks({
+        appId,
+        eventType: linkRows.EventType.ROW_SAVE,
+        row,
+        tableId: row.tableId,
+        table,
+      })
+
       for (let [fieldName, schema] of Object.entries(table.schema)) {
         // check whether the options need to be updated for inclusion as part of the data import
         if (
