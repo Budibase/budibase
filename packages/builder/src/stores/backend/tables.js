@@ -87,6 +87,7 @@ export function createTablesStore() {
         draft: {},
       })
     },
+    getDataSources: () => get(store).list.filter(t => t.name !== "Users"),
     delete: async table => {
       await api.delete(`/api/tables/${table._id}/${table._rev}`)
       update(state => ({

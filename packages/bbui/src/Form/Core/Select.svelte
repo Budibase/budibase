@@ -15,6 +15,7 @@
   export let quiet = false
   export let autoWidth = false
   export let autocomplete = false
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -72,6 +73,7 @@
   {getOptionIcon}
   {fieldIcon}
   {autocomplete}
+  {sort}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder}
   isOptionSelected={option => option === value}

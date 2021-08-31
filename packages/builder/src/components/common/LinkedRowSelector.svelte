@@ -47,6 +47,7 @@
     getOptionValue={row => row._id}
     on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
     {label}
+    sort
   />
 {:else}
   <Multiselect
@@ -55,5 +56,6 @@
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
+    sort
   />
 {/if}

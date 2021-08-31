@@ -25,11 +25,12 @@
   export let quiet = false
   export let autoWidth = false
   export let autocomplete = false
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   let searchTerm = null
 
-  $: sortedOptions = getSortedOptions(options, getOptionLabel)
+  $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
     sortedOptions,
     searchTerm,
@@ -45,9 +46,12 @@
     open = true
   }
 
-  const getSortedOptions = (options, getLabel) => {
+  const getSortedOptions = (options, getLabel, sort) => {
     if (!options?.length || !Array.isArray(options)) {
       return []
+    }
+    if (!sort) {
+      return options
     }
     return options.sort((a, b) => {
       const labelA = getLabel(a)

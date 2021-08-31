@@ -42,7 +42,9 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek } = action.parameters
   if (url) {
-    if (peek) {
+    // If we're already peeking, don't peek again
+    const isPeeking = get(routeStore).queryParams?.peek
+    if (peek && !isPeeking) {
       peekStore.actions.showPeek(url)
     } else {
       const external = !url.startsWith("/")
@@ -64,10 +66,15 @@ const queryExecutionHandler = async action => {
   })
 }
 
-const executeActionHandler = async (context, componentId, actionType) => {
+const executeActionHandler = async (
+  context,
+  componentId,
+  actionType,
+  params
+) => {
   const fn = context[`${componentId}_${actionType}`]
   if (fn) {
-    return await fn()
+    return await fn(params)
   }
 }
 
@@ -75,7 +82,8 @@ const validateFormHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
-    ActionTypes.ValidateForm
+    ActionTypes.ValidateForm,
+    action.parameters.onlyCurrentStep
   )
 }
 
@@ -99,6 +107,15 @@ const clearFormHandler = async (action, context) => {
   )
 }
 
+const changeFormStepHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ChangeFormStep,
+    action.parameters
+  )
+}
+
 const closeScreenModalHandler = () => {
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
@@ -116,6 +133,7 @@ const handlerMap = {
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,
+  ["Change Form Step"]: changeFormStepHandler,
 }
 
 const confirmTextMap = {
