@@ -8,6 +8,7 @@ import LogOut from "./LogOut.svelte"
 import ClearForm from "./ClearForm.svelte"
 import CloseScreenModal from "./CloseScreenModal.svelte"
 import ChangeFormStep from "./ChangeFormStep.svelte"
+import UpdateStateStep from "./UpdateState.svelte"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -56,5 +57,9 @@ export default [
   {
     name: "Change Form Step",
     component: ChangeFormStep,
+  },
+  {
+    name: "Update State",
+    component: UpdateStateStep,
   },
 ]
