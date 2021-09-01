@@ -5,7 +5,6 @@ Each Budibase package has its own license:
 builder: GPLv3
 server: GPLv3
 client: MPLv2.0
-standard-components: MPLv2.0
 
 You can consider Budibase to be GPLv3 licensed. 
 
