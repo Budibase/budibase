@@ -78,7 +78,7 @@ static_resources:
 
   clusters:
   - name: minio-service
-    connect_timeout: 15s
+    connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
@@ -92,7 +92,7 @@ static_resources:
                 port_value: 9000
 
   - name: couchdb-service
-    connect_timeout: 15s
+    connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
@@ -106,7 +106,7 @@ static_resources:
                 port_value: 5984
 
   - name: server-dev
-    connect_timeout: 15s
+    connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
@@ -134,7 +134,7 @@ static_resources:
                 port_value: 3000
 
   - name: worker-dev
-    connect_timeout: 15s
+    connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
