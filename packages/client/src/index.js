@@ -1,5 +1,9 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { builderStore, appStore } from "./store"
+import { builderStore, appStore } from "./stores"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
+
+// Initialise spectrum icons
+loadSpectrumIcons()
 
 let app
 

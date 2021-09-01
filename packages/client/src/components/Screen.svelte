@@ -1,7 +1,7 @@
 <script>
-  import { screenStore, routeStore } from "../store"
+  import { screenStore, routeStore } from "stores"
   import Component from "./Component.svelte"
-  import Provider from "./Provider.svelte"
+  import Provider from "./context/Provider.svelte"
   import { onMount } from "svelte"
 
   // Keep route params up to date

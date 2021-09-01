@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
-  import { dataSourceStore, createContextStore } from "../store"
-  import { ActionTypes } from "../constants"
+  import { dataSourceStore, createContextStore } from "stores"
+  import { ActionTypes } from "constants"
   import { generate } from "shortid"
 
   export let data
