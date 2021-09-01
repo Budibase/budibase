@@ -2,7 +2,8 @@
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
   import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
-  let modal
+
+  export let modal
 </script>
 
 <div class="title">

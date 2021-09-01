@@ -15,13 +15,3 @@
     }
   })
 </script>
-
-<i>Create your first automation to get started</i>
-
-<style>
-  i {
-    font-size: var(--font-size-m);
-    color: var(--grey-5);
-    margin-top: 2px;
-  }
-</style>

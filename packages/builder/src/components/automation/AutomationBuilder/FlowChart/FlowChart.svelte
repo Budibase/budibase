@@ -19,7 +19,6 @@
   }
 </script>
 
-{#if !blocks.length}<i>Add a trigger to your automation to get started</i>{/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
     <div
@@ -56,10 +55,5 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-  }
-
-  i {
-    font-size: var(--font-size-m);
-    color: var(--grey-5);
   }
 </style>
