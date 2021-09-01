@@ -182,12 +182,7 @@ exports.getComponentLibraryManifest = async (appId, library) => {
     const path = require.resolve(library).split(lib)[0]
     return require(join(path, lib, filename))
   } else if (env.isDev()) {
-    const path = join(
-      NODE_MODULES_PATH,
-      "@budibase",
-      "standard-components",
-      filename
-    )
+    const path = join(NODE_MODULES_PATH, "@budibase", "client", filename)
     // always load from new so that updates are refreshed
     delete require.cache[require.resolve(path)]
     return require(path)

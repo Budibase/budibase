@@ -1,11 +1,9 @@
 <script>
   import { writable } from "svelte/store"
   import { setContext, onMount } from "svelte"
+  import { Layout, Heading, Body } from "@budibase/bbui"
   import Component from "./Component.svelte"
-  import NotificationDisplay from "./NotificationDisplay.svelte"
-  import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
-  import PeekScreenDisplay from "./PeekScreenDisplay.svelte"
-  import SDK from "../sdk"
+  import SDK from "sdk"
   import {
     createContextStore,
     initialise,
@@ -14,14 +12,16 @@
     routeStore,
     builderStore,
     appStore,
-  } from "../store"
-  import SettingsBar from "./preview/SettingsBar.svelte"
-  import SelectionIndicator from "./preview/SelectionIndicator.svelte"
-  import HoverIndicator from "./preview/HoverIndicator.svelte"
-  import { Layout, Heading, Body } from "@budibase/bbui"
+  } from "stores"
+  import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
+  import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
+  import PeekScreenDisplay from "components/overlay/PeekScreenDisplay.svelte"
+  import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
+  import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
+  import SettingsBar from "components/preview/SettingsBar.svelte"
+  import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
+  import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import ErrorSVG from "../../../builder/assets/error.svg"
-  import UserBindingsProvider from "./UserBindingsProvider.svelte"
-  import DeviceBindingsProvider from "./DeviceBindingsProvider.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)

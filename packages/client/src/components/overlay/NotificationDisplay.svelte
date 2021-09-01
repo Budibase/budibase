@@ -1,5 +1,5 @@
 <script>
-  import { notificationStore } from "../store"
+  import { notificationStore } from "stores"
   import { Notification } from "@budibase/bbui"
   import { fly } from "svelte/transition"
 </script>

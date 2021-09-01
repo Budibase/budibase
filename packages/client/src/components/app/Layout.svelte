@@ -1,9 +1,8 @@
 <script>
   import { getContext } from "svelte"
   import { Heading, Icon } from "@budibase/bbui"
-  import { routeStore } from "../../client/src/store"
 
-  const { styleable, linkable, builderStore } = getContext("sdk")
+  const { routeStore, styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let title

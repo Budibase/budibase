@@ -90,7 +90,7 @@ exports.updateClientLibrary = async appId => {
 
   if (env.isDev()) {
     // Load the symlinked version in dev which is always the newest
-    manifest = require.resolve("@budibase/standard-components/manifest.json")
+    manifest = require.resolve("@budibase/client/manifest.json")
     client = require.resolve("@budibase/client")
   } else {
     // Load the bundled version in prod
