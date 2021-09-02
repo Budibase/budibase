@@ -41,15 +41,6 @@ function googleValidation() {
   }).unknown(true)
 }
 
-function wechatValidation() {
-  // prettier-ignore
-  return Joi.object({
-    appID: Joi.string().required(),
-    appSecret: Joi.string().required(),
-    activated: Joi.boolean().required(),
-  }).unknown(true)
-}
-
 function oidcValidation() {
   // prettier-ignore
   return Joi.object({
@@ -81,7 +72,6 @@ function buildConfigSaveValidation() {
           { is: Configs.SETTINGS, then: settingValidation() },
           { is: Configs.ACCOUNT, then: Joi.object().unknown(true) },
           { is: Configs.GOOGLE, then: googleValidation() },
-          { is: Configs.WECHAT, then: wechatValidation() },
           { is: Configs.OIDC, then: oidcValidation() }
         ],
       }),

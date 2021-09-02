@@ -132,10 +132,6 @@ exports.publicSettings = async function (ctx) {
       type: Configs.GOOGLE,
     })
 
-    const wechatConfig = await getScopedFullConfig(db, {
-      type: Configs.WECHAT,
-    })
-
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
@@ -156,15 +152,6 @@ exports.publicSettings = async function (ctx) {
         googleConfig.config.activated == null || googleConfig.config.activated
     } else {
       config.config.google = false
-    }
-
-    // wechat button flag
-    if (wechatConfig && wechatConfig.config) {
-      // activated by default for configs pre-activated flag
-      config.config.wechat =
-        wechatConfig.config.activated == null || wechatConfig.config.activated
-    } else {
-      config.config.wechat = false
     }
 
     // oidc button flag
@@ -248,11 +235,6 @@ exports.configChecklist = async function (ctx) {
       type: Configs.GOOGLE,
     })
 
-    // They have set up Wechat Auth
-    const wechatConfig = await getScopedFullConfig(db, {
-      type: Configs.WECHAT,
-    })
-
     // They have set up OIDC
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
@@ -269,7 +251,7 @@ exports.configChecklist = async function (ctx) {
       apps: apps.length,
       smtp: !!smtpConfig,
       adminUser,
-      sso: !!googleConfig || !!wechatConfig || !oidcConfig,
+      sso: !!googleConfig || !!oidcConfig,
     }
   } catch (err) {
     ctx.throw(err.status, err)

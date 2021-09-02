@@ -67,16 +67,6 @@ router
     authController.googleAuth
   )
   .get(
-    "/api/global/auth/:tenantId/wechat",
-    updateTenant,
-    authController.wechatPreAuth
-  )
-  .get(
-    "/api/global/auth/:tenantId/wechat/callback",
-    updateTenant,
-    authController.wechatAuth
-  )
-  .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",
     updateTenant,
     authController.oidcPreAuth
