@@ -133,7 +133,7 @@ exports.fetchView = async ctx => {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.includes(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentTypes.TABLE)) {
     ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }
