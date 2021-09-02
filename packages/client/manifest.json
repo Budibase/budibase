@@ -2,7 +2,9 @@
   "features": {
     "spectrumThemes": true,
     "intelligentLoading": true,
-    "deviceAwareness": true
+    "deviceAwareness": true,
+    "state": true,
+    "customThemes": true
   },
   "layout": {
     "name": "Layout",
