@@ -4,6 +4,7 @@
   import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
 
   export let modal
+  export let webhookModal
 </script>
 
 <div class="title">
@@ -12,7 +13,7 @@
       <div class="tab-content-padding">
         <AutomationList />
         <Modal bind:this={modal}>
-          <CreateAutomationModal />
+          <CreateAutomationModal {webhookModal} />
         </Modal>
       </div>
     </Tab>

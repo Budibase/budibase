@@ -4,14 +4,16 @@
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import SetupPanel from "components/automation/SetupPanel/SetupPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
+  import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
   $: automation = $automationStore.selectedAutomation?.automation
   let modal
+  let webhookModal
 </script>
 
 <!-- routify:options index=3 -->
 <div class="root">
   <div class="nav">
-    <AutomationPanel modal />
+    <AutomationPanel {modal} {webhookModal} />
   </div>
   <div class="content">
     {#if automation}
@@ -44,7 +46,10 @@
     </div>
   {/if}
   <Modal bind:this={modal}>
-    <CreateAutomationModal />
+    <CreateAutomationModal webhookModal />
+  </Modal>
+  <Modal bind:this={webhookModal} width="30%">
+    <CreateWebhookModal />
   </Modal>
 </div>
 
