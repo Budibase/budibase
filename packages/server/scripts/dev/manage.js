@@ -4,9 +4,9 @@ const path = require("path")
 const fs = require("fs")
 const { processStringSync } = require("@budibase/string-templates")
 
-// function isLinux() {
-//   return process.platform !== "darwin" && process.platform !== "win32"
-// }
+function isLinux() {
+  return process.platform !== "darwin" && process.platform !== "win32"
+}
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -28,7 +28,7 @@ async function init() {
   const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
   const contents = fs.readFileSync(envoyHbsPath, "utf8")
   const config = {
-    address: "host.docker.internal",
+    address: isLinux() ? "172.17.0.1" : "host.docker.internal",
   }
   fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
 
@@ -37,7 +37,7 @@ async function init() {
     const envFileJson = {
       PORT: 4001,
       MINIO_URL: "http://localhost:10000/",
-      COUCH_DB_URL: "http://localhost:10000/db/",
+      COUCH_DB_URL: "http://@localhost:10000/db/",
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",
@@ -48,7 +48,7 @@ async function init() {
       COUCH_DB_PASSWORD: "budibase",
       COUCH_DB_USER: "budibase",
       SELF_HOSTED: 1,
-      MULTI_TENANCY: "true",
+      MULTI_TENANCY: "",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
