@@ -104,7 +104,7 @@ exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
     user = await exports.getGlobalSelf(ctx)
     endpoint = `/api/global/users/self`
   } else {
-    user = await getGlobalUser(ctx, appId, userId)
+    user = await getGlobalUser(appId, userId)
     body._id = userId
     endpoint = `/api/global/users`
   }
