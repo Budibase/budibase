@@ -15,6 +15,7 @@ const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
+const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -290,6 +291,10 @@ exports.search = async ctx => {
 
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
+    // enrich with global users if from users table
+    if (tableId === InternalTables.USER_METADATA) {
+      response.rows = await getGlobalUsersFromMetadata(appId, response.rows)
+    }
     const table = await db.get(tableId)
     response.rows = await outputProcessing(ctx, table, response.rows)
   }

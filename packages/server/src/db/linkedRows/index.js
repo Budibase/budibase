@@ -13,7 +13,7 @@ const CouchDB = require("../../db")
 const { FieldTypes } = require("../../constants")
 const { getMultiIDParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const { partition } = require("lodash")
-const { getGlobalUsers } = require("../../utilities/global")
+const { getGlobalUsersFromMetadata } = require("../../utilities/global")
 const processor = require("../../utilities/rowProcessor")
 
 /**
@@ -71,17 +71,7 @@ async function getFullLinkedDocs(ctx, appId, links) {
   let [users, other] = partition(linked, linkRow =>
     linkRow._id.startsWith(USER_METDATA_PREFIX)
   )
-  const globalUsers = await getGlobalUsers(ctx, appId, users)
-  users = users.map(user => {
-    const globalUser = globalUsers.find(
-      globalUser => globalUser && user._id.includes(globalUser._id)
-    )
-    return {
-      ...globalUser,
-      // doing user second overwrites the id and rev (always metadata)
-      ...user,
-    }
-  })
+  users = await getGlobalUsersFromMetadata(appId, users)
   return [...other, ...users]
 }
 
