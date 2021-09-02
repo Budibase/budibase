@@ -266,12 +266,16 @@ const getDeviceBindings = () => {
  * Gets all state bindings that are globally available.
  */
 const getStateBindings = () => {
-  const safeState = makePropSafe("state")
-  return getAllStateVariables().map(key => ({
-    type: "context",
-    runtimeBinding: `${safeState}.${makePropSafe(key)}`,
-    readableBinding: `State.${key}`,
-  }))
+  let bindings = []
+  if (get(store).clientFeatures?.state) {
+    const safeState = makePropSafe("state")
+    bindings = getAllStateVariables().map(key => ({
+      type: "context",
+      runtimeBinding: `${safeState}.${makePropSafe(key)}`,
+      readableBinding: `State.${key}`,
+    }))
+  }
+  return bindings
 }
 
 /**
