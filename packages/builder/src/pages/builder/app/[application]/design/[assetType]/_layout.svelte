@@ -14,6 +14,7 @@
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
   import { get } from "svelte/store"
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
+  import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -153,6 +154,9 @@
         {#if $store.clientFeatures.spectrumThemes}
           <AppThemeSelect />
         {/if}
+        {#if $store.clientFeatures.customThemes}
+          <ThemeEditor />
+        {/if}
       </div>
       <div class="preview-content">
         {#key $store.version}
@@ -202,9 +206,18 @@
     padding: var(--spacing-xl) 40px;
   }
   .preview-header {
-    display: grid;
-    grid-template-columns: 1fr 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
   }
+  .preview-header > :global(*) {
+    flex: 0 0 auto;
+  }
+  .preview-header > :global(*:first-child) {
+    flex: 1 1 auto;
+  }
+
   .preview-content {
     flex: 1 1 auto;
   }

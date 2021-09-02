@@ -49,6 +49,7 @@
     selectedComponentId,
     previewType: $store.currentFrontEndType,
     theme: $store.theme,
+    customTheme: $store.customTheme,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.

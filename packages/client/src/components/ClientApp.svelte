@@ -11,7 +11,7 @@
     authStore,
     routeStore,
     builderStore,
-    appStore,
+    themeStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -63,9 +63,6 @@
       }
     }
   }
-
-  $: themeClass =
-    $builderStore.theme || $appStore.application?.theme || "spectrum--light"
 </script>
 
 {#if dataLoaded}
@@ -73,7 +70,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {themeClass}"
+    class="spectrum spectrum--medium {$themeStore.theme}"
   >
     {#if permissionError}
       <div class="error">
@@ -87,7 +84,11 @@
       <UserBindingsProvider>
         <DeviceBindingsProvider>
           <StateBindingsProvider>
-            <div id="app-root" class:preview={$builderStore.inBuilder}>
+            <div
+              id="app-root"
+              class:preview={$builderStore.inBuilder}
+              style={$themeStore.customThemeCss}
+            >
               {#key $screenStore.activeLayout._id}
                 <Component instance={$screenStore.activeLayout.props} />
               {/key}
@@ -130,6 +131,20 @@
   }
   #app-root.preview {
     border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  #app-root {
+    /*  Primary */
+    --spectrum-global-color-blue-600: var(--primaryColor);
+    --spectrum-global-color-blue-700: var(--primaryColor);
+    --spectrum-global-color-static-blue-600: var(--primaryColor);
+    --spectrum-global-color-static-blue-700: var(--primaryColor);
+
+    /*  Primary hover */
+    --spectrum-global-color-blue-400: var(--primaryColorHover);
+    --spectrum-global-color-blue-500: var(--primaryColorHover);
+    --spectrum-global-color-static-blue-400: var(--primaryColorHover);
+    --spectrum-global-color-static-blue-500: var(--primaryColorHover);
   }
 
   /* Custom scrollbars */

@@ -33,6 +33,7 @@
 
 <style>
   div {
+    width: 100px;
     padding-right: 8px;
   }
 </style>
