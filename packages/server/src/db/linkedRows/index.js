@@ -14,7 +14,7 @@ const { FieldTypes } = require("../../constants")
 const { getMultiIDParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const { partition } = require("lodash")
 const { getGlobalUsersFromMetadata } = require("../../utilities/global")
-const processor = require("../../utilities/rowProcessor")
+const { processFormulas } = require("../../utilities/rowProcessor/utils")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -187,9 +187,7 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
       if (!linkedRow || !linkedTable) {
         continue
       }
-      row[link.fieldName].push(
-        processor.processFormulas(linkedTable, linkedRow)
-      )
+      row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
     }
   }
   return rows
