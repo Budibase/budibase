@@ -94,6 +94,7 @@ module PostgresModule {
     try {
       return await client.query(query.sql, query.bindings || [])
     } catch (err) {
+      // @ts-ignore
       throw new Error(err)
     }
   }
