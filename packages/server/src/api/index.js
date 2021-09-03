@@ -12,6 +12,14 @@ const router = new Router()
 
 const NO_TENANCY_ENDPOINTS = [
   {
+    route: "/favicon.ico",
+    method: "GET"
+  },
+  {
+    route: "/",
+    method: "GET"
+  },
+  {
     route: "/api/analytics",
     method: "GET",
   },

@@ -46,6 +46,14 @@ const PUBLIC_ENDPOINTS = [
     route: "api/system/flags",
     method: "GET",
   },
+  {
+    route: "/favicon.ico",
+    method: "GET"
+  },
+  {
+    route: "/",
+    method: "GET"
+  }
 ]
 
 const NO_TENANCY_ENDPOINTS = [
