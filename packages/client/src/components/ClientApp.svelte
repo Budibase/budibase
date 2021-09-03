@@ -22,6 +22,7 @@
   import SettingsBar from "components/preview/SettingsBar.svelte"
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
+  import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import ErrorSVG from "../../../builder/assets/error.svg"
 
   // Provide contexts
@@ -84,15 +85,13 @@
       <UserBindingsProvider>
         <DeviceBindingsProvider>
           <StateBindingsProvider>
-            <div
-              id="app-root"
-              class:preview={$builderStore.inBuilder}
-              style={$themeStore.customThemeCss}
-            >
-              {#key $screenStore.activeLayout._id}
-                <Component instance={$screenStore.activeLayout.props} />
-              {/key}
-            </div>
+            <CustomThemeWrapper>
+              <div id="app-root" class:preview={$builderStore.inBuilder}>
+                {#key $screenStore.activeLayout._id}
+                  <Component instance={$screenStore.activeLayout.props} />
+                {/key}
+              </div>
+            </CustomThemeWrapper>
             <NotificationDisplay />
             <ConfirmationDisplay />
             <PeekScreenDisplay />
@@ -132,42 +131,6 @@
   #app-root.preview {
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
-
-  #app-root {
-    /*  Primary */
-    --spectrum-global-color-blue-600: var(--primaryColor);
-    --spectrum-global-color-blue-700: var(--primaryColor);
-    --spectrum-global-color-static-blue-600: var(--primaryColor);
-    --spectrum-global-color-static-blue-700: var(--primaryColor);
-
-    /*  Primary hover */
-    --spectrum-global-color-blue-400: var(--primaryColorHover);
-    --spectrum-global-color-blue-500: var(--primaryColorHover);
-    --spectrum-global-color-static-blue-400: var(--primaryColorHover);
-    --spectrum-global-color-static-blue-500: var(--primaryColorHover);
-  }
-
-  /* Custom scrollbars */
-  :global(::-webkit-scrollbar) {
-    width: 8px;
-    height: 8px;
-  }
-  :global(::-webkit-scrollbar-track) {
-    background: var(--spectrum-alias-background-color-default);
-  }
-  :global(::-webkit-scrollbar-thumb) {
-    background-color: var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-  }
-  :global(::-webkit-scrollbar-corner) {
-    background: var(--spectrum-alias-background-color-default);
-  }
-  :global(*) {
-    scrollbar-width: thin;
-    scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-alias-background-color-default);
-  }
-
   .error {
     position: absolute;
     width: 100%;

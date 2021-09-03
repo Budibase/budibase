@@ -41,6 +41,7 @@
       <div class="setting">
         <Label size="L">Primary Color</Label>
         <ColorPicker
+          spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColor || defaultTheme.primaryColor}
           on:change={updateProperty("primaryColor")}
         />
@@ -48,6 +49,7 @@
       <div class="setting">
         <Label size="L">Primary Color (Hover)</Label>
         <ColorPicker
+          spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColorHover ||
             defaultTheme.primaryColorHover}
           on:change={updateProperty("primaryColorHover")}

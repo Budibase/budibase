@@ -248,7 +248,7 @@
     transition: color 130ms ease-out;
   }
   .link:hover {
-    color: var(--spectrum-global-color-blue-600);
+    color: var(--spectrum-link-primary-m-text-color-hover);
   }
   .close {
     display: none;
