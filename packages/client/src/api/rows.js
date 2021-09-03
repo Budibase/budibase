@@ -121,7 +121,7 @@ export const enrichRows = async (rows, tableId) => {
       rows.forEach(row => {
         for (let key of keys) {
           const type = schema[key].type
-          if (type === "link") {
+          if (type === "link" && Array.isArray(row[key])) {
             // Enrich row a string join of relationship fields
             row[`${key}_text`] =
               row[key]
