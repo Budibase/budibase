@@ -39,13 +39,13 @@ exports.getCachedSelf = async (ctx, appId) => {
   return processUser(appId, user)
 }
 
-exports.getGlobalUser = async (ctx, appId, userId) => {
+exports.getGlobalUser = async (appId, userId) => {
   const db = getGlobalDB()
   let user = await db.get(getGlobalIDFromUserMetadataID(userId))
   return processUser(appId, user)
 }
 
-exports.getGlobalUsers = async (ctx, appId = null, users = null) => {
+exports.getGlobalUsers = async (appId = null, users = null) => {
   const db = getGlobalDB()
   let globalUsers
   if (users) {
@@ -72,4 +72,18 @@ exports.getGlobalUsers = async (ctx, appId = null, users = null) => {
     return globalUsers
   }
   return globalUsers.map(user => exports.updateAppRole(appId, user))
+}
+
+exports.getGlobalUsersFromMetadata = async (appId, users) => {
+  const globalUsers = await exports.getGlobalUsers(appId, users)
+  return users.map(user => {
+    const globalUser = globalUsers.find(
+      globalUser => globalUser && user._id.includes(globalUser._id)
+    )
+    return {
+      ...globalUser,
+      // doing user second overwrites the id and rev (always metadata)
+      ...user,
+    }
+  })
 }
