@@ -8,12 +8,10 @@ const bash = require("./steps/bash")
 const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
 const serverLog = require("./steps/serverLog")
-const env = require("../environment")
-const Sentry = require("@sentry/node")
-const {
-  automationInit,
-  getExternalAutomationStep,
-} = require("../utilities/fileSystem")
+const discord = require("./steps/discord")
+// TODO: remove zapier/integromat some time in the future/deprecate them
+const zapier = require("./steps/zapier")
+const integromat = require("./steps/integromat")
 
 const BUILTIN_ACTIONS = {
   SEND_EMAIL: sendgridEmail.run,
@@ -26,6 +24,10 @@ const BUILTIN_ACTIONS = {
   EXECUTE_BASH: bash.run,
   EXECUTE_QUERY: executeQuery.run,
   SERVER_LOG: serverLog.run,
+  // these used to be lowercase step IDs, maintain for backwards compat
+  discord: discord.run,
+  zapier: zapier.run,
+  integromat: integromat.run,
 }
 const BUILTIN_DEFINITIONS = {
   SEND_EMAIL: sendgridEmail.definition,
@@ -38,13 +40,10 @@ const BUILTIN_DEFINITIONS = {
   EXECUTE_QUERY: executeQuery.definition,
   EXECUTE_BASH: bash.definition,
   SERVER_LOG: serverLog.definition,
-}
-
-let MANIFEST = null
-
-/* istanbul ignore next */
-function buildBundleName(pkgName, version) {
-  return `${pkgName}@${version}.min.js`
+  // these used to be lowercase step IDs, maintain for backwards compat
+  discord: discord.definition,
+  zapier: zapier.definition,
+  integromat: integromat.definition,
 }
 
 /* istanbul ignore next */
@@ -52,31 +51,6 @@ module.exports.getAction = async function (actionName) {
   if (BUILTIN_ACTIONS[actionName] != null) {
     return BUILTIN_ACTIONS[actionName]
   }
-  // worker pools means that a worker may not have manifest
-  if (env.isProd() && MANIFEST == null) {
-    MANIFEST = await module.exports.init()
-  }
-  // env setup to get async packages
-  if (!MANIFEST || !MANIFEST.packages || !MANIFEST.packages[actionName]) {
-    return null
-  }
-  const pkg = MANIFEST.packages[actionName]
-  const bundleName = buildBundleName(pkg.stepId, pkg.version)
-  return getExternalAutomationStep(pkg.stepId, pkg.version, bundleName)
-}
-
-module.exports.init = async function () {
-  try {
-    MANIFEST = await automationInit()
-    module.exports.DEFINITIONS =
-      MANIFEST && MANIFEST.packages
-        ? Object.assign(MANIFEST.packages, BUILTIN_DEFINITIONS)
-        : BUILTIN_DEFINITIONS
-  } catch (err) {
-    console.error(err)
-    Sentry.captureException(err)
-  }
-  return MANIFEST
 }
 
 // definitions will have downloaded ones added to it, while builtin won't
