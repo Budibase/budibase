@@ -142,7 +142,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: stretch;
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--navBackground);
     z-index: 2;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);

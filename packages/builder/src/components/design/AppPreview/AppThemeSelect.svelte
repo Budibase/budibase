@@ -24,6 +24,7 @@
 
 <div>
   <Select
+    autoWidth
     value={$store.theme}
     options={themeOptions}
     placeholder={null}
@@ -34,6 +35,5 @@
 <style>
   div {
     width: 100px;
-    padding-right: 8px;
   }
 </style>
