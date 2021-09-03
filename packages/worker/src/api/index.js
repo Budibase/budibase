@@ -48,12 +48,12 @@ const PUBLIC_ENDPOINTS = [
   },
   {
     route: "/favicon.ico",
-    method: "GET"
+    method: "GET",
   },
   {
     route: "/",
-    method: "GET"
-  }
+    method: "GET",
+  },
 ]
 
 const NO_TENANCY_ENDPOINTS = [
