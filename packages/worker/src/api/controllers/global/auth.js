@@ -163,7 +163,8 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const protocol = env.PROTOCOL || (env.NODE_ENV === "production" ? "https" : "http")
+  const protocol =
+    env.PROTOCOL || (env.NODE_ENV === "production" ? "https" : "http")
   let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
