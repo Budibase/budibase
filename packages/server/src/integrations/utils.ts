@@ -33,13 +33,14 @@ export function generateRowIdField(keyProps: any[] = []) {
 }
 
 // should always return an array
-export function breakRowIdField(_id: string): any[] {
+export function breakRowIdField(_id: string | { _id: string }): any[] {
   if (!_id) {
     return []
   }
   // have to replace on the way back as we swapped out the double quotes
   // when encoding, but JSON can't handle the single quotes
-  const decoded: string = decodeURIComponent(_id).replace(/'/g, '"')
+  const id = typeof _id === "string" ? _id : _id._id
+  const decoded: string = decodeURIComponent(id).replace(/'/g, '"')
   try {
     const parsed = JSON.parse(decoded)
     return Array.isArray(parsed) ? parsed : [parsed]
