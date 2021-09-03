@@ -1,5 +1,7 @@
 import { Knex, knex } from "knex"
 const BASE_LIMIT = 5000
+// if requesting a single row then need to up the limit for the sake of joins
+const SINGLE_ROW_LIMIT = 100
 import {
   QueryJson,
   SearchFilters,
@@ -168,17 +170,21 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
       query = query.orderBy(key, direction)
     }
   }
+  let foundLimit = limit || BASE_LIMIT
   // handle pagination
   if (paginate && paginate.page && paginate.limit) {
     // @ts-ignore
     const page = paginate.page <= 1 ? 0 : paginate.page - 1
     const offset = page * paginate.limit
-    query = query.offset(offset).limit(paginate.limit)
+    foundLimit = paginate.limit
+    query = query.offset(offset)
   } else if (paginate && paginate.limit) {
-    query = query.limit(paginate.limit)
-  } else {
-    query.limit(limit)
+    foundLimit = paginate.limit
   }
+  if (foundLimit === 1) {
+    foundLimit = SINGLE_ROW_LIMIT
+  }
+  query = query.limit(foundLimit)
   return query
 }
 
