@@ -170,7 +170,7 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
       query = query.orderBy(key, direction)
     }
   }
-  let foundLimit = BASE_LIMIT || limit
+  let foundLimit = limit || BASE_LIMIT
   // handle pagination
   if (paginate && paginate.page && paginate.limit) {
     // @ts-ignore
