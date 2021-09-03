@@ -9,7 +9,6 @@ const DEFAULT_CONFIG = {
   company: "Budibase",
   oidc: undefined,
   google: undefined,
-  wechat: undefined,
 }
 
 export function createOrganisationStore() {

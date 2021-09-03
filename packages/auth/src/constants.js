@@ -29,7 +29,6 @@ exports.Configs = {
   ACCOUNT: "account",
   SMTP: "smtp",
   GOOGLE: "google",
-  WECHAT: "wechat",
   OIDC: "oidc",
   OIDC_LOGOS: "logos_oidc",
 }

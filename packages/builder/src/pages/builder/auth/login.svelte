@@ -12,7 +12,6 @@
   import { goto, params } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
-  import WechatButton from "./_components/WechatButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
@@ -67,7 +66,6 @@
       </Layout>
       {#if loaded}
         <GoogleButton />
-        <WechatButton />
         <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
       {/if}
       <Divider noGrid />
