@@ -1,5 +1,4 @@
 const triggers = require("./triggers")
-const actions = require("./actions")
 const env = require("../environment")
 const workerFarm = require("worker-farm")
 const singleThread = require("./thread")
@@ -31,7 +30,6 @@ async function updateQuota(automation) {
  * This module is built purely to kick off the worker farm and manage the inputs/outputs
  */
 module.exports.init = async function () {
-  await actions.init()
   triggers.automationQueue.process(async job => {
     try {
       if (env.USE_QUOTAS) {
