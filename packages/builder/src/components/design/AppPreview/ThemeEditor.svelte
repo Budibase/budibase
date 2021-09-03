@@ -7,15 +7,38 @@
     Layout,
     ColorPicker,
     Label,
+    Select,
   } from "@budibase/bbui"
   import { store } from "builderStore"
+  import AppThemeSelect from "./AppThemeSelect.svelte"
 
   let modal
 
   const defaultTheme = {
     primaryColor: "var(--spectrum-global-color-blue-600)",
     primaryColorHover: "var(--spectrum-global-color-blue-500)",
+    buttonBorderRadius: "16px",
+    navBackground: "var(--spectrum-global-color-gray-100)",
   }
+
+  const buttonBorderRadiusOptions = [
+    {
+      label: "None",
+      value: "0",
+    },
+    {
+      label: "Small",
+      value: "4px",
+    },
+    {
+      label: "Medium",
+      value: "8px",
+    },
+    {
+      label: "Large",
+      value: "16px",
+    },
+  ]
 
   const updateProperty = property => {
     return e => {
@@ -28,7 +51,7 @@
 </script>
 
 <div class="container">
-  <ActionButton icon="Brush" on:click={modal.show}>Edit</ActionButton>
+  <ActionButton icon="Brush" on:click={modal.show}>Theme</ActionButton>
 </div>
 <Modal bind:this={modal}>
   <ModalContent
@@ -37,9 +60,23 @@
     showCloseIcon={false}
     title="Theme settings"
   >
-    <Layout noPadding gap="XS">
+    <Layout noPadding gap="S">
       <div class="setting">
-        <Label size="L">Primary Color</Label>
+        <Label size="L">Theme</Label>
+        <AppThemeSelect />
+      </div>
+      <div class="setting">
+        <Label size="L">Button roundness</Label>
+        <Select
+          autoWidth
+          value={$store.customTheme?.buttonBorderRadius ||
+            defaultTheme.buttonBorderRadius}
+          on:change={updateProperty("buttonBorderRadius")}
+          options={buttonBorderRadiusOptions}
+        />
+      </div>
+      <div class="setting">
+        <Label size="L">Primary color</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColor || defaultTheme.primaryColor}
@@ -47,12 +84,21 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Primary Color (Hover)</Label>
+        <Label size="L">Primary color (hover)</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColorHover ||
             defaultTheme.primaryColorHover}
           on:change={updateProperty("primaryColorHover")}
+        />
+      </div>
+      <div class="setting">
+        <Label size="L">Navigation bar background</Label>
+        <ColorPicker
+          spectrumTheme={$store.theme}
+          value={$store.customTheme?.navBackground ||
+            defaultTheme.navBackground}
+          on:change={updateProperty("navBackground")}
         />
       </div>
     </Layout>
