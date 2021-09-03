@@ -13,16 +13,6 @@
 
   /* Themes */
   div {
-    /* General */
-    --spectrum-global-color-blue-600: var(--primaryColor);
-    --spectrum-global-color-blue-700: var(--primaryColor);
-    --spectrum-global-color-static-blue-600: var(--primaryColor);
-    --spectrum-global-color-static-blue-700: var(--primaryColor);
-    --spectrum-global-color-blue-400: var(--primaryColorHover);
-    --spectrum-global-color-blue-500: var(--primaryColorHover);
-    --spectrum-global-color-static-blue-400: var(--primaryColorHover);
-    --spectrum-global-color-static-blue-500: var(--primaryColorHover);
-
     /*  Buttons */
     --spectrum-semantic-cta-color-background-default: var(--primaryColor);
     --spectrum-semantic-cta-color-background-hover: var(--primaryColorHover);

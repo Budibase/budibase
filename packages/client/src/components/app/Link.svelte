@@ -78,7 +78,7 @@
     transition: color 130ms ease-in-out;
   }
   a:hover {
-    color: var(--spectrum-global-color-blue-600) !important;
+    color: var(--spectrum-link-primary-m-text-color-hover) !important;
   }
   .placeholder {
     font-style: italic;
