@@ -48,6 +48,7 @@
 
     /* Icons */
     --spectrum-alias-icon-color-selected: var(--primaryColor);
+    --spectrum-alias-icon-color-selected-hover: var(--primaryColorHover);
 
     /* Links */
     --spectrum-link-primary-m-text-color: var(--primaryColor);
