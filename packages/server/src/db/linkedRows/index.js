@@ -13,8 +13,8 @@ const CouchDB = require("../../db")
 const { FieldTypes } = require("../../constants")
 const { getMultiIDParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const { partition } = require("lodash")
-const { getGlobalUsers } = require("../../utilities/global")
-const processor = require("../../utilities/rowProcessor")
+const { getGlobalUsersFromMetadata } = require("../../utilities/global")
+const { processFormulas } = require("../../utilities/rowProcessor/utils")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -71,17 +71,7 @@ async function getFullLinkedDocs(ctx, appId, links) {
   let [users, other] = partition(linked, linkRow =>
     linkRow._id.startsWith(USER_METDATA_PREFIX)
   )
-  const globalUsers = await getGlobalUsers(ctx, appId, users)
-  users = users.map(user => {
-    const globalUser = globalUsers.find(
-      globalUser => globalUser && user._id.includes(globalUser._id)
-    )
-    return {
-      ...globalUser,
-      // doing user second overwrites the id and rev (always metadata)
-      ...user,
-    }
-  })
+  users = await getGlobalUsersFromMetadata(appId, users)
   return [...other, ...users]
 }
 
@@ -197,9 +187,7 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
       if (!linkedRow || !linkedTable) {
         continue
       }
-      row[link.fieldName].push(
-        processor.processFormulas(linkedTable, linkedRow)
-      )
+      row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
     }
   }
   return rows
