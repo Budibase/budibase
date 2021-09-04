@@ -172,7 +172,7 @@ async function oidcStrategyFactory(ctx, configId) {
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
   } else {
-    callbackUrl += `${DEFAULT_TENANT_ID}`
+    callbackUrl += `/${DEFAULT_TENANT_ID}`
   }
   callbackUrl += `/oidc/callback`
 
