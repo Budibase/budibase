@@ -6,8 +6,16 @@ import {
   SearchFilters,
   SortJson,
 } from "../../../definitions/datasource"
-import {Datasource, FieldSchema, Row, Table} from "../../../definitions/common"
-import {breakRowIdField, generateRowIdField} from "../../../integrations/utils"
+import {
+  Datasource,
+  FieldSchema,
+  Row,
+  Table,
+} from "../../../definitions/common"
+import {
+  breakRowIdField,
+  generateRowIdField,
+} from "../../../integrations/utils"
 import { RelationshipTypes } from "../../../constants"
 
 interface ManyRelationship {
@@ -348,7 +356,7 @@ module External {
      * information.
      */
     async lookupRelations(tableId: string, row: Row) {
-      const related: {[key: string]: any} = {}
+      const related: { [key: string]: any } = {}
       const { tableName } = breakExternalTableId(tableId)
       const table = this.tables[tableName]
       // @ts-ignore
@@ -387,7 +395,11 @@ module External {
      * isn't supposed to exist anymore and delete those. This is better than the usual method of delete them
      * all and then re-create, as theres no chance of losing data (e.g. delete succeed, but write fail).
      */
-    async handleManyRelationships(mainTableId: string, row: Row, relationships: ManyRelationship[]) {
+    async handleManyRelationships(
+      mainTableId: string,
+      row: Row,
+      relationships: ManyRelationship[]
+    ) {
       const { appId } = this
       // if we're creating (in a through table) need to wipe the existing ones first
       const promises = []
@@ -399,8 +411,10 @@ module External {
         // @ts-ignore
         const linkPrimary = linkTable.primary[0]
         const rows = related[key].rows || []
-        const found = rows.find((row: { [key: string]: any }) =>
-          row[linkPrimary] === relationship.id || row[linkPrimary] === body[linkPrimary]
+        const found = rows.find(
+          (row: { [key: string]: any }) =>
+            row[linkPrimary] === relationship.id ||
+            row[linkPrimary] === body[linkPrimary]
         )
         const operation = isUpdate
           ? DataSourceOperation.UPDATE
@@ -420,13 +434,17 @@ module External {
         }
       }
       // finally cleanup anything that needs to be removed
-      for (let [colName, {isMany, rows, tableId}] of Object.entries(related)) {
+      for (let [colName, { isMany, rows, tableId }] of Object.entries(
+        related
+      )) {
         const table = this.getTable(tableId)
         for (let row of rows) {
           const filters = buildFilters(generateIdForRow(row, table), {}, table)
           // safety check, if there are no filters on deletion bad things happen
           if (Object.keys(filters).length !== 0) {
-            const op = isMany ? DataSourceOperation.DELETE : DataSourceOperation.UPDATE
+            const op = isMany
+              ? DataSourceOperation.DELETE
+              : DataSourceOperation.UPDATE
             const body = isMany ? null : { [colName]: null }
             promises.push(
               makeExternalQuery(this.appId, {
@@ -448,7 +466,10 @@ module External {
      * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
      * is more performant and has the added benefit of protecting against this scenario.
      */
-    buildFields(table: Table, includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE) {
+    buildFields(
+      table: Table,
+      includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE
+    ) {
       function extractNonLinkFieldNames(table: Table, existing: string[] = []) {
         return Object.entries(table.schema)
           .filter(
@@ -523,7 +544,10 @@ module External {
       // can't really use response right now
       const response = await makeExternalQuery(appId, json)
       // handle many to many relationships now if we know the ID (could be auto increment)
-      if (operation !== DataSourceOperation.READ && processed.manyRelationships) {
+      if (
+        operation !== DataSourceOperation.READ &&
+        processed.manyRelationships
+      ) {
         await this.handleManyRelationships(
           table._id || "",
           response[0],
