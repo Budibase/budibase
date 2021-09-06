@@ -24,7 +24,6 @@
 
 <div>
   <Select
-    autoWidth
     value={$store.theme}
     options={themeOptions}
     placeholder={null}
