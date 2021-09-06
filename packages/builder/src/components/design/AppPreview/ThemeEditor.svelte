@@ -19,6 +19,7 @@
     primaryColorHover: "var(--spectrum-global-color-blue-500)",
     buttonBorderRadius: "16px",
     navBackground: "var(--spectrum-global-color-gray-100)",
+    navTextColor: "var(--spectrum-global-color-gray-800)",
   }
 
   const buttonBorderRadiusOptions = [
@@ -93,12 +94,20 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Navigation bar background</Label>
+        <Label size="L">Navigation bar background color</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.navBackground ||
             defaultTheme.navBackground}
           on:change={updateProperty("navBackground")}
+        />
+      </div>
+      <div class="setting">
+        <Label size="L">Navigation bar text color</Label>
+        <ColorPicker
+          spectrumTheme={$store.theme}
+          value={$store.customTheme?.navTextColor || defaultTheme.navTextColor}
+          on:change={updateProperty("navTextColor")}
         />
       </div>
     </Layout>
@@ -114,7 +123,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--spectrum-global-dimension-static-size-100);
+    padding-bottom: var(--spectrum-global-dimension-static-size-200);
     border-bottom: var(--border-light);
   }
   .setting:last-child {

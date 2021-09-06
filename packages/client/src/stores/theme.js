@@ -11,6 +11,7 @@ const defaultCustomTheme = {
   primaryColorHover: "var(--spectrum-glo" + "bal-color-blue-500)",
   buttonBorderRadius: "16px",
   navBackground: "var(--spectrum-glo" + "bal-color-gray-100)",
+  navTextColor: "var(--spectrum-glo" + "bal-color-gray-800)",
 }
 
 const createThemeStore = () => {
