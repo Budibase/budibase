@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.116",
+  "version": "0.9.121",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -62,9 +62,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.116",
-    "@budibase/client": "^0.9.116",
-    "@budibase/string-templates": "^0.9.116",
+    "@budibase/auth": "^0.9.121",
+    "@budibase/client": "^0.9.121",
+    "@budibase/string-templates": "^0.9.121",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -117,7 +117,7 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
-    "@budibase/standard-components": "^0.9.116",
+    "@budibase/standard-components": "^0.9.121",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
     "@types/jest": "^26.0.23",
@@ -138,7 +138,7 @@
     "supertest": "^4.0.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.4",
+    "typescript": "^4.3.5",
     "update-dotenv": "^1.1.1"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"

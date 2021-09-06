@@ -76,6 +76,7 @@ module ArangoModule {
         const result = await this.client.query(query.sql)
         return result.all()
       } catch (err) {
+        // @ts-ignore
         console.error("Error querying arangodb", err.message)
         throw err
       } finally {
@@ -91,6 +92,7 @@ module ArangoModule {
         )
         return result.all()
       } catch (err) {
+        // @ts-ignore
         console.error("Error querying arangodb", err.message)
         throw err
       } finally {

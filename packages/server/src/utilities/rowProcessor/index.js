@@ -1,8 +1,8 @@
-const linkRows = require("../db/linkedRows")
+const linkRows = require("../../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
-const { FieldTypes, AutoFieldSubTypes } = require("../constants")
-const { processStringSync } = require("@budibase/string-templates")
-const { attachmentsRelativeURL } = require("./index")
+const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
+const { attachmentsRelativeURL } = require("../index")
+const { processFormulas } = require("./utils")
 
 const BASE_AUTO_ID = 1
 
@@ -127,28 +127,6 @@ function processAutoColumn(user, table, row) {
   }
   return { table, row }
 }
-
-/**
- * Looks through the rows provided and finds formulas - which it then processes.
- */
-function processFormulas(table, rows) {
-  const single = !Array.isArray(rows)
-  if (single) {
-    rows = [rows]
-  }
-  for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.FORMULA) {
-      continue
-    }
-    // iterate through rows and process formula
-    rows = rows.map(row => ({
-      ...row,
-      [column]: processStringSync(schema.formula, row),
-    }))
-  }
-  return single ? rows[0] : rows
-}
-exports.processFormulas = processFormulas
 
 /**
  * This will coerce a value to the correct types based on the type transform map
