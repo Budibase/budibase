@@ -4,7 +4,6 @@
   import BlockList from "./BlockList.svelte"
 
   $: automation = $automationStore.selectedAutomation?.automation
-
   function onSelect(block) {
     automationStore.update(state => {
       state.selectedBlock = block

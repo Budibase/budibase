@@ -3,7 +3,7 @@
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
-  import { Input, ModalContent, Layout, Body } from "@budibase/bbui"
+  import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
   import analytics from "analytics"
 
   let name
@@ -18,17 +18,18 @@
       name,
       instanceId,
     })
-    const newBlock = await $automationStore.selectedAutomation.constructBlock(
+    const newBlock = $automationStore.selectedAutomation.constructBlock(
       "TRIGGER",
       triggerVal.stepId,
       triggerVal
     )
+
     automationStore.actions.addBlockToAutomation(newBlock)
     if (triggerVal.stepId === "WEBHOOK") {
       webhookModal.show()
     }
-
     notifications.success(`Automation ${name} created.`)
+
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     analytics.captureEvent("Automation Created", { name })
   }
@@ -56,16 +57,16 @@
   <Layout noPadding>
     <Body size="S">Triggers</Body>
 
-    <div class="integration-list">
+    <div class="item-list">
       {#each triggers as [idx, trigger]}
         <div
-          class="integration hoverable"
+          class="item"
           class:selected={selectedTrigger === trigger.name}
           on:click={() => selectTrigger(trigger)}
         >
-          <div style="display: flex; margin-left: 8%">
-            <i class={trigger.icon} />
-            <span style="margin-left:5px;">
+          <div class="item-body">
+            <Icon name={trigger.icon} />
+            <span class="icon-spacing">
               <Body size="S">{trigger.name}</Body></span
             >
           </div>
@@ -76,13 +77,21 @@
 </ModalContent>
 
 <style>
-  .integration-list {
+  .icon-spacing {
+    margin-left: var(--spacing-m);
+  }
+  .item-body {
+    display: flex;
+    margin-left: var(--spacing-m);
+  }
+  .item-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
-  .integration {
+  .item {
+    cursor: pointer;
     display: grid;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
@@ -93,8 +102,6 @@
     box-sizing: border-box;
     border-width: 2px;
   }
-
-  .integration:hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
   }
