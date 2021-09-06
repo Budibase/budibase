@@ -1,6 +1,6 @@
 const { sendSmtpEmail } = require("../../utilities/workerRequests")
 
-module.exports.definition = {
+exports.definition = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
   icon: "ri-mail-open-line",
@@ -46,7 +46,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   let { to, from, subject, contents } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"

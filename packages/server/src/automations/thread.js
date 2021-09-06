@@ -8,7 +8,7 @@ const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
 
-const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
+const FILTER_STEP_ID = logic.LOGIC_DEFINITIONS.FILTER.stepId
 
 /**
  * The automation orchestrator is a class responsible for executing automations.

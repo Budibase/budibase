@@ -1,6 +1,6 @@
 const scriptController = require("../../api/controllers/script")
 
-module.exports.definition = {
+exports.definition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "ri-terminal-box-line",
@@ -36,7 +36,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, context, emitter }) {
+exports.run = async function ({ inputs, appId, context, emitter }) {
   if (inputs.code == null) {
     return {
       success: false,

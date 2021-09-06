@@ -1,6 +1,6 @@
 const fetch = require("node-fetch")
 
-module.exports.definition = {
+exports.definition = {
   name: "Zapier Webhook",
   stepId: "zapier",
   type: "ACTION",
@@ -52,7 +52,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   const { url, value1, value2, value3, value4, value5 } = inputs
 
   // send the platform to make sure zaps always work, even

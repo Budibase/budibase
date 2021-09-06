@@ -4,7 +4,7 @@
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-module.exports.definition = {
+exports.definition = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
   icon: "ri-server-line",
@@ -36,6 +36,6 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId }) {
+exports.run = async function ({ inputs, appId }) {
   console.log(`App ${appId} - ${inputs.text}`)
 }
