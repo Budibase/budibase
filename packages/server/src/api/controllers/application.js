@@ -106,6 +106,12 @@ async function createInstance(template) {
     views: {},
   })
 
+  // NOTE: indexes need to be created before any tables/templates
+  // add view for linked rows
+  await createLinkView(appId)
+  await createRoutingView(appId)
+  await createAllSearchIndex(appId)
+
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   /* istanbul ignore next */
@@ -118,11 +124,6 @@ async function createInstance(template) {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
   }
-
-  // add view for linked rows
-  await createLinkView(appId)
-  await createRoutingView(appId)
-  await createAllSearchIndex(appId)
 
   return { _id: appId }
 }
