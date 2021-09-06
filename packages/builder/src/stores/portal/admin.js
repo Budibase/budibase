@@ -8,7 +8,12 @@ export function createAdminStore() {
     multiTenancy: false,
     sandbox: false,
     onboardingProgress: 0,
-    checklist: { apps: 0, smtp: false, adminUser: false, sso: false },
+    checklist: {
+      apps: { checked: false },
+      smtp: { checked: false },
+      adminUser: { checked: false },
+      sso: { checked: false },
+    },
   }
 
   const admin = writable(DEFAULT_CONFIG)

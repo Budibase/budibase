@@ -6,7 +6,7 @@
   let loaded = false
 
   $: multiTenancyEnabled = $admin.multiTenancy
-  $: hasAdminUser = !!$admin?.checklist?.adminUser
+  $: hasAdminUser = !!$admin?.checklist?.adminUser.checked
   $: tenantSet = $auth.tenantSet
 
   onMount(async () => {
