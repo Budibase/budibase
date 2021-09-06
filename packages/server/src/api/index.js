@@ -53,6 +53,8 @@ router
   })
   .use("/health", ctx => (ctx.status = 200))
   .use("/version", ctx => (ctx.body = pkg.version))
+  // re-direct before any middlewares occur
+  .redirect("/", "/builder")
   .use(
     buildAuthMiddleware(null, {
       publicAllowed: true,
@@ -92,8 +94,5 @@ for (let route of mainRoutes) {
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
-
-// add a redirect for when hitting server directly
-router.redirect("/", "/builder")
 
 module.exports = router
