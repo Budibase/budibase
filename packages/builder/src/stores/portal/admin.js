@@ -24,7 +24,7 @@ export function createAdminStore() {
       const onboardingSteps = Object.keys(json)
 
       const stepsComplete = onboardingSteps.reduce(
-        (score, step) => score + Number(!!json[step]),
+        (score, step) => (score + step.checked ? 1 : 0),
         0
       )
 
