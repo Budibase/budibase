@@ -73,6 +73,7 @@ module MSSQLModule {
     try {
       return await client.query(query.sql, query.bindings || {})
     } catch (err) {
+      // @ts-ignore
       throw new Error(err)
     }
   }
@@ -101,6 +102,7 @@ module MSSQLModule {
         const client = await this.pool.connect()
         this.client = client.request()
       } catch (err) {
+        // @ts-ignore
         throw new Error(err)
       }
     }
