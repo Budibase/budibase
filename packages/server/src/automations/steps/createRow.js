@@ -3,7 +3,7 @@ const automationUtils = require("../automationUtils")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 
-module.exports.definition = {
+exports.definition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "ri-save-3-line",
@@ -58,7 +58,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,

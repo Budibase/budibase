@@ -1,6 +1,6 @@
 const fetch = require("node-fetch")
 
-module.exports.definition = {
+exports.definition = {
   name: "Discord Message",
   tagline: "Send a message to a Discord server",
   description: "Send a message to a Discord server",
@@ -44,7 +44,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   const { url, username, avatar_url, content } = inputs
 
   const response = await fetch(url, {

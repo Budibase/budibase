@@ -56,5 +56,5 @@ exports.runStep = async function runStep(stepId, inputs) {
 
 exports.apiKey = "test"
 
-exports.actions = actions.BUILTIN_DEFINITIONS
-exports.logic = logic.BUILTIN_DEFINITIONS
+exports.actions = actions.ACTION_DEFINITIONS
+exports.logic = logic.LOGIC_DEFINITIONS

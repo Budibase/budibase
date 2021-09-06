@@ -1,6 +1,6 @@
 let { wait } = require("../../utilities")
 
-module.exports.definition = {
+exports.definition = {
   name: "Delay",
   icon: "ri-time-line",
   tagline: "Delay for {{inputs.time}} milliseconds",
@@ -21,6 +21,6 @@ module.exports.definition = {
   type: "LOGIC",
 }
 
-module.exports.run = async function delay({ inputs }) {
+exports.run = async function delay({ inputs }) {
   await wait(inputs.time)
 }

@@ -16,7 +16,7 @@ const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-module.exports.definition = {
+exports.definition = {
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",
   icon: "ri-send-plane-line",
@@ -70,7 +70,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   let { requestMethod, url, requestBody, headers } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`

@@ -44,7 +44,7 @@ describe("/automations", () => {
       ACTION_DEFINITIONS = res.body
     })
 
-    it("returns a list of definitions for triggers", async () => {
+    it("returns a list of definitions for triggerInfo", async () => {
       const res = await request
         .get(`/api/automations/trigger/list`)
         .set(config.defaultHeaders())

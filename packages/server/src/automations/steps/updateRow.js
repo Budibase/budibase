@@ -1,7 +1,7 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
 
-module.exports.definition = {
+exports.definition = {
   name: "Update Row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "ri-refresh-line",
@@ -53,7 +53,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, emitter }) {
+exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.rowId == null || inputs.row == null) {
     return {
       success: false,

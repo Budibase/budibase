@@ -1,6 +1,6 @@
 const fetch = require("node-fetch")
 
-module.exports.definition = {
+exports.definition = {
   name: "Integromat Integration",
   tagline: "Trigger an Integromat scenario",
   description:
@@ -55,7 +55,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   const { url, value1, value2, value3, value4, value5 } = inputs
 
   const response = await fetch(url, {

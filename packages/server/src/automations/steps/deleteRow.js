@@ -2,7 +2,7 @@ const rowController = require("../../api/controllers/row")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 
-module.exports.definition = {
+exports.definition = {
   description: "Delete a row from your database",
   icon: "ri-delete-bin-line",
   name: "Delete Row",
@@ -50,7 +50,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   if (inputs.id == null || inputs.revision == null) {
     return {
       success: false,

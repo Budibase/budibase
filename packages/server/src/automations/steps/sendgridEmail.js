@@ -1,4 +1,4 @@
-module.exports.definition = {
+exports.definition = {
   description: "Send an email using SendGrid",
   tagline: "Send email to {{inputs.to}}",
   icon: "ri-mail-open-line",
@@ -48,7 +48,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   const sgMail = require("@sendgrid/mail")
   sgMail.setApiKey(inputs.apiKey)
   const msg = {

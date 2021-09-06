@@ -13,7 +13,7 @@ const discord = require("./steps/discord")
 const zapier = require("./steps/zapier")
 const integromat = require("./steps/integromat")
 
-const BUILTIN_ACTIONS = {
+const ACTION_IMPLS = {
   SEND_EMAIL: sendgridEmail.run,
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
@@ -29,7 +29,7 @@ const BUILTIN_ACTIONS = {
   zapier: zapier.run,
   integromat: integromat.run,
 }
-const BUILTIN_DEFINITIONS = {
+const ACTION_DEFINITIONS = {
   SEND_EMAIL: sendgridEmail.definition,
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
@@ -47,12 +47,10 @@ const BUILTIN_DEFINITIONS = {
 }
 
 /* istanbul ignore next */
-module.exports.getAction = async function (actionName) {
-  if (BUILTIN_ACTIONS[actionName] != null) {
-    return BUILTIN_ACTIONS[actionName]
+exports.getAction = async function (actionName) {
+  if (ACTION_IMPLS[actionName] != null) {
+    return ACTION_IMPLS[actionName]
   }
 }
 
-// definitions will have downloaded ones added to it, while builtin won't
-module.exports.DEFINITIONS = BUILTIN_DEFINITIONS
-module.exports.BUILTIN_DEFINITIONS = BUILTIN_DEFINITIONS
+exports.ACTION_DEFINITIONS = ACTION_DEFINITIONS

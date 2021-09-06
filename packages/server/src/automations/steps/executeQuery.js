@@ -1,6 +1,6 @@
 const queryController = require("../../api/controllers/query")
 
-module.exports.definition = {
+exports.definition = {
   name: "External Data Connector",
   tagline: "Execute Data Connector",
   icon: "ri-database-2-line",
@@ -42,7 +42,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, emitter }) {
+exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.query == null) {
     return {
       success: false,

@@ -12,10 +12,10 @@ const PrettyLogicConditions = {
   [LogicConditions.LESS_THAN]: "Less than",
 }
 
-module.exports.LogicConditions = LogicConditions
-module.exports.PrettyLogicConditions = PrettyLogicConditions
+exports.LogicConditions = LogicConditions
+exports.PrettyLogicConditions = PrettyLogicConditions
 
-module.exports.definition = {
+exports.definition = {
   name: "Filter",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "ri-git-branch-line",
@@ -57,7 +57,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function filter({ inputs }) {
+exports.run = async function filter({ inputs }) {
   let { field, condition, value } = inputs
   // coerce types so that we can use them
   if (!isNaN(value) && !isNaN(field)) {

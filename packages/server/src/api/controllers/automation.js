@@ -5,8 +5,8 @@ const triggers = require("../../automations/triggers")
 const webhooks = require("./webhook")
 const { getAutomationParams, generateAutomationID } = require("../../db/utils")
 
-const WH_STEP_ID = triggers.BUILTIN_DEFINITIONS.WEBHOOK.stepId
-const CRON_STEP_ID = triggers.BUILTIN_DEFINITIONS.CRON.stepId
+const WH_STEP_ID = triggers.TRIGGER_DEFINITIONS.WEBHOOK.stepId
+const CRON_STEP_ID = triggers.TRIGGER_DEFINITIONS.CRON.stepId
 
 /*************************
  *                       *
@@ -242,22 +242,22 @@ exports.destroy = async function (ctx) {
 }
 
 exports.getActionList = async function (ctx) {
-  ctx.body = actions.DEFINITIONS
+  ctx.body = actions.ACTION_DEFINITIONS
 }
 
 exports.getTriggerList = async function (ctx) {
-  ctx.body = triggers.BUILTIN_DEFINITIONS
+  ctx.body = triggers.TRIGGER_DEFINITIONS
 }
 
 exports.getLogicList = async function (ctx) {
-  ctx.body = logic.BUILTIN_DEFINITIONS
+  ctx.body = logic.LOGIC_DEFINITIONS
 }
 
 module.exports.getDefinitionList = async function (ctx) {
   ctx.body = {
-    logic: logic.BUILTIN_DEFINITIONS,
-    trigger: triggers.BUILTIN_DEFINITIONS,
-    action: actions.DEFINITIONS,
+    logic: logic.LOGIC_DEFINITIONS,
+    trigger: triggers.TRIGGER_DEFINITIONS,
+    action: actions.ACTION_DEFINITIONS,
   }
 }
 
