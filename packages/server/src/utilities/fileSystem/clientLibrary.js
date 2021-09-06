@@ -8,7 +8,7 @@ const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 
 /**
  * Client library paths in the object store:
- * Previously, the entire standard-components package was downloaded from NPM
+ * Previously, the entire client library package was downloaded from NPM
  * as a tarball and extracted to the object store, even though only the manifest
  * was ever needed. Therefore we need to support old apps which may still have
  * the manifest at this location for the first update.
