@@ -19,12 +19,10 @@
   let exportFormat = FORMATS[0].key
 
   async function exportView() {
-    const filename = $t("export-0") + ` ${exportFormat}`
     download(
       `/api/views/export?view=${encodeURIComponent(
         view
-      )}&format=${exportFormat}`,
-      filename
+      )}&format=${exportFormat}`
     )
   }
 </script>
