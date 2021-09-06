@@ -7,7 +7,6 @@ exports.getApps = async ctx => {
   const apps = await getAllApps(CouchDB, { dev: true })
   const body = {}
   for (let app of apps) {
-    app = app.value
     let url = app.url || encodeURI(`${app.name}`)
     url = `/${url.replace(URL_REGEX_SLASH, "")}`
     body[url] = {
