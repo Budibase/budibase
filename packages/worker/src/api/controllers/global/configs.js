@@ -259,7 +259,7 @@ exports.configChecklist = async function (ctx) {
         link: "/builder/portal/manage/email",
       },
       adminUser: {
-        checked: adminUser != null,
+        checked: adminUser,
         label: "Create your first user",
         link: "/builder/portal/manage/users",
       },
