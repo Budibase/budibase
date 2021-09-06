@@ -3,10 +3,14 @@
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
+  import { Body, Detail, Icon, Label, StatusLight } from "@budibase/bbui"
 
   export let automation
   export let onSelect
   let blocks
+
+  // TODO: ADD LOGIC FOR SWITCHING THIS
+  let published = true
 
   $: {
     blocks = []
@@ -20,33 +24,53 @@
 </script>
 
 <section class="canvas">
-  {#each blocks as block, idx (block.id)}
-    <div
-      class="block"
-      animate:flip={{ duration: 600 }}
-      in:fade|local
-      out:fly|local={{ x: 100 }}
-    >
-      <FlowItem {onSelect} {block} />
-      {#if idx !== blocks.length - 1}
-        <Arrow />
-      {/if}
+  <div class="content">
+    <div class="title">
+      <div class="subtitle">
+        <Detail size="L">{automation.name}</Detail>
+        <div
+          style="display:flex;
+          color: var(--spectrum-global-color-gray-400);"
+        >
+          <span class="iconPadding">
+            <Icon name="DeleteOutline" />
+          </span>
+          <Label>Delete</Label>
+        </div>
+      </div>
+      <div style="margin-left: calc(-1 * var(--spacing-s))">
+        <StatusLight positive={published} notice={!published}
+          >{#if published}
+            <Body size="XS">Automation is published</Body>{:else}
+            <Body size="XS">Automation is not published</Body>{/if}</StatusLight
+        >
+      </div>
     </div>
-  {/each}
+    {#each blocks as block, idx (block.id)}
+      <div
+        class="block"
+        animate:flip={{ duration: 600 }}
+        in:fade|local
+        out:fly|local={{ x: 100 }}
+      >
+        <FlowItem {onSelect} {block} />
+        {#if idx !== blocks.length - 1}
+          <Arrow />
+        {/if}
+      </div>
+    {/each}
+  </div>
 </section>
 
 <style>
-  section {
+  .canvas {
     margin: 0 -40px calc(-1 * var(--spacing-l)) -40px;
     padding: var(--spacing-l) 40px 0 40px;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
     overflow-y: auto;
-    flex: 1 1 auto;
+    text-align: center;
   }
   /* Fix for firefox not respecting bottom padding in scrolling containers */
-  section > *:last-child {
+  .canvas > *:last-child {
     padding-bottom: 40px;
   }
 
@@ -55,5 +79,25 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+  }
+
+  .content {
+    display: inline-block;
+    text-align: left;
+  }
+
+  .title {
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .subtitle {
+    padding-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .iconPadding {
+    display: flex;
+    padding-right: var(--spacing-m);
   }
 </style>

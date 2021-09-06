@@ -15,6 +15,7 @@
 
   export let block
   export let webhookModal
+
   $: inputs = Object.entries(block.schema?.inputs?.properties || {})
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
@@ -55,7 +56,6 @@
 </script>
 
 <div class="fields">
-  <div class="block-label">{block.name}</div>
   {#each inputs as [key, value]}
     <div class="block-field">
       <Label>{value.title}</Label>
@@ -130,11 +130,5 @@
   .block-field {
     display: grid;
     grid-gap: 5px;
-  }
-
-  .block-label {
-    font-weight: 600;
-    font-size: var(--font-size-s);
-    color: var(--grey-7);
   }
 </style>
