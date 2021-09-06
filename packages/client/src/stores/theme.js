@@ -18,12 +18,17 @@ const createThemeStore = () => {
   const store = derived(
     [builderStore, appStore],
     ([$builderStore, $appStore]) => {
-      const theme =
-        $builderStore.theme || $appStore.application?.theme || defaultTheme
+      let theme = $appStore.application?.theme
+      let customTheme = $appStore.application?.customTheme
+      if ($builderStore.inBuilder) {
+        theme = $builderStore.theme
+        customTheme = $builderStore.customTheme
+      }
+
+      // Ensure theme is set
+      theme = theme || defaultTheme
 
       // Delete and nullish keys from the custom theme
-      let customTheme =
-        $builderStore.customTheme || $appStore.application?.customTheme
       if (customTheme) {
         Object.entries(customTheme).forEach(([key, value]) => {
           if (value == null || value === "") {

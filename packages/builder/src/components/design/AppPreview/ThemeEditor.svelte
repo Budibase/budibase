@@ -8,6 +8,7 @@
     ColorPicker,
     Label,
     Select,
+    Button,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import AppThemeSelect from "./AppThemeSelect.svelte"
@@ -49,6 +50,10 @@
       })
     }
   }
+
+  const resetTheme = () => {
+    store.actions.customTheme.save(null)
+  }
 </script>
 
 <div class="container">
@@ -68,13 +73,15 @@
       </div>
       <div class="setting">
         <Label size="L">Button roundness</Label>
-        <Select
-          autoWidth
-          value={$store.customTheme?.buttonBorderRadius ||
-            defaultTheme.buttonBorderRadius}
-          on:change={updateProperty("buttonBorderRadius")}
-          options={buttonBorderRadiusOptions}
-        />
+        <div class="select-wrapper">
+          <Select
+            placeholder={null}
+            value={$store.customTheme?.buttonBorderRadius ||
+              defaultTheme.buttonBorderRadius}
+            on:change={updateProperty("buttonBorderRadius")}
+            options={buttonBorderRadiusOptions}
+          />
+        </div>
       </div>
       <div class="setting">
         <Label size="L">Primary color</Label>
@@ -111,6 +118,9 @@
         />
       </div>
     </Layout>
+    <div slot="footer">
+      <Button secondary quiet on:click={resetTheme}>Reset</Button>
+    </div>
   </ModalContent>
 </Modal>
 
@@ -123,11 +133,8 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--spectrum-global-dimension-static-size-200);
-    border-bottom: var(--border-light);
   }
-  .setting:last-child {
-    padding-bottom: 0;
-    border-bottom: none;
+  .select-wrapper {
+    width: 100px;
   }
 </style>
