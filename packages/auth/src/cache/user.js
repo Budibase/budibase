@@ -18,6 +18,10 @@ exports.getUser = async (userId, tenantId = null) => {
     user = await getGlobalDB(tenantId).get(userId)
     client.store(userId, user, EXPIRY_SECONDS)
   }
+  if (user && !user.tenantId && tenantId) {
+    // make sure the tenant ID is always correct/set
+    user.tenantId = tenantId
+  }
   return user
 }
 
