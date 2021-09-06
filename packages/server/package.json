@@ -23,7 +23,6 @@
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
-    "initialise": "node scripts/initialise.js",
     "multi:enable": "node scripts/multiTenancy.js enable",
     "multi:disable": "node scripts/multiTenancy.js disable"
   },
