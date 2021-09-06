@@ -10,27 +10,6 @@ const env = require("../environment")
 
 const router = new Router()
 
-const NO_TENANCY_ENDPOINTS = [
-  {
-    route: "/api/analytics",
-    method: "GET",
-  },
-  {
-    route: "/builder",
-    method: "GET",
-  },
-  // when using this locally there can be pass through, need
-  // to allow all pass through endpoints to go without tenancy
-  {
-    route: "/api/global",
-    method: "ALL",
-  },
-  {
-    route: "/api/system",
-    method: "ALL",
-  },
-]
-
 router
   .use(
     compress({
@@ -61,7 +40,13 @@ router
     })
   )
   // nothing in the server should allow query string tenants
-  .use(buildTenancyMiddleware(null, NO_TENANCY_ENDPOINTS))
+  // the server can be public anywhere, so nowhere should throw errors
+  // if the tenancy has not been set, it'll have to be discovered at application layer
+  .use(
+    buildTenancyMiddleware(null, null, {
+      noTenancyRequired: true,
+    })
+  )
   .use(currentApp)
   .use(auditLog)
 
