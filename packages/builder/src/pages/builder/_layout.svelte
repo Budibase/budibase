@@ -6,7 +6,7 @@
   let loaded = false
 
   $: multiTenancyEnabled = $admin.multiTenancy
-  $: hasAdminUser = !!$admin?.checklist?.adminUser.checked
+  $: hasAdminUser = $admin?.checklist?.adminUser.checked
   $: tenantSet = $auth.tenantSet
 
   onMount(async () => {
@@ -26,7 +26,6 @@
       $redirect("./admin")
     }
   }
-
   // Redirect to log in at any time if the user isn't authenticated
   $: {
     if (

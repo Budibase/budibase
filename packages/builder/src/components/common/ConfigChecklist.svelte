@@ -27,7 +27,7 @@
         on:click={() => $goto($admin.checklist[checklistItem].link)}
       >
         <span>{idx + 1}. {$admin.checklist[checklistItem].label}</span>
-        <Checkbox value={!!$admin.checklist[checklistItem].checked} />
+        <Checkbox value={$admin.checklist[checklistItem].checked} />
       </div>
     </MenuItem>
   {/each}
