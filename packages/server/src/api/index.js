@@ -15,6 +15,20 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/analytics",
     method: "GET",
   },
+  {
+    route: "/builder",
+    method: "GET",
+  },
+  // when using this locally there can be pass through, need
+  // to allow all pass through endpoints to go without tenancy
+  {
+    route: "/api/global",
+    method: "ALL",
+  },
+  {
+    route: "/api/system",
+    method: "ALL",
+  },
 ]
 
 router
