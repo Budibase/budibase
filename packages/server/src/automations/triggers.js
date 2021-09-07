@@ -10,6 +10,8 @@ const { utils } = require("@budibase/auth/redis")
 const { JobQueues } = require("../constants")
 const { definitions } = require("./triggerInfo")
 const { isDevAppID } = require("../db/utils")
+// need this to call directly, so we can get a response
+const { processEvent } = require("./utils")
 
 const { opts } = utils.getRedisOptions()
 let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
@@ -76,7 +78,11 @@ emitter.on("row:delete", async function (event) {
   await queueRelevantRowAutomations(event, "row:delete")
 })
 
-exports.externalTrigger = async function (automation, params) {
+exports.externalTrigger = async function (
+  automation,
+  params,
+  { getResponses } = {}
+) {
   if (automation.definition != null && automation.definition.trigger != null) {
     if (automation.definition.trigger.stepId === "APP") {
       // values are likely to be submitted as strings, so we shall convert to correct type
@@ -88,8 +94,12 @@ exports.externalTrigger = async function (automation, params) {
       params.fields = coercedFields
     }
   }
-
-  await automationQueue.add({ automation, event: params })
+  const data = { automation, event: params }
+  if (getResponses) {
+    return processEvent({ data })
+  } else {
+    return automationQueue.add(data)
+  }
 }
 
 exports.getQueues = () => {
