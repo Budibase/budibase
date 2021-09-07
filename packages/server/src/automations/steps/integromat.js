@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 exports.definition = {
   name: "Integromat Integration",
@@ -45,6 +46,10 @@ exports.definition = {
           type: "boolean",
           description: "Whether call was successful",
         },
+        httpStatus: {
+          type: "number",
+          description: "The HTTP status code returned",
+        },
         response: {
           type: "object",
           description: "The webhook response - this can have properties",
@@ -72,19 +77,10 @@ exports.run = async function ({ inputs }) {
     },
   })
 
-  let data
-  if (response.status === 200) {
-    try {
-      data = await response.json()
-    } catch (err) {
-      data = {}
-    }
-  } else {
-    data = await response.text()
-  }
-
+  const { status, message } = await getFetchResponse(response)
   return {
-    success: response.status === 200,
-    response: data,
+    httpStatus: status,
+    success: status === 200,
+    response: message,
   }
 }

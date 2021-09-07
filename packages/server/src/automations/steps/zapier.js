@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 exports.definition = {
   name: "Zapier Webhook",
@@ -43,9 +44,9 @@ exports.definition = {
           type: "number",
           description: "The HTTP status code of the request",
         },
-        zapierStatus: {
+        response: {
           type: "string",
-          description: "The result status from Zapier",
+          description: "The response from Zapier",
         },
       },
     },
@@ -72,17 +73,11 @@ exports.run = async function ({ inputs }) {
     },
   })
 
-  let data = null
-  if (response.status === 200) {
-    try {
-      data = await response.json()
-    } catch (err) {
-      data = null
-    }
-  }
+  const { status, message } = await getFetchResponse(response)
 
   return {
-    httpStatus: response.status,
-    zapierStatus: data && data.status ? data.status : data,
+    success: status === 200,
+    httpStatus: status,
+    response: message,
   }
 }

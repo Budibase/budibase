@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 exports.definition = {
   name: "Slack Message",
@@ -32,6 +33,10 @@ exports.definition = {
           type: "boolean",
           description: "Whether the message sent successfully",
         },
+        response: {
+          type: "string",
+          description: "The response from the Slack Webhook",
+        },
       },
     },
   },
@@ -49,8 +54,10 @@ exports.run = async function ({ inputs }) {
     },
   })
 
+  const { status, message } = await getFetchResponse(response)
   return {
-    httpStatus: response.status,
-    success: response.status === 200,
+    httpStatus: status,
+    response: message,
+    success: status === 200,
   }
 }

@@ -1,4 +1,3 @@
-const sendgridEmail = require("./steps/sendgridEmail")
 const sendSmtpEmail = require("./steps/sendSmtpEmail")
 const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
@@ -14,7 +13,6 @@ const zapier = require("./steps/zapier")
 const integromat = require("./steps/integromat")
 
 const ACTION_IMPLS = {
-  SEND_EMAIL: sendgridEmail.run,
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
@@ -31,7 +29,6 @@ const ACTION_IMPLS = {
   integromat: integromat.run,
 }
 const ACTION_DEFINITIONS = {
-  SEND_EMAIL: sendgridEmail.definition,
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,

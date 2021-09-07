@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 const DEFAULT_USERNAME = "Budibase Automate"
 const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"
@@ -39,6 +40,10 @@ exports.definition = {
           type: "number",
           description: "The HTTP status code of the request",
         },
+        response: {
+          type: "string",
+          description: "The response from the Discord Webhook",
+        },
         success: {
           type: "boolean",
           description: "Whether the message sent successfully",
@@ -68,8 +73,10 @@ exports.run = async function ({ inputs }) {
     },
   })
 
+  const { status, message } = await getFetchResponse(response)
   return {
-    httpStatus: response.status,
-    success: response.status === 200,
+    httpStatus: status,
+    success: status === 200,
+    response: message,
   }
 }

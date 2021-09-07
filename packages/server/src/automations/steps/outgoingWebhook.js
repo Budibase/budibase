@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 const RequestType = {
   POST: "POST",
@@ -60,6 +61,10 @@ exports.definition = {
           type: "object",
           description: "The response from the webhook",
         },
+        httpStatus: {
+          type: "number",
+          description: "The HTTP status code returned",
+        },
         success: {
           type: "boolean",
           description: "Whether the action was successful",
@@ -107,19 +112,11 @@ exports.run = async function ({ inputs }) {
       JSON.parse(request.body)
     }
     const response = await fetch(url, request)
-    const contentType = response.headers.get("content-type")
-    const success = response.status === 200
-    let resp
-    if (!success) {
-      resp = response.statusText
-    } else if (contentType && contentType.indexOf("application/json") !== -1) {
-      resp = await response.json()
-    } else {
-      resp = await response.text()
-    }
+    const { status, message } = await getFetchResponse(response)
     return {
-      response: resp,
-      success: success,
+      httpStatus: status,
+      response: message,
+      success: status === 200,
     }
   } catch (err) {
     /* istanbul ignore next */
