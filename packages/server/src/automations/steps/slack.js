@@ -1,14 +1,14 @@
 const fetch = require("node-fetch")
 
 const DEFAULT_USERNAME = "Budibase Automate"
-const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"
+const DEFAULT_ICON_URL = "https://i.imgur.com/a1cmTKM.png"
 
 exports.definition = {
-  name: "Discord Message",
-  tagline: "Send a message to a Discord server",
-  description: "Send a message to a Discord server",
-  icon: "ri-discord-line",
-  stepId: "discord",
+  name: "Slack Message",
+  tagline: "Send a message to Slack",
+  description: "Send a message to Slack",
+  icon: "ri-slack-line",
+  stepId: "slack",
   type: "ACTION",
   inputs: {},
   schema: {
@@ -16,22 +16,14 @@ exports.definition = {
       properties: {
         url: {
           type: "string",
-          title: "Discord Webhook URL",
+          title: "Incoming Webhook URL",
         },
-        username: {
-          type: "string",
-          title: "Bot Name",
-        },
-        avatar_url: {
-          type: "string",
-          title: "Bot Avatar URL",
-        },
-        content: {
+        text: {
           type: "string",
           title: "Message",
         },
       },
-      required: ["url", "content"],
+      required: ["url", "text"],
     },
     outputs: {
       properties: {
@@ -49,19 +41,11 @@ exports.definition = {
 }
 
 exports.run = async function ({ inputs }) {
-  let { url, username, avatar_url, content } = inputs
-  if (!username) {
-    username = DEFAULT_USERNAME
-  }
-  if (!avatar_url) {
-    avatar_url = DEFAULT_AVATAR_URL
-  }
+  let { url, text } = inputs
   const response = await fetch(url, {
     method: "post",
     body: JSON.stringify({
-      username,
-      avatar_url,
-      content,
+      text,
     }),
     headers: {
       "Content-Type": "application/json",
