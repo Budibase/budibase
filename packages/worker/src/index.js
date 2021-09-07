@@ -6,6 +6,7 @@ const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
 const koaSession = require("koa-session")
+const cors = require("@koa/cors")
 const { passport } = require("@budibase/auth").auth
 const logger = require("koa-pino-logger")
 const http = require("http")
@@ -13,6 +14,14 @@ const api = require("./api")
 const redis = require("./utilities/redis")
 
 const app = new Koa()
+
+// TODO: Remove this when using envoy / nginx
+const accountPortalCors = {
+  origin: "http://localhost:3001",
+  credentials: true,
+}
+
+app.use(cors(accountPortalCors))
 
 app.keys = ["secret", "key"]
 

@@ -34,6 +34,7 @@
     "joi": "^17.4.0",
     "koa": "^2.7.0",
     "koa-body": "^4.2.0",
+    "@koa/cors": "^3.1.0",
     "koa-compress": "^4.0.1",
     "koa-passport": "^4.1.4",
     "koa-pino-logger": "^3.0.0",
