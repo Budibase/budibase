@@ -56,6 +56,7 @@ const INITIAL_FRONTEND_STATE = {
   clientLibPath: "",
   theme: "",
   customTheme: {},
+  previewDevice: "desktop",
 }
 
 export const getFrontendStore = () => {
@@ -229,6 +230,12 @@ export const getFrontendStore = () => {
         } else {
           await store.actions.layouts.save(selectedAsset)
         }
+      },
+      setDevice: device => {
+        store.update(state => {
+          state.previewDevice = device
+          return state
+        })
       },
     },
     layouts: {
