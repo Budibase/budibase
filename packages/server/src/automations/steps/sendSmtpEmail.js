@@ -3,7 +3,7 @@ const { sendSmtpEmail } = require("../../utilities/workerRequests")
 exports.definition = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
-  icon: "ri-mail-open-line",
+  icon: "Email",
   name: "Send Email (SMTP)",
   type: "ACTION",
   internal: true,

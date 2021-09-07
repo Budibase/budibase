@@ -4,7 +4,7 @@ const { processStringSync } = require("@budibase/string-templates")
 exports.definition = {
   name: "Bash Scripting",
   tagline: "Execute a bash command",
-  icon: "ri-terminal-box-line",
+  icon: "JourneyEvent",
   description: "Run a bash script",
   type: "ACTION",
   internal: true,
