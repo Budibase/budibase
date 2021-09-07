@@ -281,4 +281,6 @@ exports.trigger = async function (ctx) {
   }
 }
 
-exports.test = async function (ctx) {}
+exports.test = async function (ctx) {
+  ctx.body = {}
+}

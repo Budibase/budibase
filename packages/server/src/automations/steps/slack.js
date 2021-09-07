@@ -1,8 +1,5 @@
 const fetch = require("node-fetch")
 
-const DEFAULT_USERNAME = "Budibase Automate"
-const DEFAULT_ICON_URL = "https://i.imgur.com/a1cmTKM.png"
-
 exports.definition = {
   name: "Slack Message",
   tagline: "Send a message to Slack",
