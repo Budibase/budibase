@@ -4,7 +4,7 @@ const { buildCtx } = require("./utils")
 exports.definition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
-  icon: "ri-terminal-box-line",
+  icon: "Code",
   description: "Run a piece of JavaScript code in your automation",
   type: "ACTION",
   internal: true,

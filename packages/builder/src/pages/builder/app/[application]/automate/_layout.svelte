@@ -2,7 +2,6 @@
   import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
-  import SetupPanel from "components/automation/SetupPanel/SetupPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
   $: automation = $automationStore.selectedAutomation?.automation
@@ -40,11 +39,6 @@
       </div>
     {/if}
   </div>
-  {#if $automationStore.selectedAutomation}
-    <div class="setup">
-      <SetupPanel />
-    </div>
-  {/if}
   <Modal bind:this={modal}>
     <CreateAutomationModal webhookModal />
   </Modal>
@@ -82,19 +76,6 @@
     gap: var(--spacing-l);
     overflow: hidden;
   }
-
-  .setup {
-    padding: var(--spectrum-global-dimension-size-200);
-    border-left: var(--border-light);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-l);
-    background-color: var(--background);
-    overflow-y: auto;
-  }
-
   .centered {
     top: 0;
     bottom: 0;
