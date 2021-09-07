@@ -42,7 +42,7 @@ exports.definition = {
         },
         success: {
           type: "boolean",
-          description: "Whether the action was successful",
+          description: "Whether the row creation was successful",
         },
         id: {
           type: "string",
@@ -97,7 +97,6 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
       success: ctx.status === 200,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

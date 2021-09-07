@@ -17,10 +17,22 @@ exports.definition = {
       },
       required: ["time"],
     },
+    outputs: {
+      properties: {
+        success: {
+          type: "boolean",
+          description: "Whether the delay was successful",
+        },
+      },
+      required: ["success"],
+    },
   },
   type: "LOGIC",
 }
 
 exports.run = async function delay({ inputs }) {
   await wait(inputs.time)
+  return {
+    success: true,
+  }
 }

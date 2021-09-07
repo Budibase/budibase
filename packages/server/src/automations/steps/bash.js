@@ -24,7 +24,11 @@ exports.definition = {
       properties: {
         stdout: {
           type: "string",
-          description: "Standard output of your bash command or script.",
+          description: "Standard output of your bash command or script",
+        },
+        success: {
+          type: "boolean",
+          description: "Whether the command was successful",
         },
       },
     },
@@ -42,18 +46,20 @@ exports.run = async function ({ inputs, context }) {
   try {
     const command = processStringSync(inputs.code, context)
 
-    let stdout
+    let stdout,
+      success = true
     try {
       stdout = execSync(command, { timeout: 500 })
     } catch (err) {
       stdout = err.message
+      success = false
     }
 
     return {
       stdout,
+      success,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

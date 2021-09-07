@@ -75,7 +75,6 @@ exports.run = async function ({ inputs, appId, emitter }) {
       success: ctx.status === 200,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

@@ -58,7 +58,6 @@ exports.run = async function ({ inputs }) {
       response,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

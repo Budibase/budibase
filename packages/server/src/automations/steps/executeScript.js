@@ -64,7 +64,6 @@ exports.run = async function ({ inputs, appId, context, emitter }) {
       value: ctx.body,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

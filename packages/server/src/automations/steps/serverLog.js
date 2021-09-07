@@ -38,4 +38,7 @@ exports.definition = {
 
 exports.run = async function ({ inputs, appId }) {
   console.log(`App ${appId} - ${inputs.text}`)
+  return {
+    success: true,
+  }
 }
