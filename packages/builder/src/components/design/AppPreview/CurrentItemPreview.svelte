@@ -209,15 +209,4 @@
     width: 100%;
     height: 100%;
   }
-  /*iframe.tablet {*/
-  /*  width: 1024px;*/
-  /*  height: 768px;*/
-  /*}*/
-  /*iframe.mobile {*/
-  /*  width: calc(390px + 16px);*/
-  /*  height: calc(844px + 16px);*/
-  /*}*/
-  /*iframe.mobile :global(#spectrum-root) {*/
-  /*  border-radius: 12px;*/
-  /*}*/
 </style>
