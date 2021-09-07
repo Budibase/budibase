@@ -9,6 +9,7 @@ const { coerce } = require("../utilities/rowProcessor")
 const { utils } = require("@budibase/auth/redis")
 const { JobQueues } = require("../constants")
 const { definitions } = require("./triggerInfo")
+const { isDevAppID } = require("../db/utils")
 
 const { opts } = utils.getRedisOptions()
 let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
@@ -18,6 +19,11 @@ const TRIGGER_DEFINITIONS = definitions
 async function queueRelevantRowAutomations(event, eventType) {
   if (event.appId == null) {
     throw `No appId specified for ${eventType} - check event emitters.`
+  }
+  // don't queue events which are for dev apps, only way to test automations is
+  // running tests on them
+  if (isDevAppID(event.appId)) {
+    return
   }
   const db = new CouchDB(event.appId)
   let automations = await db.allDocs(

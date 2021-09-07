@@ -9,7 +9,7 @@ const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
 const serverLog = require("./steps/serverLog")
 const discord = require("./steps/discord")
-// TODO: remove zapier/integromat some time in the future/deprecate them
+const slack = require("./steps/slack")
 const zapier = require("./steps/zapier")
 const integromat = require("./steps/integromat")
 
@@ -26,6 +26,7 @@ const ACTION_IMPLS = {
   SERVER_LOG: serverLog.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
+  slack: slack.run,
   zapier: zapier.run,
   integromat: integromat.run,
 }
@@ -42,6 +43,7 @@ const ACTION_DEFINITIONS = {
   SERVER_LOG: serverLog.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.definition,
+  slack: slack.definition,
   zapier: zapier.definition,
   integromat: integromat.definition,
 }

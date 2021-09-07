@@ -280,3 +280,5 @@ exports.trigger = async function (ctx) {
     automation,
   }
 }
+
+exports.test = async function (ctx) {}
