@@ -274,7 +274,6 @@ exports.trigger = async function (ctx) {
     ...ctx.request.body,
     appId: ctx.appId,
   })
-  ctx.status = 200
   ctx.body = {
     message: `Automation ${automation._id} has been triggered.`,
     automation,
@@ -282,5 +281,17 @@ exports.trigger = async function (ctx) {
 }
 
 exports.test = async function (ctx) {
-  ctx.body = {}
+  const db = new CouchDB(ctx.appId)
+  let automation = await db.get(ctx.params.id)
+  ctx.body = {
+    automation,
+    responses: await triggers.externalTrigger(
+      automation,
+      {
+        ...ctx.request.body,
+        appId: ctx.appId,
+      },
+      { getResponses: true }
+    ),
+  }
 }
