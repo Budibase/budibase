@@ -37,6 +37,7 @@ const DocumentTypes = {
   DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
   DEPLOYMENTS: "deployments",
+  METADATA: "metadata",
 }
 
 const ViewNames = {
@@ -332,6 +333,18 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
     `${datasourceId}${SEPARATOR}`,
     otherProps
   )
+}
+
+exports.generateMetadataID = (type, entityId) => {
+  return `${DocumentTypes.METADATA}${SEPARATOR}${type}${SEPARATOR}${entityId}`
+}
+
+exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
+  let docId = `${type}${SEPARATOR}`
+  if (entityId != null) {
+    docId += entityId
+  }
+  return getDocParams(DocumentTypes.METADATA, docId, otherProps)
 }
 
 /**

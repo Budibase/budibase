@@ -2,16 +2,10 @@ const CouchDB = require("../../db")
 const actions = require("../../automations/actions")
 const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
-const webhooks = require("./webhook")
-const {
-  getAutomationParams,
-  generateAutomationID,
-  isDevAppID,
-  isProdAppID,
-} = require("../../db/utils")
-
-const WH_STEP_ID = triggers.TRIGGER_DEFINITIONS.WEBHOOK.stepId
-const CRON_STEP_ID = triggers.TRIGGER_DEFINITIONS.CRON.stepId
+const { getAutomationParams, generateAutomationID } = require("../../db/utils")
+const { saveEntityMetadata } = require("../../utilities")
+const { MetadataTypes } = require("../../constants")
+const { checkForWebhooks } = require("../../automations/utils")
 
 /*************************
  *                       *
@@ -26,6 +20,10 @@ function cleanAutomationInputs(automation) {
   let steps = automation.definition.steps
   let trigger = automation.definition.trigger
   let allSteps = [...steps, trigger]
+  // live is not a property used anymore
+  if (automation.live != null) {
+    delete automation.live
+  }
   for (let step of allSteps) {
     if (step == null) {
       continue
@@ -37,119 +35,6 @@ function cleanAutomationInputs(automation) {
     }
   }
   return automation
-}
-
-/**
- * This function handles checking of any cron jobs need to be created or deleted for automations.
- * @param {string} appId The ID of the app in which we are checking for webhooks
- * @param {object|undefined} oldAuto The old automation object if updating/deleting
- * @param {object|undefined} newAuto The new automation object if creating/updating
- */
-async function checkForCronTriggers({ appId, oldAuto, newAuto }) {
-  const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
-  const newTrigger = newAuto ? newAuto.definition.trigger : null
-  function isCronTrigger(auto) {
-    return (
-      auto &&
-      auto.definition.trigger &&
-      auto.definition.trigger.stepId === CRON_STEP_ID
-    )
-  }
-
-  const isLive = auto => auto && auto.live
-
-  const cronTriggerRemoved =
-    isCronTrigger(oldAuto) && !isCronTrigger(newAuto) && oldTrigger.cronJobId
-  const cronTriggerDeactivated = !isLive(newAuto) && isLive(oldAuto)
-
-  const cronTriggerActivated = isLive(newAuto) && !isLive(oldAuto)
-
-  if (cronTriggerRemoved || (cronTriggerDeactivated && oldTrigger.cronJobId)) {
-    await triggers.automationQueue.removeRepeatableByKey(oldTrigger.cronJobId)
-  }
-  // need to create cron job
-  else if (isCronTrigger(newAuto) && cronTriggerActivated) {
-    const job = await triggers.automationQueue.add(
-      {
-        automation: newAuto,
-        event: { appId, timestamp: Date.now() },
-      },
-      { repeat: { cron: newTrigger.inputs.cron } }
-    )
-    // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
-    newTrigger.cronJobId = job.id
-  }
-  return newAuto
-}
-
-/**
- * This function handles checking if any webhooks need to be created or deleted for automations.
- * @param {string} appId The ID of the app in which we are checking for webhooks
- * @param {object|undefined} oldAuto The old automation object if updating/deleting
- * @param {object|undefined} newAuto The new automation object if creating/updating
- * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
- * written to DB (this does not write to DB as it would be wasteful to repeat).
- */
-async function checkForWebhooks({ appId, oldAuto, newAuto }) {
-  const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
-  const newTrigger = newAuto ? newAuto.definition.trigger : null
-  const triggerChanged =
-    oldTrigger && newTrigger && oldTrigger.id !== newTrigger.id
-  function isWebhookTrigger(auto) {
-    return (
-      auto &&
-      auto.definition.trigger &&
-      auto.definition.trigger.stepId === WH_STEP_ID
-    )
-  }
-  // need to delete webhook
-  if (
-    isWebhookTrigger(oldAuto) &&
-    (!isWebhookTrigger(newAuto) || triggerChanged) &&
-    oldTrigger.webhookId
-  ) {
-    try {
-      let db = new CouchDB(appId)
-      // need to get the webhook to get the rev
-      const webhook = await db.get(oldTrigger.webhookId)
-      const ctx = {
-        appId,
-        params: { id: webhook._id, rev: webhook._rev },
-      }
-      // might be updating - reset the inputs to remove the URLs
-      if (newTrigger) {
-        delete newTrigger.webhookId
-        newTrigger.inputs = {}
-      }
-      await webhooks.destroy(ctx)
-    } catch (err) {
-      // don't worry about not being able to delete, if it doesn't exist all good
-    }
-  }
-  // need to create webhook
-  if (
-    (!isWebhookTrigger(oldAuto) || triggerChanged) &&
-    isWebhookTrigger(newAuto)
-  ) {
-    const ctx = {
-      appId,
-      request: {
-        body: new webhooks.Webhook(
-          "Automation webhook",
-          webhooks.WebhookType.AUTOMATION,
-          newAuto._id
-        ),
-      },
-    }
-    await webhooks.save(ctx)
-    const id = ctx.body.webhook._id
-    newTrigger.webhookId = id
-    newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
-      triggerUrl: `api/webhooks/trigger/${appId}/${id}`,
-    }
-  }
-  return newAuto
 }
 
 exports.create = async function (ctx) {
@@ -167,10 +52,6 @@ exports.create = async function (ctx) {
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
-    appId: ctx.appId,
-    newAuto: automation,
-  })
-  automation = await checkForCronTriggers({
     appId: ctx.appId,
     newAuto: automation,
   })
@@ -194,11 +75,6 @@ exports.update = async function (ctx) {
   const oldAutomation = await db.get(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
-    appId: ctx.appId,
-    oldAuto: oldAutomation,
-    newAuto: automation,
-  })
-  automation = await checkForCronTriggers({
     appId: ctx.appId,
     oldAuto: oldAutomation,
     newAuto: automation,
@@ -239,10 +115,6 @@ exports.destroy = async function (ctx) {
     appId: ctx.appId,
     oldAuto: oldAutomation,
   })
-  await checkForCronTriggers({
-    appId: ctx.appId,
-    oldAuto: oldAutomation,
-  })
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 
@@ -274,13 +146,6 @@ module.exports.getDefinitionList = async function (ctx) {
 
 exports.trigger = async function (ctx) {
   const appId = ctx.appId
-  if (isDevAppID(appId)) {
-    // in dev apps don't throw an error, just don't trigger
-    ctx.body = {
-      message: "Automation not triggered, app in development.",
-    }
-    return
-  }
   const db = new CouchDB(appId)
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {
@@ -295,12 +160,9 @@ exports.trigger = async function (ctx) {
 
 exports.test = async function (ctx) {
   const appId = ctx.appId
-  if (isProdAppID(appId)) {
-    ctx.throw(400, "Cannot test automations in production app.")
-  }
   const db = new CouchDB(appId)
   let automation = await db.get(ctx.params.id)
-  ctx.body = await triggers.externalTrigger(
+  const response = await triggers.externalTrigger(
     automation,
     {
       ...ctx.request.body,
@@ -308,4 +170,12 @@ exports.test = async function (ctx) {
     },
     { getResponses: true }
   )
+  // save a test history run
+  await saveEntityMetadata(
+    ctx.appId,
+    MetadataTypes.AUTOMATION_TEST_HISTORY,
+    automation._id,
+    ctx.request.body
+  )
+  ctx.body = response
 }
