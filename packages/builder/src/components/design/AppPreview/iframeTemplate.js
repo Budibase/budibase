@@ -17,17 +17,13 @@ export default `
         margin: 0;
       }
       html {
-        height: calc(100% - 16px);
-        width: calc(100% - 16px);
+        height: 100%;
+        width: 100%;
         overflow: hidden;
-        margin: 8px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
-      }
-      html.loaded {
-        box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
       }
       body {
         flex: 1 1 auto;
