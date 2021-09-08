@@ -16,12 +16,14 @@ const redis = require("./utilities/redis")
 const app = new Koa()
 
 // TODO: Remove this when using envoy / nginx
-const accountPortalCors = {
-  origin: "http://localhost:3001",
-  credentials: true,
-}
+if (env.CORS_ORIGIN) {
+  const corsConfig = {
+    origin: env.CORS_ORIGIN,
+    credentials: !!env.CORS_CREDENTIALS,
+  }
 
-app.use(cors(accountPortalCors))
+  app.use(cors(corsConfig))
+}
 
 app.keys = ["secret", "key"]
 
