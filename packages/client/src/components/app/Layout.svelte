@@ -66,7 +66,12 @@
   class:mobile={!!$context.device.mobile}
 >
   {#if typeClass !== "none"}
-    <div class="nav-wrapper" class:sticky class:hidden={isPeeking}>
+    <div
+      class="nav-wrapper"
+      class:sticky
+      class:hidden={isPeeking}
+      style={`--height:${$context.device.height}px; --width:${$context.device.width}px;`}
+    >
       <div class="nav nav--{typeClass} size--{widthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
@@ -358,7 +363,7 @@
     transform: translateX(0);
     width: 250px;
     transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
-    height: 100vh;
+    height: var(--height);
     opacity: 0;
     background: var(--navBackground);
     z-index: 999;
@@ -381,8 +386,8 @@
     display: block;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: var(--width);
+    height: var(--height);
     z-index: 998;
   }
 </style>
