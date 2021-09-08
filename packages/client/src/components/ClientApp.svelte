@@ -187,19 +187,20 @@
   }
 
   /* Preview styles */
+  /* The additional 6px of size is to account for 4px padding and 2px border */
   #device-root.preview {
     padding: 2px;
   }
   #device-root.tablet-preview {
-    width: calc(1024px + 8px);
-    height: calc(768px + 8px);
+    width: calc(1024px + 6px);
+    height: calc(768px + 6px);
   }
   #device-root.mobile-preview {
-    width: calc(390px + 8px);
-    height: calc(844px + 8px);
+    width: calc(390px + 6px);
+    height: calc(844px + 6px);
   }
   .preview #app-root {
-    border: 2px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
   }
 </style>
