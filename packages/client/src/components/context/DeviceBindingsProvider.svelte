@@ -17,7 +17,7 @@
   }
 
   onMount(() => {
-    const doc = document.documentElement
+    const doc = document.getElementById("device-root")
     resizeObserver.observe(doc)
 
     return () => {
