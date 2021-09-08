@@ -26,7 +26,13 @@
     const id = $builderStore.selectedComponentId
     const parent = document.getElementsByClassName(id)?.[0]
     const element = parent?.childNodes?.[0]
-    const device = document.getElementById("device-root")
+
+    // The settings bar is higher in the dom tree than the selection indicators
+    // as we want to be able to render the settings bar wider than the screen,
+    // or outside the screen.
+    // Therefore we use the clip root rather than the app root to determine
+    // its position.
+    const device = document.getElementById("clip-root")
     if (element && self) {
       // Batch reads to minimize reflow
       const deviceBounds = device.getBoundingClientRect()
