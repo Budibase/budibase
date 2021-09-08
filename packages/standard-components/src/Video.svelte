@@ -13,7 +13,7 @@
   <!-- svelte-ignore a11y-media-has-caption -->
   <video
     src={url}
-    autoplay={$autoplay}
+    {autoplay}
     alt={$component.name}
     use:styleable={$component.styles}
     controls
