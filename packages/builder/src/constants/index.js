@@ -34,4 +34,4 @@ export const LAYOUT_NAMES = {
 
 export const BUDIBASE_INTERNAL_DB = "bb_internal"
 
-export const APP_NAME_REGEX = /^[\w\s]+$/
+export const APP_NAME_REGEX = /^[\w\u4E00-\u9FA5\uF900-\uFA2D\s]+$/

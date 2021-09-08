@@ -29,6 +29,7 @@
     analytics: !analytics.disabled(),
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
+    helpUrl: $organisation.helpUrl,
     logo: $organisation.logoUrl
       ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
       : null,
@@ -65,6 +66,7 @@
     const config = {
       company: $values.company ?? "",
       platformUrl: $values.platformUrl ?? "",
+      helpUrl: $values.helpUrl ?? "",
     }
     // remove logo if required
     if (!$values.logo) {
@@ -131,6 +133,10 @@
       <div class="field">
         <Label size="L">{$t("platform-url")}</Label>
         <Input thin bind:value={$values.platformUrl} />
+      </div>
+      <div class="field">
+        <Label size="L">{$t("help-url")}</Label>
+        <Input thin bind:value={$values.helpUrl} />
       </div>
     </div>
     <Divider size="S" />

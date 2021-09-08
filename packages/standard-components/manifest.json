@@ -14,7 +14,8 @@
       {
         "type": "text",
         "label": "Logo URL",
-        "key": "logoUrl"
+        "key": "logoUrl",
+        "defaultValue": "/global/settings/logoUrl"
       },
       {
         "type": "text",

@@ -4,6 +4,7 @@ import { auth } from "stores/portal"
 
 const DEFAULT_CONFIG = {
   platformUrl: "http://localhost:10000",
+  helpUrl: "https://github.com/Budibase/budibase/discussions",
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",

@@ -148,7 +148,9 @@
       "Enter {field}"
     ],
     "src/components/feedback/NPSFeedbackForm.svelte": [
-      "NOT LIKELY"
+      "NOT LIKELY",
+      "How likely are you to recommend {$organisation.company} to a colleague?",
+      "{ $t('how-likely-are-you-to-recommend') } {$organisation.company} to a colleague?"
     ],
     "src/components/design/PropertiesPanel/PropertyControls/SectionSelect.svelte": [
       " dispatch(\"change\", selected)}\n    size=\"L\"\n    title=\"Select layout\"\n  >\n    ",

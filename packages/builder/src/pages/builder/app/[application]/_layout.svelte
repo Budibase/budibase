@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
   import { Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
@@ -7,7 +8,7 @@
   import VersionModal from "components/deploy/VersionModal.svelte"
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin, organisation } from "stores/portal"
   import { isActive, goto, layout } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
@@ -59,6 +60,11 @@
       return state
     })
   }
+  onMount(async () => {
+    if (!$organisation.logoUrl) {
+      await organisation.init()
+    }
+  })
 </script>
 
 {#await promise}
@@ -70,8 +76,8 @@
       <div class="topleftnav">
         <button class="home-logo">
           <img
-            src={Logo}
-            alt="budibase icon"
+            src={$organisation.logoUrl || Logo}
+            alt="logo"
             on:click={() => $goto(`../../portal/`)}
           />
         </button>

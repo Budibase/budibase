@@ -7,10 +7,19 @@
   import { parse, stringify } from "qs"
   import HelpIcon from "components/common/HelpIcon.svelte"
   import { initI18n } from "builderStore/store/i18n.js"
+  import { organisation } from "./stores/portal"
 
   initI18n()
 
   onMount(async () => {
+    if (!$organisation.logoUrl) {
+      await organisation.init()
+      document.title = $organisation.company
+      let $favicon = document.createElement("link");
+      $favicon.rel = "icon";
+      $favicon.href = $organisation.logoUrl;
+      document.head.appendChild($favicon);
+    }
     await initialise()
   })
 

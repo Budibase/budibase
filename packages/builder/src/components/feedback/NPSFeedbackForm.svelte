@@ -1,6 +1,6 @@
 <script>
   import analytics from "analytics"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import {
     ActionButton,
@@ -14,7 +14,7 @@
     Divider,
     Layout,
   } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
   import { _ as t } from "svelte-i18n"
 
   let step = 0
@@ -62,6 +62,12 @@
     })
     dispatch("complete")
   }
+
+  onMount(async () => {
+    if (!$organisation.logoUrl) {
+      await organisation.init()
+    }
+  })
 </script>
 
 <div
@@ -80,9 +86,9 @@
     <Layout gap="XS">
       {#if step === 0}
         <Heading size="XS"
-          >{$t(
-            "how-likely-are-you-to-recommend-budibase-to-a-colleague"
-          )}</Heading
+          >{$t("how-likely-are-you-to-recommend")}
+          {$organisation.company}
+          {$t("to-a-colleague")}</Heading
         >
         <Divider />
         <div class="ratings">
