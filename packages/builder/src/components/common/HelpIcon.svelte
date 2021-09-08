@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
-  
+
   onMount(async () => {
     if (!$organisation.logoUrl) {
       await organisation.init()
@@ -10,7 +10,11 @@
   })
 </script>
 
-<a target="_blank" href={$organisation.helpUrl || "https://github.com/Budibase/budibase/discussions"}>
+<a
+  target="_blank"
+  href={$organisation.helpUrl ||
+    "https://github.com/Budibase/budibase/discussions"}
+>
   <Icon hoverable name="Help" size="XXL" />
 </a>
 

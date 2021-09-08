@@ -15,10 +15,10 @@
     if (!$organisation.logoUrl) {
       await organisation.init()
       document.title = $organisation.company
-      let $favicon = document.createElement("link");
-      $favicon.rel = "icon";
-      $favicon.href = $organisation.logoUrl;
-      document.head.appendChild($favicon);
+      let $favicon = document.createElement("link")
+      $favicon.rel = "icon"
+      $favicon.href = $organisation.logoUrl
+      document.head.appendChild($favicon)
     }
     await initialise()
   })
