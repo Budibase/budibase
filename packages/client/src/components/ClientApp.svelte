@@ -93,9 +93,9 @@
               {/if}
             {/key}
 
-            <!-- Device boundary -->
+            <!-- Clip boundary for selection indicators -->
             <div
-              id="device-root"
+              id="clip-root"
               class:preview={$builderStore.inBuilder}
               class:tablet-preview={$builderStore.previewDevice === "tablet"}
               class:mobile-preview={$builderStore.previewDevice === "mobile"}
@@ -144,7 +144,7 @@
     justify-content: center;
     align-items: center;
   }
-  #device-root {
+  #clip-root {
     max-width: 100%;
     max-height: 100%;
     width: 100%;
@@ -188,14 +188,14 @@
 
   /* Preview styles */
   /* The additional 6px of size is to account for 4px padding and 2px border */
-  #device-root.preview {
+  #clip-root.preview {
     padding: 2px;
   }
-  #device-root.tablet-preview {
+  #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
-  #device-root.mobile-preview {
+  #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);
   }
