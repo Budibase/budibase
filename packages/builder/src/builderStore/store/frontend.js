@@ -43,6 +43,7 @@ const INITIAL_FRONTEND_STATE = {
     deviceAwareness: false,
     state: false,
     customThemes: false,
+    devicePreview: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
