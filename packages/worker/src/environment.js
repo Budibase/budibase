@@ -33,8 +33,6 @@ module.exports = {
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   SANDBOX: process.env.SANDBOX,
-  CORS_ORIGIN: process.env.CORS_ORIGIN,
-  CORS_CREDENTIALS: process.env.CORS_CREDENTIALS,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
