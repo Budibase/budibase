@@ -1,6 +1,8 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
+const CouchDB = require("../db")
+const { generateMetadataID } = require("../db/utils")
 
 const BB_CDN = "https://cdn.budi.live"
 
@@ -54,4 +56,27 @@ exports.attachmentsRelativeURL = attachmentKey => {
   return exports.checkSlashesInUrl(
     `${exports.objectStoreUrl()}/${attachmentKey}`
   )
+}
+
+exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
+  const db = new CouchDB(appId)
+  const id = generateMetadataID(type, entityId)
+  // read it to see if it exists, we'll overwrite it no matter what
+  let rev
+  try {
+    const oldMetadata = await db.get(id)
+    rev = oldMetadata._rev
+  } catch (err) {
+    rev = null
+  }
+  metadata._id = id
+  if (rev) {
+    metadata._rev = rev
+  }
+  const response = await db.put(metadata)
+  return {
+    ...metadata,
+    _id: id,
+    _rev: response.rev,
+  }
 }

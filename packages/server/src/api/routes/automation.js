@@ -9,6 +9,10 @@ const {
 } = require("@budibase/auth/permissions")
 const Joi = require("joi")
 const { bodyResource, paramResource } = require("../../middleware/resourceId")
+const {
+  middleware: appInfoMiddleware,
+  AppType,
+} = require("../../middleware/appInfo")
 
 const router = Router()
 
@@ -84,23 +88,25 @@ router
     generateValidator(false),
     controller.create
   )
+  .delete(
+    "/api/automations/:id/:rev",
+    paramResource("id"),
+    authorized(BUILDER),
+    controller.destroy
+  )
   .post(
     "/api/automations/:id/trigger",
+    appInfoMiddleware({ appType: AppType.PROD }),
     paramResource("id"),
     authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
     controller.trigger
   )
   .post(
     "/api/automations/:id/test",
+    appInfoMiddleware({ appType: AppType.DEV }),
     paramResource("id"),
     authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
     controller.test
-  )
-  .delete(
-    "/api/automations/:id/:rev",
-    paramResource("id"),
-    authorized(BUILDER),
-    controller.destroy
   )
 
 module.exports = router

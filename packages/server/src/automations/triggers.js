@@ -1,20 +1,12 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-const env = require("../environment")
-const Queue = env.isTest()
-  ? require("../utilities/queue/inMemoryQueue")
-  : require("bull")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
-const { utils } = require("@budibase/auth/redis")
-const { JobQueues } = require("../constants")
 const { definitions } = require("./triggerInfo")
 const { isDevAppID } = require("../db/utils")
 // need this to call directly, so we can get a response
 const { processEvent } = require("./utils")
-
-const { opts } = utils.getRedisOptions()
-let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
+const { queue } = require("./bullboard")
 
 const TRIGGER_DEFINITIONS = definitions
 
@@ -44,13 +36,12 @@ async function queueRelevantRowAutomations(event, eventType) {
     let automationDef = automation.definition
     let automationTrigger = automationDef ? automationDef.trigger : {}
     if (
-      !automation.live ||
       !automationTrigger.inputs ||
       automationTrigger.inputs.tableId !== event.row.tableId
     ) {
       continue
     }
-    await automationQueue.add({ automation, event })
+    await queue.add({ automation, event })
   }
 }
 
@@ -98,13 +89,8 @@ exports.externalTrigger = async function (
   if (getResponses) {
     return processEvent({ data })
   } else {
-    return automationQueue.add(data)
+    return queue.add(data)
   }
 }
-
-exports.getQueues = () => {
-  return [automationQueue]
-}
-exports.automationQueue = automationQueue
 
 exports.TRIGGER_DEFINITIONS = TRIGGER_DEFINITIONS
