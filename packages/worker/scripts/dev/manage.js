@@ -21,9 +21,6 @@ async function init() {
       COUCH_DB_PASSWORD: "budibase",
       // empty string is false
       MULTI_TENANCY: "",
-      // account portal cors configuration
-      CORS_ORIGIN: "http://localhost:3001",
-      CORS_CREDENTIALS: true,
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
