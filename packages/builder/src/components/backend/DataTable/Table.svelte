@@ -131,6 +131,7 @@
     allowEditRows={allowEditing}
     allowEditColumns={allowEditing && isInternal}
     showAutoColumns={!hideAutocolumns}
+    editColumnTitle={$t("edit")}
     on:editcolumn={e => editColumn(e.detail)}
     on:editrow={e => editRow(e.detail)}
     on:clickrelationship={e => selectRelationship(e.detail)}
