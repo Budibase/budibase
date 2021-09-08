@@ -214,7 +214,8 @@ exports.squashLinksToPrimaryDisplay = async (appId, table, enriched) => {
         }
         const newLinks = []
         for (let link of row[column]) {
-          const linkTblId = link.tableId || getRelatedTableForField(table, column)
+          const linkTblId =
+            link.tableId || getRelatedTableForField(table, column)
           const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
           const obj = { _id: link._id }
           if (link[linkedTable.primaryDisplay]) {
