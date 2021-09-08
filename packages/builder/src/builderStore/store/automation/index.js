@@ -78,8 +78,11 @@ const automationActions = store => ({
   },
   trigger: async ({ automation }) => {
     const { _id } = automation
-    const TRIGGER_AUTOMATION_URL = `/api/automations/${_id}/trigger`
-    return await api.post(TRIGGER_AUTOMATION_URL)
+    return await api.post(`/api/automations/${_id}/trigger`)
+  },
+  test: async ({ automation }) => {
+    const { _id } = automation
+    return await api.post(`/api/automations/${_id}/test`)
   },
   select: automation => {
     store.update(state => {

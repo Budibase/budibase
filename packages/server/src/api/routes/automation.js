@@ -88,6 +88,12 @@ router
     "/api/automations/:id/trigger",
     paramResource("id"),
     authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+    controller.trigger
+  )
+  .post(
+    "/api/automations/:id/test",
+    paramResource("id"),
+    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
     controller.test
   )
   .delete(

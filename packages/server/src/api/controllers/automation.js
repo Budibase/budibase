@@ -3,7 +3,12 @@ const actions = require("../../automations/actions")
 const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
 const webhooks = require("./webhook")
-const { getAutomationParams, generateAutomationID } = require("../../db/utils")
+const {
+  getAutomationParams,
+  generateAutomationID,
+  isDevAppID,
+  isProdAppID,
+} = require("../../db/utils")
 
 const WH_STEP_ID = triggers.TRIGGER_DEFINITIONS.WEBHOOK.stepId
 const CRON_STEP_ID = triggers.TRIGGER_DEFINITIONS.CRON.stepId
@@ -268,11 +273,19 @@ module.exports.getDefinitionList = async function (ctx) {
  *********************/
 
 exports.trigger = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const appId = ctx.appId
+  if (isDevAppID(appId)) {
+    // in dev apps don't throw an error, just don't trigger
+    ctx.body = {
+      message: "Automation not triggered, app in development.",
+    }
+    return
+  }
+  const db = new CouchDB(appId)
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {
     ...ctx.request.body,
-    appId: ctx.appId,
+    appId,
   })
   ctx.body = {
     message: `Automation ${automation._id} has been triggered.`,
@@ -281,17 +294,18 @@ exports.trigger = async function (ctx) {
 }
 
 exports.test = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
-  let automation = await db.get(ctx.params.id)
-  ctx.body = {
-    automation,
-    responses: await triggers.externalTrigger(
-      automation,
-      {
-        ...ctx.request.body,
-        appId: ctx.appId,
-      },
-      { getResponses: true }
-    ),
+  const appId = ctx.appId
+  if (isProdAppID(appId)) {
+    ctx.throw(400, "Cannot test automations in production app.")
   }
+  const db = new CouchDB(appId)
+  let automation = await db.get(ctx.params.id)
+  ctx.body = await triggers.externalTrigger(
+    automation,
+    {
+      ...ctx.request.body,
+      appId,
+    },
+    { getResponses: true }
+  )
 }

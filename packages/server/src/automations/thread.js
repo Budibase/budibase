@@ -30,6 +30,11 @@ class Orchestrator {
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
     this._emitter = new AutomationEmitter(this._chainCount + 1)
+    this.executionOutput = { trigger: {}, steps: [] }
+    // setup the execution output
+    const triggerStepId = automation.definition.trigger.stepId
+    const triggerId = automation.definition.trigger.id
+    this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
   }
 
   async getStepFunctionality(type, stepId) {
@@ -53,6 +58,15 @@ class Orchestrator {
     const db = new CouchDB(appId)
     this._app = await db.get(DocumentTypes.APP_METADATA)
     return this._app
+  }
+
+  updateExecutionOutput(id, stepId, inputs, outputs) {
+    const stepObj = { id, stepId, inputs, outputs }
+    // first entry is always the trigger (constructor)
+    if (this.executionOutput.steps.length === 0) {
+      this.executionOutput.trigger = stepObj
+    }
+    this.executionOutput.steps.push(stepObj)
   }
 
   async execute() {
@@ -81,12 +95,13 @@ class Orchestrator {
           break
         }
         this._context.steps.push(outputs)
+        this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       } catch (err) {
         console.error(`Automation error - ${step.stepId} - ${err}`)
         return err
       }
     }
-    return this._context
+    return this.executionOutput
   }
 }
 
