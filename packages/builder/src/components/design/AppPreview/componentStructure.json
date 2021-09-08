@@ -54,6 +54,7 @@
       "divider",
       "image",
       "backgroundimage",
+      "video",
       "link",
       "icon",
       "embed"

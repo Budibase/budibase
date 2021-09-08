@@ -807,6 +807,25 @@
       }
     ]
   },
+  "video": {
+    "name": "Video",
+    "description": "A basic component for displaying videos",
+    "icon": "VideoOutline",
+    "illegalChildren": ["section"],
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      },
+      {
+        "type": "boolean",
+        "label": "autoplay",
+        "key": "autoplay"
+      }
+    ]
+  },
   "backgroundimage": {
     "name": "Background Image",
     "description": "A background image",
