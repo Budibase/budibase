@@ -152,7 +152,9 @@
     {#if $currentAsset}
       <div class="preview-header">
         <ComponentSelectionList />
-        <DevicePreviewSelect />
+        {#if $store.clientFeatures.devicePreview}
+          <DevicePreviewSelect />
+        {/if}
         {#if $store.clientFeatures.customThemes}
           <ThemeEditor />
         {:else if $store.clientFeatures.spectrumThemes}
