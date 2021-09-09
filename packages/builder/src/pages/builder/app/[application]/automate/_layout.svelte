@@ -40,7 +40,7 @@
     {/if}
   </div>
   <Modal bind:this={modal}>
-    <CreateAutomationModal webhookModal />
+    <CreateAutomationModal {webhookModal} />
   </Modal>
   <Modal bind:this={webhookModal} width="30%">
     <CreateWebhookModal />
