@@ -2,11 +2,9 @@ require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
-const fetch = require("node-fetch")
 const uuid = require("uuid")
 const { ObjectStoreBuckets } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
-const { budibaseTempDir } = require("../../../utilities/budibaseDir")
 const { getDeployedApps } = require("../../../utilities/workerRequests")
 const CouchDB = require("../../../db")
 const {
@@ -15,7 +13,7 @@ const {
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const { objectStoreUrl, clientLibraryPath } = require("../../../utilities")
+const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
@@ -49,9 +47,6 @@ async function checkForSelfHostedURL(ctx) {
     return ctx.params.appId
   }
 }
-
-// this was the version before we started versioning the component library
-const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
@@ -108,37 +103,4 @@ exports.serveClientLibrary = async function (ctx) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
-}
-
-exports.serveComponentLibrary = async function (ctx) {
-  const appId = ctx.query.appId || ctx.appId
-
-  if (env.isDev() || env.isTest()) {
-    const componentLibraryPath = join(
-      budibaseTempDir(),
-      appId,
-      "node_modules",
-      "@budibase",
-      "standard-components",
-      "package",
-      "dist"
-    )
-    return send(ctx, "/index.js", { root: componentLibraryPath })
-  }
-  const db = new CouchDB(appId)
-  const appInfo = await db.get(DocumentTypes.APP_METADATA)
-
-  let componentLib = "componentlibrary"
-  if (appInfo && appInfo.version) {
-    componentLib += `-${appInfo.version}`
-  } else {
-    componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
-  }
-  const S3_URL = encodeURI(
-    join(objectStoreUrl(), componentLib, ctx.query.library, "dist", "index.js")
-  )
-  const response = await fetch(S3_URL)
-  const body = await response.text()
-  ctx.type = "application/javascript"
-  ctx.body = body
 }

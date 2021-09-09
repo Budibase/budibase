@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { builderStore } from "../store"
+import { builderStore } from "stores"
 
 /**
  * Helper to build a CSS string from a style object.

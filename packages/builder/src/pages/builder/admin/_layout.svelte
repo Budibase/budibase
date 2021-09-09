@@ -6,7 +6,7 @@
   let loaded = false
 
   onMount(() => {
-    if ($admin?.checklist?.adminUser) {
+    if ($admin?.checklist?.adminUser.checked) {
       $redirect("../")
     } else {
       loaded = true

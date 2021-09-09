@@ -5,12 +5,12 @@ import {
   routeStore,
   screenStore,
   builderStore,
-} from "./store"
-import { styleable } from "./utils/styleable"
-import { linkable } from "./utils/linkable"
-import { getAction } from "./utils/getAction"
-import Provider from "./components/Provider.svelte"
-import { ActionTypes } from "./constants"
+} from "stores"
+import { styleable } from "utils/styleable"
+import { linkable } from "utils/linkable"
+import { getAction } from "utils/getAction"
+import Provider from "components/context/Provider.svelte"
+import { ActionTypes } from "constants"
 
 export default {
   API,

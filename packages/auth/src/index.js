@@ -11,6 +11,7 @@ const {
   oidc,
   auditLog,
   tenancy,
+  appTenancy,
 } = require("./middleware")
 const { setDB } = require("./db")
 const userCache = require("./cache/user")
@@ -57,6 +58,7 @@ module.exports = {
     oidc,
     jwt: require("jsonwebtoken"),
     buildTenancyMiddleware: tenancy,
+    buildAppTenancyMiddleware: appTenancy,
     auditLog,
   },
   cache: {

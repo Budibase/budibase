@@ -1,11 +1,9 @@
 <script>
   import { writable } from "svelte/store"
   import { setContext, onMount } from "svelte"
+  import { Layout, Heading, Body } from "@budibase/bbui"
   import Component from "./Component.svelte"
-  import NotificationDisplay from "./NotificationDisplay.svelte"
-  import ConfirmationDisplay from "./ConfirmationDisplay.svelte"
-  import PeekScreenDisplay from "./PeekScreenDisplay.svelte"
-  import SDK from "../sdk"
+  import SDK from "sdk"
   import {
     createContextStore,
     initialise,
@@ -13,16 +11,19 @@
     authStore,
     routeStore,
     builderStore,
-    appStore,
-  } from "../store"
-  import SettingsBar from "./preview/SettingsBar.svelte"
-  import SelectionIndicator from "./preview/SelectionIndicator.svelte"
-  import HoverIndicator from "./preview/HoverIndicator.svelte"
-  import { Layout, Heading, Body } from "@budibase/bbui"
+    themeStore,
+  } from "stores"
+  import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
+  import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
+  import PeekScreenDisplay from "components/overlay/PeekScreenDisplay.svelte"
+  import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
+  import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
+  import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
+  import SettingsBar from "components/preview/SettingsBar.svelte"
+  import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
+  import HoverIndicator from "components/preview/HoverIndicator.svelte"
+  import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import ErrorSVG from "../../../builder/assets/error.svg"
-  import UserBindingsProvider from "./UserBindingsProvider.svelte"
-  import DeviceBindingsProvider from "./DeviceBindingsProvider.svelte"
-  import StateBindingsProvider from "./StateBindingsProvider.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -63,9 +64,6 @@
       }
     }
   }
-
-  $: themeClass =
-    $builderStore.theme || $appStore.application?.theme || "spectrum--light"
 </script>
 
 {#if dataLoaded}
@@ -73,7 +71,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {themeClass}"
+    class="spectrum spectrum--medium {$themeStore.theme}"
   >
     {#if permissionError}
       <div class="error">
@@ -87,11 +85,13 @@
       <UserBindingsProvider>
         <DeviceBindingsProvider>
           <StateBindingsProvider>
-            <div id="app-root" class:preview={$builderStore.inBuilder}>
-              {#key $screenStore.activeLayout._id}
-                <Component instance={$screenStore.activeLayout.props} />
-              {/key}
-            </div>
+            <CustomThemeWrapper>
+              <div id="app-root" class:preview={$builderStore.inBuilder}>
+                {#key $screenStore.activeLayout._id}
+                  <Component instance={$screenStore.activeLayout.props} />
+                {/key}
+              </div>
+            </CustomThemeWrapper>
             <NotificationDisplay />
             <ConfirmationDisplay />
             <PeekScreenDisplay />
@@ -131,28 +131,6 @@
   #app-root.preview {
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
-
-  /* Custom scrollbars */
-  :global(::-webkit-scrollbar) {
-    width: 8px;
-    height: 8px;
-  }
-  :global(::-webkit-scrollbar-track) {
-    background: var(--spectrum-alias-background-color-default);
-  }
-  :global(::-webkit-scrollbar-thumb) {
-    background-color: var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-  }
-  :global(::-webkit-scrollbar-corner) {
-    background: var(--spectrum-alias-background-color-default);
-  }
-  :global(*) {
-    scrollbar-width: thin;
-    scrollbar-color: var(--spectrum-global-color-gray-400)
-      var(--spectrum-alias-background-color-default);
-  }
-
   .error {
     position: absolute;
     width: 100%;

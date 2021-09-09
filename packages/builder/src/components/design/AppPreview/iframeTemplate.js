@@ -66,7 +66,8 @@ export default `
           screen,
           previewType,
           appId,
-          theme
+          theme,
+          customTheme
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -78,6 +79,7 @@ export default `
         window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
         window["##BUDIBASE_PREVIEW_TYPE##"] = previewType
         window["##BUDIBASE_PREVIEW_THEME##"] = theme
+        window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"] = customTheme
 
         // Initialise app
         try {
