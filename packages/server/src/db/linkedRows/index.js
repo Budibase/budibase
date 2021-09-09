@@ -203,19 +203,17 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
 exports.squashLinksToPrimaryDisplay = async (appId, table, enriched) => {
   const db = new CouchDB(appId)
   // will populate this as we find them
-  const linkedTables = []
-  for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.LINK) {
-      continue
-    }
-    for (let row of enriched) {
-      if (!row[column] || !row[column].length) {
+  const linkedTables = [table]
+  for (let row of enriched) {
+    // this only fetches the table if its not already in array
+    const rowTable = await getLinkedTable(db, row.tableId, linkedTables)
+    for (let [column, schema] of Object.entries(rowTable.schema)) {
+      if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
         continue
       }
       const newLinks = []
       for (let link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
-        // this only fetches the table if its not already in array
         const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
         const obj = { _id: link._id }
         if (link[linkedTable.primaryDisplay]) {

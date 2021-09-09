@@ -3,6 +3,7 @@
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
+  import { cloneDeep } from "lodash"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
@@ -197,7 +198,7 @@
 
   const editRow = (e, row) => {
     e.stopPropagation()
-    dispatch("editrow", row)
+    dispatch("editrow", cloneDeep(row))
   }
 
   const toggleSelectRow = row => {

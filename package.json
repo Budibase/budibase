@@ -20,7 +20,6 @@
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna link && lerna bootstrap",
     "build": "lerna run build",
-    "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
     "release": "yarn build && lerna publish patch --yes --force-publish",
