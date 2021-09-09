@@ -21,9 +21,7 @@ exports.doInTenant = (tenantId, task) => {
     cls.setOnContext(TENANT_ID, tenantId)
 
     // invoke the task
-    const result = task()
-
-    return result
+    return task()
   })
 }
 

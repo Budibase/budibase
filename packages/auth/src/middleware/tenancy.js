@@ -2,7 +2,11 @@ const { setTenantId } = require("../tenancy")
 const ContextFactory = require("../tenancy/FunctionContext")
 const { buildMatcherRegex, matches } = require("./matchers")
 
-module.exports = (allowQueryStringPatterns, noTenancyPatterns, opts = {}) => {
+module.exports = (
+  allowQueryStringPatterns,
+  noTenancyPatterns,
+  opts = { noTenancyRequired: false }
+) => {
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
   const noTenancyOptions = buildMatcherRegex(noTenancyPatterns)
 
