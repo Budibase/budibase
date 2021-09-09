@@ -13,8 +13,8 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 
 # copy files and install dependencies
 COPY . ./
-# RUN yarn
-# RUN yarn build
+RUN yarn
+RUN yarn build
 
 EXPOSE 4001
 
