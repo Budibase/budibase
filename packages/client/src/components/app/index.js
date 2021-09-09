@@ -7,9 +7,6 @@ import "@spectrum-css/vars/dist/spectrum-dark.css"
 import "@spectrum-css/vars/dist/spectrum-darkest.css"
 import "@spectrum-css/page/dist/index-vars.css"
 
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
-loadSpectrumIcons()
-
 // Non user-facing components
 export { default as Placeholder } from "./Placeholder.svelte"
 

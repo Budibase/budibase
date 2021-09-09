@@ -2,7 +2,7 @@
   import { setContext, getContext } from "svelte"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { generateID } from "../helpers"
+  import { generateID } from "utils/helpers"
 
   export let dataSource
   export let disabled = false

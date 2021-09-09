@@ -9,11 +9,12 @@
     ActionMenu,
     MenuItem,
   } from "@budibase/bbui"
-  import actionTypes from "./actions"
+  import { getAvailableActions } from "./actions"
   import { generate } from "shortid"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
+  const actionTypes = getAvailableActions()
 
   export let actions
   export let bindings = []
