@@ -24,6 +24,7 @@
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
+    "publishjqnpm": "yarn lerna publish --registry http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm/ --force-publish",
     "release": "yarn build && lerna publish patch --yes --force-publish",
     "release:develop": "yarn build && lerna publish prerelease --yes --force-publish --dist-tag develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
