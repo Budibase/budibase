@@ -1,8 +1,0 @@
-:root {
-  --spectrum-dropindicator-border-color: var(--spectrum-global-color-blue-400);
-  --spectrum-dropindicator-circle-border-color: var(--spectrum-global-color-blue-400);
-  --spectrum-dropindicator-circle-border-fill: var(--spectrum-alias-background-color-transparent);
-  --spectrum-dropindicator-border-size: var(--spectrum-alias-border-size-thick);
-  --spectrum-dropindicator-circle-border-size: var(--spectrum-alias-border-size-thick);
-  --spectrum-dropindicator-circle-size: var(--spectrum-global-dimension-static-size-150);
-}

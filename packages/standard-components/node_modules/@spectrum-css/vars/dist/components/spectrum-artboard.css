@@ -1,6 +1,0 @@
-.spectrum {
-  --spectrum-artboard-border-color: var(--spectrum-global-color-gray-400);
-  --spectrum-artboard-border-color-active: var(--spectrum-global-color-gray-600);
-  --spectrum-artboard-border-color-selected: var(--spectrum-global-color-blue-400);
-  --spectrum-artboard-border-size: var(--spectrum-alias-border-size-thin);
-}
