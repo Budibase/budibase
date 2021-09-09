@@ -56,9 +56,13 @@ function init() {
   if (CLIENT) {
     CLIENT.disconnect()
   }
-  const { opts, host, port } = getRedisOptions(CLUSTERED)
+
+  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+
   if (CLUSTERED) {
     CLIENT = new Redis.Cluster([{ host, port }], opts)
+  } else if (redisProtocolUrl) {
+    CLIENT = new Redis(redisProtocolUrl)
   } else {
     CLIENT = new Redis(opts)
   }
