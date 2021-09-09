@@ -938,6 +938,150 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+<<<<<<< HEAD
+=======
+"@budibase/auth@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.123-alpha.1.tgz#48e011b2afbf0133ebcd564416d0f2399a107b82"
+  integrity sha512-mI0rN0uwCCVjQiwfELjgIm2WpUHfDdzD84lSumRQ8HWAXywD94MdR/qe+B1r7YqjboXxC5SWydoiOivU7jhaTA==
+  dependencies:
+    "@techpass/passport-openidconnect" "^0.3.0"
+    aws-sdk "^2.901.0"
+    bcryptjs "^2.4.3"
+    cls-hooked "^4.2.2"
+    ioredis "^4.27.1"
+    jsonwebtoken "^8.5.1"
+    koa-passport "^4.1.4"
+    lodash "^4.17.21"
+    node-fetch "^2.6.1"
+    passport-google-auth "^1.0.2"
+    passport-google-oauth "^2.0.0"
+    passport-jwt "^4.0.0"
+    passport-local "^1.0.0"
+    sanitize-s3-objectkey "^0.0.1"
+    tar-fs "^2.1.1"
+    uuid "^8.3.2"
+    zlib "^1.0.5"
+
+"@budibase/bbui@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.123-alpha.1.tgz#704b693938efdb23eed9d1f089ad86a7f06f35d0"
+  integrity sha512-QGeR3f/xsalkRC3/HRUdG7VaNakYK9MCL3819M5bQxMjyhVoFdZw18mnc7zNfcCL3kTyw0C6capJULho4ic+AA==
+  dependencies:
+    "@adobe/spectrum-css-workflow-icons" "^1.2.1"
+    "@spectrum-css/actionbutton" "^1.0.1"
+    "@spectrum-css/actiongroup" "^1.0.1"
+    "@spectrum-css/avatar" "^3.0.2"
+    "@spectrum-css/button" "^3.0.1"
+    "@spectrum-css/buttongroup" "^3.0.2"
+    "@spectrum-css/checkbox" "^3.0.2"
+    "@spectrum-css/dialog" "^3.0.1"
+    "@spectrum-css/divider" "^1.0.3"
+    "@spectrum-css/dropzone" "^3.0.2"
+    "@spectrum-css/fieldgroup" "^3.0.2"
+    "@spectrum-css/fieldlabel" "^3.0.1"
+    "@spectrum-css/icon" "^3.0.1"
+    "@spectrum-css/illustratedmessage" "^3.0.2"
+    "@spectrum-css/inputgroup" "^3.0.2"
+    "@spectrum-css/label" "^2.0.10"
+    "@spectrum-css/link" "^3.1.1"
+    "@spectrum-css/menu" "^3.0.1"
+    "@spectrum-css/modal" "^3.0.1"
+    "@spectrum-css/pagination" "^3.0.3"
+    "@spectrum-css/picker" "^1.0.1"
+    "@spectrum-css/popover" "^3.0.1"
+    "@spectrum-css/progressbar" "^1.0.2"
+    "@spectrum-css/progresscircle" "^1.0.2"
+    "@spectrum-css/radio" "^3.0.2"
+    "@spectrum-css/search" "^3.0.2"
+    "@spectrum-css/sidenav" "^3.0.2"
+    "@spectrum-css/statuslight" "^3.0.2"
+    "@spectrum-css/stepper" "^3.0.3"
+    "@spectrum-css/switch" "^1.0.2"
+    "@spectrum-css/table" "^3.0.1"
+    "@spectrum-css/tabs" "^3.0.1"
+    "@spectrum-css/tags" "^3.0.2"
+    "@spectrum-css/textfield" "^3.0.1"
+    "@spectrum-css/toast" "^3.0.1"
+    "@spectrum-css/tooltip" "^3.0.3"
+    "@spectrum-css/treeview" "^3.0.2"
+    "@spectrum-css/typography" "^3.0.1"
+    "@spectrum-css/underlay" "^2.0.9"
+    "@spectrum-css/vars" "^3.0.1"
+    dayjs "^1.10.4"
+    svelte-flatpickr "^3.1.0"
+    svelte-portal "^1.0.0"
+
+"@budibase/client@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.123-alpha.1.tgz#a70199937c546544a2750e4273c8347e2fddab53"
+  integrity sha512-s/diiHoN/1kd2JavHy+otYDryfH3ijdjna/jqsZYPK/6Y9ZGcHwtVL43+VVtz9YlBw5aD4Av+YW2t1sqNHCsJw==
+  dependencies:
+    "@budibase/bbui" "^0.9.123-alpha.1"
+    "@budibase/standard-components" "^0.9.123-alpha.1"
+    "@budibase/string-templates" "^0.9.123-alpha.1"
+    regexparam "^1.3.0"
+    shortid "^2.2.15"
+    svelte-spa-router "^3.0.5"
+
+"@budibase/handlebars-helpers@^0.11.4":
+  version "0.11.5"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.5.tgz#e9cc90a44e94ad536992cf10906829b633e94bc5"
+  integrity sha512-ZxpyNtTHxS8Y+yTicbgWvYDAydooUSjOf3Y+wmTE2d4NpDgO0g0IjepLfZV+KASv9XBr//ylJdjE4hClX9NTFw==
+  dependencies:
+    array-sort "^1.0.0"
+    define-property "^2.0.2"
+    extend-shallow "^3.0.2"
+    "falsey" "^1.0.0"
+    for-in "^1.0.2"
+    get-object "^0.2.0"
+    get-value "^3.0.1"
+    handlebars "^4.7.7"
+    handlebars-utils "^1.0.6"
+    has-value "^2.0.2"
+    helper-date "^1.0.1"
+    helper-markdown "^1.0.0"
+    helper-md "^0.2.2"
+    html-tag "^2.0.0"
+    is-even "^1.0.0"
+    is-glob "^4.0.1"
+    kind-of "^6.0.3"
+    micromatch "^3.1.5"
+    relative "^3.0.2"
+    striptags "^3.1.1"
+    to-gfm-code-block "^0.1.1"
+    year "^0.2.1"
+
+"@budibase/standard-components@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.123-alpha.1.tgz#944e4906e88ce9f8be6a26dc46d50afa17ef3a58"
+  integrity sha512-tCaiOhmmLAOBh+A8rFXnPHKZaSYRK7xlrI23r1IRgvDTkmuflr0o/VrRBVQuaxwWClKQPGkQ3wgnOJgXvk6CgQ==
+  dependencies:
+    "@budibase/bbui" "^0.9.123-alpha.1"
+    "@spectrum-css/button" "^3.0.3"
+    "@spectrum-css/card" "^3.0.3"
+    "@spectrum-css/divider" "^1.0.3"
+    "@spectrum-css/link" "^3.1.3"
+    "@spectrum-css/page" "^3.0.1"
+    "@spectrum-css/typography" "^3.0.2"
+    "@spectrum-css/vars" "^3.0.1"
+    apexcharts "^3.22.1"
+    dayjs "^1.10.5"
+    svelte-apexcharts "^1.0.2"
+    svelte-flatpickr "^3.1.0"
+
+"@budibase/string-templates@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.123-alpha.1.tgz#6b2e718478d98aa8ba046ad23e7190894360906a"
+  integrity sha512-Id5AUdzTiYKGo/TTU3cuy1m4hS1Wy66hMIxVCM6GKoEnDinEB/rEA6IwP3IDFyTs2Uld8uWLBnEru93sP982AQ==
+  dependencies:
+    "@budibase/handlebars-helpers" "^0.11.4"
+    dayjs "^1.10.4"
+    handlebars "^4.7.6"
+    handlebars-utils "^1.0.6"
+    lodash "^4.17.20"
+
+>>>>>>> 1b1675747cf86f9db1c6c0248eda226a387dff2d
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -2497,10 +2641,35 @@ atomic-sleep@^1.0.0:
   resolved "https://registry.yarnpkg.com/atomic-sleep/-/atomic-sleep-1.0.0.tgz#eb85b77a601fc932cfe432c5acd364a9e2c9075b"
   integrity sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==
 
+<<<<<<< HEAD
+=======
+autolinker@~0.28.0:
+  version "0.28.1"
+  resolved "https://registry.yarnpkg.com/autolinker/-/autolinker-0.28.1.tgz#0652b491881879f0775dace0cdca3233942a4e47"
+  integrity sha1-BlK0kYgYefB3XazgzcoyM5QqTkc=
+  dependencies:
+    gulp-header "^1.7.1"
+
+>>>>>>> 1b1675747cf86f9db1c6c0248eda226a387dff2d
 aws-sdk@^2.767.0:
   version "2.981.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.981.0.tgz#b2e6205db23d755e1c8fcbd0618e8309e69d3767"
   integrity sha512-Itrj9O1zmPm/HupwUiWBhoMTuSjLQzsBcEpxHgLQmUPRv2pxud8kq5DbuKdS2tLlBFMuKx4OLcs9x5RbNOfj5A==
+  dependencies:
+    buffer "4.9.2"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
+aws-sdk@^2.901.0:
+  version "2.979.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.979.0.tgz#d0104fec763cc3eafb123e709f94866790109da4"
+  integrity sha512-pKKhpYZwmihCvuH3757WHY8JQI9g2wvtF3s0aiyH2xCUmX/6uekhExz/utD4uqZP3m3PwKZPGQkQkH30DtHrPw==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -7573,7 +7742,7 @@ mute-stream@0.0.8:
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
-mysql@2.18.1:
+mysql@^2.18.1:
   version "2.18.1"
   resolved "https://registry.yarnpkg.com/mysql/-/mysql-2.18.1.tgz#2254143855c5a8c73825e4522baf2ea021766717"
   integrity sha512-Bca+gk2YWmqp2Uf6k5NFEurwY/0td0cpebAucFpY/3jhrwrVGuxU2uQFCHjU19SJfje0yQvi+rVWdq78hR5lig==
@@ -10307,6 +10476,19 @@ typescript@^4.3.5:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.5.tgz#4d1c37cc16e893973c45a06886b7113234f119f4"
   integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
 
+<<<<<<< HEAD
+=======
+uglify-js@^3.1.4:
+  version "3.14.2"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.14.2.tgz#d7dd6a46ca57214f54a2d0a43cad0f35db82ac99"
+  integrity sha512-rtPMlmcO4agTUfz10CbgJ1k6UAoXM2gWb3GoMPPZB/+/Ackf8lNWk11K4rYi2D0apgoFRLtQOZhb+/iGNJq26A==
+
+uid2@0.0.x:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/uid2/-/uid2-0.0.4.tgz#033f3b1d5d32505f5ce5f888b9f3b667123c0a44"
+  integrity sha512-IevTus0SbGwQzYh3+fRsAMTVVPOoIVufzacXcHPmdlle1jUpq7BRL+mw3dgeLanvGZdwwbWhRV6XrcFNdBmjWA==
+
+>>>>>>> 1b1675747cf86f9db1c6c0248eda226a387dff2d
 unbox-primitive@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/unbox-primitive/-/unbox-primitive-1.0.1.tgz#085e215625ec3162574dc8859abee78a59b14471"
