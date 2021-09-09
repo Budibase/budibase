@@ -19,6 +19,7 @@ const AppStatus = {
 
 const DocumentTypes = {
   APP: CoreDocTypes.APP,
+  DEV: CoreDocTypes.DEV,
   APP_DEV: CoreDocTypes.APP_DEV,
   APP_METADATA: CoreDocTypes.APP_METADATA,
   ROLE: CoreDocTypes.ROLE,
