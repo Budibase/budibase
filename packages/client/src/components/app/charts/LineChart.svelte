@@ -77,7 +77,9 @@
     }))
     builder = builder.series(series)
     if (!useDates) {
-      builder = builder.categories(data.map(row => row[labelColumn]))
+      builder = builder.xCategories(data.map(row => row[labelColumn]))
+    } else {
+      builder = builder.clearXFormatter()
     }
 
     // Build chart options
