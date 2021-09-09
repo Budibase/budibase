@@ -8,6 +8,7 @@ const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 
 exports.Databases = {
   PW_RESETS: "pwReset",
+  VERIFICATIONS: "verification",
   INVITATIONS: "invitation",
   DEV_LOCKS: "devLocks",
   DEBOUNCE: "debounce",
