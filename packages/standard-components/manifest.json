@@ -807,6 +807,20 @@
       }
     ]
   },
+  "gis": {
+    "name": "GIS",
+    "description": "A basic component for displaying gis",
+    "icon": "GlobeOutline",
+    "illegalChildren": ["section"],
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "text",
+        "label": "URL",
+        "key": "url"
+      }
+    ]
+  },
   "video": {
     "name": "Video",
     "description": "A basic component for displaying videos",
@@ -1871,7 +1885,7 @@
       {
         "type": "validation/string",
         "label": "Validation",
-        "key": "validation"
+        "key": "validation" 
       }
     ]
   },
