@@ -57,7 +57,7 @@ function init() {
     CLIENT.disconnect()
   }
   
-    const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
 
   if (CLUSTERED) {
     CLIENT = new Redis.Cluster([{ host, port }], opts)
