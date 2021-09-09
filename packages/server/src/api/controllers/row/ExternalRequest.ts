@@ -276,7 +276,7 @@ module External {
     }
 
     outputProcessing(
-      rows: Row[],
+      rows: Row[] = [],
       table: Table,
       relationships: RelationshipsJson[]
     ) {

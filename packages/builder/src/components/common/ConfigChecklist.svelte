@@ -7,13 +7,7 @@
     ProgressCircle,
   } from "@budibase/bbui"
   import { admin } from "stores/portal"
-
-  const MESSAGES = {
-    apps: "Create your first app",
-    smtp: "Set up email",
-    adminUser: "Create your first user",
-    sso: "Set up single sign-on",
-  }
+  import { goto } from "@roxi/routify"
 </script>
 
 <ActionMenu>
@@ -28,9 +22,12 @@
   </MenuItem>
   {#each Object.keys($admin.checklist) as checklistItem, idx}
     <MenuItem>
-      <div class="item">
-        <span>{idx + 1}. {MESSAGES[checklistItem]}</span>
-        <Checkbox value={!!$admin.checklist[checklistItem]} />
+      <div
+        class="item"
+        on:click={() => $goto($admin.checklist[checklistItem].link)}
+      >
+        <span>{idx + 1}. {$admin.checklist[checklistItem].label}</span>
+        <Checkbox value={$admin.checklist[checklistItem].checked} />
       </div>
     </MenuItem>
   {/each}

@@ -248,10 +248,26 @@ exports.configChecklist = async function (ctx) {
     const adminUser = users.rows.some(row => row.doc.admin)
 
     ctx.body = {
-      apps: apps.length,
-      smtp: !!smtpConfig,
-      adminUser,
-      sso: !!googleConfig || !!oidcConfig,
+      apps: {
+        checked: apps.length > 0,
+        label: "Create your first app",
+        link: "/builder/portal/apps",
+      },
+      smtp: {
+        checked: !!smtpConfig,
+        label: "Set up email",
+        link: "/builder/portal/manage/email",
+      },
+      adminUser: {
+        checked: adminUser,
+        label: "Create your first user",
+        link: "/builder/portal/manage/users",
+      },
+      sso: {
+        checked: !!googleConfig || !!oidcConfig,
+        label: "Set up single sign-on",
+        link: "/builder/portal/manage/auth",
+      },
     }
   } catch (err) {
     ctx.throw(err.status, err)
