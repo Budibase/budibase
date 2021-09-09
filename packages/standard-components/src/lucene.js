@@ -105,12 +105,12 @@ export const luceneQuery = (docs, query) => {
 
   // Process an equal match (fails if the value is different)
   const equalMatch = match("equal", (key, value, doc) => {
-    return doc[key] !== value
+    return value != null && value !== "" && doc[key] !== value
   })
 
   // Process a not-equal match (fails if the value is the same)
   const notEqualMatch = match("notEqual", (key, value, doc) => {
-    return doc[key] === value
+    return value != null && value !== "" && doc[key] === value
   })
 
   // Process an empty match (fails if the value is not empty)

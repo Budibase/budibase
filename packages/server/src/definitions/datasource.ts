@@ -42,7 +42,7 @@ export enum SourceNames {
 
 export enum IncludeRelationships {
   INCLUDE = 1,
-  EXCLUDE = 0
+  EXCLUDE = 0,
 }
 
 export interface QueryDefinition {

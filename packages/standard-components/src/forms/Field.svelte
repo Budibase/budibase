@@ -25,6 +25,7 @@
   const labelPosition = fieldGroupContext?.labelPosition || "above"
   const formField = formApi?.registerField(
     field,
+    type,
     defaultValue,
     disabled,
     validation,

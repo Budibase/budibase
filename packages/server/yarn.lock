@@ -943,10 +943,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.121":
-  version "0.9.121"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.121.tgz#509ba49ca542fa741424b9a1310cf8e16dc59eeb"
-  integrity sha512-SQbp6PsIg0C9IMFMBaFJ8UgJdantheOrCjphMCxpaq3rATl2MOsh9koyo5R/WMYYeBtdG7V+WKd4O5kBUtrfXQ==
+"@budibase/auth@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.123-alpha.1.tgz#48e011b2afbf0133ebcd564416d0f2399a107b82"
+  integrity sha512-mI0rN0uwCCVjQiwfELjgIm2WpUHfDdzD84lSumRQ8HWAXywD94MdR/qe+B1r7YqjboXxC5SWydoiOivU7jhaTA==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -966,10 +966,10 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-"@budibase/bbui@^0.9.121":
-  version "0.9.121"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.121.tgz#d374f2856c8e335b0167440dbc2819671203be58"
-  integrity sha512-60zNUJ/Nil8yfWdKgjAo4Xxk3mbxipCpZBIgGl/RuE0r6Am0oylRx8pRMmwHaQ92cofbXwApWyC/9VLQQGSJzw==
+"@budibase/bbui@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.123-alpha.1.tgz#704b693938efdb23eed9d1f089ad86a7f06f35d0"
+  integrity sha512-QGeR3f/xsalkRC3/HRUdG7VaNakYK9MCL3819M5bQxMjyhVoFdZw18mnc7zNfcCL3kTyw0C6capJULho4ic+AA==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1015,14 +1015,14 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.121":
-  version "0.9.121"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.121.tgz#fe00d672eea51bd2c8e60c283332a072168971d1"
-  integrity sha512-1IMjIy2IuL5Y3GuIBgNe7ASGloA+As/CUBLtHQMe7oM8Q3FbRBOm7SKyV6FZGYXiG7hggq0fKJqm5YcRO9Lqgw==
+"@budibase/client@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.123-alpha.1.tgz#a70199937c546544a2750e4273c8347e2fddab53"
+  integrity sha512-s/diiHoN/1kd2JavHy+otYDryfH3ijdjna/jqsZYPK/6Y9ZGcHwtVL43+VVtz9YlBw5aD4Av+YW2t1sqNHCsJw==
   dependencies:
-    "@budibase/bbui" "^0.9.121"
-    "@budibase/standard-components" "^0.9.121"
-    "@budibase/string-templates" "^0.9.121"
+    "@budibase/bbui" "^0.9.123-alpha.1"
+    "@budibase/standard-components" "^0.9.123-alpha.1"
+    "@budibase/string-templates" "^0.9.123-alpha.1"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1055,12 +1055,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/standard-components@^0.9.121":
-  version "0.9.121"
-  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.121.tgz#7950a83b1111310b700790a933f68ba9bbababb6"
-  integrity sha512-VPbJCisPprPUEVrkFn/yz+ZOTpAJQN+8PRo7gSWtuXLPlLXKdPZ+B8ICDQNA8i3QBswfFACoIZQ7QwEJ+kBJVg==
+"@budibase/standard-components@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.123-alpha.1.tgz#944e4906e88ce9f8be6a26dc46d50afa17ef3a58"
+  integrity sha512-tCaiOhmmLAOBh+A8rFXnPHKZaSYRK7xlrI23r1IRgvDTkmuflr0o/VrRBVQuaxwWClKQPGkQ3wgnOJgXvk6CgQ==
   dependencies:
-    "@budibase/bbui" "^0.9.121"
+    "@budibase/bbui" "^0.9.123-alpha.1"
     "@spectrum-css/button" "^3.0.3"
     "@spectrum-css/card" "^3.0.3"
     "@spectrum-css/divider" "^1.0.3"
@@ -1073,10 +1073,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.121":
-  version "0.9.121"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.121.tgz#bc16761e9571cd44748b414bda24a3830a867672"
-  integrity sha512-7j+o9D/qwP1lbclptu5tRLj5AzNRB6RyqAB13DkvfqCDxYkxK5qO3+Gdnm7eVZRguESwCcVEJHe+a/qVBUWhog==
+"@budibase/string-templates@^0.9.123-alpha.1":
+  version "0.9.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.123-alpha.1.tgz#6b2e718478d98aa8ba046ad23e7190894360906a"
+  integrity sha512-Id5AUdzTiYKGo/TTU3cuy1m4hS1Wy66hMIxVCM6GKoEnDinEB/rEA6IwP3IDFyTs2Uld8uWLBnEru93sP982AQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"
@@ -11353,9 +11353,9 @@ typescript@^4.3.5:
   integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
 
 uglify-js@^3.1.4:
-  version "3.14.1"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.14.1.tgz#e2cb9fe34db9cb4cf7e35d1d26dfea28e09a7d06"
-  integrity sha512-JhS3hmcVaXlp/xSo3PKY5R0JqKs5M3IV+exdLHW99qKvKivPO4Z8qbej6mte17SOPqAOVMjt/XGgWacnFSzM3g==
+  version "3.14.2"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.14.2.tgz#d7dd6a46ca57214f54a2d0a43cad0f35db82ac99"
+  integrity sha512-rtPMlmcO4agTUfz10CbgJ1k6UAoXM2gWb3GoMPPZB/+/Ackf8lNWk11K4rYi2D0apgoFRLtQOZhb+/iGNJq26A==
 
 uid2@0.0.x:
   version "0.0.4"
