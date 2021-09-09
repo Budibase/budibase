@@ -1,5 +1,9 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { builderStore, appStore } from "./store"
+import { builderStore, appStore } from "./stores"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
+
+// Initialise spectrum icons
+loadSpectrumIcons()
 
 let app
 
@@ -13,6 +17,7 @@ const loadBudibase = () => {
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
     previewType: window["##BUDIBASE_PREVIEW_TYPE##"],
     theme: window["##BUDIBASE_PREVIEW_THEME##"],
+    customTheme: window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real

@@ -1,5 +1,5 @@
 import { writable, derived } from "svelte/store"
-import Manifest from "@budibase/standard-components/manifest.json"
+import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
 
 const dispatchEvent = (type, data = {}) => {

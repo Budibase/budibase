@@ -44,7 +44,6 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
   )
-  .get("/componentlibrary", controller.serveComponentLibrary)
   // TODO: this likely needs to be secured in some way
   .get("/:appId/:path*", controller.serveApp)
 

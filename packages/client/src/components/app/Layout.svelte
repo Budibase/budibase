@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
   import { Heading, Icon } from "@budibase/bbui"
-  import { routeStore } from "../../client/src/store"
+  import active from "svelte-spa-router/active"
 
-  const { styleable, linkable, builderStore } = getContext("sdk")
+  const { routeStore, styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let title
@@ -96,7 +96,13 @@
           <div class="links" class:visible={mobileOpen}>
             {#each validLinks as { text, url }}
               {#if isInternal(url)}
-                <a class="link" href={url} use:linkable on:click={close}>
+                <a
+                  class="link"
+                  href={url}
+                  use:linkable
+                  on:click={close}
+                  use:active={url}
+                >
                   {text}
                 </a>
               {:else}
@@ -143,7 +149,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: stretch;
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--navBackground);
     z-index: 2;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);
@@ -165,6 +171,18 @@
     padding: var(--spacing-xl) 32px;
     max-width: 100%;
     gap: var(--spacing-xl);
+  }
+  .nav :global(.spectrum-Icon) {
+    color: var(--navTextColor);
+    opacity: 0.75;
+  }
+  .nav :global(.spectrum-Icon:hover) {
+    color: var(--navTextColor);
+    opacity: 1;
+  }
+
+  .nav :global(h1) {
+    color: var(--navTextColor);
   }
   .nav-header {
     flex: 0 0 auto;
@@ -243,13 +261,19 @@
     margin-top: var(--spacing-xl);
   }
   .link {
-    color: var(--spectrum-alias-text-color);
+    opacity: 0.75;
+    color: var(--navTextColor);
     font-size: var(--spectrum-global-dimension-font-size-200);
     font-weight: 600;
     transition: color 130ms ease-out;
   }
+  .link.active {
+    opacity: 1;
+  }
   .link:hover {
-    color: var(--spectrum-global-color-blue-600);
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-position: under;
   }
   .close {
     display: none;
@@ -333,7 +357,7 @@
       transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
       height: 100vh;
       opacity: 0;
-      background: var(--spectrum-alias-background-color-secondary);
+      background: var(--navBackground);
       z-index: 999;
       flex-direction: column;
       justify-content: flex-start;
@@ -347,8 +371,7 @@
     .links.visible {
       opacity: 1;
       transform: translateX(250px);
-      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.2);
-      border-right: 1px solid var(--spectrum-global-color-gray-300);
+      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
     }
     .mobile-click-handler.visible {
       position: fixed;

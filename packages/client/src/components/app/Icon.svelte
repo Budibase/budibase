@@ -20,7 +20,12 @@
 </script>
 
 {#if icon}
-  <i use:styleable={styles} class="{icon} {size}" on:click={onClick} />
+  <i
+    use:styleable={styles}
+    class="{icon} {size}"
+    on:click={onClick}
+    class:hoverable={onClick != null}
+  />
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles}>
     <Placeholder />
@@ -30,5 +35,9 @@
 <style>
   div {
     font-style: italic;
+  }
+  .hoverable:hover {
+    color: var(--spectrum-alias-icon-color-selected-hover) !important;
+    cursor: pointer;
   }
 </style>
