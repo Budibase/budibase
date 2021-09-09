@@ -96,7 +96,7 @@
     color: var(--spectrum-alias-text-color);
   }
   a:hover {
-    color: var(--spectrum-global-color-blue-600);
+    color: var(--spectrum-link-primary-m-text-color-hover);
   }
 
   .horizontal .spectrum-Card-coverPhoto {

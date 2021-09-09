@@ -5,6 +5,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@budibase/standard-components": "0.x"
+    "@budibase/client": "0.x"
   }
 }

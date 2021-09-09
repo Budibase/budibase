@@ -1,6 +1,6 @@
 <script>
   import Provider from "./Provider.svelte"
-  import { stateStore } from "../store"
+  import { stateStore } from "stores"
 </script>
 
 <Provider key="state" data={$stateStore}>

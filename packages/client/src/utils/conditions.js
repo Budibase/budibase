@@ -1,7 +1,4 @@
-import {
-  buildLuceneQuery,
-  luceneQuery,
-} from "../../../standard-components/src/lucene"
+import { buildLuceneQuery, luceneQuery } from "./lucene"
 
 export const getActiveConditions = conditions => {
   if (!conditions?.length) {

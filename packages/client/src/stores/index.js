@@ -8,6 +8,7 @@ export { dataSourceStore } from "./dataSource"
 export { confirmationStore } from "./confirmation"
 export { peekStore } from "./peek"
 export { stateStore } from "./state"
+export { themeStore } from "./theme"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"
