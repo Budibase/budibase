@@ -1,0 +1,10 @@
+name: Modal
+description: A modal component used primarily by Dialog
+examples:
+  - id: modal
+    name: Modal
+    demoClassName: spectrum-CSSExample-example--overlay
+    markup: |
+      <div class="spectrum-Modal-wrapper spectrum-CSSExample-dialog">
+        <div class="spectrum-Modal is-open">This is a modal. Don't use it like this; get yourself a Modal.</div>
+      </div>

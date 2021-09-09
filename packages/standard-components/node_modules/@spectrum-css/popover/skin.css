@@ -1,0 +1,43 @@
+/*
+Copyright 2020 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-Popover {
+  background-color: var(--spectrum-popover-background-color);
+  border-color: var(--spectrum-popover-border-color);
+  /*
+    box-shadow offset/blur is hardcoded here as it cannot be adjusted when scale changes,
+    and we'd rather it be able to change when color stops change
+    use filter instead so it includes the triangle
+
+    we can't use box-shadow anymore because it renders along the rectangle that encloses the triangle instead
+    of along the triangle's diagonal borders.
+    we may be able to use box-shadow for the popover + drop-shadow just for the tip, each direction would need it's own
+    and it may still have the problem where the tip's shadow would cover the popover border just a little and make it look sloppy again
+  */
+  filter: drop-shadow(0 1px 4px var(--spectrum-popover-shadow-color));
+  /* explicitly adding this webkit prefix may fix the bug where the drop-shadow remains dirty */
+  /* https://stackoverflow.com/questions/56478925/safari-drop-shadow-filter-remains-visible-even-with-hidden-element */
+  -webkit-filter: drop-shadow(0 1px 4px var(--spectrum-popover-shadow-color));
+  will-change: filter;
+  /* this helps mark the "dirty" area, it shouldn't affect anything unless it's sticking out from the popover. (tooltips?)
+     this is an assumption that may not be a good idea
+     it has to be 30px outside to compensate for the tip size at large + the drop-shadow coming off of it
+  */
+  clip-path: inset(-30px -30px);
+
+  .spectrum-Popover-tip {
+    .spectrum-Popover-tip-triangle {
+      fill: var(--spectrum-popover-background-color);
+      stroke: var(--spectrum-popover-border-color);
+    }
+  }
+}

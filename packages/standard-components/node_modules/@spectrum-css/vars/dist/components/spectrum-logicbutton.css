@@ -1,0 +1,34 @@
+.spectrum {
+  --spectrum-logicbutton-and-text-color: var(--spectrum-global-color-static-white);
+  --spectrum-logicbutton-and-background-color: var(--spectrum-global-color-blue-500);
+  --spectrum-logicbutton-and-border-color: var(--spectrum-global-color-blue-500);
+  --spectrum-logicbutton-and-text-color-disabled: var(--spectrum-alias-text-color-disabled);
+  --spectrum-logicbutton-and-background-color-disabled: var(--spectrum-global-color-gray-200);
+  --spectrum-logicbutton-and-border-color-disabled: var(--spectrum-global-color-gray-200);
+  --spectrum-logicbutton-and-background-color-hover: var(--spectrum-global-color-blue-700);
+  --spectrum-logicbutton-and-border-color-hover: var(--spectrum-global-color-blue-700);
+  --spectrum-logicbutton-and-background-color-key-focus: var(--spectrum-global-color-blue-700);
+  --spectrum-logicbutton-and-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-logicbutton-and-border-size: var(--spectrum-alias-border-size-thick);
+  --spectrum-logicbutton-and-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-logicbutton-and-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-logicbutton-and-text-font-weight: var(--spectrum-global-font-weight-bold);
+  --spectrum-logicbutton-and-height: 24px;
+  --spectrum-logicbutton-and-padding-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-logicbutton-or-text-color: var(--spectrum-global-color-static-white);
+  --spectrum-logicbutton-or-background-color: var(--spectrum-global-color-magenta-500);
+  --spectrum-logicbutton-or-border-color: var(--spectrum-global-color-magenta-500);
+  --spectrum-logicbutton-or-text-color-disabled: var(--spectrum-alias-text-color-disabled);
+  --spectrum-logicbutton-or-background-color-disabled: var(--spectrum-global-color-gray-200);
+  --spectrum-logicbutton-or-border-color-disabled: var(--spectrum-global-color-gray-200);
+  --spectrum-logicbutton-or-background-color-hover: var(--spectrum-global-color-magenta-700);
+  --spectrum-logicbutton-or-border-color-hover: var(--spectrum-global-color-magenta-700);
+  --spectrum-logicbutton-or-background-color-key-focus: var(--spectrum-global-color-magenta-700);
+  --spectrum-logicbutton-or-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-logicbutton-or-border-size: var(--spectrum-alias-border-size-thick);
+  --spectrum-logicbutton-or-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-logicbutton-or-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-logicbutton-or-text-font-weight: var(--spectrum-global-font-weight-bold);
+  --spectrum-logicbutton-or-height: 24px;
+  --spectrum-logicbutton-or-padding-x: var(--spectrum-global-dimension-size-100);
+}

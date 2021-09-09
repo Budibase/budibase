@@ -1,0 +1,214 @@
+.spectrum-SideNav {
+  --spectrum-sidenav-item-padding-y: var(--spectrum-global-dimension-size-65);
+}
+
+.spectrum-SideNav {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.spectrum-SideNav-item {
+  list-style-type: none;
+
+  margin-top: var(--spectrum-sidenav-item-gap, var(--spectrum-global-dimension-size-50));
+
+  margin-bottom: var(--spectrum-sidenav-item-gap, var(--spectrum-global-dimension-size-50));
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.spectrum-SideNav-itemLink {
+  position: relative;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-align: center;
+      align-items: center;
+  -ms-flex-pack: left;
+      justify-content: left;
+  box-sizing: border-box;
+
+  width: 100%;
+  min-height: var(--spectrum-sidenav-item-height, var(--spectrum-alias-single-line-height));
+
+  padding-left: var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150));
+
+  padding-right: var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150));
+  padding-top: var(--spectrum-sidenav-item-padding-y);
+  padding-bottom: var(--spectrum-sidenav-item-padding-y);
+
+  border-radius: var(--spectrum-sidenav-item-border-radius, var(--spectrum-alias-border-radius-regular));
+
+  font-size: var(--spectrum-sidenav-item-text-size, var(--spectrum-alias-font-size-default));
+  font-weight: var(--spectrum-sidenav-item-text-font-weight, var(--spectrum-global-font-weight-regular));
+  font-style: normal;
+  text-decoration: none;
+
+  word-break: break-word;
+  -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+          hyphens: auto;
+
+  cursor: pointer;
+
+  transition: background-color var(--spectrum-global-animation-duration-100, 130ms)
+      ease-out,
+    color var(--spectrum-global-animation-duration-100, 130ms) ease-out;
+}
+
+.spectrum-SideNav-itemLink:focus {
+    outline: none;
+  }
+
+[dir="ltr"] .spectrum-SideNav-itemLink.focus-ring::before {
+    left: 0;
+}
+
+[dir="rtl"] .spectrum-SideNav-itemLink.focus-ring::before {
+    right: 0;
+}
+
+[dir="ltr"] .spectrum-SideNav-itemLink.focus-ring::before {
+    right: 0;
+}
+
+[dir="rtl"] .spectrum-SideNav-itemLink.focus-ring::before {
+    left: 0;
+}
+
+.spectrum-SideNav-itemLink.focus-ring::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+
+    border-top: var(--spectrum-tabs-m-focus-ring-size, var(--spectrum-alias-border-size-thick)) solid transparent;
+
+    border-bottom: var(--spectrum-tabs-m-focus-ring-size, var(--spectrum-alias-border-size-thick)) solid transparent;
+    border-radius: var(--spectrum-sidenav-item-border-radius, var(--spectrum-alias-border-radius-regular));
+  }
+
+[dir="ltr"] .spectrum-SideNav-itemLink .spectrum-SideNav-itemIcon {
+    margin-right: var(--spectrum-sidenav-icon-gap, var(--spectrum-global-dimension-size-100));
+}
+
+[dir="rtl"] .spectrum-SideNav-itemLink .spectrum-SideNav-itemIcon {
+    margin-left: var(--spectrum-sidenav-icon-gap, var(--spectrum-global-dimension-size-100));
+}
+
+.spectrum-SideNav-itemLink .spectrum-SideNav-itemIcon {
+    -ms-flex-negative: 0;
+        flex-shrink: 0;
+  }
+
+[dir="ltr"] .spectrum-SideNav-heading {
+  margin-right: 0;
+}
+
+[dir="rtl"] .spectrum-SideNav-heading {
+  margin-left: 0;
+}
+
+[dir="ltr"] .spectrum-SideNav-heading {
+  margin-left: 0;
+}
+
+[dir="rtl"] .spectrum-SideNav-heading {
+  margin-right: 0;
+}
+
+.spectrum-SideNav-heading {
+  height: var(--spectrum-sidenav-heading-height, var(--spectrum-alias-single-line-height));
+  line-height: var(--spectrum-sidenav-heading-height, var(--spectrum-alias-single-line-height));
+
+  margin-top: var(--spectrum-sidenav-heading-gap-top, var(--spectrum-global-dimension-size-200));
+  margin-bottom: var(--spectrum-sidenav-heading-gap-bottom, var(--spectrum-global-dimension-size-50));
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: var(--spectrum-sidenav-heading-padding-x, var(--spectrum-global-dimension-size-150));
+  padding-right: var(--spectrum-sidenav-heading-padding-x, var(--spectrum-global-dimension-size-150));
+
+  border-radius: var(--spectrum-sidenav-heading-border-radius, var(--spectrum-alias-border-radius-regular));
+
+  font-size: var(--spectrum-sidenav-heading-text-size, var(--spectrum-global-dimension-font-size-50));
+  font-weight: var(--spectrum-sidenav-heading-text-font-weight, var(--spectrum-global-font-weight-medium));
+  font-style: normal;
+  letter-spacing: var(--spectrum-sidenav-heading-text-letter-spacing, var(--spectrum-global-font-letter-spacing-medium));
+
+  text-transform: uppercase;
+}
+
+.spectrum-SideNav--multiLevel .spectrum-SideNav-itemLink {
+    font-weight: var(--spectrum-sidenav-multilevel-main-item-font-weight, var(--spectrum-global-font-weight-bold));
+  }
+
+.spectrum-SideNav--multiLevel .spectrum-SideNav {
+    margin: 0;
+    padding: 0;
+  }
+
+[dir="ltr"] .spectrum-SideNav--multiLevel .spectrum-SideNav .spectrum-SideNav-itemLink {
+
+      padding-left: calc(var(--spectrum-sidenav-multilevel-item-indentation, var(--spectrum-global-dimension-size-150)) + var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150)));
+}
+
+[dir="rtl"] .spectrum-SideNav--multiLevel .spectrum-SideNav .spectrum-SideNav-itemLink {
+
+      padding-right: calc(var(--spectrum-sidenav-multilevel-item-indentation, var(--spectrum-global-dimension-size-150)) + var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150)));
+}
+
+.spectrum-SideNav--multiLevel .spectrum-SideNav .spectrum-SideNav-itemLink {
+      font-weight: var(--spectrum-sidenav-item-text-font-weight, var(--spectrum-global-font-weight-regular));
+    }
+
+[dir="ltr"] .spectrum-SideNav--multiLevel .spectrum-SideNav .spectrum-SideNav .spectrum-SideNav-itemLink {
+        padding-left: calc(var(--spectrum-sidenav-multilevel-item-indentation, var(--spectrum-global-dimension-size-150)) + var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150)));
+}
+
+[dir="rtl"] .spectrum-SideNav--multiLevel .spectrum-SideNav .spectrum-SideNav .spectrum-SideNav-itemLink {
+        padding-right: calc(var(--spectrum-sidenav-multilevel-item-indentation, var(--spectrum-global-dimension-size-150)) + var(--spectrum-sidenav-item-padding-x, var(--spectrum-global-dimension-size-150)));
+}
+
+.spectrum-SideNav-item.is-selected > .spectrum-SideNav-itemLink {
+      color: var(--spectrum-sidenav-item-text-color-selected, var(--spectrum-alias-text-color-hover));
+      background-color: var(--spectrum-sidenav-item-background-color-selected, var(--spectrum-alias-highlight-hover));
+    }
+
+.spectrum-SideNav-item .is-active > .spectrum-SideNav-itemLink {
+      background-color: var(--spectrum-sidenav-item-background-color-down, var(--spectrum-alias-highlight-hover));
+    }
+
+.spectrum-SideNav-item.is-disabled .spectrum-SideNav-itemLink {
+      background-color: var(--spectrum-sidenav-item-background-color-disabled, var(--spectrum-alias-background-color-transparent));
+      color: var(--spectrum-sidenav-item-text-color-disabled, var(--spectrum-alias-text-color-disabled));
+
+      cursor: default;
+      pointer-events: none;
+    }
+
+.spectrum-SideNav-itemLink {
+  background-color: var(--spectrum-sidenav-item-background-color, var(--spectrum-alias-background-color-transparent));
+  color: var(--spectrum-sidenav-item-text-color, var(--spectrum-alias-text-color));
+}
+
+.spectrum-SideNav-itemLink:hover {
+    background-color: var(--spectrum-sidenav-item-background-color-hover, var(--spectrum-alias-highlight-hover));
+    color: var(--spectrum-sidenav-item-text-color-hover, var(--spectrum-alias-text-color-hover));
+  }
+
+.spectrum-SideNav-itemLink:active {
+    background-color: var(--spectrum-sidenav-item-background-color-down, var(--spectrum-alias-highlight-hover));
+  }
+
+.spectrum-SideNav-itemLink.focus-ring {
+    background-color: var(--spectrum-sidenav-item-background-color-key-focus, var(--spectrum-alias-highlight-hover));
+    color: var(--spectrum-sidenav-item-text-color-key-focus, var(--spectrum-alias-text-color-hover));
+  }
+
+.spectrum-SideNav-itemLink.focus-ring::before {
+      border-color: var(--spectrum-sidenav-item-border-color-key-focus, var(--spectrum-alias-border-color-focus));
+    }
+
+.spectrum-SideNav-heading {
+  color: var(--spectrum-sidenav-heading-text-color, var(--spectrum-global-color-gray-700));
+}

@@ -1,0 +1,15 @@
+:root {
+  --spectrum-pagination-page-button-background-color-hover: var(--spectrum-alias-background-color-hover-overlay);
+  --spectrum-pagination-page-button-border-color-key-focus: var(--spectrum-alias-focus-color);
+  --spectrum-pagination-page-button-background-color-down: var(--spectrum-global-color-gray-800);
+  --spectrum-pagination-page-button-text-color-down: var(--spectrum-global-color-static-white);
+  --spectrum-pagination-textfield-width: var(--spectrum-global-dimension-size-600);
+  --spectrum-pagination-counter-height: var(--spectrum-global-dimension-size-400);
+  --spectrum-pagination-counter-margin-left: var(--spectrum-global-dimension-size-65);
+  --spectrum-pagination-direction-button-text-size: var(--spectrum-alias-pill-button-text-size);
+  --spectrum-pagination-page-button-width: var(--spectrum-global-dimension-size-400);
+  --spectrum-pagination-page-button-margin-horizontal: var(--spectrum-global-dimension-size-65);
+  --spectrum-pagination-page-button-border-size: var(--spectrum-global-dimension-size-25);
+  --spectrum-pagination-icon-width: var(--spectrum-global-dimension-size-75);
+  --spectrum-pagination-icon-height: var(--spectrum-global-dimension-size-125);
+}

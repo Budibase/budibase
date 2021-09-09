@@ -1,0 +1,4 @@
+.spectrum {
+  background-color: var(--spectrum-alias-background-color-default, var(--spectrum-global-color-gray-100));
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}

@@ -1,0 +1,52 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-IllustratedMessage {
+  --spectrum-illustrated-message-description-max-width: 500px;
+  --spectrum-illustrated-message-heading-max-width: 500px;
+  --spectrum-illustrated-message-illustration-margin-bottom: 24px;
+  --spectrum-illustrated-message-heading-margin: 0;
+  --spectrum-illustrated-message-description-margin: 4px 0 0 0;
+}
+
+.spectrum-IllustratedMessage {
+  block-size: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.spectrum-IllustratedMessage-illustration {
+  margin-block-end: var(--spectrum-illustrated-message-illustration-margin-bottom);
+}
+
+.spectrum-IllustratedMessage-heading {
+  max-inline-size: var(--spectrum-illustrated-message-heading-max-width);
+  margin: var(--spectrum-illustrated-message-heading-margin);
+}
+
+.spectrum-IllustratedMessage-description {
+  max-inline-size: var(--spectrum-illustrated-message-description-max-width);
+  margin: var(--spectrum-illustrated-message-description-margin);
+
+  font-style: italic;
+}
+
+.spectrum-IllustratedMessage--cta {
+  .spectrum-IllustratedMessage-description {
+    font-style: normal;
+  }
+}

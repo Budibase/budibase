@@ -1,0 +1,53 @@
+.spectrum-Icon {
+  display: inline-block;
+/* Inherit the text color */
+  color: inherit;
+/* Fill should match the current text color */
+  fill: currentColor;
+}
+.spectrum-Icon.is-animated {
+/* Transition any color changes */
+  transition: color 150ms ease-in-out, fill 150ms ease-in-out;
+}
+.spectrum-Icon--sizeXXS,
+.spectrum-Icon--sizeXXS img,
+.spectrum-Icon--sizeXXS svg {
+  height: 0.5625rem;
+  width: 0.5625rem;
+}
+.spectrum-Icon--sizeXS,
+.spectrum-Icon--sizeXS img,
+.spectrum-Icon--sizeXS svg {
+  height: 0.75rem;
+  width: 0.75rem;
+}
+.spectrum-Icon--sizeS,
+.spectrum-Icon--sizeS img,
+.spectrum-Icon--sizeS svg {
+  height: 1.125rem;
+  width: 1.125rem;
+}
+.spectrum-Icon--sizeM,
+.spectrum-Icon--sizeM img,
+.spectrum-Icon--sizeM svg {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+.spectrum-Icon--sizeL,
+.spectrum-Icon--sizeL img,
+.spectrum-Icon--sizeL svg {
+  height: 2.25rem;
+  width: 2.25rem;
+}
+.spectrum-Icon--sizeXL,
+.spectrum-Icon--sizeXL img,
+.spectrum-Icon--sizeXL svg {
+  height: 3rem;
+  width: 3rem;
+}
+.spectrum-Icon--sizeXXL,
+.spectrum-Icon--sizeXXL img,
+.spectrum-Icon--sizeXXL svg {
+  height: 4.5rem;
+  width: 4.5rem;
+}

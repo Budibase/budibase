@@ -1,0 +1,67 @@
+name: Divider
+status: Verified
+SpectrumSiteSlug: https://spectrum.adobe.com/page/divider/
+sections:
+  - name: Migration Guide
+    description: |
+      ### Component rename
+      Rule is now named Divider. All instances of `.spectrum-Rule` in your code should be replaced with `.spectrum-Divider`, and the `@spectrum-css/divider` package should be used instead of `@spectrum-css/rule`.
+
+      ### Change workflow icon size to medium
+      Please replace `.spectrum-Icon--sizeS` with `.spectrum-Icon--sizeM`.sections:
+
+      ### T-shirt sizing
+      Divider now supports t-shirt sizing and requires that you specify the size by adding a `.spectrum-Divider--size*` class.
+examples:
+  - id: divider-large
+    name: 'Large'
+    markup: |
+      <h2 class="spectrum-Heading spectrum-Heading--sizeM">Large</h2>
+      <hr class="spectrum-Divider spectrum-Divider--sizeL">
+      <p class="spectrum-Body">Page or Section Titles.</p>
+  - id: divider-medium
+    name: 'Medium'
+    markup: |
+      <h2 class="spectrum-Heading spectrum-Heading--sizeS">Medium</h2>
+      <hr class="spectrum-Divider spectrum-Divider--sizeM">
+      <p class="spectrum-Body">Divide subsections, or divide different groups of elements (between panels, rails, etc.)</p>
+  - id: divider-small
+    name: 'Small'
+    markup: |
+      <h2 class="spectrum-Heading spectrum-Heading--sizeXS">Small</h2>
+      <hr class="spectrum-Divider spectrum-Divider--sizeS">
+      <p class="spectrum-Body">Divide like-elements (tables, tool groups, elements within a panel, etc.)</p>
+  - id: divider-vertical-small
+    name: 'Vertical, Small'
+    description: |
+      When a vertical Divider is used inside of a flex container, use `align-self: stretch; height: auto` on the Divider.
+    markup: |
+      <div class="spectrum-ActionGroup spectrum-ActionGroup--horizontal">
+        <button class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Properties">
+            <use xlink:href="#spectrum-icon-18-Properties" />
+          </svg>
+        </button>
+        <div class="spectrum-Divider spectrum-Divider--sizeS spectrum-Divider--vertical" style="height: auto; align-self: stretch;"></div>
+        <button class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Select">
+            <use xlink:href="#spectrum-icon-18-Select" />
+          </svg>
+        </button>
+      </div>
+  - id: divider-vertical-medium
+    name: 'Vertical, Medium'
+    markup: |
+      <div class="spectrum-ActionGroup spectrum-ActionGroup--horizontal">
+        <button class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Properties">
+            <use xlink:href="#spectrum-icon-18-Properties" />
+          </svg>
+        </button>
+        <div class="spectrum-Divider spectrum-Divider--sizeM spectrum-Divider--vertical" style="height: auto; align-self: stretch;"></div>
+        <button class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-ActionButton--quiet">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Select">
+            <use xlink:href="#spectrum-icon-18-Select" />
+          </svg>
+        </button>
+      </div>

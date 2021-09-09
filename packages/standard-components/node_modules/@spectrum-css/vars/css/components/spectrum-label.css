@@ -1,0 +1,12 @@
+:root {
+  --spectrum-label-colored-gray-background-color: var(--spectrum-global-color-static-gray-700);
+  --spectrum-label-colored-green-background-color: var(--spectrum-global-color-static-green-600);
+  --spectrum-label-colored-blue-background-color: var(--spectrum-global-color-static-blue);
+  --spectrum-label-colored-red-background-color: var(--spectrum-global-color-static-red-600);
+  --spectrum-label-colored-seafoam-background-color: var(--spectrum-global-color-seafoam-400);
+  --spectrum-label-colored-fuchsia-background-color: var(--spectrum-global-color-fuchsia-400);
+  --spectrum-label-colored-orange-background-color: var(--spectrum-global-color-static-orange-600);
+  --spectrum-label-colored-yellow-background-color: var(--spectrum-global-color-yellow-400);
+  --spectrum-label-colored-text-color: var(--spectrum-global-color-static-white);
+  --spectrum-label-colored-background-color-disabled: var(--spectrum-global-color-gray-200);
+}

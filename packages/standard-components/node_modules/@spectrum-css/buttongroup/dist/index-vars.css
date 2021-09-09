@@ -1,0 +1,40 @@
+.spectrum-ButtonGroup {
+  --spectrum-buttongroup-button-gap-reset: 0;
+}
+
+.spectrum-ButtonGroup {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.spectrum-ButtonGroup .spectrum-ButtonGroup-item {
+    -ms-flex-negative: 0;
+        flex-shrink: 0;
+  }
+
+[dir="ltr"] .spectrum-ButtonGroup .spectrum-ButtonGroup-item + .spectrum-ButtonGroup-item {
+    margin-left: var(--spectrum-buttongroup-button-gap-x, var(--spectrum-global-dimension-static-size-200));
+}
+
+[dir="rtl"] .spectrum-ButtonGroup .spectrum-ButtonGroup-item + .spectrum-ButtonGroup-item {
+    margin-right: var(--spectrum-buttongroup-button-gap-x, var(--spectrum-global-dimension-static-size-200));
+}
+
+.spectrum-ButtonGroup--vertical {
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-direction: column;
+      flex-direction: column;
+}
+
+[dir="ltr"] .spectrum-ButtonGroup--vertical .spectrum-ButtonGroup-item + .spectrum-ButtonGroup-item {
+    margin-left: var(--spectrum-buttongroup-button-gap-reset);
+}
+
+[dir="rtl"] .spectrum-ButtonGroup--vertical .spectrum-ButtonGroup-item + .spectrum-ButtonGroup-item {
+    margin-right: var(--spectrum-buttongroup-button-gap-reset);
+}
+
+.spectrum-ButtonGroup--vertical .spectrum-ButtonGroup-item + .spectrum-ButtonGroup-item {
+    margin-top: var(--spectrum-buttongroup-button-gap-y, var(--spectrum-global-dimension-static-size-200));
+  }

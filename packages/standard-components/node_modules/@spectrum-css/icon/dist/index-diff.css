@@ -1,0 +1,270 @@
+.spectrum--large .spectrum-Icon {
+  --spectrum-icon-size-s: var(--spectrum-alias-workflow-icon-size-s);
+  --spectrum-icon-size-m: var(--spectrum-alias-workflow-icon-size-m);
+  --spectrum-icon-size-l: var(--spectrum-alias-workflow-icon-size-l);
+  --spectrum-icon-size-xl: var(--spectrum-alias-workflow-icon-size-xl);
+  --spectrum-icon-size-xxl: var(--spectrum-global-dimension-size-400);
+}
+.spectrum--large .spectrum-Icon--sizeS,
+  .spectrum--large .spectrum-Icon--sizeS img,
+  .spectrum--large .spectrum-Icon--sizeS svg {
+    height: var(--spectrum-icon-size-s);
+    width: var(--spectrum-icon-size-s);
+  }
+.spectrum--large .spectrum-Icon--sizeM,
+  .spectrum--large .spectrum-Icon--sizeM img,
+  .spectrum--large .spectrum-Icon--sizeM svg {
+    height: var(--spectrum-icon-size-m);
+    width: var(--spectrum-icon-size-m);
+  }
+.spectrum--large .spectrum-Icon--sizeL,
+  .spectrum--large .spectrum-Icon--sizeL img,
+  .spectrum--large .spectrum-Icon--sizeL svg {
+    height: var(--spectrum-icon-size-l);
+    width: var(--spectrum-icon-size-l);
+  }
+.spectrum--large .spectrum-Icon--sizeXL,
+  .spectrum--large .spectrum-Icon--sizeXL img,
+  .spectrum--large .spectrum-Icon--sizeXL svg {
+    height: var(--spectrum-icon-size-xl);
+    width: var(--spectrum-icon-size-xl);
+  }
+.spectrum--large .spectrum-Icon--sizeXXL,
+  .spectrum--large .spectrum-Icon--sizeXXL img,
+  .spectrum--large .spectrum-Icon--sizeXXL svg {
+    height: var(--spectrum-icon-size-xxl);
+    width: var(--spectrum-icon-size-xxl);
+  }
+.spectrum--large .spectrum-UIIcon--large {
+  display: var(--ui-icon-large-display);
+}
+.spectrum--large .spectrum-UIIcon--medium {
+  display: var(--ui-icon-medium-display);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight75,
+.spectrum--large .spectrum-UIIcon-ChevronDown75,
+.spectrum--large .spectrum-UIIcon-ChevronLeft75,
+.spectrum--large .spectrum-UIIcon-ChevronUp75 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-75);
+  height: var(--spectrum-alias-ui-icon-chevron-size-75);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight100,
+.spectrum--large .spectrum-UIIcon-ChevronDown100,
+.spectrum--large .spectrum-UIIcon-ChevronLeft100,
+.spectrum--large .spectrum-UIIcon-ChevronUp100 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-100);
+  height: var(--spectrum-alias-ui-icon-chevron-size-100);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight200,
+.spectrum--large .spectrum-UIIcon-ChevronDown200,
+.spectrum--large .spectrum-UIIcon-ChevronLeft200,
+.spectrum--large .spectrum-UIIcon-ChevronUp200 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-200);
+  height: var(--spectrum-alias-ui-icon-chevron-size-200);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight300,
+.spectrum--large .spectrum-UIIcon-ChevronDown300,
+.spectrum--large .spectrum-UIIcon-ChevronLeft300,
+.spectrum--large .spectrum-UIIcon-ChevronUp300 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-300);
+  height: var(--spectrum-alias-ui-icon-chevron-size-300);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight400,
+.spectrum--large .spectrum-UIIcon-ChevronDown400,
+.spectrum--large .spectrum-UIIcon-ChevronLeft400,
+.spectrum--large .spectrum-UIIcon-ChevronUp400 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-400);
+  height: var(--spectrum-alias-ui-icon-chevron-size-400);
+}
+.spectrum--large .spectrum-UIIcon-ChevronRight500,
+.spectrum--large .spectrum-UIIcon-ChevronDown500,
+.spectrum--large .spectrum-UIIcon-ChevronLeft500,
+.spectrum--large .spectrum-UIIcon-ChevronUp500 {
+  width: var(--spectrum-alias-ui-icon-chevron-size-500);
+  height: var(--spectrum-alias-ui-icon-chevron-size-500);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight75,
+.spectrum--large .spectrum-UIIcon-ArrowDown75,
+.spectrum--large .spectrum-UIIcon-ArrowLeft75,
+.spectrum--large .spectrum-UIIcon-ArrowUp75 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-75);
+  height: var(--spectrum-alias-ui-icon-arrow-size-75);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight100,
+.spectrum--large .spectrum-UIIcon-ArrowDown100,
+.spectrum--large .spectrum-UIIcon-ArrowLeft100,
+.spectrum--large .spectrum-UIIcon-ArrowUp100 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-100);
+  height: var(--spectrum-alias-ui-icon-arrow-size-100);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight200,
+.spectrum--large .spectrum-UIIcon-ArrowDown200,
+.spectrum--large .spectrum-UIIcon-ArrowLeft200,
+.spectrum--large .spectrum-UIIcon-ArrowUp200 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-200);
+  height: var(--spectrum-alias-ui-icon-arrow-size-200);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight300,
+.spectrum--large .spectrum-UIIcon-ArrowDown300,
+.spectrum--large .spectrum-UIIcon-ArrowLeft300,
+.spectrum--large .spectrum-UIIcon-ArrowUp300 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-300);
+  height: var(--spectrum-alias-ui-icon-arrow-size-300);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight400,
+.spectrum--large .spectrum-UIIcon-ArrowDown400,
+.spectrum--large .spectrum-UIIcon-ArrowLeft400,
+.spectrum--large .spectrum-UIIcon-ArrowUp400 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-400);
+  height: var(--spectrum-alias-ui-icon-arrow-size-400);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight500,
+.spectrum--large .spectrum-UIIcon-ArrowDown500,
+.spectrum--large .spectrum-UIIcon-ArrowLeft500,
+.spectrum--large .spectrum-UIIcon-ArrowUp500 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-500);
+  height: var(--spectrum-alias-ui-icon-arrow-size-500);
+}
+.spectrum--large .spectrum-UIIcon-ArrowRight600,
+.spectrum--large .spectrum-UIIcon-ArrowDown600,
+.spectrum--large .spectrum-UIIcon-ArrowLeft600,
+.spectrum--large .spectrum-UIIcon-ArrowUp600 {
+  width: var(--spectrum-alias-ui-icon-arrow-size-600);
+  height: var(--spectrum-alias-ui-icon-arrow-size-600);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark50 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-50);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-50);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark75 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-75);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-75);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark100 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-100);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-100);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark200 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-200);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-200);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark300 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-300);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-300);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark400 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-400);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-400);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark500 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-500);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-500);
+}
+.spectrum--large .spectrum-UIIcon-Checkmark600 {
+  width: var(--spectrum-alias-ui-icon-checkmark-size-600);
+  height: var(--spectrum-alias-ui-icon-checkmark-size-600);
+}
+.spectrum--large .spectrum-UIIcon-Dash50 {
+  width: var(--spectrum-alias-ui-icon-dash-size-50);
+  height: var(--spectrum-alias-ui-icon-dash-size-50);
+}
+.spectrum--large .spectrum-UIIcon-Dash75 {
+  width: var(--spectrum-alias-ui-icon-dash-size-75);
+  height: var(--spectrum-alias-ui-icon-dash-size-75);
+}
+.spectrum--large .spectrum-UIIcon-Dash100 {
+  width: var(--spectrum-alias-ui-icon-dash-size-100);
+  height: var(--spectrum-alias-ui-icon-dash-size-100);
+}
+.spectrum--large .spectrum-UIIcon-Dash200 {
+  width: var(--spectrum-alias-ui-icon-dash-size-200);
+  height: var(--spectrum-alias-ui-icon-dash-size-200);
+}
+.spectrum--large .spectrum-UIIcon-Dash300 {
+  width: var(--spectrum-alias-ui-icon-dash-size-300);
+  height: var(--spectrum-alias-ui-icon-dash-size-300);
+}
+.spectrum--large .spectrum-UIIcon-Dash400 {
+  width: var(--spectrum-alias-ui-icon-dash-size-400);
+  height: var(--spectrum-alias-ui-icon-dash-size-400);
+}
+.spectrum--large .spectrum-UIIcon-Dash500 {
+  width: var(--spectrum-alias-ui-icon-dash-size-500);
+  height: var(--spectrum-alias-ui-icon-dash-size-500);
+}
+.spectrum--large .spectrum-UIIcon-Dash600 {
+  width: var(--spectrum-alias-ui-icon-dash-size-600);
+  height: var(--spectrum-alias-ui-icon-dash-size-600);
+}
+.spectrum--large .spectrum-UIIcon-Cross75 {
+  width: var(--spectrum-alias-ui-icon-cross-size-75);
+  height: var(--spectrum-alias-ui-icon-cross-size-75);
+}
+.spectrum--large .spectrum-UIIcon-Cross100 {
+  width: var(--spectrum-alias-ui-icon-cross-size-100);
+  height: var(--spectrum-alias-ui-icon-cross-size-100);
+}
+.spectrum--large .spectrum-UIIcon-Cross200 {
+  width: var(--spectrum-alias-ui-icon-cross-size-200);
+  height: var(--spectrum-alias-ui-icon-cross-size-200);
+}
+.spectrum--large .spectrum-UIIcon-Cross300 {
+  width: var(--spectrum-alias-ui-icon-cross-size-300);
+  height: var(--spectrum-alias-ui-icon-cross-size-300);
+}
+.spectrum--large .spectrum-UIIcon-Cross400 {
+  width: var(--spectrum-alias-ui-icon-cross-size-400);
+  height: var(--spectrum-alias-ui-icon-cross-size-400);
+}
+.spectrum--large .spectrum-UIIcon-Cross500 {
+  width: var(--spectrum-alias-ui-icon-cross-size-500);
+  height: var(--spectrum-alias-ui-icon-cross-size-500);
+}
+.spectrum--large .spectrum-UIIcon-Cross600 {
+  width: var(--spectrum-alias-ui-icon-cross-size-600);
+  height: var(--spectrum-alias-ui-icon-cross-size-600);
+}
+.spectrum--large .spectrum-UIIcon-TripleGripper100 {
+  width: var(--spectrum-alias-ui-icon-triplegripper-size-100-height);
+  height: var(--spectrum-alias-ui-icon-triplegripper-size-100-width);
+}
+.spectrum--large .spectrum-UIIcon-DoubleGripper100 {
+  width: var(--spectrum-alias-ui-icon-doublegripper-size-100-height);
+  height: var(--spectrum-alias-ui-icon-doublegripper-size-100-width);
+}
+.spectrum--large .spectrum-UIIcon-SingleGripper100 {
+  width: var(--spectrum-alias-ui-icon-singlegripper-size-100-height);
+  height: var(--spectrum-alias-ui-icon-singlegripper-size-100-width);
+}
+.spectrum--large .spectrum-UIIcon-CornerTriangle75 {
+  width: var(--spectrum-alias-ui-icon-cornertriangle-size-75);
+  height: var(--spectrum-alias-ui-icon-cornertriangle-size-75);
+}
+.spectrum--large .spectrum-UIIcon-CornerTriangle100 {
+  width: var(--spectrum-alias-ui-icon-cornertriangle-size-100);
+  height: var(--spectrum-alias-ui-icon-cornertriangle-size-100);
+}
+.spectrum--large .spectrum-UIIcon-CornerTriangle200 {
+  width: var(--spectrum-alias-ui-icon-cornertriangle-size-200);
+  height: var(--spectrum-alias-ui-icon-cornertriangle-size-200);
+}
+.spectrum--large .spectrum-UIIcon-CornerTriangle300 {
+  width: var(--spectrum-alias-ui-icon-cornertriangle-size-300);
+  height: var(--spectrum-alias-ui-icon-cornertriangle-size-300);
+}
+.spectrum--large .spectrum-UIIcon-Asterisk75 {
+  width: var(--spectrum-alias-ui-icon-asterisk-size-75);
+  height: var(--spectrum-alias-ui-icon-asterisk-size-300);
+}
+.spectrum--large .spectrum-UIIcon-Asterisk100 {
+  width: var(--spectrum-alias-ui-icon-asterisk-size-100);
+  height: var(--spectrum-alias-ui-icon-asterisk-size-100);
+}
+.spectrum--large .spectrum-UIIcon-Asterisk200 {
+  width: var(--spectrum-alias-ui-icon-asterisk-size-200);
+  height: var(--spectrum-alias-ui-icon-asterisk-size-200);
+}
+.spectrum--large .spectrum-UIIcon-Asterisk300 {
+  width: var(--spectrum-alias-ui-icon-asterisk-size-300);
+  height: var(--spectrum-alias-ui-icon-asterisk-size-300);
+}

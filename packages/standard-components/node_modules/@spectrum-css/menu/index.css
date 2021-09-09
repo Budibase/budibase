@@ -1,0 +1,221 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import "../vars/css/components/spectrum-listitem.css";
+
+.spectrum-Menu {
+  --spectrum-menu-margin-x: var(--spectrum-global-dimension-size-40);
+  --spectrum-listitem-heading-text-size: var(
+    --spectrum-global-dimension-font-size-50
+  );
+  --spectrum-listitem-heading-text-font-weight: 400;
+  --spectrum-listitem-heading-text-transform: uppercase;
+  --spectrum-listitem-heading-letter-spacing: 0.06em;
+  --spectrum-listitem-heading-margin: var(--spectrum-global-dimension-size-75) 0
+    0 0;
+  --spectrum-listitem-heading-padding: 0
+    var(--spectrum-global-dimension-size-450) 0
+    var(--spectrum-global-dimension-size-150);
+
+  --spectrum-listitem-padding-y: var(
+    --spectrum-global-dimension-size-85
+  );
+
+  --spectrum-listitem-selectable-padding-right: calc(
+    var(--spectrum-global-dimension-size-100) +
+      var(--spectrum-icon-checkmark-medium-width) +
+      var(--spectrum-listitem-icon-gap)
+  );
+
+  --spectrum-listitem-icon-margin-top: var(
+    --spectrum-global-dimension-size-50
+  );
+
+  /* Hardcoded for wrapping study */
+  --spectrum-listitem-label-line-height: 1.3;
+  --spectrum-listitem-heading-line-height: var(
+    --spectrum-alias-body-text-line-height
+  );
+}
+
+.spectrum-Menu {
+  @remapvars {
+    find: /--spectrum-listitem-m(.*)/;
+    filter: color;
+    replace: --spectrum-listitem$1;
+  }
+}
+
+.spectrum-Menu {
+  display: inline-block;
+
+  box-sizing: border-box;
+
+  margin-block: var(--spectrum-popover-padding-y);
+  margin-inline: 0;
+  padding: 0;
+
+  list-style-type: none;
+
+  overflow: auto;
+
+  > .spectrum-Menu-sectionHeading {
+    /* Support headings as LI */
+    margin-block-start: var(--spectrum-menu-margin-x);
+    margin-block-end: var(--spectrum-menu-margin-x);
+  }
+
+  &.is-selectable {
+    .spectrum-Menu-item {
+      padding-inline-end: var(
+        --spectrum-listitem-selectable-padding-right
+      );
+
+      &.is-selected {
+        padding-inline-end: calc(
+          var(--spectrum-listitem-padding-right) -
+            var(--spectrum-popover-border-size)
+        );
+      }
+    }
+  }
+}
+
+.spectrum-Menu-checkmark {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.spectrum-Menu-item {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  box-sizing: border-box;
+
+  padding: var(--spectrum-listitem-padding-y)
+    var(--spectrum-listitem-padding-right)
+    var(--spectrum-listitem-padding-y)
+    var(--spectrum-listitem-padding-left);
+
+  margin: 0;
+
+  border-inline-start: var(--spectrum-listitem-focus-indicator-size) solid
+    transparent;
+
+  min-block-size: var(--spectrum-listitem-height);
+
+  font-size: var(--spectrum-listitem-text-size);
+  font-weight: var(--spectrum-listitem-text-font-weight);
+  font-style: normal;
+  text-decoration: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &.is-selected {
+    /* Redundant, but included for backwards compatibility */
+    padding-inline-end: calc(
+      var(--spectrum-listitem-padding-right) -
+        var(--spectrum-popover-border-size)
+    );
+
+    .spectrum-Menu-checkmark {
+      display: block;
+    }
+  }
+
+  .spectrum-Icon,
+  .spectrum-Menu-itemIcon {
+    /* Don't get smaller, you're an icon! */
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+
+  .spectrum-Icon + .spectrum-Menu-itemLabel,
+  .spectrum-Menu-itemIcon + .spectrum-Menu-itemLabel {
+    margin-inline-start: var(--spectrum-listitem-icon-gap);
+
+    inline-size: calc(
+      100% - var(--spectrum-icon-checkmark-medium-width) -
+        var(--spectrum-listitem-icon-gap) -
+        var(--spectrum-listitem-thumbnail-padding-left) -
+        var(--spectrum-alias-workflow-icon-size-m)
+    );
+  }
+}
+
+.spectrum-Menu-itemLabel {
+  flex: 1 1 auto;
+  line-height: var(--spectrum-listitem-label-line-height);
+  hyphens: auto;
+  overflow-wrap: break-word;
+  inline-size: calc(
+    100% - var(--spectrum-icon-checkmark-medium-width) -
+      var(--spectrum-listitem-icon-gap)
+  );
+}
+
+.spectrum-Menu-itemLabel--wrapping {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.spectrum-Menu-checkmark {
+  display: none;
+  align-self: flex-start;
+}
+
+.spectrum-Menu-checkmark,
+.spectrum-Menu-chevron {
+  flex-grow: 0;
+  margin-inline-start: var(--spectrum-listitem-icon-gap);
+  margin-block-start: var(--spectrum-listitem-icon-margin-top);
+}
+
+.spectrum-Menu-chevron {
+  transform: logical rotate(0deg);
+}
+
+.spectrum-Menu-divider {
+  /* Add the correct box sizing for hr in Firefox. */
+  box-sizing: content-box;
+
+  /* Show the overflow for hr in Edge and IE. */
+  overflow: visible;
+
+  block-size: var(--spectrum-listitem-divider-size);
+  margin-block: calc(var(--spectrum-listitem-divider-padding) / 2);
+  margin-inline: var(--spectrum-listitem-padding-y);
+  padding: 0;
+  border: none;
+}
+
+.spectrum-Menu-sectionHeading {
+  display: block;
+  margin: var(--spectrum-listitem-heading-margin);
+  padding: var(--spectrum-listitem-heading-padding);
+
+  font-size: var(--spectrum-listitem-heading-text-size);
+  font-weight: var(--spectrum-listitem-heading-text-font-weight);
+  line-height: var(--spectrum-listitem-heading-line-height);
+  text-transform: var(--spectrum-listitem-heading-text-transform);
+  letter-spacing: var(--spectrum-listitem-heading-letter-spacing);
+}
+
+.spectrum-Menu .spectrum-Menu {
+  /* Fill parent menu when nested */
+  display: block;
+}

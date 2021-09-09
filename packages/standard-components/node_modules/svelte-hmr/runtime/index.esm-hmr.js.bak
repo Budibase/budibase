@@ -1,0 +1,7 @@
+/**
+ * Entry point for re export of browser DOM runtime with esm-hmr.
+ */
+
+export * from './hot-api-esm.js'
+
+export * from './proxy-adapter-dom.js'

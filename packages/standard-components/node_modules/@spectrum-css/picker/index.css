@@ -1,0 +1,332 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import "../commons/basebutton.css";
+@import "../vars/css/components/spectrum-picker.css";
+
+.spectrum-Picker {
+  @inherit: %spectrum-BaseButton;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Truncate if menu options make us too wide */
+  max-inline-size: 100%;
+  inline-size: var(--spectrum-picker-width);
+  min-inline-size: var(--spectrum-picker-min-width);
+  block-size: var(--spectrum-picker-height);
+
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--spectrum-picker-textonly-padding-left) var(--spectrum-picker-textonly-padding-right);
+
+  border-width: var(--spectrum-picker-border-size);
+  border-style: solid;
+  border-radius: var(--spectrum-picker-border-radius);
+
+  transition: background-color var(--spectrum-global-animation-duration-100),
+    box-shadow var(--spectrum-global-animation-duration-100),
+    border-color var(--spectrum-global-animation-duration-100);
+
+  &:disabled,
+  &.is-disabled {
+    border-width: var(--spectrum-picker-disabled-border-size);
+    cursor: default;
+  }
+
+  .spectrum-Picker-icon {
+    flex-shrink: 0;
+
+    /* todo: In theory, this is right -- there should be more gap with an icon -- but in practice, it does not match */
+    /* margin-inline-start: calc(var(--spectrum-picker-padding-left) - var(--spectrum-picker-textonly-padding-left)); */
+    margin-inline-end: var(--spectrum-picker-icon-gap);
+  }
+
+  .spectrum-Picker-label + .spectrum-Picker-icon {
+    margin-inline-start: var(--spectrum-picker-icon-gap);
+  }
+}
+
+.spectrum-Picker--sizeS {
+  @remapvars {
+    find: /--spectrum-picker-s(.*)/;
+    filter: color;
+    replace: --spectrum-picker$1;
+  }
+}
+
+.spectrum-Picker--sizeM {
+  @remapvars {
+    find: /--spectrum-picker-m(.*)/;
+    filter: color;
+    replace: --spectrum-picker$1;
+  }
+}
+
+.spectrum-Picker--sizeL {
+  @remapvars {
+    find: /--spectrum-picker-l(.*)/;
+    filter: color;
+    replace: --spectrum-picker$1;
+  }
+}
+
+.spectrum-Picker--sizeXL {
+  @remapvars {
+    find: /--spectrum-picker-xl(.*)/;
+    filter: color;
+    replace: --spectrum-picker$1;
+  }
+}
+
+.spectrum-Picker {
+  /* todo: remove when fixed in DNA */
+  --spectrum-picker-min-width: var(--spectrum-global-dimension-size-400);
+
+  /* Todo: fix in DNA, should have been zero */
+  --spectrum-picker-disabled-border-size: 0;
+
+  --spectrum-picker-popover-max-width: var(--spectrum-global-dimension-size-3000);
+  --spectrum-picker-width: var(--spectrum-global-dimension-size-2400);
+
+  /* todo: use real DNA var */
+  --spectrum-picker-border-size-increase-focus: 1px;
+}
+
+.spectrum-Picker--quiet {
+  @remapvars {
+    find: /--spectrum-picker-quiet-m(.*)/;
+    filter: color;
+    replace: --spectrum-picker-$1;
+  }
+
+  /* Todo: fix in DNA, should have been zero */
+  --spectrum-picker-border-size: 0;
+  --spectrum-picker-border-radius: 0;
+  --spectrum-picker-textonly-padding-left: 0;
+  --spectrum-picker-textonly-padding-right: 0;
+}
+
+.spectrum-Picker--quiet {
+  inline-size: auto;
+  min-inline-size: 0;
+
+  &:disabled,
+  &.is-disabled {
+    &:focus-ring {
+      box-shadow: none;
+    }
+  }
+}
+
+.spectrum-Picker-label {
+  /* Be the biggest, but also shrink! */
+  flex: 1 1 auto;
+
+  white-space: nowrap;
+  overflow: hidden;
+
+  block-size: calc(
+    var(--spectrum-picker-height) - calc(var(--spectrum-picker-border-size) * 2)
+  );
+  line-height: calc(
+    var(--spectrum-picker-height) - calc(var(--spectrum-picker-border-size) * 2)
+  );
+
+  font-size: var(--spectrum-picker-text-size);
+
+  text-overflow: ellipsis;
+  text-align: start;
+
+  &.is-placeholder {
+    font-weight: var(--spectrum-picker-placeholder-text-font-weight);
+    font-style: var(--spectrum-picker-placeholder-text-font-style);
+    transition: color var(--spectrum-global-animation-duration-100) ease-in-out;
+  }
+}
+
+/* The picker chevron */
+.spectrum-Picker-menuIcon {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  transition: color var(--spectrum-global-animation-duration-100) ease-out;
+  flex-shrink: 0;
+}
+
+.spectrum-Picker-validationIcon {
+  margin-inline-start: var(--spectrum-picker-error-icon-margin-left);
+}
+
+.spectrum-Picker-label ~ .spectrum-Picker-menuIcon {
+  margin-inline-start: var(--spectrum-picker-ui-icon-gap);
+}
+
+.spectrum-Picker-popover {
+  max-inline-size: var(--spectrum-picker-popover-max-width);
+}
+
+.spectrum-Picker-popover--quiet {
+  margin-inline-start: calc(
+    -1 * calc(var(--spectrum-picker-quiet-m-popover-offset-x) +
+          var(--spectrum-popover-border-size))
+  );
+}
+
+.spectrum-Picker {
+  color: var(--spectrum-picker-m-text-color);
+  background-color: var(--spectrum-picker-m-background-color);
+  border-color: var(--spectrum-picker-m-border-color);
+
+  &:hover {
+    color: var(--spectrum-picker-m-text-color-hover);
+    background-color: var(--spectrum-picker-m-background-color-hover);
+    border-color: var(--spectrum-picker-m-border-color-hover);
+
+    .spectrum-Picker-menuIcon {
+      color: var(--spectrum-picker-m-icon-color-hover);
+    }
+  }
+
+  &:active,
+  &.is-open {
+    background-color: var(--spectrum-picker-m-background-color-down);
+    border-color: var(--spectrum-picker-m-border-color-down);
+
+    &.is-placeholder {
+      .spectrum-Picker-label {
+        color: var(--spectrum-picker-m-placeholder-text-color-down);
+      }
+    }
+  }
+
+  &:focus-ring,
+  &.is-focused {
+    background-color: var(--spectrum-picker-m-background-color-key-focus);
+    border-color: var(--spectrum-picker-m-border-color-key-focus);
+    box-shadow: 0 0 0 var(--spectrum-picker-border-size-increase-focus) var(--spectrum-picker-m-border-color-key-focus);
+    color: var(--spectrum-picker-m-text-color-key-focus);
+
+    &.is-placeholder {
+      color: var(--spectrum-picker-m-placeholder-text-color-key-focus);
+    }
+  }
+
+  &.is-invalid {
+    border-color: var(--spectrum-picker-m-border-color-error);
+
+    .spectrum-Picker-validationIcon {
+      color: var(--spectrum-picker-m-validation-icon-color-error);
+    }
+
+    &:hover {
+      border-color: var(--spectrum-picker-m-border-color-error-hover);
+    }
+
+    &:active,
+    &.is-open {
+      border-color: var(--spectrum-picker-m-border-color-error-down);
+    }
+
+    &:focus-ring,
+    &.is-focused {
+      border-color: var(--spectrum-picker-m-border-color-error-key-focus);
+      box-shadow: 0 0 0 var(--spectrum-picker-border-size-increase-focus) var(--spectrum-picker-m-border-color-error-key-focus);
+    }
+  }
+
+  &:disabled,
+  &.is-disabled {
+    background-color: var(--spectrum-picker-m-background-color-disabled);
+    color: var(--spectrum-picker-m-text-color-disabled);
+
+    .spectrum-Picker-icon,
+    .spectrum-Picker-menuIcon,
+    .spectrum-Picker-validationIcon {
+      color: var(--spectrum-picker-m-icon-color-disabled);
+    }
+
+    .spectrum-Picker-label {
+      &.is-placeholder {
+        color: var(--spectrum-picker-m-placeholder-text-color-disabled);
+      }
+    }
+  }
+}
+
+.spectrum-Picker-menuIcon {
+  color: var(--spectrum-picker-m-icon-color);
+}
+
+.spectrum-Picker-label {
+  &.is-placeholder {
+    color: var(--spectrum-picker-m-placeholder-text-color);
+
+    &:hover {
+      color: var(--spectrum-picker-m-placeholder-text-color-hover);
+    }
+
+    &:active {
+      color: var(--spectrum-picker-m-placeholder-text-color-mouse-focus);
+    }
+  }
+}
+
+.spectrum-Picker--quiet {
+  color: var(--spectrum-picker-m-text-color);
+  border-color: var(--spectrum-picker-quiet-m-border-color);
+  background-color: var(--spectrum-picker-quiet-m-background-color);
+
+  &:hover {
+    background-color: var(--spectrum-picker-quiet-m-background-color-hover);
+    color: var(--spectrum-picker-m-text-color-hover);
+  }
+
+  &:focus-ring,
+  &.is-focused {
+    background-color: var(--spectrum-picker-quiet-m-background-color-key-focus);
+    box-shadow: 0 2px 0 0 var(--spectrum-picker-m-border-color-key-focus);
+
+    &.is-placeholder {
+      color: var(--spectrum-picker-quiet-m-placeholder-text-color-key-focus);
+    }
+    .spectrum-Picker-menuIcon {
+      color: var(--spectrum-picker-m-icon-color-key-focus)
+    }
+  }
+
+  &:active,
+  &.is-open {
+    background-color: var(--spectrum-picker-quiet-m-background-color-down);
+    border-color: var(--spectrum-picker-quiet-m-border-color-down);
+
+    &:focus-ring,
+    &.is-focused {
+      background-color: var(--spectrum-picker-quiet-m-background-color-key-focus);
+      box-shadow: 0 2px 0 0 var(--spectrum-picker-m-border-color-key-focus);
+    }
+  }
+
+  &.is-invalid {
+    &:focus-ring,
+    &.is-focused {
+      box-shadow: 0 2px 0 0 var(--spectrum-picker-m-border-color-error-key-focus);
+    }
+  }
+
+  &:disabled,
+  &.is-disabled {
+    background-color: var(--spectrum-picker-quiet-m-background-color-disabled);
+    color: var(--spectrum-picker-m-text-color-disabled);
+  }
+}

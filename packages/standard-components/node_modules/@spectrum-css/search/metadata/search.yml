@@ -1,0 +1,78 @@
+name: Search
+description: 'The searchy, cleary field.'
+sections:
+  - name: Migration Guide
+    description: |
+      ### New Textfield markup
+      Search now uses the new Textfield markup. See the [Textfield migration guide](textfield.html#migrationguide) for more information.
+
+      ### Quiet Search requires `.spectrum-Search--quiet`
+      You now must add `.spectrum-Search--quiet` for Quiet Search.
+
+      ### `.spectrum-Search-icon` is no longer required
+      You can omit the `.spectrum-Search-icon` class.
+
+      ### `.spectrum-Search-clearButton` must be added to `.spectrum-ClearButton`
+      The `.spectrum-Search-clearButton` class is now required on the `.spectrum-ClearButton`.
+
+examples:
+  - id: search
+    name: Standard
+    markup: |
+      <form class="spectrum-Search">
+        <div class="spectrum-Textfield">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-icon-18-Magnify" />
+          </svg>
+          <input type="search" placeholder="Search" name="search" value="" class="spectrum-Textfield-input spectrum-Search-input" autocomplete="off">
+        </div>
+        <button type="reset" class="spectrum-ClearButton spectrum-Search-clearButton">
+          <svg class="spectrum-Icon spectrum-UIIcon-Cross75" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Cross75" />
+          </svg>
+        </button>
+      </form>
+
+      <form class="spectrum-Search is-disabled">
+        <div class="spectrum-Textfield is-disabled">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-icon-18-Magnify" />
+          </svg>
+          <input type="search" placeholder="Search" name="search" value="" class="spectrum-Textfield-input spectrum-Search-input" autocomplete="off" disabled>
+        </div>
+        <button type="reset" class="spectrum-ClearButton spectrum-Search-clearButton" disabled>
+          <svg class="spectrum-Icon spectrum-UIIcon-Cross75" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Cross75" />
+          </svg>
+        </button>
+      </form>
+  - id: search-quiet
+    name: Quiet
+    markup: |
+      <form class="spectrum-Search spectrum-Search--quiet">
+        <div class="spectrum-Textfield spectrum-Textfield--quiet">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-icon-18-Magnify" />
+          </svg>
+          <input type="search" placeholder="Search" name="search" value="" class="spectrum-Textfield-input spectrum-Search-input" autocomplete="off">
+        </div>
+        <button type="reset" class="spectrum-ClearButton spectrum-Search-clearButton">
+          <svg class="spectrum-Icon spectrum-UIIcon-Cross100 focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Cross100" />
+          </svg>
+        </button>
+      </form>
+
+      <form class="spectrum-Search spectrum-Search--quiet is-disabled">
+        <div class="spectrum-Textfield spectrum-Textfield--quiet is-disabled">
+          <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon" focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-icon-18-Magnify" />
+          </svg>
+          <input type="search" placeholder="Search" name="search" value="" class="spectrum-Textfield-input spectrum-Search-input" autocomplete="off" disabled>
+        </div>
+        <button type="reset" class="spectrum-ClearButton spectrum-Search-clearButton" disabled>
+          <svg class="spectrum-Icon spectrum-UIIcon-Cross100 focusable="false" aria-hidden="true">
+            <use xlink:href="#spectrum-css-icon-Cross100" />
+          </svg>
+        </button>
+      </form>

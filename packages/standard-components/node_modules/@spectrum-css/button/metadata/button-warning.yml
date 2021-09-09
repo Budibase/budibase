@@ -1,0 +1,176 @@
+name: Button - Warning
+status: Verified
+description: The negative button is for high emphasis of negative or destructive actions.
+SpectrumSiteSlug: https://spectrum.adobe.com/page/button/#Negative
+sections:
+  - name: Migration Guide
+    description: |
+      ### T-shirt sizing
+      Button now supports t-shirt sizing and requires that you specify the size of button by adding a `.spectrum-Button--size*` class.
+
+      ### Change workflow icon size
+
+      Previously, all Buttons used `.spectrum-Icon--sizeS`. This has changed:
+
+      | Button classname           | Workflow icon classname           |
+      | -------------------------- | --------------------------------- |
+      | `.spectrum-Button--sizeS`  | `.spectrum-Icon--sizeS`           |
+      | `.spectrum-Button--sizeM`  | `.spectrum-Icon--sizeM`           |
+      | `.spectrum-Button--sizeL`  | `.spectrum-Icon--sizeL`           |
+      | `.spectrum-Button--sizeXL` | `.spectrum-Icon--sizeXL`          |
+examples:
+  - id: button-warning
+    name: Sizing
+    markup: |
+      <div class="spectrum-Examples">
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">S</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeS">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeS">
+            <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">M (default)</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeM">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeM">
+            <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">L</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeL">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeL" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">XL</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeXL">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--sizeXL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeXL" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+      </div>
+
+  - id: button-warning
+    name: Standard - Disabled
+    markup: |
+      <button class="spectrum-Button spectrum-Button--sizeM spectrum-Button--warning" disabled>
+        <span class="spectrum-Button-label">Delete</span>
+      </button>
+
+      <button class="spectrum-Button spectrum-Button--sizeM spectrum-Button--warning" disabled>
+        <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="Delete">
+          <use xlink:href="#spectrum-icon-18-Delete" />
+        </svg>
+        <span class="spectrum-Button-label">Delete</span>
+      </button>
+
+  - id: button-quiet-warning
+    name: Warning (quiet)
+    markup: |
+      <div class="spectrum-Examples">
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">S</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeS">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeS">
+            <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">M (default)</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeM">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeM">
+            <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">L</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeL">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeL" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">XL</h4>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeXL">
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--warning spectrum-Button--quiet spectrum-Button--sizeXL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeXL" focusable="false" aria-hidden="true" aria-label="Delete">
+              <use xlink:href="#spectrum-icon-18-Delete" />
+            </svg>
+            <span class="spectrum-Button-label">Delete</span>
+          </button>
+        </div>
+      </div>
+
+  - id: button-quiet-warning
+    name: Warning (quiet) - Disabled
+    markup: |
+      <button class="spectrum-Button spectrum-Button--sizeM spectrum-Button--warning spectrum-Button--quiet" disabled>
+        <span class="spectrum-Button-label">Button</span>
+      </button>
+
+      <button class="spectrum-Button spectrum-Button--sizeM spectrum-Button--warning spectrum-Button--quiet" disabled>
+        <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="Delete">
+          <use xlink:href="#spectrum-icon-18-Delete" />
+        </svg>
+        <span class="spectrum-Button-label">Delete</span>
+      </button>

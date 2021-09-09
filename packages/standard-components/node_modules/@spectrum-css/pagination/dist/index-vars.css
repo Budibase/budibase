@@ -1,0 +1,57 @@
+.spectrum-Pagination--explicit,
+.spectrum-Pagination--listing {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: row;
+      flex-direction: row;
+  -ms-flex-align: center;
+      align-items: center;
+}
+
+.spectrum-Pagination-textfield {
+  width: var(--spectrum-pagination-textfield-width, var(--spectrum-global-dimension-size-600));
+  min-width: var(--spectrum-pagination-textfield-width, var(--spectrum-global-dimension-size-600));
+}
+
+[dir="ltr"] .spectrum-Pagination-counter {
+  margin-left: var(--spectrum-pagination-counter-margin-left, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="rtl"] .spectrum-Pagination-counter {
+  margin-right: var(--spectrum-pagination-counter-margin-left, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="ltr"] .spectrum-Pagination-prevButton {
+  margin-right: var(--spectrum-pagination-page-button-margin-horizontal, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="rtl"] .spectrum-Pagination-prevButton {
+  margin-left: var(--spectrum-pagination-page-button-margin-horizontal, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="ltr"] .spectrum-Pagination-nextButton {
+  margin-left: var(--spectrum-pagination-page-button-margin-horizontal, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="rtl"] .spectrum-Pagination-nextButton {
+  margin-right: var(--spectrum-pagination-page-button-margin-horizontal, var(--spectrum-global-dimension-size-65));
+}
+
+[dir="rtl"] .spectrum-Pagination-prevButton .spectrum-Icon,[dir="rtl"]  .spectrum-Pagination-nextButton .spectrum-Icon { transform: matrix(-1, 0, 0, 1, 0, 0) ; }
+
+.spectrum-Pagination-pageButton:hover {
+    background-color: var(--spectrum-pagination-page-button-background-color-hover, var(--spectrum-alias-background-color-hover-overlay));
+  }
+
+.spectrum-Pagination-pageButton:focus {
+    border-color: var(--spectrum-pagination-page-button-border-color-key-focus, var(--spectrum-alias-focus-color));
+  }
+
+.spectrum-Pagination-pageButton.is-selected {
+    background-color: var(--spectrum-pagination-page-button-background-color-down, var(--spectrum-global-color-gray-800));
+    color: var(--spectrum-pagination-page-button-text-color-down, var(--spectrum-global-color-static-white));
+  }
+
+.spectrum-Pagination-counter {
+  color: var(--spectrum-alias-label-text-color, var(--spectrum-global-color-gray-700));
+}

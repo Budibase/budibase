@@ -1,0 +1,72 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-Menu {
+  /* these need to be removed but we don't have a full design spec */
+  --spectrum-listheading-text-color: var(--spectrum-global-color-gray-700);
+}
+
+.spectrum-Menu {
+  background-color: var(--spectrum-listitem-m-background-color);
+}
+
+.spectrum-Menu-item {
+  background-color: var(--spectrum-listitem-m-background-color);
+  color: var(--spectrum-listitem-m-text-color);
+
+  &:focus-ring,
+  &.is-focused {
+    background-color: var(
+      --spectrum-listitem-m-background-color-key-focus
+    );
+    color: var(--spectrum-listitem-m-text-color-key-focus);
+    border-inline-start-color: var(
+      --spectrum-listitem-m-focus-indicator-color
+    );
+  }
+
+  &:hover,
+  &:focus,
+  &.is-highlighted,
+  &.is-open {
+    background-color: var(--spectrum-listitem-m-background-color-hover);
+    color: var(--spectrum-listitem-m-text-color-hover);
+  }
+
+  &.is-selected {
+    color: var(--spectrum-listitem-m-text-color-selected);
+
+    .spectrum-Menu-checkmark {
+      color: var(--spectrum-listitem-m-icon-color-selected);
+    }
+  }
+
+  .is-active,
+  &:active {
+    background-color: var(--spectrum-listitem-m-background-color-down);
+  }
+
+  &.is-disabled {
+    background-color: var(--spectrum-listitem-m-background-color-disabled);
+    background-image: none;
+    color: var(--spectrum-listitem-m-text-color-disabled);
+    cursor: default;
+  }
+}
+
+.spectrum-Menu-sectionHeading {
+  color: var(--spectrum-listheading-text-color);
+}
+
+.spectrum-Menu-divider {
+  background-color: var(--spectrum-listitem-m-divider-color);
+}

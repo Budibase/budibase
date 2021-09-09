@@ -1,0 +1,211 @@
+name: Text Field
+status: Verified
+description: A single-line text field (aka textfield)
+SpectrumSiteSlug: https://spectrum.adobe.com/page/text-field/
+sections:
+  - name: Migration Guide
+    description: |
+      ### Composition
+      As of 3.0.0, Textfield is now composed the same way a DecoratedTextfield was preivously.
+
+      That is, the outer element `div.spectrum-Textfield` contains a `input.spectrum-Textfield-input`.
+
+      ### Icons
+      Icons are now added as SVGs, with `svg.spectrum-Textfield-icon` for workflow icons, and `svg.spectrum-Textfield-validationIcon` for UI icons.
+
+      The `<svg>` element should appear before the `<input>` element.
+
+      ### Indicating validity and focus
+      Validity and focus must be bubbled up to the parent so adjacent siblings can be styled.
+
+      Thus, implementations must add the following classes in the following situations:
+
+      * `.spectrum-Textfield.is-focused` - when the input is focused with the mouse
+      * `.spectrum-Textfield.is-keyboardFocused` - when the input is focused with the keyboard
+      * `.spectrum-Textfield.is-valid` - when the input has an explicit valid state
+      * `.spectrum-Textfield.is-invalid` - when the input has an explicit invalid state
+
+      ### Removal of `:valid` and `:invalid`
+      Textfield no longer supports the CSS pseudo selectors [`:invalid`](https://developer.mozilla.org/en-US/docs/Web/CSS/:invalid) and [`:value`](https://developer.mozilla.org/en-US/docs/Web/CSS/:valid).
+
+      Using these selectors is an anti-pattern that complicates form validation techniques by making inputs appear invalid immediately, not after use interaction. Please apply `.is-valid` and `.is-invalid` to the outer `div.spectrum-Textfield` element instead.
+
+      ### Variants
+      Variants must be applied to the parent element, i.e. `.spectrum-Textfield.spectrum-Textfield--quiet` or `.spectrum-Textfield.spectrum-Textfield--multiline`. The `<input>` will be styled appropriately.
+
+examples:
+  - id: textfield
+    name: Standard
+    markup: |
+      <div class="spectrum-Textfield">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield
+    name: Disabled
+    markup: |
+      <div class="spectrum-Textfield is-disabled">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input" disabled>
+      </div>
+
+  - id: textfield
+    name: Valid
+    markup: |
+      <div class="spectrum-Textfield is-valid">
+        <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-css-icon-Checkmark100" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="A valid input" class="spectrum-Textfield-input" pattern="[\w\s]+" required>
+      </div>
+
+  - id: textfield
+    name: Valid (disabled)
+    markup: |
+      <div class="spectrum-Textfield is-valid is-disabled">
+        <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-css-icon-Checkmark100" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="A valid input" class="spectrum-Textfield-input" pattern="[\w\s]+" required disabled>
+      </div>
+
+  - id: textfield
+    name: Invalid
+    markup: |
+      <div class="spectrum-Textfield is-invalid">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>
+
+  - id: textfield
+    name: Invalid (disabled)
+    markup: |
+      <div class="spectrum-Textfield is-invalid is-disabled">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" disabled>
+      </div>
+
+  - id: textfield
+    name: Focused
+    markup: |
+      <div class="spectrum-Textfield is-focused">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield
+    name: Keyboard Focused
+    markup: |
+      <div class="spectrum-Textfield is-keyboardFocused">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield
+    name: Focused (invalid)
+    markup: |
+      <div class="spectrum-Textfield is-invalid is-focused">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>
+
+  - id: textfield
+    name: Keyboard Focused (invalid)
+    markup: |
+      <div class="spectrum-Textfield is-invalid is-keyboardFocused">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Disabled
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-disabled">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input" disabled>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Valid
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-valid">
+        <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-css-icon-Checkmark100" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="A valid input" class="spectrum-Textfield-input" pattern="[\w\s]+" required>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Valid (disabled)
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-valid is-disabled">
+        <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-css-icon-Checkmark100" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="A valid input" class="spectrum-Textfield-input" pattern="[\w\s]+" required disabled>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Invalid
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-invalid">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Invalid (disabled)
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-invalid is-disabled">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" disabled>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Focused
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-focused">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Keyboard Focused
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-keyboardFocused">
+        <input type="text" placeholder="Enter your name" name="field" value="" class="spectrum-Textfield-input">
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Focused (invalid)
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-invalid is-focused">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>
+
+  - id: textfield-quiet
+    name: Quiet Keyboard Focused (invalid)
+    markup: |
+      <div class="spectrum-Textfield spectrum-Textfield--quiet is-invalid is-keyboardFocused">
+        <svg class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon" focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-icon-18-Alert" />
+        </svg>
+        <input type="text" placeholder="Enter your name" name="field" value="Invalid input" class="spectrum-Textfield-input" pattern="[\d]+" required>
+      </div>

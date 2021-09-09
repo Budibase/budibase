@@ -1,0 +1,20 @@
+name: Typography Detail
+dnaStatus: Verified
+description: Detail is a typography component used for disclosing extra information or smaller items in hierarchical relationships of text.
+SpectrumSiteSlug: https://spectrum.adobe.com/page/detail/
+examples:
+  - id: detail-m
+    status: Verified
+    name: Detail
+    markup: |
+      <div class="spectrum">
+        <p class="spectrum-Detail spectrum-Detail--sizeXL">DetailXL <em>DetailXL Emphasis</em> <span class="spectrum-Detail--light">DetailXL Light</span> <strong>DetailXL Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeL">DetailL <em>DetailL Emphasis</em> <span class="spectrum-Detail--light">DetailL Light</span> <strong>DetailL Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeM">DetailM <em>DetailM Emphasis</em> <span class="spectrum-Detail--light">DetailM Light</span> <strong>DetailM Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeS">DetailS <em>DetailS Emphasis</em> <span class="spectrum-Detail--light">DetailS Light</span> <strong>DetailS Strong</strong>.</p>
+        </br/>
+        <p class="spectrum-Detail spectrum-Detail--sizeXL spectrum-Detail--serif">DetailXL <em>DetailXL Emphasis</em> <span class="spectrum-Detail--light">DetailXL Light</span> <strong>DetailXL Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeL spectrum-Detail--serif">DetailL <em>DetailL Emphasis</em> <span class="spectrum-Detail--light">DetailL Light</span> <strong>DetailL Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeM spectrum-Detail--serif">DetailM <em>DetailM Emphasis</em> <span class="spectrum-Detail--light">DetailM Light</span> <strong>DetailM Strong</strong>.</p>
+        <p class="spectrum-Detail spectrum-Detail--sizeS spectrum-Detail--serif">DetailS <em>DetailS Emphasis</em> <span class="spectrum-Detail--light">DetailS Light</span> <strong>DetailS Strong</strong>.</p>
+      </div>

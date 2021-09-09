@@ -1,0 +1,303 @@
+.spectrum-Tooltip {
+  --spectrum-overlay-animation-distance: var(--spectrum-picker-m-popover-offset-y, var(--spectrum-global-dimension-size-75));
+
+  visibility: hidden;
+
+  opacity: 0;
+
+  transition: transform var(--spectrum-global-animation-duration-100, 130ms) ease-in-out,
+              opacity var(--spectrum-global-animation-duration-100, 130ms) ease-in-out,
+              visibility 0ms linear var(--spectrum-global-animation-duration-100, 130ms);
+
+  pointer-events: none;
+}
+
+.spectrum-Tooltip.is-open {
+  visibility: visible;
+
+  opacity: 1;
+
+  transition-delay: 0ms;
+
+  pointer-events: auto;
+}
+
+.spectrum-Tooltip--bottom.is-open {
+  transform: translateY(var(--spectrum-overlay-animation-distance));
+}
+
+.spectrum-Tooltip--top.is-open {
+  transform: translateY(calc(-1 * var(--spectrum-overlay-animation-distance)));
+}
+
+.spectrum-Tooltip--right.is-open {
+  transform: translateX(var(--spectrum-overlay-animation-distance));
+}
+
+.spectrum-Tooltip--left.is-open {
+  transform: translateX(calc(-1 * var(--spectrum-overlay-animation-distance)));
+}
+
+.spectrum-Tooltip {
+  --spectrum-tooltip-target-offset: 3px;
+  --spectrum-tooltip-tip-width: var(--spectrum-tooltip-tip-height, var(--spectrum-global-dimension-size-50));
+}
+
+.spectrum-Tooltip {
+
+  position: relative;
+  left: 0px;
+  top: 0px;
+
+  display: -ms-inline-flexbox;
+
+  display: inline-flex;
+  -ms-flex-direction: row;
+      flex-direction: row;
+  -ms-flex-align: center;
+      align-items: center;
+  box-sizing: border-box;
+
+  vertical-align: top;
+
+  width: auto;
+  padding: var(--spectrum-tooltip-padding-top, var(--spectrum-global-dimension-size-50)) var(--spectrum-tooltip-padding-x, var(--spectrum-global-dimension-size-125));
+  border-radius: var(--spectrum-tooltip-border-radius, var(--spectrum-global-dimension-size-50));
+  min-height: var(--spectrum-tooltip-min-height, var(--spectrum-global-dimension-size-300));
+  max-width: var(--spectrum-tooltip-max-width, var(--spectrum-global-dimension-size-2000));
+
+  font-size: var(--spectrum-tooltip-text-size, var(--spectrum-global-dimension-font-size-75));
+  font-weight: var(--spectrum-tooltip-text-font-weight, var(--spectrum-global-font-weight-regular));
+  line-height: var(--spectrum-tooltip-text-line-height, var(--spectrum-alias-component-text-line-height));
+  word-break: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+.spectrum-Tooltip {
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+.spectrum-Tooltip p {
+    margin: 0;
+  }
+
+.spectrum-Tooltip-tip {
+  position: absolute;
+
+  height: 0;
+  width: 0;
+
+  border-width: var(--spectrum-tooltip-tip-width, var(--spectrum-global-dimension-size-100));
+  border-style: solid;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.spectrum-Tooltip--right .spectrum-Tooltip-tip, .spectrum-Tooltip--left .spectrum-Tooltip-tip {
+    top: 50%;
+    margin-top: calc(-1 * var(--spectrum-tooltip-tip-width, var(--spectrum-global-dimension-size-100)));
+  }
+
+.spectrum-Tooltip--right {
+  margin-left: var(--spectrum-tooltip-target-offset);
+}
+
+.spectrum-Tooltip--right .spectrum-Tooltip-tip {
+    right: 100%;
+    transform: rotate(90deg);
+  }
+
+.spectrum-Tooltip--left {
+  margin-right: var(--spectrum-tooltip-target-offset);
+}
+
+.spectrum-Tooltip--left .spectrum-Tooltip-tip {
+    left: 100%;
+    transform: rotate(-90deg);
+  }
+
+.spectrum-Tooltip--top {
+  margin-bottom: var(--spectrum-tooltip-target-offset);
+}
+
+.spectrum-Tooltip--top .spectrum-Tooltip-tip {
+    top: 100%;
+  }
+
+.spectrum-Tooltip--bottom {
+  margin-top: var(--spectrum-tooltip-target-offset);
+}
+
+.spectrum-Tooltip--bottom .spectrum-Tooltip-tip {
+    bottom: 100%;
+    transform: rotate(-180deg);
+  }
+
+.spectrum-Tooltip--bottom .spectrum-Tooltip-tip, .spectrum-Tooltip--top .spectrum-Tooltip-tip {
+    left: 50%;
+    margin-left: calc(-1 * var(--spectrum-tooltip-tip-width, var(--spectrum-global-dimension-size-100)));
+  }
+
+[dir="ltr"] .spectrum-Tooltip-typeIcon {
+  margin-left: calc(var(--spectrum-tooltip-icon-margin-x, var(--spectrum-global-dimension-size-100)) - var(--spectrum-tooltip-padding-x, var(--spectrum-global-dimension-size-125)));
+}
+
+[dir="rtl"] .spectrum-Tooltip-typeIcon {
+  margin-right: calc(var(--spectrum-tooltip-icon-margin-x, var(--spectrum-global-dimension-size-100)) - var(--spectrum-tooltip-padding-x, var(--spectrum-global-dimension-size-125)));
+}
+
+[dir="ltr"] .spectrum-Tooltip-typeIcon {
+  margin-right: var(--spectrum-tooltip-icon-margin-x, var(--spectrum-global-dimension-size-100));
+}
+
+[dir="rtl"] .spectrum-Tooltip-typeIcon {
+  margin-left: var(--spectrum-tooltip-icon-margin-x, var(--spectrum-global-dimension-size-100));
+}
+
+.spectrum-Tooltip-typeIcon {
+  width: var(--spectrum-tooltip-icon-size, var(--spectrum-global-dimension-size-175));
+  height: var(--spectrum-tooltip-icon-size, var(--spectrum-global-dimension-size-175));
+  -ms-flex-item-align: start;
+      align-self: flex-start;
+  -ms-flex-negative: 0;
+      flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.spectrum-Tooltip-label {
+  line-height: var(--spectrum-tooltip-text-line-height, var(--spectrum-alias-component-text-line-height));
+}
+
+.u-tooltip-showOnHover {
+  display: inline-block;
+  position: relative;
+}
+
+.u-tooltip-showOnHover .spectrum-Tooltip {
+    position: absolute;
+    white-space: nowrap;
+    visibility: visible !important;
+    transition: transform var(--spectrum-global-animation-duration-100, 130ms)
+      ease-in-out;
+    top: -100%;
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip-label {
+    max-width: none;
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--right,
+  .u-tooltip-showOnHover .spectrum-Tooltip--left {
+    top: 50%;
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--right .spectrum-Tooltip-tip, .u-tooltip-showOnHover .spectrum-Tooltip--left .spectrum-Tooltip-tip {
+      top: 50%;
+    }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--right {
+    left: 100%;
+    transform: translate(0, -50%);
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--left {
+    transform: translate(-100%, -50%);
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--bottom,
+  .u-tooltip-showOnHover .spectrum-Tooltip--top {
+    left: 50%;
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--bottom .spectrum-Tooltip-tip, .u-tooltip-showOnHover .spectrum-Tooltip--top .spectrum-Tooltip-tip {
+      left: 50%;
+    }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--bottom {
+    top: 100%;
+    transform: translate(-50%, calc(-1 * var(--spectrum-tooltip-tip-margin, var(--spectrum-global-dimension-size-50))));
+  }
+
+.u-tooltip-showOnHover .spectrum-Tooltip--top {
+    transform: translate(-50%, var(--spectrum-tooltip-tip-margin, var(--spectrum-global-dimension-size-50)));
+  }
+
+.u-tooltip-showOnHover:hover .spectrum-Tooltip,
+  .u-tooltip-showOnHover:focus .spectrum-Tooltip,
+  .u-tooltip-showOnHover.is-focused .spectrum-Tooltip,
+  .u-tooltip-showOnHover *:focus .spectrum-Tooltip {
+    opacity: 1;
+  }
+
+.u-tooltip-showOnHover:hover .spectrum-Tooltip.spectrum-Tooltip--bottom,
+  .u-tooltip-showOnHover:focus .spectrum-Tooltip.spectrum-Tooltip--bottom,
+  .u-tooltip-showOnHover.is-focused .spectrum-Tooltip.spectrum-Tooltip--bottom,
+  .u-tooltip-showOnHover *:focus .spectrum-Tooltip.spectrum-Tooltip--bottom {
+    transform: translate(-50%, 0);
+  }
+
+.u-tooltip-showOnHover:hover .spectrum-Tooltip.spectrum-Tooltip--top,
+  .u-tooltip-showOnHover:focus .spectrum-Tooltip.spectrum-Tooltip--top,
+  .u-tooltip-showOnHover.is-focused .spectrum-Tooltip.spectrum-Tooltip--top,
+  .u-tooltip-showOnHover *:focus .spectrum-Tooltip.spectrum-Tooltip--top {
+    transform: translate(-50%, calc(-1 * var(--spectrum-tooltip-tip-margin, var(--spectrum-global-dimension-size-50))));
+  }
+
+.u-tooltip-showOnHover:hover .spectrum-Tooltip.spectrum-Tooltip--left,
+  .u-tooltip-showOnHover:focus .spectrum-Tooltip.spectrum-Tooltip--left,
+  .u-tooltip-showOnHover.is-focused .spectrum-Tooltip.spectrum-Tooltip--left,
+  .u-tooltip-showOnHover *:focus .spectrum-Tooltip.spectrum-Tooltip--left {
+    transform: translate(
+      calc(-100% - var(--spectrum-tooltip-tip-margin, var(--spectrum-global-dimension-size-50))),
+      -50%
+    );
+  }
+
+.u-tooltip-showOnHover:hover .spectrum-Tooltip.spectrum-Tooltip--right,
+  .u-tooltip-showOnHover:focus .spectrum-Tooltip.spectrum-Tooltip--right,
+  .u-tooltip-showOnHover.is-focused .spectrum-Tooltip.spectrum-Tooltip--right,
+  .u-tooltip-showOnHover *:focus .spectrum-Tooltip.spectrum-Tooltip--right {
+    transform: translate(var(--spectrum-tooltip-tip-margin, var(--spectrum-global-dimension-size-50)), -50%);
+  }
+
+.spectrum-Tooltip {
+  background-color: var(--spectrum-tooltip-background-color, var(--spectrum-global-color-static-gray-700));
+
+  color: var(--spectrum-tooltip-text-color, var(--spectrum-global-color-static-white));
+}
+
+.spectrum-Tooltip-tip {
+  border-top-color: var(--spectrum-tooltip-background-color, var(--spectrum-global-color-static-gray-700));
+}
+
+.spectrum-Tooltip--negative,
+/** @deprecated */.spectrum-Tooltip--error {
+  background-color: var(--spectrum-tooltip-negative-background-color, var(--spectrum-global-color-static-red-700));
+}
+
+.spectrum-Tooltip--negative .spectrum-Tooltip-tip, .spectrum-Tooltip--error .spectrum-Tooltip-tip {
+    border-top-color: var(--spectrum-tooltip-negative-background-color, var(--spectrum-global-color-static-red-700));
+  }
+
+.spectrum-Tooltip--info,
+/** @deprecated */.spectrum-Tooltip--help {
+  background-color: var(--spectrum-tooltip-info-background-color, var(--spectrum-global-color-static-blue-700));
+}
+
+.spectrum-Tooltip--info .spectrum-Tooltip-tip, .spectrum-Tooltip--help .spectrum-Tooltip-tip {
+    border-top-color: var(--spectrum-tooltip-info-background-color, var(--spectrum-global-color-static-blue-700));
+  }
+
+.spectrum-Tooltip--positive,
+/** @deprecated */.spectrum-Tooltip--success {
+  background-color: var(--spectrum-tooltip-positive-background-color, var(--spectrum-global-color-static-green-700));
+}
+
+.spectrum-Tooltip--positive .spectrum-Tooltip-tip, .spectrum-Tooltip--success .spectrum-Tooltip-tip {
+    border-top-color: var(--spectrum-tooltip-positive-background-color, var(--spectrum-global-color-static-green-700));
+  }

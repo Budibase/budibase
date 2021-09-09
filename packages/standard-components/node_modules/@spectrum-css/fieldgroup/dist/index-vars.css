@@ -1,0 +1,26 @@
+.spectrum-FieldGroup {
+  --spectrum-fieldgroup-margin: var(--spectrum-global-dimension-size-200);
+}
+
+.spectrum-FieldGroup {
+  display: -ms-flexbox;
+  display: flex;
+  vertical-align: top;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+[dir="ltr"] .spectrum-FieldGroup--horizontal .spectrum-FieldGroup-item:not(:last-child) {
+    margin-right: var(--spectrum-fieldgroup-margin);
+}
+
+[dir="rtl"] .spectrum-FieldGroup--horizontal .spectrum-FieldGroup-item:not(:last-child) {
+    margin-left: var(--spectrum-fieldgroup-margin);
+}
+
+.spectrum-FieldGroup--vertical {
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-direction: column;
+      flex-direction: column;
+}

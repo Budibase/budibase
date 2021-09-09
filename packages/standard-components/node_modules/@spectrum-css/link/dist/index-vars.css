@@ -1,0 +1,111 @@
+.spectrum-Link--sizeS {
+  --spectrum-link-primary-text-size: var(--spectrum-link-primary-s-text-size, var(--spectrum-alias-item-text-size-s));
+}
+
+.spectrum-Link--sizeM {
+  --spectrum-link-primary-text-size: var(--spectrum-link-primary-m-text-size, var(--spectrum-alias-item-text-size-m));
+}
+
+.spectrum-Link--sizeL {
+  --spectrum-link-primary-text-size: var(--spectrum-link-primary-l-text-size, var(--spectrum-alias-item-text-size-l));
+}
+
+.spectrum-Link--sizeXL {
+  --spectrum-link-primary-text-size: var(--spectrum-link-primary-xl-text-size, var(--spectrum-alias-item-text-size-xl));
+}
+
+.spectrum-Link--sizeS,
+.spectrum-Link--sizeM,
+.spectrum-Link--sizeL,
+.spectrum-Link--sizeXL {
+  font-size: var(--spectrum-link-primary-text-size);
+}
+
+.spectrum-Link {
+  background-color: transparent;
+  -webkit-text-decoration-skip: objects;
+  text-decoration: underline;
+  transition: color var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
+  outline: none;
+  cursor: pointer;
+}
+
+.spectrum-Link.focus-ring {
+    text-decoration: underline;
+    -webkit-text-decoration-style: double;
+            text-decoration-style: double;
+  }
+
+.spectrum-Link--quiet {
+  text-decoration: none;
+}
+
+.spectrum-Link--quiet:hover {
+    text-decoration: underline;
+  }
+
+.spectrum-Link {
+  color: var(--spectrum-link-primary-m-text-color, var(--spectrum-global-color-blue-600));
+}
+
+.spectrum-Link:hover {
+    color: var(--spectrum-link-primary-m-text-color-hover, var(--spectrum-global-color-blue-600));
+  }
+
+.spectrum-Link:active {
+    color: var(--spectrum-link-primary-m-text-color-down, var(--spectrum-global-color-blue-700));
+  }
+
+.spectrum-Link.focus-ring {
+    color: var(--spectrum-link-primary-m-text-color-key-focus, var(--spectrum-alias-text-color-key-focus));
+  }
+
+.spectrum-Link--secondary {
+  color: inherit;
+}
+
+.spectrum-Link--secondary:hover {
+    color: inherit;
+  }
+
+.spectrum-Link--secondary:active {
+    color: inherit;
+  }
+
+.spectrum-Link--secondary:focus {
+    color: inherit;
+  }
+
+.spectrum-Link--overBackground {
+  color: var(--spectrum-link-over-background-m-text-color, var(--spectrum-alias-text-color-over-background));
+}
+
+.spectrum-Link--overBackground:hover {
+    color: var(--spectrum-link-over-background-m-text-color-hover, var(--spectrum-alias-text-color-over-background));
+  }
+
+.spectrum-Link--overBackground:active {
+    color: var(--spectrum-link-over-background-m-text-color-down, var(--spectrum-alias-text-color-over-background));
+  }
+
+.spectrum-Link--overBackground:focus {
+    color: var(--spectrum-link-over-background-m-text-color-key-focus, var(--spectrum-alias-text-color-over-background));
+  }
+
+@media (forced-colors: active) {
+  .spectrum-Link--secondary {
+    color: linktext;
+  }
+  
+    .spectrum-Link--secondary:hover {
+      color: linktext;
+    }
+  
+    .spectrum-Link--secondary:active {
+      color: linktext;
+    }
+  
+    .spectrum-Link--secondary:focus {
+      color: linktext;
+    }
+}

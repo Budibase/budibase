@@ -1,0 +1,19 @@
+
+.spectrum-Dialog {
+  --spectrum-dialog-confirm-min-width: var(--spectrum-global-dimension-static-size-3600);
+  --spectrum-dialog-confirm-border-radius: var(--spectrum-global-dimension-size-50);
+  --spectrum-dialog-confirm-padding: undefined;
+  --spectrum-dialog-confirm-title-text-size: undefined;
+  --spectrum-dialog-confirm-title-text-font-weight: var(--spectrum-global-font-weight-bold);
+  --spectrum-dialog-confirm-title-text-line-height: var(--spectrum-alias-heading-text-line-height);
+  --spectrum-dialog-confirm-divider-margin-top: var(--spectrum-global-dimension-static-size-150);
+  --spectrum-dialog-confirm-divider-margin-bottom: var(--spectrum-global-dimension-static-size-200);
+  --spectrum-dialog-confirm-description-text-size: undefined;
+  --spectrum-dialog-confirm-description-text-font-weight: var(--spectrum-global-font-weight-regular);
+  --spectrum-dialog-confirm-description-text-line-height: var(--spectrum-alias-component-text-line-height);
+  --spectrum-dialog-error-width: 90%;
+  --spectrum-dialog-confirm-title-text-color: var(--spectrum-global-color-gray-900);
+  --spectrum-dialog-confirm-description-text-color: var(--spectrum-global-color-gray-800);
+  --spectrum-dialog-confirm-icon-color: var(--spectrum-global-color-gray-900);
+  --spectrum-dialog-error-icon-color: var(--spectrum-semantic-negative-color-icon);
+}
