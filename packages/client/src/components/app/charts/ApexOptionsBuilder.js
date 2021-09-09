@@ -1,6 +1,6 @@
 export class ApexOptionsBuilder {
   formatters = {
-    ["Default"]: val => Math.round(val * 100) / 100,
+    ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
     ["Thousands"]: val => `${Math.round(val / 1000)}K`,
     ["Millions"]: val => `${Math.round(val / 1000000)}M`,
   }
@@ -20,6 +20,11 @@ export class ApexOptionsBuilder {
       },
       zoom: {
         enabled: false,
+      },
+    },
+    xaxis: {
+      labels: {
+        formatter: this.formatters.Default,
       },
     },
     yaxis: {
@@ -77,8 +82,12 @@ export class ApexOptionsBuilder {
     return this.setOption(["yaxis", "title", "text"], label)
   }
 
-  categories(categories) {
+  xCategories(categories) {
     return this.setOption(["xaxis", "categories"], categories)
+  }
+
+  yCategories(categories) {
+    return this.setOption(["yaxis", "categories"], categories)
   }
 
   series(series) {
@@ -130,6 +139,13 @@ export class ApexOptionsBuilder {
     return this.setOption(["labels"], labels)
   }
 
+  xUnits(units) {
+    return this.setOption(
+      ["xaxis", "labels", "formatter"],
+      this.formatters[units || "Default"]
+    )
+  }
+
   yUnits(units) {
     return this.setOption(
       ["yaxis", "labels", "formatter"],
@@ -137,8 +153,22 @@ export class ApexOptionsBuilder {
     )
   }
 
+  clearXFormatter() {
+    delete this.options.xaxis.labels
+    return this
+  }
+
+  clearYFormatter() {
+    delete this.options.yaxis.labels
+    return this
+  }
+
   xType(type) {
     return this.setOption(["xaxis", "type"], type)
+  }
+
+  yType(type) {
+    return this.setOption(["yaxis", "type"], type)
   }
 
   yTooltip(yTooltip) {

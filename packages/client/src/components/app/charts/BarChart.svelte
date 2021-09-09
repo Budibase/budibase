@@ -16,6 +16,7 @@
   export let stacked
   export let yAxisUnits
   export let palette
+  export let horizontal
 
   $: options = setUpChart(dataProvider)
 
@@ -25,7 +26,7 @@
       return null
     }
 
-    // Fatch data
+    // Fetch data
     const { schema, rows } = provider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
@@ -46,14 +47,18 @@
       .animate(animate)
       .legend(legend)
       .stacked(stacked)
-      .yUnits(yAxisUnits)
       .palette(palette)
+      .horizontal(horizontal)
 
     // Add data
     let useDates = false
     if (schema[labelColumn]) {
       const labelFieldType = schema[labelColumn].type
-      builder = builder.xType(labelFieldType)
+      if (horizontal) {
+        builder = builder.yType(labelFieldType).xUnits(yAxisUnits)
+      } else {
+        builder = builder.xType(labelFieldType).yUnits(yAxisUnits)
+      }
       useDates = labelFieldType === "datetime"
     }
     const series = valueColumns.map(column => ({
@@ -68,7 +73,14 @@
     }))
     builder = builder.series(series)
     if (!useDates) {
-      builder = builder.categories(data.map(row => row[labelColumn]))
+      builder = builder.xCategories(data.map(row => row[labelColumn]))
+    } else {
+      // Horizontal dates don't work anyway, but this is the correct logic
+      if (horizontal) {
+        builder = builder.clearYFormatter()
+      } else {
+        builder = builder.clearXFormatter()
+      }
     }
 
     // Build chart options
