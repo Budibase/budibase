@@ -16,3 +16,24 @@ exports.getFetchResponse = async fetched => {
   }
   return { status, message }
 }
+
+// need to make sure all ctx structures have the
+// throw added to them, so that controllers don't
+// throw a ctx.throw undefined when error occurs
+exports.buildCtx = (appId, emitter, { body, params } = {}) => {
+  const ctx = {
+    appId,
+    user: { appId },
+    eventEmitter: emitter,
+    throw: (code, error) => {
+      throw error
+    },
+  }
+  if (body) {
+    ctx.request = { body }
+  }
+  if (params) {
+    ctx.params = params
+  }
+  return ctx
+}

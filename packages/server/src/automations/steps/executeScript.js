@@ -1,4 +1,5 @@
 const scriptController = require("../../api/controllers/script")
+const { buildCtx } = require("./utils")
 
 exports.definition = {
   name: "JS Scripting",
@@ -23,8 +24,7 @@ exports.definition = {
       properties: {
         value: {
           type: "string",
-          description:
-            "The result of the last statement of the executed script.",
+          description: "The result of the return statement",
         },
         success: {
           type: "boolean",
@@ -46,21 +46,17 @@ exports.run = async function ({ inputs, appId, context, emitter }) {
     }
   }
 
-  const ctx = {
-    request: {
-      body: {
-        script: inputs.code,
-        context,
-      },
+  const ctx = buildCtx(appId, emitter, {
+    body: {
+      script: inputs.code,
+      context,
     },
-    user: { appId },
-    eventEmitter: emitter,
-  }
+  })
 
   try {
     await scriptController.execute(ctx)
     return {
-      success: ctx.status === 200,
+      success: true,
       value: ctx.body,
     }
   } catch (err) {

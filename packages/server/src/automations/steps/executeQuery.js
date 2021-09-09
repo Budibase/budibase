@@ -1,4 +1,5 @@
 const queryController = require("../../api/controllers/query")
+const { buildCtx } = require("./utils")
 
 exports.definition = {
   name: "External Data Connector",
@@ -54,25 +55,20 @@ exports.run = async function ({ inputs, appId, emitter }) {
 
   const { queryId, ...rest } = inputs.query
 
-  const ctx = {
+  const ctx = buildCtx(appId, emitter, {
+    body: {
+      parameters: rest,
+    },
     params: {
       queryId,
     },
-    request: {
-      body: {
-        parameters: rest,
-      },
-    },
-    appId,
-    eventEmitter: emitter,
-  }
-
-  await queryController.execute(ctx)
+  })
 
   try {
+    await queryController.execute(ctx)
     return {
       response: ctx.body,
-      success: ctx.status === 200,
+      success: true,
     }
   } catch (err) {
     return {
