@@ -1,6 +1,0 @@
-:root {
-  --spectrum-drag-handle-background-color: var(--spectrum-global-color-gray-300);
-  --spectrum-drag-handle-icon-color: var(--spectrum-global-color-gray-50);
-  --spectrum-drag-handle-background-color-hover: var(--spectrum-global-color-gray-500);
-  --spectrum-drag-handle-background-color-key-focus: var(--spectrum-alias-focus-color);
-}
