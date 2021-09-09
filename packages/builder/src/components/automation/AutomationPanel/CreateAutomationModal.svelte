@@ -26,8 +26,14 @@
 
     automationStore.actions.addBlockToAutomation(newBlock)
     if (triggerVal.stepId === "WEBHOOK") {
-      webhookModal.show()
+      webhookModal.show
     }
+
+    await automationStore.actions.save({
+      instanceId,
+      automation: $automationStore.selectedAutomation?.automation,
+    })
+
     notifications.success(`Automation ${name} created.`)
 
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)

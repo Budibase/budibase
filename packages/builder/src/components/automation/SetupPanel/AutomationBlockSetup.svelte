@@ -12,16 +12,25 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
+  import { database } from "stores/backend"
 
   export let block
   export let webhookModal
-
   $: inputs = Object.entries(block.schema?.inputs?.properties || {})
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block,
     $automationStore.selectedAutomation?.automation?.definition
   )
+  $: instanceId = $database._id
+
+  async function saveOnChange(e, key) {
+    block.inputs[key] = e.detail
+    await automationStore.actions.save({
+      instanceId,
+      automation: $automationStore.selectedAutomation?.automation,
+    })
+  }
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -61,41 +70,67 @@
       <Label>{value.title}</Label>
       {#if value.type === "string" && value.enum}
         <Select
-          bind:value={block.inputs[key]}
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />
       {:else if value.customType === "password"}
-        <Input type="password" bind:value={block.inputs[key]} />
+        <Input
+          type="password"
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
+        />
       {:else if value.customType === "email"}
         <DrawerBindableInput
           title={value.title}
           panel={AutomationBindingPanel}
           type="email"
           value={block.inputs[key]}
-          on:change={e => (block.inputs[key] = e.detail)}
+          on:change={e => saveOnChange(e, key)}
           {bindings}
         />
       {:else if value.customType === "query"}
-        <QuerySelector bind:value={block.inputs[key]} />
+        <QuerySelector
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
+        />
       {:else if value.customType === "cron"}
-        <CronBuilder bind:value={block.inputs[key]} />
+        <CronBuilder
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
+        />
       {:else if value.customType === "queryParams"}
-        <QueryParamSelector bind:value={block.inputs[key]} {bindings} />
+        <QueryParamSelector
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
+          {bindings}
+        />
       {:else if value.customType === "table"}
-        <TableSelector bind:value={block.inputs[key]} />
+        <TableSelector
+          value={block.inputs[key]}
+          on:change={e => saveOnChange(e, key)}
+        />
       {:else if value.customType === "row"}
-        <RowSelector bind:value={block.inputs[key]} {bindings} />
+        <RowSelector
+          value={block.inputs[key]}
+          on:change={e => saveOnChange(e, key)}
+          {bindings}
+        />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay value={block.inputs[key]} />
       {:else if value.customType === "triggerSchema"}
-        <SchemaSetup bind:value={block.inputs[key]} />
+        <SchemaSetup
+          on:change={e => saveOnChange(e, key)}
+          value={block.inputs[key]}
+        />
       {:else if value.customType === "code"}
         <CodeEditorModal>
           <pre>{JSON.stringify(bindings, null, 2)}</pre>
           <Editor
             mode="javascript"
             on:change={e => {
+              saveOnChange(e, key)
               block.inputs[key] = e.detail.value
             }}
             value={block.inputs[key]}
@@ -107,7 +142,7 @@
           panel={AutomationBindingPanel}
           type={value.customType}
           value={block.inputs[key]}
-          on:change={e => (block.inputs[key] = e.detail)}
+          on:change={e => saveOnChange(e, key)}
           {bindings}
         />
       {/if}

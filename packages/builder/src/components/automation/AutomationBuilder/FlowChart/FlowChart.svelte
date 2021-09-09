@@ -1,16 +1,18 @@
 <script>
+  import { automationStore } from "builderStore"
+
   import FlowItem from "./FlowItem.svelte"
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
-  import { Body, Detail, Icon, Label, StatusLight } from "@budibase/bbui"
+  import { Detail, Icon, ActionButton, notifications } from "@budibase/bbui"
+  import { database } from "stores/backend"
 
   export let automation
   export let onSelect
   let blocks
 
-  // TODO: ADD LOGIC FOR SWITCHING THIS
-  let published = true
+  $: instanceId = $database._id
 
   $: {
     blocks = []
@@ -20,6 +22,29 @@
       }
       blocks = blocks.concat(automation.definition.steps || [])
     }
+  }
+
+  async function deleteAutomation() {
+    await automationStore.actions.delete({
+      instanceId,
+      automation: $automationStore.selectedAutomation?.automation,
+    })
+  }
+
+  async function testAutomation() {
+    const result = await automationStore.actions.trigger({
+      automation: $automationStore.selectedAutomation.automation,
+    })
+    if (result.status === 200) {
+      notifications.success(
+        `Automation ${$automationStore.selectedAutomation.automation.name} triggered successfully.`
+      )
+    } else {
+      notifications.error(
+        `Failed to trigger automation ${$automationStore.selectedAutomation.automation.name}.`
+      )
+    }
+    return result
   }
 </script>
 
@@ -32,26 +57,23 @@
           style="display:flex;
           color: var(--spectrum-global-color-gray-400);"
         >
-          <span class="iconPadding">
+          <span on:click={() => deleteAutomation()} class="iconPadding">
             <Icon name="DeleteOutline" />
           </span>
-          <Label>Delete</Label>
+          <ActionButton
+            on:change={() => testAutomation()}
+            icon="MultipleCheck"
+            size="S">Run test</ActionButton
+          >
         </div>
-      </div>
-      <div style="margin-left: calc(-1 * var(--spacing-s))">
-        <StatusLight positive={published} notice={!published}
-          >{#if published}
-            <Body size="XS">Automation is published</Body>{:else}
-            <Body size="XS">Automation is not published</Body>{/if}</StatusLight
-        >
       </div>
     </div>
     {#each blocks as block, idx (block.id)}
       <div
         class="block"
-        animate:flip={{ duration: 600 }}
+        animate:flip={{ duration: 800 }}
         in:fade|local
-        out:fly|local={{ x: 100 }}
+        out:fly|local={{ x: 500 }}
       >
         <FlowItem {onSelect} {block} />
         {#if idx !== blocks.length - 1}
@@ -97,6 +119,7 @@
   }
 
   .iconPadding {
+    cursor: pointer;
     display: flex;
     padding-right: var(--spacing-m);
   }

@@ -8,77 +8,52 @@
     Detail,
     Modal,
     Button,
-    ActionButton,
-    notifications,
     StatusLight,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
   import TestDataModal from "./TestDataModal.svelte"
+  import ResultsModal from "./ResultsModal.svelte"
+
   import ActionModal from "./ActionModal.svelte"
   import { database } from "stores/backend"
 
   export let onSelect
   export let block
-
   let selected
   let webhookModal
   let testDataModal
   let actionModal
-  let setupComplete
+  let resultsModal
+  let setupToggled
   let blockComplete
-  let testToggled
-
-  $: setupToggled = !setupComplete || false
-
   $: instanceId = $database._id
-  $: schemaKey = Object.keys(block.schema?.inputs?.properties || {})
+
+  $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
   $: steps =
     $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
 
   $: blockIdx = steps.findIndex(step => step.id === block.id)
-  $: allowDeleteTrigger = !steps.length
+  $: lastStep = !isTrigger && blockIdx + 1 === steps.length
 
-  function deleteStep() {
+  // Logic for hiding / showing the add button.first we check if it has a child
+  // then we check to see whether its inputs have been commpleted
+  $: disableAddButton = isTrigger
+    ? $automationStore.selectedAutomation?.automation?.definition?.steps
+        .length > 0
+    : !isTrigger && steps.length - blockIdx > 1
+  $: hasCompletedInputs = Object.keys(
+    block.schema?.inputs?.properties || {}
+  ).every(x => block?.inputs[x])
+
+  async function deleteStep() {
     automationStore.actions.deleteAutomationBlock(block)
-  }
-
-  async function testAutomation() {
-    const result = await automationStore.actions.trigger({
-      automation: $automationStore.selectedAutomation.automation,
-    })
-    if (result.status === 200) {
-      notifications.success(
-        `Automation ${$automationStore.selectedAutomation.automation.name} triggered successfully.`
-      )
-    } else {
-      notifications.error(
-        `Failed to trigger automation ${$automationStore.selectedAutomation.automation.name}.`
-      )
-    }
-    return result
-  }
-
-  async function saveAutomation() {
     await automationStore.actions.save({
       instanceId,
-      automation: $automationStore.selectedAutomation.automation,
+      automation: $automationStore.selectedAutomation?.automation,
     })
-    notifications.success(
-      `Automation ${$automationStore.selectedAutomation.automation.name} saved.`
-    )
-  }
-
-  function onContinue() {
-    const testResult = testAutomation()
-    const saveResult = saveAutomation()
-
-    if (testResult && saveResult) {
-      setupComplete = true
-      testToggled = true
-    }
   }
 </script>
 
@@ -108,8 +83,12 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if blockComplete}
-        <StatusLight positive={true} notice={false} />
+      {#if !blockComplete}
+        <span on:click={() => resultsModal.show()}>
+          <StatusLight positive={true} negative={false}
+            ><Body size="XS">View response</Body></StatusLight
+          >
+        </span>
       {/if}
     </div>
   </div>
@@ -120,9 +99,7 @@
         <div class="splitHeader">
           <div
             on:click={() => {
-              if (!setupComplete) {
-                setupToggled = !setupToggled
-              }
+              setupToggled = !setupToggled
             }}
             class="toggle"
           >
@@ -133,54 +110,37 @@
             {/if}
             <Detail size="S">Setup</Detail>
           </div>
-          <div on:click={() => deleteStep()}>
-            <Icon name="DeleteOutline" />
-          </div>
+          {#if !isTrigger}
+            <div on:click={() => deleteStep()}>
+              <Icon name="DeleteOutline" />
+            </div>
+          {/if}
         </div>
 
         {#if setupToggled}
           <AutomationBlockSetup {block} {webhookModal} />
-          {#if block.inputs[schemaKey]}
-            <Button on:click={() => onContinue()} cta
-              >Continue and test trigger</Button
+          {#if lastStep}
+            <Button on:click={() => testDataModal.show()} cta
+              >Test Automation</Button
             >
           {/if}
-        {/if}
-      </Layout>
-    </div>
-
-    <Divider noMargin />
-    <div class="blockSection">
-      <Layout noPadding gap="S">
-        <div
-          on:click={() => {
-            if (setupComplete) {
-              testToggled = !testToggled
-            }
-          }}
-          class="toggle"
-        >
-          {#if testToggled}
-            <Icon size="M" name="ChevronDown" />
-          {:else}
-            <Icon size="M" name="ChevronRight" />
-          {/if}
-          <Detail size="S">Test</Detail>
-        </div>
-        {#if testToggled}
-          <ActionButton on:click={testDataModal.show()} fullWidth icon="Add"
-            >Add test data</ActionButton
-          >
           <Button
+            disabled={disableAddButton ? true : !hasCompletedInputs}
             on:click={() => {
+              setupToggled = false
               actionModal.show()
             }}
-            cta>Save trigger and continue to action</Button
+            primary={!isTrigger}
+            cta={isTrigger}>Add Action</Button
           >
         {/if}
       </Layout>
     </div>
   {/if}
+
+  <Modal bind:this={resultsModal} width="30%">
+    <ResultsModal />
+  </Modal>
 
   <Modal bind:this={actionModal} width="30%">
     <ActionModal bind:blockComplete />
