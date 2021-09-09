@@ -1,0 +1,97 @@
+name: Field Group
+description: 'A group of fields, usually Radios or Checkboxes.'
+examples:
+  - id: fieldgroup
+    name: Standard
+    markup: |
+      <div class="spectrum-FieldGroup spectrum-FieldGroup--horizontal">
+        <div class="spectrum-Radio spectrum-FieldGroup-item">
+          <input type="radio" name="pets" class="spectrum-Radio-input" id="radio-0">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-0">Kittens</label>
+        </div>
+        <div class="spectrum-Radio spectrum-FieldGroup-item">
+          <input type="radio" name="pets" class="spectrum-Radio-input" id="radio-1">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-1">Dogs</label>
+        </div>
+      </div>
+      <div class="spectrum-FieldGroup spectrum-FieldGroup--horizontal">
+        <label class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item">
+          <input type="checkbox" class="spectrum-Checkbox-input" id="checkbox-0">
+          <span class="spectrum-Checkbox-box">
+            <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark" focusable="false" aria-hidden="true">
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </span>
+          <span class="spectrum-Checkbox-label">Checkbox</span>
+        </label>
+        <label class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item">
+          <input type="checkbox" class="spectrum-Checkbox-input" id="checkbox-1" checked>
+          <span class="spectrum-Checkbox-box">
+            <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark" focusable="false" aria-hidden="true">
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </span>
+          <span class="spectrum-Checkbox-label">Checkbox</span>
+        </label>
+      </div>
+  - id: fieldgroup-vertical
+    name: Vertical
+    description: A vertical group of fields.
+    markup: |
+      <div class="spectrum-FieldGroup spectrum-FieldGroup--vertical">
+        <div class="spectrum-Radio spectrum-FieldGroup-item">
+          <input type="radio" name="animals" class="spectrum-Radio-input" id="radio-fieldgroup-vertical-1">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-fieldgroup-vertical-1">Kittens</label>
+        </div>
+        <div class="spectrum-Radio spectrum-FieldGroup-item">
+          <input type="radio" name="animals" class="spectrum-Radio-input" id="radio-fieldgroup-vertical-2">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-fieldgroup-vertical-2">Dogs</label>
+        </div>
+      </div>
+
+      <div class="spectrum-FieldGroup spectrum-FieldGroup--vertical">
+        <label class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item">
+          <input type="checkbox" class="spectrum-Checkbox-input">
+          <span class="spectrum-Checkbox-box">
+            <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark" focusable="false" aria-hidden="true">
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </span>
+          <span class="spectrum-Checkbox-label">Kibble</span>
+        </label>
+        <label class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item">
+          <input type="checkbox" class="spectrum-Checkbox-input" checked>
+          <span class="spectrum-Checkbox-box">
+            <svg class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark" focusable="false" aria-hidden="true">
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </span>
+          <span class="spectrum-Checkbox-label">Bits</span>
+        </label>
+      </div>
+
+  - id: fieldgroup-labelsbelow
+    name: Radios with labels below
+    description: Put the labels below by adding the modifier class to the field itself.
+    markup: |
+      <div class="spectrum-FieldGroup spectrum-FieldGroup--horizontal">
+        <div class="spectrum-Radio spectrum-Radio--labelBelow spectrum-FieldGroup-item">
+          <input type="radio" name="rating" class="spectrum-Radio-input" id="radio-2">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-2">1</label>
+        </div>
+        <div class="spectrum-Radio spectrum-Radio--labelBelow spectrum-FieldGroup-item">
+          <input type="radio" name="rating" class="spectrum-Radio-input" id="radio-3">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-3">2</label>
+        </div>
+        <div class="spectrum-Radio spectrum-Radio--labelBelow spectrum-FieldGroup-item">
+          <input type="radio" name="rating" class="spectrum-Radio-input" id="radio-4">
+          <span class="spectrum-Radio-button"></span>
+          <label class="spectrum-Radio-label" for="radio-4">3</label>
+        </div>
+      </div>

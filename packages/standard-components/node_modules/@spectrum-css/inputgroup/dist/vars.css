@@ -1,0 +1,29 @@
+
+.spectrum-InputGroup,
+.spectrum-Datepicker {
+  --spectrum-icon-alert-medium-width: var(--spectrum-global-dimension-size-225);
+  --spectrum-textfield-m-height: var(--spectrum-alias-item-height-m);
+  --spectrum-actionbutton-m-min-width: var(--spectrum-global-dimension-size-400);
+  --spectrum-icon-chevron-down-medium-width: undefined;
+  --spectrum-alias-single-line-width: var(--spectrum-global-dimension-size-2400);
+  --spectrum-alias-border-radius-regular: var(--spectrum-global-dimension-size-50);
+  --spectrum-combobox-fieldbutton-border-top-left-radius: 0;
+  --spectrum-combobox-fieldbutton-border-bottom-left-radius: 0;
+  --spectrum-combobox-textfield-border-top-right-radius: 0;
+  --spectrum-combobox-textfield-border-bottom-right-radius: 0;
+  --spectrum-textfield-quiet-m-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-textfield-m-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-textfield-m-border-color-hover: var(--spectrum-alias-border-color-hover);
+  --spectrum-textfield-m-border-color-error-hover: var(--spectrum-semantic-negative-color-state-hover);
+  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-500);
+  --spectrum-picker-m-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-picker-m-border-color-error: var(--spectrum-global-color-red-500);
+  --spectrum-picker-m-border-color-error-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-textfield-quiet-m-border-color: var(--spectrum-alias-border-color);
+  --spectrum-textfield-quiet-m-border-color-disabled: var(--spectrum-alias-border-color-mid);
+  --spectrum-textfield-quiet-m-border-color-hover: var(--spectrum-alias-border-color-hover);
+  --spectrum-textfield-quiet-m-border-color-error: var(--spectrum-semantic-negative-color-default);
+  --spectrum-textfield-quiet-m-border-color-mouse-focus: var(--spectrum-alias-border-color-mouse-focus);
+  --spectrum-textfield-quiet-m-border-color-error-mouse-focus: var(--spectrum-semantic-negative-color-state-hover);
+  --spectrum-textfield-quiet-m-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+}

@@ -1,0 +1,191 @@
+.spectrum-FieldLabel--sizeS {
+  --spectrum-fieldlabel-text-font-weight: var(--spectrum-fieldlabel-s-text-font-weight, var(--spectrum-alias-body-text-font-weight));
+  --spectrum-fieldlabel-text-line-height: var(--spectrum-fieldlabel-s-text-line-height, var(--spectrum-alias-component-text-line-height));
+  --spectrum-fieldlabel-text-size: var(--spectrum-fieldlabel-s-text-size, var(--spectrum-global-dimension-font-size-75));
+  --spectrum-fieldlabel-asterisk-gap: var(--spectrum-fieldlabel-s-asterisk-gap, var(--spectrum-global-dimension-size-25));
+  --spectrum-fieldlabel-asterisk-margin-y: var(--spectrum-fieldlabel-s-asterisk-margin-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-top: var(--spectrum-fieldlabel-s-padding-top, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-bottom: var(--spectrum-fieldlabel-s-padding-bottom, var(--spectrum-global-dimension-size-65));
+}
+
+.spectrum-FieldLabel--sizeM {
+  --spectrum-fieldlabel-text-font-weight: var(--spectrum-fieldlabel-m-text-font-weight, var(--spectrum-alias-body-text-font-weight));
+  --spectrum-fieldlabel-text-line-height: var(--spectrum-fieldlabel-m-text-line-height, var(--spectrum-alias-component-text-line-height));
+  --spectrum-fieldlabel-text-size: var(--spectrum-fieldlabel-m-text-size, var(--spectrum-global-dimension-font-size-75));
+  --spectrum-fieldlabel-asterisk-gap: var(--spectrum-fieldlabel-m-asterisk-gap, var(--spectrum-global-dimension-size-25));
+  --spectrum-fieldlabel-asterisk-margin-y: var(--spectrum-fieldlabel-m-asterisk-margin-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-top: var(--spectrum-fieldlabel-m-padding-top, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-bottom: var(--spectrum-fieldlabel-m-padding-bottom, var(--spectrum-global-dimension-size-65));
+}
+
+.spectrum-FieldLabel--sizeL {
+  --spectrum-fieldlabel-text-font-weight: var(--spectrum-fieldlabel-l-text-font-weight, var(--spectrum-alias-body-text-font-weight));
+  --spectrum-fieldlabel-text-line-height: var(--spectrum-fieldlabel-l-text-line-height, var(--spectrum-alias-component-text-line-height));
+  --spectrum-fieldlabel-text-size: var(--spectrum-fieldlabel-l-text-size, var(--spectrum-global-dimension-font-size-100));
+  --spectrum-fieldlabel-asterisk-gap: var(--spectrum-fieldlabel-l-asterisk-gap, var(--spectrum-global-dimension-size-25));
+  --spectrum-fieldlabel-asterisk-margin-y: var(--spectrum-fieldlabel-l-asterisk-margin-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-top: var(--spectrum-fieldlabel-l-padding-top, var(--spectrum-global-dimension-size-75));
+  --spectrum-fieldlabel-padding-bottom: var(--spectrum-fieldlabel-l-padding-bottom, var(--spectrum-global-dimension-size-115));
+}
+
+.spectrum-FieldLabel--sizeXL {
+  --spectrum-fieldlabel-text-font-weight: var(--spectrum-fieldlabel-xl-text-font-weight, var(--spectrum-alias-body-text-font-weight));
+  --spectrum-fieldlabel-text-line-height: var(--spectrum-fieldlabel-xl-text-line-height, var(--spectrum-alias-component-text-line-height));
+  --spectrum-fieldlabel-text-size: var(--spectrum-fieldlabel-xl-text-size, var(--spectrum-global-dimension-font-size-200));
+  --spectrum-fieldlabel-asterisk-gap: var(--spectrum-fieldlabel-xl-asterisk-gap, var(--spectrum-global-dimension-size-25));
+  --spectrum-fieldlabel-asterisk-margin-y: var(--spectrum-fieldlabel-xl-asterisk-margin-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-fieldlabel-padding-top: var(--spectrum-fieldlabel-xl-padding-top, var(--spectrum-global-dimension-size-115));
+  --spectrum-fieldlabel-padding-bottom: var(--spectrum-fieldlabel-xl-padding-bottom, var(--spectrum-global-dimension-size-130));
+}
+
+.spectrum-FieldLabel,
+.spectrum-Form-itemLabel {
+  display: block;
+
+  box-sizing: border-box;
+
+  padding-top: var(--spectrum-fieldlabel-padding-top);
+
+  padding-bottom: var(--spectrum-fieldlabel-padding-bottom);
+  padding-left: 0;
+  padding-right: 0;
+
+  font-size: var(--spectrum-fieldlabel-text-size);
+  font-weight: var(--spectrum-fieldlabel-text-font-weight);
+  line-height: var(--spectrum-fieldlabel-text-line-height);
+
+  vertical-align: top;
+
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  font-smoothing: subpixel-antialiased;
+}
+
+[dir="ltr"] .spectrum-FieldLabel-requiredIcon {
+  margin-left: var(--spectrum-fieldlabel-asterisk-gap);
+  margin-right: 0;
+}
+
+[dir="rtl"] .spectrum-FieldLabel-requiredIcon {
+  margin-right: var(--spectrum-fieldlabel-asterisk-gap);
+  margin-left: 0;
+}
+
+.spectrum-FieldLabel-requiredIcon {
+  margin-top: var(--spectrum-fieldlabel-asterisk-margin-y);
+  margin-bottom: 0;
+}
+
+[dir="ltr"] .spectrum-FieldLabel--left {
+  padding-left: 0;
+  padding-right: var(--spectrum-fieldlabel-side-m-padding-right, var(--spectrum-global-dimension-size-150));
+}
+
+[dir="rtl"] .spectrum-FieldLabel--left {
+  padding-right: 0;
+  padding-left: var(--spectrum-fieldlabel-side-m-padding-right, var(--spectrum-global-dimension-size-150));
+}
+
+.spectrum-FieldLabel--left {
+  display: inline-block;
+  padding-top: var(--spectrum-fieldlabel-side-m-padding-top, var(--spectrum-global-dimension-size-100));
+  padding-bottom: 0;
+}
+
+[dir="ltr"] .spectrum-FieldLabel--left .spectrum-FieldLabel-requiredIcon {
+    margin-left: var(--spectrum-fieldlabel-asterisk-gap);
+    margin-right: 0;
+}
+
+[dir="rtl"] .spectrum-FieldLabel--left .spectrum-FieldLabel-requiredIcon {
+    margin-right: var(--spectrum-fieldlabel-asterisk-gap);
+    margin-left: 0;
+}
+
+.spectrum-FieldLabel--left .spectrum-FieldLabel-requiredIcon {
+    margin-top: var(--spectrum-fieldlabel-side-m-asterisk-margin-y, var(--spectrum-global-dimension-size-50));
+    margin-bottom: 0;
+  }
+
+[dir="ltr"] .spectrum-FieldLabel--right {
+  text-align: right;
+}
+
+[dir="rtl"] .spectrum-FieldLabel--right {
+  text-align: left;
+}
+
+[dir="ltr"] .spectrum-FieldLabel--right {
+  padding-left: 0;
+  padding-right: var(--spectrum-fieldlabel-side-m-padding-right, var(--spectrum-global-dimension-size-150));
+}
+
+[dir="rtl"] .spectrum-FieldLabel--right {
+  padding-right: 0;
+  padding-left: var(--spectrum-fieldlabel-side-m-padding-right, var(--spectrum-global-dimension-size-150));
+}
+
+.spectrum-FieldLabel--right {
+  display: inline-block;
+  padding-top: var(--spectrum-fieldlabel-side-m-padding-top, var(--spectrum-global-dimension-size-100));
+  padding-bottom: 0;
+}
+
+.spectrum-Form {
+  --spectrum-tableform-border-spacing: 0 var(--spectrum-global-dimension-size-300);
+  --spectrum-tableform-margin: calc(var(--spectrum-global-dimension-size-250) * -1) 0;
+  --spectrum-tableform-labelsabove-item-gap: var(--spectrum-global-dimension-size-100);
+
+  display: table;
+  border-collapse: separate;
+  border-spacing: var(--spectrum-tableform-border-spacing);
+  margin: var(--spectrum-tableform-margin);
+}
+
+.spectrum-Form-item {
+  display: table-row;
+}
+
+.spectrum-Form-itemLabel {
+  display: table-cell;
+}
+
+.spectrum-Form-itemField {
+  display: table-cell;
+}
+
+.spectrum-Form--labelsAbove {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: column;
+      flex-direction: column;
+  margin: 0;
+}
+
+.spectrum-Form--labelsAbove .spectrum-Form-item {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+        flex-direction: column;
+  }
+
+.spectrum-Form--labelsAbove .spectrum-Form-item + .spectrum-Form-item {
+      margin-top: var(--spectrum-tableform-labelsabove-item-gap);
+    }
+
+.spectrum-FieldLabel,
+.spectrum-Form-itemLabel {
+  color: var(--spectrum-fieldlabel-m-text-color, var(--spectrum-alias-label-text-color));
+}
+
+.spectrum-FieldLabel.is-disabled, .spectrum-Form-itemLabel.is-disabled {
+    color: var(--spectrum-fieldlabel-m-text-color-disabled, var(--spectrum-alias-text-color-disabled));
+  }
+
+.spectrum-FieldLabel.is-disabled .spectrum-FieldLabel-requiredIcon, .spectrum-Form-itemLabel.is-disabled .spectrum-FieldLabel-requiredIcon {
+      color: var(--spectrum-fieldlabel-m-asterisk-color-disabled, var(--spectrum-alias-text-color-disabled));
+    }
+
+.spectrum-FieldLabel-requiredIcon {
+  color: var(--spectrum-fieldlabel-m-asterisk-color, var(--spectrum-global-color-gray-600));
+}

@@ -1,0 +1,31 @@
+
+.spectrum-Menu {
+  --spectrum-alias-body-text-line-height: var(--spectrum-global-font-line-height-medium);
+  --spectrum-listitem-m-divider-size: var(--spectrum-alias-border-size-thick);
+  --spectrum-listitem-m-divider-padding: 3px;
+  --spectrum-listitem-m-focus-indicator-size: var(--spectrum-alias-border-size-thick);
+  --spectrum-listitem-m-text-font-weight: var(--spectrum-alias-body-text-font-weight);
+  --spectrum-listitem-m-text-size: var(--spectrum-alias-item-text-size-m);
+  --spectrum-listitem-m-height: var(--spectrum-alias-item-height-m);
+  --spectrum-listitem-m-icon-gap: var(--spectrum-alias-item-workflow-icon-gap-m);
+  --spectrum-listitem-m-padding-left: var(--spectrum-alias-item-workflow-padding-left-m);
+  --spectrum-listitem-m-padding-right: var(--spectrum-alias-item-padding-m);
+  --spectrum-listitem-m-thumbnail-padding-left: var(--spectrum-alias-item-padding-m);
+  --spectrum-popover-padding-y: var(--spectrum-global-dimension-size-50);
+  --spectrum-popover-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-icon-checkmark-medium-width: undefined;
+  --spectrum-alias-workflow-icon-size-m: var(--spectrum-global-dimension-size-225);
+  --spectrum-listitem-m-background-color: var(--spectrum-alias-background-color-transparent);
+  --spectrum-listitem-m-text-color: var(--spectrum-alias-text-color);
+  --spectrum-listitem-m-focus-indicator-color: var(--spectrum-alias-border-color-focus);
+  --spectrum-listitem-m-background-color-key-focus: var(--spectrum-alias-background-color-hover-overlay);
+  --spectrum-listitem-m-text-color-key-focus: var(--spectrum-alias-text-color);
+  --spectrum-listitem-m-background-color-hover: var(--spectrum-alias-background-color-hover-overlay);
+  --spectrum-listitem-m-text-color-hover: var(--spectrum-alias-text-color);
+  --spectrum-listitem-m-text-color-selected: var(--spectrum-alias-text-color);
+  --spectrum-listitem-m-icon-color-selected: var(--spectrum-alias-icon-color-selected);
+  --spectrum-listitem-m-background-color-down: var(--spectrum-alias-background-color-hover-overlay);
+  --spectrum-listitem-m-background-color-disabled: var(--spectrum-alias-background-color-transparent);
+  --spectrum-listitem-m-text-color-disabled: var(--spectrum-alias-text-color-disabled);
+  --spectrum-listitem-m-divider-color: var(--spectrum-alias-border-color-extralight);
+}

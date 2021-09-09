@@ -1,0 +1,67 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-ProgressBar {
+  .spectrum-ProgressBar-fill {
+    background: var(--spectrum-progressbar-m-track-fill-color);
+  }
+
+  .spectrum-ProgressBar-track {
+    background-color: var(--spectrum-progressbar-m-track-color);
+  }
+
+  &.spectrum-ProgressBar--overBackground {
+    .spectrum-ProgressBar-fill {
+      background: var(
+        --spectrum-progressbar-m-over-background-track-fill-color
+      );
+    }
+
+    .spectrum-ProgressBar-label,
+    .spectrum-ProgressBar-percentage {
+      color: var(--spectrum-progressbar-m-over-background-track-fill-color);
+    }
+
+    .spectrum-ProgressBar-track {
+      background-color: var(
+        --spectrum-progressbar-m-over-background-track-color
+      );
+    }
+  }
+  &.is-positive {
+    .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-positive-m-track-fill-color);
+    }
+  }
+  &.is-notice {
+    .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-notice-m-track-fill-color);
+    }
+  }
+  &.is-negative {
+    .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-negative-m-track-fill-color);
+    }
+  }
+}
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color);
+}
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color);
+}
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color);
+}

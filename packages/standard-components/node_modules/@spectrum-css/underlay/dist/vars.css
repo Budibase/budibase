@@ -1,0 +1,10 @@
+
+.spectrum-Underlay {
+  --spectrum-dialog-confirm-background-exit-animation-duration: var(--spectrum-global-animation-duration-300);
+  --spectrum-dialog-confirm-background-exit-animation-ease: var(--spectrum-global-animation-linear);
+  --spectrum-dialog-confirm-background-exit-animation-delay: var(--spectrum-global-animation-duration-200);
+  --spectrum-dialog-confirm-background-entry-animation-duration: var(--spectrum-global-animation-duration-600);
+  --spectrum-dialog-confirm-background-entry-animation-ease: var(--spectrum-global-animation-linear);
+  --spectrum-dialog-confirm-background-entry-animation-delay: 0ms;
+  --spectrum-dialog-confirm-overlay-background-color: var(--spectrum-alias-background-color-modal-overlay);
+}

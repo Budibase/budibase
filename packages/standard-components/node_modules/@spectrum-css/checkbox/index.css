@@ -1,0 +1,218 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import "../vars/css/scales/spectrum-large.css";
+@import "../vars/css/scales/spectrum-medium.css";
+@import "../vars/css/components/spectrum-checkbox.css";
+
+.spectrum-Checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+
+  position: relative;
+
+  min-block-size: var(--spectrum-checkbox-height);
+  max-inline-size: 100%;
+
+  vertical-align: top;
+}
+
+.spectrum-Checkbox-input {
+  /* Change the font styles in all browsers for input. */
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+
+  /* Remove the margin for input in Firefox and Safari. */
+  margin: 0;
+
+  /* Show the overflow for input in Edge. */
+  overflow: visible;
+
+  /* Add the correct box sizing for [type="checkbox"] in IE 10-. */
+  box-sizing: border-box;
+
+  /* Remove the padding for [type="checkbox"] in IE 10-. */
+  padding: 0;
+
+  position: absolute;
+  inline-size: 100%;
+  block-size: 100%;
+
+  opacity: .0001;
+  z-index: 1;
+
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:checked + .spectrum-Checkbox-box {
+    &:before {
+      border-width: calc(var(--spectrum-checkbox-box-size) / 2);
+    }
+
+    .spectrum-Checkbox-checkmark {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  &:focus-ring {
+    + .spectrum-Checkbox-box {
+      &:after {
+        margin: calc(var(--spectrum-alias-focus-ring-gap) * -1);
+      }
+    }
+  }
+}
+
+.spectrum-Checkbox--sizeS {
+  @remapvars {
+    find: /--spectrum-checkbox-s(.*)/;
+    filter: color;
+    replace: --spectrum-checkbox$1;
+  }
+}
+
+.spectrum-Checkbox--sizeM {
+  @remapvars {
+    find: /--spectrum-checkbox-m(.*)/;
+    filter: color;
+    replace: --spectrum-checkbox$1;
+  }
+}
+
+.spectrum-Checkbox--sizeL {
+  @remapvars {
+    find: /--spectrum-checkbox-l(.*)/;
+    filter: color;
+    replace: --spectrum-checkbox$1;
+  }
+}
+
+.spectrum-Checkbox--sizeXL {
+  @remapvars {
+    find: /--spectrum-checkbox-xl(.*)/;
+    filter: color;
+    replace: --spectrum-checkbox$1;
+  }
+}
+
+.spectrum-Checkbox.is-indeterminate {
+  .spectrum-Checkbox-box,
+  .spectrum-Checkbox-input:checked + .spectrum-Checkbox-box {
+    &:before {
+      border-width: calc(var(--spectrum-checkbox-box-size) / 2);
+    }
+
+    .spectrum-Checkbox-checkmark {
+      display: none;
+    }
+
+    .spectrum-Checkbox-partialCheckmark {
+      display: block;
+
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+
+.spectrum-Checkbox-label {
+  text-align: start;
+  margin-inline-start: var(--spectrum-checkbox-text-gap);
+  margin-block-start: var(--spectrum-checkbox-text-padding-top);
+
+  font-size: var(--spectrum-checkbox-text-size);
+  font-weight: var(--spectrum-checkbox-text-font-weight);
+  font-style: var(--spectrum-checkbox-text-font-style);
+  line-height: var(--spectrum-checkbox-text-line-height);
+
+  transition: color var(--spectrum-global-animation-duration-100) ease-in-out;
+}
+
+.spectrum-Checkbox-box {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: var(--spectrum-checkbox-box-size);
+  block-size: var(--spectrum-checkbox-box-size);
+
+  /* Fix vertical alignment when not wrapping since we're flex-start */
+  margin: calc((var(--spectrum-checkbox-height) - var(--spectrum-checkbox-box-size)) / 2) 0;
+
+  flex-grow: 0;
+  flex-shrink: 0;
+
+  /* :before is used to draw the box fill */
+  &:before {
+    display: block;
+    z-index: 0;
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+
+    width: var(--spectrum-checkbox-box-size);
+    height: var(--spectrum-checkbox-box-size);
+
+    border-radius: var(--spectrum-checkbox-box-border-radius);
+    border-width: var(--spectrum-checkbox-box-border-size);
+    border-style: solid;
+
+    transition: border var(--spectrum-global-animation-duration-100) ease-in-out, box-shadow var(--spectrum-global-animation-duration-100) ease-in-out;
+  }
+
+  &:after {
+    border-radius: calc(var(--spectrum-checkbox-box-border-radius) + var(--spectrum-alias-focus-ring-gap));
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    margin: var(--spectrum-alias-focus-ring-gap);
+
+    transition: box-shadow var(--spectrum-global-animation-duration-100) ease-out,
+                margin var(--spectrum-global-animation-duration-100) ease-out;
+
+    /* force ff to render on the pixel grid */
+    transform: translate(0, 0);
+  }
+}
+
+.spectrum-Checkbox-checkmark,
+.spectrum-Checkbox-partialCheckmark {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+
+  opacity: 0;
+  transform: scale(0);
+
+  transition: opacity var(--spectrum-global-animation-duration-100) ease-in-out, transform var(--spectrum-global-animation-duration-100) ease-in-out;
+}
+
+.spectrum-Checkbox-checkmark {
+  margin-block-start: calc(var(--spectrum-checkbox-checkmark-size) / -2);
+  margin-inline-start: calc(var(--spectrum-checkbox-checkmark-size) / -2);
+}
+
+.spectrum-Checkbox-partialCheckmark {
+  margin-block-start: calc(var(--spectrum-checkbox-checkmark-size) / -2);
+  margin-inline-start: calc(var(--spectrum-checkbox-checkmark-size) / -2);
+}
+
+.spectrum-Checkbox-partialCheckmark {
+  display: none;
+}

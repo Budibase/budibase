@@ -1,0 +1,34 @@
+
+.spectrum-SideNav {
+  --spectrum-sidenav-item-gap: var(--spectrum-global-dimension-size-50);
+  --spectrum-sidenav-item-height: var(--spectrum-alias-single-line-height);
+  --spectrum-sidenav-item-padding-x: var(--spectrum-global-dimension-size-150);
+  --spectrum-sidenav-item-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-sidenav-item-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-sidenav-item-text-font-weight: var(--spectrum-global-font-weight-regular);
+  --spectrum-tabs-m-focus-ring-size: var(--spectrum-alias-border-size-thick);
+  --spectrum-sidenav-icon-gap: var(--spectrum-global-dimension-size-100);
+  --spectrum-sidenav-heading-height: var(--spectrum-alias-single-line-height);
+  --spectrum-sidenav-heading-gap-top: var(--spectrum-global-dimension-size-200);
+  --spectrum-sidenav-heading-gap-bottom: var(--spectrum-global-dimension-size-50);
+  --spectrum-sidenav-heading-padding-x: var(--spectrum-global-dimension-size-150);
+  --spectrum-sidenav-heading-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-sidenav-heading-text-size: var(--spectrum-global-dimension-font-size-50);
+  --spectrum-sidenav-heading-text-font-weight: var(--spectrum-global-font-weight-medium);
+  --spectrum-sidenav-heading-text-letter-spacing: var(--spectrum-global-font-letter-spacing-medium);
+  --spectrum-sidenav-multilevel-main-item-font-weight: var(--spectrum-global-font-weight-bold);
+  --spectrum-sidenav-multilevel-item-indentation: var(--spectrum-global-dimension-size-150);
+  --spectrum-sidenav-item-text-color-selected: var(--spectrum-alias-text-color-hover);
+  --spectrum-sidenav-item-background-color-selected: var(--spectrum-alias-highlight-hover);
+  --spectrum-sidenav-item-background-color-down: var(--spectrum-alias-highlight-hover);
+  --spectrum-sidenav-item-background-color-disabled: var(--spectrum-alias-background-color-transparent);
+  --spectrum-sidenav-item-text-color-disabled: var(--spectrum-alias-text-color-disabled);
+  --spectrum-sidenav-item-background-color: var(--spectrum-alias-background-color-transparent);
+  --spectrum-sidenav-item-text-color: var(--spectrum-alias-text-color);
+  --spectrum-sidenav-item-background-color-hover: var(--spectrum-alias-highlight-hover);
+  --spectrum-sidenav-item-text-color-hover: var(--spectrum-alias-text-color-hover);
+  --spectrum-sidenav-item-background-color-key-focus: var(--spectrum-alias-highlight-hover);
+  --spectrum-sidenav-item-text-color-key-focus: var(--spectrum-alias-text-color-hover);
+  --spectrum-sidenav-item-border-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-sidenav-heading-text-color: var(--spectrum-global-color-gray-700);
+}

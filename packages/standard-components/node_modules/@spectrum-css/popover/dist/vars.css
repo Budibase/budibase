@@ -1,0 +1,11 @@
+
+.spectrum-Popover {
+  --spectrum-picker-m-popover-offset-y: var(--spectrum-global-dimension-size-75);
+  --spectrum-popover-min-width: var(--spectrum-global-dimension-size-400);
+  --spectrum-popover-min-height: var(--spectrum-global-dimension-size-400);
+  --spectrum-popover-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-popover-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-popover-background-color: var(--spectrum-global-color-gray-50);
+  --spectrum-popover-border-color: var(--spectrum-alias-border-color-dark);
+  --spectrum-popover-shadow-color: var(--spectrum-alias-dropshadow-color);
+}

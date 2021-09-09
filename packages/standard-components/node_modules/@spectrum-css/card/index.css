@@ -1,0 +1,289 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-Card {
+  position: relative;
+
+  display: inline-flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+  min-inline-size: var(--spectrum-card-min-width);
+
+  border: var(--spectrum-card-border-size) solid transparent;
+  border-radius: var(--spectrum-card-border-radius);
+
+  text-decoration: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &.is-focused,
+  &.is-selected,
+  &:focus,
+  &:hover {
+    .spectrum-Card-quickActions,
+    .spectrum-Card-actions {
+      /* Ideally, this would simply apply is-open to the QuickActions component */
+      visibility: visible;
+      opacity: 1;
+      pointer-events: all;
+    }
+  }
+}
+
+.spectrum-Card-actions {
+  position: absolute;
+  inset-inline-end: var(--spectrum-card-actions-margin);
+  inset-block-start: var(--spectrum-card-actions-margin);
+  block-size: var(--spectrum-quickactions-height);
+  visibility: hidden;
+}
+
+.spectrum-Card-quickActions {
+  position: absolute;
+  inset-inline-start: var(--spectrum-card-checkbox-margin);
+  inset-block-start: var(--spectrum-card-checkbox-margin);
+
+  inline-size: var(--spectrum-quickactions-height);
+  block-size: var(--spectrum-quickactions-height);
+
+  visibility: hidden;
+
+  /* hack to work around #124 */
+  .spectrum-Checkbox:dir(ltr),
+  .spectrum-Checkbox:dir(rtl) {
+    margin: 0;
+  }
+}
+
+.spectrum-Card-coverPhoto {
+  block-size: var(--spectrum-card-coverphoto-height);
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-block-end: var(--spectrum-card-coverphoto-border-bottom-size) solid transparent;
+  border-top-left-radius: calc(var(--spectrum-card-border-radius) - 1px);
+  border-top-right-radius: calc(var(--spectrum-card-border-radius) - 1px);
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+
+  background-size: cover;
+  background-position: center center;
+}
+
+.spectrum-Card-body {
+  padding-block-start: var(--spectrum-card-body-padding-top);
+  padding-inline-end: var(--spectrum-card-body-padding-right);
+  padding-block-end: var(--spectrum-card-body-padding-bottom);
+  padding-inline-start: var(--spectrum-card-body-padding-left);
+
+  &:last-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: var(--spectrum-card-border-radius);
+    border-bottom-left-radius: var(--spectrum-card-border-radius);
+  }
+}
+
+.spectrum-Card-preview {
+  overflow: hidden;
+  border-top-left-radius: calc(var(--spectrum-card-border-radius) - 1px);
+  border-top-right-radius: calc(var(--spectrum-card-border-radius) - 1px);
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.spectrum-Card-header {
+  block-size: var(--spectrum-card-body-header-height);
+}
+
+.spectrum-Card-content {
+  display: flex;
+  block-size: var(--spectrum-card-body-content-height);
+  margin-block-start: var(--spectrum-card-body-content-margin-top);
+}
+
+.spectrum-Card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-end: var(--spectrum-card-title-padding-right);
+}
+
+.spectrum-Card-subtitle {
+  padding-inline-end: var(--spectrum-card-subtitle-padding-right);
+}
+
+.spectrum-Card-description {
+  font-size: var(--spectrum-card-subtitle-text-size);
+}
+
+.spectrum-Card-subtitle + .spectrum-Card-description:before {
+  content: "•";
+  padding-inline-end: var(--spectrum-card-subtitle-padding-right);
+}
+
+.spectrum-Card-footer {
+  padding-block-start: var(--spectrum-card-footer-padding-top);
+  margin-inline-end: var(--spectrum-card-body-padding-right);
+  padding-block-end: var(--spectrum-card-body-padding-bottom);
+  margin-inline-start: var(--spectrum-card-body-padding-left);
+
+  border-block-start: var(--spectrum-card-footer-border-top-size) solid;
+}
+
+.spectrum-Card-header {
+  display: flex;
+  align-items: baseline;
+}
+
+.spectrum-Card-actionButton {
+  flex: 1;
+  align-self: center;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.spectrum-Card--quiet {
+  .spectrum-Card-preview {
+    min-block-size: var(--spectrum-card-quiet-min-size);
+  }
+}
+
+.spectrum-Card--quiet,
+.spectrum-Card--gallery {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: var(--spectrum-card-quiet-min-size);
+  border-width: 0;
+  border-radius: 0;
+  overflow: visible;
+
+  .spectrum-Card-preview {
+    inline-size: 100%;
+    flex: 1;
+    padding: var(--spectrum-card-quiet-preview-padding);
+    margin: 0 auto;
+    box-sizing: border-box;
+    border-radius: var(--spectrum-card-quiet-border-radius);
+    position: relative;
+    transition: background-color var(--spectrum-global-animation-duration-100);
+    overflow: visible;
+
+    /* Use a :before to show the selection outline so that the border doesn't
+     * affect the layout of the content within the preview. */
+    &:before {
+      content: '';
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      box-sizing: border-box;
+      border-radius: inherit;
+      border: var(--spectrum-card-quiet-border-size) solid transparent;
+    }
+  }
+
+  &.is-drop-target {
+    .spectrum-Card-preview {
+      transition: none;
+    }
+  }
+
+  .spectrum-Card-header {
+    block-size: var(--spectrum-card-quiet-body-header-height);
+    margin-block-start: var(--spectrum-card-quiet-body-header-margin-top);
+  }
+
+  .spectrum-Card-body {
+    padding: 0;
+  }
+}
+
+.spectrum-Card--small {
+  min-inline-size: var(--spectrum-card-quiet-small-min-size);
+
+  .spectrum-Card-quickActions {
+    inset-inline-start: var(--spectrum-card-quiet-small-checkbox-margin);
+    inset-block-start: var(--spectrum-card-quiet-small-checkbox-margin);
+  }
+
+  .spectrum-Card-preview {
+    padding: var(--spectrum-card-quiet-small-preview-padding);
+    min-block-size: var(--spectrum-card-quiet-small-min-size);
+  }
+
+  .spectrum-Card-header {
+    margin-block-start: var(--spectrum-card-quiet-small-body-margin-top);
+    block-size: var(--spectrum-card-quiet-small-body-header-height);
+  }
+
+  .spectrum-Card-title {
+    font-size: var(--spectrum-card-quiet-small-title-text-size);
+  }
+}
+
+.spectrum-Card--horizontal {
+  flex-direction: row;
+
+  .spectrum-Card-preview {
+    flex-shrink: 0;
+    min-block-size: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-start-start-radius: var(--spectrum-card-quiet-border-radius);
+    border-start-end-radius: 0;
+    border-end-start-radius: var(--spectrum-card-quiet-border-radius);
+    border-end-end-radius: 0;
+
+    border-inline-end: var(--spectrum-card-border-size) solid transparent;
+
+    padding: var(--spectrum-global-dimension-size-175);
+  }
+
+  .spectrum-Card-header,
+  .spectrum-Card-content {
+    margin-block-start: 0;
+    block-size: auto;
+  }
+
+  .spectrum-Card-title {
+    padding-inline-end: 0;
+  }
+
+  .spectrum-Card-body {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    padding-block: 0;
+    padding-inline: var(--spectrum-global-dimension-size-200);
+  }
+}
+
+.spectrum-Card--gallery {
+  min-inline-size: 0;
+
+  .spectrum-Card-preview {
+    padding: 0;
+    border-radius: 0;
+  }
+}

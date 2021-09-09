@@ -1,0 +1,10 @@
+
+.spectrum-Modal {
+  --spectrum-dialog-confirm-entry-animation-distance: var(--spectrum-global-dimension-size-250);
+  --spectrum-dialog-confirm-border-radius: var(--spectrum-global-dimension-size-50);
+  --spectrum-dialog-confirm-exit-animation-duration: var(--spectrum-global-animation-duration-100);
+  --spectrum-dialog-confirm-exit-animation-delay: 0ms;
+  --spectrum-dialog-confirm-entry-animation-duration: var(--spectrum-global-animation-duration-500);
+  --spectrum-dialog-confirm-entry-animation-delay: var(--spectrum-global-animation-duration-200);
+  --spectrum-dialog-confirm-background-color: var(--spectrum-alias-background-color-default);
+}

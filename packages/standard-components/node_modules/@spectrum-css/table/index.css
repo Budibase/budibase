@@ -1,0 +1,217 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-Table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.spectrum-Table-sortedIcon {
+  display: none;
+  margin-inline-start: var(--spectrum-table-header-sort-icon-gap);
+
+  vertical-align: middle;
+
+  transition: transform var(--spectrum-global-animation-duration-100) ease-in-out;
+}
+
+.spectrum-Table-headCell {
+  box-sizing: border-box;
+  text-align: start;
+  font-size: var(--spectrum-table-header-text-size);
+  font-weight: var(--spectrum-table-header-text-font-weight);
+  line-height: var(--spectrum-table-header-text-line-height);
+  min-block-size: var(--spectrum-table-header-min-height);
+  letter-spacing: var(--spectrum-table-header-text-letter-spacing);
+  text-transform: uppercase;
+  padding-block: var(--spectrum-table-header-padding-y);
+  padding-inline: var(--spectrum-table-header-padding-x);
+  transition: color var(--spectrum-global-animation-duration-100) ease-in-out;
+  cursor: default;
+  outline: 0;
+  border-radius: var(--spectrum-table-header-border-radius);
+
+  &.is-sortable {
+    cursor: pointer;
+  }
+
+  &.is-sorted-asc,
+  &.is-sorted-desc {
+    .spectrum-Table-sortedIcon {
+      display: inline-block;
+      /* offset icon because it's not properly aligned */
+      margin-block-start: calc(var(--spectrum-global-dimension-size-25) * -1);
+    }
+  }
+
+  &.is-sorted-asc {
+    .spectrum-Table-sortedIcon {
+      transform: rotateZ(-90deg);
+    }
+  }
+}
+
+.spectrum-Table-cell--alignCenter {
+  text-align: center;
+}
+
+.spectrum-Table-cell--alignRight {
+  text-align: end;
+}
+
+/* Helper for shared drop target overlay */
+%drop-target {
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    z-index: 1;
+  }
+}
+
+.spectrum-Table-body {
+  position: relative;
+
+  border-width: var(--spectrum-table-border-size);
+  border-radius: var(--spectrum-table-border-radius);
+  overflow: auto;
+  vertical-align: var(--spectrum-table-cell-vertical-alignment);
+
+  &.is-drop-target {
+    @inherit: %drop-target;
+  }
+}
+
+/* The tbody tag doesn't allow setting a border-radius, so these hacks are to make that work
+   by putting it on the individual cells instead. */
+.spectrum-Table:not(.spectrum-Table--quiet) {
+  tbody.spectrum-Table-body {
+    border-width: var(--spectrum-table-border-size);
+    border-radius: var(--spectrum-table-border-radius);
+
+    .spectrum-Table-row:first-child .spectrum-Table-cell:first-child {
+      border-start-start-radius: var(--spectrum-table-border-radius);
+    }
+
+    .spectrum-Table-row:first-child .spectrum-Table-cell:last-child {
+      border-start-end-radius: var(--spectrum-table-border-radius);
+    }
+
+    .spectrum-Table-row:last-child .spectrum-Table-cell:first-child {
+      border-end-start-radius: var(--spectrum-table-border-radius);
+    }
+
+    .spectrum-Table-row:last-child .spectrum-Table-cell:last-child {
+      border-end-end-radius: var(--spectrum-table-border-radius);
+    }
+  }
+}
+
+.spectrum-Table-cell {
+  box-sizing: border-box;
+  font-size: var(--spectrum-table-cell-text-size);
+  font-weight: var(--spectrum-table-cell-text-font-weight);
+  line-height: var(--spectrum-table-cell-text-line-height);
+  padding-block: var(--spectrum-table-cell-padding-y);
+  padding-inline: var(--spectrum-table-cell-padding-x);
+  /* Subtract top/bottom padding for this value to be correct in this implementation */
+  min-block-size: calc(var(--spectrum-table-cell-min-height) - calc(var(--spectrum-table-cell-padding-y) * 2));
+}
+
+.spectrum-Table-cell,
+.spectrum-Table-headCell {
+  position: relative;
+
+  &:focus-ring,
+  &.is-focused {
+    outline: none;
+
+    &::before {
+      content: '';
+
+      /* Float above border */
+      z-index: 1;
+      position: absolute;
+
+      inset-block-start: 0;
+      inset-inline-end: 0;
+      inset-block-end: 0;
+      inset-inline-start: 0;
+
+      border-radius: calc(var(--spectrum-table-cell-border-radius-key-focus) - 1px);
+    }
+  }
+}
+
+.spectrum-Table-headCell {
+  &:focus-ring,
+  &.is-focused {
+    &::before {
+      inset-block-start: var(--spectrum-table-border-size);
+      inset-inline-end: var(--spectrum-table-border-size);
+      inset-block-end: var(--spectrum-table-border-size);
+      inset-inline-start: var(--spectrum-table-border-size);
+    }
+  }
+}
+
+.spectrum-Table-cell--divider {
+  border-inline-end-width: var(--spectrum-table-divider-border-size);
+}
+
+.spectrum-Table-row {
+  position: relative;
+  cursor: pointer;
+  transition: background-color var(--spectrum-global-animation-duration-100) ease-in-out;
+
+  &:focus {
+    outline: 0;
+  }
+
+  &.is-drop-target {
+    @inherit: %drop-target;
+  }
+}
+
+.spectrum-Table > .spectrum-Table-body > .spectrum-Table-row:last-of-type {
+  border-block-end-style: none;
+}
+
+.spectrum-Table--quiet {
+  .spectrum-Table-body {
+    border-radius: var(--spectrum-table-quiet-border-radius);
+  }
+
+  .spectrum-Table-body,
+  .spectrum-Table-row {
+    &.is-drop-target {
+      &::before {
+        border-radius: var(--spectrum-alias-border-radius-regular);
+      }
+    }
+  }
+}
+
+.spectrum-Table-checkboxCell {
+  padding-inline-end: var(--spectrum-table-cell-checkbox-padding-right);
+  /* have to eliminate vertical padding to allow proper vertical alignment */
+  padding-block-start: 0px;
+  padding-block-end: 0px;
+  vertical-align: var(--spectrum-table-cell-checkbox-vertical-alignment);
+}
+
+.spectrum-Table-checkbox {
+  vertical-align: super;
+}

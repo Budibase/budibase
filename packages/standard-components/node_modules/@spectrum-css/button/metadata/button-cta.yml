@@ -1,0 +1,79 @@
+name: Button - CTA
+status: Verified
+description: The call to action button communicates strong emphasis and is reserved for encouraging critical actions.
+SpectrumSiteSlug: https://spectrum.adobe.com/page/button/
+sections:
+  - name: Migration Guide
+    description: |
+      ### T-shirt sizing
+      Button now supports t-shirt sizing and requires that you specify the size of button by adding a `.spectrum-Button--size*` class.
+examples:
+  - id: button-cta
+    name: Sizing
+    markup: |
+      <div class="spectrum-Examples">
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">S</h4>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeS">
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeS">
+            <svg class="spectrum-Icon spectrum-Icon--sizeS" focusable="false" aria-hidden="true" aria-label="Edit">
+              <use xlink:href="#spectrum-icon-18-Edit" />
+            </svg>
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+        </div>
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">M (default)</h4>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeM">
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeM">
+            <svg class="spectrum-Icon spectrum-Icon--sizeM" focusable="false" aria-hidden="true" aria-label="Edit">
+              <use xlink:href="#spectrum-icon-18-Edit" />
+            </svg>
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">L</h4>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeL">
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeL" focusable="false" aria-hidden="true" aria-label="Edit">
+              <use xlink:href="#spectrum-icon-18-Edit" />
+            </svg>
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+        </div>
+
+        <div class="spectrum-Examples-item">
+          <h4 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Examples-itemHeading">XL</h4>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeXL">
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+
+          <button class="spectrum-Button spectrum-Button--cta spectrum-Button--sizeXL">
+            <svg class="spectrum-Icon spectrum-Icon--sizeXL" focusable="false" aria-hidden="true" aria-label="Edit">
+              <use xlink:href="#spectrum-icon-18-Edit" />
+            </svg>
+            <span class="spectrum-Button-label">Edit</span>
+          </button>
+        </div>
+      </div>
+  - id: button-cta
+    name: Disabled
+    markup: |
+      <button class="spectrum-Button spectrum-Button--sizeM spectrum-Button--cta" disabled>
+        <span class="spectrum-Button-label">Button</span>
+      </button>

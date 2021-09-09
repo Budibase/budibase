@@ -1,0 +1,11 @@
+:root {
+  --spectrum-dragbar-handle-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-dragbar-handle-background-color-hover: var(--spectrum-global-color-gray-400);
+  --spectrum-dragbar-handle-background-color-down: var(--spectrum-global-color-gray-800);
+  --spectrum-dragbar-handle-width: var(--spectrum-global-dimension-static-size-25);
+  --spectrum-dragbar-gripper-width: var(--spectrum-global-dimension-static-size-50);
+  --spectrum-dragbar-gripper-height: var(--spectrum-global-dimension-static-size-200);
+  --spectrum-dragbar-gripper-border-width-vertical: 4px;
+  --spectrum-dragbar-gripper-border-width-horizontal: 3px;
+  --spectrum-dragbar-gripper-border-radius: var(--spectrum-alias-border-radius-small);
+}

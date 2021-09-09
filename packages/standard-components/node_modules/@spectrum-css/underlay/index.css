@@ -1,0 +1,46 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import '../overlay/index.css';
+
+.spectrum-Underlay {
+  /* Bug: this must be 0ms, not 0 */
+  --spectrum-dialog-confirm-background-entry-animation-delay: 0ms;
+  --spectrum-dialog-confirm-background-exit-animation-ease: cubic-bezier(0.5, 0, 1, 1); /* wrong in DNA */
+  --spectrum-dialog-confirm-background-entry-animation-ease: cubic-bezier(0, 0, 0.40, 1); /* wrong in DNA */
+}
+
+.spectrum-Underlay {
+  @inherit: %spectrum-overlay;
+
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  /* Float above things by default */
+  z-index: 1;
+
+  overflow: hidden;
+
+  /* Exit animations */
+  transition: opacity var(--spectrum-dialog-confirm-background-exit-animation-duration) var(--spectrum-dialog-confirm-background-exit-animation-ease) var(--spectrum-dialog-confirm-background-exit-animation-delay),
+              visibility 0ms linear calc(var(--spectrum-dialog-confirm-background-exit-animation-delay) + var(--spectrum-dialog-confirm-background-exit-animation-duration));
+}
+
+.spectrum-Underlay.is-open {
+  @inherit: %spectrum-overlay--open;
+
+  /* Entry animations */
+  transition: opacity var(--spectrum-dialog-confirm-background-entry-animation-duration) var(--spectrum-dialog-confirm-background-entry-animation-ease) var(--spectrum-dialog-confirm-background-entry-animation-delay);
+}

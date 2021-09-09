@@ -1,0 +1,99 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+.spectrum-Toast {
+  --spectrum-toast-icon-padding-y: var(--spectrum-global-dimension-size-85);
+  --spectrum-toast-neutral-content-padding-top: var(
+    --spectrum-global-dimension-size-65
+  );
+  --spectrum-toast-content-padding-bottom: var(
+    --spectrum-global-dimension-size-65
+  );
+
+  --spectrum-toast-button-margin-right: var(
+    --spectrum-global-dimension-size-130
+  );
+}
+
+.spectrum-Toast {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: stretch;
+
+  border-radius: var(--spectrum-toast-neutral-border-radius);
+
+  padding-block: var(--spectrum-toast-neutral-padding-y);
+  padding-inline-end: var(--spectrum-toast-neutral-padding-right);
+  padding-inline-start: var(--spectrum-toast-neutral-padding-left);
+
+  font-size: var(--spectrum-toast-neutral-text-size);
+  font-weight: var(--spectrum-toast-neutral-text-font-weight);
+  -webkit-font-smoothing: antialiased;
+}
+
+.spectrum-Toast-typeIcon {
+  flex-shrink: 0;
+  flex-grow: 0;
+
+  margin-block: var(--spectrum-toast-icon-padding-y);
+  margin-inline-end: var(--spectrum-toast-neutral-icon-padding-right);
+  margin-inline-start: 0;
+}
+
+.spectrum-Toast-content {
+  flex: 1 1 auto;
+  display: inline-block;
+  box-sizing: border-box;
+
+  padding-block-start: var(--spectrum-toast-neutral-content-padding-top);
+  padding-inline-end: var(--spectrum-toast-neutral-content-padding-right);
+  padding-block-end: var(--spectrum-toast-content-padding-bottom);
+  padding-inline-start: 0;
+
+  font-size: var(--spectrum-toast-info-text-size);
+  font-weight: var(--spectrum-toast-info-text-font-weight);
+  line-height: var(--spectrum-toast-info-text-line-height);
+
+  text-align: start;
+}
+
+.spectrum-Toast-buttons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+
+  .spectrum-Button,
+  .spectrum-ClearButton {
+    & + .spectrum-Button,
+    & + .spectrum-ClearButton {
+      margin-inline-start: var(--spectrum-toast-neutral-button-gap-x);
+    }
+  }
+}
+
+.spectrum-Toast-body {
+  flex: 1 1 auto;
+  align-self: center;
+
+  .spectrum-Button {
+    float: inline-end;
+    margin-inline-end: var(--spectrum-toast-button-margin-right);
+  }
+
+  & + .spectrum-Toast-buttons {
+    padding-inline-start: var(--spectrum-toast-neutral-padding-right);
+
+    border-inline-start-width: 1px;
+    border-inline-start-style: solid;
+  }
+}

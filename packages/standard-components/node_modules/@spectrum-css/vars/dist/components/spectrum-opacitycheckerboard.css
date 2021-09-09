@@ -1,0 +1,6 @@
+.spectrum {
+  --spectrum-opacitycheckerboard-box-color-light: var(--spectrum-global-color-static-white);
+  --spectrum-opacitycheckerboard-box-color-gray: var(--spectrum-global-color-static-gray-400);
+  --spectrum-opacitycheckerboard-box-height: var(--spectrum-global-dimension-size-100);
+  --spectrum-opacitycheckerboard-box-width: var(--spectrum-global-dimension-size-100);
+}

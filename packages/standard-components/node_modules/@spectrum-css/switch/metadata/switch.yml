@@ -1,0 +1,72 @@
+name: Switch
+SpectrumSiteSlug: https://spectrum.adobe.com/page/switch/
+sections:
+  - name: Migration Guide
+    description: |
+        ### Component renamed
+        Toggle is now known as Switch. Replace all `.spectrum-ToggleSwitch*` classnames with `.spectrum-Switch*`.
+
+        ### Quiet and emphasized
+        Spectrum has chosen the variant previously known as `quiet` to be the default and has added an `emphasized` variant with the same styles as the previous default.
+        If you were using the `quiet` variant, the `.spectrum-Switch--quiet` class is no longer required and can be removed.
+        If you need a switch to look like it did before this change, add `.spectrum-Switch--emphasized`.
+
+        ### A/B toggle variant removed
+        It's been deprecated and removed. A similar use case could be served by using Radio buttons.
+examples:
+  - id: switch
+    name: Standard
+    status: Verified
+    description: The on/off variant of the Switch.
+    markup: |
+      <div class="spectrum-Switch">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-0">
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-0">Switch Off</label>
+      </div>
+      <div class="spectrum-Switch">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-1" checked>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-1">Switch On</label>
+      </div>
+
+      <br>
+
+      <div class="spectrum-Switch">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-disabled-0" disabled>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-disabled-0">Switch Off</label>
+      </div>
+      <div class="spectrum-Switch">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-disabled-1" checked disabled>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-disabled-1">Switch On</label>
+      </div>
+  - id: switch
+    name: Emphasis
+    status: Verified
+    description: The emphasized variant of the Switch.
+    markup: |
+      <div class="spectrum-Switch spectrum-Switch--">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-0">
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-0">Switch Off</label>
+      </div>
+      <div class="spectrum-Switch spectrum-Switch--emphasized">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-1" checked>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-1">Switch On</label>
+      </div>
+
+      <br>
+
+      <div class="spectrum-Switch spectrum-Switch--emphasized">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-disabled-0" disabled>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-disabled-0">Switch Off</label>
+      </div>
+      <div class="spectrum-Switch spectrum-Switch--emphasized">
+        <input type="checkbox" class="spectrum-Switch-input" id="switch-onoff-disabled-1" checked disabled>
+        <span class="spectrum-Switch-switch"></span>
+        <label class="spectrum-Switch-label" for="switch-onoff-disabled-1">Switch On</label>
+      </div>

@@ -1,0 +1,14 @@
+id: logicbutton-and
+name: Logic Button
+description: A button that toggles between and/or when clicked.
+examples:
+  - id: logicbutton-and
+    name: And
+    markup: |
+      <button class="spectrum-LogicButton spectrum-LogicButton--and">And</button>
+      <button class="spectrum-LogicButton spectrum-LogicButton--and" disabled>And</button>
+  - id: logicbutton-or
+    name: Or
+    markup: |
+      <button class="spectrum-LogicButton spectrum-LogicButton--or">Or</button>
+      <button class="spectrum-LogicButton spectrum-LogicButton--or" disabled>Or</button>

@@ -1,0 +1,22 @@
+
+.spectrum-Tooltip {
+  --spectrum-picker-m-popover-offset-y: var(--spectrum-global-dimension-size-75);
+  --spectrum-tooltip-tip-height: var(--spectrum-global-dimension-size-50);
+  --spectrum-tooltip-padding-top: var(--spectrum-global-dimension-size-50);
+  --spectrum-tooltip-padding-x: var(--spectrum-global-dimension-size-125);
+  --spectrum-tooltip-border-radius: var(--spectrum-global-dimension-size-50);
+  --spectrum-tooltip-min-height: var(--spectrum-global-dimension-size-300);
+  --spectrum-tooltip-max-width: var(--spectrum-global-dimension-size-2000);
+  --spectrum-tooltip-text-size: var(--spectrum-global-dimension-font-size-75);
+  --spectrum-tooltip-text-font-weight: var(--spectrum-global-font-weight-regular);
+  --spectrum-tooltip-text-line-height: var(--spectrum-alias-component-text-line-height);
+  --spectrum-tooltip-tip-width: var(--spectrum-global-dimension-size-100);
+  --spectrum-tooltip-icon-margin-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-tooltip-icon-size: var(--spectrum-global-dimension-size-175);
+  --spectrum-tooltip-tip-margin: var(--spectrum-global-dimension-size-50);
+  --spectrum-tooltip-background-color: var(--spectrum-global-color-static-gray-700);
+  --spectrum-tooltip-text-color: var(--spectrum-global-color-static-white);
+  --spectrum-tooltip-negative-background-color: var(--spectrum-global-color-static-red-700);
+  --spectrum-tooltip-info-background-color: var(--spectrum-global-color-static-blue-700);
+  --spectrum-tooltip-positive-background-color: var(--spectrum-global-color-static-green-700);
+}

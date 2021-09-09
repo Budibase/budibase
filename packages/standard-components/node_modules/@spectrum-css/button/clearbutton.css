@@ -1,0 +1,57 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import "../commons/basebutton.css";
+
+.spectrum-ClearButton {
+  @inherit: %spectrum-BaseButton;
+  @inherit: %spectrum-ButtonWithFocusRing;
+
+  inline-size: var(--spectrum-clearbutton-medium-width);
+  block-size: var(--spectrum-clearbutton-medium-height);
+
+  border-radius: 100%;
+
+  padding: 0;
+  margin: 0;
+
+  border: none;
+
+  > .spectrum-Icon {
+    /* @safari10 Workaround for https://bugs.webkit.org/show_bug.cgi?id=169700 */
+    margin-block: 0;
+    margin-inline: auto;
+  }
+}
+
+.spectrum-ClearButton--overBackground {
+  &:focus-ring {
+    &:after {
+      /* Adjust margin because ClearButton does not have a border */
+      margin: calc(var(--spectrum-alias-focus-ring-gap) * -1);
+    }
+  }
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+  .spectrum-ClearButton {
+    > .spectrum-Icon {
+      /* @ie11 Workaround for regression caused by fix for https://bugs.webkit.org/show_bug.cgi?id=169700 */
+      margin: 0;
+    }
+  }
+}
+
+.spectrum-ClearButton--small {
+  inline-size: var(--spectrum-clearbutton-small-width);
+  block-size: var(--spectrum-clearbutton-small-height);
+}

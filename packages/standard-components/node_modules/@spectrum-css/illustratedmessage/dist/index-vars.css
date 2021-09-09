@@ -1,0 +1,49 @@
+.spectrum-IllustratedMessage {
+  --spectrum-illustrated-message-description-max-width: 500px;
+  --spectrum-illustrated-message-heading-max-width: 500px;
+  --spectrum-illustrated-message-illustration-margin-bottom: 24px;
+  --spectrum-illustrated-message-heading-margin: 0;
+  --spectrum-illustrated-message-description-margin: 4px 0 0 0;
+}
+
+.spectrum-IllustratedMessage {
+  height: 100%;
+
+  display: -ms-flexbox;
+
+  display: flex;
+  -ms-flex-direction: column;
+      flex-direction: column;
+  -ms-flex-align: center;
+      align-items: center;
+  -ms-flex-pack: center;
+      justify-content: center;
+
+  text-align: center;
+}
+
+.spectrum-IllustratedMessage-illustration {
+  margin-bottom: var(--spectrum-illustrated-message-illustration-margin-bottom);
+}
+
+.spectrum-IllustratedMessage-heading {
+  max-width: var(--spectrum-illustrated-message-heading-max-width);
+  margin: var(--spectrum-illustrated-message-heading-margin);
+}
+
+.spectrum-IllustratedMessage-description {
+  max-width: var(--spectrum-illustrated-message-description-max-width);
+  margin: var(--spectrum-illustrated-message-description-margin);
+
+  font-style: italic;
+}
+
+.spectrum-IllustratedMessage--cta .spectrum-IllustratedMessage-description {
+    font-style: normal;
+  }
+
+.spectrum-IllustratedMessage-illustration {
+  color: var(--spectrum-global-color-gray-500);
+  fill: currentColor;
+  stroke: currentColor;
+}

@@ -1,0 +1,240 @@
+.spectrum-ProgressBar--sizeS {
+  --spectrum-progressbar-border-radius: var(--spectrum-progressbar-s-border-radius);
+  --spectrum-progressbar-label-gap-y: var(--spectrum-progressbar-s-label-gap-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-height: var(--spectrum-progressbar-s-height, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-width: var(--spectrum-progressbar-s-width, var(--spectrum-global-dimension-static-size-2400));
+  --spectrum-progressbar-indeterminate-fill-width: var(--spectrum-progressbar-s-indeterminate-fill-width, var(--spectrum-global-dimension-size-1700));
+  --spectrum-progressbar-indeterminate-duration: var(--spectrum-progressbar-s-indeterminate-duration, var(--spectrum-global-animation-duration-2000));
+  --spectrum-fieldlabel-side-padding-right: var(--spectrum-fieldlabel-side-s-padding-right, var(--spectrum-global-dimension-size-130));
+}
+
+.spectrum-ProgressBar--sizeM {
+  --spectrum-progressbar-border-radius: var(--spectrum-progressbar-m-border-radius);
+  --spectrum-progressbar-label-gap-y: var(--spectrum-progressbar-m-label-gap-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-height: var(--spectrum-progressbar-m-height, var(--spectrum-global-dimension-size-75));
+  --spectrum-progressbar-width: var(--spectrum-progressbar-m-width, var(--spectrum-global-dimension-static-size-2400));
+  --spectrum-progressbar-indeterminate-fill-width: var(--spectrum-progressbar-m-indeterminate-fill-width, var(--spectrum-global-dimension-size-1700));
+  --spectrum-progressbar-indeterminate-duration: var(--spectrum-progressbar-m-indeterminate-duration, var(--spectrum-global-animation-duration-2000));
+  --spectrum-fieldlabel-side-padding-right: var(--spectrum-fieldlabel-side-m-padding-right, var(--spectrum-global-dimension-size-150));
+}
+
+.spectrum-ProgressBar--sizeL {
+  --spectrum-progressbar-label-gap-y: var(--spectrum-progressbar-l-label-gap-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-height: var(--spectrum-progressbar-l-height, var(--spectrum-global-dimension-size-100));
+  --spectrum-progressbar-border-radius: var(--spectrum-progressbar-l-border-radius, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-width: var(--spectrum-progressbar-l-width, var(--spectrum-global-dimension-static-size-2500));
+  --spectrum-progressbar-indeterminate-fill-width: var(--spectrum-progressbar-l-indeterminate-fill-width, var(--spectrum-global-dimension-size-1800));
+  --spectrum-progressbar-indeterminate-duration: var(--spectrum-progressbar-l-indeterminate-duration, var(--spectrum-global-animation-duration-2000));
+  --spectrum-fieldlabel-side-padding-right: var(--spectrum-fieldlabel-side-l-padding-right, var(--spectrum-global-dimension-size-175));
+}
+
+.spectrum-ProgressBar--sizeXL {
+  --spectrum-progressbar-border-radius: var(--spectrum-progressbar-xl-border-radius);
+  --spectrum-progressbar-label-gap-y: var(--spectrum-progressbar-xl-label-gap-y, var(--spectrum-global-dimension-size-50));
+  --spectrum-progressbar-height: var(--spectrum-progressbar-xl-height, var(--spectrum-global-dimension-size-125));
+  --spectrum-progressbar-width: var(--spectrum-progressbar-xl-width, var(--spectrum-global-dimension-static-size-2800));
+  --spectrum-progressbar-indeterminate-fill-width: var(--spectrum-progressbar-xl-indeterminate-fill-width, var(--spectrum-global-dimension-size-2000));
+  --spectrum-progressbar-indeterminate-duration: var(--spectrum-progressbar-xl-indeterminate-duration, var(--spectrum-global-animation-duration-2000));
+  --spectrum-fieldlabel-side-padding-right: var(--spectrum-fieldlabel-side-xl-padding-right, var(--spectrum-global-dimension-size-185));
+}
+
+.spectrum-ProgressBar {
+  position: relative;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-flow: row wrap;
+      flex-flow: row wrap;
+  -ms-flex-pack: justify;
+      justify-content: space-between;
+  -ms-flex-align: center;
+      align-items: center;
+  width: var(--spectrum-progressbar-width);
+  vertical-align: top;
+}
+
+.spectrum-ProgressBar-track {
+  overflow: hidden;
+  width: 100%;
+  height: var(--spectrum-progressbar-height);
+  border-radius: var(--spectrum-progressbar-border-radius);
+  z-index: 1;
+}
+
+.spectrum-ProgressBar-fill {
+  border: none;
+  height: var(--spectrum-progressbar-height);
+
+  transition: width 1s;
+}
+
+[dir="ltr"] .spectrum-ProgressBar-label,[dir="ltr"] 
+.spectrum-ProgressBar-percentage {
+  text-align: left;
+}
+
+[dir="rtl"] .spectrum-ProgressBar-label,[dir="rtl"] 
+.spectrum-ProgressBar-percentage {
+  text-align: right;
+}
+
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  margin-bottom: var(--spectrum-progressbar-label-gap-y);
+}
+
+.spectrum-ProgressBar-label {
+  -ms-flex: 1 1 0%;
+      flex: 1 1 0%;
+}
+
+[dir="ltr"] .spectrum-ProgressBar-percentage {
+  margin-left: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+[dir="rtl"] .spectrum-ProgressBar-percentage {
+  margin-right: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+.spectrum-ProgressBar-percentage {
+  -ms-flex-item-align: start;
+      align-self: flex-start;
+}
+
+.spectrum-ProgressBar--sideLabel {
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-flow: row;
+      flex-flow: row;
+  -ms-flex-pack: justify;
+      justify-content: space-between;
+  width: auto;
+}
+
+.spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-track {
+    min-width: var(--spectrum-progressbar-width);
+    -ms-flex: 1 1 var(--spectrum-progressbar-width);
+        flex: 1 1 var(--spectrum-progressbar-width);
+  }
+
+[dir="ltr"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-label {
+    margin-right: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+[dir="rtl"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-label {
+    margin-left: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+.spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-label {
+    -ms-flex-positive: 0;
+        flex-grow: 0;
+    margin-bottom: 0;
+  }
+
+[dir="ltr"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-percentage {
+    text-align: right;
+}
+
+[dir="rtl"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-percentage {
+    text-align: left;
+}
+
+[dir="ltr"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-percentage {
+    margin-left: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+[dir="rtl"] .spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-percentage {
+    margin-right: var(--spectrum-fieldlabel-side-padding-right);
+}
+
+.spectrum-ProgressBar--sideLabel .spectrum-ProgressBar-percentage {
+    -ms-flex-order: 3;
+        order: 3;
+    margin-bottom: 0;
+  }
+
+.spectrum-ProgressBar--indeterminate .spectrum-ProgressBar-fill {
+  width: var(--spectrum-progressbar-indeterminate-fill-width);
+  position: relative;
+  animation-timing-function: var(
+    --spectrum-progressbar-indeterminate-animation-ease
+  );
+  will-change: transform;
+}
+
+[dir="ltr"] .spectrum-ProgressBar--indeterminate .spectrum-ProgressBar-fill {
+  animation: indeterminate-loop-ltr
+    var(--spectrum-progressbar-indeterminate-duration) infinite;
+}
+
+[dir="rtl"] .spectrum-ProgressBar--indeterminate .spectrum-ProgressBar-fill {
+  animation: indeterminate-loop-rtl
+    var(--spectrum-progressbar-indeterminate-duration) infinite;
+}
+
+@keyframes indeterminate-loop-ltr {
+  from {
+    transform: translate(
+      calc(-1 * var(--spectrum-progressbar-indeterminate-fill-width))
+    );
+  }
+  to {
+    transform: translate(var(--spectrum-progressbar-width));
+  }
+}
+
+@keyframes indeterminate-loop-rtl {
+  from {
+    transform: translate(var(--spectrum-progressbar-width));
+  }
+  to {
+    transform: translate(calc(-1 * var(--spectrum-progressbar-width)));
+  }
+}
+
+.spectrum-ProgressBar .spectrum-ProgressBar-fill {
+    background: var(--spectrum-progressbar-m-track-fill-color, var(--spectrum-global-color-blue-500));
+  }
+
+.spectrum-ProgressBar .spectrum-ProgressBar-track {
+    background-color: var(--spectrum-progressbar-m-track-color, var(--spectrum-alias-track-color-default));
+  }
+
+.spectrum-ProgressBar.spectrum-ProgressBar--overBackground .spectrum-ProgressBar-fill {
+      background: var(--spectrum-progressbar-m-over-background-track-fill-color, var(--spectrum-global-color-static-white));
+    }
+
+.spectrum-ProgressBar.spectrum-ProgressBar--overBackground .spectrum-ProgressBar-label,
+    .spectrum-ProgressBar.spectrum-ProgressBar--overBackground .spectrum-ProgressBar-percentage {
+      color: var(--spectrum-progressbar-m-over-background-track-fill-color, var(--spectrum-global-color-static-white));
+    }
+
+.spectrum-ProgressBar.spectrum-ProgressBar--overBackground .spectrum-ProgressBar-track {
+      background-color: var(--spectrum-progressbar-m-over-background-track-color, var(--spectrum-alias-track-color-over-background));
+    }
+
+.spectrum-ProgressBar.is-positive .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-positive-m-track-fill-color, var(--spectrum-semantic-positive-color-status));
+    }
+
+.spectrum-ProgressBar.is-notice .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-notice-m-track-fill-color, var(--spectrum-semantic-notice-color-status));
+    }
+
+.spectrum-ProgressBar.is-negative .spectrum-ProgressBar-fill {
+      background: var(--spectrum-meter-negative-m-track-fill-color, var(--spectrum-semantic-negative-color-status));
+    }
+
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color, var(--spectrum-alias-label-text-color));
+}
+
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color, var(--spectrum-alias-label-text-color));
+}
+
+.spectrum-ProgressBar-label,
+.spectrum-ProgressBar-percentage {
+  color: var(--spectrum-fieldlabel-m-text-color, var(--spectrum-alias-label-text-color));
+}

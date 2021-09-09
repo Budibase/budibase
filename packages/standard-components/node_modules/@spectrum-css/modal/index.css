@@ -1,0 +1,160 @@
+/*
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import "../overlay/index.css";
+
+.spectrum-Modal {
+  --spectrum-dialog-confirm-vertical-offset: -2vh;
+
+  /* Bug: this must be 0ms, not 0 */
+  --spectrum-dialog-confirm-exit-animation-delay: 0ms;
+
+  /* Distance between top and bottom of dialog and edge of window for fullscreen dialog */
+  --spectrum-dialog-fullscreen-margin: 32px;
+  --spectrum-dialog-max-height: 90vh;
+}
+
+/* Used to position the modal */
+.spectrum-Modal-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  inline-size: 100vw;
+  /* On mobile browsers, vh units are fixed based on the maximum height of the screen.
+   * However, when you scroll, the toolbar and address bar shrink, making the viewport resize.
+   * We use the fill-available value to counteract this where supported. */
+  height: 100vh;
+  height: -moz-available;
+  height: -webkit-fill-available;
+  height: fill-available;
+
+  visibility: hidden;
+
+  /* Don't catch clicks */
+  pointer-events: none;
+
+  /* Appear above underlay */
+  z-index: 2;
+
+  /* Be invisible by default */
+  transition: visibility 0ms linear
+    var(--spectrum-global-animation-duration-100);
+
+  &.is-open {
+    visibility: visible;
+  }
+}
+
+.spectrum-Modal {
+  @inherit: %spectrum-overlay;
+
+  /* Start offset by the animation distance */
+  transform: translateY(
+    var(--spectrum-dialog-confirm-entry-animation-distance)
+  );
+
+  /* Appear above underlay */
+  z-index: 2;
+
+  /* Don't be bigger than the screen */
+  max-height: var(--spectrum-dialog-max-height);
+
+  border-radius: var(--spectrum-dialog-confirm-border-radius);
+  overflow: hidden;
+  outline: none; /* Firefox shows outline */
+  pointer-events: auto;
+
+  /* Exit animations */
+  transition: opacity var(--spectrum-dialog-confirm-exit-animation-duration)
+      cubic-bezier(0.5, 0, 1, 1)
+      var(--spectrum-dialog-confirm-exit-animation-delay),
+    visibility 0ms linear
+      calc(
+        var(--spectrum-dialog-confirm-exit-animation-delay) +
+          var(--spectrum-dialog-confirm-exit-animation-duration)
+      ),
+    transform 0ms linear
+      calc(
+        var(--spectrum-dialog-confirm-exit-animation-delay) +
+          var(--spectrum-dialog-confirm-exit-animation-duration)
+      );
+
+  &.is-open {
+    @inherit: %spectrum-overlay--open;
+
+    /* Entry animations */
+    transition: transform
+        var(--spectrum-dialog-confirm-entry-animation-duration)
+        cubic-bezier(0, 0, 0.4, 1)
+        var(--spectrum-dialog-confirm-entry-animation-delay),
+      opacity var(--spectrum-dialog-confirm-entry-animation-duration)
+        cubic-bezier(0, 0, 0.4, 1)
+        var(--spectrum-dialog-confirm-entry-animation-delay);
+
+    transform: translateY(0);
+  }
+}
+
+/* Responsive modals will fill the screen on small viewports */
+@media only screen and (max-device-width: 400px),
+  only screen and (max-device-height: 350px) {
+  .spectrum-Modal--responsive {
+    inline-size: 100%;
+    height: 100%;
+    max-inline-size: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+  .spectrum-Modal-wrapper {
+    .spectrum-Modal--responsive {
+      margin-top: 0; /* Prevent the vertical offset bit */
+    }
+  }
+}
+
+/** @unofficial */
+.spectrum-Modal--fullscreen {
+  position: fixed;
+  left: var(--spectrum-dialog-fullscreen-margin);
+  top: var(--spectrum-dialog-fullscreen-margin);
+  right: var(--spectrum-dialog-fullscreen-margin);
+  bottom: var(--spectrum-dialog-fullscreen-margin);
+  max-inline-size: none;
+  max-height: none;
+}
+
+.spectrum-Modal--fullscreenTakeover {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  max-inline-size: none;
+  max-height: none;
+
+  box-sizing: border-box;
+
+  /* Remove the border since we've taken over */
+  border: none;
+  border-radius: 0;
+
+  &,
+  &.is-open {
+    transform: none;
+  }
+}

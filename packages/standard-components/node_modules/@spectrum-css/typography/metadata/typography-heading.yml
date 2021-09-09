@@ -1,0 +1,101 @@
+name: Typography Heading
+id: heading-m
+description: Heading is a typography component used to create various levels of hierarchies between text.
+SpectrumSiteSlug: https://spectrum.adobe.com/page/heading/
+examples:
+  - id: heading-m
+    name: Heading
+    status: Verified
+    description: Headings for typography.
+    markup: |
+      <div class="spectrum">
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL">HeadingXXXL <em>HeadingXXXL Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL">HeadingXXL <em>HeadingXXL Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL">HeadingXL <em>HeadingXL Emphasis</em> <strong>Strong</strong>.</h1>
+        <h2 class="spectrum-Heading spectrum-Heading--sizeL">HeadingL <em>HeadingL Emphasis</em> <strong>Strong</strong>.</h2>
+        <h3 class="spectrum-Heading spectrum-Heading--sizeM">HeadingM <em>HeadingM Emphasis</em> <strong>Strong</strong>.</h3>
+        <h4 class="spectrum-Heading spectrum-Heading--sizeS">HeadingS <em>HeadingS Emphasis</em> <strong>Strong</strong>.</h4>
+        <h5 class="spectrum-Heading spectrum-Heading--sizeXS">HeadingXS <em>HeadingXS Emphasis</em> <strong>Strong</strong>.</h5>
+        <h6 class="spectrum-Heading spectrum-Heading--sizeXXS">HeadingXXS <em>HeadingXXS Emphasis</em> <strong>Strong</strong>.</h6>
+        <br/>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL spectrum-Heading--serif">HeadingXXXL Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL spectrum-Heading--serif">HeadingXXL Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL spectrum-Heading--serif">HeadingXL Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h1>
+        <p class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--serif">HeadingL Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</p>
+        <h3 class="spectrum-Heading spectrum-Heading--sizeM spectrum-Heading--serif">HeadingM Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h3>
+        <h4 class="spectrum-Heading spectrum-Heading--sizeS spectrum-Heading--serif">HeadingS Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h4>
+        <h5 class="spectrum-Heading spectrum-Heading--sizeXS spectrum-Heading--serif">HeadingXS Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h5>
+        <h6 class="spectrum-Heading spectrum-Heading--sizeXXS spectrum-Heading--serif">HeadingXXS Serif <em>Serif Emphasis</em> <strong>Serif Strong</strong>.</h6>
+      </div>
+
+  - id: heading-heavy-m
+    name: Heading (Heavy)
+    status: Verified
+    description: Strong headings for typography.
+    markup: |
+      <div class="spectrum">
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL spectrum-Heading--heavy">HeadingXXXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL spectrum-Heading--heavy">HeadingXXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL spectrum-Heading--heavy">HeadingXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <p class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--heavy">HeadingL <em>Emphasis</em> <strong>strong</strong>.</p>
+        <br/>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL spectrum-Heading--heavy spectrum-Heading--serif">HeadingXXXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL spectrum-Heading--heavy spectrum-Heading--serif">HeadingXXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL spectrum-Heading--heavy spectrum-Heading--serif">HeadingXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <p class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--heavy spectrum-Heading--serif">HeadingL Serif <em>Emphasis</em> <strong>strong</strong>.</p>
+      </div>
+
+  - id: heading-light-m
+    name: Heading (Light)
+    status: Verified
+    description: Light headings for typography.
+    markup: |
+      <div class="spectrum">
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL spectrum-Heading--light">HeadingXXXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL spectrum-Heading--light">HeadingXXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL spectrum-Heading--light">HeadingXL <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <p class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--light">HeadingL <em>Emphasis</em> <strong>Strong</strong>.</p>
+        <br/>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL spectrum-Heading--light spectrum-Heading--serif">HeadingXXXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL spectrum-Heading--light spectrum-Heading--serif">HeadingXXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL spectrum-Heading--light spectrum-Heading--serif">HeadingXL Serif <em>Emphasis</em> <strong>Strong</strong>.</h1>
+        <p class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--light spectrum-Heading--serif">HeadingL Serif <em>Emphasis</em> <strong>Strong</strong>.</p>
+      </div>
+
+  - id: heading-m
+    name: Standard
+    status: Verified
+    description: Typography elements paired to display clear content hierarchies.
+    markup: |
+      <div class="spectrum-Typography">
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXXL">Aliquet Mauris Eu</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXXXL">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeXXXL">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXXL">Aliquet Mauris Eu</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXXL">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeXXL">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL">Aliquet Mauris Eu</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXL">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeXL">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h2 class="spectrum-Heading spectrum-Heading--sizeL">Aliquet Mauris Eu</h1>
+        <p class="spectrum-Body spectrum-Body--sizeL">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeL">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h3 class="spectrum-Heading spectrum-Heading--sizeM">Lorem Ipsum Dolor</h1>
+        <p class="spectrum-Body spectrum-Body--sizeM">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeM">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h4 class="spectrum-Heading spectrum-Heading--sizeS">Lorem Ipsum Dolor</h1>
+        <p class="spectrum-Body spectrum-Body--sizeS">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeS">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h5 class="spectrum-Heading spectrum-Heading--sizeXS">Lorem Ipsum Dolor</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXS">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeXS">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+        <h6 class="spectrum-Heading spectrum-Heading--sizeXXS">Lorem Ipsum Dolor</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXS">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+        <p class="spectrum-Body spectrum-Body--sizeXS">Ut et lectus finibus, aliquet mauris eu, tincidunt mi. Donec scelerisque orci sit amet venenatis luctus. Morbi eget lacus est. Duis iaculis magna quis aliquam lacinia. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>

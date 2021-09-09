@@ -1,0 +1,34 @@
+$bezier = cubic-bezier(0.23, 1, 0.32, 1)
+$slideTime = 400ms
+
+// calendar width calculation
+$daySize = 39px
+$padding = ($daySize/16)
+$dayMargin = 2px
+$daysWidth = ($daySize*7 + $dayMargin*14 + $padding*2 + 2)
+$calendarWidth = $daysWidth
+
+$monthNavHeight ?= 34px
+$weekdaysHeight ?= 28px
+$timeHeight = 40px
+
+// Colors
+
+$calendarBackground ?= #ffffff
+$calendarBorderColor ?= #e6e6e6
+
+$monthForeground ?= alpha(black, 0.9)
+$arrow_hover_color ?= #f64747
+
+$monthBackground ?= transparent
+
+$weekdaysBackground ?= transparent
+$weekdaysForeground ?= alpha(black, 0.54)
+
+$dayForeground ?= #393939
+$dayHoverBackground ?= #e6e6e6
+
+$todayColor ?= #959ea9
+$selectedDayBackground ?= #569FF7
+
+$invertedBg = invert($calendarBackground)

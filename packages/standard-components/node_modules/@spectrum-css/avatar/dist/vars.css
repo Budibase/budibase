@@ -1,0 +1,8 @@
+
+.spectrum-Avatar {
+  --spectrum-avatar-size-50-width: var(--spectrum-alias-avatar-size-50);
+  --spectrum-avatar-size-50-height: var(--spectrum-alias-avatar-size-50);
+  --spectrum-avatar-size-50-border-radius: 50%;
+  --spectrum-avatar-size-100-opacity: 1;
+  --spectrum-avatar-size-100-opacity-disabled: 0.3;
+}

@@ -1,0 +1,17 @@
+.spectrum {
+  --spectrum-popover-background-color: var(--spectrum-global-color-gray-50);
+  --spectrum-popover-border-color: var(--spectrum-alias-border-color-dark);
+  --spectrum-popover-shadow-color: var(--spectrum-alias-dropshadow-color);
+  --spectrum-popover-shadow-blur: var(--spectrum-alias-dropshadow-blur);
+  --spectrum-popover-shadow-offset-y: var(--spectrum-alias-dropshadow-offset-y);
+  --spectrum-popover-elevation: 2dp;
+  --spectrum-popover-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-popover-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-popover-padding-x: 0px;
+  --spectrum-popover-padding-y: var(--spectrum-global-dimension-size-50);
+  --spectrum-popover-tip-width: var(--spectrum-global-dimension-size-250);
+  --spectrum-popover-tip-height: var(--spectrum-global-dimension-size-125);
+  --spectrum-popover-source-gap: var(--spectrum-global-dimension-size-75);
+  --spectrum-popover-min-width: var(--spectrum-global-dimension-size-400);
+  --spectrum-popover-min-height: var(--spectrum-global-dimension-size-400);
+}

@@ -1,0 +1,145 @@
+/*
+Copyright 2020 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+@import '../overlay/index.css';
+
+.spectrum-Popover {
+  --spectrum-popover-target-offset: 13px;
+  --spectrum-popover-dialog-padding: 30px 29px;
+  --spectrum-popover-dialog-min-width: 270px;
+
+  --spectrum-popover-min-width: var(--spectrum-global-dimension-size-400);
+  --spectrum-popover-min-height: var(--spectrum-global-dimension-size-400);
+
+  /* Popover tip positioning for left/right oriented popovers (-11px/-25px) */
+  --spectrum-popover-tip-horizontal-offset: calc(var(--spectrum-global-dimension-size-250) * -1);
+  /* Popover tip positioning for top/bottom oriented popovers (6px/8px) */
+  --spectrum-popover-tip-vertical-offset: var(--spectrum-global-dimension-size-75);
+
+  --spectrum-popover-tip-triangle-top-offset: calc(var(--spectrum-global-dimension-size-225) * -1);
+}
+
+.spectrum-Popover {
+  @inherit: %spectrum-overlay;
+
+  /* Be a flexbox to allow a full sized content area that scrolls */
+  display: inline-flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  min-width: var(--spectrum-popover-min-width);
+  min-height: var(--spectrum-popover-min-height);
+
+  position: absolute;
+
+  border-style: solid;
+  border-width: var(--spectrum-popover-border-size);
+  border-radius: var(--spectrum-popover-border-radius);
+
+  outline: none; /* Hide focus outline */
+  box-sizing: border-box;
+
+  &.is-open {
+    @inherit: %spectrum-overlay--open;
+  }
+}
+
+.spectrum-Popover-tip {
+  position: absolute;
+  --spectrum-popover-tip-size: var(--spectrum-popover-tip-width);
+  --spectrum-popover-tip-borderWidth: var(--spectrum-popover-border-size);
+  /* https://stackoverflow.com/questions/44170229/how-to-prevent-half-pixel-svg-shift-on-high-pixel-ratio-devices-retina */
+  -webkit-transform: translate(0, 0);
+
+  .spectrum-Popover-tip-triangle {
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    stroke-width: var(--spectrum-popover-border-size);
+  }
+}
+
+.spectrum-Popover--dialog {
+  min-width: var(--spectrum-popover-dialog-min-width);
+  padding: var(--spectrum-popover-dialog-padding);
+}
+
+.spectrum-Popover--left {
+  &.spectrum-Popover--withTip {
+    margin-right: var(--spectrum-popover-target-offset);
+  }
+
+  &.is-open {
+    @inherit: %spectrum-overlay--left--open;
+  }
+  .spectrum-Popover-tip {
+    left: 100%;
+  }
+}
+
+.spectrum-Popover--right {
+  &.spectrum-Popover--withTip {
+    margin-left: var(--spectrum-popover-target-offset);
+  }
+
+  &.is-open {
+    @inherit: %spectrum-overlay--right--open;
+  }
+  .spectrum-Popover-tip {
+    right: 100%;
+    transform: scaleX(-1);
+  }
+}
+
+/* Center the tip by default */
+.spectrum-Popover--left,
+.spectrum-Popover--right {
+  .spectrum-Popover-tip {
+    top: 50%;
+    margin-top: calc(var(--spectrum-global-dimension-size-150) * -1);
+  }
+}
+
+.spectrum-Popover--bottom {
+  &.spectrum-Popover--withTip {
+    margin-top: var(--spectrum-popover-target-offset);
+  }
+
+  &.is-open {
+    @inherit: %spectrum-overlay--bottom--open;
+  }
+  .spectrum-Popover-tip {
+    bottom: 100%;
+    transform: scaleY(-1);
+  }
+}
+
+.spectrum-Popover--top {
+  &.spectrum-Popover--withTip {
+    margin-bottom: var(--spectrum-popover-target-offset);
+  }
+
+  &.is-open {
+    @inherit: %spectrum-overlay--top--open;
+  }
+  .spectrum-Popover-tip {
+    top: 100%;
+  }
+}
+
+/* Center the tip by default */
+.spectrum-Popover--bottom,
+.spectrum-Popover--top {
+  .spectrum-Popover-tip {
+    left: 50%;
+    margin-left: calc(var(--spectrum-global-dimension-size-150) * -1);
+  }
+}

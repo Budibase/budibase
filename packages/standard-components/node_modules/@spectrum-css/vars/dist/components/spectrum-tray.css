@@ -1,0 +1,28 @@
+.spectrum {
+  --spectrum-tray-underlay-background-color: var(--spectrum-alias-background-color-modal-overlay);
+  --spectrum-tray-padding-x: var(--spectrum-global-dimension-static-size-100);
+  --spectrum-tray-padding-y: 0;
+  --spectrum-tray-width: 100%;
+  --spectrum-tray-max-width: 375px;
+  --spectrum-tray-min-height: var(--spectrum-global-dimension-static-size-800);
+  --spectrum-tray-border-radius: 0px;
+  --spectrum-tray-full-width-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-tray-background-entry-animation-delay: 0ms;
+  --spectrum-tray-background-entry-animation-duration: var(--spectrum-global-animation-duration-600);
+  --spectrum-tray-background-entry-animation-ease: var(--spectrum-global-animation-linear);
+  --spectrum-tray-background-entry-animation-properties: opacity;
+  --spectrum-tray-entry-animation-delay: var(--spectrum-global-animation-duration-200);
+  --spectrum-tray-entry-animation-duration: var(--spectrum-global-animation-duration-500);
+  --spectrum-tray-entry-animation-ease: var(--spectrum-global-animation-ease-out);
+  --spectrum-tray-entry-animation-distance: var(--spectrum-global-dimension-size-250);
+  --spectrum-tray-entry-animation-properties: opacity, distance;
+  --spectrum-tray-background-exit-animation-delay: var(--spectrum-global-animation-duration-200);
+  --spectrum-tray-background-exit-animation-duration: var(--spectrum-global-animation-duration-300);
+  --spectrum-tray-background-exit-animation-ease: var(--spectrum-global-animation-linear);
+  --spectrum-tray-background-exit-animation-properties: opacity;
+  --spectrum-tray-exit-animation-delay: 0ms;
+  --spectrum-tray-exit-animation-duration: var(--spectrum-global-animation-duration-100);
+  --spectrum-tray-exit-animation-ease: var(--spectrum-global-animation-ease-in);
+  --spectrum-tray-exit-animation-distance: 0;
+  --spectrum-tray-exit-animation-properties: opacity, distance;
+}

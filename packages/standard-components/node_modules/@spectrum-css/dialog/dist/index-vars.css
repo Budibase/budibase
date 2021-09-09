@@ -1,0 +1,441 @@
+.spectrum-Dialog {
+  --spectrum-dialog-fullscreen-header-text-size: 28px;
+
+  --spectrum-dialog-confirm-small-width: 400px;
+  --spectrum-dialog-confirm-medium-width: 480px;
+  --spectrum-dialog-confirm-large-width: 640px;
+  --spectrum-dialog-error-width: var(--spectrum-dialog-confirm-medium-width);
+
+  --spectrum-dialog-confirm-hero-height: var(
+    --spectrum-global-dimension-size-1600
+  );
+  --spectrum-dialog-confirm-description-padding: var(
+    --spectrum-global-dimension-size-25
+  );
+  --spectrum-dialog-confirm-description-margin: calc(var(--spectrum-global-dimension-size-25) * -1);
+  --spectrum-dialog-confirm-footer-padding-top: var(--spectrum-global-dimension-static-size-500, 40px);
+  --spectrum-dialog-confirm-gap-size: var(--spectrum-global-dimension-size-200);
+  --spectrum-dialog-confirm-buttongroup-padding-top: var(--spectrum-global-dimension-static-size-500, 40px);
+  --spectrum-dialog-confirm-close-button-size: var(
+    --spectrum-global-dimension-size-400
+  );
+  --spectrum-dialog-confirm-close-button-padding: calc(26px - var(--spectrum-global-dimension-size-175));
+  --spectrum-dialog-confirm-divider-height: var(--spectrum-global-dimension-static-size-25, 2px);
+}
+
+.spectrum-Dialog {
+  display: -ms-flexbox;
+  display: flex;
+  box-sizing: border-box;
+  width: -webkit-fit-content;
+  width: fit-content;
+  min-width: var(--spectrum-dialog-confirm-min-width, var(--spectrum-global-dimension-static-size-3600));
+  max-width: 100%;
+
+  max-height: inherit;
+
+  outline: none;
+}
+
+.spectrum-Dialog--small {
+  width: var(--spectrum-dialog-confirm-small-width);
+}
+
+.spectrum-Dialog--medium {
+  width: var(--spectrum-dialog-confirm-medium-width);
+}
+
+.spectrum-Dialog--large {
+  width: var(--spectrum-dialog-confirm-large-width);
+}
+
+.spectrum-Dialog-hero {
+  grid-area: hero;
+  height: var(--spectrum-dialog-confirm-hero-height);
+
+  border-top-left-radius: var(--spectrum-dialog-confirm-border-radius, var(--spectrum-global-dimension-size-50));
+  border-top-right-radius: var(--spectrum-dialog-confirm-border-radius, var(--spectrum-global-dimension-size-50));
+
+  background-size: cover;
+  background-position: center center;
+  overflow: hidden;
+}
+
+.spectrum-Dialog .spectrum-Dialog-grid {
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns:
+    var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+    var(--spectrum-dialog-confirm-padding);
+      grid-template-columns:
+    var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+    var(--spectrum-dialog-confirm-padding);
+  -ms-grid-rows: auto var(--spectrum-dialog-confirm-padding) auto auto 1fr auto var(
+      --spectrum-dialog-confirm-padding
+    );
+      grid-template-rows: auto var(--spectrum-dialog-confirm-padding) auto auto 1fr auto var(
+      --spectrum-dialog-confirm-padding
+    );
+  grid-template-areas:
+    "hero hero    hero    hero        hero        hero"
+    ".    .       .       .           .           ."
+    ".    heading header  header      typeIcon    ."
+    ".    divider divider divider     divider     ."
+    ".    content content content     content     ."
+    ".    footer  footer  buttonGroup buttonGroup ."
+    ".    .       .       .           .           .";
+  width: 100%;
+}
+
+[dir="ltr"] .spectrum-Dialog-heading {
+
+  padding-right: var(--spectrum-dialog-confirm-gap-size);
+}
+
+[dir="rtl"] .spectrum-Dialog-heading {
+
+  padding-left: var(--spectrum-dialog-confirm-gap-size);
+}
+
+.spectrum-Dialog-heading {
+  grid-area: heading;
+
+  margin: 0;
+
+  font-size: var(--spectrum-dialog-confirm-title-text-size);
+  font-weight: var(--spectrum-dialog-confirm-title-text-font-weight, var(--spectrum-global-font-weight-bold));
+  line-height: var(--spectrum-dialog-confirm-title-text-line-height, var(--spectrum-alias-heading-text-line-height));
+
+  outline: none;
+}
+
+[dir="ltr"] .spectrum-Dialog-heading.spectrum-Dialog-heading--noHeader {
+    padding-right: 0;
+}
+
+[dir="rtl"] .spectrum-Dialog-heading.spectrum-Dialog-heading--noHeader {
+    padding-left: 0;
+}
+
+.spectrum-Dialog-heading.spectrum-Dialog-heading--noHeader {
+    grid-area: heading-start / heading-start / header-end / header-end;
+  }
+
+.spectrum-Dialog-header {
+  grid-area: header;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+      align-items: center;
+  -ms-flex-pack: end;
+      justify-content: flex-end;
+
+  box-sizing: border-box;
+
+  outline: none;
+}
+
+.spectrum-Dialog-typeIcon {
+  grid-area: typeIcon;
+}
+
+.spectrum-Dialog .spectrum-Dialog-divider {
+  grid-area: divider;
+  width: 100%;
+  margin-top: var(--spectrum-dialog-confirm-divider-margin-top, var(--spectrum-global-dimension-static-size-150));
+  margin-bottom: var(--spectrum-dialog-confirm-divider-margin-bottom, var(--spectrum-global-dimension-static-size-200));
+}
+
+.spectrum-Dialog--noDivider .spectrum-Dialog-divider {
+    display: none;
+  }
+
+.spectrum-Dialog--noDivider .spectrum-Dialog-heading {
+    padding-bottom: calc(var(--spectrum-dialog-confirm-divider-margin-top, var(--spectrum-global-dimension-static-size-150)) + var(--spectrum-dialog-confirm-divider-margin-bottom, var(--spectrum-global-dimension-static-size-200)) + var(--spectrum-dialog-confirm-divider-height));
+  }
+
+.spectrum-Dialog-content {
+  grid-area: content;
+  box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  outline: none;
+
+  font-size: var(--spectrum-dialog-confirm-description-text-size);
+  font-weight: var(--spectrum-dialog-confirm-description-text-font-weight, var(--spectrum-global-font-weight-regular));
+  line-height: var(--spectrum-dialog-confirm-description-text-line-height, var(--spectrum-alias-component-text-line-height));
+  padding: 0 var(--spectrum-dialog-confirm-description-padding);
+  margin: 0 var(--spectrum-dialog-confirm-description-margin);
+}
+
+.spectrum-Dialog-footer {
+  grid-area: footer;
+  padding-top: var(--spectrum-dialog-confirm-footer-padding-top);
+
+  display: -ms-flexbox;
+
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+
+  outline: none;
+}
+
+.spectrum-Dialog-footer > *,
+  .spectrum-Dialog-footer > .spectrum-Button + .spectrum-Button {
+    margin-bottom: 0;
+  }
+
+[dir="ltr"] .spectrum-Dialog-buttonGroup {
+  padding-left: var(--spectrum-dialog-confirm-gap-size);
+}
+
+[dir="rtl"] .spectrum-Dialog-buttonGroup {
+  padding-right: var(--spectrum-dialog-confirm-gap-size);
+}
+
+.spectrum-Dialog-buttonGroup {
+  grid-area: buttonGroup;
+  padding-top: var(--spectrum-dialog-confirm-buttongroup-padding-top);
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-pack: end;
+      justify-content: flex-end;
+}
+
+.spectrum-Dialog-buttonGroup.spectrum-Dialog-buttonGroup--noFooter {
+    grid-area: footer-start / footer-start / buttonGroup-end / buttonGroup-end;
+  }
+
+.spectrum-Dialog.spectrum-Dialog--dismissable .spectrum-Dialog-grid {
+  -ms-grid-columns:
+    var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+    minmax(0, var(--spectrum-dialog-confirm-close-button-size)) var(--spectrum-dialog-confirm-padding);
+      grid-template-columns:
+    var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+    minmax(0, var(--spectrum-dialog-confirm-close-button-size)) var(--spectrum-dialog-confirm-padding);
+  -ms-grid-rows: auto var(--spectrum-dialog-confirm-padding) auto auto 1fr auto var(
+      --spectrum-dialog-confirm-padding
+    );
+      grid-template-rows: auto var(--spectrum-dialog-confirm-padding) auto auto 1fr auto var(
+      --spectrum-dialog-confirm-padding
+    );
+  grid-template-areas:
+    "hero hero    hero    hero        hero        hero        hero"
+    ".    .       .       .           .           closeButton closeButton"
+    ".    heading header  header      typeIcon    closeButton closeButton"
+    ".    divider divider divider     divider     divider     ."
+    ".    content content content     content     content     ."
+    ".    footer  footer  buttonGroup buttonGroup buttonGroup ."
+    ".    .       .       .           .           .           .";
+}
+
+.spectrum-Dialog.spectrum-Dialog--dismissable .spectrum-Dialog-grid .spectrum-Dialog-buttonGroup {
+    display: none;
+  }
+
+.spectrum-Dialog.spectrum-Dialog--dismissable .spectrum-Dialog-grid .spectrum-Dialog-footer {
+    grid-area: footer / footer/ buttonGroup / buttonGroup;
+  }
+
+[dir="ltr"] .spectrum-Dialog-closeButton {
+
+  margin-right: var(--spectrum-dialog-confirm-close-button-padding);
+}
+
+[dir="rtl"] .spectrum-Dialog-closeButton {
+
+  margin-left: var(--spectrum-dialog-confirm-close-button-padding);
+}
+
+.spectrum-Dialog-closeButton {
+  grid-area: closeButton;
+  -ms-flex-item-align: start;
+      -ms-grid-row-align: start;
+      align-self: start;
+  justify-self: end;
+  margin-top: var(--spectrum-dialog-confirm-close-button-padding);
+}
+
+.spectrum-Dialog--error {
+  width: var(--spectrum-dialog-error-width, 90%);
+}
+
+.spectrum-Dialog--fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.spectrum-Dialog--fullscreenTakeover {
+  width: 100%;
+  height: 100%;
+
+  border-radius: 0;
+}
+
+.spectrum-Dialog--fullscreen,
+.spectrum-Dialog--fullscreenTakeover {
+  max-height: none;
+  max-width: none;
+}
+
+.spectrum-Dialog--fullscreen.spectrum-Dialog .spectrum-Dialog-grid, .spectrum-Dialog--fullscreenTakeover.spectrum-Dialog .spectrum-Dialog-grid {
+    display: -ms-grid;
+    display: grid;
+    -ms-grid-columns: var(--spectrum-dialog-confirm-padding) 1fr auto auto var(
+        --spectrum-dialog-confirm-padding
+      );
+        grid-template-columns: var(--spectrum-dialog-confirm-padding) 1fr auto auto var(
+        --spectrum-dialog-confirm-padding
+      );
+    -ms-grid-rows: var(--spectrum-dialog-confirm-padding) auto auto 1fr var(
+        --spectrum-dialog-confirm-padding
+      );
+        grid-template-rows: var(--spectrum-dialog-confirm-padding) auto auto 1fr var(
+        --spectrum-dialog-confirm-padding
+      );
+    grid-template-areas:
+      ".    .       .       .            ."
+      ".    heading header  buttonGroup  ."
+      ".    divider divider divider      ."
+      ".    content content content      ."
+      ".    .       .       .            .";
+  }
+
+.spectrum-Dialog--fullscreen .spectrum-Dialog-heading, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-heading {
+    font-size: var(--spectrum-dialog-fullscreen-header-text-size);
+  }
+
+.spectrum-Dialog--fullscreen .spectrum-Dialog-content, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-content {
+    max-height: none;
+  }
+
+.spectrum-Dialog--fullscreen .spectrum-Dialog-footer,
+  .spectrum-Dialog--fullscreen .spectrum-Dialog-buttonGroup,
+  .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-footer,
+  .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-buttonGroup {
+    padding-top: 0px;
+  }
+
+.spectrum-Dialog--fullscreen .spectrum-Dialog-footer, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-footer {
+    display: none;
+  }
+
+.spectrum-Dialog--fullscreen .spectrum-Dialog-buttonGroup, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-buttonGroup {
+    grid-area: buttonGroup;
+    -ms-flex-item-align: start;
+        -ms-grid-row-align: start;
+        align-self: start;
+  }
+
+@media screen and (max-inline-size: 700px) {
+  .spectrum-Dialog .spectrum-Dialog-grid {
+    -ms-grid-columns:
+      var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+      var(--spectrum-dialog-confirm-padding);
+        grid-template-columns:
+      var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+      var(--spectrum-dialog-confirm-padding);
+    -ms-grid-rows: auto var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+        --spectrum-dialog-confirm-padding
+      );
+        grid-template-rows: auto var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+        --spectrum-dialog-confirm-padding
+      );
+    grid-template-areas:
+      "hero hero    hero    hero        hero        hero"
+      ".    .       .       .           .           ."
+      ".    heading heading heading     typeIcon    ."
+      ".    header  header  header      header      ."
+      ".    divider divider divider     divider     ."
+      ".    content content content     content     ."
+      ".    footer  footer  buttonGroup buttonGroup ."
+      ".    .       .       .           .           .";
+  }
+
+  .spectrum-Dialog.spectrum-Dialog--dismissable .spectrum-Dialog-grid {
+    -ms-grid-columns:
+      var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+      minmax(0, var(--spectrum-dialog-confirm-close-button-size)) var(--spectrum-dialog-confirm-padding);
+        grid-template-columns:
+      var(--spectrum-dialog-confirm-padding) auto 1fr auto minmax(0, auto)
+      minmax(0, var(--spectrum-dialog-confirm-close-button-size)) var(--spectrum-dialog-confirm-padding);
+    -ms-grid-rows: auto var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+        --spectrum-dialog-confirm-padding
+      );
+        grid-template-rows: auto var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+        --spectrum-dialog-confirm-padding
+      );
+    grid-template-areas:
+      "hero hero    hero    hero        hero        hero        hero"
+      ".    .       .       .           .           closeButton closeButton"
+      ".    heading heading heading     typeIcon    closeButton closeButton"
+      ".    header  header  header      header      header      ."
+      ".    divider divider divider     divider     divider     ."
+      ".    content content content     content     content     ."
+      ".    footer  footer  buttonGroup buttonGroup buttonGroup ."
+      ".    .       .       .           .           .           .";
+  }
+
+  .spectrum-Dialog .spectrum-Dialog-header {
+    -ms-flex-pack: start;
+        justify-content: flex-start;
+  }
+    .spectrum-Dialog--fullscreen.spectrum-Dialog .spectrum-Dialog-grid, .spectrum-Dialog--fullscreenTakeover.spectrum-Dialog .spectrum-Dialog-grid {
+      display: -ms-grid;
+      display: grid;
+      -ms-grid-columns: var(--spectrum-dialog-confirm-padding) 1fr var(
+          --spectrum-dialog-confirm-padding
+        );
+          grid-template-columns: var(--spectrum-dialog-confirm-padding) 1fr var(
+          --spectrum-dialog-confirm-padding
+        );
+      -ms-grid-rows: var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+          --spectrum-dialog-confirm-padding
+        );
+          grid-template-rows: var(--spectrum-dialog-confirm-padding) auto auto auto 1fr auto var(
+          --spectrum-dialog-confirm-padding
+        );
+      grid-template-areas:
+        ".    .            ."
+        ".    heading      ."
+        ".    header       ."
+        ".    divider      ."
+        ".    content      ."
+        ".    buttonGroup  ."
+        ".    .            .";
+    }
+
+    .spectrum-Dialog--fullscreen .spectrum-Dialog-buttonGroup, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-buttonGroup {
+      padding-top: var(
+        --spectrum-dialog-confirm-buttongroup-padding-top
+      );
+    }
+
+    .spectrum-Dialog--fullscreen .spectrum-Dialog-heading, .spectrum-Dialog--fullscreenTakeover .spectrum-Dialog-heading {
+      font-size: var(--spectrum-dialog-confirm-title-text-size);
+    }
+}
+
+@media (forced-colors: active) {
+  .spectrum-Dialog {
+    border: solid;
+  }
+}
+
+.spectrum-Dialog-heading {
+  color: var(--spectrum-dialog-confirm-title-text-color, var(--spectrum-global-color-gray-900));
+}
+
+.spectrum-Dialog-content {
+  color: var(--spectrum-dialog-confirm-description-text-color, var(--spectrum-global-color-gray-800));
+}
+
+.spectrum-Dialog-typeIcon {
+  color: var(--spectrum-dialog-confirm-icon-color, var(--spectrum-global-color-gray-900));
+}
+
+.spectrum-Dialog--error .spectrum-Dialog-typeIcon {
+    color: var(--spectrum-dialog-error-icon-color, var(--spectrum-semantic-negative-color-icon));
+  }

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html class="spectrum--medium">
+<head>
+  <title>Spectrum SVG Icons - Color</title>
+  <link rel="stylesheet" href="sites/spectrum-css/spectrum-core.css">
+  <link rel="stylesheet" href="sites/spectrum-css/spectrum-light.css">
+
+  <link rel="stylesheet" href="sites/spectrum-icons.css">
+
+  <link rel="stylesheet" href="sites/spectrum-icons-demo.css">
+  <script src="sites/spectrum-icons-demo.js"></script>
+
+  <script src="sites/lib/loadIcons.js"></script>
+  <script>
+    loadIcons('sites/spectrum-css/spectrum-css-icons.svg');
+    loadIcons('spectrum-icons-color.svg');
+  </script>
+</head>
+<body class="spectrum spectrum--light">
+  <div class="spectrum-Toast spectrum-Toast--success notification-toast" style="visibility: hidden; opacity: 0;">
+    <svg class="spectrum-Icon spectrum-UIIcon-SuccessMedium spectrum-Toast-typeIcon" focusable="false" aria-hidden="true">
+      <use xlink:href="#spectrum-css-icon-SuccessMedium" />
+    </svg>
+    <div class="spectrum-Toast-content">Markup copied to clipboard!</div>
+    <div class="spectrum-Toast-buttons">
+      <button class="spectrum-ClearButton spectrum-ClearButton--medium spectrum-ClearButton--overBackground">
+        <svg class="spectrum-Icon spectrum-UIIcon-CrossMedium focusable="false" aria-hidden="true">
+          <use xlink:href="#spectrum-css-icon-CrossMedium" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <textarea class="markup-example" name="markup-example"></textarea>
+  <div class="icons-container">
+    <h2 class="spectrum-Heading--page-title">Spectrum SVG Icons</h2>
+    <%
+      var sizes = {
+        'XXS': 24,
+        'XS': 24,
+        'S': 24,
+        'M': 24,
+        'L': 24,
+        'XL': 24,
+        'XXL': 24
+      };
+    %>
+
+    <table class="spectrum-Table icons-table">
+      <thead class="spectrum-Table-head">
+        <tr>
+          <th class="spectrum-Table-headCell">Icon</th>
+          <%
+          for (var size in sizes) {
+          %>
+          <th class="spectrum-Table-headCell"><%- size %></th>
+          <%
+          }
+          %>
+        </tr>
+      </thead>
+      <tbody class="spectrum-Table-body">
+        <%
+        icons.forEach(function(icon) {
+          icon = icon.replace(/\.svg/, '');
+        %>
+        <tr class="spectrum-Table-row" id="<%- icon %>">
+          <td class="spectrum-Table-cell"><a class="spectrum-Link" href="#<%- icon %>"><%- icon %></a></td>
+          <%
+          for (var size in sizes) {
+            var iconsize = sizes[size];
+            %>
+          <td class="spectrum-Table-cell">
+            <svg class="spectrum-Icon spectrum-Icon--size<%- size %>" focusable="false" aria-hidden="true" aria-label="<%- icon %>">
+              <use xlink:href="#spectrum-icon-<%- iconsize %>-<%- icon %>" />
+            </svg>
+          </td>
+          <%
+          }
+          %>
+        </tr>
+        <%
+        });
+        %>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

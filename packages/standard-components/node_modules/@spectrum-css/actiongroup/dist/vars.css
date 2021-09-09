@@ -1,0 +1,7 @@
+
+.spectrum-ActionGroup {
+  --spectrum-actiongroup-button-gap-y: var(--spectrum-global-dimension-size-100);
+  --spectrum-actiongroup-button-gap-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-actionbutton-m-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-actionbutton-m-border-size: var(--spectrum-alias-border-size-thin);
+}

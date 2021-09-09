@@ -1,0 +1,22 @@
+
+.spectrum-Toast {
+  --spectrum-toast-neutral-padding-right: var(--spectrum-global-dimension-size-100);
+  --spectrum-toast-neutral-padding-left: var(--spectrum-global-dimension-size-200);
+  --spectrum-toast-neutral-border-radius: var(--spectrum-global-dimension-static-size-50);
+  --spectrum-toast-neutral-padding-y: var(--spectrum-global-dimension-size-100);
+  --spectrum-toast-neutral-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-toast-neutral-text-font-weight: var(--spectrum-global-font-weight-regular);
+  --spectrum-toast-neutral-icon-padding-right: var(--spectrum-global-dimension-size-150);
+  --spectrum-toast-neutral-content-padding-right: var(--spectrum-global-dimension-size-200);
+  --spectrum-toast-neutral-content-padding-top: var(--spectrum-global-dimension-size-65);
+  --spectrum-toast-info-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-toast-info-text-font-weight: var(--spectrum-global-font-weight-regular);
+  --spectrum-toast-info-text-line-height: var(--spectrum-alias-component-text-line-height);
+  --spectrum-toast-neutral-button-gap-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-toast-neutral-background-color: var(--spectrum-semantic-neutral-background-color-default);
+  --spectrum-toast-neutral-text-color: var(--spectrum-global-color-static-white);
+  --spectrum-toast-warning-background-color: var(--spectrum-global-color-static-orange-700);
+  --spectrum-toast-negative-background-color: var(--spectrum-semantic-negative-color-background);
+  --spectrum-toast-info-background-color: var(--spectrum-semantic-informative-color-background);
+  --spectrum-toast-positive-background-color: var(--spectrum-semantic-positive-color-background);
+}

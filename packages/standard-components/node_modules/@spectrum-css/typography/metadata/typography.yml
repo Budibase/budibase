@@ -1,0 +1,169 @@
+name: Typography
+dnaStatus: Verified
+description: |
+  Spectrum Typography is broken out into several separate components.
+
+  In addition, the previous deprecated Typogaphy implementations ([legacy](typography-legacy.html), [depreacted](typography-deprecated.html)) are still shipped, but their usage is discouraged.
+SpectrumSiteSlug: https://spectrum.adobe.com/page/typography/
+examplesHeading: Components
+examples:
+  - id: heading-m
+    name: Heading
+    status: Verified
+    description: |
+      Heading is used to create various levels of typographic hierarchies.
+
+      [View the Heading typography component](typography-heading.html)
+    markup: |
+      <h1 class="spectrum-Heading spectrum-Heading--sizeXXL">Hello world.</h1>
+  - id: body-m
+    name: Body
+    status: Verified
+    description: |
+      Body is primarily used for Spectrum components and for blocks of text.
+
+      [View the Body typography component](typography-body.html)
+    markup: |
+      <p class="spectrum-Body spectrum-Body--sizeM">Spectrum is based on real-world situations.</p>
+  - id: detail-m
+    status: Verified
+    name: Detail
+    description: |
+      Detail is used for disclosing extra information or smaller items in hierarchical relationships of text.
+
+      [View the Detail typography component](typography-detail.html)
+    markup: |
+      <p class="spectrum-Detail spectrum-Detail--sizeXL">Our recommendations</p>
+  - id: code-m
+    name: Code
+    status: Verified
+    description: |
+      Code is used for text that represents code.
+
+      [View the Code typography component](typography-code.html)
+    markup: |
+      <code class="spectrum-Code spectrum-Code--sizeS">alert("Hello world");</code>
+sections:
+  - name: Applying margins
+    description: |
+      By default, Typography components do not include outer margins. If you would like to add margins, simply add the `.spectrum-Typography` class to your container, and every typography component inside of your container will have the correct margins.
+    markup: |
+      <div class="spectrum-Typography">
+        <h1 class="spectrum-Heading spectrum-Heading--sizeXL">Aliquet Mauris Eu</h1>
+        <p class="spectrum-Body spectrum-Body--sizeXL">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eleifend est mollis ligula lobortis, tempus ultricies sapien lacinia. Nulla ut turpis velit. Sed finibus dapibus diam et sollicitudin. Phasellus in ipsum nec ante elementum congue eget in leo. Morbi eleifend justo non rutrum venenatis. Fusce cursus et lectus eu facilisis. Ut laoreet felis in magna dignissim feugiat.</p>
+      </div>
+
+  - name: Migrating from deprecated Typography
+    description: |
+      See the table below to reference what will need to change when migrating to the new Typography API. Cells with a dash indicate the typography style did not exist in the previous API.
+
+      Note that all instances of typography now require the component class in addition to the modifier class. For example, to get a large Heading, you will need the `.spectrum-Heading--sizeL` modifier class as well as the `.spectrum-Heading` component class.
+
+      ### Heading
+
+      | Deprecated Classname                                      | New Classname                                                          |
+      | --------------------------------------------------------- | ---------------------------------------------------------------------- |
+      | `~.spectrum-Heading1--display~`                           | `.spectrum-Heading.spectrum-Heading--sizeXXXL`                         |
+      | `~.spectrum-Heading1--display.spectrum-Heading1--quiet~`  | `.spectrum-Heading.spectrum-Heading--sizeXXXL.spectrum-Heading--light` |
+      | `~.spectrum-Heading1--display.spectrum-Heading1--strong~` | `.spectrum-Heading.spectrum-Heading--sizeXXXL.spectrum-Heading--heavy` |
+      | `~.spectrum-Heading2--display~`                           | `.spectrum-Heading.spectrum-Heading--sizeXXL`                          |
+      | `~.spectrum-Heading2--display.spectrum-Heading2--quiet~`  | `.spectrum-Heading.spectrum-Heading--sizeXXL.spectrum-Heading--light`  |
+      | `~.spectrum-Heading2--display.spectrum-Heading2--strong~` | `.spectrum-Heading.spectrum-Heading--sizeXXL.spectrum-Heading--heavy`  |
+      | `~.spectrum-Heading1~`                                    | `.spectrum-Heading.spectrum-Heading--sizeXL`                           |
+      | `~.spectrum-Heading1--quiet~`                             | `.spectrum-Heading.spectrum-Heading--sizeXL.spectrum-Heading--light`   |
+      | `~.spectrum-Heading1--strong~`                            | `.spectrum-Heading.spectrum-Heading--sizeXL.spectrum-Heading--heavy`   |
+      | `~.spectrum-Heading2~`                                    | `.spectrum-Heading.spectrum-Heading--sizeL`                            |
+      | `~.spectrum-Heading1--quiet~`                             | `.spectrum-Heading.spectrum-Heading--sizeL.spectrum-Heading--light`    |
+      | `~.spectrum-Heading2--strong~`                            | `.spectrum-Heading.spectrum-Heading--sizeL.spectrum-Heading--heavy`    |
+      | `~.spectrum-Heading3~`                                    | `.spectrum-Heading.spectrum-Heading--sizeM`                            |
+      | `~.spectrum-Heading4~`                                    | `.spectrum-Heading.spectrum-Heading--sizeS`                            |
+      | `~.spectrum-Heading5~`                                    | `.spectrum-Heading.spectrum-Heading--sizeXS`                           |
+      | `~.spectrum-Heading6~`                                    | `.spectrum-Heading.spectrum-Heading--sizeXXS`                          |
+
+
+      ### Body
+
+      | Deprecated Classname   | New Classname                            |
+      | ---------------------- | ---------------------------------------- |
+      | -                      | `.spectrum-Body.spectrum-Body--sizeXXXL` |
+      | -                      | `.spectrum-Body.spectrum-Body--sizeXXL`  |
+      | `~.spectrum-Body1~`    | `.spectrum-Body.spectrum-Body--sizeXL`   |
+      | `~.spectrum-Body2~`    | `.spectrum-Body.spectrum-Body--sizeL`    |
+      | `~.spectrum-Body3~`    | `.spectrum-Body.spectrum-Body--sizeM`    |
+      | `~.spectrum-Body4~`    | `.spectrum-Body.spectrum-Body--sizeS`    |
+      | `~.spectrum-Body5~`    | `.spectrum-Body.spectrum-Body--sizeXS`   |
+
+
+      ### Detail
+
+      | Deprecated Classname     | New Classname                                     |
+      | ------------------------ | ------------------------------------------------- |
+      | -                        | `.spectrum-Detail--sizeXL`                        |
+      | -                        | `.spectrum-Detail--sizeXL.spectrum-Detail--light` |
+      | -                        | `.spectrum-Detail--sizeL`                         |
+      | -                        | `.spectrum-Detail--sizeL.spectrum-Detail--light`  |
+      | -                        | `.spectrum-Detail--sizeM`                         |
+      | -                        | `.spectrum-Detail--sizeM.spectrum-Detail--light`  |
+      | `~.spectrum-Subheading~` | `.spectrum-Detail--sizeS`                         |
+      | `~.spectrum-Detail~`     | `.spectrum-Detail--sizeS.spectrum-Detail--light`  |
+
+
+      ### Code
+
+      | Deprecated Classname | New Classname           |
+      | -------------------- | ----------------------- |
+      | `~.spectrum-Code-1~` | `.spectrum-Code--sizeXL`|
+      | `~.spectrum-Code-2~` | `.spectrum-Code--sizeL` |
+      | `~.spectrum-Code-3~` | `.spectrum-Code--sizeM` |
+      | `~.spectrum-Code-4~` | `.spectrum-Code--sizeS` |
+      | `~.spectrum-Code-5~` | `.spectrum-Code--sizeXS`|
+
+  - name: Updating sizing syntax
+    description: |
+      To be more consistent with other t-shirt sizing syntax, the Typography components now use the word `size` in the class name syntax.
+
+      ### Heading
+
+      | Deprecated Classname                       | New Classname                                  |
+      |--------------------------------------------|------------------------------------------------|
+      | `.spectrum-Heading.spectrum-Heading--XXXL` | `.spectrum-Heading.spectrum-Heading--sizeXXXL` |
+      | `.spectrum-Heading.spectrum-Heading--XXL`  | `.spectrum-Heading.spectrum-Heading--sizeXXL`  |
+      | `.spectrum-Heading.spectrum-Heading--XL`   | `.spectrum-Heading.spectrum-Heading--sizeXL`   |
+      | `.spectrum-Heading.spectrum-Heading--L`    | `.spectrum-Heading.spectrum-Heading--sizeL`    |
+      | `.spectrum-Heading.spectrum-Heading--M`    | `.spectrum-Heading.spectrum-Heading--sizeM`    |
+      | `.spectrum-Heading.spectrum-Heading--S`    | `.spectrum-Heading.spectrum-Heading--sizeS`    |
+      | `.spectrum-Heading.spectrum-Heading--XS`   | `.spectrum-Heading.spectrum-Heading--sizeXS`   |
+      | `.spectrum-Heading.spectrum-Heading--XXS`  | `.spectrum-Heading.spectrum-Heading--sizeXXS`  |
+
+      ### Body
+
+      | Deprecated Classname                 | New Classname                            |
+      |--------------------------------------|------------------------------------------|
+      | `.spectrum-Body.spectrum-Body--XXXL` | `.spectrum-Body.spectrum-Body--sizeXXXL` |
+      | `.spectrum-Body.spectrum-Body--XXL`  | `.spectrum-Body.spectrum-Body--sizeXXL`  |
+      | `.spectrum-Body.spectrum-Body--XL`   | `.spectrum-Body.spectrum-Body--sizeXL`   |
+      | `.spectrum-Body.spectrum-Body--L`    | `.spectrum-Body.spectrum-Body--sizeL`    |
+      | `.spectrum-Body.spectrum-Body--M`    | `.spectrum-Body.spectrum-Body--sizeM`    |
+      | `.spectrum-Body.spectrum-Body--S`    | `.spectrum-Body.spectrum-Body--sizeS`    |
+      | `.spectrum-Body.spectrum-Body--XS`   | `.spectrum-Body.spectrum-Body--sizeXS`   |
+      | `.spectrum-Body.spectrum-Body--XXS`  | `.spectrum-Body.spectrum-Body--sizeXXS`  |
+
+      ### Detail
+
+      | Deprecated Classname                     | New Classname                                |
+      |------------------------------------------|----------------------------------------------|
+      | `.spectrum-Detail.spectrum-Detail--XL`   | `.spectrum-Detail.spectrum-Detail--sizeXL`   |
+      | `.spectrum-Detail.spectrum-Detail--L`    | `.spectrum-Detail.spectrum-Detail--sizeL`    |
+      | `.spectrum-Detail.spectrum-Detail--M`    | `.spectrum-Detail.spectrum-Detail--sizeM`    |
+      | `.spectrum-Detail.spectrum-Detail--S`    | `.spectrum-Detail.spectrum-Detail--sizeS`    |
+
+
+      ### Code
+
+      | Deprecated Classname                   | New Classname                              |
+      |----------------------------------------|--------------------------------------------|
+      | `.spectrum-Detail.spectrum-Detail--XL` | `.spectrum-Detail.spectrum-Detail--sizeXL` |
+      | `.spectrum-Detail.spectrum-Detail--L`  | `.spectrum-Detail.spectrum-Detail--sizeL`  |
+      | `.spectrum-Detail.spectrum-Detail--M`  | `.spectrum-Detail.spectrum-Detail--sizeM`  |
+      | `.spectrum-Detail.spectrum-Detail--S`  | `.spectrum-Detail.spectrum-Detail--sizeS`  |
+      | `.spectrum-Detail.spectrum-Detail--XS` | `.spectrum-Detail.spectrum-Detail--sizeXS` |

@@ -1,0 +1,164 @@
+name: Progress circle
+status: Verified
+SpectrumSiteSlug: https://spectrum.adobe.com/page/progress-circle/
+sections:
+  - name: Migration Guide
+    description: |
+        ### Component renamed
+        Circle loader is now known as Progress circle. Replace all `.spectrum-CircleLoader*` classnames with `.spectrum-ProgressCircle*`.
+examples:
+  - id: progresscircle-small
+    name: Standard
+    markup: |
+      <div style="width: 250px; height: 150px; display: flex; align-items: center; justify-content: space-around;" id="standard-loaders">
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--small">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spectrum-ProgressCircle">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--large">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  - id: progresscircle-small-over-background
+    name: Over Background
+    markup: |
+      <div style="width: 250px; height: 150px; background-color: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-around;" id="ob-loaders">
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--small spectrum-ProgressCircle--overBackground">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--overBackground">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--large spectrum-ProgressCircle--overBackground">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  - id: progresscircle-small
+    name: Indeterminate
+    markup: |
+      <div style="width: 250px; height: 150px; display: flex; align-items: center; justify-content: space-around;">
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--indeterminate spectrum-ProgressCircle--small">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--indeterminate">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spectrum-ProgressCircle spectrum-ProgressCircle--indeterminate spectrum-ProgressCircle--large">
+          <div class="spectrum-ProgressCircle-track"></div>
+          <div class="spectrum-ProgressCircle-fills">
+            <div class="spectrum-ProgressCircle-fillMask1">
+              <div class="spectrum-ProgressCircle-fillSubMask1">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+            <div class="spectrum-ProgressCircle-fillMask2">
+              <div class="spectrum-ProgressCircle-fillSubMask2">
+                <div class="spectrum-ProgressCircle-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>

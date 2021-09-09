@@ -1,0 +1,21 @@
+.spectrum-Avatar {
+  width: var(--spectrum-avatar-size-50-width, var(--spectrum-alias-avatar-size-50));
+  height: var(--spectrum-avatar-size-50-height, var(--spectrum-alias-avatar-size-50));
+
+  border-radius: var(--spectrum-avatar-size-50-border-radius, 50%);
+  border-style: none;
+
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.spectrum-Avatar {
+  opacity: var(--spectrum-avatar-size-100-opacity, 1);
+}
+
+.spectrum-Avatar.is-disabled {
+    opacity: var(--spectrum-avatar-size-100-opacity-disabled, 0.3);
+  }
