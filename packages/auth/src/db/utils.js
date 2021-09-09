@@ -63,6 +63,23 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 }
 
 /**
+ * Given an app ID this will attempt to retrieve the tenant ID from it.
+ * @return {null|string} The tenant ID found within the app ID.
+ */
+exports.getTenantIDFromAppID = appId => {
+  const split = appId.split(SEPARATOR)
+  const hasDev = split[1] === DocumentTypes.DEV
+  if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
+    return null
+  }
+  if (hasDev) {
+    return split[2]
+  } else {
+    return split[1]
+  }
+}
+
+/**
  * Generates a new workspace ID.
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
