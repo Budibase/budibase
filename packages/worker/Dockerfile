@@ -9,7 +9,7 @@ WORKDIR /app
 
 # copy files and install dependencies
 COPY . ./
-RUN yarn
+# RUN yarn
 
 EXPOSE 4001
 
