@@ -17,8 +17,6 @@
   export let minValue = 0
   export let maxValue = 100
 
-  $: console.log(value)
-
   let subMask1Style
   let subMask2Style
   $: calculateSubMasks(value)
