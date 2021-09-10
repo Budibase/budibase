@@ -224,7 +224,7 @@ const requiredHandler = value => {
 // Evaluates a min length constraint
 const minLengthHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
-  return value && value.length >= limit
+  return value == null || value.length >= limit
 }
 
 // Evaluates a max length constraint
@@ -237,7 +237,7 @@ const maxLengthHandler = (value, rule) => {
 const minValueHandler = (value, rule) => {
   // Use same type as the value so that things can be compared
   const limit = parseType(rule.value, rule.type)
-  return value && value >= limit
+  return value == null || value >= limit
 }
 
 // Evaluates a max value constraint
