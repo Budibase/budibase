@@ -7,6 +7,7 @@ const { isDevAppID } = require("../db/utils")
 // need this to call directly, so we can get a response
 const { processEvent } = require("./utils")
 const { queue } = require("./bullboard")
+const { checkTestFlag } = require("../utilities/redis")
 
 const TRIGGER_DEFINITIONS = definitions
 
@@ -14,11 +15,7 @@ async function queueRelevantRowAutomations(event, eventType) {
   if (event.appId == null) {
     throw `No appId specified for ${eventType} - check event emitters.`
   }
-  // don't queue events which are for dev apps, only way to test automations is
-  // running tests on them
-  if (isDevAppID(event.appId)) {
-    return
-  }
+
   const db = new CouchDB(event.appId)
   let automations = await db.allDocs(
     getAutomationParams(null, { include_docs: true })
@@ -33,6 +30,12 @@ async function queueRelevantRowAutomations(event, eventType) {
     })
 
   for (let automation of automations) {
+    // don't queue events which are for dev apps, only way to test automations is
+    // running tests on them
+    // in production the test flag will never be checked due to lazy evaluation (first always false)
+    if (isDevAppID(event.appId) && !(await checkTestFlag(automation._id))) {
+      return
+    }
     let automationDef = automation.definition
     let automationTrigger = automationDef ? automationDef.trigger : {}
     if (

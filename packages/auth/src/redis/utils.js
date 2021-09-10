@@ -13,6 +13,7 @@ exports.Databases = {
   DEBOUNCE: "debounce",
   SESSIONS: "session",
   USER_CACHE: "users",
+  FLAGS: "flags",
 }
 
 exports.SEPARATOR = SEPARATOR
