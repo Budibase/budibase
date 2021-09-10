@@ -62,7 +62,7 @@
 <div
   class="layout layout--{typeClass}"
   use:styleable={$component.styles}
-  class:desktop={!$context.device.mobile && !$context.device.tablet}
+  class:desktop={!$context.device.mobile}
   class:mobile={!!$context.device.mobile}
 >
   {#if typeClass !== "none"}
