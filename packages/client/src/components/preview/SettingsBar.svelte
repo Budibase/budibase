@@ -26,8 +26,16 @@
     const id = $builderStore.selectedComponentId
     const parent = document.getElementsByClassName(id)?.[0]
     const element = parent?.childNodes?.[0]
+
+    // The settings bar is higher in the dom tree than the selection indicators
+    // as we want to be able to render the settings bar wider than the screen,
+    // or outside the screen.
+    // Therefore we use the clip root rather than the app root to determine
+    // its position.
+    const device = document.getElementById("clip-root")
     if (element && self) {
       // Batch reads to minimize reflow
+      const deviceBounds = device.getBoundingClientRect()
       const elBounds = element.getBoundingClientRect()
       const width = self.offsetWidth
       const height = self.offsetHeight
@@ -35,8 +43,15 @@
 
       // Vertically, always render above unless no room, then render inside
       let newTop = elBounds.top + scrollY - verticalOffset - height
+      if (newTop < deviceBounds.top - 50) {
+        newTop = deviceBounds.top - 50
+      }
       if (newTop < 0) {
         newTop = 0
+      }
+      const deviceBottom = deviceBounds.top + deviceBounds.height
+      if (newTop > deviceBottom - 44) {
+        newTop = deviceBottom - 44
       }
 
       // Horizontally, try to center first.

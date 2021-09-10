@@ -4,7 +4,8 @@
     "intelligentLoading": true,
     "deviceAwareness": true,
     "state": true,
-    "customThemes": true
+    "customThemes": true,
+    "devicePreview": true
   },
   "layout": {
     "name": "Layout",

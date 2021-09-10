@@ -20,6 +20,9 @@ const createBuilderStore = () => {
     previewId: null,
     previewType: null,
     selectedPath: [],
+    theme: null,
+    customTheme: null,
+    previewDevice: "desktop",
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {

@@ -15,6 +15,7 @@
   import { get } from "svelte/store"
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
+  import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -151,6 +152,9 @@
     {#if $currentAsset}
       <div class="preview-header">
         <ComponentSelectionList />
+        {#if $store.clientFeatures.devicePreview}
+          <DevicePreviewSelect />
+        {/if}
         {#if $store.clientFeatures.customThemes}
           <ThemeEditor />
         {:else if $store.clientFeatures.spectrumThemes}
@@ -208,7 +212,8 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
+    gap: 1rem;
   }
   .preview-header > :global(*) {
     flex: 0 0 auto;

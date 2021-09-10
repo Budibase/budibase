@@ -50,6 +50,7 @@
     previewType: $store.currentFrontEndType,
     theme: $store.theme,
     customTheme: $store.customTheme,
+    previewDevice: $store.previewDevice,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -140,11 +141,12 @@
     </div>
   {/if}
   <iframe
-    style="height: 100%; width: 100%"
     title="componentPreview"
     bind:this={iframe}
     srcdoc={template}
     class:hidden={loading || error}
+    class:tablet={$store.previewDevice === "tablet"}
+    class:mobile={$store.previewDevice === "mobile"}
   />
 </div>
 <ConfirmDialog
@@ -160,6 +162,8 @@
   .component-container {
     grid-row-start: middle;
     grid-column-start: middle;
+    display: grid;
+    place-items: center;
     position: relative;
     overflow: hidden;
     margin: auto;
@@ -199,5 +203,10 @@
   .error :global(h1) {
     font-weight: 400;
     margin: 0;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
   }
 </style>
