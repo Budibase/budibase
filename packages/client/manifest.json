@@ -827,7 +827,7 @@
         }
       },
       {
-        "type": "array<text>",
+        "type": "options",
         "label": "ModelUris",
         "key": "modelUris"
       },
@@ -911,6 +911,24 @@
         "type": "boolean",
         "label": "InfoBox",
         "key": "infoBox",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Scale",
+        "key": "scale",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Select Model",
+        "key": "selectModel",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Pre-Select Feature",
+        "key": "preSelectFeature",
         "defaultValue": true
       }
     ]
