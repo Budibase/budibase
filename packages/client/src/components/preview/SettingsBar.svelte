@@ -3,8 +3,8 @@
   import SettingsButton from "./SettingsButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
-  import { builderStore } from "../../store"
-  import { domDebounce } from "../../utils/domDebounce"
+  import { builderStore } from "stores"
+  import { domDebounce } from "utils/domDebounce"
 
   const verticalOffset = 28
   const horizontalOffset = 2

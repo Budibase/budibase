@@ -1,4 +1,4 @@
-import { notificationStore, dataSourceStore } from "../store"
+import { notificationStore, dataSourceStore } from "stores"
 import API from "./api"
 import { fetchTableDefinition } from "./tables"
 

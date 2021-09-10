@@ -6,9 +6,9 @@ import {
   authStore,
   peekStore,
   stateStore,
-} from "../store"
-import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
-import { ActionTypes } from "../constants"
+} from "stores"
+import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
+import { ActionTypes } from "constants"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters

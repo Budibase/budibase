@@ -36,7 +36,7 @@
     font-size: 2rem;
     font-weight: 600;
     margin: 0 1.5rem 1.5rem 1.5rem;
-    color: var(--spectrum-global-color-blue-600);
+    color: var(--spectrum-link-primary-m-text-color);
     white-space: pre-wrap;
   }
 

@@ -56,6 +56,7 @@
       disabled={fieldState.disabled}
       error={fieldState.error}
       id={fieldState.fieldId}
+      appendTo={document.getElementById("app-root")}
       {enableTime}
       {placeholder}
     />

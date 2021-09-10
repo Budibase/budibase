@@ -1,6 +1,10 @@
 const Router = require("@koa/router")
-const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
-  require("@budibase/auth").auth
+const {
+  buildAuthMiddleware,
+  auditLog,
+  buildTenancyMiddleware,
+  buildAppTenancyMiddleware,
+} = require("@budibase/auth").auth
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
@@ -48,6 +52,8 @@ router
     })
   )
   .use(currentApp)
+  // this middleware will try to use the app ID to determine the tenancy
+  .use(buildAppTenancyMiddleware())
   .use(auditLog)
 
 // error handling middleware
