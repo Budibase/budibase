@@ -2,7 +2,7 @@ const {
   checkBuilderEndpoint,
   getAllTableRows,
   clearAllAutomations,
-  triggerAutomation,
+  testAutomation,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicAutomation } = setup.structures
@@ -160,14 +160,13 @@ describe("/automations", () => {
       automation.definition.steps[0].inputs.row.tableId = table._id
       automation = await config.createAutomation(automation)
       await setup.delay(500)
-      const res = await triggerAutomation(config, automation)
+      const res = await testAutomation(config, automation)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
       // TODO: update when workflow logs are a thing
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
-        expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
-        expect(res.body.automation.name).toEqual(automation.name)
+        expect(res.body).toBeDefined()
         await setup.delay(500)
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test

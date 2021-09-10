@@ -7,6 +7,7 @@ const {
   checkForWebhooks,
   updateTestHistory,
 } = require("../../automations/utils")
+const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
 
 /*************************
  *                       *
@@ -163,6 +164,7 @@ exports.test = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   let automation = await db.get(ctx.params.id)
+  await setTestFlag(automation._id)
   const response = await triggers.externalTrigger(
     automation,
     {
@@ -176,5 +178,6 @@ exports.test = async function (ctx) {
     ...ctx.request.body,
     occurredAt: new Date().toISOString(),
   })
+  await clearTestFlag(automation._id)
   ctx.body = response
 }
