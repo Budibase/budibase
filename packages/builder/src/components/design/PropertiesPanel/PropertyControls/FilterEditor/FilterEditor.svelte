@@ -31,7 +31,7 @@
 </script>
 
 <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-<Drawer bind:this={drawer} title={$t("filtering")}>
+<Drawer bind:this={drawer} title={$t("filtering")} cancelText={$t("cancel")}>
   <Button cta slot="buttons" on:click={saveFilter}>{$t("save")}</Button>
   <FilterDrawer
     slot="body"

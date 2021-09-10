@@ -19,7 +19,11 @@
 </script>
 
 <ActionButton on:click={drawer.show}>{$t("configure-validation")}</ActionButton>
-<Drawer bind:this={drawer} title={$t("validation-rules")}>
+<Drawer
+  bind:this={drawer}
+  title={$t("validation-rules")}
+  cancelText={$t("cancel")}
+>
   <svelte:fragment slot="description">
     {$t("configure-validation-rules-for-this-field")}
   </svelte:fragment>

@@ -93,7 +93,11 @@
       >
         <Icon size="S" name="FlashOn" />
       </div>
-      <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
+      <Drawer
+        bind:this={bindingDrawer}
+        title={$t(capitalise(key))}
+        cancelText={$t("cancel")}
+      >
         <svelte:fragment slot="description">
           {$t("add-the-objects-on-the-left-to-enrich-your-text")}
         </svelte:fragment>

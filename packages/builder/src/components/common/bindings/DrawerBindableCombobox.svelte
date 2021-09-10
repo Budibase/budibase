@@ -47,7 +47,7 @@
     </div>
   {/if}
 </div>
-<Drawer bind:this={bindingDrawer} {title}>
+<Drawer bind:this={bindingDrawer} {title} cancelText={$t("cancel")}>
   <svelte:fragment slot="description">
     {$t("add-the-objects-on-the-left-to-enrich-your-text")}
   </svelte:fragment>

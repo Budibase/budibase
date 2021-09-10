@@ -6,6 +6,7 @@
   import Heading from "../Typography/Heading.svelte"
 
   export let title
+  export let cancelText
 
   let visible = false
 
@@ -43,7 +44,9 @@
           </Body>
         </div>
         <div class="buttons">
-          <Button secondary quiet on:click={hide}>Cancel</Button>
+          <Button secondary quiet on:click={hide}>
+            {cancelText || "Cancel"}
+          </Button>
           <slot name="buttons" />
         </div>
       </header>

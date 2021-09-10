@@ -1,7 +1,7 @@
 <script>
   import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import OptionsDrawer from "./OptionsDrawer.svelte"
+  import ArrayTextDrawer from "./ArrayTextDrawer.svelte"
   import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
@@ -13,17 +13,14 @@
 
   const saveFilter = async () => {
     // Filter out incomplete options
-    tempValue = tempValue.filter(option => option.value && option.label)
+    tempValue = tempValue.filter(option => option.value)
     dispatch("change", tempValue)
     drawer.hide()
   }
 </script>
 
-<ActionButton on:click={drawer.show}>{$t("define-options")}</ActionButton>
-<Drawer bind:this={drawer} title={$t("options")} cancelText={$t("cancel")}>
-  <svelte:fragment slot="description">
-    {$t("define-the-options-for-this-picker")}
-  </svelte:fragment>
+<ActionButton on:click={drawer.show}>{$t("define-array")}</ActionButton>
+<Drawer bind:this={drawer} title={$t("array")} cancelText={$t("cancel")}>
   <Button cta slot="buttons" on:click={saveFilter}>{$t("save")}</Button>
-  <OptionsDrawer bind:options={tempValue} slot="body" />
+  <ArrayTextDrawer bind:options={tempValue} slot="body" />
 </Drawer>

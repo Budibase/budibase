@@ -817,9 +817,101 @@
     "styles": ["size"],
     "settings": [
       {
+        "key": "_styles",
+        "defaultValue": {
+          "normal": {
+            "height": "350px"
+          },
+          "hover": {}, 
+          "active": {}
+        }
+      },
+      {
+        "type": "array<text>",
+        "label": "ModelUris",
+        "key": "modelUris"
+      },
+      {
+        "type": "select",
+        "label": "Language",
+        "key": "language",
+        "defaultValue": "zh-hans",
+        "options": [
+          {
+            "label": "简体中文",
+            "value": "zh-hans"
+          },
+          {
+            "label": "English",
+            "value": "en-us"
+          }
+        ]
+      },
+      {
         "type": "text",
-        "label": "URL",
-        "key": "url"
+        "label": "Token",
+        "key": "cesiumToken",
+        "defaultValue": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNjE1MDY1Yi1kZTdjLTRhM2ItYTcxYy0wOTc4Yzk1OGFlYTEiLCJpZCI6MTIzNTAsInNjb3BlcyI6WyJsZ24iLCJwciIsImFjdyIsImFzbCIsImFzciIsImFzdyIsImFzcyIsImdjIiwibHIiLCJsdyIsInRyIiwidHciLCJ1c2ciXSwiaWF0IjoxNjMxMjUzNTY3LCJleHAiOjE2MzE4NTgzNjd9.rNGDvjLxRom5wJ5bVYcMSgG2ZrBK0ise8uJu94sT3K4"
+      },
+      {
+        "type": "boolean",
+        "label": "Geocoder",
+        "key": "geocoder",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Home Button",
+        "key": "homeButton",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Base Layer Picker",
+        "key": "baseLayerPicker",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Scene Mode Picker",
+        "key": "sceneModePicker",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Navigation Help Button",
+        "key": "navigationHelpButton",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Fullscreen Button",
+        "key": "fullscreenButton",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Selection Indicator",
+        "key": "selectionIndicator",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Timeline",
+        "key": "timeline",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Animation",
+        "key": "animation",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "InfoBox",
+        "key": "infoBox",
+        "defaultValue": true
       }
     ]
   },
@@ -2412,7 +2504,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "info": "Pagination is only available for data stored in internal tables.",
+    "info": "Pagination is only availabel for data stored in internal tables.",
     "icon": "Data",
     "illegalChildren": ["section"],
     "hasChildren": true,

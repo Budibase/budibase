@@ -114,7 +114,11 @@
   />
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={"Query Parameters"} bind:this={drawer}>
+    <Drawer
+      title={"Query Parameters"}
+      bind:this={drawer}
+      cancelText={$t("cancel")}
+    >
       <Button
         slot="buttons"
         cta

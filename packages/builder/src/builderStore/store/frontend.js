@@ -384,7 +384,6 @@ export const getFrontendStore = () => {
       create: async (componentName, presetProps) => {
         const selected = get(selectedComponent)
         const asset = get(currentAsset)
-
         // Create new component
         const componentInstance = store.actions.components.createInstance(
           componentName,

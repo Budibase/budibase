@@ -55,10 +55,16 @@
       "image",
       "backgroundimage",
       "video",
-      "gis",
       "link",
       "icon",
       "embed"
+    ]
+  },
+  {
+    "name": "3D",
+    "icon": "3DMaterials",
+    "children": [
+      "gis"
     ]
   }
 ]

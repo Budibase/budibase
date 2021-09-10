@@ -37,7 +37,7 @@
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
-  <Drawer bind:this={drawer} title="Custom CSS">
+  <Drawer bind:this={drawer} title="Custom CSS" cancelText={$t("cancel")}>
     <Button cta slot="buttons" on:click={save}>Save</Button>
     <DrawerContent slot="body">
       <div class="content">

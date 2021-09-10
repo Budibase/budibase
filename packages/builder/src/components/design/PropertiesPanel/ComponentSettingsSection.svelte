@@ -60,7 +60,7 @@
   }
 </script>
 
-<DetailSummary name="General" collapsible={false}>
+<DetailSummary name={$t("general-0")} collapsible={false}>
   {#if !componentInstance._component.endsWith("/layout")}
     <PropertyControl
       bindable={false}
@@ -77,7 +77,7 @@
         <PropertyControl
           type={setting.type}
           control={getComponentForSettingType(setting.type)}
-          label={setting.label}
+          label={$t(setting.label)}
           key={setting.key}
           value={componentInstance[setting.key] ??
             componentInstance[setting.key]?.defaultValue}

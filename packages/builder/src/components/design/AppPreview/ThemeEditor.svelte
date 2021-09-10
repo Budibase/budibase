@@ -12,6 +12,7 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import AppThemeSelect from "./AppThemeSelect.svelte"
+  import { _ as t } from "svelte-i18n"
 
   let modal
 
@@ -25,19 +26,19 @@
 
   const buttonBorderRadiusOptions = [
     {
-      label: "None",
+      label: $t("none"),
       value: "0",
     },
     {
-      label: "Small",
+      label: $t("small"),
       value: "4px",
     },
     {
-      label: "Medium",
+      label: $t("medium"),
       value: "8px",
     },
     {
-      label: "Large",
+      label: $t("large"),
       value: "16px",
     },
   ]
@@ -57,22 +58,22 @@
 </script>
 
 <div class="container">
-  <ActionButton icon="Brush" on:click={modal.show}>Theme</ActionButton>
+  <ActionButton icon="Brush" on:click={modal.show}>{$t("theme")}</ActionButton>
 </div>
 <Modal bind:this={modal}>
   <ModalContent
     showConfirmButton={false}
-    cancelText="Close"
+    cancelText={$t("close")}
     showCloseIcon={false}
-    title="Theme settings"
+    title={$t("theme-settings")}
   >
     <Layout noPadding gap="S">
       <div class="setting">
-        <Label size="L">Theme</Label>
+        <Label size="L">{$t("theme")}</Label>
         <AppThemeSelect />
       </div>
       <div class="setting">
-        <Label size="L">Button roundness</Label>
+        <Label size="L">{$t("button-roundness")}</Label>
         <div class="select-wrapper">
           <Select
             placeholder={null}
@@ -84,7 +85,7 @@
         </div>
       </div>
       <div class="setting">
-        <Label size="L">Primary color</Label>
+        <Label size="L">{$t("primary-color")}</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColor || defaultTheme.primaryColor}
@@ -92,7 +93,7 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Primary color (hover)</Label>
+        <Label size="L">{$t("primary-color-hover")}</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColorHover ||
@@ -101,7 +102,7 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Navigation bar background color</Label>
+        <Label size="L">{$t("navigation-bar-background-color")}</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.navBackground ||
@@ -110,7 +111,7 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Navigation bar text color</Label>
+        <Label size="L">{$t("navigation-bar-text-color")}</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.navTextColor || defaultTheme.navTextColor}
@@ -119,7 +120,7 @@
       </div>
     </Layout>
     <div slot="footer">
-      <Button secondary quiet on:click={resetTheme}>Reset</Button>
+      <Button secondary quiet on:click={resetTheme}>{$t("reset")}</Button>
     </div>
   </ModalContent>
 </Modal>

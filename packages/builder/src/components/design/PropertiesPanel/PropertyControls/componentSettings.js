@@ -13,11 +13,13 @@ import NavigationEditor from "./NavigationEditor/NavigationEditor.svelte"
 import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 import URLSelect from "./URLSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
+import ArrayTextEditor from "./ArrayEditor/ArrayTextEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 
 const componentMap = {
   text: Input,
+  "array<text>": ArrayTextEditor,
   select: Select,
   dataSource: DataSourceSelect,
   dataProvider: DataProviderSelect,
