@@ -3,9 +3,10 @@ const actions = require("../../automations/actions")
 const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
 const { getAutomationParams, generateAutomationID } = require("../../db/utils")
-const { saveEntityMetadata } = require("../../utilities")
-const { MetadataTypes } = require("../../constants")
-const { checkForWebhooks } = require("../../automations/utils")
+const {
+  checkForWebhooks,
+  updateTestHistory,
+} = require("../../automations/utils")
 
 /*************************
  *                       *
@@ -171,11 +172,9 @@ exports.test = async function (ctx) {
     { getResponses: true }
   )
   // save a test history run
-  await saveEntityMetadata(
-    ctx.appId,
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
-    automation._id,
-    ctx.request.body
-  )
+  await updateTestHistory(ctx.appId, automation, {
+    ...ctx.request.body,
+    occurredAt: new Date().toISOString(),
+  })
   ctx.body = response
 }

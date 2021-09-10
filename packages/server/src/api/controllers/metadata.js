@@ -14,7 +14,12 @@ exports.saveMetadata = async ctx => {
   if (type === MetadataTypes.AUTOMATION_TEST_HISTORY) {
     ctx.throw(400, "Cannot save automation history type")
   }
-  await saveEntityMetadata(ctx.appId, type, entityId, ctx.request.body)
+  ctx.body = await saveEntityMetadata(
+    ctx.appId,
+    type,
+    entityId,
+    ctx.request.body
+  )
 }
 
 exports.deleteMetadata = async ctx => {
@@ -34,7 +39,7 @@ exports.deleteMetadata = async ctx => {
     await db.remove(id, rev)
   }
   ctx.body = {
-    message: "Metadata deleted successfully.",
+    message: "Metadata deleted successfully",
   }
 }
 
@@ -42,5 +47,13 @@ exports.getMetadata = async ctx => {
   const { type, entityId } = ctx.params
   const db = new CouchDB(ctx.appId)
   const id = generateMetadataID(type, entityId)
-  ctx.body = await db.get(id)
+  try {
+    ctx.body = await db.get(id)
+  } catch (err) {
+    if (err.status === 404) {
+      ctx.body = {}
+    } else {
+      ctx.throw(err.status, err)
+    }
+  }
 }

@@ -58,16 +58,19 @@ exports.attachmentsRelativeURL = attachmentKey => {
   )
 }
 
-exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
+exports.updateEntityMetadata = async (appId, type, entityId, updateFn) => {
   const db = new CouchDB(appId)
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
-  let rev
+  let rev,
+    metadata = {}
   try {
     const oldMetadata = await db.get(id)
     rev = oldMetadata._rev
+    metadata = updateFn(oldMetadata)
   } catch (err) {
     rev = null
+    metadata = updateFn({})
   }
   metadata._id = id
   if (rev) {
@@ -79,4 +82,10 @@ exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
     _id: id,
     _rev: response.rev,
   }
+}
+
+exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
+  return exports.updateEntityMetadata(appId, type, entityId, () => {
+    return metadata
+  })
 }
