@@ -63,7 +63,6 @@
     Cesium.Ion.defaultAccessToken = cesiumToken
 
     viewer = new Cesium.Viewer(el, {
-      terrainProvider: window.Cesium.createWorldTerrain(),
       geocoder,
       homeButton,
       baseLayerPicker,
