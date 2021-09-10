@@ -18,12 +18,12 @@ exports.Databases = {
 exports.SEPARATOR = SEPARATOR
 
 exports.getRedisOptions = (clustered = false) => {
-  const [host, port] = REDIS_URL.split(":")
+  const [host, port, ...rest] = REDIS_URL.split(":")
 
   let redisProtocolUrl
 
   // fully qualified redis URL
-  if (/rediss?/.test(host)) {
+  if (rest.length && /rediss?/.test(host)) {
     redisProtocolUrl = REDIS_URL
   }
 
