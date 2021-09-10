@@ -7,6 +7,8 @@ const webhooks = require("../api/controllers/webhook")
 const CouchDB = require("../db")
 const { queue } = require("./bullboard")
 const newid = require("../db/newid")
+const { updateEntityMetadata } = require("../utilities")
+const { MetadataTypes } = require("../constants")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -61,6 +63,24 @@ exports.processEvent = async job => {
     )
     return err
   }
+}
+
+exports.updateTestHistory = async (appId, automation, history) => {
+  return updateEntityMetadata(
+    appId,
+    MetadataTypes.AUTOMATION_TEST_HISTORY,
+    automation._id,
+    metadata => {
+      if (metadata && Array.isArray(metadata.history)) {
+        metadata.history.push(history)
+      } else {
+        metadata = {
+          history: [history],
+        }
+      }
+      return metadata
+    }
+  )
 }
 
 // end the repetition and the job itself

@@ -101,3 +101,21 @@ exports.checkPermissionsEndpoint = async ({
 exports.getDB = config => {
   return new CouchDB(config.getAppId())
 }
+
+exports.triggerAutomation = async (config, automation) => {
+  return await config.request
+    .post(`/api/automations/${automation._id}/trigger`)
+    .send({ name: "Test", description: "TEST" })
+    .set(config.defaultHeaders())
+    .expect("Content-Type", /json/)
+    .expect(200)
+}
+
+exports.testAutomation = async (config, automation) => {
+  return await config.request
+    .post(`/api/automations/${automation._id}/test`)
+    .send({ name: "Test", description: "TEST" })
+    .set(config.defaultHeaders())
+    .expect("Content-Type", /json/)
+    .expect(200)
+}

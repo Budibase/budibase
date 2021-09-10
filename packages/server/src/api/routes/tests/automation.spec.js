@@ -2,6 +2,7 @@ const {
   checkBuilderEndpoint,
   getAllTableRows,
   clearAllAutomations,
+  triggerAutomation,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicAutomation } = setup.structures
@@ -22,15 +23,6 @@ describe("/automations", () => {
   beforeEach(async () => {
     await config.init()
   })
-
-  const triggerWorkflow = async automation => {
-    return await request
-      .post(`/api/automations/${automation._id}/trigger`)
-      .send({ name: "Test", description: "TEST" })
-      .set(config.defaultHeaders())
-      .expect('Content-Type', /json/)
-      .expect(200)
-  }
 
   describe("get definitions", () => {
     it("returns a list of definitions for actions", async () => {
@@ -168,7 +160,7 @@ describe("/automations", () => {
       automation.definition.steps[0].inputs.row.tableId = table._id
       automation = await config.createAutomation(automation)
       await setup.delay(500)
-      const res = await triggerWorkflow(automation)
+      const res = await triggerAutomation(config, automation)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
