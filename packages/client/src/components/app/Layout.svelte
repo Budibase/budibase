@@ -5,6 +5,7 @@
 
   const { routeStore, styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
 
   export let title
   export let hideTitle = false
@@ -58,9 +59,19 @@
   }
 </script>
 
-<div class="layout layout--{typeClass}" use:styleable={$component.styles}>
+<div
+  class="layout layout--{typeClass}"
+  use:styleable={$component.styles}
+  class:desktop={!$context.device.mobile && !$context.device.tablet}
+  class:mobile={!!$context.device.mobile}
+>
   {#if typeClass !== "none"}
-    <div class="nav-wrapper" class:sticky class:hidden={isPeeking}>
+    <div
+      class="nav-wrapper"
+      class:sticky
+      class:hidden={isPeeking}
+      style={`--height:${$context.device.height}px; --width:${$context.device.width}px;`}
+    >
       <div class="nav nav--{typeClass} size--{widthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
@@ -286,101 +297,97 @@
   }
 
   /* Desktop nav overrides */
-  @media (min-width: 600px) {
-    .layout--left {
-      flex-direction: row;
-      overflow: hidden;
-    }
-    .layout--left .main-wrapper {
-      height: 100%;
-      overflow: auto;
-    }
+  .desktop.layout--left {
+    flex-direction: row;
+    overflow: hidden;
+  }
+  .desktop.layout--left .main-wrapper {
+    height: 100%;
+    overflow: auto;
+  }
 
-    .nav--left {
-      width: 250px;
-      padding: var(--spacing-xl);
-    }
+  .desktop .nav--left {
+    width: 250px;
+    padding: var(--spacing-xl);
+  }
 
-    .nav--left .links {
-      margin-top: var(--spacing-m);
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: stretch;
-    }
-    .nav--left .link {
-      font-size: var(--spectrum-global-dimension-font-size-150);
-    }
+  .desktop .nav--left .links {
+    margin-top: var(--spacing-m);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .desktop .nav--left .link {
+    font-size: var(--spectrum-global-dimension-font-size-150);
   }
 
   /* Mobile nav overrides */
-  @media (max-width: 600px) {
-    .nav-wrapper {
-      position: sticky;
-      top: 0;
-      left: 0;
-      box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
-    }
+  .mobile .nav-wrapper {
+    position: sticky;
+    top: 0;
+    left: 0;
+    box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+  }
 
-    /* Show close button in drawer */
-    .close {
-      display: block;
-    }
+  /* Show close button in drawer */
+  .mobile .close {
+    display: block;
+  }
 
-    /* Force standard top bar */
-    .nav {
-      padding: var(--spacing-m) 16px;
-    }
-    .burger {
-      display: grid;
-      place-items: center;
-    }
-    .logo {
-      flex: 0 0 auto;
-    }
-    .logo :global(h1) {
-      display: none;
-    }
+  /* Force standard top bar */
+  .mobile .nav {
+    padding: var(--spacing-m) 16px;
+  }
+  .mobile .burger {
+    display: grid;
+    place-items: center;
+  }
+  .mobile .logo {
+    flex: 0 0 auto;
+  }
+  .mobile .logo :global(h1) {
+    display: none;
+  }
 
-    /* Reduce padding */
-    .main {
-      padding: 16px;
-    }
+  /* Reduce padding */
+  .mobile .main {
+    padding: 16px;
+  }
 
-    /* Transform links into drawer */
-    .links {
-      margin-top: 0;
-      position: fixed;
-      top: 0;
-      left: -250px;
-      transform: translateX(0);
-      width: 250px;
-      transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
-      height: 100vh;
-      opacity: 0;
-      background: var(--navBackground);
-      z-index: 999;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: stretch;
-      padding: var(--spacing-xl);
-    }
-    .link {
-      width: calc(100% - 30px);
-      font-size: 120%;
-    }
-    .links.visible {
-      opacity: 1;
-      transform: translateX(250px);
-      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
-    }
-    .mobile-click-handler.visible {
-      position: fixed;
-      display: block;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 998;
-    }
+  /* Transform links into drawer */
+  .mobile .links {
+    margin-top: 0;
+    position: absolute;
+    top: 0;
+    left: -250px;
+    transform: translateX(0);
+    width: 250px;
+    transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
+    height: var(--height);
+    opacity: 0;
+    background: var(--navBackground);
+    z-index: 999;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: var(--spacing-xl);
+  }
+  .mobile .link {
+    width: calc(100% - 30px);
+    font-size: 120%;
+  }
+  .mobile .links.visible {
+    opacity: 1;
+    transform: translateX(250px);
+    box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
+  }
+  .mobile .mobile-click-handler.visible {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    width: var(--width);
+    height: var(--height);
+    z-index: 998;
   }
 </style>
