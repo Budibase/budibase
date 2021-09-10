@@ -301,6 +301,9 @@
     flex-direction: row;
     overflow: hidden;
   }
+  .desktop.layout--left .nav-wrapper {
+    border-bottom: none;
+  }
   .desktop.layout--left .main-wrapper {
     height: 100%;
     overflow: auto;
