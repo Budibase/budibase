@@ -70,17 +70,22 @@
       updating = false
     }
 
+    const device = document.getElementById("app-root")
+    const deviceBounds = device.getBoundingClientRect()
     children.forEach((child, idx) => {
       const callback = createIntersectionCallback(idx)
       const threshold = children.length > 1 ? 1 : 0
-      const observer = new IntersectionObserver(callback, { threshold })
+      const observer = new IntersectionObserver(callback, {
+        threshold,
+        root: device,
+      })
       observer.observe(child)
       observers.push(observer)
 
       const elBounds = child.getBoundingClientRect()
       nextIndicators.push({
-        top: elBounds.top + scrollY - 2,
-        left: elBounds.left + scrollX - 2,
+        top: elBounds.top + scrollY - deviceBounds.top,
+        left: elBounds.left + scrollX - deviceBounds.left,
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,
