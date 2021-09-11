@@ -22,6 +22,7 @@
   export let scale
   export let selectModel
   export let preSelectFeature
+  export let firstPerson
 
   const distances = [
     1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000,
@@ -36,6 +37,7 @@
   let cesiumJs
   let distanceLabel
   let barWidth
+  let preSelectedFeature
   let selectedFeature
   let getOutOfRangeLabel = () =>
     language === "zh-hans" ? "超出测量范围" : "Out of range"
@@ -126,6 +128,105 @@
       distanceLabel = undefined
     }
   }
+  let initSelectedFeature = () => {
+    const Cesium = window.Cesium
+    let selectFeature = feature => {
+      feature.color = Cesium.Color.clone(
+        Cesium.Color.fromBytes(146, 187, 255),
+        feature.color
+      )
+      selectedFeature = feature
+    }
+
+    let unselectFeature = feature => {
+      if (!Cesium.defined(feature)) {
+        return
+      }
+      feature.color = Cesium.Color.clone(Cesium.Color.WHITE, feature.color)
+      if (feature === selectedFeature) {
+        selectedFeature = undefined
+      }
+    }
+
+    let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+    handler.setInputAction(movement => {
+      var feature = viewer.scene.pick(movement.position)
+      unselectFeature(selectedFeature)
+      if (feature instanceof Cesium.Cesium3DTileFeature) {
+        selectFeature(feature)
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+  }
+  let initPreSelectedFeature = () => {
+    const Cesium = window.Cesium
+    let preSelectFeature = feature => {
+      feature.color = Cesium.Color.clone(
+        Cesium.Color.fromBytes(146, 187, 255),
+        feature.color
+      )
+      preSelectedFeature = feature
+    }
+
+    let unpreSelectFeature = feature => {
+      if (!Cesium.defined(feature)) {
+        return
+      }
+      if (preSelectedFeature !== selectedFeature) {
+        feature.color = Cesium.Color.clone(Cesium.Color.WHITE, feature.color)
+      }
+      if (feature === preSelectedFeature) {
+        preSelectedFeature = undefined
+      }
+    }
+
+    let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+    handler.setInputAction(movement => {
+      var feature = viewer.scene.pick(movement.endPosition)
+      unpreSelectFeature(preSelectedFeature)
+      if (feature instanceof Cesium.Cesium3DTileFeature) {
+        preSelectFeature(feature)
+      }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+  }
+
+  let initModelUris = () => {
+    const Cesium = window.Cesium
+    tilesets = modelUris.map(uri => {
+      return {
+        ...uri,
+        $: viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: /^[0-9]+$/.test(uri.value)
+              ? Cesium.IonResource.fromAssetId(uri.value)
+              : uri.value,
+          })
+        ),
+      }
+    })
+
+    currTilesetValue = tilesets[0].label
+
+    tilesets[0].$.readyPromise
+      .then(tileset => {
+        viewer.flyTo(tileset, { duration: 2.0 })
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
+          e => {
+            e.cancel = true
+            viewer.flyTo(tileset, { duration: 2.0 })
+          }
+        )
+      })
+      .otherwise(console.log)
+  }
+  let initFirstPerson = () => {
+    let toolbar = el.querySelector("div.cesium-viewer-toolbar")
+    let modeButton = el.querySelector("span.cesium-sceneModePicker-wrapper")
+    let firstPersonButton = document.createElement("button")
+    firstPersonButton.classList.add("cesium-button", "cesium-toolbar-button")
+    firstPersonButton.innerHTML = "F"
+    toolbar.insertBefore(firstPersonButton, modeButton)
+  }
+
   let initViewer = () => {
     const Cesium = window.Cesium
 
@@ -138,6 +239,7 @@
       sceneModePicker,
       navigationHelpButton,
       fullscreenButton,
+      fullscreenElement: el,
       selectionIndicator,
       timeline,
       animation,
@@ -152,62 +254,18 @@
       viewer.scene.postRender.addEventListener(cesiumScale)
     }
 
-    if (preSelectFeature) {
-      let selectFeature = feature => {
-        feature.color = Cesium.Color.clone(
-          Cesium.Color.fromAlpha(feature.color, 0.6),
-          feature.color
-        )
-        selectedFeature = feature
-      }
-
-      let unselectFeature = feature => {
-        if (!Cesium.defined(feature)) {
-          return
-        }
-        feature.color = Cesium.Color.clone(Cesium.Color.WHITE, feature.color)
-        if (feature === selectedFeature) {
-          selectedFeature = undefined
-        }
-      }
-
-      let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
-      handler.setInputAction(movement => {
-        var feature = viewer.scene.pick(movement.endPosition)
-        unselectFeature(selectedFeature)
-        if (feature instanceof Cesium.Cesium3DTileFeature) {
-          selectFeature(feature)
-        }
-      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+    if (firstPerson) {
+      initFirstPerson()
     }
 
+    if (preSelectFeature) {
+      initPreSelectedFeature()
+    }
+
+    initSelectedFeature()
+
     if (modelUris) {
-      tilesets = modelUris.map(uri => {
-        return {
-          ...uri,
-          $: viewer.scene.primitives.add(
-            new Cesium.Cesium3DTileset({
-              url: /^[0-9]+$/.test(uri.value)
-                ? Cesium.IonResource.fromAssetId(uri.value)
-                : uri.value,
-            })
-          ),
-        }
-      })
-
-      currTilesetValue = tilesets[0].label
-
-      tilesets[0].$.readyPromise
-        .then(tileset => {
-          viewer.flyTo(tileset, { duration: 2.0 })
-          viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-            e => {
-              e.cancel = true
-              viewer.flyTo(tileset, { duration: 2.0 })
-            }
-          )
-        })
-        .otherwise(console.log)
+      initModelUris()
     }
   }
 
