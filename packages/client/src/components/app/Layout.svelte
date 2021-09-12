@@ -62,7 +62,7 @@
 <div
   class="layout layout--{typeClass}"
   use:styleable={$component.styles}
-  class:desktop={!$context.device.mobile && !$context.device.tablet}
+  class:desktop={!$context.device.mobile}
   class:mobile={!!$context.device.mobile}
 >
   {#if typeClass !== "none"}
@@ -300,6 +300,9 @@
   .desktop.layout--left {
     flex-direction: row;
     overflow: hidden;
+  }
+  .desktop.layout--left .nav-wrapper {
+    border-bottom: none;
   }
   .desktop.layout--left .main-wrapper {
     height: 100%;
