@@ -21,6 +21,5 @@
   .wide {
     max-width: none;
     margin: 0;
-    min-height: calc(100% - var(--spacing-xl) * 3);
   }
 </style>
