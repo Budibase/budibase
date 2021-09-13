@@ -2004,7 +2004,7 @@
       {
         "type": "validation/string",
         "label": "Validation",
-        "key": "validation" 
+        "key": "validation"
       }
     ]
   },
@@ -2529,7 +2529,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "info": "Pagination is only availabel for data stored in internal tables.",
+    "info": "Pagination is only available for data stored in internal tables.",
     "icon": "Data",
     "illegalChildren": ["section"],
     "hasChildren": true,

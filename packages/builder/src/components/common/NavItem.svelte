@@ -39,7 +39,7 @@
         <Icon size="S" name={icon} />
       </div>
     {/if}
-    <div class="text">{text}</div>
+    <div class="text">{decodeURIComponent(text)}</div>
     {#if withActions}
       <div class="actions">
         <slot />

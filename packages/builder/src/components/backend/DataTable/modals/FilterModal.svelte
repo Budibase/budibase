@@ -148,6 +148,7 @@
         <Select
           bind:value={filter.condition}
           options={CONDITIONS}
+          placeholder={$t("choose-an-option")}
           {getOptionLabel}
           {getOptionValue}
         />

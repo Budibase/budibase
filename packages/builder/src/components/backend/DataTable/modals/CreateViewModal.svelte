@@ -21,7 +21,7 @@
       tableId: $tables.selected._id,
       field,
     })
-    notifications.success($t("view-0") + ` ${name} ` + $t("created"))
+    notifications.success($t("view") + ` ${name} ` + $t("created"))
     analytics.captureEvent("View Created", { name })
     $goto(`../../view/${name}`)
   }
@@ -33,5 +33,5 @@
   confirmText={$t("create-view-0")}
   onConfirm={saveView}
 >
-  <Input label={$t("view-name-0")} thin bind:value={name} />
+  <Input label={$t("view-name")} thin bind:value={name} />
 </ModalContent>
