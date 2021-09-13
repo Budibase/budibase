@@ -9,6 +9,7 @@
     ActionMenu,
     MenuItem,
     Modal,
+    clickOutside,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth } from "stores/portal"
@@ -79,7 +80,11 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <div class="nav" class:visible={mobileMenuVisible}>
+    <div
+      class="nav"
+      class:visible={mobileMenuVisible}
+      use:clickOutside={hideMobileMenu}
+    >
       <Layout paddingX="L" paddingY="L">
         <div class="branding">
           <div class="name" on:click={() => $goto("./apps")}>
@@ -145,11 +150,6 @@
         <slot />
       </div>
     </div>
-    <div
-      class="mobile-click-handler"
-      class:visible={mobileMenuVisible}
-      on:click={hideMobileMenu}
-    />
   </div>
   <Modal bind:this={userInfoModal}>
     <UpdateUserInfoModal />
@@ -237,11 +237,18 @@
   .content {
     overflow: auto;
   }
-  .mobile-click-handler {
-    display: none;
-  }
 
   @media (max-width: 640px) {
+    .toolbar {
+      background: var(--background);
+      border-bottom: var(--border-light);
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-m) calc(var(--spacing-xl) * 1.5);
+    }
+
     .nav {
       position: absolute;
       left: -250px;
@@ -264,14 +271,9 @@
       flex: 1 1 0;
     }
 
-    .mobile-click-handler.visible {
-      position: absolute;
-      display: block;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
+    /* Reduce BBUI page padding */
+    .content :global(> *) {
+      padding: calc(var(--spacing-xl) * 1.5) !important;
     }
   }
 </style>
