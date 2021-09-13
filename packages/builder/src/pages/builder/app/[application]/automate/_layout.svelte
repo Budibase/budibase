@@ -7,7 +7,6 @@
   $: automation = $automationStore.automations[0]
   let modal
   let webhookModal
-  $: console.log(automation)
 </script>
 
 <!-- routify:options index=3 -->

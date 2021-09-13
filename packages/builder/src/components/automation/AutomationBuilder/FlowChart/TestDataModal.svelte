@@ -16,9 +16,7 @@
   }
 
   // get the outputs so we can define the fields
-  let schemaProperties = Object.entries(
-    trigger.schema?.outputs?.properties || {}
-  )
+  let schemaProperties = Object.entries(trigger.schema.outputs.properties || {})
 
   // check to see if there is existing test data in the store
   $: testData = Object.keys(
@@ -26,6 +24,11 @@
   ).length
     ? $automationStore.selectedAutomation.automation.testData
     : {}
+
+  // Checj the schema to see if required fields have been entered
+  $: isError = !trigger.schema.outputs.required.every(
+    required => testData[required]
+  )
 
   function parseTestJSON(e) {
     try {
@@ -42,7 +45,9 @@
   title="Add test data"
   confirmText="Save"
   showConfirmButton={true}
+  disabled={isError}
   onConfirm={() => {
+    automationStore.actions.addTestDataToAutomation(testData)
     automationStore.actions.trigger(
       $automationStore.selectedAutomation,
       testData
@@ -53,7 +58,7 @@
   <Tabs selected="Form" quiet
     ><Tab icon="Form" title="Form"
       ><AutomationBlockSetup
-        {testData}
+        bind:testData
         {schemaProperties}
         block={trigger}
       /></Tab

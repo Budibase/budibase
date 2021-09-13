@@ -30,7 +30,7 @@
 
   $: inputData = testData ? testData : block.inputs
 
-  const debouncedOnChange = debounce(async function (e, key) {
+  async function onChange(e, key) {
     if (testData) {
       testData[key] = e.detail
     } else {
@@ -40,7 +40,7 @@
         automation: $automationStore.selectedAutomation?.automation,
       })
     }
-  }, 800)
+  }
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -80,7 +80,7 @@
       <Label>{value.title || key}</Label>
       {#if value.type === "string" && value.enum}
         <Select
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={e => onChange(e, key)}
           value={inputData[key]}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
@@ -88,7 +88,7 @@
       {:else if value.customType === "password"}
         <Input
           type="password"
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={e => onChange(e, key)}
           value={inputData[key]}
         />
       {:else if value.customType === "email"}
@@ -98,7 +98,7 @@
             value={inputData[key]}
             panel={AutomationBindingPanel}
             type="email"
-            on:change={e => debouncedOnChange(e, key)}
+            on:change={e => onChange(e, key)}
             {bindings}
           />
         {:else}
@@ -107,51 +107,45 @@
             panel={AutomationBindingPanel}
             type="email"
             value={inputData[key]}
-            on:change={e => debouncedOnChange(e, key)}
+            on:change={e => onChange(e, key)}
             {bindings}
           />
         {/if}
       {:else if value.customType === "query"}
         <QuerySelector
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={e => onChange(e, key)}
           value={inputData[key]}
         />
       {:else if value.customType === "cron"}
-        <CronBuilder
-          on:change={e => debouncedOnChange(e, key)}
-          value={inputData[key]}
-        />
+        <CronBuilder on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "queryParams"}
         <QueryParamSelector
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={e => onChange(e, key)}
           value={inputData[key]}
           {bindings}
         />
       {:else if value.customType === "table"}
         <TableSelector
           value={inputData[key]}
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={e => onChange(e, key)}
         />
       {:else if value.customType === "row"}
         <RowSelector
           value={inputData[key]}
-          on:change={e => debouncedOnChange(e, key)}
+          on:change={debounce(e => onChange(e, key), 800)}
           {bindings}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay value={inputData[key]} />
       {:else if value.customType === "triggerSchema"}
-        <SchemaSetup
-          on:change={e => debouncedOnChange(e, key)}
-          value={value[key]}
-        />
+        <SchemaSetup on:change={e => onChange(e, key)} value={value[key]} />
       {:else if value.customType === "code"}
         <CodeEditorModal>
           <pre>{JSON.stringify(bindings, null, 2)}</pre>
           <Editor
             mode="javascript"
             on:change={e => {
-              debouncedOnChange(e, key)
+              onChange(e, key)
               inputData[key] = e.detail.value
             }}
             value={inputData[key]}
@@ -164,7 +158,7 @@
             value={inputData[key]}
             panel={AutomationBindingPanel}
             type={value.customType}
-            on:change={e => debouncedOnChange(e, key)}
+            on:change={e => onChange(e, key)}
             {bindings}
           />
         {:else}
@@ -173,7 +167,7 @@
             panel={AutomationBindingPanel}
             type={value.customType}
             value={inputData[key]}
-            on:change={e => debouncedOnChange(e, key)}
+            on:change={e => onChange(e, key)}
             {bindings}
           />
         {/if}
