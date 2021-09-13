@@ -89,3 +89,20 @@ exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
     return metadata
   })
 }
+
+exports.deleteEntityMetadata = async (appId, type, entityId) => {
+  const db = new CouchDB(appId)
+  const id = generateMetadataID(type, entityId)
+  let rev
+  try {
+    const metadata = await db.get(id)
+    if (metadata) {
+      rev = metadata._rev
+    }
+  } catch (err) {
+    // don't need to error if it doesn't exist
+  }
+  if (id && rev) {
+    await db.remove(id, rev)
+  }
+}

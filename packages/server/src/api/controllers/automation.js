@@ -7,6 +7,8 @@ const {
   checkForWebhooks,
   updateTestHistory,
 } = require("../../automations/utils")
+const { deleteEntityMetadata } = require("../../utilities")
+const { MetadataTypes } = require("../../constants")
 const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
 
 /*************************
@@ -14,6 +16,19 @@ const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
  *   BUILDER FUNCTIONS   *
  *                       *
  *************************/
+
+async function cleanupAutomationMetadata(appId, automationId) {
+  await deleteEntityMetadata(
+    appId,
+    MetadataTypes.AUTOMATION_TEST_INPUT,
+    automationId
+  )
+  await deleteEntityMetadata(
+    appId,
+    MetadataTypes.AUTOMATION_TEST_HISTORY,
+    automationId
+  )
+}
 
 function cleanAutomationInputs(automation) {
   if (automation == null) {
@@ -84,6 +99,23 @@ exports.update = async function (ctx) {
   const response = await db.put(automation)
   automation._rev = response.rev
 
+  const oldAutoTrigger =
+    oldAutomation && oldAutomation.definition.trigger
+      ? oldAutomation.definition.trigger
+      : {}
+  const newAutoTrigger =
+    automation && automation.definition.trigger
+      ? automation.definition.trigger
+      : {}
+  // trigger has been updated, remove the test inputs
+  if (oldAutoTrigger.id !== newAutoTrigger.id) {
+    await deleteEntityMetadata(
+      ctx.appId,
+      MetadataTypes.AUTOMATION_TEST_INPUT,
+      automation._id
+    )
+  }
+
   ctx.status = 200
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,
@@ -112,12 +144,15 @@ exports.find = async function (ctx) {
 
 exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  const oldAutomation = await db.get(ctx.params.id)
+  const automationId = ctx.params.id
+  const oldAutomation = await db.get(automationId)
   await checkForWebhooks({
     appId: ctx.appId,
     oldAuto: oldAutomation,
   })
-  ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
+  // delete metadata first
+  await cleanupAutomationMetadata(ctx.appId, automationId)
+  ctx.body = await db.remove(automationId, ctx.params.rev)
 }
 
 exports.getActionList = async function (ctx) {
