@@ -2,7 +2,7 @@
   import { themeStore } from "stores"
 </script>
 
-<div style={$themeStore.customThemeCss}>
+<div style={$themeStore.customThemeCss} id="theme-root">
   <slot />
 </div>
 
