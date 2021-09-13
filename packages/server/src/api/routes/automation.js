@@ -26,7 +26,6 @@ function generateStepSchema(allowStepTypes) {
     tagline: Joi.string().required(),
     icon: Joi.string().required(),
     params: Joi.object(),
-    // TODO: validate args a bit more deeply
     args: Joi.object(),
     type: Joi.string().required().valid(...allowStepTypes),
   }).unknown(true)
@@ -35,7 +34,6 @@ function generateStepSchema(allowStepTypes) {
 function generateValidator(existing = false) {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    live: Joi.bool(),
     _id: existing ? Joi.string().required() : Joi.string(),
     _rev: existing ? Joi.string().required() : Joi.string(),
     name: Joi.string().required(),
