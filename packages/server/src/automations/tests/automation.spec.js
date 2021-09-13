@@ -21,7 +21,7 @@ const automation = require("../index")
 const usageQuota = require("../../utilities/usageQuota")
 const thread = require("../thread")
 const triggers = require("../triggers")
-const { basicAutomation, basicTable } = require("../../tests/utilities/structures")
+const { basicAutomation } = require("../../tests/utilities/structures")
 const { wait } = require("../../utilities")
 const { makePartial } = require("../../tests/utilities")
 const { cleanInputValues } = require("../automationUtils")
@@ -61,42 +61,11 @@ describe("Run through some parts of the automations system", () => {
   it("try error scenario", async () => {
     await setup.runInProd(async () => {
       // the second call will throw an error
-      await triggers.externalTrigger(basicAutomation(), { a: 1 })
+      const response = await triggers.externalTrigger(basicAutomation(), {a: 1}, {getResponses: true})
       await wait(100)
       expect(console.error).toHaveBeenCalled()
+      expect(response.err).toBeDefined()
     })
-  })
-
-  it("should be able to check triggering row filling", async () => {
-    const automation = basicAutomation()
-    let table = basicTable()
-    table.schema.boolean = {
-      type: "boolean",
-      constraints: {
-        type: "boolean",
-      },
-    }
-    table.schema.number = {
-      type: "number",
-      constraints: {
-        type: "number",
-      },
-    }
-    table.schema.datetime = {
-      type: "datetime",
-      constraints: {
-        type: "datetime",
-      },
-    }
-    table = await config.createTable(table)
-    automation.definition.trigger.inputs.tableId = table._id
-    const params = await triggers.fillRowOutput(automation, { appId: config.getAppId() })
-    expect(params.row).toBeDefined()
-    const date = new Date(params.row.datetime)
-    expect(typeof params.row.name).toBe("string")
-    expect(typeof params.row.boolean).toBe("boolean")
-    expect(typeof params.row.number).toBe("number")
-    expect(date.getFullYear()).toBe(1970)
   })
 
   it("should check coercion", async () => {
@@ -120,7 +89,7 @@ describe("Run through some parts of the automations system", () => {
           }
         }
       }
-    }))
+    }), expect.any(Function))
   })
 
   it("should be able to clean inputs with the utilities", () => {
