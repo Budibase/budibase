@@ -1233,6 +1233,12 @@
       },
       {
         "type": "boolean",
+        "label": "Horizontal",
+        "key": "horizontal",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Data Labels",
         "key": "dataLabels",
         "defaultValue": false
