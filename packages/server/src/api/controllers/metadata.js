@@ -1,7 +1,7 @@
 const { MetadataTypes } = require("../../constants")
 const CouchDB = require("../../db")
 const { generateMetadataID } = require("../../db/utils")
-const { saveEntityMetadata } = require("../../utilities")
+const { saveEntityMetadata, deleteEntityMetadata } = require("../../utilities")
 
 exports.getTypes = async ctx => {
   ctx.body = {
@@ -24,20 +24,7 @@ exports.saveMetadata = async ctx => {
 
 exports.deleteMetadata = async ctx => {
   const { type, entityId } = ctx.params
-  const db = new CouchDB(ctx.appId)
-  const id = generateMetadataID(type, entityId)
-  let rev
-  try {
-    const metadata = await db.get(id)
-    if (metadata) {
-      rev = metadata._rev
-    }
-  } catch (err) {
-    // don't need to error if it doesn't exist
-  }
-  if (id && rev) {
-    await db.remove(id, rev)
-  }
+  await deleteEntityMetadata(ctx.appId, type, entityId)
   ctx.body = {
     message: "Metadata deleted successfully",
   }
