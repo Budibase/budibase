@@ -67,6 +67,9 @@ function getDocParams(docType, docId = null, otherProps = {}) {
  * @return {null|string} The tenant ID found within the app ID.
  */
 exports.getTenantIDFromAppID = appId => {
+  if (!appId) {
+    return null
+  }
   const split = appId.split(SEPARATOR)
   const hasDev = split[1] === DocumentTypes.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
