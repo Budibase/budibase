@@ -254,7 +254,7 @@
       left: -250px;
       height: 100%;
       transition: left ease-in-out 230ms;
-      z-index: 2;
+      z-index: 100;
     }
     .nav.visible {
       left: 0;
