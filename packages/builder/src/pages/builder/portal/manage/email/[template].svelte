@@ -90,23 +90,25 @@
   </header>
   <Detail>Description</Detail>
   <Body>{description}</Body>
-  <Body
-    >Change the email template here. Add dynamic content by using the bindings
-    menu on the right.</Body
-  >
+  <Body>
+    Change the email template here. Add dynamic content by using the bindings
+    menu on the right.
+  </Body>
 </Layout>
 <Tabs selected="Edit" on:select={fixMountBug}>
   <Tab title="Edit">
     <div class="template-editor">
-      <Editor
-        editorHeight={800}
-        bind:this={htmlEditor}
-        mode="handlebars"
-        on:change={e => {
-          selectedTemplate.contents = e.detail.value
-        }}
-        value={selectedTemplate?.contents}
-      />
+      <div class="template-text-editor">
+        <Editor
+          editorHeight={640}
+          bind:this={htmlEditor}
+          mode="handlebars"
+          on:change={e => {
+            selectedTemplate.contents = e.detail.value
+          }}
+          value={selectedTemplate?.contents}
+        />
+      </div>
       <div class="bindings-editor">
         <Detail size="L">Bindings</Detail>
         {#if mounted}
@@ -139,22 +141,35 @@
 
 <style>
   .template-editor {
-    display: grid;
-    grid-template-columns: 1fr minmax(250px, 20%);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: wrap;
     grid-gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
+  }
+  .template-text-editor {
+    flex: 1 1 0;
+    min-width: 250px;
+  }
+  .bindings-editor {
+    margin-top: var(--spacing-s);
+    height: 640px;
+    overflow: auto;
+    flex: 0 0 300px;
   }
 
   header {
     display: flex;
     width: 100%;
     justify-content: space-between;
-    margin-top: var(--spacing-l);
+    align-items: flex-start;
   }
 
   .preview {
-    height: 800px;
-    padding: var(--spacing-xl) 0;
+    height: 640px;
+    margin-top: calc(var(--spacing-xl) + var(--spacing-s));
     position: relative;
   }
   iframe {
