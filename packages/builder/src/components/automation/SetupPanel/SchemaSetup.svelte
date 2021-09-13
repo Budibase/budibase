@@ -31,15 +31,13 @@
   function addField() {
     const newValue = { ...value }
     newValue[""] = "string"
-    value = newValue
-    dispatch("change", value)
+    dispatch("change", newValue)
   }
 
   function removeField(name) {
     const newValues = { ...value }
     delete newValues[name]
-    value = newValues
-    dispatch("change", value)
+    dispatch("change", newValues)
   }
 
   const fieldNameChanged = originalName => e => {
@@ -74,7 +72,10 @@
       />
       <Select
         value={field.type}
-        on:change={e => (value[field.name] = e.target.value)}
+        on:change={e => {
+          value[field.name] = e.target.value
+          dispatch("change", value)
+        }}
         options={typeOptions}
       />
       <i

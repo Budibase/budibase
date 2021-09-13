@@ -80,14 +80,21 @@ const automationActions = store => ({
     const { _id } = automation
     return await api.post(`/api/automations/${_id}/trigger`)
   },
-  test: async ({ automation }) => {
+  test: async ({ automation }, testData) => {
     const { _id } = automation
-    return await api.post(`/api/automations/${_id}/test`)
+    return await api.post(`/api/automations/${_id}/test`, testData)
   },
   select: automation => {
     store.update(state => {
       state.selectedAutomation = new Automation(cloneDeep(automation))
       state.selectedBlock = null
+      return state
+    })
+  },
+  addTestDataToAutomation: data => {
+    store.update(state => {
+      state.selectedAutomation.addTestData(data)
+      console.log(state)
       return state
     })
   },

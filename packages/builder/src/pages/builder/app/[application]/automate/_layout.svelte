@@ -4,9 +4,10 @@
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
-  $: automation = $automationStore.selectedAutomation?.automation
+  $: automation = $automationStore.automations[0]
   let modal
   let webhookModal
+  $: console.log(automation)
 </script>
 
 <!-- routify:options index=3 -->
