@@ -16,7 +16,7 @@ const populateFromDB = (userId, tenantId) => {
  * If not present fallback to loading the user directly and re-caching.
  * @param {*} userId the id of the user to get
  * @param {*} tenantId the tenant of the user to get
- * @param {*} loadUser function to provide the user for re-caching. default to couch db
+ * @param {*} populateUser function to provide the user for re-caching. default to couch db
  * @returns
  */
 exports.getUser = async (
