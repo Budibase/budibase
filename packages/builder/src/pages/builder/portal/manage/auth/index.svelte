@@ -272,7 +272,7 @@
   })
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Authentication</Heading>
     <Body>
@@ -285,9 +285,9 @@
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <div>
+        <div class="provider-title">
           <GoogleLogo />
-          Google
+          <span>Google</span>
           <div class="google-save-button">
             <div>
               <Button
@@ -330,9 +330,9 @@
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <div>
+        <div class="provider-title">
           <OidcLogo />
-          OpenID Connect
+          <span>OpenID Connect</span>
           <div class="oidc-save-button">
             <div>
               <Button
@@ -426,11 +426,20 @@
 
   .google-save-button {
     display: inline-block;
-    margin-left: 400px;
   }
 
   .oidc-save-button {
     display: inline-block;
-    margin-left: 320px;
+  }
+
+  .provider-title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .provider-title span {
+    flex: 1 1 auto;
   }
 </style>
