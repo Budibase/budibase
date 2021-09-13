@@ -5,10 +5,9 @@ import SlackLogo from "assets/slack.svg"
 import n8nlogo from "assets/n8nlogo.png"
 
 export const externalActions = {
-    zapier: { name: "zapier", icon: ZapierLogo },
-    discord: { name: "discord", icon: DiscordLogo },
-    slack: { name: "slack", icon: SlackLogo },
-    integromat: { name: "integromat", icon: IntegromatLogo },
-    n8n:{ name: "n8n", icon: n8nlogo },
+  zapier: { name: "zapier", icon: ZapierLogo },
+  discord: { name: "discord", icon: DiscordLogo },
+  slack: { name: "slack", icon: SlackLogo },
+  integromat: { name: "integromat", icon: IntegromatLogo },
+  n8n: { name: "n8n", icon: n8nlogo },
 }
-  
