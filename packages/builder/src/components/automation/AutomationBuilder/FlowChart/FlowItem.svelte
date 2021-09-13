@@ -15,6 +15,7 @@
   import ResultsModal from "./ResultsModal.svelte"
   import ActionModal from "./ActionModal.svelte"
   import { database } from "stores/backend"
+  import { externalActions } from "./ExternalActions"
 
   export let onSelect
   export let block
@@ -70,15 +71,24 @@
       class="splitHeader"
     >
       <div style="display: flex;">
-        <svg
-          width="35px"
-          height="35px"
-          class="spectrum-Icon"
-          style="color:grey;"
-          focusable="false"
-        >
-          <use xlink:href="#spectrum-icon-18-{block.icon}" />
-        </svg>
+        {#if externalActions[block.stepId]}
+          <img
+            alt={externalActions[block.stepId].name}
+            width="35px"
+            height="35px"
+            src={externalActions[block.stepId].icon}
+          />
+        {:else}
+          <svg
+            width="35px"
+            height="35px"
+            class="spectrum-Icon"
+            style="color:grey;"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-{block.icon}" />
+          </svg>
+        {/if}
         <div class="iconAlign">
           <Body size="XS">When this happens:</Body>
 

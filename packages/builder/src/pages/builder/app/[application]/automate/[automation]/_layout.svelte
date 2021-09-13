@@ -7,7 +7,6 @@
       m => m._id === $params.automation
     )
     if (automation) {
-      console.log(automation)
       automationStore.actions.select(automation)
     }
   }

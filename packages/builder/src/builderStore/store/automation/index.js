@@ -94,7 +94,6 @@ const automationActions = store => ({
   addTestDataToAutomation: data => {
     store.update(state => {
       state.selectedAutomation.addTestData(data)
-      console.log(state)
       return state
     })
   },
