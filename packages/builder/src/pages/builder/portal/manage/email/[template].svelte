@@ -155,7 +155,7 @@
   }
   .bindings-editor {
     margin-top: var(--spacing-s);
-    height: 640px;
+    max-height: 640px;
     overflow: auto;
     flex: 0 0 300px;
   }
