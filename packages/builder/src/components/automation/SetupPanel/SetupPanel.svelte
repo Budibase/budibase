@@ -10,7 +10,9 @@
   $: instanceId = $database._id
   $: automation = $automationStore.selectedAutomation?.automation
   $: automationLive = automation?.live
-
+  $: console.log(
+    $automationStore.selectedBlock.definition.trigger.schema.outputs.properties
+  )
   function setAutomationLive(live) {
     if (automationLive === live) {
       return

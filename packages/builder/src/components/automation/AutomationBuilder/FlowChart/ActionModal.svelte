@@ -4,7 +4,11 @@
   import DiscordLogo from "assets/discord.svg"
   import ZapierLogo from "assets/zapier.png"
   import IntegromatLogo from "assets/integromat.png"
-  import SlackLogo from "assets/integromat.png"
+  import SlackLogo from "assets/slack.svg"
+  import n8nlogo from "assets/n8nlogo.png"
+
+  import { database } from "stores/backend"
+  $: instanceId = $database._id
 
   let selectedAction
   let actionVal
@@ -15,6 +19,7 @@
     { name: "discord", logo: DiscordLogo },
     { name: "slack", logo: SlackLogo },
     { name: "integromat", logo: IntegromatLogo },
+    { name: "n8n", logo: n8nlogo },
   ]
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
 
@@ -39,13 +44,17 @@
     selectedAction = action.name
   }
 
-  function addBlockToAutomation() {
+  async function addBlockToAutomation() {
     const newBlock = $automationStore.selectedAutomation.constructBlock(
       "ACTION",
       actionVal.stepId,
       actionVal
     )
     automationStore.actions.addBlockToAutomation(newBlock)
+    await automationStore.actions.save({
+      instanceId,
+      automation: $automationStore.selectedAutomation?.automation,
+    })
   }
 </script>
 

@@ -12,17 +12,15 @@
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
-  import TestDataModal from "./TestDataModal.svelte"
   import ResultsModal from "./ResultsModal.svelte"
-
   import ActionModal from "./ActionModal.svelte"
   import { database } from "stores/backend"
 
   export let onSelect
   export let block
+  export let testDataModal
   let selected
   let webhookModal
-  let testDataModal
   let actionModal
   let resultsModal
   let setupToggled
@@ -61,13 +59,17 @@
   class={`block ${block.type} hoverable`}
   class:selected
   on:click={() => {
-    blockComplete = false
     onSelect(block)
   }}
 >
   <div class="blockSection">
-    <div class="splitHeader">
-      <div>
+    <div
+      on:click={() => {
+        blockComplete = !blockComplete
+      }}
+      class="splitHeader"
+    >
+      <div style="display: flex;">
         <svg
           width="35px"
           height="35px"
@@ -83,13 +85,11 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if !blockComplete}
-        <span on:click={() => resultsModal.show()}>
-          <StatusLight positive={true} negative={false}
-            ><Body size="XS">View response</Body></StatusLight
-          >
-        </span>
-      {/if}
+      <span on:click={() => resultsModal.show()}>
+        <StatusLight positive={true} negative={false}
+          ><Body size="XS">View response</Body></StatusLight
+        >
+      </span>
     </div>
   </div>
   {#if !blockComplete}
@@ -98,7 +98,7 @@
       <Layout noPadding gap="S">
         <div class="splitHeader">
           <div
-            on:click={() => {
+            on:click|stopPropagation={() => {
               setupToggled = !setupToggled
             }}
             class="toggle"
@@ -118,10 +118,14 @@
         </div>
 
         {#if setupToggled}
-          <AutomationBlockSetup {block} {webhookModal} />
+          <AutomationBlockSetup
+            schemaProperties={Object.entries(block.schema.inputs.properties)}
+            {block}
+            {webhookModal}
+          />
           {#if lastStep}
             <Button on:click={() => testDataModal.show()} cta
-              >Test Automation</Button
+              >Continue and test automation</Button
             >
           {/if}
           <Button
@@ -148,10 +152,6 @@
 
   <Modal bind:this={webhookModal} width="30%">
     <CreateWebhookModal />
-  </Modal>
-
-  <Modal bind:this={testDataModal} width="30%">
-    <TestDataModal />
   </Modal>
 </div>
 

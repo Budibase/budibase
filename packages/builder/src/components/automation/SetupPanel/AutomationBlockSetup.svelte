@@ -13,24 +13,34 @@
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import { database } from "stores/backend"
+  import { debounce } from "lodash"
+  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
 
   export let block
   export let webhookModal
-  $: inputs = Object.entries(block.schema?.inputs?.properties || {})
+  export let testData
+  export let schemaProperties
+
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
-    block,
+    block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
   $: instanceId = $database._id
 
-  async function saveOnChange(e, key) {
-    block.inputs[key] = e.detail
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
-  }
+  $: inputData = testData ? testData : block.inputs
+
+  const debouncedOnChange = debounce(async function (e, key) {
+    if (testData) {
+      testData[key] = e.detail
+    } else {
+      block.inputs[key] = e.detail
+      await automationStore.actions.save({
+        instanceId,
+        automation: $automationStore.selectedAutomation?.automation,
+      })
+    }
+  }, 800)
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -65,64 +75,75 @@
 </script>
 
 <div class="fields">
-  {#each inputs as [key, value]}
+  {#each schemaProperties as [key, value]}
     <div class="block-field">
-      <Label>{value.title}</Label>
+      <Label>{value.title || key}</Label>
       {#if value.type === "string" && value.enum}
         <Select
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={inputData[key]}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />
       {:else if value.customType === "password"}
         <Input
           type="password"
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={inputData[key]}
         />
       {:else if value.customType === "email"}
-        <DrawerBindableInput
-          title={value.title}
-          panel={AutomationBindingPanel}
-          type="email"
-          value={block.inputs[key]}
-          on:change={e => saveOnChange(e, key)}
-          {bindings}
-        />
+        {#if testData}
+          <ModalBindableInput
+            title={value.title}
+            value={inputData[key]}
+            panel={AutomationBindingPanel}
+            type="email"
+            on:change={e => debouncedOnChange(e, key)}
+            {bindings}
+          />
+        {:else}
+          <DrawerBindableInput
+            title={value.title}
+            panel={AutomationBindingPanel}
+            type="email"
+            value={inputData[key]}
+            on:change={e => debouncedOnChange(e, key)}
+            {bindings}
+          />
+        {/if}
       {:else if value.customType === "query"}
         <QuerySelector
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={inputData[key]}
         />
       {:else if value.customType === "cron"}
         <CronBuilder
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={inputData[key]}
         />
       {:else if value.customType === "queryParams"}
         <QueryParamSelector
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={inputData[key]}
           {bindings}
         />
       {:else if value.customType === "table"}
         <TableSelector
-          value={block.inputs[key]}
-          on:change={e => saveOnChange(e, key)}
+          value={inputData[key]}
+          on:change={e => debouncedOnChange(e, key)}
         />
       {:else if value.customType === "row"}
         <RowSelector
-          value={block.inputs[key]}
-          on:change={e => saveOnChange(e, key)}
+          value={inputData[key]}
+          on:change={e => debouncedOnChange(e, key)}
           {bindings}
         />
       {:else if value.customType === "webhookUrl"}
-        <WebhookDisplay value={block.inputs[key]} />
+        <WebhookDisplay value={inputData[key]} />
       {:else if value.customType === "triggerSchema"}
         <SchemaSetup
-          on:change={e => saveOnChange(e, key)}
-          value={block.inputs[key]}
+          on:change={e => debouncedOnChange(e, key)}
+          value={value[key]}
         />
       {:else if value.customType === "code"}
         <CodeEditorModal>
@@ -130,21 +151,32 @@
           <Editor
             mode="javascript"
             on:change={e => {
-              saveOnChange(e, key)
-              block.inputs[key] = e.detail.value
+              debouncedOnChange(e, key)
+              inputData[key] = e.detail.value
             }}
-            value={block.inputs[key]}
+            value={inputData[key]}
           />
         </CodeEditorModal>
       {:else if value.type === "string" || value.type === "number"}
-        <DrawerBindableInput
-          title={value.title}
-          panel={AutomationBindingPanel}
-          type={value.customType}
-          value={block.inputs[key]}
-          on:change={e => saveOnChange(e, key)}
-          {bindings}
-        />
+        {#if testData}
+          <ModalBindableInput
+            title={value.title}
+            value={inputData[key]}
+            panel={AutomationBindingPanel}
+            type={value.customType}
+            on:change={e => debouncedOnChange(e, key)}
+            {bindings}
+          />
+        {:else}
+          <DrawerBindableInput
+            title={value.title}
+            panel={AutomationBindingPanel}
+            type={value.customType}
+            value={inputData[key]}
+            on:change={e => debouncedOnChange(e, key)}
+            {bindings}
+          />
+        {/if}
       {/if}
     </div>
   {/each}

@@ -2,14 +2,23 @@
   import { automationStore } from "builderStore"
 
   import FlowItem from "./FlowItem.svelte"
+  import TestDataModal from "./TestDataModal.svelte"
+
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
-  import { Detail, Icon, ActionButton, notifications } from "@budibase/bbui"
+  import {
+    Detail,
+    Icon,
+    ActionButton,
+    notifications,
+    Modal,
+  } from "@budibase/bbui"
   import { database } from "stores/backend"
 
   export let automation
   export let onSelect
+  let testDataModal
   let blocks
 
   $: instanceId = $database._id
@@ -61,7 +70,7 @@
             <Icon name="DeleteOutline" />
           </span>
           <ActionButton
-            on:change={() => testAutomation()}
+            on:click={() => testDataModal.show()}
             icon="MultipleCheck"
             size="S">Run test</ActionButton
           >
@@ -75,21 +84,24 @@
         in:fade|local
         out:fly|local={{ x: 500 }}
       >
-        <FlowItem {onSelect} {block} />
+        <FlowItem {testDataModal} {testAutomation} {onSelect} {block} />
         {#if idx !== blocks.length - 1}
           <Arrow />
         {/if}
       </div>
     {/each}
   </div>
+  <Modal bind:this={testDataModal} width="30%">
+    <TestDataModal {testAutomation} />
+  </Modal>
 </section>
 
 <style>
   .canvas {
     margin: 0 -40px calc(-1 * var(--spacing-l)) -40px;
-    padding: var(--spacing-l) 40px 0 40px;
     overflow-y: auto;
     text-align: center;
+    height: 100%;
   }
   /* Fix for firefox not respecting bottom padding in scrolling containers */
   .canvas > *:last-child {
