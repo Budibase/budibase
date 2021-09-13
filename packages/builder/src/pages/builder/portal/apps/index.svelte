@@ -201,7 +201,7 @@
         <Heading>Apps</Heading>
         <ButtonGroup>
           <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create new app</Button>
+          <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>
       </div>
       <div class="filter">

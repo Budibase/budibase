@@ -20,6 +20,7 @@
   let loaded = false
   let userInfoModal
   let changePasswordModal
+  let mobileMenuVisible = false
 
   $: menu = buildMenu($auth.isAdmin)
 
@@ -60,6 +61,9 @@
     return menu
   }
 
+  const showMobileMenu = () => (mobileMenuVisible = true)
+  const hideMobileMenu = () => (mobileMenuVisible = false)
+
   onMount(async () => {
     // Prevent non-builders from accessing the portal
     if ($auth.user) {
@@ -75,7 +79,7 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <div class="nav">
+    <div class="nav" class:visible={mobileMenuVisible}>
       <Layout paddingX="L" paddingY="L">
         <div class="branding">
           <div class="name" on:click={() => $goto("./apps")}>
@@ -89,7 +93,12 @@
         <div class="menu">
           <Navigation>
             {#each menu as { title, href, heading }}
-              <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+              <Item
+                on:click={hideMobileMenu}
+                selected={$isActive(href)}
+                {href}
+                {heading}>{title}</Item
+              >
             {/each}
           </Navigation>
         </div>
@@ -97,35 +106,50 @@
     </div>
     <div class="main">
       <div class="toolbar">
-        <div />
-        <ActionMenu align="right">
-          <div slot="control" class="avatar">
-            <Avatar
-              size="M"
-              initials={$auth.initials}
-              url={$auth.user.pictureUrl}
-            />
-            <Icon size="XL" name="ChevronDown" />
-          </div>
-          <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-            Update user information
-          </MenuItem>
-          <MenuItem
-            icon="LockClosed"
-            on:click={() => changePasswordModal.show()}
-          >
-            Update password
-          </MenuItem>
-          <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-            Close developer mode
-          </MenuItem>
-          <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
-        </ActionMenu>
+        <div class="mobile-toggle">
+          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+        </div>
+        <div class="mobile-logo">
+          <img
+            src={$organisation?.logoUrl || Logo}
+            alt={$organisation?.company || "Budibase"}
+          />
+        </div>
+        <div class="user-dropdown">
+          <ActionMenu align="right">
+            <div slot="control" class="avatar">
+              <Avatar
+                size="M"
+                initials={$auth.initials}
+                url={$auth.user.pictureUrl}
+              />
+              <Icon size="XL" name="ChevronDown" />
+            </div>
+            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+              Update user information
+            </MenuItem>
+            <MenuItem
+              icon="LockClosed"
+              on:click={() => changePasswordModal.show()}
+            >
+              Update password
+            </MenuItem>
+            <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
+              Close developer mode
+            </MenuItem>
+            <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+          </ActionMenu>
+        </div>
       </div>
       <div class="content">
         <slot />
       </div>
     </div>
+    <div
+      class="mobile-click-handler"
+      class:visible={mobileMenuVisible}
+      on:click={hideMobileMenu}
+    />
   </div>
   <Modal bind:this={userInfoModal}>
     <UpdateUserInfoModal />
@@ -138,16 +162,20 @@
 <style>
   .container {
     height: 100%;
-    display: grid;
-    grid-template-columns: 250px 1fr;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: stretch;
   }
   .nav {
     background: var(--background);
     border-right: var(--border-light);
     overflow: auto;
+    flex: 0 0 auto;
+    width: 250px;
   }
   .main {
+    flex: 1 1 auto;
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
@@ -181,11 +209,21 @@
   .toolbar {
     background: var(--background);
     border-bottom: var(--border-light);
-    display: grid;
-    grid-template-columns: 250px auto;
+    display: flex;
+    flex-direction: row;
     justify-content: space-between;
-    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
     align-items: center;
+    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+  }
+  .mobile-toggle,
+  .mobile-logo {
+    display: none;
+  }
+  .user-dropdown {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
   }
   img {
     width: 28px;
@@ -198,5 +236,42 @@
   }
   .content {
     overflow: auto;
+  }
+  .mobile-click-handler {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .nav {
+      position: absolute;
+      left: -250px;
+      height: 100%;
+      transition: left ease-in-out 230ms;
+      z-index: 2;
+    }
+    .nav.visible {
+      left: 0;
+      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .mobile-toggle,
+    .mobile-logo {
+      display: block;
+    }
+
+    .mobile-toggle,
+    .user-dropdown {
+      flex: 1 1 0;
+    }
+
+    .mobile-click-handler.visible {
+      position: absolute;
+      display: block;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
   }
 </style>
