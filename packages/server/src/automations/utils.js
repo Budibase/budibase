@@ -52,16 +52,19 @@ exports.processEvent = async job => {
     if (env.USE_QUOTAS) {
       job.data.automation.apiKey = await updateQuota(job.data.automation)
     }
+    // need to actually await these so that an error can be captured properly
+    let response
     if (!env.isProd()) {
-      return runSingleThread(job)
+      response = await runSingleThread(job)
     } else {
-      return runWorker(job)
+      response = await runWorker(job)
     }
+    return response
   } catch (err) {
     console.error(
       `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
     )
-    return err
+    return { err }
   }
 }
 

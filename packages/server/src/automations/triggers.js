@@ -5,9 +5,9 @@ const { coerce } = require("../utilities/rowProcessor")
 const { definitions } = require("./triggerInfo")
 const { isDevAppID } = require("../db/utils")
 // need this to call directly, so we can get a response
-const { processEvent } = require("./utils")
 const { queue } = require("./bullboard")
 const { checkTestFlag } = require("../utilities/redis")
+const utils = require("./utils")
 
 const TRIGGER_DEFINITIONS = definitions
 
@@ -90,7 +90,7 @@ exports.externalTrigger = async function (
   }
   const data = { automation, event: params }
   if (getResponses) {
-    return processEvent({ data })
+    return utils.processEvent({ data })
   } else {
     return queue.add(data)
   }
