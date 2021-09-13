@@ -46,7 +46,7 @@
       <Layout gap="XS" justifyItems="center" noPadding>
         <Heading size="M">{$t("create-an-admin-user")}</Heading>
         <Body size="M" textAlign="center">
-          {$t("the-admin-user-has-access-to-everything-in-budibase")}
+          {$t("the-admin-user-has-access-to-everything")}
         </Body>
       </Layout>
       <Layout gap="XS" noPadding>

@@ -46,7 +46,7 @@
 </script>
 
 {#if $store.currentView !== "component" && $currentAsset && $store.currentFrontEndType === FrontendTypes.SCREEN}
-  <DetailSummary name="Screen" collapsible={false}>
+  <DetailSummary name={$t("screen")} collapsible={false}>
     {#each screenSettings as def (`${componentInstance._id}-${def.key}`)}
       <PropertyControl
         bindable={false}

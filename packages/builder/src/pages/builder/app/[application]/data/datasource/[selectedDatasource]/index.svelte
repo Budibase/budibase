@@ -9,6 +9,7 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   let relationshipModal
   let displayColumnModal
@@ -152,7 +153,9 @@
           <Button secondary on:click={saveDatasource}>{$t("save")}</Button>
         </div>
         <Body size="S">
-          {$t("connect-your-database-to-budibase-using-the-config-below")}
+          {$t("connect-your-database-to")}
+          {$organisation.company ? $organisation.company : "Budibase"}
+          {$t("using-the-config-below")}.
         </Body>
         <IntegrationConfigForm
           schema={integration.datasource}
@@ -178,7 +181,7 @@
         </div>
         <Body>
           {$t(
-            "this-datasource-can-determine-tables-automatically-budibase-can-fetch-your-tables-directly-from-the-database-and-you-can-use-them-without-having-to-write-any-queries-at-all"
+            "this-datasource-can-determine-tables-automatically-can-fetch-your-tables-directly-from-the-database-and-you-can-use-them-without-having-to-write-any-queries-at-all"
           )}
         </Body>
         <div class="query-list">
@@ -200,7 +203,7 @@
           </div>
           <Body>
             {$t(
-              "tell-budibase-how-your-tables-are-related-to-get-even-more-smart-features"
+              "tell-us-how-your-tables-are-related-to-get-even-more-smart-features"
             )}
           </Body>
         {/if}

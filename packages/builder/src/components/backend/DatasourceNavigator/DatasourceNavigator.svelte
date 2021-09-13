@@ -8,6 +8,7 @@
   import NavItem from "components/common/NavItem.svelte"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import ICONS from "./icons"
+  import { organisation } from "stores/portal"
 
   function selectDatasource(datasource) {
     datasources.select(datasource._id)
@@ -28,23 +29,43 @@
 {#if $database?._id}
   <div class="hierarchy-items-container">
     {#each $datasources.list as datasource, idx}
-      <NavItem
-        border={idx > 0}
-        text={datasource.name}
-        selected={$datasources.selected === datasource._id}
-        on:click={() => selectDatasource(datasource)}
-      >
-        <div class="datasource-icon" slot="icon">
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="18"
-            width="18"
-          />
-        </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+      {#if datasource._id === BUDIBASE_INTERNAL_DB}
+        <NavItem
+          border={idx > 0}
+          text={($organisation.company && $organisation.company + " DB") ||
+            datasource.name}
+          selected={$datasources.selected === datasource._id}
+          on:click={() => selectDatasource(datasource)}
+        >
+          <div class="datasource-icon" slot="icon">
+            {#if $organisation.logoUrl}
+              <img height="18" width="18" alt={$organisation.company} src={$organisation.logoUrl} />
+            {:else}
+              <svelte:component
+                this={ICONS[datasource.source]}
+                height="18"
+                width="18"
+              />
+            {/if}
+          </div>
+        </NavItem>
+      {:else}
+        <NavItem
+          border={idx > 0}
+          text={datasource.name}
+          selected={$datasources.selected === datasource._id}
+          on:click={() => selectDatasource(datasource)}
+        >
+          <div class="datasource-icon" slot="icon">
+            <svelte:component
+              this={ICONS[datasource.source]}
+              height="18"
+              width="18"
+            />
+          </div>
           <EditDatasourcePopover {datasource} />
-        {/if}
-      </NavItem>
+        </NavItem>
+      {/if}
 
       <TableNavigator sourceId={datasource._id} />
 

@@ -145,13 +145,13 @@
         <Heading size="S">{$t("analytics")}</Heading>
         <Body size="S">
           {$t(
-            "if-you-would-like-to-send-analytics-that-help-us-make-budibase-better-please-let-us-know-below"
+            "if-you-would-like-to-send-analytics-that-help-us-make-better-please-let-us-know-below"
           )}
         </Body>
       </Layout>
       <div class="fields">
         <div class="field">
-          <Label size="L">{$t("send-analytics-to-budibase")}</Label>
+          <Label size="L">{$t("send-analytics-to-us")}</Label>
           <Toggle text="" bind:value={$values.analytics} />
         </div>
       </div>

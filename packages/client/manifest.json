@@ -850,7 +850,13 @@
       },
       {
         "type": "text",
-        "label": "Token",
+        "label": "SDK Path",
+        "key": "cesiumPath",
+        "defaultValue": "https://cdn.bootcdn.net/ajax/libs/cesium/1.83.0"
+      },
+      {
+        "type": "text",
+        "label": "SDK Token",
         "key": "cesiumToken",
         "defaultValue": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNjE1MDY1Yi1kZTdjLTRhM2ItYTcxYy0wOTc4Yzk1OGFlYTEiLCJpZCI6MTIzNTAsInNjb3BlcyI6WyJsZ24iLCJwciIsImFjdyIsImFzbCIsImFzciIsImFzdyIsImFzcyIsImdjIiwibHIiLCJsdyIsInRyIiwidHciLCJ1c2ciXSwiaWF0IjoxNjMxMjUzNTY3LCJleHAiOjE2MzE4NTgzNjd9.rNGDvjLxRom5wJ5bVYcMSgG2ZrBK0ise8uJu94sT3K4"
       },
@@ -916,8 +922,14 @@
       },
       {
         "type": "boolean",
-        "label": "Scale",
-        "key": "scale",
+        "label": "Compass",
+        "key": "compass",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Distance Legend",
+        "key": "distanceLegend",
         "defaultValue": true
       },
       {

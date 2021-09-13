@@ -30,7 +30,7 @@
     "nuke:packages": "yarn run restore",
     "nuke:docker": "lerna run --parallel dev:stack:nuke",
     "clean": "lerna clean",
-    "kill-port": "kill-port 4001 4002",
+    "kill-port": "kill-port 3000 4001 4002",
     "dev": "yarn run kill-port && lerna link && lerna run --parallel dev:builder --concurrency 1",
     "dev:noserver": "lerna link && lerna run dev:stack:up && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/server --ignore @budibase/worker",
     "test": "lerna run test",

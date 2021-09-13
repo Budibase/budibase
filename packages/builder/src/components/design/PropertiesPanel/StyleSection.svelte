@@ -2,6 +2,7 @@
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import { DetailSummary } from "@budibase/bbui"
   import { store } from "builderStore"
+  import { _ as t } from "svelte-i18n"
 
   export let name
   export let columns
@@ -25,7 +26,7 @@
   }
 </script>
 
-<DetailSummary collapsible={false} name={`${name}${changed ? " *" : ""}`}>
+<DetailSummary collapsible={false} name={`${$t(name)}${changed ? " *" : ""}`}>
   <div class="group-content" style="grid-template-columns: {columns || '1fr'}">
     {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
       <div style="grid-column: {prop.column || 'auto'}">

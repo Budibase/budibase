@@ -109,6 +109,7 @@
   <Select
     readonly
     value={text}
+    placeholder={$t("choose-an-option")}
     options={[text]}
     on:click={dropdownRight.show}
   />

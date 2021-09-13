@@ -281,7 +281,7 @@
     <Heading size="M">{$t("authentication")}</Heading>
     <Body>
       {$t(
-        "every-budibase-app-comes-with-basic-authentication-email-password-included-you-can-add-additional-authentication-methods-from-the-options-below"
+        "every-app-comes-with-basic-authentication-email-password-included-you-can-add-additional-authentication-methods-from-the-options-below"
       )}
     </Body>
   </Layout>

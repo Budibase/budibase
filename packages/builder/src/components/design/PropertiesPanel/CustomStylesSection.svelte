@@ -29,7 +29,7 @@
 </script>
 
 <DetailSummary
-  name={`Custom CSS${componentInstance?._styles?.custom ? " *" : ""}`}
+  name={`${$t("custom-css")}${componentInstance?._styles?.custom ? " *" : ""}`}
   collapsible={false}
 >
   <div>
@@ -37,8 +37,8 @@
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
-  <Drawer bind:this={drawer} title="Custom CSS" cancelText={$t("cancel")}>
-    <Button cta slot="buttons" on:click={save}>Save</Button>
+  <Drawer bind:this={drawer} title={$t("custom-css")} cancelText={$t("cancel")}>
+    <Button cta slot="buttons" on:click={save}>{$t("save")}</Button>
     <DrawerContent slot="body">
       <div class="content">
         <Layout gap="S" noPadding>

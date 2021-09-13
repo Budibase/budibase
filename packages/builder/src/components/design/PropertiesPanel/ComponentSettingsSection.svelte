@@ -60,7 +60,7 @@
   }
 </script>
 
-<DetailSummary name={$t("general-0")} collapsible={false}>
+<DetailSummary name={$t("general")} collapsible={false}>
   {#if !componentInstance._component.endsWith("/layout")}
     <PropertyControl
       bindable={false}
@@ -100,7 +100,7 @@
   {/if}
   {#if componentDefinition?.info}
     <div class="text">
-      {@html componentDefinition?.info}
+      {@html $t(componentDefinition?.info)}
     </div>
   {/if}
 </DetailSummary>

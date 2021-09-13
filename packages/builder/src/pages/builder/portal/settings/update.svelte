@@ -12,6 +12,7 @@
   import { auth } from "stores/portal"
   import { redirect } from "@roxi/routify"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   let version
 
@@ -24,16 +25,20 @@
 
   async function updateBudibase() {
     try {
-      notifications.info($t("updating-budibase"))
+      notifications.info($t("updating"))
       await fetch("/v1/update", {
         headers: {
           Authorization: "Bearer budibase",
         },
       })
-      notifications.success($t("your-budibase-installation-is-up-to-date"))
+      notifications.success($t("installation-is-up-to-date"))
       getVersion()
     } catch (err) {
-      notifications.error($t("error-installing-budibase-update") + ` ${err}`)
+      notifications.error(
+        `${$t("error-installing")} ${
+          $organisation.company ? $organisation.company : "Budibase"
+        } ${$t("update")}` + ` ${err}`
+      )
     }
   }
 
@@ -53,7 +58,7 @@
       <Heading size="M">{$t("update")}</Heading>
       <Body>
         {$t(
-          "keep-your-budibase-installation-up-to-date-to-take-advantage-of-the-latest-features-security-updates-and-much-more"
+          "keep-installation-up-to-date-to-take-advantage-of-the-latest-features-security-updates-and-much-more"
         )}
       </Body>
     </Layout>

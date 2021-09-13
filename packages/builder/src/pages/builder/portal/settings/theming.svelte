@@ -4,12 +4,17 @@
   import { localeStore } from "builderStore"
   import { getLabel } from "builderStore/store/i18n.js"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 </script>
 
 <Layout>
   <Layout gap="XS" noPadding>
     <Heading size="M">{$t("theming")} & {$t("language")}</Heading>
-    <Body>{$t("customize-how-budibase-looks-and-feels")}</Body>
+    <Body
+      >{$t("customize-how")}
+      {$organisation.company ? $organisation.company : "Budibase"}
+      {$t("looks-and-feels")}.}</Body
+    >
   </Layout>
   <Divider size="S" />
   <div class="fields">

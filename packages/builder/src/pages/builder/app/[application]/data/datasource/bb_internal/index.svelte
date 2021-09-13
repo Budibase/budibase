@@ -5,6 +5,7 @@
   import { tables } from "stores/backend"
   import { goto } from "@roxi/routify"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   let modal
 </script>
@@ -18,11 +19,15 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">{$t("budibase-internal")}</Heading>
+        <Heading size="M"
+          >{$organisation.company ? $organisation.company : "Budibase"}
+          {$t("internal")}</Heading
+        >
       </header>
       <Body size="M">
+        {$organisation.company ? $organisation.company : "Budibase"}
         {$t(
-          "budibase-internal-tables-are-part-of-your-app-so-the-data-will-be-stored-in-your-apps-context"
+          "internal-tables-are-part-of-your-app-so-the-data-will-be-stored-in-your-apps-context"
         )}
       </Body>
     </Layout>

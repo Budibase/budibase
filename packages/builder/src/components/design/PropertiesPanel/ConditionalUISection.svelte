@@ -22,7 +22,7 @@
 </script>
 
 <DetailSummary
-  name={`Conditions${componentInstance?._conditions ? " *" : ""}`}
+  name={`${$t("conditions")}${componentInstance?._conditions ? " *" : ""}`}
   collapsible={false}
 >
   <div>

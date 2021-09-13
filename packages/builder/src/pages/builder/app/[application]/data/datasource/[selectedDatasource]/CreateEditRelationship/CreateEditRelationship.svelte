@@ -12,6 +12,7 @@
   import { uuid } from "builderStore/uuid"
   import { writable } from "svelte/store"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   export let save
   export let datasource
@@ -268,8 +269,9 @@
     <Detail>{$t("column-names")}</Detail>
   </div>
   <Body>
+    {$organisation.company ? $organisation.company : "Budibase"}
     {$t(
-      "budibase-manages-sql-relationships-as-a-new-column-in-the-table-please-provide-a-name-for-these-columns"
+      "manages-sql-relationships-as-a-new-column-in-the-table-please-provide-a-name-for-these-columns"
     )}
   </Body>
   <Input

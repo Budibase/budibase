@@ -8,6 +8,7 @@
 
   export let modelUris
   export let language
+  export let cesiumPath
   export let cesiumToken
   export let geocoder
   export let homeButton
@@ -19,7 +20,8 @@
   export let timeline
   export let animation
   export let infoBox
-  export let scale
+  export let compass
+  export let distanceLegend
   export let selectModel
   export let preSelectFeature
   export let firstPerson
@@ -35,17 +37,13 @@
   let tilesets
   let cesiumCss
   let cesiumJs
-  let distanceLabel
-  let barWidth
+  let cesiumNavigationJs
   let preSelectedFeature
   let selectedFeature
-  let getOutOfRangeLabel = () =>
-    language === "zh-hans" ? "超出测量范围" : "Out of range"
   let loadCesiumAsserts = () =>
     new Promise((resolve, reject) => {
-      const cssUrl =
-        "https://cdn.bootcdn.net/ajax/libs/cesium/1.83.0/Widgets/widgets.css"
-      const jsUrl = "https://cdn.bootcdn.net/ajax/libs/cesium/1.83.0/Cesium.js"
+      const cssUrl = `${cesiumPath}/Widgets/widgets.css`
+      const jsUrl = `${cesiumPath}/Cesium.js`
       cesiumCss = document.createElement("link")
       cesiumCss.type = "text/css"
       cesiumCss.rel = "stylesheet"
@@ -54,7 +52,21 @@
         cesiumJs = document.createElement("script")
         cesiumJs.setAttribute("type", "text/javascript")
         cesiumJs.setAttribute("src", jsUrl)
-        cesiumJs.onload = resolve
+        cesiumJs.onload = () => {
+          if (compass || distanceLegend) {
+            const cesiumNavigationJsUrl = `http://localhost:10000/global/cdn/cesium/viewerCesiumNavigationMixin.min.js`
+            cesiumNavigationJs = document.createElement("script")
+            cesiumNavigationJs.setAttribute("type", "text/javascript")
+            cesiumNavigationJs.setAttribute("src", cesiumNavigationJsUrl)
+            cesiumNavigationJs.onload = () => {
+              resolve()
+            }
+            cesiumNavigationJs.onerror = reject
+            document.head.appendChild(cesiumNavigationJs)
+          } else {
+            resolve()
+          }
+        }
         cesiumJs.onerror = reject
         document.head.appendChild(cesiumJs)
       }
@@ -64,6 +76,9 @@
   let unloadCesiumAsserts = () => {
     if (viewer && viewer.destroy) {
       viewer.entities.removeAll()
+      if (viewer.cesiumNavigation) {
+        viewer.cesiumNavigation.destroy()
+      }
       viewer.destroy()
     }
     if (!$builderStore.inBuilder) {
@@ -76,56 +91,9 @@
       if (cesiumCss) {
         document.head.removeChild(cesiumCss)
       }
-    }
-  }
-  let cesiumScale = () => {
-    const Cesium = window.Cesium
-    let geodesic = new Cesium.EllipsoidGeodesic()
-    // Find the distance between two pixels at the bottom center of the screen.
-    let scene = viewer.scene
-    let width = scene.canvas.clientWidth
-    let height = scene.canvas.clientHeight
-    let left = scene.camera.getPickRay(
-      new Cesium.Cartesian2((width / 2) | 0, height - 1)
-    )
-    let right = scene.camera.getPickRay(
-      new Cesium.Cartesian2((1 + width / 2) | 0, height - 1)
-    )
-    let globe = scene.globe
-    let leftPosition = globe.pick(left, scene)
-    let rightPosition = globe.pick(right, scene)
-    if (!Cesium.defined(leftPosition) || !Cesium.defined(rightPosition)) {
-      barWidth = undefined
-      distanceLabel = undefined
-      return
-    }
-    let leftCartographic = globe.ellipsoid.cartesianToCartographic(leftPosition)
-    let rightCartographic =
-      globe.ellipsoid.cartesianToCartographic(rightPosition)
-    geodesic.setEndPoints(leftCartographic, rightCartographic)
-    let pixelDistance = geodesic.surfaceDistance
-    // Find the first distance that makes the scale bar less than 100 pixels.
-    let maxBarWidth = 100
-    let distance
-    for (
-      let i = distances.length - 1;
-      !Cesium.defined(distance) && i >= 0;
-      --i
-    ) {
-      if (distances[i] / pixelDistance < maxBarWidth) {
-        distance = distances[i]
+      if (cesiumNavigationJs) {
+        document.head.removeChild(cesiumNavigationJs)
       }
-    }
-    if (Cesium.defined(distance)) {
-      var label =
-        distance >= 1000
-          ? (distance / 1000).toString() + " km"
-          : distance.toString() + " m"
-      barWidth = (distance / pixelDistance) | 0
-      distanceLabel = label
-    } else {
-      barWidth = undefined
-      distanceLabel = undefined
     }
   }
   let initSelectedFeature = () => {
@@ -246,13 +214,18 @@
       infoBox,
     })
 
+    if (compass || distanceLegend) {
+      viewer.extend(Cesium.viewerCesiumNavigationMixin, {
+        enableCompass: compass,
+        enableZoomControls: compass,
+        enableDistanceLegend: distanceLegend,
+        enableCompassOuterRing: true,
+      })
+    }
+
     i18n.load(el, language)
     viewer._cesiumWidget._creditContainer.style.display = "none"
     viewer.scene.globe.depthTestAgainstTerrain = true
-
-    if (scale) {
-      viewer.scene.postRender.addEventListener(cesiumScale)
-    }
 
     if (firstPerson) {
       initFirstPerson()
@@ -283,14 +256,6 @@
 
 <div class="gis-container" use:styleable={$component.styles}>
   <div class="cesium-container" bind:this={el} />
-  {#if scale}
-    <div class="scale-container">
-      <div class="scale-label">{distanceLabel || getOutOfRangeLabel()}</div>
-      {#if barWidth}
-        <div class="scale-bar" style="width: {barWidth}px" />
-      {/if}
-    </div>
-  {/if}
   {#if selectModel && currTilesetValue}
     <div class="select-model-container">
       <div style="width: 100%;">
@@ -335,37 +300,5 @@
     align-items: normal;
     background: transparent;
     justify-items: start;
-  }
-  .scale-container {
-    position: absolute;
-    z-index: 1001;
-    left: 0;
-    bottom: 0;
-    width: 100px;
-    height: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-  }
-  .scale-label {
-    font-size: 12px;
-    color: #fff;
-    text-align: center;
-  }
-  .scale-bar {
-    position: relative;
-    padding-top: 10px;
-  }
-  .scale-bar::after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 10px;
-    border: 1px solid #fff;
-    border-top: none;
-    left: 0;
-    bottom: 0;
   }
 </style>

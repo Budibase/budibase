@@ -24,7 +24,7 @@
       value: "0 0 * * *",
     },
     {
-      label: $t("every-budibase-reboot"),
+      label: $t("every-reboot"),
       value: "@reboot",
     },
   ]

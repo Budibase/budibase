@@ -108,9 +108,7 @@
           <Detail size="S">{$t("extremely-likely")}</Detail>
         </div>
       {:else if step === 1}
-        <Heading size="XS"
-          >{$t("what-could-be-improved-most-in-budibase")}</Heading
-        >
+        <Heading size="XS">{$t("what-could-be-improved-most")}</Heading>
         <Divider />
         <RadioGroup
           bind:value={improvements}

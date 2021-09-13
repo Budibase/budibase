@@ -40,7 +40,7 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={Logo} />
-        <Heading>{$t("set-budibase-organisation")}</Heading>
+        <Heading>{$t("set-organisation")}</Heading>
       </Layout>
       <Divider noGrid />
       <Layout gap="XS" noPadding>

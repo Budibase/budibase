@@ -17,6 +17,7 @@
   import api from "builderStore/api"
   import { cloneDeep } from "lodash/fp"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -171,8 +172,9 @@
     <Layout gap="XS" noPadding>
       <Heading size="S">{$t("templates")}</Heading>
       <Body size="S">
+        {$organisation.company ? $organisation.company : "Budibase"}
         {$t(
-          "budibase-comes-out-of-the-box-with-ready-made-email-templates-to-help-with-user-onboarding-please-refrain-from-changing-the-links"
+          "comes-out-of-the-box-with-ready-made-email-templates-to-help-with-user-onboarding-please-refrain-from-changing-the-links"
         )}
       </Body>
     </Layout>

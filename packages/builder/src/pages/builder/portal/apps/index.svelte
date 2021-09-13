@@ -277,7 +277,7 @@
           </div>
           <Body size="S">
             {$t(
-              "the-purpose-of-the-budibase-builder-is-to-help-you-build-beautiful-powerful-applications-quickly-and-easily"
+              "the-purpose-of-the-builder-is-to-help-you-build-beautiful-powerful-applications-quickly-and-easily"
             )}
           </Body>
         </ModalContent>

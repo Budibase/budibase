@@ -15,7 +15,7 @@
     quiet
     primary
     size="M"
-    icon="DownloadFromCloud">{$t("self-host-budibase")}</Button
+    icon="DownloadFromCloud">{$t("self-host")}</Button
   >
 </div>
 <Modal bind:this={upgradeModal}>
@@ -28,7 +28,7 @@
   >
     <span
       >{$t(
-        "upgrade-to-budibase-self-hosting-for-free-and-get-sso-unlimited-apps-and-more-and-it-only-takes-a-few-minutes"
+        "upgrade-to-self-hosting-for-free-and-get-sso-unlimited-apps-and-more-and-it-only-takes-a-few-minutes"
       )}</span
     >
   </ModalContent>

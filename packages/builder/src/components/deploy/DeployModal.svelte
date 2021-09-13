@@ -4,6 +4,7 @@
   import api from "builderStore/api"
   import analytics from "analytics"
   import { _ as t } from "svelte-i18n"
+  import { organisation } from "stores/portal"
 
   const DeploymentStatus = {
     SUCCESS: "SUCCESS",
@@ -93,7 +94,9 @@
 <Modal bind:this={feedbackModal}>
   <ModalContent
     cancelText={$t("cancel")}
-    title={$t("enjoying-budibase")}
+    title={`${$t("enjoying")} ${
+      $organisation.company ? $organisation.company : "Budibase"
+    }?`}
     size="L"
     showConfirmButton={false}
     showCancelButton={false}
