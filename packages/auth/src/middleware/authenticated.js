@@ -21,7 +21,10 @@ function finalise(
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-module.exports = (noAuthPatterns = [], opts = { publicAllowed: false }) => {
+module.exports = (
+  noAuthPatterns = [],
+  opts = { publicAllowed: false, populateUser: null }
+) => {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
   return async (ctx, next) => {
     let publicEndpoint = false
@@ -46,7 +49,15 @@ module.exports = (noAuthPatterns = [], opts = { publicAllowed: false }) => {
           error = "No session found"
         } else {
           try {
-            user = await getUser(userId, session.tenantId)
+            if (opts && opts.populateUser) {
+              user = await getUser(
+                userId,
+                session.tenantId,
+                opts.populateUser(ctx)
+              )
+            } else {
+              user = await getUser(userId, session.tenantId)
+            }
             delete user.password
             authenticated = true
           } catch (err) {
