@@ -16,7 +16,7 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const redis = require("./utilities/redis")
-const convert = require('koa-convert')
+const convert = require("koa-convert")
 
 const app = new Koa()
 
@@ -57,12 +57,14 @@ if (!env.isTest()) {
 app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
-app.use(convert(async (ctx: ExtendableContext, next: () => any) => {
-  await next()
-  if (ctx.message) {
-    ctx.message = encodeURIComponent(ctx.message)
-  }
-}))
+app.use(
+  convert(async (ctx: ExtendableContext, next: () => any) => {
+    await next()
+    if (ctx.message) {
+      ctx.message = encodeURIComponent(ctx.message)
+    }
+  })
+)
 // api routes
 app.use(api.routes())
 

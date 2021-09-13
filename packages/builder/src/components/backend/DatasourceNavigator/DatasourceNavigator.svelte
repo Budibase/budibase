@@ -39,7 +39,12 @@
         >
           <div class="datasource-icon" slot="icon">
             {#if $organisation.logoUrl}
-              <img height="18" width="18" alt={$organisation.company} src={$organisation.logoUrl} />
+              <img
+                height="18"
+                width="18"
+                alt={$organisation.company}
+                src={$organisation.logoUrl}
+              />
             {:else}
               <svelte:component
                 this={ICONS[datasource.source]}
