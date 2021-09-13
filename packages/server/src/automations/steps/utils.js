@@ -11,9 +11,6 @@ exports.getFetchResponse = async fetched => {
   } catch (err) {
     message = "Failed to retrieve response"
   }
-  if (typeof message !== "string") {
-    message = JSON.stringify(message)
-  }
   return { status, message }
 }
 
