@@ -1,5 +1,4 @@
 const actions = require("./actions")
-const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
@@ -8,7 +7,7 @@ const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
 
-const FILTER_STEP_ID = logic.LOGIC_DEFINITIONS.FILTER.stepId
+const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -37,13 +36,8 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
   }
 
-  async getStepFunctionality(type, stepId) {
-    let step = null
-    if (type === "ACTION") {
-      step = await actions.getAction(stepId)
-    } else if (type === "LOGIC") {
-      step = logic.getLogic(stepId)
-    }
+  async getStepFunctionality(stepId) {
+    let step = await actions.getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
     }
@@ -73,7 +67,7 @@ class Orchestrator {
     let automation = this._automation
     const app = await this.getApp()
     for (let step of automation.definition.steps) {
-      let stepFn = await this.getStepFunctionality(step.type, step.stepId)
+      let stepFn = await this.getStepFunctionality(step.stepId)
       step.inputs = await processObject(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,

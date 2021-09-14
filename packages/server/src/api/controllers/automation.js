@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const actions = require("../../automations/actions")
-const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
 const { getAutomationParams, generateAutomationID } = require("../../db/utils")
 const {
@@ -163,13 +162,8 @@ exports.getTriggerList = async function (ctx) {
   ctx.body = triggers.TRIGGER_DEFINITIONS
 }
 
-exports.getLogicList = async function (ctx) {
-  ctx.body = logic.LOGIC_DEFINITIONS
-}
-
 module.exports.getDefinitionList = async function (ctx) {
   ctx.body = {
-    logic: logic.LOGIC_DEFINITIONS,
     trigger: triggers.TRIGGER_DEFINITIONS,
     action: actions.ACTION_DEFINITIONS,
   }

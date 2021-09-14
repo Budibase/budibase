@@ -11,7 +11,6 @@ const MAX_RETRIES = 4
 
 let ACTION_DEFINITIONS = {}
 let TRIGGER_DEFINITIONS = {}
-let LOGIC_DEFINITIONS = {}
 
 describe("/automations", () => {
   let request = setup.getRequest()
@@ -47,17 +46,6 @@ describe("/automations", () => {
       TRIGGER_DEFINITIONS = res.body
     })
 
-    it("returns a list of definitions for actions", async () => {
-      const res = await request
-        .get(`/api/automations/logic/list`)
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      expect(Object.keys(res.body).length).not.toEqual(0)
-      LOGIC_DEFINITIONS = res.body
-    })
-
     it("returns all of the definitions in one", async () => {
       const res = await request
         .get(`/api/automations/definitions/list`)
@@ -67,7 +55,6 @@ describe("/automations", () => {
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(Object.keys(ACTION_DEFINITIONS).length)
       expect(Object.keys(res.body.trigger).length).toEqual(Object.keys(TRIGGER_DEFINITIONS).length)
-      expect(Object.keys(res.body.logic).length).toEqual(Object.keys(LOGIC_DEFINITIONS).length)
     })
   })
 
