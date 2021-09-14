@@ -29,7 +29,7 @@
 
   $: inputData = testData ? testData : block.inputs
 
-  async function onChange(e, key) {
+  const onChange = debounce(async function (e, key) {
     if (testData) {
       testData[key] = e.detail
     } else {
@@ -39,7 +39,7 @@
         automation: $automationStore.selectedAutomation?.automation,
       })
     }
-  }
+  }, 800)
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -131,7 +131,7 @@
       {:else if value.customType === "row"}
         <RowSelector
           value={inputData[key]}
-          on:change={debounce(e => onChange(e, key), 800)}
+          on:change={e => onChange(e, key)}
           {bindings}
         />
       {:else if value.customType === "webhookUrl"}

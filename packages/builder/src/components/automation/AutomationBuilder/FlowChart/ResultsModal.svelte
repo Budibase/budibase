@@ -2,8 +2,10 @@
   import { ModalContent, Icon, Detail, Badge, TextArea } from "@budibase/bbui"
 
   export let testResult
+  export let isTrigger
   let inputToggled
   let outputToggled
+  $: console.log(isTrigger)
 </script>
 
 <ModalContent
@@ -14,7 +16,11 @@
 >
   <div slot="header">
     <div style="float: right;">
-      <Badge red><Icon size="S" name="CheckmarkCircle" /></Badge>
+      {#if isTrigger || testResult[0].outputs.success}
+        <Badge green><Icon size="S" name="CheckmarkCircle" /></Badge>
+      {:else}
+        <Badge red><Icon size="S" name="CloseCircle" /></Badge>
+      {/if}
     </div>
   </div>
 

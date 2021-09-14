@@ -1,7 +1,7 @@
 exports.definition = {
   name: "Row Updated",
   event: "row:update",
-  icon: "ri-refresh-line",
+  icon: "Refresh",
   tagline: "Row is updated in {{inputs.enriched.table.name}}",
   description: "Fired when a row is updated in your database",
   stepId: "ROW_UPDATED",
