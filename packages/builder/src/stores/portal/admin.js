@@ -6,7 +6,7 @@ export function createAdminStore() {
   const DEFAULT_CONFIG = {
     loaded: false,
     multiTenancy: false,
-    sandbox: false,
+    cloud: false,
     onboardingProgress: 0,
     checklist: {
       apps: { checked: false },
@@ -45,18 +45,18 @@ export function createAdminStore() {
 
   async function getFlags() {
     let multiTenancyEnabled = false
-    let sandbox = false
+    let cloud = false
     try {
       const response = await api.get(`/api/system/flags`)
       const json = await response.json()
       multiTenancyEnabled = json.multiTenancy
-      sandbox = json.sandbox
+      cloud = json.cloud
     } catch (err) {
       // just let it stay disabled
     }
     admin.update(store => {
       store.multiTenancy = multiTenancyEnabled
-      store.sandbox = sandbox
+      store.cloud = cloud
       return store
     })
   }
