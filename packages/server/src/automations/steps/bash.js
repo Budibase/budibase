@@ -7,6 +7,7 @@ exports.definition = {
   icon: "ri-terminal-box-line",
   description: "Run a bash script",
   type: "ACTION",
+  internal: true,
   stepId: "EXECUTE_BASH",
   inputs: {},
   schema: {

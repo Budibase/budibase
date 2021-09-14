@@ -6,6 +6,7 @@ exports.definition = {
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the automation until an amount of time has passed",
   stepId: "DELAY",
+  internal: true,
   inputs: {},
   schema: {
     inputs: {

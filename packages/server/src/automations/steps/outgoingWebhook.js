@@ -23,6 +23,7 @@ exports.definition = {
   icon: "ri-send-plane-line",
   description: "Send a request of specified method to a URL",
   type: "ACTION",
+  internal: true,
   stepId: "OUTGOING_WEBHOOK",
   inputs: {
     requestMethod: "POST",

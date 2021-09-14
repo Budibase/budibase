@@ -7,6 +7,7 @@ exports.definition = {
   icon: "ri-terminal-box-line",
   description: "Run a piece of JavaScript code in your automation",
   type: "ACTION",
+  internal: true,
   stepId: "EXECUTE_SCRIPT",
   inputs: {},
   schema: {

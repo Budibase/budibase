@@ -11,6 +11,7 @@ exports.definition = {
   icon: "ri-discord-line",
   stepId: "discord",
   type: "ACTION",
+  internal: false,
   inputs: {},
   schema: {
     inputs: {

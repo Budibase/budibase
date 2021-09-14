@@ -7,6 +7,7 @@ exports.definition = {
   icon: "ri-refresh-line",
   description: "Update a row in your database",
   type: "ACTION",
+  internal: true,
   stepId: "UPDATE_ROW",
   inputs: {},
   schema: {

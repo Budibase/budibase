@@ -9,6 +9,7 @@ exports.definition = {
   icon: "ri-shut-down-line",
   stepId: "integromat",
   type: "ACTION",
+  internal: false,
   inputs: {},
   schema: {
     inputs: {
