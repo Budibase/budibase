@@ -8,9 +8,28 @@
   } from "@budibase/bbui"
   import { admin } from "stores/portal"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
+
+  let width = window.innerWidth
+  $: side = width < 500 ? "right" : "left"
+
+  const resizeObserver = new ResizeObserver(entries => {
+    if (entries?.[0]) {
+      width = entries[0].contentRect?.width
+    }
+  })
+
+  onMount(() => {
+    const doc = document.documentElement
+    resizeObserver.observe(doc)
+
+    return () => {
+      resizeObserver.unobserve(doc)
+    }
+  })
 </script>
 
-<ActionMenu>
+<ActionMenu align={side}>
   <div slot="control" class="icon">
     <ProgressCircle size="S" value={$admin.onboardingProgress} />
   </div>
@@ -37,7 +56,7 @@
   .item {
     display: grid;
     align-items: center;
-    grid-template-columns: 200px 20px;
+    grid-template-columns: 175px 20px;
   }
   .icon {
     cursor: pointer;
