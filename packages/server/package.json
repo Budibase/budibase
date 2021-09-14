@@ -109,7 +109,6 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
-    "worker-farm": "1.7.0",
     "yargs": "13.2.4",
     "zlib": "1.0.5"
   },

@@ -1,7 +1,11 @@
 const CouchDB = require("../../../db")
 const Deployment = require("./Deployment")
 const { Replication } = require("@budibase/auth/db")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
+const {
+  disableAllCrons,
+  enableCronTrigger,
+} = require("../../../automations/utils")
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -58,6 +62,23 @@ async function storeDeploymentHistory(deployment) {
   return deployment
 }
 
+async function initDeployedApp(prodAppId) {
+  const db = new CouchDB(prodAppId)
+  const automations = (
+    await db.allDocs(
+      getAutomationParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+  const promises = []
+  await disableAllCrons(prodAppId)
+  for (let automation of automations) {
+    promises.push(enableCronTrigger(prodAppId, automation))
+  }
+  await Promise.all(promises)
+}
+
 async function deployApp(deployment) {
   try {
     const productionAppId = deployment.appId.replace("_dev", "")
@@ -85,6 +106,7 @@ async function deployApp(deployment) {
       },
     })
 
+    await initDeployedApp(productionAppId)
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
   } catch (err) {
