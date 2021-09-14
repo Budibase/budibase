@@ -231,9 +231,12 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
     if (split[0] === DocumentTypes.APP) {
-      const noTenantId = split.length === 2 || split[1] === DocumentTypes.DEV
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
+
+      const noTenantId =
+        split.length === 2 || possibleTenantId === DocumentTypes.DEV
+
       return (
         (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
         possibleTenantId === tenantId
