@@ -1,6 +1,5 @@
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
 const actions = require("../../actions")
-const logic = require("../../logic")
 const emitter = require("../../../events/index")
 const env = require("../../../environment")
 
@@ -34,16 +33,7 @@ exports.runInProd = async fn => {
 }
 
 exports.runStep = async function runStep(stepId, inputs) {
-  let step
-  if (
-    Object.values(exports.actions)
-      .map(action => action.stepId)
-      .includes(stepId)
-  ) {
-    step = await actions.getAction(stepId)
-  } else {
-    step = logic.getLogic(stepId)
-  }
+  let step = await actions.getAction(stepId)
   expect(step).toBeDefined()
   return step({
     inputs,
@@ -57,4 +47,3 @@ exports.runStep = async function runStep(stepId, inputs) {
 exports.apiKey = "test"
 
 exports.actions = actions.ACTION_DEFINITIONS
-exports.logic = logic.LOGIC_DEFINITIONS

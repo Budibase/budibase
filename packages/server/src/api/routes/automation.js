@@ -57,11 +57,6 @@ router
     controller.getActionList
   )
   .get(
-    "/api/automations/logic/list",
-    authorized(BUILDER),
-    controller.getLogicList
-  )
-  .get(
     "/api/automations/definitions/list",
     authorized(BUILDER),
     controller.getDefinitionList
