@@ -8,6 +8,7 @@ const { isDevAppID } = require("../db/utils")
 const { queue } = require("./bullboard")
 const { checkTestFlag } = require("../utilities/redis")
 const utils = require("./utils")
+const env = require("../environment")
 
 const TRIGGER_DEFINITIONS = definitions
 
@@ -30,21 +31,24 @@ async function queueRelevantRowAutomations(event, eventType) {
     })
 
   for (let automation of automations) {
-    // don't queue events which are for dev apps, only way to test automations is
-    // running tests on them
-    // in production the test flag will never be checked due to lazy evaluation (first always false)
-    if (isDevAppID(event.appId) && !(await checkTestFlag(automation._id))) {
-      return
-    }
     let automationDef = automation.definition
     let automationTrigger = automationDef ? automationDef.trigger : {}
+    // don't queue events which are for dev apps, only way to test automations is
+    // running tests on them, in production the test flag will never
+    // be checked due to lazy evaluation (first always false)
     if (
-      !automationTrigger.inputs ||
-      automationTrigger.inputs.tableId !== event.row.tableId
+      !env.ALLOW_DEV_AUTOMATIONS &&
+      isDevAppID(event.appId) &&
+      !(await checkTestFlag(automation._id))
     ) {
       continue
     }
-    await queue.add({ automation, event })
+    if (
+      automationTrigger.inputs &&
+      automationTrigger.inputs.tableId === event.row.tableId
+    ) {
+      await queue.add({ automation, event })
+    }
   }
 }
 
