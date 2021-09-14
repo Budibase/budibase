@@ -205,7 +205,7 @@ exports.test = async function (ctx) {
   // save a test history run
   await updateTestHistory(ctx.appId, automation, {
     ...ctx.request.body,
-    occurredAt: new Date().toISOString(),
+    occurredAt: new Date().getTime(),
   })
   await clearTestFlag(automation._id)
   ctx.body = response
