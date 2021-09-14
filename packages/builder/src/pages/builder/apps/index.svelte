@@ -41,17 +41,8 @@
     <Page>
       <div class="content">
         <Layout noPadding>
-          <img alt="logo" src={$organisation.logoUrl || Logo} />
-          <div class="info-title">
-            <Layout noPadding gap="XS">
-              <Heading size="L">
-                Hey {$auth.user.firstName || $auth.user.email}
-              </Heading>
-              <Body>
-                Welcome to the {$organisation.company} portal. Below you'll find
-                the list of apps that you have access to.
-              </Body>
-            </Layout>
+          <div class="header">
+            <img alt="logo" src={$organisation.logoUrl || Logo} />
             <ActionMenu align="right">
               <div slot="control" class="avatar">
                 <Avatar
@@ -81,6 +72,15 @@
               <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
+          <Layout noPadding gap="XS">
+            <Heading size="M">
+              Hey {$auth.user.firstName || $auth.user.email}
+            </Heading>
+            <Body>
+              Welcome to the {$organisation.company} portal. Below you'll find the
+              list of apps that you have access to.
+            </Body>
+          </Layout>
           <Divider />
           {#if publishedApps.length}
             <Heading>Apps</Heading>
@@ -137,17 +137,17 @@
     overflow: auto;
   }
   .content {
-    padding: 60px 0;
     width: 100%;
+  }
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
   img {
     width: 40px;
     margin-bottom: -12px;
-  }
-  .info-title {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-gap: var(--spacing-xl);
   }
   .avatar {
     display: grid;
@@ -160,7 +160,6 @@
     filter: brightness(110%);
   }
   .group {
-    margin-top: var(--spacing-s);
   }
   .app {
     display: grid;
