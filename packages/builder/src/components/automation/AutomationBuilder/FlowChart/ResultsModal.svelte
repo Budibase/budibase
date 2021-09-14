@@ -5,7 +5,6 @@
   export let isTrigger
   let inputToggled
   let outputToggled
-  $: console.log(isTrigger)
 </script>
 
 <ModalContent
