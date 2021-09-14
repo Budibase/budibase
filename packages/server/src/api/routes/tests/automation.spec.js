@@ -2,6 +2,7 @@ const {
   checkBuilderEndpoint,
   getAllTableRows,
   clearAllAutomations,
+  testAutomation,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicAutomation } = setup.structures
@@ -10,7 +11,6 @@ const MAX_RETRIES = 4
 
 let ACTION_DEFINITIONS = {}
 let TRIGGER_DEFINITIONS = {}
-let LOGIC_DEFINITIONS = {}
 
 describe("/automations", () => {
   let request = setup.getRequest()
@@ -22,15 +22,6 @@ describe("/automations", () => {
   beforeEach(async () => {
     await config.init()
   })
-
-  const triggerWorkflow = async automation => {
-    return await request
-      .post(`/api/automations/${automation._id}/trigger`)
-      .send({ name: "Test", description: "TEST" })
-      .set(config.defaultHeaders())
-      .expect('Content-Type', /json/)
-      .expect(200)
-  }
 
   describe("get definitions", () => {
     it("returns a list of definitions for actions", async () => {
@@ -44,7 +35,7 @@ describe("/automations", () => {
       ACTION_DEFINITIONS = res.body
     })
 
-    it("returns a list of definitions for triggers", async () => {
+    it("returns a list of definitions for triggerInfo", async () => {
       const res = await request
         .get(`/api/automations/trigger/list`)
         .set(config.defaultHeaders())
@@ -53,17 +44,6 @@ describe("/automations", () => {
 
       expect(Object.keys(res.body).length).not.toEqual(0)
       TRIGGER_DEFINITIONS = res.body
-    })
-
-    it("returns a list of definitions for actions", async () => {
-      const res = await request
-        .get(`/api/automations/logic/list`)
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      expect(Object.keys(res.body).length).not.toEqual(0)
-      LOGIC_DEFINITIONS = res.body
     })
 
     it("returns all of the definitions in one", async () => {
@@ -75,7 +55,6 @@ describe("/automations", () => {
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(Object.keys(ACTION_DEFINITIONS).length)
       expect(Object.keys(res.body.trigger).length).toEqual(Object.keys(TRIGGER_DEFINITIONS).length)
-      expect(Object.keys(res.body.logic).length).toEqual(Object.keys(LOGIC_DEFINITIONS).length)
     })
   })
 
@@ -168,14 +147,13 @@ describe("/automations", () => {
       automation.definition.steps[0].inputs.row.tableId = table._id
       automation = await config.createAutomation(automation)
       await setup.delay(500)
-      const res = await triggerWorkflow(automation)
+      const res = await testAutomation(config, automation)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
       // TODO: update when workflow logs are a thing
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
-        expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
-        expect(res.body.automation.name).toEqual(automation.name)
+        expect(res.body).toBeDefined()
         await setup.delay(500)
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
