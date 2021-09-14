@@ -46,12 +46,10 @@ const automationActions = store => ({
     })
   },
   save: async ({ automation }) => {
-    console.log(automation)
     const UPDATE_AUTOMATION_URL = `/api/automations`
     const response = await api.put(UPDATE_AUTOMATION_URL, automation)
     const json = await response.json()
     store.update(state => {
-      console.log(state)
       const existingIdx = state.automations.findIndex(
         existing => existing._id === automation._id
       )

@@ -6,7 +6,6 @@
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
 
   $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
-  $: console.log($automationStore)
   onMount(() => {
     automationStore.actions.fetch()
   })
