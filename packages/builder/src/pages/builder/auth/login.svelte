@@ -51,6 +51,12 @@
 
   onMount(async () => {
     await organisation.init()
+
+    // redirect to account portal for login in the cloud
+    if ($admin.cloud && $admin.accountPortalUrl) {
+      window.location.href = $admin.accountPortalUrl
+    }
+
     loaded = true
   })
 </script>
