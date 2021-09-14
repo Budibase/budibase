@@ -46,6 +46,7 @@ describe("/metadata", () => {
       const metadata = await getMetadata(MetadataTypes.AUTOMATION_TEST_HISTORY)
       expect(metadata).toBeDefined()
       expect(metadata.history.length).toBe(1)
+      expect(typeof metadata.history[0].occurredAt).toBe("number")
     })
   })
 
