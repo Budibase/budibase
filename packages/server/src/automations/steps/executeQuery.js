@@ -8,6 +8,7 @@ exports.definition = {
   description: "Execute a query in an external data connector",
   type: "ACTION",
   stepId: "EXECUTE_QUERY",
+  internal: true,
   inputs: {},
   schema: {
     inputs: {

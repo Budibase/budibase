@@ -10,6 +10,7 @@ exports.definition = {
   icon: "ri-server-line",
   description: "Logs the given text to the server (using console.log)",
   type: "ACTION",
+  internal: true,
   stepId: "SERVER_LOG",
   inputs: {
     text: "",

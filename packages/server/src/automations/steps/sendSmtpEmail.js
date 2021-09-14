@@ -6,6 +6,7 @@ exports.definition = {
   icon: "ri-mail-open-line",
   name: "Send Email (SMTP)",
   type: "ACTION",
+  internal: true,
   stepId: "SEND_EMAIL_SMTP",
   inputs: {},
   schema: {

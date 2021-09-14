@@ -21,6 +21,7 @@ exports.definition = {
   icon: "ri-git-branch-line",
   description: "Filter any automations which do not meet certain conditions",
   type: "LOGIC",
+  internal: true,
   stepId: "FILTER",
   inputs: {
     condition: FilterConditions.EQUALS,

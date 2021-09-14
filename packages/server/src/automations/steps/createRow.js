@@ -9,6 +9,7 @@ exports.definition = {
   icon: "ri-save-3-line",
   description: "Add a row to your database",
   type: "ACTION",
+  internal: true,
   stepId: "CREATE_ROW",
   inputs: {},
   schema: {

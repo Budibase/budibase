@@ -9,6 +9,7 @@ exports.definition = {
   tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: "ACTION",
   stepId: "DELETE_ROW",
+  internal: true,
   inputs: {},
   schema: {
     inputs: {

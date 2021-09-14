@@ -5,6 +5,7 @@ exports.definition = {
   name: "Zapier Webhook",
   stepId: "zapier",
   type: "ACTION",
+  internal: false,
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",

@@ -8,6 +8,7 @@ exports.definition = {
   icon: "ri-slack-line",
   stepId: "slack",
   type: "ACTION",
+  internal: false,
   inputs: {},
   schema: {
     inputs: {
