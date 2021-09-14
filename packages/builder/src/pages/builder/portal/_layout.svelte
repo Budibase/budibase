@@ -60,7 +60,7 @@
     }
 
     // add link to account portal if the user has access
-    if ($auth.user.account) {
+    if ($auth?.user?.account) {
       menu = menu.concat([
         {
           title: "Account",
