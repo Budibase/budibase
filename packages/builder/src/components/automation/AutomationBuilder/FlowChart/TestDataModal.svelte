@@ -18,11 +18,7 @@
   let schemaProperties = Object.entries(trigger.schema.outputs.properties || {})
 
   // check to see if there is existing test data in the store
-  $: testData = Object.keys(
-    $automationStore.selectedAutomation?.automation?.testData
-  ).length
-    ? $automationStore.selectedAutomation.automation.testData
-    : {}
+  $: testData = $automationStore.selectedAutomation.automation.testData
 
   // Checj the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(

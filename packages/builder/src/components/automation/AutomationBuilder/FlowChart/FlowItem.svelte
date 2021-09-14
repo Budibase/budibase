@@ -26,13 +26,10 @@
   let resultsModal
   let setupToggled
   let blockComplete
-
-  $: testResult = $automationStore?.testResults
-    ? $automationStore.testResults.steps.filter(
-        step => step.stepId === block.stepId
-      )
-    : null
-
+  $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
+    step => step.stepId === block.stepId
+  )
+  $: console.log(testResult)
   $: instanceId = $database._id
 
   $: isTrigger = block.type === "TRIGGER"
@@ -102,11 +99,11 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if !!testResult}
+      {#if testResult}
         <span on:click={() => resultsModal.show()}>
           <StatusLight
-            positive={testResult[0].outputs.success}
-            negative={!testResult[0].outputs.success}
+            positive={isTrigger || testResult[0].outputs?.success}
+            negative={!testResult[0].outputs?.success}
             ><Body size="XS">View response</Body></StatusLight
           >
         </span>
@@ -164,7 +161,7 @@
   {/if}
 
   <Modal bind:this={resultsModal} width="30%">
-    <ResultsModal {testResult} />
+    <ResultsModal {isTrigger} {testResult} />
   </Modal>
 
   <Modal bind:this={actionModal} width="30%">
