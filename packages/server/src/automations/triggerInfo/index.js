@@ -11,5 +11,5 @@ exports.definitions = {
   ROW_DELETED: rowDeleted.definition,
   WEBHOOK: webhook.definition,
   APP: app.definition,
-  CRON: cron.defintion,
+  CRON: cron.definition,
 }
