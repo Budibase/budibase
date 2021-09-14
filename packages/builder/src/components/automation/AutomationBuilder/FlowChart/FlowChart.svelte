@@ -56,7 +56,7 @@
   }
 </script>
 
-<section class="canvas">
+<div class="canvas">
   <div class="content">
     <div class="title">
       <div class="subtitle">
@@ -95,7 +95,7 @@
   <Modal bind:this={testDataModal} width="30%">
     <TestDataModal {testAutomation} />
   </Modal>
-</section>
+</div>
 
 <style>
   .separator {

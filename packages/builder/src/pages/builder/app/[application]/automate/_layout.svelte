@@ -52,7 +52,7 @@
     flex: 1 1 auto;
     height: 0;
     display: grid;
-    grid-template-columns: 260px minmax(510px, 1fr) 260px;
+    grid-template-columns: 260px minmax(510px, 1fr);
   }
 
   .nav {
