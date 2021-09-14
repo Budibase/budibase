@@ -347,4 +347,10 @@
     justify-content: center;
     align-items: center;
   }
+
+  @media (max-width: 640px) {
+    .appTable {
+      grid-template-columns: 1fr auto;
+    }
+  }
 </style>
