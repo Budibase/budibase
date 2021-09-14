@@ -4,7 +4,6 @@
   export let testResult
   let inputToggled
   let outputToggled
-  $: console.log(testResult)
 </script>
 
 <ModalContent

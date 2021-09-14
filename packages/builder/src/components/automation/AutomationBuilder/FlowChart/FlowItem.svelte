@@ -32,7 +32,7 @@
         step => step.stepId === block.stepId
       )
     : null
-  $: console.log(testResult)
+
   $: instanceId = $database._id
 
   $: isTrigger = block.type === "TRIGGER"
