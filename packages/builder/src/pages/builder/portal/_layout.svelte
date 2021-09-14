@@ -12,6 +12,7 @@
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth } from "stores/portal"
+  import { admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
@@ -54,6 +55,16 @@
           title: "Theming",
           href: "/builder/portal/settings/theming",
           heading: "Settings",
+        },
+      ])
+    }
+
+    // add link to account portal if the user has access
+    if ($auth.user.account) {
+      menu = menu.concat([
+        {
+          title: "Account",
+          href: $adminStore.accountPortalUrl,
         },
       ])
     }
