@@ -71,73 +71,77 @@
   }
 </script>
 
-<Layout gap="XS" noPadding>
-  <div class="back">
-    <ActionButton
-      on:click={() => $goto("./")}
-      quiet
-      size="S"
-      icon="BackAndroid"
-    >
-      Back to email settings
-    </ActionButton>
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <div>
+      <ActionButton
+        on:click={() => $goto("./")}
+        quiet
+        size="S"
+        icon="BackAndroid"
+      >
+        Back to email settings
+      </ActionButton>
+    </div>
+    <header>
+      <Heading>
+        Email Template: {name}
+      </Heading>
+      <Button cta on:click={saveTemplate}>Save</Button>
+    </header>
+    <Body>
+      {description}
+      <br />
+      Change the email template here. Add dynamic content by using the bindings menu
+      on the right.
+    </Body>
+  </Layout>
+  <div>
+    <Tabs selected="Edit" on:select={fixMountBug}>
+      <Tab title="Edit">
+        <div class="template-editor">
+          <div class="template-text-editor">
+            <Editor
+              editorHeight={640}
+              bind:this={htmlEditor}
+              mode="handlebars"
+              on:change={e => {
+                selectedTemplate.contents = e.detail.value
+              }}
+              value={selectedTemplate?.contents}
+            />
+          </div>
+          <div class="bindings-editor">
+            <Detail size="L">Bindings</Detail>
+            {#if mounted}
+              <Tabs selected="Template">
+                <Tab title="Template">
+                  <TemplateBindings
+                    title="Template Bindings"
+                    bindings={templateBindings}
+                    onBindingClick={setTemplateBinding}
+                  />
+                </Tab>
+                <Tab title="Common">
+                  <TemplateBindings
+                    title="Common Bindings"
+                    bindings={$email?.definitions?.bindings?.common}
+                    onBindingClick={setTemplateBinding}
+                  />
+                </Tab>
+              </Tabs>
+            {/if}
+          </div>
+        </div>
+      </Tab>
+      <Tab title="Preview">
+        <div class="preview">
+          <iframe title="preview" srcdoc={previewContent} />
+        </div>
+      </Tab>
+    </Tabs>
   </div>
-  <header>
-    <Heading>
-      Email Template: {name}
-    </Heading>
-    <Button cta on:click={saveTemplate}>Save</Button>
-  </header>
-  <Detail>Description</Detail>
-  <Body>{description}</Body>
-  <Body>
-    Change the email template here. Add dynamic content by using the bindings
-    menu on the right.
-  </Body>
 </Layout>
-<Tabs selected="Edit" on:select={fixMountBug}>
-  <Tab title="Edit">
-    <div class="template-editor">
-      <div class="template-text-editor">
-        <Editor
-          editorHeight={640}
-          bind:this={htmlEditor}
-          mode="handlebars"
-          on:change={e => {
-            selectedTemplate.contents = e.detail.value
-          }}
-          value={selectedTemplate?.contents}
-        />
-      </div>
-      <div class="bindings-editor">
-        <Detail size="L">Bindings</Detail>
-        {#if mounted}
-          <Tabs selected="Template">
-            <Tab title="Template">
-              <TemplateBindings
-                title="Template Bindings"
-                bindings={templateBindings}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-            <Tab title="Common">
-              <TemplateBindings
-                title="Common Bindings"
-                bindings={$email?.definitions?.bindings?.common}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-          </Tabs>
-        {/if}
-      </div>
-    </div>
-  </Tab>
-  <Tab title="Preview">
-    <div class="preview">
-      <iframe title="preview" srcdoc={previewContent} />
-    </div>
-  </Tab>
-</Tabs>
 
 <style>
   .template-editor {
