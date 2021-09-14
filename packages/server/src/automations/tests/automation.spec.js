@@ -1,20 +1,6 @@
 jest.mock("../../utilities/usageQuota")
 jest.mock("../thread")
 jest.spyOn(global.console, "error")
-jest.mock("worker-farm", () => {
-  return () => {
-    const value = jest
-      .fn()
-      .mockReturnValueOnce(undefined)
-      .mockReturnValueOnce("Error")
-    return (input, callback) => {
-      workerJob = input
-      if (callback) {
-        callback(value())
-      }
-    }
-  }
-})
 
 require("../../environment")
 const automation = require("../index")
@@ -26,8 +12,6 @@ const { wait } = require("../../utilities")
 const { makePartial } = require("../../tests/utilities")
 const { cleanInputValues } = require("../automationUtils")
 const setup = require("./utilities")
-
-let workerJob
 
 usageQuota.getAPIKey.mockReturnValue({ apiKey: "test" })
 
@@ -44,28 +28,12 @@ describe("Run through some parts of the automations system", () => {
   it("should be able to init in builder", async () => {
     await triggers.externalTrigger(basicAutomation(), { a: 1 })
     await wait(100)
-    expect(workerJob).toBeUndefined()
     expect(thread).toHaveBeenCalled()
   })
 
   it("should be able to init in prod", async () => {
-    await setup.runInProd(async () => {
-      await triggers.externalTrigger(basicAutomation(), { a: 1 })
-      await wait(100)
-      // haven't added a mock implementation so getAPIKey of usageQuota just returns undefined
-      expect(usageQuota.update).toHaveBeenCalledWith("test", "automationRuns", 1)
-      expect(workerJob).toBeDefined()
-    })
-  })
-
-  it("try error scenario", async () => {
-    await setup.runInProd(async () => {
-      // the second call will throw an error
-      const response = await triggers.externalTrigger(basicAutomation(), {a: 1}, {getResponses: true})
-      await wait(100)
-      expect(console.error).toHaveBeenCalled()
-      expect(response.err).toBeDefined()
-    })
+    await triggers.externalTrigger(basicAutomation(), { a: 1 })
+    await wait(100)
   })
 
   it("should check coercion", async () => {
@@ -89,7 +57,7 @@ describe("Run through some parts of the automations system", () => {
           }
         }
       }
-    }), expect.any(Function))
+    }))
   })
 
   it("should be able to clean inputs with the utilities", () => {
