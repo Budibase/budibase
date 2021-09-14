@@ -1,7 +1,6 @@
 const env = require("../environment")
-const workerFarm = require("worker-farm")
 const { getAPIKey, update, Properties } = require("../utilities/usageQuota")
-const singleThread = require("./thread")
+const runner = require("./thread")
 const { definitions } = require("./triggerInfo")
 const webhooks = require("../api/controllers/webhook")
 const CouchDB = require("../db")
@@ -12,32 +11,6 @@ const { MetadataTypes } = require("../constants")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
-
-let workers = workerFarm(require.resolve("./thread"))
-
-function runWorker(job) {
-  return new Promise((resolve, reject) => {
-    workers(job, (err, output) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(output)
-      }
-    })
-  })
-}
-
-function runSingleThread(job) {
-  return new Promise((resolve, reject) => {
-    singleThread(job, (err, output) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(output)
-      }
-    })
-  })
-}
 
 async function updateQuota(automation) {
   const appId = automation.appId
@@ -53,13 +26,7 @@ exports.processEvent = async job => {
       job.data.automation.apiKey = await updateQuota(job.data.automation)
     }
     // need to actually await these so that an error can be captured properly
-    let response
-    if (!env.isProd()) {
-      response = await runSingleThread(job)
-    } else {
-      response = await runWorker(job)
-    }
-    return response
+    return await runner(job)
   } catch (err) {
     console.error(
       `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`

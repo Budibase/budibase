@@ -1,4 +1,4 @@
-exports.defintion = {
+exports.definition = {
   name: "Cron Trigger",
   event: "cron:trigger",
   icon: "ri-timer-line",

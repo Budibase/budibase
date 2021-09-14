@@ -99,21 +99,10 @@ class Orchestrator {
   }
 }
 
-// callback is required for worker-farm to state that the worker thread has completed
-module.exports = (job, cb) => {
-  if (!cb) {
-    throw "Callback must be defined."
-  }
+module.exports = async job => {
   const automationOrchestrator = new Orchestrator(
     job.data.automation,
     job.data.event
   )
-  automationOrchestrator
-    .execute()
-    .then(output => {
-      cb(null, output)
-    })
-    .catch(err => {
-      cb(err)
-    })
+  return automationOrchestrator.execute()
 }
