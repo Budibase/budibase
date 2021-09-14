@@ -5,7 +5,6 @@
   import { cloneDeep } from "lodash/fp"
 
   let failedParse = null
-
   // clone the trigger so we're not mutating the reference
   let trigger = cloneDeep(
     $automationStore.selectedAutomation.automation.definition.trigger
@@ -43,15 +42,12 @@
 
 <ModalContent
   title="Add test data"
-  confirmText="Save"
+  confirmText="Test"
   showConfirmButton={true}
   disabled={isError}
   onConfirm={() => {
     automationStore.actions.addTestDataToAutomation(testData)
-    automationStore.actions.trigger(
-      $automationStore.selectedAutomation,
-      testData
-    )
+    automationStore.actions.test($automationStore.selectedAutomation, testData)
   }}
   cancelText="Cancel"
 >

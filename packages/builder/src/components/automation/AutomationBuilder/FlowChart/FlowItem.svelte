@@ -26,6 +26,13 @@
   let resultsModal
   let setupToggled
   let blockComplete
+
+  $: testResult = $automationStore?.testResults
+    ? $automationStore.testResults.steps.filter(
+        step => step.stepId === block.stepId
+      )
+    : null
+  $: console.log(testResult)
   $: instanceId = $database._id
 
   $: isTrigger = block.type === "TRIGGER"
@@ -95,11 +102,15 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      <span on:click={() => resultsModal.show()}>
-        <StatusLight positive={true} negative={false}
-          ><Body size="XS">View response</Body></StatusLight
-        >
-      </span>
+      {#if !!testResult}
+        <span on:click={() => resultsModal.show()}>
+          <StatusLight
+            positive={testResult[0].outputs.success}
+            negative={!testResult[0].outputs.success}
+            ><Body size="XS">View response</Body></StatusLight
+          >
+        </span>
+      {/if}
     </div>
   </div>
   {#if !blockComplete}
@@ -153,7 +164,7 @@
   {/if}
 
   <Modal bind:this={resultsModal} width="30%">
-    <ResultsModal />
+    <ResultsModal {testResult} />
   </Modal>
 
   <Modal bind:this={actionModal} width="30%">
