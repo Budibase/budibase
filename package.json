@@ -47,6 +47,8 @@
     "release:helm": "./scripts/release_helm_chart.sh",
     "multi:enable": "lerna run multi:enable",
     "multi:disable": "lerna run multi:disable",
+    "selfhost:enable": "lerna run selfhost:enable",
+    "selfhost:disable": "lerna run selfhost:disable",
     "postinstall": "husky install"
   }
 }

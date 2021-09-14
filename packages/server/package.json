@@ -24,7 +24,9 @@
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
     "multi:enable": "node scripts/multiTenancy.js enable",
-    "multi:disable": "node scripts/multiTenancy.js disable"
+    "multi:disable": "node scripts/multiTenancy.js disable",
+    "self:enable": "node scripts/selfhost.js enable",
+    "self:disable": "node scripts/selfhost.js disable"
   },
   "jest": {
     "preset": "ts-jest",
