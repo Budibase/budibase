@@ -20,7 +20,6 @@
   export let webhookModal
   export let testData
   export let schemaProperties
-
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
