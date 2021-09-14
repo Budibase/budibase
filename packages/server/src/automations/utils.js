@@ -1,5 +1,3 @@
-const env = require("../environment")
-const { getAPIKey, update, Properties } = require("../utilities/usageQuota")
 const runner = require("./thread")
 const { definitions } = require("./triggerInfo")
 const webhooks = require("../api/controllers/webhook")
@@ -12,19 +10,8 @@ const { MetadataTypes } = require("../constants")
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 
-async function updateQuota(automation) {
-  const appId = automation.appId
-  const apiObj = await getAPIKey(appId)
-  // this will fail, causing automation to escape if limits reached
-  await update(apiObj.apiKey, Properties.AUTOMATION, 1)
-  return apiObj.apiKey
-}
-
 exports.processEvent = async job => {
   try {
-    if (env.USE_QUOTAS) {
-      job.data.automation.apiKey = await updateQuota(job.data.automation)
-    }
     // need to actually await these so that an error can be captured properly
     return await runner(job)
   } catch (err) {
