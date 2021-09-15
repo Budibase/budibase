@@ -196,6 +196,11 @@ exports.getSelf = async ctx => {
   }
   // this will set the body
   await exports.find(ctx)
+
+  // append the account portal session information if present
+  if (ctx.user.account) {
+    ctx.body.account = ctx.user.account
+  }
 }
 
 exports.updateSelf = async ctx => {
