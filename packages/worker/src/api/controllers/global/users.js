@@ -197,10 +197,10 @@ exports.getSelf = async ctx => {
   // this will set the body
   await exports.find(ctx)
 
-  // append the account portal session information if present
-  if (ctx.user.account) {
-    ctx.body.account = ctx.user.account
-  }
+  // forward session information not found in db
+  ctx.body.account = ctx.user.account
+  ctx.body.budibaseAccess = ctx.user.budibaseAccess
+  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
 }
 
 exports.updateSelf = async ctx => {

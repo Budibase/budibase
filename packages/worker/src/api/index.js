@@ -84,7 +84,10 @@ router
   .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
-    if (!ctx.isAuthenticated && !ctx.publicEndpoint) {
+    if (ctx.publicEndpoint) {
+      return next()
+    }
+    if (!ctx.isAuthenticated || !ctx.user.budibaseAccess) {
       ctx.throw(403, "Unauthorized - no public worker access")
     }
     return next()
