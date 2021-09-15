@@ -18,7 +18,9 @@
     "dev:builder": "npm run dev:stack:init && nodemon src/index.js",
     "test": "jest --runInBand",
     "multi:enable": "node scripts/multiTenancy.js enable",
-    "multi:disable": "node scripts/multiTenancy.js disable"
+    "multi:disable": "node scripts/multiTenancy.js disable",
+    "selfhost:enable": "node scripts/selfhost.js enable",
+    "selfhost:disable": "node scripts/selfhost.js disable"
   },
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
