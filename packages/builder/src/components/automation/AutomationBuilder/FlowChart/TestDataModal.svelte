@@ -18,13 +18,12 @@
   // get the outputs so we can define the fields
 
   // check to see if there is existing test data in the store
-  $: testData = $automationStore.selectedAutomation.automation.testData
+  let testData = $automationStore.selectedAutomation.automation.testData
 
-  // Checj the schema to see if required fields have been entered
+  // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
     required => testData[required]
   )
-
   function parseTestJSON(e) {
     try {
       const obj = JSON.parse(e.detail)
