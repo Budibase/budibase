@@ -93,7 +93,11 @@
           </svg>
         {/if}
         <div class="iconAlign">
-          <Body size="XS">When this happens:</Body>
+          {#if isTrigger}
+            <Body size="XS">When this happens:</Body>
+          {:else}
+            <Body size="XS">Do this:</Body>
+          {/if}
 
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
