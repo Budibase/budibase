@@ -14,7 +14,7 @@ const DOMAIN_MAP = {
   views: usageQuota.Properties.VIEW,
   users: usageQuota.Properties.USER,
   // this will not be updated by endpoint calls
-  // instead it will be updated by triggers
+  // instead it will be updated by triggerInfo
   automationRuns: usageQuota.Properties.AUTOMATION,
 }
 

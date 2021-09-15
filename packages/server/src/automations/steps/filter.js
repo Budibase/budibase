@@ -1,29 +1,30 @@
-const LogicConditions = {
+const FilterConditions = {
   EQUAL: "EQUAL",
   NOT_EQUAL: "NOT_EQUAL",
   GREATER_THAN: "GREATER_THAN",
   LESS_THAN: "LESS_THAN",
 }
 
-const PrettyLogicConditions = {
-  [LogicConditions.EQUAL]: "Equals",
-  [LogicConditions.NOT_EQUAL]: "Not equals",
-  [LogicConditions.GREATER_THAN]: "Greater than",
-  [LogicConditions.LESS_THAN]: "Less than",
+const PrettyFilterConditions = {
+  [FilterConditions.EQUAL]: "Equals",
+  [FilterConditions.NOT_EQUAL]: "Not equals",
+  [FilterConditions.GREATER_THAN]: "Greater than",
+  [FilterConditions.LESS_THAN]: "Less than",
 }
 
-module.exports.LogicConditions = LogicConditions
-module.exports.PrettyLogicConditions = PrettyLogicConditions
+exports.FilterConditions = FilterConditions
+exports.PrettyFilterConditions = PrettyFilterConditions
 
-module.exports.definition = {
+exports.definition = {
   name: "Filter",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "ri-git-branch-line",
   description: "Filter any automations which do not meet certain conditions",
   type: "LOGIC",
+  internal: true,
   stepId: "FILTER",
   inputs: {
-    condition: LogicConditions.EQUALS,
+    condition: FilterConditions.EQUALS,
   },
   schema: {
     inputs: {
@@ -35,8 +36,8 @@ module.exports.definition = {
         condition: {
           type: "string",
           title: "Condition",
-          enum: Object.values(LogicConditions),
-          pretty: Object.values(PrettyLogicConditions),
+          enum: Object.values(FilterConditions),
+          pretty: Object.values(PrettyFilterConditions),
         },
         value: {
           type: "string",
@@ -57,7 +58,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function filter({ inputs }) {
+exports.run = async function filter({ inputs }) {
   let { field, condition, value } = inputs
   // coerce types so that we can use them
   if (!isNaN(value) && !isNaN(field)) {
@@ -70,16 +71,16 @@ module.exports.run = async function filter({ inputs }) {
   let success = false
   if (typeof field !== "object" && typeof value !== "object") {
     switch (condition) {
-      case LogicConditions.EQUAL:
+      case FilterConditions.EQUAL:
         success = field === value
         break
-      case LogicConditions.NOT_EQUAL:
+      case FilterConditions.NOT_EQUAL:
         success = field !== value
         break
-      case LogicConditions.GREATER_THAN:
+      case FilterConditions.GREATER_THAN:
         success = field > value
         break
-      case LogicConditions.LESS_THAN:
+      case FilterConditions.LESS_THAN:
         success = field < value
         break
     }

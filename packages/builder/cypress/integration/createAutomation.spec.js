@@ -24,7 +24,7 @@ context("Create a automation", () => {
     })
 
     // Create action
-    cy.contains("Action").click()
+    cy.contains("Internal").click()
     cy.contains("Create Row").click()
     cy.get(".setup").within(() => {
       cy.get(".spectrum-Picker-label").click()

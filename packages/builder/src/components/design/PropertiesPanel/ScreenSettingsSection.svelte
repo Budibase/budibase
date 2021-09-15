@@ -53,7 +53,9 @@
         control={def.control}
         label={def.label}
         key={def.key}
-        value={deepGet($currentAsset, def.key)}
+        value={def.key === "routing.route"
+          ? decodeURIComponent(deepGet($currentAsset, def.key))
+          : deepGet($currentAsset, def.key)}
         onChange={val => setAssetProps(def.key, val, def.parser)}
         {bindings}
       />

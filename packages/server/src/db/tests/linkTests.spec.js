@@ -59,16 +59,4 @@ describe("test link functionality", () => {
       expect(Array.isArray(output)).toBe(true)
     })
   })
-
-  describe("attachLinkIDs", () => {
-    it("should be able to attach linkIDs", async () => {
-      await config.init()
-      await config.createTable()
-      const table = await config.createLinkedTable()
-      const row = await config.createRow()
-      const linkRow = await config.createRow(basicLinkedRow(table._id, row._id))
-      const attached = await links.attachLinkIDs(config.getAppId(), [linkRow])
-      expect(attached[0].link[0]).toBe(row._id)
-    })
-  })
 })

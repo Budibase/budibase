@@ -943,12 +943,6 @@
         "label": "Pre-Select Feature",
         "key": "preSelectFeature",
         "defaultValue": true
-      },
-      {
-        "type": "boolean",
-        "label": "First Person",
-        "key": "firstPerson",
-        "defaultValue": true
       }
     ]
   },

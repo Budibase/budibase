@@ -9,6 +9,10 @@ const {
 } = require("@budibase/auth/permissions")
 const Joi = require("joi")
 const { bodyResource, paramResource } = require("../../middleware/resourceId")
+const {
+  middleware: appInfoMiddleware,
+  AppType,
+} = require("../../middleware/appInfo")
 
 const router = Router()
 
@@ -22,7 +26,6 @@ function generateStepSchema(allowStepTypes) {
     tagline: Joi.string().required(),
     icon: Joi.string().required(),
     params: Joi.object(),
-    // TODO: validate args a bit more deeply
     args: Joi.object(),
     type: Joi.string().required().valid(...allowStepTypes),
   }).unknown(true)
@@ -31,7 +34,6 @@ function generateStepSchema(allowStepTypes) {
 function generateValidator(existing = false) {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    live: Joi.bool(),
     _id: existing ? Joi.string().required() : Joi.string(),
     _rev: existing ? Joi.string().required() : Joi.string(),
     name: Joi.string().required(),
@@ -53,11 +55,6 @@ router
     "/api/automations/action/list",
     authorized(BUILDER),
     controller.getActionList
-  )
-  .get(
-    "/api/automations/logic/list",
-    authorized(BUILDER),
-    controller.getLogicList
   )
   .get(
     "/api/automations/definitions/list",
@@ -84,17 +81,25 @@ router
     generateValidator(false),
     controller.create
   )
-  .post(
-    "/api/automations/:id/trigger",
-    paramResource("id"),
-    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
-    controller.trigger
-  )
   .delete(
     "/api/automations/:id/:rev",
     paramResource("id"),
     authorized(BUILDER),
     controller.destroy
+  )
+  .post(
+    "/api/automations/:id/trigger",
+    appInfoMiddleware({ appType: AppType.PROD }),
+    paramResource("id"),
+    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+    controller.trigger
+  )
+  .post(
+    "/api/automations/:id/test",
+    appInfoMiddleware({ appType: AppType.DEV }),
+    paramResource("id"),
+    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+    controller.test
   )
 
 module.exports = router

@@ -1,16 +1,12 @@
 <script>
-  import {
-    Icon,
-    Button,
-    Input,
-    DrawerContent,
-    Layout,
-    Body,
-  } from "@budibase/bbui"
+  import { Icon, Button, DrawerContent, Layout, Body } from "@budibase/bbui"
   import { generate } from "shortid"
   import { _ as t } from "svelte-i18n"
 
   export let options = []
+  export let object
+  export let props
+  export let defaultValue = null
 
   const removeOption = id => {
     options = options.filter(option => option.id !== id)
@@ -21,7 +17,7 @@
       ...options,
       {
         id: generate(),
-        value: null,
+        value: defaultValue,
       },
     ]
   }
@@ -36,11 +32,10 @@
       {#if options?.length}
         <div class="options">
           {#each options as option (option.id)}
-            <Input
-              placeholder={$t("value")}
+            <svelte:component
+              this={object}
               bind:value={option.value}
-              label={$t("value")}
-              labelPosition="left"
+              {...props}
             />
             <Icon
               name="Close"

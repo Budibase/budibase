@@ -10,6 +10,7 @@
   export let language
   export let cesiumPath
   export let cesiumToken
+
   export let geocoder
   export let homeButton
   export let baseLayerPicker
@@ -24,7 +25,6 @@
   export let distanceLegend
   export let selectModel
   export let preSelectFeature
-  export let firstPerson
 
   let el
   let viewer
@@ -53,9 +53,7 @@
             cesiumNavigationJs = document.createElement("script")
             cesiumNavigationJs.setAttribute("type", "text/javascript")
             cesiumNavigationJs.setAttribute("src", cesiumNavigationJsUrl)
-            cesiumNavigationJs.onload = () => {
-              resolve()
-            }
+            cesiumNavigationJs.onload = resolve
             cesiumNavigationJs.onerror = reject
             document.head.appendChild(cesiumNavigationJs)
           } else {
@@ -181,13 +179,14 @@
       })
       .otherwise(console.log)
   }
-  let initFirstPerson = () => {
-    let toolbar = el.querySelector("div.cesium-viewer-toolbar")
-    let modeButton = el.querySelector("span.cesium-sceneModePicker-wrapper")
-    let firstPersonButton = document.createElement("button")
-    firstPersonButton.classList.add("cesium-button", "cesium-toolbar-button")
-    firstPersonButton.innerHTML = "F"
-    toolbar.insertBefore(firstPersonButton, modeButton)
+  let initCompassOrDistanceLegend = () => {
+    const Cesium = window.Cesium
+    viewer.extend(Cesium.viewerCesiumNavigationMixin, {
+      enableCompass: compass,
+      enableZoomControls: compass,
+      enableDistanceLegend: distanceLegend,
+      enableCompassOuterRing: true,
+    })
   }
 
   let initViewer = () => {
@@ -209,22 +208,14 @@
       infoBox,
     })
 
+    i18n.load(el, language)
+
     if (compass || distanceLegend) {
-      viewer.extend(Cesium.viewerCesiumNavigationMixin, {
-        enableCompass: compass,
-        enableZoomControls: compass,
-        enableDistanceLegend: distanceLegend,
-        enableCompassOuterRing: true,
-      })
+      initCompassOrDistanceLegend()
     }
 
-    i18n.load(el, language)
     viewer._cesiumWidget._creditContainer.style.display = "none"
     viewer.scene.globe.depthTestAgainstTerrain = true
-
-    if (firstPerson) {
-      initFirstPerson()
-    }
 
     if (preSelectFeature) {
       initPreSelectedFeature()

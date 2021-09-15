@@ -1,7 +1,7 @@
 <script>
-  import { ActionButton, Button, Drawer } from "@budibase/bbui"
+  import { ActionButton, Button, Drawer, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import ArrayTextDrawer from "./ArrayTextDrawer.svelte"
+  import ArrayDrawer from "./ArrayDrawer.svelte"
   import { _ as t } from "svelte-i18n"
 
   const dispatch = createEventDispatcher()
@@ -22,5 +22,14 @@
 <ActionButton on:click={drawer.show}>{$t("define-array")}</ActionButton>
 <Drawer bind:this={drawer} title={$t("array")} cancelText={$t("cancel")}>
   <Button cta slot="buttons" on:click={saveFilter}>{$t("save")}</Button>
-  <ArrayTextDrawer bind:options={tempValue} slot="body" />
+  <ArrayDrawer
+    bind:options={tempValue}
+    object={Input}
+    props={{
+      placeholder: $t("value"),
+      label: $t("value"),
+      labelPosition: "left",
+    }}
+    slot="body"
+  />
 </Drawer>
