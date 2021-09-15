@@ -48,23 +48,41 @@
   cancelText="Cancel"
 >
   <Tabs selected="Form" quiet
-    ><Tab icon="Form" title="Form"
-      ><AutomationBlockSetup
-        bind:testData
-        {schemaProperties}
-        block={trigger}
-      /></Tab
+    ><Tab icon="Form" title="Form">
+      <div class="tab-content-padding">
+        <AutomationBlockSetup
+          bind:testData
+          {schemaProperties}
+          block={trigger}
+        />
+      </div></Tab
     >
     <Tab icon="FileJson" title="JSON">
-      <Label>JSON</Label><TextArea
-        value={JSON.stringify(
-          $automationStore.selectedAutomation.automation.testData,
-          null,
-          2
-        )}
-        error={failedParse}
-        on:change={e => parseTestJSON(e)}
-      />
+      <div class="tab-content-padding">
+        <Label>JSON</Label>
+        <div class="text-area-container">
+          <TextArea
+            value={JSON.stringify(
+              $automationStore.selectedAutomation.automation.testData,
+              null,
+              2
+            )}
+            error={failedParse}
+            on:change={e => parseTestJSON(e)}
+          />
+        </div>
+      </div>
     </Tab>
   </Tabs>
 </ModalContent>
+
+<style>
+  .text-area-container :global(textarea) {
+    min-height: 200px;
+    height: 200px;
+  }
+
+  .tab-content-padding {
+    padding: 0 var(--spacing-xl);
+  }
+</style>
