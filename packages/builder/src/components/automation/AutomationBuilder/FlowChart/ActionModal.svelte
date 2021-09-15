@@ -1,39 +1,26 @@
 <script>
   import { ModalContent, Layout, Detail, Body, Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
-  import DiscordLogo from "assets/discord.svg"
-  import ZapierLogo from "assets/zapier.png"
-  import IntegromatLogo from "assets/integromat.png"
-  import SlackLogo from "assets/slack.svg"
-  import n8nlogo from "assets/n8n.png"
-
   import { database } from "stores/backend"
+  import { externalActions } from "./ExternalActions"
   $: instanceId = $database._id
 
   let selectedAction
   let actionVal
+  let actions = Object.entries($automationStore.blockDefinitions.ACTION)
   export let blockComplete
 
-  let externalActionsPredicate = [
-    { name: "zapier", logo: ZapierLogo },
-    { name: "discord", logo: DiscordLogo },
-    { name: "slack", logo: SlackLogo },
-    { name: "integromat", logo: IntegromatLogo },
-    { name: "n8n", logo: n8nlogo },
-  ]
-  let actions = Object.entries($automationStore.blockDefinitions.ACTION)
-
-  const externalActions = actions.reduce((acc, elm) => {
+  const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
-    if (externalActionsPredicate.some(pred => pred.name === k)) {
+    if (!v.internal) {
       acc[k] = v
     }
     return acc
   }, {})
 
-  const internalActions = actions.reduce((acc, elm) => {
+  const internal = actions.reduce((acc, elm) => {
     const [k, v] = elm
-    if (!externalActionsPredicate.some(pred => pred.name === k)) {
+    if (v.internal) {
       acc[k] = v
     }
     return acc
@@ -73,7 +60,7 @@
     <Body size="S">Apps</Body>
 
     <div class="item-list">
-      {#each Object.entries(externalActions) as [idx, action]}
+      {#each Object.entries(external) as [idx, action]}
         <div
           class="item"
           class:selected={selectedAction === action.name}
@@ -83,7 +70,7 @@
             <img
               width="20"
               height="20"
-              src={externalActionsPredicate.find(val => val.name === idx).logo}
+              src={externalActions[action.stepId].icon}
               alt="zapier"
             />
             <span class="icon-spacing">
@@ -98,7 +85,7 @@
     <Detail size="S">Actions</Detail>
 
     <div class="item-list">
-      {#each Object.entries(internalActions) as [idx, action]}
+      {#each Object.entries(internal) as [idx, action]}
         <div
           class="item"
           class:selected={selectedAction === action.name}
