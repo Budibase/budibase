@@ -37,9 +37,8 @@ Cypress.Commands.add("createApp", name => {
       cy.contains("Create app").click()
     })
     .then(() => {
-      cy.get(".selected > .content", {
-        timeout: 20000,
-      }).should("be.visible")
+      cy.get(".icon.arrow").eq(0).click()
+      cy.get(".nav-item.selected > .content").should("be.visible")
     })
 })
 
@@ -83,6 +82,7 @@ Cypress.Commands.add("createTable", tableName => {
 
 Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   // Select Table
+  //cy.get(".icon.arrow").eq(0).click()
   cy.contains(".nav-item", tableName).click()
   cy.contains("Create column").click()
 
