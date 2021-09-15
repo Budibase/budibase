@@ -89,6 +89,7 @@ globals:
   sentryDSN: "" 
   logLevel: info
   selfHosted: 1
+  accountPortalUrL: ""
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
   # if createSecrets is set to false, you can hard-code your secrets here

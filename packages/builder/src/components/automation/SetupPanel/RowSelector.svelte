@@ -3,12 +3,25 @@
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { createEventDispatcher } from "svelte"
+  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import { automationStore } from "builderStore"
+
+  const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
-
   $: table = $tables.list.find(table => table._id === value?.tableId)
   $: schemaFields = Object.entries(table?.schema ?? {})
+  const onChangeTable = e => {
+    value = { tableId: e.detail }
+    dispatch("change", value)
+  }
+
+  const onChange = (e, field) => {
+    value[field] = e.detail
+    dispatch("change", value)
+  }
 
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
@@ -20,7 +33,8 @@
 </script>
 
 <Select
-  bind:value={value.tableId}
+  on:change={onChangeTable}
+  value={value.tableId}
   options={$tables.list}
   getOptionLabel={table => table.name}
   getOptionValue={table => table._id}
@@ -32,19 +46,31 @@
       {#if !schema.autocolumn}
         {#if schemaHasOptions(schema)}
           <Select
+            on:change={e => onChange(e, field)}
             label={field}
-            bind:value={value[field]}
+            value={value[field]}
             options={schema.constraints.inclusion}
           />
         {:else if schema.type === "string" || schema.type === "number"}
-          <DrawerBindableInput
-            panel={AutomationBindingPanel}
-            value={value[field]}
-            on:change={e => (value[field] = e.detail)}
-            label={field}
-            type="string"
-            {bindings}
-          />
+          {#if $automationStore.selectedAutomation.automation.testData}
+            <ModalBindableInput
+              value={value[field]}
+              panel={AutomationBindingPanel}
+              label={field}
+              type={value.customType}
+              on:change={e => onChange(e, field)}
+              {bindings}
+            />
+          {:else}
+            <DrawerBindableInput
+              panel={AutomationBindingPanel}
+              value={value[field]}
+              on:change={e => onChange(e, field)}
+              label={field}
+              type="string"
+              {bindings}
+            />
+          {/if}
         {/if}
       {/if}
     {/each}
