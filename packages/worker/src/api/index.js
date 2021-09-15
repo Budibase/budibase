@@ -44,7 +44,7 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "api/system/flags",
+    route: "api/system/environment",
     method: "GET",
   },
   {

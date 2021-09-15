@@ -1,7 +1,7 @@
 exports.definition = {
   name: "Row Deleted",
   event: "row:delete",
-  icon: "ri-delete-bin-line",
+  icon: "Delete",
   tagline: "Row is deleted from {{inputs.enriched.table.name}}",
   description: "Fired when a row is deleted from your database",
   stepId: "ROW_DELETED",
