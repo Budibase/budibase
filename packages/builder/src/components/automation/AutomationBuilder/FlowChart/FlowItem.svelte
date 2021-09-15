@@ -73,18 +73,18 @@
       }}
       class="splitHeader"
     >
-      <div style="display: flex;">
+      <div class="center-items">
         {#if externalActions[block.stepId]}
           <img
             alt={externalActions[block.stepId].name}
-            width="35px"
-            height="35px"
+            width="28px"
+            height="28px"
             src={externalActions[block.stepId].icon}
           />
         {:else}
           <svg
-            width="35px"
-            height="35px"
+            width="28px"
+            height="28px"
             class="spectrum-Icon"
             style="color:grey;"
             focusable="false"
@@ -118,7 +118,7 @@
             on:click|stopPropagation={() => {
               setupToggled = !setupToggled
             }}
-            class="toggle"
+            class="center-items"
           >
             {#if setupToggled}
               <Icon size="M" name="ChevronDown" />
@@ -142,7 +142,7 @@
           />
           {#if lastStep}
             <Button on:click={() => testDataModal.show()} cta
-              >Continue and test automation</Button
+              >Finish and test automation</Button
             >
           {/if}
           <Button
@@ -173,7 +173,7 @@
 </div>
 
 <style>
-  .toggle {
+  .center-items {
     display: flex;
     align-items: center;
   }

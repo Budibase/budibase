@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Icon, Detail, Badge, TextArea } from "@budibase/bbui"
+  import { ModalContent, Icon, Detail, TextArea } from "@budibase/bbui"
 
   export let testResult
   export let isTrigger
@@ -16,9 +16,13 @@
   <div slot="header">
     <div style="float: right;">
       {#if isTrigger || testResult[0].outputs.success}
-        <Badge green><Icon size="S" name="CheckmarkCircle" /></Badge>
+        <div class="iconSuccess">
+          <Icon size="S" name="CheckmarkCircle" />
+        </div>
       {:else}
-        <Badge red><Icon size="S" name="CloseCircle" /></Badge>
+        <div class="iconFailure">
+          <Icon size="S" name="CloseCircle" />
+        </div>
       {/if}
     </div>
   </div>
@@ -45,7 +49,12 @@
     </div>
   </div>
   {#if inputToggled}
-    <TextArea disabled value={JSON.stringify(testResult[0].inputs, null, 2)} />
+    <div class="text-area-container">
+      <TextArea
+        disabled
+        value={JSON.stringify(testResult[0].inputs, null, 2)}
+      />
+    </div>
   {/if}
 
   <div
@@ -70,11 +79,24 @@
     </div>
   </div>
   {#if outputToggled}
-    <TextArea disabled value={JSON.stringify(testResult[0].outputs, null, 2)} />
+    <div class="text-area-container">
+      <TextArea
+        disabled
+        value={JSON.stringify(testResult[0].outputs, null, 2)}
+      />
+    </div>
   {/if}
 </ModalContent>
 
 <style>
+  .iconSuccess {
+    color: var(--spectrum-global-color-green-600);
+  }
+
+  .iconFailure {
+    color: var(--spectrum-global-color-red-600);
+  }
+
   .splitHeader {
     cursor: pointer;
     display: flex;
@@ -84,5 +106,9 @@
   .toggle {
     display: flex;
     align-items: center;
+  }
+
+  .text-area-container :global(textarea) {
+    height: 150px;
   }
 </style>
