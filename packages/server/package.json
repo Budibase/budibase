@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.125-alpha.5",
+  "version": "0.9.125-alpha.7",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -24,7 +24,9 @@
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
     "multi:enable": "node scripts/multiTenancy.js enable",
-    "multi:disable": "node scripts/multiTenancy.js disable"
+    "multi:disable": "node scripts/multiTenancy.js disable",
+    "selfhost:enable": "node scripts/selfhost.js enable",
+    "selfhost:disable": "node scripts/selfhost.js disable"
   },
   "jest": {
     "preset": "ts-jest",
@@ -61,9 +63,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.125-alpha.5",
-    "@budibase/client": "^0.9.125-alpha.5",
-    "@budibase/string-templates": "^0.9.125-alpha.5",
+    "@budibase/auth": "^0.9.125-alpha.7",
+    "@budibase/client": "^0.9.125-alpha.7",
+    "@budibase/string-templates": "^0.9.125-alpha.7",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
